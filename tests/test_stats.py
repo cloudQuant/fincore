@@ -19,7 +19,8 @@ except ImportError:
     from pandas.util.testing import assert_index_equal
 
 from fincore import empyrical
-from fincore.empyrical import utils as emutils
+from fincore.empyrical import Empyrical, utils as emutils
+from fincore.constants import DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
 
 DECIMAL_PLACES = 8
 
@@ -225,18 +226,18 @@ class TestStats(BaseTestCase):
             4)
 
     @parameterized.expand([
-        (simple_benchmark, empyrical.WEEKLY, [0.0,
+        (simple_benchmark, WEEKLY, [0.0,
                                               0.040604010000000024,
                                               0.0]),
-        (simple_benchmark, empyrical.MONTHLY, [0.01,
+        (simple_benchmark, MONTHLY, [0.01,
                                                0.03030099999999991]),
-        (simple_benchmark, empyrical.QUARTERLY, [0.04060401]),
-        (simple_benchmark, empyrical.YEARLY, [0.040604010000000024]),
-        (weekly_returns, empyrical.MONTHLY, [0.0, 0.087891200000000058,
+        (simple_benchmark, QUARTERLY, [0.04060401]),
+        (simple_benchmark, YEARLY, [0.040604010000000024]),
+        (weekly_returns, MONTHLY, [0.0, 0.087891200000000058,
                                              -0.04500459999999995]),
-        (weekly_returns, empyrical.YEARLY, [0.038931091700480147]),
-        (monthly_returns, empyrical.YEARLY, [0.038931091700480147]),
-        (monthly_returns, empyrical.QUARTERLY, [0.11100000000000021,
+        (weekly_returns, YEARLY, [0.038931091700480147]),
+        (monthly_returns, YEARLY, [0.038931091700480147]),
+        (monthly_returns, QUARTERLY, [0.11100000000000021,
                                                 0.008575999999999917,
                                                 -0.072819999999999996])
     ])
@@ -259,9 +260,9 @@ class TestStats(BaseTestCase):
         (positive_returns, -0.0),
 
         # negative returns means the drawdown is just the returns
-        (negative_returns, empyrical.cum_returns_final(negative_returns)),
+        (negative_returns, Empyrical.cal_cum_returns_final(negative_returns)),
         (all_negative_returns,
-         empyrical.cum_returns_final(all_negative_returns)),
+         Empyrical.cal_cum_returns_final(all_negative_returns)),
 
         (
             pd.Series(
@@ -298,9 +299,9 @@ class TestStats(BaseTestCase):
         assert depressed_dd <= max_dd
 
     @parameterized.expand([
-        (mixed_returns, empyrical.DAILY, 1.9135925373194231),
-        (weekly_returns, empyrical.WEEKLY, 0.24690830513998208),
-        (monthly_returns, empyrical.MONTHLY, 0.052242061386048144)
+        (mixed_returns, DAILY, 1.9135925373194231),
+        (weekly_returns, WEEKLY, 0.24690830513998208),
+        (monthly_returns, MONTHLY, 0.052242061386048144)
     ])
     def test_annual_ret(self, returns, period, expected):
         assert_almost_equal(
@@ -312,10 +313,10 @@ class TestStats(BaseTestCase):
             DECIMAL_PLACES)
 
     @parameterized.expand([
-        (flat_line_1_tz, empyrical.DAILY, 0.0),
-        (mixed_returns, empyrical.DAILY, 0.9136465399704637),
-        (weekly_returns, empyrical.WEEKLY, 0.38851569394870583),
-        (monthly_returns, empyrical.MONTHLY, 0.18663690238892558)
+        (flat_line_1_tz, DAILY, 0.0),
+        (mixed_returns, DAILY, 0.9136465399704637),
+        (weekly_returns, WEEKLY, 0.38851569394870583),
+        (monthly_returns, MONTHLY, 0.18663690238892558)
     ])
     def test_annual_volatility(self, returns, period, expected):
         assert_almost_equal(
@@ -328,11 +329,11 @@ class TestStats(BaseTestCase):
         )
 
     @parameterized.expand([
-        (empty_returns, empyrical.DAILY, np.nan),
-        (one_return, empyrical.DAILY, np.nan),
-        (mixed_returns, empyrical.DAILY, 19.135925373194233),
-        (weekly_returns, empyrical.WEEKLY, 2.4690830513998208),
-        (monthly_returns, empyrical.MONTHLY, 0.52242061386048144)
+        (empty_returns, DAILY, np.nan),
+        (one_return, DAILY, np.nan),
+        (mixed_returns, DAILY, 19.135925373194233),
+        (weekly_returns, WEEKLY, 2.4690830513998208),
+        (monthly_returns, MONTHLY, 0.52242061386048144)
     ])
     def test_calmar(self, returns, period, expected):
         assert_almost_equal(
@@ -475,22 +476,22 @@ class TestStats(BaseTestCase):
 
     # Regressive downside risk tests
     @parameterized.expand([
-        (empty_returns, 0.0, empyrical.DAILY, np.nan),
-        (one_return, 0.0, empyrical.DAILY, 0.0),
-        (mixed_returns, mixed_returns, empyrical.DAILY, 0.0),
-        (mixed_returns, 0.0, empyrical.DAILY, 0.60448325038829653),
-        (mixed_returns, 0.1, empyrical.DAILY, 1.7161730681956295),
-        (weekly_returns, 0.0, empyrical.WEEKLY, 0.25888650451930134),
-        (weekly_returns, 0.1, empyrical.WEEKLY, 0.7733045971672482),
-        (monthly_returns, 0.0, empyrical.MONTHLY, 0.1243650540411842),
-        (monthly_returns, 0.1, empyrical.MONTHLY, 0.37148351242013422),
-        (df_simple, 0.0, empyrical.DAILY,
+        (empty_returns, 0.0, DAILY, np.nan),
+        (one_return, 0.0, DAILY, 0.0),
+        (mixed_returns, mixed_returns, DAILY, 0.0),
+        (mixed_returns, 0.0, DAILY, 0.60448325038829653),
+        (mixed_returns, 0.1, DAILY, 1.7161730681956295),
+        (weekly_returns, 0.0, WEEKLY, 0.25888650451930134),
+        (weekly_returns, 0.1, WEEKLY, 0.7733045971672482),
+        (monthly_returns, 0.0, MONTHLY, 0.1243650540411842),
+        (monthly_returns, 0.1, MONTHLY, 0.37148351242013422),
+        (df_simple, 0.0, DAILY,
          pd.Series([0.20671788246185202, 0.083495680595704475],
                    index=['one', 'two'])),
-        (df_week, 0.0, empyrical.WEEKLY,
+        (df_week, 0.0, WEEKLY,
          pd.Series([0.093902996054410062, 0.037928477556776516],
                    index=['one', 'two'])),
-        (df_month, 0.0, empyrical.MONTHLY,
+        (df_month, 0.0, MONTHLY,
          pd.Series([0.045109540184877193, 0.018220251263412916],
                    index=['one', 'two']))
     ])
@@ -568,24 +569,24 @@ class TestStats(BaseTestCase):
 
     # Regressive sortino ratio tests
     @parameterized.expand([
-        (empty_returns, 0.0, empyrical.DAILY, np.nan),
-        (one_return, 0.0, empyrical.DAILY, np.nan),
-        (mixed_returns, mixed_returns, empyrical.DAILY, np.nan),
-        (mixed_returns, 0.0, empyrical.DAILY, 2.605531251673693),
-        (mixed_returns, flat_line_1, empyrical.DAILY,
+        (empty_returns, 0.0, DAILY, np.nan),
+        (one_return, 0.0, DAILY, np.nan),
+        (mixed_returns, mixed_returns, DAILY, np.nan),
+        (mixed_returns, 0.0, DAILY, 2.605531251673693),
+        (mixed_returns, flat_line_1, DAILY,
             -1.3934779588919977),
-        (positive_returns, 0.0, empyrical.DAILY, np.inf),
-        (negative_returns, 0.0, empyrical.DAILY, -13.532743075043401),
-        (simple_benchmark, 0.0, empyrical.DAILY, np.inf),
-        (weekly_returns, 0.0, empyrical.WEEKLY, 1.1158901056866439),
-        (monthly_returns, 0.0, empyrical.MONTHLY, 0.53605626741889756),
-        (df_simple, 0.0, empyrical.DAILY,
+        (positive_returns, 0.0, DAILY, np.inf),
+        (negative_returns, 0.0, DAILY, -13.532743075043401),
+        (simple_benchmark, 0.0, DAILY, np.inf),
+        (weekly_returns, 0.0, WEEKLY, 1.1158901056866439),
+        (monthly_returns, 0.0, MONTHLY, 0.53605626741889756),
+        (df_simple, 0.0, DAILY,
          pd.Series([3.0639640966566306, 38.090963117002495],
                    index=['one', 'two'])),
-        (df_week, 0.0, empyrical.WEEKLY,
+        (df_week, 0.0, WEEKLY,
          pd.Series([1.3918264112070571, 17.303077589064618],
                    index=['one', 'two'])),
-        (df_month, 0.0, empyrical.MONTHLY,
+        (df_month, 0.0, MONTHLY,
          pd.Series([0.6686117809312383, 8.3121296084492844],
                    index=['one', 'two']))
     ])
@@ -1000,10 +1001,10 @@ class TestStats(BaseTestCase):
 
     # Regression tests for CAGR.
     @parameterized.expand([
-        (empty_returns, empyrical.DAILY, np.nan),
-        (one_return, empyrical.DAILY, 11.274002099240244),
-        (mixed_returns, empyrical.DAILY, 1.9135925373194231),
-        (flat_line_1_tz, empyrical.DAILY, 11.274002099240256),
+        (empty_returns, DAILY, np.nan),
+        (one_return, DAILY, 11.274002099240244),
+        (mixed_returns, DAILY, 1.9135925373194231),
+        (flat_line_1_tz, DAILY, 11.274002099240256),
         (pd.Series(np.array(
             [3., 3., 3.])/100,
             index=pd.date_range('2000-1-30', periods=3, freq=YEAR_FREQ)
@@ -1379,13 +1380,13 @@ class TestStats(BaseTestCase):
 
     # Regression tests for tracking_error
     @parameterized.expand([
-        (empty_returns, simple_benchmark, empyrical.DAILY, np.nan),
-        (one_return, one_return, empyrical.DAILY, np.nan),  # Single point has no std
-        (mixed_returns, simple_benchmark, empyrical.DAILY, 0.9234446382972831),
-        (mixed_returns, mixed_returns, empyrical.DAILY, 0.0),
-        (negative_returns, negative_returns, empyrical.DAILY, 0.0),  # Same series = 0 tracking error
-        (negative_returns, negative_returns, empyrical.WEEKLY, 0.0),
-        (negative_returns, negative_returns, empyrical.MONTHLY, 0.0),
+        (empty_returns, simple_benchmark, DAILY, np.nan),
+        (one_return, one_return, DAILY, np.nan),  # Single point has no std
+        (mixed_returns, simple_benchmark, DAILY, 0.9234446382972831),
+        (mixed_returns, mixed_returns, DAILY, 0.0),
+        (negative_returns, negative_returns, DAILY, 0.0),  # Same series = 0 tracking error
+        (negative_returns, negative_returns, WEEKLY, 0.0),
+        (negative_returns, negative_returns, MONTHLY, 0.0),
     ])
     def test_tracking_error(self, returns, factor_returns, period, expected):
         assert_almost_equal(
@@ -1396,14 +1397,14 @@ class TestStats(BaseTestCase):
 
     # Regression tests for treynor_ratio
     @parameterized.expand([
-        (empty_returns, simple_benchmark, 0.0, empyrical.DAILY, np.nan),
-        (one_return, one_return, 0.0, empyrical.DAILY, np.nan),
-        (mixed_returns, simple_benchmark, 0.0, empyrical.DAILY, np.nan),  # Beta is negative
-        (mixed_returns, mixed_returns, 0.0, empyrical.DAILY, 1.913592537319458),  # Beta is 1
-        (positive_returns, mixed_returns, 0.0, empyrical.DAILY, 9382.016570787557),
-        (mixed_returns, simple_benchmark, 0.01, empyrical.DAILY, np.nan),  # Beta is negative
-        (weekly_returns, simple_benchmark, 0.0, empyrical.WEEKLY, 0.13215767793298694),
-        (monthly_returns, simple_benchmark, 0.0, empyrical.MONTHLY, np.nan),  # Beta might be negative or zero
+        (empty_returns, simple_benchmark, 0.0, DAILY, np.nan),
+        (one_return, one_return, 0.0, DAILY, np.nan),
+        (mixed_returns, simple_benchmark, 0.0, DAILY, np.nan),  # Beta is negative
+        (mixed_returns, mixed_returns, 0.0, DAILY, 1.913592537319458),  # Beta is 1
+        (positive_returns, mixed_returns, 0.0, DAILY, 9382.016570787557),
+        (mixed_returns, simple_benchmark, 0.01, DAILY, np.nan),  # Beta is negative
+        (weekly_returns, simple_benchmark, 0.0, WEEKLY, 0.13215767793298694),
+        (monthly_returns, simple_benchmark, 0.0, MONTHLY, np.nan),  # Beta might be negative or zero
     ])
     def test_treynor_ratio(self, returns, factor_returns, risk_free, period, expected):
         result = self.empyrical.treynor_ratio(
@@ -1416,14 +1417,14 @@ class TestStats(BaseTestCase):
 
     # Regression tests for m_squared
     @parameterized.expand([
-        (empty_returns, simple_benchmark, 0.0, empyrical.DAILY, np.nan),
-        (one_return, one_return, 0.0, empyrical.DAILY, np.nan),
-        (mixed_returns, simple_benchmark, 0.0, empyrical.DAILY, 0.17523476672946897),
-        (mixed_returns, mixed_returns, 0.0, empyrical.DAILY, 1.913592537319458),
-        (negative_returns, negative_returns, 0.0, empyrical.DAILY, -0.9999971141282427),
-        (mixed_returns, simple_benchmark, 0.01, empyrical.DAILY, 0.18431902963647773),
-        (negative_returns, negative_returns, 0.0, empyrical.WEEKLY, -0.9280745543718799),
-        (negative_returns, negative_returns, 0.0, empyrical.MONTHLY, -0.4552419357313745),
+        (empty_returns, simple_benchmark, 0.0, DAILY, np.nan),
+        (one_return, one_return, 0.0, DAILY, np.nan),
+        (mixed_returns, simple_benchmark, 0.0, DAILY, 0.17523476672946897),
+        (mixed_returns, mixed_returns, 0.0, DAILY, 1.913592537319458),
+        (negative_returns, negative_returns, 0.0, DAILY, -0.9999971141282427),
+        (mixed_returns, simple_benchmark, 0.01, DAILY, 0.18431902963647773),
+        (negative_returns, negative_returns, 0.0, WEEKLY, -0.9280745543718799),
+        (negative_returns, negative_returns, 0.0, MONTHLY, -0.4552419357313745),
     ])
     def test_m_squared(self, returns, factor_returns, risk_free, period, expected):
         result = self.empyrical.m_squared(
@@ -1436,13 +1437,13 @@ class TestStats(BaseTestCase):
 
     # Regression tests for annual_active_risk
     @parameterized.expand([
-        (empty_returns, simple_benchmark, empyrical.DAILY, np.nan),
-        (one_return, one_return, empyrical.DAILY, np.nan),  # Single point has no std
-        (mixed_returns, simple_benchmark, empyrical.DAILY, 0.9234446382972831),
-        (mixed_returns, mixed_returns, empyrical.DAILY, 0.0),
-        (negative_returns, negative_returns, empyrical.DAILY, 0.0),  # Same series = 0 active risk
-        (negative_returns, negative_returns, empyrical.WEEKLY, 0.0),
-        (negative_returns, negative_returns, empyrical.MONTHLY, 0.0),
+        (empty_returns, simple_benchmark, DAILY, np.nan),
+        (one_return, one_return, DAILY, np.nan),  # Single point has no std
+        (mixed_returns, simple_benchmark, DAILY, 0.9234446382972831),
+        (mixed_returns, mixed_returns, DAILY, 0.0),
+        (negative_returns, negative_returns, DAILY, 0.0),  # Same series = 0 active risk
+        (negative_returns, negative_returns, WEEKLY, 0.0),
+        (negative_returns, negative_returns, MONTHLY, 0.0),
     ])
     def test_annual_active_risk(self, returns, factor_returns, period, expected):
             assert_almost_equal(
@@ -1453,13 +1454,13 @@ class TestStats(BaseTestCase):
 
     # Regression tests for annual_active_return
     @parameterized.expand([
-        (empty_returns, simple_benchmark, empyrical.DAILY, np.nan),
-        (one_return, one_return, empyrical.DAILY, 0.0),
-        (mixed_returns, simple_benchmark, empyrical.DAILY, -0.13425938751982391),
-        (mixed_returns, mixed_returns, empyrical.DAILY, 0.0),
-        (positive_returns, mixed_returns, empyrical.DAILY, 13.259480083900217),
-        (weekly_returns, simple_benchmark, empyrical.WEEKLY, -0.005935602500302561),
-        (monthly_returns, simple_benchmark, empyrical.MONTHLY, -0.001167416484335826),
+        (empty_returns, simple_benchmark, DAILY, np.nan),
+        (one_return, one_return, DAILY, 0.0),
+        (mixed_returns, simple_benchmark, DAILY, -0.13425938751982391),
+        (mixed_returns, mixed_returns, DAILY, 0.0),
+        (positive_returns, mixed_returns, DAILY, 13.259480083900217),
+        (weekly_returns, simple_benchmark, WEEKLY, -0.005935602500302561),
+        (monthly_returns, simple_benchmark, MONTHLY, -0.001167416484335826),
     ])
     def test_annual_active_return(self, returns, factor_returns, period, expected):
             assert_almost_equal(
@@ -1755,7 +1756,7 @@ class TestStats(BaseTestCase):
         defined later in the body than those references. That way, the
         attributes are looked up on the empyrical module, not this property.
 
-        e.g. empyrical.DAILY
+        e.g. DAILY
         """
         return ReturnTypeEmpyricalProxy(self, (pd.Series, float, int))
 
@@ -1774,18 +1775,18 @@ class TestStatsArrays(TestStats):
         pass
 
     @parameterized.expand([
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.WEEKLY, [0.0,
+        (TestStats.simple_benchmark, WEEKLY, [0.0,
                                                         0.040604010000000024,
                                                         0.0]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.MONTHLY, [0.01,
+        (TestStats.simple_benchmark, MONTHLY, [0.01,
                                                          0.03030099999999991]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.QUARTERLY, [0.04060401]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.YEARLY, [0.040604010000000024]),
-        (TestStats.weekly_returns, EMPYRICAL_MODULE.MONTHLY, [0.0, 0.087891200000000058,
+        (TestStats.simple_benchmark, QUARTERLY, [0.04060401]),
+        (TestStats.simple_benchmark, YEARLY, [0.040604010000000024]),
+        (TestStats.weekly_returns, MONTHLY, [0.0, 0.087891200000000058,
                                                        -0.04500459999999995]),
-        (TestStats.weekly_returns, EMPYRICAL_MODULE.YEARLY, [0.038931091700480147]),
-        (TestStats.monthly_returns, EMPYRICAL_MODULE.YEARLY, [0.038931091700480147]),
-        (TestStats.monthly_returns, EMPYRICAL_MODULE.QUARTERLY, [0.11100000000000021,
+        (TestStats.weekly_returns, YEARLY, [0.038931091700480147]),
+        (TestStats.monthly_returns, YEARLY, [0.038931091700480147]),
+        (TestStats.monthly_returns, QUARTERLY, [0.11100000000000021,
                                                           0.008575999999999917,
                                                           -0.072819999999999996])
     ])
@@ -1798,7 +1799,7 @@ class TestStatsArrays(TestStats):
             index = returns_series.index
 
         normalized = pd.Series(np.asarray(returns_series.copy()), index=index)
-        aggregated = EMPYRICAL_MODULE.aggregate_returns(normalized, convert_to)
+        aggregated = Empyrical.cal_aggregate_returns(normalized, convert_to)
         aggregated_values = aggregated.values if hasattr(aggregated, 'values') else np.asarray(aggregated)
 
         assert len(aggregated_values) == len(expected)
@@ -1809,7 +1810,7 @@ class TestStatsArrays(TestStats):
     def test_annual_active_return_5(self):
         from fincore import empyrical
         assert_almost_equal(
-            self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=empyrical.WEEKLY),
+            self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=WEEKLY),
             -0.011645391602789212,
             DECIMAL_PLACES,
         )
@@ -1817,7 +1818,7 @@ class TestStatsArrays(TestStats):
     def test_annual_active_return_6(self):
         from fincore import empyrical
         assert_almost_equal(
-            self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=empyrical.MONTHLY),
+            self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=MONTHLY),
             -0.0022597421059689093,
             DECIMAL_PLACES,
         )
@@ -1825,7 +1826,7 @@ class TestStatsArrays(TestStats):
     def test_treynor_ratio_6(self):
         from fincore import empyrical
         result = self.empyrical.treynor_ratio(
-            self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=empyrical.WEEKLY
+            self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=WEEKLY
         )
         assert np.isnan(result), f"Expected NaN but got {result}"
 
@@ -1851,18 +1852,18 @@ class TestStatsIntIndex(TestStats):
         pass
 
     @parameterized.expand([
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.WEEKLY, [0.0,
+        (TestStats.simple_benchmark, WEEKLY, [0.0,
                                                         0.040604010000000024,
                                                         0.0]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.MONTHLY, [0.01,
+        (TestStats.simple_benchmark, MONTHLY, [0.01,
                                                          0.03030099999999991]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.QUARTERLY, [0.04060401]),
-        (TestStats.simple_benchmark, EMPYRICAL_MODULE.YEARLY, [0.040604010000000024]),
-        (TestStats.weekly_returns, EMPYRICAL_MODULE.MONTHLY, [0.0, 0.087891200000000058,
+        (TestStats.simple_benchmark, QUARTERLY, [0.04060401]),
+        (TestStats.simple_benchmark, YEARLY, [0.040604010000000024]),
+        (TestStats.weekly_returns, MONTHLY, [0.0, 0.087891200000000058,
                                                        -0.04500459999999995]),
-        (TestStats.weekly_returns, EMPYRICAL_MODULE.YEARLY, [0.038931091700480147]),
-        (TestStats.monthly_returns, EMPYRICAL_MODULE.YEARLY, [0.038931091700480147]),
-        (TestStats.monthly_returns, EMPYRICAL_MODULE.QUARTERLY, [0.11100000000000021,
+        (TestStats.weekly_returns, YEARLY, [0.038931091700480147]),
+        (TestStats.monthly_returns, YEARLY, [0.038931091700480147]),
+        (TestStats.monthly_returns, QUARTERLY, [0.11100000000000021,
                                                           0.008575999999999917,
                                                           -0.072819999999999996])
     ])
@@ -1872,7 +1873,7 @@ class TestStatsIntIndex(TestStats):
         datetime_index = base_series.index if isinstance(base_series.index, pd.DatetimeIndex) else pd.date_range('2000-01-01', periods=len(base_series), freq='D')
 
         normalized = pd.Series(np.asarray(base_series.copy()), index=datetime_index)
-        aggregated = EMPYRICAL_MODULE.aggregate_returns(normalized, convert_to)
+        aggregated = Empyrical.cal_aggregate_returns(normalized, convert_to)
 
         # Convert back to int index to mimic suite expectations
         aggregated_values = aggregated.values if hasattr(aggregated, 'values') else np.asarray(aggregated)
@@ -1884,7 +1885,7 @@ class TestStatsIntIndex(TestStats):
     def test_annual_active_return_5(self):
         from fincore import empyrical
         assert_almost_equal(
-            self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=empyrical.WEEKLY),
+            self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=WEEKLY),
             -0.011645391602789212,
             DECIMAL_PLACES,
         )
@@ -1892,7 +1893,7 @@ class TestStatsIntIndex(TestStats):
     def test_annual_active_return_6(self):
         from fincore import empyrical
         assert_almost_equal(
-            self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=empyrical.MONTHLY),
+            self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=MONTHLY),
             -0.0022597421059689093,
             DECIMAL_PLACES,
         )
@@ -1900,7 +1901,7 @@ class TestStatsIntIndex(TestStats):
     def test_treynor_ratio_6(self):
         from fincore import empyrical
         result = self.empyrical.treynor_ratio(
-            self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=empyrical.WEEKLY
+            self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=WEEKLY
         )
         assert np.isnan(result), f"Expected NaN but got {result}"
 
@@ -1924,51 +1925,57 @@ class TestHelpers(BaseTestCase):
             index=pd.date_range('2000-1-30', periods=120, freq=MONTH_FREQ))
 
     def test_roll_pandas(self):
+        emp = Empyrical()
         res = emutils.roll(self.returns,
                            self.factor_returns,
                            window=12,
-                           function=empyrical.alpha_aligned)
+                           function=emp.alpha_aligned)
 
         self.assertEqual(res.size, self.ser_length - self.window + 1)
 
     def test_roll_ndarray(self):
+        emp = Empyrical()
         res = emutils.roll(self.returns.values,
                            self.factor_returns.values,
                            window=12,
-                           function=empyrical.alpha_aligned)
+                           function=emp.alpha_aligned)
 
         self.assertEqual(len(res), self.ser_length - self.window + 1)
 
     def test_down(self):
+        emp = Empyrical()
         pd_res = emutils.down(self.returns, self.factor_returns,
-                              function=empyrical.capture)
+                              function=emp.capture)
         np_res = emutils.down(self.returns.values, self.factor_returns.values,
-                              function=empyrical.capture)
+                              function=emp.capture)
 
         self.assertTrue(isinstance(pd_res, float))
         assert_almost_equal(pd_res, np_res, DECIMAL_PLACES)
 
     def test_up(self):
+        emp = Empyrical()
         pd_res = emutils.up(self.returns, self.factor_returns,
-                            function=empyrical.capture)
+                            function=emp.capture)
         np_res = emutils.up(self.returns.values, self.factor_returns.values,
-                            function=empyrical.capture)
+                            function=emp.capture)
 
         self.assertTrue(isinstance(pd_res, float))
         assert_almost_equal(pd_res, np_res, DECIMAL_PLACES)
 
     def test_roll_bad_types(self):
         with self.assertRaises(ValueError):
+            emp = Empyrical()
             emutils.roll(self.returns.values,
                          self.factor_returns,
                          window=12,
-                         function=empyrical.max_drawdown)
+                         function=emp.max_drawdown)
 
     def test_roll_max_window(self):
+        emp = Empyrical()
         res = emutils.roll(self.returns,
                            self.factor_returns,
                            window=self.ser_length + 100,
-                           function=empyrical.max_drawdown)
+                           function=emp.max_drawdown)
         self.assertTrue(res.size == 0)
 
 
@@ -2101,10 +2108,10 @@ class ReturnTypeEmpyricalProxy(object):
         return newone
 
     def __getattr__(self, item):
+        emp = Empyrical()
+        func = getattr(emp, item)
         return self._check_input_not_mutated(
-            self._check_return_type(
-                getattr(empyrical, item)
-            )
+            self._check_return_type(func)
         )
 
     def _check_return_type(self, func):

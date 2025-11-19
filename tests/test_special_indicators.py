@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -44,7 +44,8 @@ class TestSpecialIndicators(TestCase):
     # Test conditional Sharpe ratio
     def test_conditional_sharpe_ratio(self):
         """Test conditional Sharpe ratio calculation."""
-        result = empyrical.conditional_sharpe_ratio(self.normal_returns)
+        emp = Empyrical()
+        result = emp.conditional_sharpe_ratio(self.normal_returns)
         # Should return a valid number
         assert isinstance(result, (float, np.floating))
         if not np.isnan(result):
@@ -53,19 +54,22 @@ class TestSpecialIndicators(TestCase):
 
     def test_conditional_sharpe_ratio_positive(self):
         """Test that positive returns give positive conditional Sharpe."""
-        result = empyrical.conditional_sharpe_ratio(self.positive_returns)
+        emp = Empyrical()
+        result = emp.conditional_sharpe_ratio(self.positive_returns)
         if not np.isnan(result):
             assert result > 0, f"Expected positive conditional Sharpe, got {result}"
 
     def test_conditional_sharpe_ratio_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.conditional_sharpe_ratio(self.empty_returns)
+        emp = Empyrical()
+        result = emp.conditional_sharpe_ratio(self.empty_returns)
         assert np.isnan(result)
 
     def test_conditional_sharpe_vs_regular_sharpe(self):
         """Test relationship with regular Sharpe ratio."""
-        cond_sharpe = empyrical.conditional_sharpe_ratio(self.normal_returns)
-        reg_sharpe = empyrical.sharpe_ratio(self.normal_returns)
+        emp = Empyrical()
+        cond_sharpe = emp.conditional_sharpe_ratio(self.normal_returns)
+        reg_sharpe = emp.sharpe_ratio(self.normal_returns)
         # Both should have the same sign
         if not (np.isnan(cond_sharpe) or np.isnan(reg_sharpe)):
             assert np.sign(cond_sharpe) == np.sign(reg_sharpe)
@@ -73,25 +77,29 @@ class TestSpecialIndicators(TestCase):
     # Test VaR excess return
     def test_var_excess_return(self):
         """Test VaR excess return calculation."""
-        result = empyrical.var_excess_return(self.normal_returns)
+        emp = Empyrical()
+        result = emp.var_excess_return(self.normal_returns)
         # Should return a valid number
         assert isinstance(result, (float, np.floating))
 
     def test_var_excess_return_extreme(self):
         """Test VaR excess return with extreme values."""
-        result = empyrical.var_excess_return(self.extreme_returns)
+        emp = Empyrical()
+        result = emp.var_excess_return(self.extreme_returns)
         # Should capture extreme downside
         assert isinstance(result, (float, np.floating))
 
     def test_var_excess_return_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.var_excess_return(self.empty_returns)
+        emp = Empyrical()
+        result = emp.var_excess_return(self.empty_returns)
         assert np.isnan(result)
 
     # Test regression annual return (RAR)
     def test_regression_annual_return(self):
         """Test regression annual return calculation."""
-        result = empyrical.regression_annual_return(
+        emp = Empyrical()
+        result = emp.regression_annual_return(
             self.multi_year_returns,
             self.multi_year_market
         )
@@ -100,7 +108,8 @@ class TestSpecialIndicators(TestCase):
 
     def test_regression_annual_return_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.regression_annual_return(
+        emp = Empyrical()
+        result = emp.regression_annual_return(
             self.empty_returns,
             self.multi_year_market
         )
@@ -109,7 +118,8 @@ class TestSpecialIndicators(TestCase):
     # Test R-cubed
     def test_r_cubed(self):
         """Test R-cubed calculation."""
-        result = empyrical.r_cubed(
+        emp = Empyrical()
+        result = emp.r_cubed(
             self.multi_year_returns,
             self.multi_year_market
         )
@@ -123,20 +133,23 @@ class TestSpecialIndicators(TestCase):
         """Test R-cubed with perfect fit (returns = market)."""
         returns = self.positive_returns
         market = returns.copy()
-        result = empyrical.r_cubed(returns, market)
+        emp = Empyrical()
+        result = emp.r_cubed(returns, market)
         if not np.isnan(result):
             # Should be close to 1 for perfect fit
             assert result > 0.9, f"Expected R-cubed close to 1, got {result}"
 
     def test_r_cubed_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.r_cubed(self.empty_returns, self.multi_year_market)
+        emp = Empyrical()
+        result = emp.r_cubed(self.empty_returns, self.multi_year_market)
         assert np.isnan(result)
 
     # Test with different cutoffs
     def test_conditional_sharpe_custom_cutoff(self):
         """Test conditional Sharpe with custom cutoff."""
-        result = empyrical.conditional_sharpe_ratio(
+        emp = Empyrical()
+        result = emp.conditional_sharpe_ratio(
             self.normal_returns,
             cutoff=0.01
         )
@@ -144,7 +157,8 @@ class TestSpecialIndicators(TestCase):
 
     def test_var_excess_return_custom_cutoff(self):
         """Test VaR excess return with custom cutoff."""
-        result = empyrical.var_excess_return(
+        emp = Empyrical()
+        result = emp.var_excess_return(
             self.normal_returns,
             cutoff=0.01
         )

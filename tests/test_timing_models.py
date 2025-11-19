@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -45,7 +45,8 @@ class TestTimingModels(TestCase):
     # Test Treynor-Mazuy model
     def test_treynor_mazuy_timing(self):
         """Test Treynor-Mazuy timing coefficient calculation."""
-        result = empyrical.treynor_mazuy_timing(
+        emp = Empyrical()
+        result = emp.treynor_mazuy_timing(
             self.multi_year_returns,
             self.multi_year_market
         )
@@ -54,7 +55,8 @@ class TestTimingModels(TestCase):
 
     def test_treynor_mazuy_timing_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.treynor_mazuy_timing(
+        emp = Empyrical()
+        result = emp.treynor_mazuy_timing(
             self.empty_returns,
             self.multi_year_market
         )
@@ -63,7 +65,8 @@ class TestTimingModels(TestCase):
     def test_treynor_mazuy_timing_values(self):
         """Test Treynor-Mazuy with known timing behavior."""
         # Timing returns should have positive gamma
-        gamma = empyrical.treynor_mazuy_timing(
+        emp = Empyrical()
+        gamma = emp.treynor_mazuy_timing(
             self.timing_returns,
             self.multi_year_market
         )
@@ -73,7 +76,8 @@ class TestTimingModels(TestCase):
     # Test Henriksson-Merton model
     def test_henriksson_merton_timing(self):
         """Test Henriksson-Merton timing coefficient calculation."""
-        result = empyrical.henriksson_merton_timing(
+        emp = Empyrical()
+        result = emp.henriksson_merton_timing(
             self.multi_year_returns,
             self.multi_year_market
         )
@@ -82,7 +86,8 @@ class TestTimingModels(TestCase):
 
     def test_henriksson_merton_timing_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.henriksson_merton_timing(
+        emp = Empyrical()
+        result = emp.henriksson_merton_timing(
             self.empty_returns,
             self.multi_year_market
         )
@@ -91,7 +96,8 @@ class TestTimingModels(TestCase):
     def test_henriksson_merton_timing_values(self):
         """Test Henriksson-Merton with known timing behavior."""
         # Timing returns should have positive timing coefficient
-        timing_coef = empyrical.henriksson_merton_timing(
+        emp = Empyrical()
+        timing_coef = emp.henriksson_merton_timing(
             self.timing_returns,
             self.multi_year_market
         )
@@ -101,7 +107,8 @@ class TestTimingModels(TestCase):
     # Test Cornell-Letang model (if different from H-M)
     def test_market_timing_return(self):
         """Test market timing return calculation."""
-        result = empyrical.market_timing_return(
+        emp = Empyrical()
+        result = emp.market_timing_return(
             self.multi_year_returns,
             self.multi_year_market
         )
@@ -110,7 +117,8 @@ class TestTimingModels(TestCase):
 
     def test_market_timing_return_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.market_timing_return(
+        emp = Empyrical()
+        result = emp.market_timing_return(
             self.empty_returns,
             self.multi_year_market
         )
@@ -119,7 +127,8 @@ class TestTimingModels(TestCase):
     # Test with short series
     def test_treynor_mazuy_short_series(self):
         """Test T-M with short series (should handle gracefully)."""
-        result = empyrical.treynor_mazuy_timing(
+        emp = Empyrical()
+        result = emp.treynor_mazuy_timing(
             self.simple_returns,
             self.simple_market
         )
@@ -128,7 +137,8 @@ class TestTimingModels(TestCase):
 
     def test_henriksson_merton_short_series(self):
         """Test H-M with short series (should handle gracefully)."""
-        result = empyrical.henriksson_merton_timing(
+        emp = Empyrical()
+        result = emp.henriksson_merton_timing(
             self.simple_returns,
             self.simple_market
         )

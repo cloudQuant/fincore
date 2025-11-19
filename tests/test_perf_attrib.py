@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import unittest
-from fincore.empyrical.perf_attrib import perf_attrib
+from fincore.empyrical import Empyrical
 
 
 class PerfAttribTestCase(unittest.TestCase):
@@ -61,12 +61,14 @@ class PerfAttribTestCase(unittest.TestCase):
                   'risk_factor2': [0.25, 0.25]}
         )
 
-        exposures_portfolio, perf_attrib_output = perf_attrib(
-            returns,
-            positions,
-            factor_returns,
-            factor_loadings,
+        emp = Empyrical(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
         )
+
+        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
 
         self.assertTrue(
             expected_perf_attrib_output.round(10).equals(
@@ -77,12 +79,14 @@ class PerfAttribTestCase(unittest.TestCase):
         # test long and short positions
         positions = pd.Series([0.5, -0.5, 0.5, -0.5], index=index)
 
-        exposures_portfolio, perf_attrib_output = perf_attrib(
-            returns,
-            positions,
-            factor_returns,
-            factor_loadings,
+        emp = Empyrical(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
         )
+
+        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
 
         expected_perf_attrib_output = pd.DataFrame(
             index=dts,
@@ -114,12 +118,14 @@ class PerfAttribTestCase(unittest.TestCase):
         # test long and short positions with tilt exposure
         positions = pd.Series([1.0, -0.5, 1.0, -0.5], index=index)
 
-        exposures_portfolio, perf_attrib_output = perf_attrib(
-            returns,
-            positions,
-            factor_returns,
-            factor_loadings,
+        emp = Empyrical(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
         )
+
+        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
 
         expected_perf_attrib_output = pd.DataFrame(
             index=dts,
@@ -197,12 +203,14 @@ class PerfAttribTestCase(unittest.TestCase):
         if intercepts.shape[1] == 1:
             intercepts = intercepts.iloc[:, 0]
 
-        risk_exposures_portfolio, perf_attrib_output = perf_attrib(
-            returns,
-            positions,
-            factor_returns,
-            factor_loadings,
+        emp = Empyrical(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
         )
+
+        risk_exposures_portfolio, perf_attrib_output = emp.perf_attrib()
 
         specific_returns = perf_attrib_output['specific_returns']
         common_returns = perf_attrib_output['common_returns']

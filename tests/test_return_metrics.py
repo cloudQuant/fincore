@@ -8,7 +8,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -40,7 +40,8 @@ class TestReturnMetrics(TestCase):
     # Test annualized cumulative return
     def test_annualized_cumulative_return(self):
         """Test annualized cumulative return calculation."""
-        result = empyrical.annualized_cumulative_return(self.simple_returns)
+        emp = Empyrical()
+        result = emp.annualized_cumulative_return(self.simple_returns)
         # Should return a valid number
         assert isinstance(result, (float, np.floating))
         if not np.isnan(result):
@@ -49,20 +50,23 @@ class TestReturnMetrics(TestCase):
 
     def test_annualized_cumulative_return_negative(self):
         """Test with negative returns."""
-        result = empyrical.annualized_cumulative_return(self.negative_returns)
+        emp = Empyrical()
+        result = emp.annualized_cumulative_return(self.negative_returns)
         if not np.isnan(result):
             # Should be negative for negative returns
             assert result < 0, f"Expected negative return, got {result}"
 
     def test_annualized_cumulative_return_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.annualized_cumulative_return(self.empty_returns)
+        emp = Empyrical()
+        result = emp.annualized_cumulative_return(self.empty_returns)
         assert np.isnan(result)
 
     def test_annualized_cumulative_return_vs_cagr(self):
         """Test relationship with CAGR/annual_return."""
-        ann_cum_ret = empyrical.annualized_cumulative_return(self.multi_year_returns)
-        cagr = empyrical.cagr(self.multi_year_returns)
+        emp = Empyrical()
+        ann_cum_ret = emp.annualized_cumulative_return(self.multi_year_returns)
+        cagr = emp.cagr(self.multi_year_returns)
         # Should be very close
         if not (np.isnan(ann_cum_ret) or np.isnan(cagr)):
             assert_almost_equal(ann_cum_ret, cagr, decimal=4)
@@ -70,7 +74,8 @@ class TestReturnMetrics(TestCase):
     # Test annual active return by year
     def test_annual_active_return_by_year(self):
         """Test annual active return by year."""
-        result = empyrical.annual_active_return_by_year(
+        emp = Empyrical()
+        result = emp.annual_active_return_by_year(
             self.multi_year_returns,
             self.multi_year_benchmark
         )
@@ -83,7 +88,8 @@ class TestReturnMetrics(TestCase):
 
     def test_annual_active_return_by_year_values(self):
         """Test that annual active returns are reasonable."""
-        result = empyrical.annual_active_return_by_year(
+        emp = Empyrical()
+        result = emp.annual_active_return_by_year(
             self.multi_year_returns,
             self.multi_year_benchmark
         )
@@ -93,7 +99,8 @@ class TestReturnMetrics(TestCase):
 
     def test_annual_active_return_by_year_empty(self):
         """Test that empty returns give empty Series."""
-        result = empyrical.annual_active_return_by_year(
+        emp = Empyrical()
+        result = emp.annual_active_return_by_year(
             self.empty_returns,
             self.multi_year_benchmark
         )
@@ -101,13 +108,14 @@ class TestReturnMetrics(TestCase):
 
     def test_annual_active_return_by_year_consistency(self):
         """Test consistency with annual_return_by_year."""
-        active_by_year = empyrical.annual_active_return_by_year(
+        emp = Empyrical()
+        active_by_year = emp.annual_active_return_by_year(
             self.multi_year_returns,
             self.multi_year_benchmark
         )
 
-        strategy_by_year = empyrical.annual_return_by_year(self.multi_year_returns)
-        benchmark_by_year = empyrical.annual_return_by_year(self.multi_year_benchmark)
+        strategy_by_year = emp.annual_return_by_year(self.multi_year_returns)
+        benchmark_by_year = emp.annual_return_by_year(self.multi_year_benchmark)
 
         # For common years, active return should equal strategy - benchmark
         for year in active_by_year.index:
