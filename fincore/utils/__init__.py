@@ -28,7 +28,16 @@ from .data_utils import (
     rolling_window, up, down, roll
 )
 
+def default_returns_func(returns):
+    """
+    Default returns processing function.
+    
+    This is a simple passthrough function that returns the input as-is.
+    It's used by pyfolio for returns processing compatibility.
+    """
+    return returns
+
 __all__ = [
     'nanmean', 'nanstd', 'nansum', 'nanmax', 'nanmin', 'nanargmax', 'nanargmin',
-    'rolling_window', 'up', 'down', 'roll'
+    'rolling_window', 'up', 'down', 'roll', 'default_returns_func'
 ]

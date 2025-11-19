@@ -21,9 +21,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
-from pyfolio.pos import get_percent_alloc
-from pyfolio.txn import get_turnover
-from pyfolio.utils import print_table, configure_legend
+from .pos import get_percent_alloc
+from .txn import get_turnover
+from .utils import print_table, configure_legend
 
 PERF_ATTRIB_TURNOVER_THRESHOLD = 0.25
 

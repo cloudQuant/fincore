@@ -18,7 +18,7 @@ import warnings
 from time import time
 import os
 import shutil
-import pyfolio as pf
+# import pyfolio as pf  # Remove circular import
 from fincore import empyrical as ep
 try:
     from IPython.display import display, Markdown

@@ -156,7 +156,7 @@ class PerfAttribTestCase(unittest.TestCase):
         self.assertTrue(expected_exposures_portfolio.equals(exposures_portfolio))
 
     def test_perf_attrib_regression(self):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         positions = pd.read_csv(os.path.join(current_dir, 'test_data', 'positions.csv'),
                                 index_col=0, parse_dates=True)
 
