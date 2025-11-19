@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -48,7 +48,8 @@ class TestAnnualAlphaBeta(TestCase):
     # Test annual alpha
     def test_annual_alpha(self):
         """Test annual alpha calculation."""
-        result = empyrical.annual_alpha(self.multi_year_returns, self.multi_year_market)
+        emp = Empyrical()
+        result = emp.annual_alpha(self.multi_year_returns, self.multi_year_market)
         # Should return a Series with years as index
         assert isinstance(result, pd.Series)
         assert len(result) > 0
@@ -57,20 +58,23 @@ class TestAnnualAlphaBeta(TestCase):
 
     def test_annual_alpha_short_series(self):
         """Test annual alpha with short series (less than 1 year)."""
-        result = empyrical.annual_alpha(self.short_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.annual_alpha(self.short_returns, self.short_market)
         # Should still work but may have only 1 year
         assert isinstance(result, pd.Series)
 
     def test_annual_alpha_empty(self):
         """Test that empty returns give empty Series."""
-        result = empyrical.annual_alpha(self.empty_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.annual_alpha(self.empty_returns, self.short_market)
         assert isinstance(result, pd.Series)
         assert len(result) == 0
 
     # Test annual beta
     def test_annual_beta(self):
         """Test annual beta calculation."""
-        result = empyrical.annual_beta(self.multi_year_returns, self.multi_year_market)
+        emp = Empyrical()
+        result = emp.annual_beta(self.multi_year_returns, self.multi_year_market)
         # Should return a Series with years as index
         assert isinstance(result, pd.Series)
         assert len(result) > 0
@@ -79,19 +83,22 @@ class TestAnnualAlphaBeta(TestCase):
 
     def test_annual_beta_short_series(self):
         """Test annual beta with short series."""
-        result = empyrical.annual_beta(self.short_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.annual_beta(self.short_returns, self.short_market)
         assert isinstance(result, pd.Series)
 
     def test_annual_beta_empty(self):
         """Test that empty returns give empty Series."""
-        result = empyrical.annual_beta(self.empty_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.annual_beta(self.empty_returns, self.short_market)
         assert isinstance(result, pd.Series)
         assert len(result) == 0
 
     # Test residual risk
     def test_residual_risk(self):
         """Test residual risk calculation."""
-        result = empyrical.residual_risk(self.multi_year_returns, self.multi_year_market)
+        emp = Empyrical()
+        result = emp.residual_risk(self.multi_year_returns, self.multi_year_market)
         # Residual risk should be a positive number
         assert isinstance(result, (float, np.floating))
         if not np.isnan(result):
@@ -101,31 +108,35 @@ class TestAnnualAlphaBeta(TestCase):
         """Test residual risk with perfect correlation (should be low)."""
         returns = self.short_returns
         market = returns.copy()  # Perfect correlation
-        result = empyrical.residual_risk(returns, market)
+        emp = Empyrical()
+        result = emp.residual_risk(returns, market)
         # Should be very small or zero
         if not np.isnan(result):
             assert result < 0.001, f"Expected low residual risk, got {result}"
 
     def test_residual_risk_short_series(self):
         """Test residual risk with short series."""
-        result = empyrical.residual_risk(self.short_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.residual_risk(self.short_returns, self.short_market)
         assert isinstance(result, (float, np.floating))
 
     def test_residual_risk_empty(self):
         """Test that empty returns give NaN."""
-        result = empyrical.residual_risk(self.empty_returns, self.short_market)
+        emp = Empyrical()
+        result = emp.residual_risk(self.empty_returns, self.short_market)
         assert np.isnan(result)
 
     # Integration tests
     def test_annual_metrics_consistency(self):
         """Test that annual alpha and beta are consistent with overall metrics."""
         # Get annual values
-        annual_alphas = empyrical.annual_alpha(self.multi_year_returns, self.multi_year_market)
-        annual_betas = empyrical.annual_beta(self.multi_year_returns, self.multi_year_market)
+        emp = Empyrical()
+        annual_alphas = emp.annual_alpha(self.multi_year_returns, self.multi_year_market)
+        annual_betas = emp.annual_beta(self.multi_year_returns, self.multi_year_market)
 
         # Get overall values
-        overall_alpha = empyrical.alpha(self.multi_year_returns, self.multi_year_market)
-        overall_beta = empyrical.beta(self.multi_year_returns, self.multi_year_market)
+        overall_alpha = emp.alpha(self.multi_year_returns, self.multi_year_market)
+        overall_beta = emp.beta(self.multi_year_returns, self.multi_year_market)
 
         # Annual betas should vary around the overall beta
         if len(annual_betas) > 0 and not np.isnan(overall_beta):

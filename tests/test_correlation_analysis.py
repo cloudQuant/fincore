@@ -8,7 +8,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -45,7 +45,8 @@ class TestCorrelationAnalysis(TestCase):
 
     # Test stock market correlation
     def test_stock_market_correlation(self):
-        result = empyrical.stock_market_correlation(
+        emp = Empyrical()
+        result = emp.stock_market_correlation(
             self.portfolio_returns,
             self.stock_market_returns
         )
@@ -55,7 +56,8 @@ class TestCorrelationAnalysis(TestCase):
 
     def test_stock_market_correlation_perfect(self):
         """Test perfect correlation."""
-        result = empyrical.stock_market_correlation(
+        emp = Empyrical()
+        result = emp.stock_market_correlation(
             self.portfolio_returns,
             self.portfolio_returns
         )
@@ -63,7 +65,8 @@ class TestCorrelationAnalysis(TestCase):
 
     # Test bond market correlation
     def test_bond_market_correlation(self):
-        result = empyrical.bond_market_correlation(
+        emp = Empyrical()
+        result = emp.bond_market_correlation(
             self.portfolio_returns,
             self.bond_market_returns
         )
@@ -73,7 +76,8 @@ class TestCorrelationAnalysis(TestCase):
 
     # Test futures market correlation
     def test_futures_market_correlation(self):
-        result = empyrical.futures_market_correlation(
+        emp = Empyrical()
+        result = emp.futures_market_correlation(
             self.portfolio_returns,
             self.futures_market_returns
         )
@@ -82,20 +86,23 @@ class TestCorrelationAnalysis(TestCase):
 
     # Test serial correlation
     def test_serial_correlation_one_week(self):
-        result = empyrical.serial_correlation(self.autocorr_returns, lag=1)
+        emp = Empyrical()
+        result = emp.serial_correlation(self.autocorr_returns, lag=1)
         # Trending series should have positive autocorrelation
         assert result > 0, f"Expected positive autocorrelation, got {result}"
         assert -1 <= result <= 1, f"Correlation {result} should be between -1 and 1"
 
     def test_serial_correlation_default(self):
         """Test serial correlation with default 1-week lag."""
-        result = empyrical.serial_correlation(self.autocorr_returns)
+        emp = Empyrical()
+        result = emp.serial_correlation(self.autocorr_returns)
         assert -1 <= result <= 1, f"Correlation {result} should be between -1 and 1"
 
     # Test edge cases
     def test_correlation_empty_returns(self):
         """Test that empty returns give NaN."""
-        result = empyrical.stock_market_correlation(
+        emp = Empyrical()
+        result = emp.stock_market_correlation(
             self.empty_returns,
             self.stock_market_returns
         )
@@ -104,7 +111,8 @@ class TestCorrelationAnalysis(TestCase):
     def test_correlation_mismatched_length(self):
         """Test with mismatched length series."""
         short_returns = self.portfolio_returns[:4]
-        result = empyrical.stock_market_correlation(
+        emp = Empyrical()
+        result = emp.stock_market_correlation(
             short_returns,
             self.stock_market_returns
         )
@@ -114,5 +122,6 @@ class TestCorrelationAnalysis(TestCase):
     def test_serial_correlation_insufficient_data(self):
         """Test serial correlation with insufficient data."""
         short_returns = pd.Series([0.01, 0.02], index=pd.date_range('2000-1-1', periods=2, freq='W'))
-        result = empyrical.serial_correlation(short_returns, lag=1)
+        emp = Empyrical()
+        result = emp.serial_correlation(short_returns, lag=1)
         assert np.isnan(result)

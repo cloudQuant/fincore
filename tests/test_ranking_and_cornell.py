@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from unittest import TestCase
 
-from fincore import empyrical
+from fincore.empyrical import Empyrical
 
 DECIMAL_PLACES = 4
 
@@ -38,7 +38,8 @@ class TestRankingAndCornell(TestCase):
     # Test alpha ranking
     def test_alpha_percentile_rank(self):
         """Test alpha percentile ranking among multiple strategies."""
-        result = empyrical.alpha_percentile_rank(
+        emp = Empyrical()
+        result = emp.alpha_percentile_rank(
             self.strategy_returns,
             list(self.all_strategies.values()),
             self.market_returns
@@ -52,7 +53,8 @@ class TestRankingAndCornell(TestCase):
         best_returns = self.market_returns + 0.001
         others = list(self.all_strategies.values())[:5]
 
-        result = empyrical.alpha_percentile_rank(
+        emp = Empyrical()
+        result = emp.alpha_percentile_rank(
             best_returns,
             others,
             self.market_returns
@@ -66,7 +68,8 @@ class TestRankingAndCornell(TestCase):
         worst_returns = self.market_returns - 0.001
         others = list(self.all_strategies.values())[:5]
 
-        result = empyrical.alpha_percentile_rank(
+        emp = Empyrical()
+        result = emp.alpha_percentile_rank(
             worst_returns,
             others,
             self.market_returns
@@ -77,7 +80,8 @@ class TestRankingAndCornell(TestCase):
     def test_alpha_percentile_rank_empty(self):
         """Test that empty returns give NaN."""
         empty_returns = pd.Series([], dtype=float)
-        result = empyrical.alpha_percentile_rank(
+        emp = Empyrical()
+        result = emp.alpha_percentile_rank(
             empty_returns,
             list(self.all_strategies.values()),
             self.market_returns
@@ -87,7 +91,8 @@ class TestRankingAndCornell(TestCase):
     # Test Cornell timing model
     def test_cornell_timing(self):
         """Test Cornell market timing coefficient."""
-        result = empyrical.cornell_timing(
+        emp = Empyrical()
+        result = emp.cornell_timing(
             self.strategy_returns,
             self.market_returns
         )
@@ -97,7 +102,8 @@ class TestRankingAndCornell(TestCase):
     def test_cornell_timing_empty(self):
         """Test that empty returns give NaN."""
         empty_returns = pd.Series([], dtype=float)
-        result = empyrical.cornell_timing(
+        emp = Empyrical()
+        result = emp.cornell_timing(
             empty_returns,
             self.market_returns
         )
@@ -111,6 +117,7 @@ class TestRankingAndCornell(TestCase):
             np.random.randn(500) / 100 + 0.0003 + timing_signal,
             index=pd.date_range('2020-1-1', periods=500, freq='D'))
 
-        gamma = empyrical.cornell_timing(timing_returns, self.market_returns)
+        emp = Empyrical()
+        gamma = emp.cornell_timing(timing_returns, self.market_returns)
         # Should be a valid number
         assert not np.isnan(gamma)
