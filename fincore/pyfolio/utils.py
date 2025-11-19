@@ -33,8 +33,8 @@ except ImportError:
         return string
 from pathlib import Path
 import os
-import pyfolio as pf
 from fincore import empyrical
+from fincore import utils as fincore_utils
 from pandas.testing import assert_frame_equal, assert_series_equal
 from packaging import version
 
@@ -377,7 +377,7 @@ def print_table(table,
     if run_flask_app:
         # 检查pyfolio中是否存在static文件夹,如果存在,就保存数据到static中
         # 获取 pyfolio 的根目录
-        data_root = Path(pf.__file__).parent
+        data_root = Path(__file__).parent
         # 目标静态文件路径
         target_static_path = data_root / "static"
         # 检查目标路径是否存在，如果不存在则创建
@@ -568,7 +568,7 @@ def clip_returns_to_benchmark(rets, benchmark_rets):
     ----------
     rets : pd.Series
         Daily returns of the strategy, noncumulative.
-         - See pf.tears.create_full_tear_sheet for more details
+         - See create_full_tear_sheet for more details
 
     benchmark_rets : pd.Series
         Daily returns of the benchmark, noncumulative.
@@ -654,7 +654,7 @@ def make_timezone_aware(timestamp, target_tz):
 
 # These functions are simply a passthrough to empyrical, but is
 # required by the register_returns_func and get_symbol_rets.
-default_returns_func = empyrical.utils.default_returns_func
+default_returns_func = fincore_utils.default_returns_func
 
 # Settings dict to store functions/values that may
 # need to be overridden depending on the user's environment

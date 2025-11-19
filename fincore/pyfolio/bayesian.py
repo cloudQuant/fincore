@@ -26,7 +26,7 @@ matplotlib.use('Agg')
 import pymc as pm
 
 from . import _seaborn as sns
-from empyrical import cum_returns
+from fincore.empyrical import Empyrical
 
 
 def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
@@ -478,7 +478,7 @@ def compute_consistency_score(returns_test, preds):
         outside of Bayesian cone.)
     """
 
-    returns_test_cum = cum_returns(returns_test, starting_value=1.)
+    returns_test_cum = Empyrical.cal_cum_returns(returns_test, starting_value=1.)
     cum_preds = np.cumprod(preds + 1, 1)
 
     q = [sp.stats.percentileofscore(cum_preds[:, i],
@@ -495,8 +495,8 @@ def _plot_bayes_cone(returns_train, returns_test,
     if ax is None:
         ax = plt.gca()
 
-    returns_train_cum = cum_returns(returns_train, starting_value=1.)
-    returns_test_cum = cum_returns(returns_test,
+    returns_train_cum = Empyrical.cal_cum_returns(returns_train, starting_value=1.)
+    returns_test_cum = Empyrical.cal_cum_returns(returns_test,
                                    starting_value=returns_train_cum.iloc[-1])
 
     perc = compute_bayes_cone(preds, starting_value=returns_train_cum.iloc[-1])

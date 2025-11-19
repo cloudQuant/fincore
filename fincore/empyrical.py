@@ -3816,8 +3816,39 @@ class Empyrical:
         return info
 
 
+# 为了向后兼容，在模块级别提供函数接口
+# 这样pyfolio等代码可以直接使用 empyrical.annual_return() 等函数
+
+# 常用统计函数的模块级别接口
+annual_return = Empyrical.cal_annual_return
+cum_returns_final = Empyrical.cal_cum_returns_final
+annual_volatility = Empyrical.cal_annual_volatility
+sharpe_ratio = Empyrical.cal_sharpe_ratio
+calmar_ratio = Empyrical.cal_calmar_ratio
+stability_of_timeseries = Empyrical.cal_stability_of_timeseries
+max_drawdown = Empyrical.cal_max_drawdown
+omega_ratio = Empyrical.cal_omega_ratio
+sortino_ratio = Empyrical.cal_sortino_ratio
+skewness = Empyrical.cal_skewness
+kurtosis = Empyrical.cal_kurtosis
+down_capture = Empyrical.cal_down_capture
+up_capture = Empyrical.cal_up_capture
+cum_returns = Empyrical.cal_cum_returns
+value_at_risk = Empyrical.cal_value_at_risk
+alpha_beta = Empyrical.cal_alpha_beta
+alpha = Empyrical.cal_alpha
+beta = Empyrical.cal_beta
+treynor_ratio = Empyrical.cal_treynor_ratio
+tail_ratio = Empyrical.cal_tail_ratio
+
 # 导出所有函数和类
 __all__ = [
     # 新的类
     'Empyrical',
+    # 兼容性函数接口
+    'annual_return', 'cum_returns_final', 'annual_volatility', 'sharpe_ratio',
+    'calmar_ratio', 'stability_of_timeseries', 'max_drawdown', 'omega_ratio',
+    'sortino_ratio', 'skewness', 'kurtosis', 'down_capture', 'up_capture',
+    'cum_returns', 'value_at_risk', 'alpha_beta', 'alpha', 'beta', 'treynor_ratio',
+    'tail_ratio'
 ]
