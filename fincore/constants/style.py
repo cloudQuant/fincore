@@ -26,24 +26,24 @@ CAP_BUCKETS = OrderedDict([
 ])
 
 SIMPLE_STAT_FUNCS = [
-    ep.annual_return,
-    ep.cum_returns_final,
-    ep.annual_volatility,
-    ep.sharpe_ratio,
-    ep.calmar_ratio,
-    ep.stability_of_timeseries,
-    ep.max_drawdown,
-    ep.omega_ratio,
-    ep.sortino_ratio,
-    stats.skew,
-    stats.kurtosis,
-    ep.tail_ratio,
-    value_at_risk
+    "annual_return",
+    "cum_returns_final",
+    "annual_volatility",
+    "sharpe_ratio",
+    "calmar_ratio",
+    "stability_of_timeseries",
+    "max_drawdown",
+    "omega_ratio",
+    "sortino_ratio",
+    "stats.skew",
+    "stats.kurtosis",
+    "tail_ratio",
+    "value_at_risk"
 ]
 
 FACTOR_STAT_FUNCS = [
-    ep.alpha,
-    ep.beta,
+    "alpha",
+    "beta",
 ]
 
 STAT_FUNC_NAMES = {
@@ -132,3 +132,5 @@ DURATION_STATS = OrderedDict(
      #  ('Avg # round_trips per month', lambda x: float(len(x)) /
      #   (((x.max() - x.min()).days) / APPROX_BDAYS_PER_MONTH)),
      ])
+
+MM_DISPLAY_UNIT = 1000000.

@@ -1,5 +1,6 @@
 import time
 
+
 def timer(msg_body, previous_time):
     current_time = time.time()
     run_time = current_time - previous_time
