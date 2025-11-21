@@ -28,6 +28,33 @@ except ImportError:
         return string
 
 
+def customize(func):
+    """Decorator to set plotting context and axes style during function call.
+
+    This is primarily intended for methods of classes that implement
+    ``plotting_context`` and ``axes_style`` (for example ``Pyfolio``).
+    It leaves the function behavior unchanged other than temporarily
+    applying those style contexts when ``set_context`` is True.
+    """
+
+    @wraps(func)
+    def call_w_context(*args, **kwargs):
+        set_context = kwargs.pop("set_context", True)
+
+        # If used as a bound method, the first argument should be ``self``.
+        if not set_context:
+            return func(*args, **kwargs)
+
+        if args and hasattr(args[0], "plotting_context") and hasattr(args[0], "axes_style"):
+            self = args[0]
+            with self.plotting_context(), self.axes_style():
+                return func(*args, **kwargs)
+
+        # Fallback: call without any special context if no plotting helpers exist.
+        return func(*args, **kwargs)
+
+    return call_w_context
+
 def analyze_dataframe_differences(daily_txn, expected):
     """
     Analyze the differences between two DataFrames, `daily_txn` and `expected`.

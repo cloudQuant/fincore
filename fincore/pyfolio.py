@@ -33,23 +33,7 @@ with warnings.catch_warnings():
     from seaborn import *  # noqa
 
 from fincore.empyrical import Empyrical
-
-
-def customize(func):
-    """
-    Decorator to set plotting context and axes style during function call.
-    """
-
-    @wraps(func)
-    def call_w_context(*args, **kwargs):
-        set_context = kwargs.pop('set_context', True)
-        if set_context:
-            with plotting_context(), axes_style():
-                return func(*args, **kwargs)
-        else:
-            return func(*args, **kwargs)
-
-    return call_w_context
+from fincore.utils.common_utils import customize
 
 
 class Pyfolio(Empyrical):
@@ -80,12 +64,35 @@ class Pyfolio(Empyrical):
             Factor loadings for all days in the date range.
         ... (其他参数与create_full_tear_sheet保持一致)
         """
-        # 存储核心数据
-        super().__init__(returns, positions, transactions, market_data, benchmark_rets, slippage, live_start_date,
-                         sector_mappings, bayesian, round_trips, estimate_intraday, hide_positions, cone_std, bootstrap,
-                         unadjusted_returns, style_factor_panel, sectors, caps, shares_held, volumes, percentile,
-                         turnover_denom, set_context, factor_returns, factor_loadings, pos_in_dollars, header_rows,
-                         factor_partitions)
+        # 存储核心数据（保持传入参数与属性一一对应）
+        self.returns = returns
+        self.positions = positions
+        self.transactions = transactions
+        self.market_data = market_data
+        self.benchmark_rets = benchmark_rets
+        self.slippage = slippage
+        self.live_start_date = live_start_date
+        self.sector_mappings = sector_mappings
+        self.bayesian = bayesian
+        self.round_trips = round_trips
+        self.estimate_intraday = estimate_intraday
+        self.hide_positions = hide_positions
+        self.cone_std = cone_std
+        self.bootstrap = bootstrap
+        self.unadjusted_returns = unadjusted_returns
+        self.style_factor_panel = style_factor_panel
+        self.sectors = sectors
+        self.caps = caps
+        self.shares_held = shares_held
+        self.volumes = volumes
+        self.percentile = percentile
+        self.turnover_denom = turnover_denom
+        self.set_context = set_context
+        self.factor_returns = factor_returns
+        self.factor_loadings = factor_loadings
+        self.pos_in_dollars = pos_in_dollars
+        self.header_rows = header_rows
+        self.factor_partitions = factor_partitions
 
     def plot_best(self, trace=None, data_train=None, data_test=None,
                   samples=1000, burn=200, axs=None):
@@ -219,9 +226,11 @@ class Pyfolio(Empyrical):
         if ax is None:
             ax = plt.gca()
 
-        returns_train_cum = Empyrical.cal_cum_returns(returns_train, starting_value=1.)
-        returns_test_cum = Empyrical.cal_cum_returns(returns_test,
-                                                     starting_value=returns_train_cum.iloc[-1])
+        returns_train_cum = Empyrical.cum_returns(returns_train, starting_value=1.0)
+        returns_test_cum = Empyrical.cum_returns(
+            returns_test,
+            starting_value=returns_train_cum.iloc[-1],
+        )
 
         perc = self.compute_bayes_cone(preds, starting_value=returns_train_cum.iloc[-1])
         # Add indices
@@ -910,16 +919,18 @@ class Pyfolio(Empyrical):
         if live_start_date is not None:
             live_start_date = get_utc_timestamp(live_start_date)
 
-        self.show_perf_stats(returns,
-                             benchmark_rets,
-                             positions=positions,
-                             transactions=transactions,
-                             turnover_denom=turnover_denom,
-                             live_start_date=live_start_date,
-                             header_rows=header_rows)
+        self.show_perf_stats(
+            returns,
+            benchmark_rets,
+            positions=positions,
+            transactions=transactions,
+            turnover_denom=turnover_denom,
+            live_start_date=live_start_date,
+            header_rows=header_rows,
+        )
 
         fig = plt.figure(figsize=(14, vertical_sections * 6))
-        gs = self.gridspec.GridSpec(vertical_sections, 3, wspace=0.5, hspace=0.5)
+        gs = gridspec.GridSpec(vertical_sections, 3, wspace=0.5, hspace=0.5)
 
         ax_rolling_returns = fig.add_subplot(gs[:2, :])
         i = 2
@@ -1386,15 +1397,18 @@ class Pyfolio(Empyrical):
             If True, returns the figure that was plotted on.
         """
 
-        positions = check_intraday(estimate_intraday, returns,
-                                         positions, transactions)
+        positions = check_intraday(
+            estimate_intraday,
+            returns,
+            positions,
+            transactions,
+        )
 
-        transactions_closed = self.round_trips.add_closing_transactions(positions,
-                                                                   transactions)
+        transactions_closed = Empyrical.add_closing_transactions(positions, transactions)
         # extract_round_trips requires BoD portfolio_value
-        trades = self.round_trips.extract_round_trips(
+        trades = Empyrical.extract_round_trips(
             transactions_closed,
-            portfolio_value=positions.sum(axis='columns') / (1 + returns)
+            portfolio_value=positions.sum(axis='columns') / (1 + returns),
         )
 
         if len(trades) < 5:
@@ -1408,13 +1422,15 @@ class Pyfolio(Empyrical):
         self.show_profit_attribution(trades, run_flask_app=run_flask_app)
 
         if sector_mappings is not None:
-            sector_trades = self.round_trips.apply_sector_mappings_to_round_trips(
-                trades, sector_mappings)
+            sector_trades = Empyrical.apply_sector_mappings_to_round_trips(
+                trades,
+                sector_mappings,
+            )
             self.show_profit_attribution(sector_trades, run_flask_app=run_flask_app)
 
         fig = plt.figure(figsize=(14, 3 * 6))
 
-        gs = self.gridspec.GridSpec(3, 2, wspace=0.5, hspace=0.5)
+        gs = gridspec.GridSpec(3, 2, wspace=0.5, hspace=0.5)
 
         ax_trade_lifetimes = fig.add_subplot(gs[0, :])
         ax_prob_profit_trade = fig.add_subplot(gs[1, 0])
@@ -2068,8 +2084,10 @@ class Pyfolio(Empyrical):
         gs = gridspec.GridSpec(vertical_sections, 1,
                                wspace=0.5, hspace=0.5)
 
-        self.plot_returns(perf_attrib_data,
-                                 ax=fig.add_subplot(gs[current_section]))
+        self.plot_perf_attrib_returns(
+            perf_attrib_data,
+            ax=fig.add_subplot(gs[current_section]),
+        )
         current_section += 1
 
         if factor_partitions is not None:
@@ -2771,7 +2789,7 @@ class Pyfolio(Empyrical):
                              cone_std=None,
                              legend_loc='best',
                              volatility_match=False,
-                             cone_function= "forecast_cone_bootstrap",
+                             cone_function=Empyrical.forecast_cone_bootstrap,
                              ax=None, **kwargs):
         """
         Plots cumulative rolling returns versus some benchmarks'.
@@ -4173,7 +4191,7 @@ class Pyfolio(Empyrical):
             },
         )
 
-    def plot_returns(self, perf_attrib_data, cost=None, ax=None):
+    def plot_perf_attrib_returns(self, perf_attrib_data, cost=None, ax=None):
         """
         Plot total, specific, and common returns.
 

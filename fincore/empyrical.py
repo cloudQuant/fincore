@@ -93,7 +93,27 @@ class Empyrical:
     # ================================
     @staticmethod
     def _ensure_datetime_index_series(data, period=DAILY):
-        """Return a Series indexed by dates regardless of the input type."""
+        """Return a Series indexed by dates regardless of the input type.
+
+        If the input is already a datetime-indexed Series, it is returned
+        as-is. Otherwise, a synthetic datetime index is generated based on
+        the specified ``period``.
+
+        Parameters
+        ----------
+        data : array-like or pd.Series
+            Input data to be converted.
+        period : str, optional
+            Frequency of the data (for example ``DAILY``, ``WEEKLY``). Used
+            to generate the synthetic datetime index when needed. Default is
+            ``DAILY``.
+
+        Returns
+        -------
+        pd.Series
+            Series with a ``DatetimeIndex``. If the input is empty, an empty
+            Series is returned.
+        """
         if isinstance(data, pd.Series) and isinstance(data.index, pd.DatetimeIndex):
             return data
 
@@ -108,18 +128,76 @@ class Empyrical:
 
     @staticmethod
     def _flatten(arr):
+        """Flatten a pandas Series to a NumPy array.
+
+        Parameters
+        ----------
+        arr : array-like or pd.Series
+            Input array or Series.
+
+        Returns
+        -------
+        np.ndarray or original type
+            If the input is a Series, returns its underlying values as a
+            NumPy array; otherwise returns the input unchanged.
+        """
         return arr if not isinstance(arr, pd.Series) else arr.values
 
     @staticmethod
     def _adjust_returns(returns, adjustment_factor):
-        """Returns the `returns` series adjusted by adjustment_factor."""
+        """Adjust returns by subtracting an adjustment factor.
+
+        This is a convenience helper for computing excess returns or active
+        returns. If the adjustment factor is zero, the original returns are
+        returned unchanged.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative returns.
+        adjustment_factor : float or array-like or pd.Series or pd.DataFrame
+            Value(s) to subtract from ``returns``. Can be a scalar (for
+            example a risk-free rate) or an array-like of the same shape as
+            ``returns`` (for example benchmark returns).
+
+        Returns
+        -------
+        array-like or pd.Series or pd.DataFrame
+            Adjusted returns ``returns - adjustment_factor``, or the original
+            ``returns`` if ``adjustment_factor`` is zero.
+        """
         if isinstance(adjustment_factor, (float, int)) and adjustment_factor == 0:
             return returns
         return returns - adjustment_factor
 
     @staticmethod
     def annualization_factor(period, annualization):
-        """Return annualization factor from the period entered or if a custom value is passed in."""
+        """Return the annualization factor for a given period.
+
+        If a custom ``annualization`` value is provided, it is returned
+        directly. Otherwise, the factor is looked up from a predefined
+        mapping based on ``period``.
+
+        Parameters
+        ----------
+        period : str
+            Frequency of the data (for example ``DAILY``, ``WEEKLY``,
+            ``MONTHLY``, ``YEARLY``).
+        annualization : float or None
+            Custom annualization factor. If provided (not ``None``), this
+            value is returned directly.
+
+        Returns
+        -------
+        float
+            Annualization factor corresponding to ``period`` or the custom
+            value if provided.
+
+        Raises
+        ------
+        ValueError
+            If ``period`` is not recognized and ``annualization`` is ``None``.
+        """
         if annualization is None:
             try:
                 factor = ANNUALIZATION_FACTORS[period]
@@ -136,7 +214,25 @@ class Empyrical:
 
     @staticmethod
     def _to_pandas(ob):
-        """Convert an array-like to a `pandas` object."""
+        """Convert an array-like to a pandas object.
+
+        Parameters
+        ----------
+        ob : np.ndarray or pd.Series or pd.DataFrame
+            Input array or pandas object.
+
+        Returns
+        -------
+        pd.Series or pd.DataFrame
+            If the input is already a pandas object, it is returned as-is.
+            Otherwise, 1D arrays are converted to Series and 2D arrays to
+            DataFrame.
+
+        Raises
+        ------
+        ValueError
+            If the input has more than two dimensions.
+        """
         if isinstance(ob, (pd.Series, pd.DataFrame)):
             return ob
 
@@ -151,7 +247,24 @@ class Empyrical:
 
     @staticmethod
     def _aligned_series(*many_series):
-        """Return a new list of series with their indices aligned."""
+        """Return a new tuple of series with their indices aligned.
+
+        This helper aligns multiple return series by their common index,
+        dropping observations that are not present in all series. If all
+        inputs are NumPy arrays of the same length, they are assumed to be
+        already aligned and returned unchanged.
+
+        Parameters
+        ----------
+        *many_series : sequence of array-like or pd.Series or pd.DataFrame
+            Two or more return series to align.
+
+        Returns
+        -------
+        tuple of pd.Series or pd.DataFrame
+            Aligned series with a common index. If the inputs were NumPy
+            arrays of the same length, they are returned unchanged.
+        """
         head = many_series[0]
         tail = many_series[1:]
         n = len(head)
@@ -171,7 +284,20 @@ class Empyrical:
 
     @classmethod
     def simple_returns(cls, prices):
-        """Compute simple returns from a timeseries of prices."""
+        """Compute simple returns from a time series of prices.
+
+        Parameters
+        ----------
+        prices : array-like or pd.Series or pd.DataFrame
+            Time series of prices.
+
+        Returns
+        -------
+        array-like or pd.Series or pd.DataFrame
+            Simple returns computed as ``(price[t] - price[t-1]) / price[t-1]``.
+            The first observation is dropped. For pandas inputs, the index is
+            preserved (excluding the first element).
+        """
         if isinstance(prices, (pd.DataFrame, pd.Series)):
             out = prices.pct_change().iloc[1:]
         else:
@@ -185,7 +311,29 @@ class Empyrical:
 
     @classmethod
     def cum_returns(cls, returns, starting_value=0, out=None):
-        """Compute cumulative returns from simple returns."""
+        """Compute cumulative returns from simple returns.
+
+        This compounds the input returns and optionally scales by an initial
+        ``starting_value``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        starting_value : float, optional
+            Initial portfolio value. If ``0`` (default), the result is
+            returned as a pure cumulative return. Otherwise the result is
+            scaled so that ``starting_value * cumprod(1 + returns)`` is
+            returned.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        array-like or pd.Series or pd.DataFrame
+            Cumulative returns. The type mirrors the input type.
+        """
         if len(returns) < 1:
             return returns.copy()
 
@@ -220,7 +368,28 @@ class Empyrical:
 
     @classmethod
     def cum_returns_final(cls, returns, starting_value=0):
-        """Compute total returns from simple returns."""
+        """Compute total cumulative return from a series of simple returns.
+
+        This computes the cumulative return by compounding simple period
+        returns and optionally scaling by an initial ``starting_value``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns. For a DataFrame, the computation is
+            performed column-wise.
+        starting_value : float, optional
+            Initial portfolio value. If ``0`` (default), the result is
+            returned as a pure return (ending_value - 1). Otherwise the result
+            is scaled so that ``starting_value * cumprod(1 + returns)`` is
+            returned.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series or pd.DataFrame
+            Final cumulative return (or value, depending on
+            ``starting_value``). The type mirrors the input type.
+        """
         if len(returns) == 0:
             return np.nan
 
@@ -238,7 +407,27 @@ class Empyrical:
 
     @classmethod
     def aggregate_returns(cls, returns, convert_to="monthly"):
-        """Aggregates returns by week, month, or year."""
+        """Aggregate returns to a coarser frequency (week, month, quarter, year).
+
+        The function groups the input return series by calendar period and
+        compounds the returns within each group using
+        :meth:`Empyrical.cum_returns`.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative returns with a ``DatetimeIndex``.
+        convert_to : {"weekly", "monthly", "quarterly", "yearly"}, optional
+            Target aggregation frequency. Case-insensitive. Default is
+            ``"monthly"``.
+
+        Returns
+        -------
+        pd.Series
+            Aggregated returns at the requested frequency, indexed by
+            (year, period) where period is week number, month, quarter, or
+            year depending on ``convert_to``.
+        """
 
         def cumulate_returns(x):
             return cls.cum_returns(x).iloc[-1]
@@ -260,7 +449,25 @@ class Empyrical:
 
     @classmethod
     def max_drawdown(cls, returns, out=None):
-        """Determines the maximum drawdown of a strategy."""
+        """Determine the maximum drawdown of a return series.
+
+        Maximum drawdown is defined as the minimum (most negative) percentage
+        drop from a running maximum of cumulative returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If provided, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Maximum drawdown. For 1D input a scalar is returned; for 2D input
+            one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -294,7 +501,28 @@ class Empyrical:
 
     @classmethod
     def annual_return(cls, returns, period=DAILY, annualization=None):
-        """Determines the mean annual growth rate of returns."""
+        """Determine the mean annual growth rate of returns (CAGR).
+
+        This is effectively the compound annual growth rate assuming
+        reinvestment of returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized return. For 1D input a scalar is returned; for 2D input
+            one value is returned per column.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -307,14 +535,62 @@ class Empyrical:
 
     @classmethod
     def cagr(cls, returns, period=DAILY, annualization=None):
-        """Compute compound annual growth rate."""
+        """Compute compound annual growth rate (CAGR).
+
+        This is a thin wrapper around :meth:`Empyrical.annual_return` kept for
+        API compatibility with the original empyrical implementation.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Compound annual growth rate, matching
+            :meth:`Empyrical.annual_return`.
+        """
         return cls.annual_return(returns, period, annualization)
 
     @classmethod
     def annual_volatility(
         cls, returns, period=DAILY, alpha_=2.0, annualization=None, out=None
     ):
-        """Determines the annual volatility of a strategy."""
+        """Determine the annualized volatility of a return series.
+
+        Volatility is computed as the standard deviation of returns scaled by
+        an annualization factor based on ``period`` or ``annualization``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        alpha_ : float, optional
+            Power used when scaling volatility (for example 2.0 for variance,
+            1.0 for standard deviation). Defaults to 2.0 to match the
+            original empyrical implementation.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If provided, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized volatility. For 1D input a scalar is returned; for 2D
+            input one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -336,7 +612,28 @@ class Empyrical:
 
     @classmethod
     def calmar_ratio(cls, returns, period=DAILY, annualization=None):
-        """Determines the Calmar ratio, or drawdown ratio, of a strategy."""
+        """Determine the Calmar ratio (return-to-drawdown ratio).
+
+        The Calmar ratio is defined as the annualized return divided by the
+        absolute value of the maximum drawdown.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Calmar ratio of the return series. Returns ``NaN`` if maximum
+            drawdown is non-negative or infinite.
+        """
         max_dd = cls.max_drawdown(returns=returns)
         if max_dd < 0:
             temp = cls.annual_return(
@@ -358,7 +655,30 @@ class Empyrical:
         required_return=0.0,
         annualization=APPROX_BDAYS_PER_YEAR,
     ):
-        """Determines the Omega ratio of a strategy."""
+        """Determine the Omega ratio of a strategy.
+
+        The Omega ratio is the probability-weighted ratio of gains over
+        losses above/below a required return threshold.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative simple returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        required_return : float, optional
+            Minimum acceptable return threshold. Default is 0.0.
+        annualization : float, optional
+            Number of periods per year used when interpreting
+            ``required_return`` as an annual rate (for example trading days
+            per year). Default is ``APPROX_BDAYS_PER_YEAR``.
+
+        Returns
+        -------
+        float
+            Omega ratio of the strategy. Returns ``NaN`` if there are fewer
+            than two observations or if the downside component is zero.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -383,7 +703,33 @@ class Empyrical:
     def sharpe_ratio(
         cls, returns, risk_free=0, period=DAILY, annualization=None, out=None
     ):
-        """Determines the Sharpe ratio of a strategy."""
+        """Determine the annualized Sharpe ratio of a strategy.
+
+        The Sharpe ratio is defined as the annualized mean excess return
+        divided by the annualized standard deviation of returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative simple returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If provided, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized Sharpe ratio. For 1D input a scalar is returned; for 2D
+            input one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -430,7 +776,38 @@ class Empyrical:
         annualization=None,
         out=None,
     ):
-        """Calculates annualized alpha and beta."""
+        """Calculate annualized alpha and beta versus a benchmark.
+
+        This is a convenience wrapper that aligns ``returns`` and
+        ``factor_returns`` (if they are not already NumPy arrays) and then
+        delegates to :meth:`Empyrical.alpha_beta_aligned`.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns, aligned to
+            ``returns`` after preprocessing.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape ``(..., 2)`` containing annualized alpha and beta
+            in the last dimension. For 1D inputs this is length-2; for 2D
+            inputs it has one row per column of ``returns``.
+        """
         # Match original empyrical.stats.alpha_beta behaviour: align series
         # first, then delegate to the aligned implementation.
         if not (
@@ -458,10 +835,39 @@ class Empyrical:
         out=None,
         _beta=None,
     ):
-        """Calculates annualized alpha.
+        """Calculate annualized alpha versus a benchmark.
 
-        This mirrors empyrical.stats.alpha, which internally calls
-        alpha_aligned after aligning non-ndarray inputs.
+        This mirrors ``empyrical.stats.alpha``: non-ndarray inputs are first
+        aligned, then :meth:`Empyrical.alpha_aligned` is called to compute the
+        annualized alpha.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+        _beta : float or np.ndarray, optional
+            Optional pre-computed beta used to avoid recomputing beta
+            internally. Primarily intended for internal reuse.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized alpha of the strategy versus the benchmark. For 1D
+            input a scalar is returned; for 2D input one value is returned
+            per column.
         """
         if not (
             isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)
@@ -488,10 +894,35 @@ class Empyrical:
         annualization=None,
         out=None,
     ):
-        """Calculates beta.
+        """Calculate beta versus a benchmark.
 
-        This mirrors empyrical.stats.beta, which forwards to beta_aligned
-        after aligning non-ndarray inputs.
+        This mirrors ``empyrical.stats.beta``: non-ndarray inputs are first
+        aligned, then :meth:`Empyrical.beta_aligned` is called to compute the
+        beta.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Currently
+            unused here but kept for API compatibility.
+        annualization : float, optional
+            Optional annualization factor. Present for API compatibility; the
+            beta estimate itself is not annualized.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Beta of the strategy versus the benchmark. For 1D input a scalar
+            is returned; for 2D input one value is returned per column.
         """
         if not (
             isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)
@@ -515,7 +946,39 @@ class Empyrical:
         annualization=None,
         out=None,
     ):
-        """Calculates annualized alpha and beta for already-aligned series."""
+        """Calculate annualized alpha and beta for already-aligned series.
+
+        This function assumes that ``returns`` and ``factor_returns`` are
+        already aligned NumPy arrays (or array-like) with matching shapes
+        along the time dimension.
+
+        Parameters
+        ----------
+        returns : np.ndarray
+            Array of non-cumulative strategy returns. The first dimension is
+            interpreted as time; any remaining dimensions correspond to
+            different assets/strategies.
+        factor_returns : np.ndarray
+            Array of non-cumulative benchmark or factor returns, aligned with
+            ``returns`` along the time dimension.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array of shape ``returns.shape[1:] +
+            (2,)``. If given, the result is written in-place into this array.
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape ``returns.shape[1:] + (2,)`` whose last dimension
+            contains ``[alpha, beta]``.
+        """
         if out is None:
             out = np.empty(returns.shape[1:] + (2,), dtype="float64")
 
@@ -543,7 +1006,43 @@ class Empyrical:
         out=None,
         _beta=None,
     ):
-        """Calculates annualized alpha for already-aligned series."""
+        """Calculate annualized alpha for already-aligned series.
+
+        This function assumes that ``returns`` and ``factor_returns`` are
+        already aligned NumPy arrays (or array-like) with matching shapes
+        along the time dimension.
+
+        Parameters
+        ----------
+        returns : np.ndarray
+            Array of non-cumulative strategy returns. The first dimension is
+            interpreted as time; any remaining dimensions correspond to
+            different assets/strategies.
+        factor_returns : np.ndarray
+            Array of non-cumulative benchmark or factor returns, aligned with
+            ``returns`` along the time dimension.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+        _beta : float or np.ndarray, optional
+            Optional pre-computed beta used to avoid recomputing beta
+            internally.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized alpha of the strategy versus the benchmark. For 1D
+            input a scalar is returned; for higher-dimensional input one value
+            is returned per series.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:], dtype="float64")
@@ -588,7 +1087,34 @@ class Empyrical:
 
     @classmethod
     def beta_aligned(cls, returns, factor_returns, risk_free=0.0, out=None):
-        """Calculates beta for already-aligned data (equivalent to beta_aligned)."""
+        """Calculate beta for already-aligned data.
+
+        This function assumes that ``returns`` and ``factor_returns`` are
+        already aligned NumPy arrays (or array-like) with matching shapes
+        along the time dimension. Beta is estimated using the covariance of
+        excess returns divided by the variance of excess factor returns.
+
+        Parameters
+        ----------
+        returns : np.ndarray
+            Array of non-cumulative strategy returns. The first dimension is
+            interpreted as time; any remaining dimensions correspond to
+            different assets/strategies.
+        factor_returns : np.ndarray
+            Array of non-cumulative benchmark or factor returns, aligned with
+            ``returns`` along the time dimension.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray
+            Beta of the strategy versus the benchmark. For 1D input a scalar
+            is returned; for 2D input one value is returned per column.
+        """
         nanmean_local = np.nanmean
         nan = np.nan
         isnan = np.isnan
@@ -647,7 +1173,38 @@ class Empyrical:
         out=None,
         _downside_risk=None,
     ):
-        """Determines the Sortino ratio of a strategy."""
+        """Determine the Sortino ratio of a strategy.
+
+        The Sortino ratio is defined as the annualized excess return divided
+        by the annualized downside risk. Only returns falling below
+        ``required_return`` contribute to the downside risk term.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        required_return : float, optional
+            Minimum acceptable return used as the threshold when computing
+            downside risk. Default is 0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+        _downside_risk : float or np.ndarray, optional
+            Optional pre-computed annualized downside risk. If provided, this
+            value is reused instead of recomputing downside risk.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Sortino ratio of the strategy. For 1D input a scalar is
+            returned; for 2D input one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -675,16 +1232,50 @@ class Empyrical:
             np.divide(average_annual_return, annualized_downside_risk, out=out)
         if return_1d:
             out = out.item()
-        elif isinstance(returns, pd.DataFrame):
+        elif allocated_output and isinstance(returns, pd.DataFrame):
             out = pd.Series(out)
-
         return out
 
     @classmethod
     def downside_risk(
         cls, returns, required_return=0, period=DAILY, annualization=None, out=None
     ):
-        """Determines the downside deviation below a threshold."""
+        """Determine the annualized downside deviation below a threshold.
+
+        This computes the downside deviation of a return series relative to a
+        required return (minimum acceptable return). Only observations below
+        the threshold contribute to the deviation, and the result is
+        annualized using the given ``period`` or a custom ``annualization``
+        factor.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative returns of the asset or strategy. Can be a 1D
+            array/Series or a 2D array/DataFrame with columns representing
+            different assets.
+        required_return : float or array-like, optional
+            Minimum acceptable return. Returns greater than this value are
+            truncated to the threshold when computing downside deviation.
+            Default is 0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``, ``WEEKLY``).
+            Used to infer the annualization factor when ``annualization`` is
+            ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized downside deviation. For 1D input a scalar is returned;
+            for 2D input one value is returned per column (for example, a
+            Series for a DataFrame input).
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -721,7 +1312,29 @@ class Empyrical:
 
     @classmethod
     def excess_sharpe(cls, returns, factor_returns, out=None):
-        """Determines the Excess Sharpe of a strategy."""
+        """Determine the excess Sharpe ratio of a strategy.
+
+        The excess Sharpe ratio is defined as the mean active return divided
+        by the tracking error, where active return is the difference between
+        the strategy returns and the benchmark (factor) returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns, aligned to
+            ``returns``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Excess Sharpe ratio. For 1D input a scalar is returned; for 2D
+            input one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -752,7 +1365,35 @@ class Empyrical:
     def tracking_error(
         cls, returns, factor_returns, period=DAILY, annualization=None, out=None
     ):
-        """Determines the tracking error of returns relative to factor returns."""
+        """Determine the annualized tracking error versus a benchmark.
+
+        Tracking error is defined as the standard deviation of the active
+        return (strategy minus benchmark) and is annualized using the
+        specified ``period`` or custom ``annualization`` factor.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns, aligned to
+            ``returns``.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated output array. If given, the result is
+            written in-place into this array.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized tracking error of active returns. For 1D input a scalar
+            is returned; for 2D input one value is returned per column.
+        """
         allocated_output = out is None
         if allocated_output:
             out = np.empty(returns.shape[1:])
@@ -782,7 +1423,30 @@ class Empyrical:
     def information_ratio(
         cls, returns, factor_returns, period=DAILY, annualization=None
     ):
-        """Determines the information ratio of returns relative to factor returns."""
+        """Determine the information ratio versus a benchmark.
+
+        The information ratio is defined as the annualized mean active return
+        divided by the annualized tracking error of the active returns.
+
+        Parameters
+        ----------
+        returns : pd.Series or pd.DataFrame
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series or pd.DataFrame
+            Non-cumulative benchmark or factor returns, aligned to
+            ``returns``.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            infer the annualization factor when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or pd.Series
+            Information ratio of the strategy versus the benchmark.
+        """
         returns, factor_returns = cls._aligned_series(returns, factor_returns)
         super_returns = returns - factor_returns
 
@@ -796,7 +1460,25 @@ class Empyrical:
 
     @classmethod
     def value_at_risk(cls, returns, cutoff=0.05):
-        """Calculates the daily value at risk (VaR) of returns."""
+        """Calculate the (historical) value at risk (VaR) of returns.
+
+        This computes a historical VaR at the given cutoff level using the
+        empirical percentile of the return distribution.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Series of non-cumulative returns.
+        cutoff : float, optional
+            Left-tail probability level in (0, 1). For example, ``0.05``
+            corresponds to the 5th percentile. Default is 0.05.
+
+        Returns
+        -------
+        float
+            Value at risk at the given cutoff level. Returns ``NaN`` if there
+            are no observations.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -804,7 +1486,25 @@ class Empyrical:
 
     @classmethod
     def conditional_value_at_risk(cls, returns, cutoff=0.05):
-        """Calculates the conditional value at risk (CVaR) of returns."""
+        """Calculate the conditional value at risk (CVaR) of returns.
+
+        CVaR (also called expected shortfall) is defined as the average of
+        returns that are less than or equal to the VaR at the given cutoff.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Series of non-cumulative returns.
+        cutoff : float, optional
+            Left-tail probability level used to determine the VaR threshold.
+            Default is 0.05.
+
+        Returns
+        -------
+        float
+            Conditional value at risk at the given cutoff level. Returns
+            ``NaN`` if there are no observations.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -813,7 +1513,23 @@ class Empyrical:
 
     @classmethod
     def tail_ratio(cls, returns):
-        """Determines the ratio between the right (95th) and left (5th) percentile of the returns."""
+        """Determine the ratio of right- to left-tail percentiles of returns.
+
+        The tail ratio is defined as ``|p95| / |p5|``, where ``p95`` and ``p5``
+        are the 95th and 5th percentiles of the (non-cumulative) return
+        distribution, respectively.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Series of non-cumulative returns.
+
+        Returns
+        -------
+        float
+            Tail ratio of the return distribution. Returns ``NaN`` if there
+            are fewer than one non-NaN observations.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -827,7 +1543,23 @@ class Empyrical:
 
     @classmethod
     def stability_of_timeseries(cls, returns):
-        """Determines R-squared of a linear fit to the cumulative log returns."""
+        """Determine the R-squared of a linear fit to cumulative log returns.
+
+        This computes the coefficient of determination (R²) from a linear
+        regression of the cumulative log returns against time. Higher values
+        indicate a more stable (less noisy) growth profile.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Series of non-cumulative returns.
+
+        Returns
+        -------
+        float
+            R-squared of the linear fit to cumulative log returns. Returns
+            ``NaN`` if there are fewer than two valid observations.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -844,7 +1576,28 @@ class Empyrical:
 
     @classmethod
     def capture(cls, returns, factor_returns, period=DAILY):
-        """Calculates the capture ratio."""
+        """Calculate the capture ratio versus a benchmark.
+
+        The capture ratio is defined as the strategy's annualized return
+        divided by the benchmark's annualized return over the same period.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series
+            Non-cumulative benchmark or factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize both strategy and benchmark returns.
+
+        Returns
+        -------
+        float
+            Capture ratio (strategy annualized return divided by benchmark
+            annualized return). Returns ``NaN`` if there are insufficient
+            observations or the benchmark annualized return is zero.
+        """
         if len(returns) < 1 or len(factor_returns) < 1:
             return np.nan
 
@@ -858,7 +1611,26 @@ class Empyrical:
 
     @classmethod
     def up_capture(cls, returns, factor_returns, period=DAILY):
-        """Calculates the capture ratio for periods when the benchmark return is positive."""
+        """Calculate the capture ratio for up-market periods.
+
+        The up-capture ratio is defined as the capture ratio computed using
+        only those periods where the benchmark (factor) return is positive.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series
+            Non-cumulative benchmark or factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+
+        Returns
+        -------
+        float
+            Up-capture ratio of the strategy relative to the benchmark.
+            Returns ``NaN`` if there are no positive benchmark periods.
+        """
         returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         up_returns = returns[factor_returns > 0]
@@ -871,7 +1643,26 @@ class Empyrical:
 
     @classmethod
     def down_capture(cls, returns, factor_returns, period=DAILY):
-        """Calculates the capture ratio for periods when the benchmark return is negative."""
+        """Calculate the capture ratio for down-market periods.
+
+        The down-capture ratio is defined as the capture ratio computed using
+        only those periods where the benchmark (factor) return is negative.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series
+            Non-cumulative benchmark or factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+
+        Returns
+        -------
+        float
+            Down-capture ratio of the strategy relative to the benchmark.
+            Returns ``NaN`` if there are no negative benchmark periods.
+        """
         returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         down_returns = returns[factor_returns < 0]
@@ -884,10 +1675,25 @@ class Empyrical:
 
     @classmethod
     def up_down_capture(cls, returns, factor_returns, period=DAILY):
-        """Calculates the ratio of up capture to down capture.
-        
-        Returns up_capture / down_capture as a single value.
-        When down_capture is 0 or both are nan, returns nan.
+        """Calculate the ratio of up-capture to down-capture.
+
+        This computes ``up_capture / down_capture`` using
+        :func:`Empyrical.up_capture` and :func:`Empyrical.down_capture`.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series
+            Non-cumulative benchmark or factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+
+        Returns
+        -------
+        float
+            Ratio of up-capture to down-capture. Returns ``NaN`` if either
+            capture is ``NaN`` or if the down-capture is zero.
         """
         up_cap = cls.up_capture(returns, factor_returns, period=period)
         down_cap = cls.down_capture(returns, factor_returns, period=period)
@@ -976,7 +1782,40 @@ class Empyrical:
     def cal_treynor_ratio(
         cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """Calculates the Treynor ratio."""
+        """Calculate the Treynor ratio of a strategy.
+
+        The Treynor ratio is defined as the strategy's annualized excess
+        return divided by its beta with respect to a benchmark:
+
+        .. math::
+
+            T = \frac{R_p - R_f}{\beta_p}
+
+        where :math:`R_p` is the annualized portfolio return, :math:`R_f` is
+        the risk-free rate, and :math:`\beta_p` is the portfolio beta.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series or np.ndarray
+            Non-cumulative benchmark or factor returns used to estimate beta.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Treynor ratio. For 1D input a scalar is returned; for 2D input one
+            value is returned per column. Returns ``NaN`` when beta is zero,
+            negative, or ``NaN``.
+        """
         allocated_output = True
         out = np.empty(returns.shape[1:])
 
@@ -1033,7 +1872,34 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates the Treynor ratio."""
+        """Convenience wrapper to compute the Treynor ratio.
+
+        This helper fetches the stored ``returns`` and ``factor_returns`` (if
+        necessary) and then calls :meth:`Empyrical.cal_treynor_ratio`.
+
+        Parameters
+        ----------
+        returns : pd.Series or None, optional
+            Non-cumulative strategy returns. If ``None``, the method will use
+            internally stored returns (if available).
+        factor_returns : pd.Series or None, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method will use internally stored factor returns (if available).
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Treynor ratio as computed by
+            :meth:`Empyrical.cal_treynor_ratio`.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
         return cls.cal_treynor_ratio(
@@ -1044,7 +1910,42 @@ class Empyrical:
     def m_squared(
         cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """Calculates the M-squared (M²) measure."""
+        """Calculate the ModiglianiModigliani (Mb2) measure.
+
+        The Mb2 measure scales the portfolio's risk-adjusted performance to
+        the benchmark's volatility. It is defined as:
+
+        .. math::
+
+            M^2 = (R_p - R_f) \frac{\sigma_b}{\sigma_p} + R_f
+
+        where :math:`R_p` and :math:`R_f` are the annualized portfolio and
+        risk-free returns, and :math:`\sigma_p` and :math:`\sigma_b` are the
+        annualized volatilities of the portfolio and benchmark, respectively.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray
+            Non-cumulative strategy returns.
+        factor_returns : pd.Series or np.ndarray
+            Non-cumulative benchmark or factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns and volatilities when ``annualization`` is
+            ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Mb2 value of the strategy relative to the benchmark. Returns
+            ``NaN`` if the portfolio volatility is zero, negative, or
+            ``NaN``.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -1075,7 +1976,31 @@ class Empyrical:
 
     @classmethod
     def annual_return_by_year(cls, returns, period=DAILY, annualization=None):
-        """Determines the annual return for each year."""
+        """Determine the annual return for each calendar year.
+
+        This groups the input returns by calendar year and computes the
+        annualized return for each year using :meth:`Empyrical.annual_return`.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray
+            Non-cumulative strategy returns. If an array is passed, it is
+            interpreted as a daily series and converted to a Series with a
+            datetime index using :meth:`Empyrical._ensure_datetime_index_series`.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used for
+            annualization when computing yearly returns.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series or np.ndarray
+            Yearly annualized returns indexed by year. If the input was a
+            NumPy array, the result is returned as an array of yearly
+            returns; otherwise a Series indexed by year is returned.
+        """
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
             return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -1095,7 +2020,33 @@ class Empyrical:
     def sharpe_ratio_by_year(
         cls, returns, risk_free=0, period=DAILY, annualization=None
     ):
-        """Determines the Sharpe ratio for each year."""
+        """Determine the Sharpe ratio for each calendar year.
+
+        This groups the input returns by calendar year and computes the
+        Sharpe ratio for each year using :meth:`Empyrical.sharpe_ratio`.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray
+            Non-cumulative strategy returns. If an array is passed, it is
+            interpreted as a daily series and converted to a Series with a
+            datetime index using :meth:`Empyrical._ensure_datetime_index_series`.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize the Sharpe ratio when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series or np.ndarray
+            Yearly Sharpe ratios indexed by year. If the input was a NumPy
+            array, the result is returned as an array of yearly Sharpe
+            ratios; otherwise a Series indexed by year is returned.
+        """
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
             return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -1114,7 +2065,25 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_by_year(cls, returns):
-        """Determines the maximum drawdown for each year."""
+        """Determine the maximum drawdown for each calendar year.
+
+        This groups the input returns by calendar year and computes
+        :meth:`Empyrical.max_drawdown` for each year's sub-series.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray
+            Non-cumulative strategy returns. If an array is passed, it is
+            interpreted as a daily series and converted to a Series with a
+            datetime index using :meth:`Empyrical._ensure_datetime_index_series`.
+
+        Returns
+        -------
+        pd.Series or np.ndarray
+            Yearly maximum drawdowns indexed by year. If the input was a
+            NumPy array, the result is returned as an array of yearly
+            drawdowns; otherwise a Series indexed by year is returned.
+        """
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
             return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -1130,7 +2099,22 @@ class Empyrical:
 
     @classmethod
     def skewness(cls, returns):
-        """Calculates the skewness of the returns."""
+        """Calculate the skewness of a return series.
+
+        This is a thin wrapper around :func:`scipy.stats.skew` with
+        ``nan_policy="omit"``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative returns.
+
+        Returns
+        -------
+        float
+            Sample skewness of the return distribution, or ``NaN`` if there
+            are fewer than three observations.
+        """
         if len(returns) < 3:
             return np.nan
 
@@ -1138,7 +2122,22 @@ class Empyrical:
 
     @classmethod
     def kurtosis(cls, returns):
-        """Calculates the kurtosis of the returns."""
+        """Calculate the kurtosis of a return series.
+
+        This is a thin wrapper around :func:`scipy.stats.kurtosis` with
+        ``nan_policy="omit"``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative returns.
+
+        Returns
+        -------
+        float
+            Sample excess kurtosis of the return distribution, or ``NaN`` if
+            there are fewer than four observations.
+        """
         if len(returns) < 4:
             return np.nan
 
@@ -1146,7 +2145,24 @@ class Empyrical:
 
     @classmethod
     def hurst_exponent(cls, returns):
-        """Calculates the Hurst exponent of the returns."""
+        """Estimate the Hurst exponent of a return series.
+
+        The Hurst exponent is estimated via a rescaled range (R/S) analysis
+        with safeguards for short and noisy series. Values near 0.5 indicate
+        a random walk; values above 0.5 suggest persistence; values below 0.5
+        suggest mean reversion.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative returns.
+
+        Returns
+        -------
+        float
+            Estimated Hurst exponent in the interval [0, 1], or ``NaN`` when
+            there is insufficient data.
+        """
         # Lower minimum requirement for short series
         min_length = 8
         if len(returns) < min_length:
@@ -1249,7 +2265,32 @@ class Empyrical:
 
     @classmethod
     def sterling_ratio(cls, returns, risk_free=0.0, period=DAILY, annualization=None):
-        """Calculates the Sterling ratio."""
+        """Calculate the Sterling ratio of a strategy.
+
+        The Sterling ratio is defined as the annualized excess return divided
+        by the average drawdown. When no explicit drawdowns are detected,
+        this implementation falls back to using downside returns as a proxy
+        for risk.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Sterling ratio of the strategy. Returns ``NaN`` when there is
+            effectively no drawdown risk.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -1287,7 +2328,30 @@ class Empyrical:
 
     @classmethod
     def burke_ratio(cls, returns, risk_free=0.0, period=DAILY, annualization=None):
-        """Calculates the Burke ratio."""
+        """Calculate the Burke ratio of a strategy.
+
+        The Burke ratio is defined as the annualized excess return divided by
+        the square root of the sum of squared drawdowns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize returns when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Burke ratio of the strategy. Returns ``NaN`` when there is
+            effectively no drawdown risk.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -1328,7 +2392,34 @@ class Empyrical:
     def kappa_three_ratio(
         cls, returns, risk_free=0.0, period=DAILY, annualization=None, mar=0.0
     ):
-        """Calculates the Kappa 3 ratio (downside deviation cubed)."""
+        """Calculate the Kappa 3 ratio based on third-order downside deviation.
+
+        This variant of the Kappa ratio uses the third-order lower partial
+        moment (LPM3) of returns below a minimum acceptable return (MAR) as
+        the risk measure.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``). Used to
+            annualize LPM3 when ``annualization`` is ``None``.
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        mar : float, optional
+            Minimum acceptable return (MAR) used when computing the lower
+            partial moment. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Kappa 3 ratio of the strategy. Returns ``NaN`` when downside
+            risk is effectively zero.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -1373,7 +2464,25 @@ class Empyrical:
 
     @classmethod
     def adjusted_sharpe_ratio(cls, returns, risk_free=0.0):
-        """Calculates the adjusted Sharpe ratio (accounts for skewness and kurtosis)."""
+        """Calculate the adjusted Sharpe ratio.
+
+        This version of the Sharpe ratio applies a correction for skewness
+        and kurtosis of the return distribution, following the standard
+        approximation with additional dampening for small sample sizes.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Adjusted Sharpe ratio that accounts for non-normality. Returns
+            ``NaN`` when there is insufficient data.
+        """
         if len(returns) < 4:
             return np.nan
 
@@ -1409,7 +2518,24 @@ class Empyrical:
 
     @classmethod
     def stutzer_index(cls, returns, target_return=0.0):
-        """Calculates the Stutzer index."""
+        """Calculate the Stutzer index.
+
+        The Stutzer index is a downside-risk-adjusted performance measure
+        based on an exponential tilting of the return distribution.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        target_return : float, optional
+            Target or benchmark return used to compute excess returns.
+
+        Returns
+        -------
+        float
+            Stutzer index estimate, or ``NaN`` if the optimization fails or
+            there is insufficient data.
+        """
         if len(returns) < 2:
             return np.nan
 
@@ -1444,7 +2570,19 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_up_days(cls, returns):
-        """Determines the maximum number of consecutive days with positive returns."""
+        """Determine the maximum number of consecutive days with positive returns.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative daily returns with a pandas index.
+
+        Returns
+        -------
+        int or float
+            Length (in days) of the longest run of strictly positive daily
+            returns, or ``NaN`` if the input is empty.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1461,7 +2599,19 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_down_days(cls, returns):
-        """Determines the maximum number of consecutive days with negative returns."""
+        """Determine the maximum number of consecutive days with negative returns.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative daily returns with a pandas index.
+
+        Returns
+        -------
+        int or float
+            Length (in days) of the longest run of strictly negative daily
+            returns, or ``NaN`` if the input is empty.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1478,7 +2628,19 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_gain(cls, returns):
-        """Determines the maximum consecutive gain."""
+        """Determine the maximum cumulative gain over consecutive positive days.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative daily returns with a pandas index.
+
+        Returns
+        -------
+        float
+            Maximum sum of returns over any contiguous block of strictly
+            positive-return days, or ``NaN`` if there are no positive days.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1495,7 +2657,20 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_loss(cls, returns):
-        """Determines the maximum consecutive loss."""
+        """Determine the maximum cumulative loss over consecutive negative days.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Non-cumulative daily returns with a pandas index.
+
+        Returns
+        -------
+        float
+            Minimum (most negative) sum of returns over any contiguous block
+            of strictly negative-return days, or ``NaN`` if there are no
+            negative days.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1512,7 +2687,18 @@ class Empyrical:
 
     @classmethod
     def max_single_day_gain(cls, returns):
-        """Determines the maximum single day gain."""
+        """Determine the maximum single-day gain.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative daily returns.
+
+        Returns
+        -------
+        float
+            Maximum daily return, or ``NaN`` if the input is empty.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1520,7 +2706,19 @@ class Empyrical:
 
     @classmethod
     def max_single_day_loss(cls, returns):
-        """Determines the maximum single day loss."""
+        """Determine the maximum single-day loss.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative daily returns.
+
+        Returns
+        -------
+        float
+            Minimum (most negative) daily return, or ``NaN`` if the input is
+            empty.
+        """
         if len(returns) < 1:
             return np.nan
 
@@ -1528,7 +2726,22 @@ class Empyrical:
 
     @classmethod
     def stock_market_correlation(cls, returns, market_returns):
-        """Determines the correlation with the stock market."""
+        """Determine the correlation between strategy and stock market returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        market_returns : array-like or pd.Series
+            Non-cumulative stock market (benchmark) returns.
+
+        Returns
+        -------
+        float
+            Pearson correlation coefficient in ``[-1, 1]`` between strategy
+            and market returns, or ``NaN`` if there are fewer than two valid
+            observations.
+        """
         if len(returns) < 2 or len(market_returns) < 2:
             return np.nan
 
@@ -1557,7 +2770,22 @@ class Empyrical:
 
     @classmethod
     def bond_market_correlation(cls, returns, bond_returns):
-        """Determines the correlation with the bond market."""
+        """Determine the correlation between strategy and bond market returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        bond_returns : array-like or pd.Series
+            Non-cumulative bond market benchmark returns.
+
+        Returns
+        -------
+        float
+            Pearson correlation coefficient in ``[-1, 1]`` between strategy
+            and bond market returns, or ``NaN`` if there are fewer than two
+            valid observations.
+        """
         if len(returns) < 2 or len(bond_returns) < 2:
             return np.nan
 
@@ -1621,7 +2849,27 @@ class Empyrical:
 
     @classmethod
     def treynor_mazuy_timing(cls, returns, factor_returns, risk_free=0.0):
-        """Calculates the Treynor-Mazuy market timing coefficient (gamma)."""
+        """Calculate the Treynor–Mazuy market timing coefficient (gamma).
+
+        This fits a quadratic regression of excess strategy returns on excess
+        factor returns and uses the coefficient on the squared factor term as
+        a measure of market timing ability.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or market returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Treynor–Mazuy timing coefficient (gamma), or ``NaN`` if there is
+            insufficient data.
+        """
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
 
         if len(returns_aligned) < 10:
@@ -1647,7 +2895,27 @@ class Empyrical:
 
     @classmethod
     def henriksson_merton_timing(cls, returns, factor_returns, risk_free=0.0):
-        """Calculates the Henriksson-Merton market timing coefficient."""
+        """Calculate the Henriksson–Merton market timing coefficient.
+
+        This fits a regression of excess strategy returns on excess factor
+        returns and a down-market dummy, using the coefficient on the dummy
+        as a measure of market timing.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or market returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Henriksson–Merton timing coefficient, or ``NaN`` if there is
+            insufficient data.
+        """
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
 
         if len(returns_aligned) < 10:
@@ -1673,7 +2941,26 @@ class Empyrical:
 
     @classmethod
     def market_timing_return(cls, returns, factor_returns, risk_free=0.0):
-        """Calculates market timing return component."""
+        """Calculate the market timing return component.
+
+        Given the Treynor–Mazuy timing coefficient, this computes the portion
+        of returns attributable to market timing as ``gamma * E[(R_m - R_f)^2]``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or market returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Estimated contribution of market timing to returns, or ``NaN`` if
+            the timing coefficient cannot be estimated.
+        """
         gamma = cls.treynor_mazuy_timing(returns, factor_returns, risk_free)
 
         if np.isnan(gamma):
@@ -1694,7 +2981,33 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Determines the annual alpha for each year."""
+        """Determine the annual alpha for each calendar year.
+
+        This groups aligned strategy and benchmark returns by calendar year
+        and computes :meth:`Empyrical.alpha` for each year.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative strategy returns indexed by date. If ``None``, the
+            method attempts to use internally stored returns.
+        factor_returns : pd.Series, optional
+            Non-cumulative benchmark or factor returns indexed by date. If
+            ``None``, the method attempts to use internally stored factor
+            returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series
+            Annual alpha by calendar year.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -1741,7 +3054,33 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Determines the annual beta for each year."""
+        """Determine the annual beta for each calendar year.
+
+        This groups aligned strategy and benchmark returns by calendar year
+        and computes :meth:`Empyrical.beta` for each year.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative strategy returns indexed by date. If ``None``, the
+            method attempts to use internally stored returns.
+        factor_returns : pd.Series, optional
+            Non-cumulative benchmark or factor returns indexed by date. If
+            ``None``, the method attempts to use internally stored factor
+            returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series
+            Annual beta by calendar year.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -1774,7 +3113,29 @@ class Empyrical:
 
     @classmethod
     def residual_risk(cls, returns=None, factor_returns=None, risk_free=0.0):
-        """Calculates the residual risk (tracking error of alpha)."""
+        """Calculate residual risk (tracking error of alpha).
+
+        Residual risk is defined here as the standard deviation of the
+        regression residuals from a single-factor model of excess returns
+        versus excess factor returns, annualized to 252 trading days.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Annualized standard deviation of residuals (tracking error of
+            alpha), or ``NaN`` if there is insufficient data.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -1801,7 +3162,27 @@ class Empyrical:
 
     @classmethod
     def conditional_sharpe_ratio(cls, returns=None, cutoff=0.05):
-        """Calculates the conditional Sharpe ratio."""
+        """Calculate the Sharpe ratio conditional on the left tail.
+
+        The conditional Sharpe ratio is computed on the subset of returns
+        that fall below a given quantile of the full return distribution.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        cutoff : float, optional
+            Left-tail probability level in (0, 1). For example ``0.05``
+            selects the worst 5% of returns. Default is 0.05.
+
+        Returns
+        -------
+        float
+            Sharpe ratio computed on the conditional (left-tail) subsample,
+            annualized using a 252 trading-day convention. Returns ``NaN`` if
+            there are fewer than two observations.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 2:
@@ -1825,7 +3206,26 @@ class Empyrical:
 
     @classmethod
     def var_excess_return(cls, returns=None, cutoff=0.05):
-        """Calculates the VaR excess return."""
+        """Calculate the mean excess return in the VaR tail.
+
+        This computes the average of returns that fall below or equal to the
+        historical value at risk (VaR) at the given cutoff level.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        cutoff : float, optional
+            Left-tail probability level in (0, 1) used to define the VaR
+            threshold. Default is 0.05.
+
+        Returns
+        -------
+        float
+            Mean return in the VaR tail, or ``NaN`` if there are no such
+            observations.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 2:
@@ -1841,7 +3241,20 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_up_weeks(cls, returns=None):
-        """Determines the maximum number of consecutive weeks with positive returns."""
+        """Determine the maximum number of consecutive weeks with positive returns.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative returns indexed by date. If ``None``, the method
+            attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Length (in weeks) of the longest run of strictly positive weekly
+            returns, or ``NaN`` if the input is empty.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1863,7 +3276,20 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_down_weeks(cls, returns=None):
-        """Determines the maximum number of consecutive weeks with negative returns."""
+        """Determine the maximum number of consecutive weeks with negative returns.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative returns indexed by date. If ``None``, the method
+            attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Length (in weeks) of the longest run of strictly negative weekly
+            returns, or ``NaN`` if the input is empty.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1885,7 +3311,20 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_up_months(cls, returns=None):
-        """Determines the maximum number of consecutive months with positive returns."""
+        """Determine the maximum number of consecutive months with positive returns.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative returns indexed by date. If ``None``, the method
+            attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Length (in months) of the longest run of strictly positive
+            monthly returns, or ``NaN`` if the input is empty.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1909,7 +3348,20 @@ class Empyrical:
 
     @classmethod
     def max_consecutive_down_months(cls, returns=None):
-        """Determines the maximum number of consecutive months with negative returns."""
+        """Determine the maximum number of consecutive months with negative returns.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative returns indexed by date. If ``None``, the method
+            attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Length (in months) of the longest run of strictly negative
+            monthly returns, or ``NaN`` if the input is empty.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1933,7 +3385,20 @@ class Empyrical:
 
     @classmethod
     def win_rate(cls, returns=None):
-        """Calculates the percentage of positive returns."""
+        """Calculate the percentage of positive return observations.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+
+        Returns
+        -------
+        float
+            Fraction of observations with strictly positive returns in
+            ``[0, 1]``, or ``NaN`` if there are no valid observations.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1961,7 +3426,20 @@ class Empyrical:
 
     @classmethod
     def loss_rate(cls, returns=None):
-        """Calculates the percentage of negative returns."""
+        """Calculate the percentage of negative return observations.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+
+        Returns
+        -------
+        float
+            Fraction of observations with strictly negative returns in
+            ``[0, 1]``, or ``NaN`` if there are no valid observations.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -1989,7 +3467,20 @@ class Empyrical:
 
     @classmethod
     def get_max_drawdown_period(cls, returns=None):
-        """Gets the start and end dates of the maximum drawdown period."""
+        """Get the start and end dates of the maximum drawdown period.
+
+        Parameters
+        ----------
+        returns : pd.Series, optional
+            Non-cumulative returns indexed by date. If ``None``, the method
+            attempts to use internally stored returns.
+
+        Returns
+        -------
+        (pd.Timestamp, pd.Timestamp)
+            Tuple ``(start_date, end_date)`` of the maximum drawdown period,
+            or ``(None, None)`` if it cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2016,7 +3507,20 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_days(cls, returns=None):
-        """Calculates the duration of maximum drawdown in days."""
+        """Calculate the duration of the maximum drawdown in days.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of days (or periods) between the peak and trough of the
+            maximum drawdown, or ``NaN`` if it cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2042,18 +3546,38 @@ class Empyrical:
 
         # Calculate days difference
         if isinstance(returns.index, pd.DatetimeIndex):
-            days_diff = (end_idx - start_idx).days
+            # Use index positions
+            start_week = returns.index.get_loc(start_idx)
+            end_week = returns.index.get_loc(end_idx)
+            weeks_diff = end_week - start_week
         else:
             # For non-datetime index, count the number of periods
             start_pos = returns.index.get_loc(start_idx)
             end_pos = returns.index.get_loc(end_idx)
-            days_diff = end_pos - start_pos
+            weeks_diff = end_pos - start_pos
 
-        return days_diff
+        return weeks_diff
 
     @classmethod
     def futures_market_correlation(cls, returns=None, futures_returns=None):
-        """Determines the correlation with the futures market."""
+        """Determine the correlation between strategy and futures market returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        futures_returns : array-like or pd.Series, optional
+            Non-cumulative futures market benchmark returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+
+        Returns
+        -------
+        float
+            Pearson correlation coefficient in ``[-1, 1]`` between strategy
+            and futures market returns, or ``NaN`` if there are fewer than two
+            valid observations.
+        """
         returns = cls._get_returns(returns)
         if futures_returns is None:
             futures_returns = cls._get_factor_returns(futures_returns)
@@ -2063,13 +3587,26 @@ class Empyrical:
     def cal_futures_market_correlation(cls, returns, futures_returns):
         """Core implementation for futures market correlation.
 
-        This mirrors the logic of other *market_correlation helpers:
-        - align indices for pandas Series
-        - drop NaNs
-        - return NaN if there are fewer than 2 observations
-        - otherwise return Pearson correlation in [-1, 1]
-        """
+        This mirrors the logic of other ``*_market_correlation`` helpers:
 
+        * Align indices if inputs are pandas Series.
+        * Drop observations containing NaNs.
+        * Return ``NaN`` if there are fewer than two valid observations.
+        * Otherwise return the Pearson correlation in ``[-1, 1]``.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        futures_returns : array-like or pd.Series
+            Non-cumulative futures market benchmark returns.
+
+        Returns
+        -------
+        float
+            Pearson correlation coefficient in ``[-1, 1]``, or ``NaN`` if
+            there is insufficient data.
+        """
         if returns is None or futures_returns is None:
             return np.nan
 
@@ -2106,7 +3643,35 @@ class Empyrical:
         annualization=None,
         out=None,
     ):
-        """Calculates alpha and beta for up-market periods only."""
+        """Calculate alpha and beta for up-market periods only.
+
+        This helper restricts the sample to periods where the benchmark
+        (factor) return is positive and then estimates alpha and beta using
+        a single-factor model on excess returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated array of length 2, where index 0 receives
+            alpha and index 1 receives beta.
+
+        Returns
+        -------
+        np.ndarray
+            Array ``[alpha, beta]`` for up-market periods. Elements are
+            ``NaN`` if there is insufficient data.
+        """
         # Handle output array
         if out is None:
             out = np.empty((2,), dtype="float64")
@@ -2171,7 +3736,35 @@ class Empyrical:
         annualization=None,
         out=None,
     ):
-        """Calculates alpha and beta for down-market periods only."""
+        """Calculate alpha and beta for down-market periods only.
+
+        This helper restricts the sample to periods where the benchmark
+        (factor) return is non-positive and then estimates alpha and beta
+        using a single-factor model on excess returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+        out : np.ndarray, optional
+            Optional pre-allocated array of length 2, where index 0 receives
+            alpha and index 1 receives beta.
+
+        Returns
+        -------
+        np.ndarray
+            Array ``[alpha, beta]`` for down-market periods. Elements are
+            ``NaN`` if there is insufficient data.
+        """
         # Handle output array
         if out is None:
             out = np.empty((2,), dtype="float64")
@@ -2236,7 +3829,36 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates the percentile rank of alpha relative to a universe."""
+        """Calculate the percentile rank of alpha versus a peer universe.
+
+        This computes the strategy's alpha and compares it with the alphas of
+        a list of peer strategies, returning the percentile rank of the
+        strategy within that universe.
+
+        Parameters
+        ----------
+        strategy_returns : array-like or pd.Series
+            Non-cumulative returns of the strategy of interest.
+        all_strategies_returns : sequence of array-like or pd.Series
+            Iterable of return series for peer strategies.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or factor returns used in the alpha
+            regression.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Percentile rank of the strategy's alpha in ``[0, 1]``, or ``NaN``
+            if the universe is empty or the strategy's alpha cannot be
+            computed.
+        """
         if len(strategy_returns) < 3:
             return np.nan
 
@@ -2271,7 +3893,28 @@ class Empyrical:
 
     @classmethod
     def cornell_timing(cls, returns, factor_returns, risk_free=0.0):
-        """Calculates the Cornell timing model coefficient."""
+        """Calculate the Cornell timing model coefficient.
+
+        The Cornell timing model decomposes market returns into positive and
+        negative components and estimates different betas in up and down
+        markets. The timing coefficient is the difference between these two
+        betas.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative strategy returns.
+        factor_returns : array-like or pd.Series
+            Non-cumulative benchmark or market returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+
+        Returns
+        -------
+        float
+            Cornell timing coefficient (beta_up - beta_down), or ``NaN`` if
+            there is insufficient data.
+        """
         if len(returns) < 10 or len(factor_returns) < 10:
             return np.nan
 
@@ -2330,7 +3973,26 @@ class Empyrical:
 
     @classmethod
     def r_cubed(cls, returns=None, factor_returns=None):
-        """Calculates R-cubed (R³) measure."""
+        """Calculate the R-cubed (R³) measure.
+
+        R³ is defined as the cube of the correlation between strategy returns
+        and benchmark returns.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+
+        Returns
+        -------
+        float
+            Cube of the Pearson correlation coefficient, or ``NaN`` if there
+            is insufficient data.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -2354,7 +4016,35 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates the annual return from regression (alpha + beta * benchmark_return)."""
+        """Calculate annual return implied by a linear regression model.
+
+        This computes ``alpha + beta * benchmark_annual``, where ``alpha``
+        and ``beta`` are estimated via :meth:`Empyrical.alpha` and
+        :meth:`Empyrical.beta` and ``benchmark_annual`` is the annual return
+        of the benchmark.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+        risk_free : float, optional
+            Risk-free rate used when computing excess returns. Default is 0.0.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Annual return implied by the regression model, or ``NaN`` if the
+            inputs are insufficient.
+        """
         alpha_val = cls.alpha(returns, factor_returns, risk_free, period, annualization)
         beta_val = cls.beta(returns, factor_returns, risk_free, period, annualization)
 
@@ -2373,7 +4063,28 @@ class Empyrical:
     def annualized_cumulative_return(
         cls, returns=None, period=DAILY, annualization=None
     ):
-        """Calculates the annualized cumulative return."""
+        """Calculate the annualized cumulative return.
+
+        This is effectively an alias for :meth:`Empyrical.annual_return`,
+        retained for API compatibility.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float or np.ndarray or pd.Series
+            Annualized cumulative return, as produced by
+            :meth:`Empyrical.annual_return`.
+        """
         # This is essentially the same as annual_return
         return cls.annual_return(returns, period, annualization)
 
@@ -2381,7 +4092,31 @@ class Empyrical:
     def annual_active_return(
         cls, returns=None, factor_returns=None, period=DAILY, annualization=None
     ):
-        """Calculates the annual active return (strategy - benchmark)."""
+        """Calculate annual active return (strategy minus benchmark).
+
+        Active return is defined as the difference between the annualized
+        strategy return and the annualized benchmark return on aligned data.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Annualized active return (strategy - benchmark), or ``NaN`` if
+            either annualized return cannot be computed.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -2404,12 +4139,53 @@ class Empyrical:
     def annual_active_risk(
         cls, returns=None, factor_returns=None, period=DAILY, annualization=None
     ):
-        """Calculates the annual active risk (tracking error)."""
+        """Calculate annual active risk (tracking error).
+
+        This is a thin wrapper around :meth:`Empyrical.tracking_error`.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Annualized tracking error (standard deviation of active returns),
+            or ``NaN`` if there is insufficient data.
+        """
         return cls.tracking_error(returns, factor_returns, period, annualization)
 
     @classmethod
     def tracking_difference(cls, returns=None, factor_returns=None):
-        """Calculates the tracking difference (cumulative strategy return - cumulative benchmark return)."""
+        """Calculate tracking difference in cumulative returns.
+
+        Tracking difference is defined as the cumulative strategy return minus
+        the cumulative benchmark return over the full sample.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+        factor_returns : array-like or pd.Series, optional
+            Non-cumulative benchmark or factor returns. If ``None``, the
+            method attempts to use internally stored factor returns.
+
+        Returns
+        -------
+        float
+            Difference between cumulative strategy and benchmark returns.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -2432,7 +4208,34 @@ class Empyrical:
     def annual_active_return_by_year(
         cls, returns=None, factor_returns=None, period=DAILY, annualization=None
     ):
-        """Determines the annual active return for each year."""
+        """Determine the annual active return for each calendar year.
+
+        This groups aligned strategy and benchmark returns by calendar year
+        and computes :meth:`Empyrical.annual_active_return` for each year.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray, optional
+            Non-cumulative strategy returns. If an array is passed, it is
+            interpreted as a daily series and converted to a Series with a
+            datetime index. If ``None``, the method attempts to use
+            internally stored returns.
+        factor_returns : pd.Series or np.ndarray, optional
+            Non-cumulative benchmark or factor returns. If an array is
+            passed, it is similarly converted to a datetime-indexed Series.
+            If ``None``, the method attempts to use internally stored factor
+            returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series
+            Annual active return by calendar year.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -2467,7 +4270,37 @@ class Empyrical:
     def information_ratio_by_year(
         cls, returns=None, factor_returns=None, period=DAILY, annualization=None
     ):
-        """Determines the information ratio for each year."""
+        """Determine the information ratio for each calendar year.
+
+        This groups aligned strategy and benchmark returns by calendar year
+        and computes the information ratio for each year using the standard
+        deviation of active returns.
+
+        Parameters
+        ----------
+        returns : pd.Series or np.ndarray, optional
+            Non-cumulative strategy returns. If an array is passed, it is
+            interpreted as a daily series and converted to a Series with a
+            datetime index. If ``None``, the method attempts to use
+            internally stored returns.
+        factor_returns : pd.Series or np.ndarray, optional
+            Non-cumulative benchmark or factor returns. If an array is
+            passed, it is similarly converted to a datetime-indexed Series.
+            If ``None``, the method attempts to use internally stored factor
+            returns.
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        pd.Series or np.ndarray
+            Information ratio by calendar year. If the input was a NumPy
+            array, the result is returned as an array; otherwise a Series
+            indexed by year is returned.
+        """
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -2512,7 +4345,26 @@ class Empyrical:
     def _calculate_information_ratio_for_active_returns(
         cls, active_returns, period=DAILY, annualization=None
     ):
-        """Calculate information ratio from active returns."""
+        """Calculate information ratio from active returns.
+
+        This is an internal helper that computes the annualized mean divided
+        by the annualized standard deviation of the provided active returns.
+
+        Parameters
+        ----------
+        active_returns : pd.Series
+            Active returns (strategy minus benchmark).
+        period : str, optional
+            Frequency of the input data (for example ``DAILY``).
+        annualization : float, optional
+            Custom annualization factor. If provided, this value is used
+            directly instead of inferring it from ``period``.
+
+        Returns
+        -------
+        float
+            Information ratio, or ``NaN`` if the standard deviation is zero.
+        """
         ann_factor = cls.annualization_factor(period, annualization)
         mean_excess_return = active_returns.mean()
         std_excess_return = active_returns.std(ddof=1)
@@ -2525,7 +4377,23 @@ class Empyrical:
 
     @classmethod
     def second_max_drawdown(cls, returns=None):
-        """Determines the second maximum drawdown of a strategy."""
+        """Determine the second-largest drawdown of a strategy.
+
+        This identifies all distinct drawdown periods and returns the
+        second-most severe (second-most negative) drawdown.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+
+        Returns
+        -------
+        float
+            Second-largest drawdown, or ``NaN`` if there are fewer than two
+            drawdown periods.
+        """
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns(returns)
@@ -2541,7 +4409,23 @@ class Empyrical:
 
     @classmethod
     def third_max_drawdown(cls, returns=None):
-        """Determines the third maximum drawdown of a strategy."""
+        """Determine the third-largest drawdown of a strategy.
+
+        This identifies all distinct drawdown periods and returns the
+        third-most severe (third-most negative) drawdown.
+
+        Parameters
+        ----------
+        returns : array-like or pd.Series, optional
+            Non-cumulative strategy returns. If ``None``, the method attempts
+            to use internally stored returns.
+
+        Returns
+        -------
+        float
+            Third-largest drawdown, or ``NaN`` if there are fewer than three
+            drawdown periods.
+        """
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns(returns)
@@ -2557,7 +4441,23 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_weeks(cls, returns=None):
-        """Calculates the duration of maximum drawdown in weeks."""
+        """Calculate the duration of the maximum drawdown in weeks.
+
+        This computes the number of periods (interpreted as weeks) between
+        the peak and trough of the maximum drawdown.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of weeks (or periods) between the peak and trough of the
+            maximum drawdown, or ``NaN`` if it cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2597,7 +4497,23 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_months(cls, returns=None):
-        """Calculates the duration of maximum drawdown in months."""
+        """Calculate the duration of the maximum drawdown in months.
+
+        This computes the number of periods (interpreted as months) between
+        the peak and trough of the maximum drawdown.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of months (or periods) between the peak and trough of the
+            maximum drawdown, or ``NaN`` if it cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2630,7 +4546,24 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_recovery_days(cls, returns=None):
-        """Calculates the recovery time from maximum drawdown in days."""
+        """Calculate the recovery time from maximum drawdown in days.
+
+        This computes the number of days (or periods) from the trough of the
+        maximum drawdown until the portfolio value recovers to the previous
+        peak.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of days (or periods) from the trough to recovery, or
+            ``NaN`` if recovery does not occur or cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2670,7 +4603,24 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_recovery_weeks(cls, returns=None):
-        """Calculates the recovery time from maximum drawdown in weeks."""
+        """Calculate the recovery time from maximum drawdown in weeks.
+
+        This computes the number of weeks (or periods) from the trough of the
+        maximum drawdown until the portfolio value recovers to the previous
+        peak.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of weeks (or periods) from the trough to recovery, or
+            ``NaN`` if recovery does not occur or cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -2711,7 +4661,24 @@ class Empyrical:
 
     @classmethod
     def max_drawdown_recovery_months(cls, returns=None):
-        """Calculates the recovery time from maximum drawdown in months."""
+        """Calculate the recovery time from maximum drawdown in months.
+
+        This computes the number of months (or periods) from the trough of
+        the maximum drawdown until the portfolio value recovers to the
+        previous peak.
+
+        Parameters
+        ----------
+        returns : pd.Series or array-like, optional
+            Non-cumulative returns indexed by date or position. If ``None``,
+            the method attempts to use internally stored returns.
+
+        Returns
+        -------
+        int or float
+            Number of months (or periods) from the trough to recovery, or
+            ``NaN`` if recovery does not occur or cannot be determined.
+        """
         returns = cls._get_returns(returns)
 
         if len(returns) < 1:
@@ -3894,7 +5861,7 @@ class Empyrical:
             outside of Bayesian cone.)
         """
 
-        returns_test_cum = Empyrical.cal_cum_returns(returns_test, starting_value=1.0)
+        returns_test_cum = Empyrical.cum_returns(returns_test, starting_value=1.0)
         cum_preds = np.cumprod(preds + 1, 1)
 
         q = [
@@ -4806,7 +6773,7 @@ class Empyrical:
             Contains daily position values including cash.
             - See full explanation in tears.create_full_tear_sheet
         transactions : pd.DataFrame
-            Prices and `amounts` of executed trades.One row per trade.
+            Prices and `amounts` of executed trades. One row per trade.
             - See full explanation in tears.create_full_tear_sheet
         denominator : str, optional
             Either 'AGB' or 'portfolio_value', default AGB.
@@ -4898,23 +6865,62 @@ class Empyrical:
         pd.Series
             Performance metrics.
         """
+        # Use a local Series name that does not shadow scipy.stats
+        perf_stats_series = pd.Series()
 
-        stats = pd.Series()
-        for stat_func in SIMPLE_STAT_FUNCS:
-            stats[STAT_FUNC_NAMES[stat_func.__name__]] = stat_func(returns)
+        def _resolve_stat_func(entry):
+            """Resolve a SIMPLE/FACTOR_STAT_FUNCS entry to (callable, key).
 
+            Entries may be callables (backwards-compat) or strings defined in
+            fincore.constants.style. String entries referring to SciPy stats
+            functions use the "stats." prefix (for example "stats.skew").
+            Other strings are looked up as classmethods on Empyrical.
+            The returned key is the lookup key used for STAT_FUNC_NAMES.
+            """
+
+            # Already a callable (old-style configuration)
+            if callable(entry):
+                func = entry
+                key = getattr(entry, "__name__", str(entry))
+                return func, key
+
+            # New-style configuration: string names
+            if isinstance(entry, str):
+                if entry.startswith("stats."):
+                    func_name = entry.split(".", 1)[1]
+                    func = getattr(stats, func_name)
+                    return func, func_name
+
+                # Default: Empyrical classmethod with the same name
+                func = getattr(Empyrical, entry)
+                return func, entry
+
+            # Fallback: return as-is; any error will surface naturally
+            return entry, str(entry)
+
+        # Simple (univariate) performance statistics
+        for entry in SIMPLE_STAT_FUNCS:
+            func, key = _resolve_stat_func(entry)
+            label = STAT_FUNC_NAMES.get(key, key)
+            perf_stats_series[label] = func(returns)
+
+        # Position- and transaction-dependent statistics
         if positions is not None:
-            stats["Gross leverage"] = Empyrical.gross_lev(positions).mean()
+            perf_stats_series["Gross leverage"] = Empyrical.gross_lev(positions).mean()
             if transactions is not None:
-                stats["Daily turnover"] = Empyrical.get_turnover(
+                perf_stats_series["Daily turnover"] = Empyrical.get_turnover(
                     positions, transactions, turnover_denom
                 ).mean()
-        if factor_returns is not None:
-            for stat_func in FACTOR_STAT_FUNCS:
-                res = stat_func(returns, factor_returns)
-                stats[STAT_FUNC_NAMES[stat_func.__name__]] = res
 
-        return stats
+        # Factor-based statistics (alpha, beta, etc.)
+        if factor_returns is not None:
+            for entry in FACTOR_STAT_FUNCS:
+                func, key = _resolve_stat_func(entry)
+                res = func(returns, factor_returns)
+                label = STAT_FUNC_NAMES.get(key, key)
+                perf_stats_series[label] = res
+
+        return perf_stats_series
 
     @classmethod
     def perf_stats_bootstrap(
@@ -4947,25 +6953,47 @@ class Empyrical:
             If return_stats is False:
             - Bootstrap samples for each performance metric.
         """
-
         bootstrap_values = OrderedDict()
 
-        for stat_func in SIMPLE_STAT_FUNCS:
-            stat_name = STAT_FUNC_NAMES[stat_func.__name__]
-            bootstrap_values[stat_name] = Empyrical.calc_bootstrap(stat_func, returns)
+        def _resolve_stat_func(entry):
+            """Same resolution logic as in perf_stats for bootstrap case."""
 
+            if callable(entry):
+                func = entry
+                key = getattr(entry, "__name__", str(entry))
+                return func, key
+
+            if isinstance(entry, str):
+                if entry.startswith("stats."):
+                    func_name = entry.split(".", 1)[1]
+                    func = getattr(stats, func_name)
+                    return func, func_name
+
+                func = getattr(Empyrical, entry)
+                return func, entry
+
+            return entry, str(entry)
+
+        # Bootstrap for simple statistics
+        for entry in SIMPLE_STAT_FUNCS:
+            func, key = _resolve_stat_func(entry)
+            stat_name = STAT_FUNC_NAMES.get(key, key)
+            bootstrap_values[stat_name] = Empyrical.calc_bootstrap(func, returns)
+
+        # Bootstrap for factor-based statistics, if provided
         if factor_returns is not None:
-            for stat_func in FACTOR_STAT_FUNCS:
-                stat_name = STAT_FUNC_NAMES[stat_func.__name__]
+            for entry in FACTOR_STAT_FUNCS:
+                func, key = _resolve_stat_func(entry)
+                stat_name = STAT_FUNC_NAMES.get(key, key)
                 bootstrap_values[stat_name] = Empyrical.calc_bootstrap(
-                    stat_func, returns, factor_returns=factor_returns
+                    func, returns, factor_returns=factor_returns
                 )
 
         bootstrap_values = pd.DataFrame(bootstrap_values)
 
         if return_stats:
-            stats = bootstrap_values.apply(Empyrical.calc_distribution_stats)
-            return stats.T[["mean", "median", "5%", "95%"]]
+            stats_df = bootstrap_values.apply(Empyrical.calc_distribution_stats)
+            return stats_df.T[["mean", "median", "5%", "95%"]]
         else:
             return bootstrap_values
 
