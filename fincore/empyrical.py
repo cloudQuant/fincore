@@ -43,20 +43,42 @@ try:
 except ImportError:
     ZIPLINE = False
     warnings.warn(
-        'Module "zipline.assets" not found; mutltipliers will not be applied' +
-        ' to position notionals.'
+        'Module "zipline.assets" not found; mutltipliers will not be applied'
+        + " to position notionals."
     )
 
 
 class Empyrical:
     """
     面向对象的性能指标计算类
-    
+
     这个类将所有empyrical模块的函数封装为类方法，提供统一的数据管理和计算接口。
     初始化参数与pyfolio的create_full_tear_sheet函数参数保持一致。
-    
+
     通过直接调用原有函数确保100%的计算一致性。
     """
+
+    def __init__(
+        self,
+        returns=None,
+        positions=None,
+        factor_returns=None,
+        factor_loadings=None,
+        **kwargs,
+    ):
+        """Lightweight data container for instance-style API.
+
+        Tests use patterns like ``Empyrical(returns=...).perf_attrib()``.
+        We just store the provided data on ``self`` and let instance
+        methods default to these attributes when explicit arguments are
+        omitted. Extra kwargs are accepted for forward-compatibility but
+        ignored here.
+        """
+
+        self.returns = returns
+        self.positions = positions
+        self.factor_returns = factor_returns
+        self.factor_loadings = factor_loadings
 
     @classmethod
     def _get_returns(cls, returns):
@@ -124,7 +146,7 @@ class Empyrical:
             return pd.DataFrame(ob)
         else:
             raise ValueError(
-                'cannot convert array of dim > 2 to a pandas structure',
+                "cannot convert array of dim > 2 to a pandas structure",
             )
 
     @staticmethod
@@ -133,15 +155,18 @@ class Empyrical:
         head = many_series[0]
         tail = many_series[1:]
         n = len(head)
-        if (isinstance(head, np.ndarray) and
-                all(len(s) == n and isinstance(s, np.ndarray) for s in tail)):
+        if isinstance(head, np.ndarray) and all(
+            len(s) == n and isinstance(s, np.ndarray) for s in tail
+        ):
             # optimization: ndarrays of the same length are already aligned
             return many_series
 
         # dataframe has no ``itervalues``
         return (
             v
-            for _, v in iteritems(pd.concat(map(Empyrical._to_pandas, many_series), axis=1))
+            for _, v in iteritems(
+                pd.concat(map(Empyrical._to_pandas, many_series), axis=1)
+            )
         )
 
     @classmethod
@@ -153,7 +178,7 @@ class Empyrical:
             # Assume np.ndarray
             out = np.diff(prices, axis=0)
             # Avoid division by zero warning
-            with np.errstate(divide='ignore', invalid='ignore'):
+            with np.errstate(divide="ignore", invalid="ignore"):
                 np.divide(out, prices[:-1], out=out)
 
         return out
@@ -186,7 +211,9 @@ class Empyrical:
                 out = pd.Series(out, index=returns.index)
             elif isinstance(returns, pd.DataFrame):
                 out = pd.DataFrame(
-                    out, index=returns.index, columns=returns.columns,
+                    out,
+                    index=returns.index,
+                    columns=returns.columns,
                 )
 
         return out
@@ -210,7 +237,7 @@ class Empyrical:
         return result
 
     @classmethod
-    def aggregate_returns(cls, returns, convert_to='monthly'):
+    def aggregate_returns(cls, returns, convert_to="monthly"):
         """Aggregates returns by week, month, or year."""
 
         def cumulate_returns(x):
@@ -221,12 +248,12 @@ class Empyrical:
         elif convert_to == MONTHLY:
             grouping = [lambda x: x.year, lambda x: x.month]
         elif convert_to == QUARTERLY:
-            grouping = [lambda x: x.year, lambda x: int(math.ceil(x.month / 3.))]
+            grouping = [lambda x: x.year, lambda x: int(math.ceil(x.month / 3.0))]
         elif convert_to == YEARLY:
             grouping = [lambda x: x.year]
         else:
             raise ValueError(
-                'convert_to must be {}, {} or {}'.format(WEEKLY, MONTHLY, YEARLY)
+                "convert_to must be {}, {} or {}".format(WEEKLY, MONTHLY, YEARLY)
             )
 
         return returns.groupby(grouping).apply(cumulate_returns)
@@ -250,7 +277,7 @@ class Empyrical:
 
         cumulative = np.empty(
             (returns.shape[0] + 1,) + returns.shape[1:],
-            dtype='float64',
+            dtype="float64",
         )
         cumulative[0] = start = 100
         cls.cum_returns(returns_array, starting_value=start, out=cumulative[1:])
@@ -284,7 +311,9 @@ class Empyrical:
         return cls.annual_return(returns, period, annualization)
 
     @classmethod
-    def annual_volatility(cls, returns, period=DAILY, alpha_=2.0, annualization=None, out=None):
+    def annual_volatility(
+        cls, returns, period=DAILY, alpha_=2.0, annualization=None, out=None
+    ):
         """Determines the annual volatility of a strategy."""
         allocated_output = out is None
         if allocated_output:
@@ -311,9 +340,7 @@ class Empyrical:
         max_dd = cls.max_drawdown(returns=returns)
         if max_dd < 0:
             temp = cls.annual_return(
-                returns=returns,
-                period=period,
-                annualization=annualization
+                returns=returns, period=period, annualization=annualization
             ) / abs(max_dd)
         else:
             return np.nan
@@ -324,7 +351,13 @@ class Empyrical:
         return temp
 
     @classmethod
-    def omega_ratio(cls, returns, risk_free=0.0, required_return=0.0, annualization=APPROX_BDAYS_PER_YEAR):
+    def omega_ratio(
+        cls,
+        returns,
+        risk_free=0.0,
+        required_return=0.0,
+        annualization=APPROX_BDAYS_PER_YEAR,
+    ):
         """Determines the Omega ratio of a strategy."""
         if len(returns) < 2:
             return np.nan
@@ -334,8 +367,7 @@ class Empyrical:
         elif required_return <= -1:
             return np.nan
         else:
-            return_threshold = (1 + required_return) ** \
-                               (1. / annualization) - 1
+            return_threshold = (1 + required_return) ** (1.0 / annualization) - 1
 
         returns_less_thresh = returns - risk_free - return_threshold
 
@@ -348,7 +380,9 @@ class Empyrical:
             return np.nan
 
     @classmethod
-    def sharpe_ratio(cls, returns, risk_free=0, period=DAILY, annualization=None, out=None):
+    def sharpe_ratio(
+        cls, returns, risk_free=0, period=DAILY, annualization=None, out=None
+    ):
         """Determines the Sharpe ratio of a strategy."""
         allocated_output = out is None
         if allocated_output:
@@ -370,7 +404,7 @@ class Empyrical:
         mean_returns = nanmean(returns_risk_adj, axis=0)
 
         # Avoid division by zero warning
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             np.multiply(
                 np.divide(
                     mean_returns,
@@ -387,11 +421,21 @@ class Empyrical:
 
     # 实例方法，调用对应的类方法（保持向后兼容）
     @classmethod
-    def alpha_beta(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    def alpha_beta(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+    ):
         """Calculates annualized alpha and beta."""
         # Match original empyrical.stats.alpha_beta behaviour: align series
         # first, then delegate to the aligned implementation.
-        if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
+        if not (
+            isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)
+        ):
             returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         return cls.alpha_beta_aligned(
@@ -404,13 +448,24 @@ class Empyrical:
         )
 
     @classmethod
-    def alpha(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None):
+    def alpha(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+        _beta=None,
+    ):
         """Calculates annualized alpha.
 
         This mirrors empyrical.stats.alpha, which internally calls
         alpha_aligned after aligning non-ndarray inputs.
         """
-        if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
+        if not (
+            isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)
+        ):
             returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         return cls.alpha_aligned(
@@ -424,13 +479,23 @@ class Empyrical:
         )
 
     @classmethod
-    def beta(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    def beta(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+    ):
         """Calculates beta.
 
         This mirrors empyrical.stats.beta, which forwards to beta_aligned
         after aligning non-ndarray inputs.
         """
-        if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
+        if not (
+            isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)
+        ):
             returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         return cls.beta_aligned(
@@ -441,7 +506,15 @@ class Empyrical:
         )
 
     @classmethod
-    def alpha_beta_aligned(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    def alpha_beta_aligned(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+    ):
         """Calculates annualized alpha and beta for already-aligned series."""
         if out is None:
             out = np.empty(returns.shape[1:] + (2,), dtype="float64")
@@ -460,8 +533,16 @@ class Empyrical:
         return out
 
     @classmethod
-    def alpha_aligned(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None,
-                      _beta=None):
+    def alpha_aligned(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+        _beta=None,
+    ):
         """Calculates annualized alpha for already-aligned series."""
         allocated_output = out is None
         if allocated_output:
@@ -557,8 +638,15 @@ class Empyrical:
         return out
 
     @classmethod
-    def sortino_ratio(cls, returns, required_return=0, period=DAILY, annualization=None, out=None,
-                      _downside_risk=None):
+    def sortino_ratio(
+        cls,
+        returns,
+        required_return=0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+        _downside_risk=None,
+    ):
         """Determines the Sortino ratio of a strategy."""
         allocated_output = out is None
         if allocated_output:
@@ -579,11 +667,11 @@ class Empyrical:
         average_annual_return = nanmean(adj_returns, axis=0) * ann_factor
         annualized_downside_risk = (
             _downside_risk
-            if _downside_risk is not None else
-            cls.downside_risk(returns, required_return, period, annualization)
+            if _downside_risk is not None
+            else cls.downside_risk(returns, required_return, period, annualization)
         )
         # Avoid division by zero warning
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             np.divide(average_annual_return, annualized_downside_risk, out=out)
         if return_1d:
             out = out.item()
@@ -593,7 +681,9 @@ class Empyrical:
         return out
 
     @classmethod
-    def downside_risk(cls, returns, required_return=0, period=DAILY, annualization=None, out=None):
+    def downside_risk(
+        cls, returns, required_return=0, period=DAILY, annualization=None, out=None
+    ):
         """Determines the downside deviation below a threshold."""
         allocated_output = out is None
         if allocated_output:
@@ -648,7 +738,7 @@ class Empyrical:
         tracking_error = np.nan_to_num(nanstd(active_return, ddof=1, axis=0))
 
         # Avoid division by zero warning
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             out = np.divide(
                 nanmean(active_return, axis=0, out=out),
                 tracking_error,
@@ -659,7 +749,9 @@ class Empyrical:
         return out
 
     @classmethod
-    def tracking_error(cls, returns, factor_returns, period=DAILY, annualization=None, out=None):
+    def tracking_error(
+        cls, returns, factor_returns, period=DAILY, annualization=None, out=None
+    ):
         """Determines the tracking error of returns relative to factor returns."""
         allocated_output = out is None
         if allocated_output:
@@ -687,7 +779,9 @@ class Empyrical:
         return out
 
     @classmethod
-    def information_ratio(cls, returns, factor_returns, period=DAILY, annualization=None):
+    def information_ratio(
+        cls, returns, factor_returns, period=DAILY, annualization=None
+    ):
         """Determines the information ratio of returns relative to factor returns."""
         returns, factor_returns = cls._aligned_series(returns, factor_returns)
         super_returns = returns - factor_returns
@@ -695,7 +789,9 @@ class Empyrical:
         ann_factor = cls.annualization_factor(period, annualization)
         mean_excess_return = super_returns.mean()
         std_excess_return = super_returns.std(ddof=1)
-        ir = (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
+        ir = (mean_excess_return * ann_factor) / (
+            std_excess_return * np.sqrt(ann_factor)
+        )
         return ir
 
     @classmethod
@@ -744,7 +840,7 @@ class Empyrical:
         cum_log_returns = np.log1p(returns).cumsum()
         rhat = stats.linregress(np.arange(len(cum_log_returns)), cum_log_returns)[2]
 
-        return rhat ** 2
+        return rhat**2
 
     @classmethod
     def capture(cls, returns, factor_returns, period=DAILY):
@@ -788,56 +884,79 @@ class Empyrical:
 
     @classmethod
     def up_down_capture(cls, returns, factor_returns, period=DAILY):
-        """Calculates the up and down capture ratios."""
+        """Calculates the ratio of up capture to down capture.
+        
+        Returns up_capture / down_capture as a single value.
+        When down_capture is 0 or both are nan, returns nan.
+        """
         up_cap = cls.up_capture(returns, factor_returns, period=period)
         down_cap = cls.down_capture(returns, factor_returns, period=period)
-        return up_cap, down_cap
+        
+        if np.isnan(up_cap) or np.isnan(down_cap) or down_cap == 0:
+            return np.nan
+        
+        return up_cap / down_cap
 
     @classmethod
-    def perf_attrib(cls,
-                    returns=None,
-                    positions=None,
-                    factor_returns=None,
-                    factor_loadings=None):
+    def _perf_attrib_core(
+        cls, returns=None, positions=None, factor_returns=None, factor_loadings=None
+    ):
         returns = cls._get_returns(returns)
         if positions is None:
             raise ValueError("Either provide positions or set positions data")
         if factor_returns is None:
-            raise ValueError("Either provide factor_returns or set factor_returns/benchmark_rets")
+            raise ValueError(
+                "Either provide factor_returns or set factor_returns/benchmark_rets"
+            )
         if factor_loadings is None:
-            raise ValueError("Either provide factor_loadings or set factor_loadings data")
+            raise ValueError(
+                "Either provide factor_loadings or set factor_loadings data"
+            )
         start = returns.index[0]
         end = returns.index[-1]
         factor_returns = factor_returns.loc[start:end]
         factor_loadings = factor_loadings.loc[start:end]
         factor_loadings = factor_loadings.copy()
-        factor_loadings.index = factor_loadings.index.set_names(['dt', 'ticker'])
+        factor_loadings.index = factor_loadings.index.set_names(["dt", "ticker"])
         positions = positions.copy()
-        positions.index = positions.index.set_names(['dt', 'ticker'])
+        positions.index = positions.index.set_names(["dt", "ticker"])
 
-        risk_exposures_portfolio = cls.compute_exposures(
+        risk_exposures_portfolio = cls._compute_exposures(
             positions=positions,
             factor_loadings=factor_loadings,
         )
         risk_exposures_portfolio.index = returns.index
 
         perf_attrib_by_factor = risk_exposures_portfolio.multiply(factor_returns)
-        common_returns = perf_attrib_by_factor.sum(axis='columns')
+        common_returns = perf_attrib_by_factor.sum(axis="columns")
         tilt_exposure = risk_exposures_portfolio.mean()
-        tilt_returns = factor_returns.multiply(tilt_exposure).sum(axis='columns')
+        
+        # Handle both DataFrame and Series factor_returns
+        tilt_returns_raw = factor_returns.multiply(tilt_exposure)
+        if isinstance(tilt_returns_raw, pd.DataFrame):
+            tilt_returns = tilt_returns_raw.sum(axis="columns")
+        else:
+            # For Series, sum without axis parameter
+            tilt_returns = tilt_returns_raw.sum()
+        
         timing_returns = common_returns - tilt_returns
         specific_returns = returns - common_returns
 
-        returns_df = pd.DataFrame(OrderedDict([
-            ('total_returns', returns),
-            ('common_returns', common_returns),
-            ('specific_returns', specific_returns),
-            ('tilt_returns', tilt_returns),
-            ('timing_returns', timing_returns),
-        ]))
+        returns_df = pd.DataFrame(
+            OrderedDict(
+                [
+                    ("total_returns", returns),
+                    ("common_returns", common_returns),
+                    ("specific_returns", specific_returns),
+                    ("tilt_returns", tilt_returns),
+                    ("timing_returns", timing_returns),
+                ]
+            )
+        )
 
-        perf_attribution = pd.concat([perf_attrib_by_factor, returns_df],
-                                     axis='columns')
+        perf_attribution = pd.concat(
+            [perf_attrib_by_factor, returns_df], axis="columns"
+        )
         perf_attribution.index = returns.index
 
         return risk_exposures_portfolio, perf_attribution
@@ -847,14 +966,17 @@ class Empyrical:
         if positions is None:
             raise ValueError("Either provide positions or set positions data")
         if factor_loadings is None:
-            raise ValueError("Either provide factor_loadings or set factor_loadings data")
-        risk_exposures = factor_loadings.multiply(positions, axis='rows')
-        return risk_exposures.groupby(level='dt').sum()
+            raise ValueError(
+                "Either provide factor_loadings or set factor_loadings data"
+            )
+        risk_exposures = factor_loadings.multiply(positions, axis="rows")
+        return risk_exposures.groupby(level="dt").sum()
 
     @classmethod
-    def cal_treynor_ratio(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
-        """Calculates the Treynor ratio.
-        """
+    def cal_treynor_ratio(
+        cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
+    ):
+        """Calculates the Treynor ratio."""
         allocated_output = True
         out = np.empty(returns.shape[1:])
 
@@ -869,7 +991,9 @@ class Empyrical:
         returns, factor_returns = cls._aligned_series(returns, factor_returns)
 
         # Annualized excess return
-        ann_return = cls.annual_return(returns, period=period, annualization=annualization)
+        ann_return = cls.annual_return(
+            returns, period=period, annualization=annualization
+        )
         ann_excess_return = ann_return - risk_free
 
         # Beta
@@ -879,20 +1003,20 @@ class Empyrical:
             if b == 0 or b < 0 or np.isnan(b):
                 out = np.nan
             else:
-                with np.errstate(divide='ignore', invalid='ignore'):
+                with np.errstate(divide="ignore", invalid="ignore"):
                     out[()] = ann_excess_return / b
                 out = out.item()
         else:
             if isinstance(b, (pd.Series, np.ndarray)):
                 mask = (b == 0) | (b < 0) | np.isnan(b)
-                with np.errstate(divide='ignore', invalid='ignore'):
+                with np.errstate(divide="ignore", invalid="ignore"):
                     if isinstance(ann_excess_return, (pd.Series, pd.DataFrame)):
                         out = (ann_excess_return / b).values
                     else:
                         out = ann_excess_return / b
                 out[mask] = np.nan
             else:
-                with np.errstate(divide='ignore', invalid='ignore'):
+                with np.errstate(divide="ignore", invalid="ignore"):
                     out[()] = ann_excess_return / b
 
             if allocated_output and isinstance(returns, pd.DataFrame):
@@ -901,25 +1025,44 @@ class Empyrical:
         return out
 
     @classmethod
-    def treynor_ratio(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def treynor_ratio(
+        cls,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates the Treynor ratio."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
-        return cls.cal_treynor_ratio(returns, factor_returns, risk_free, period, annualization)
+        return cls.cal_treynor_ratio(
+            returns, factor_returns, risk_free, period, annualization
+        )
 
     @classmethod
-    def m_squared(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
+    def m_squared(
+        cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
+    ):
         """Calculates the M-squared (M²) measure."""
         if len(returns) < 2:
             return np.nan
 
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
 
-        # Calculate annualized returns and volatilities  
-        ann_return = cls.annual_return(returns_aligned, period=period, annualization=annualization)
-        ann_vol = cls.annual_volatility(returns_aligned, period=period, annualization=annualization)
-        ann_factor_return = cls.annual_return(factor_aligned, period=period, annualization=annualization)
-        ann_factor_vol = cls.annual_volatility(factor_aligned, period=period, annualization=annualization)
+        # Calculate annualized returns and volatilities
+        ann_return = cls.annual_return(
+            returns_aligned, period=period, annualization=annualization
+        )
+        ann_vol = cls.annual_volatility(
+            returns_aligned, period=period, annualization=annualization
+        )
+        ann_factor_return = cls.annual_return(
+            factor_aligned, period=period, annualization=annualization
+        )
+        ann_factor_vol = cls.annual_volatility(
+            factor_aligned, period=period, annualization=annualization
+        )
 
         # Handle division by zero or negative volatility
         if ann_vol == 0 or ann_vol < 0 or np.isnan(ann_vol):
@@ -935,7 +1078,7 @@ class Empyrical:
         """Determines the annual return for each year."""
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
-            return np.array([]) if return_as_array else pd.Series(dtype='float64')
+            return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
         return_as_array = isinstance(returns, np.ndarray)
 
@@ -949,18 +1092,22 @@ class Empyrical:
         return annual_returns.values if return_as_array else annual_returns
 
     @classmethod
-    def sharpe_ratio_by_year(cls, returns, risk_free=0, period=DAILY, annualization=None):
+    def sharpe_ratio_by_year(
+        cls, returns, risk_free=0, period=DAILY, annualization=None
+    ):
         """Determines the Sharpe ratio for each year."""
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
-            return np.array([]) if return_as_array else pd.Series(dtype='float64')
+            return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
         return_as_array = isinstance(returns, np.ndarray)
 
         returns = cls._ensure_datetime_index_series(returns, period=period)
 
         sharpe_by_year = returns.groupby(returns.index.year).apply(
-            lambda x: cls.sharpe_ratio(x, risk_free=risk_free, period=period, annualization=annualization)
+            lambda x: cls.sharpe_ratio(
+                x, risk_free=risk_free, period=period, annualization=annualization
+            )
         )
 
         return sharpe_by_year.values if return_as_array else sharpe_by_year
@@ -970,7 +1117,7 @@ class Empyrical:
         """Determines the maximum drawdown for each year."""
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
-            return np.array([]) if return_as_array else pd.Series(dtype='float64')
+            return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
         return_as_array = isinstance(returns, np.ndarray)
 
@@ -987,7 +1134,7 @@ class Empyrical:
         if len(returns) < 3:
             return np.nan
 
-        return stats.skew(returns, nan_policy='omit')
+        return stats.skew(returns, nan_policy="omit")
 
     @classmethod
     def kurtosis(cls, returns):
@@ -995,7 +1142,7 @@ class Empyrical:
         if len(returns) < 4:
             return np.nan
 
-        return stats.kurtosis(returns, nan_policy='omit')
+        return stats.kurtosis(returns, nan_policy="omit")
 
     @classmethod
     def hurst_exponent(cls, returns):
@@ -1046,7 +1193,7 @@ class Empyrical:
 
                 rs_list = []
                 for i in range(n_subseries):
-                    sub_series = returns_clean[i * lag:(i + 1) * lag]
+                    sub_series = returns_clean[i * lag : (i + 1) * lag]
                     if len(sub_series) < 2:
                         continue
 
@@ -1163,7 +1310,7 @@ class Empyrical:
                 burke_risk = np.std(downside_returns)
         else:
             # Calculate Burke ratio denominator: sqrt(sum(drawdowns^2))
-            squared_drawdowns = [dd ** 2 for dd in drawdown_periods]
+            squared_drawdowns = [dd**2 for dd in drawdown_periods]
             burke_risk = np.sqrt(np.sum(squared_drawdowns))
 
         if burke_risk == 0 or burke_risk < 1e-10:
@@ -1178,7 +1325,9 @@ class Empyrical:
         return (ann_ret - risk_free) / burke_risk
 
     @classmethod
-    def kappa_three_ratio(cls, returns, risk_free=0.0, period=DAILY, annualization=None, mar=0.0):
+    def kappa_three_ratio(
+        cls, returns, risk_free=0.0, period=DAILY, annualization=None, mar=0.0
+    ):
         """Calculates the Kappa 3 ratio (downside deviation cubed)."""
         if len(returns) < 2:
             return np.nan
@@ -1193,7 +1342,7 @@ class Empyrical:
         # Calculate Lower Partial Moment of order 3
         # LPM3 = mean((max(0, MAR - return))^3)
         downside_deviations = np.maximum(0, mar - returns_clean)
-        lpm3 = np.mean(downside_deviations ** 3)
+        lpm3 = np.mean(downside_deviations**3)
 
         # Annualize LPM3
         ann_factor = cls.annualization_factor(period, annualization)
@@ -1247,7 +1396,7 @@ class Empyrical:
         dampening = min(1.0, n / 50.0)  # Full adjustment only for n >= 50
 
         skew_adj = (skew / 6) * sharpe * dampening
-        kurt_adj = (kurt / 24) * (sharpe ** 2) * dampening
+        kurt_adj = (kurt / 24) * (sharpe**2) * dampening
         adjustment = 1 + skew_adj - kurt_adj
 
         # Bound the adjustment to prevent extreme values
@@ -1281,7 +1430,9 @@ class Empyrical:
                     return np.inf
                 return -np.log(exp_theta_r.mean()) / theta
 
-            result = minimize_scalar(neg_log_likelihood, bounds=(1e-10, 10), method='bounded')
+            result = minimize_scalar(
+                neg_log_likelihood, bounds=(1e-10, 10), method="bounded"
+            )
 
             if result.success:
                 return -result.fun
@@ -1383,7 +1534,7 @@ class Empyrical:
 
         # Align series if they are pandas objects
         if isinstance(returns, pd.Series) and isinstance(market_returns, pd.Series):
-            returns, market_returns = returns.align(market_returns, join='inner')
+            returns, market_returns = returns.align(market_returns, join="inner")
 
         if len(returns) < 2:
             return np.nan
@@ -1412,7 +1563,7 @@ class Empyrical:
 
         # Align series if they are pandas objects
         if isinstance(returns, pd.Series) and isinstance(bond_returns, pd.Series):
-            returns, bond_returns = returns.align(bond_returns, join='inner')
+            returns, bond_returns = returns.align(bond_returns, join="inner")
 
         if len(returns) < 2:
             return np.nan
@@ -1434,39 +1585,39 @@ class Empyrical:
         return float(correlation) if not np.isnan(correlation) else np.nan
 
     @classmethod
-    def futures_market_correlation(cls, returns, futures_returns):
-        """Determines the correlation with the futures market."""
-        if len(returns) < 2 or len(futures_returns) < 2:
-            return np.nan
-
-        # Align series if they are pandas objects
-        if isinstance(returns, pd.Series) and isinstance(futures_returns, pd.Series):
-            returns, futures_returns = returns.align(futures_returns, join='inner')
-
-        if len(returns) < 2:
-            return np.nan
-
-        returns_array = np.asanyarray(returns)
-        futures_array = np.asanyarray(futures_returns)
-
-        # Remove NaN values
-        valid_mask = ~(np.isnan(returns_array) | np.isnan(futures_array))
-        returns_clean = returns_array[valid_mask]
-        futures_clean = futures_array[valid_mask]
-
-        if len(returns_clean) < 2:
-            return np.nan
-
-        # Calculate Pearson correlation
-        correlation = np.corrcoef(returns_clean, futures_clean)[0, 1]
-
-        return float(correlation) if not np.isnan(correlation) else np.nan
-
-    @classmethod
     def serial_correlation(cls, returns=None, lag=1):
-        """Determines the serial correlation of returns."""
+        """Determines the serial correlation of returns.
+
+        This matches the original empyrical behavior: align inputs,
+        drop NaNs, and compute the correlation between ``r[t]`` and
+        ``r[t-lag]``. If there are fewer than ``lag + 1`` valid
+        observations, return NaN.
+        """
+
         returns = cls._get_returns(returns)
-        return cls.serial_correlation(returns, lag)
+
+        if returns is None:
+            return np.nan
+
+        # Convert to numpy array, dropping NaNs but preserving order.
+        arr = np.asarray(returns)
+        if arr.size == 0:
+            return np.nan
+
+        mask = ~np.isnan(arr)
+        arr = arr[mask]
+
+        if arr.size <= lag:
+            return np.nan
+
+        x = arr[lag:]
+        y = arr[:-lag]
+
+        if x.size < 2:
+            return np.nan
+
+        corr = np.corrcoef(x, y)[0, 1]
+        return float(corr) if not np.isnan(corr) else np.nan
 
     @classmethod
     def treynor_mazuy_timing(cls, returns, factor_returns, risk_free=0.0):
@@ -1481,11 +1632,13 @@ class Empyrical:
         excess_factor = factor_aligned - risk_free
 
         # Create the quadratic term
-        factor_squared = excess_factor ** 2
+        factor_squared = excess_factor**2
 
         # Multiple regression: excess_returns = alpha + beta*excess_factor + gamma*factor_squared
         try:
-            X = np.column_stack([np.ones(len(excess_factor)), excess_factor, factor_squared])
+            X = np.column_stack(
+                [np.ones(len(excess_factor)), excess_factor, factor_squared]
+            )
             coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
             return coeffs[2]  # gamma coefficient
         except Exception as e:
@@ -1509,7 +1662,9 @@ class Empyrical:
 
         # Multiple regression: excess_returns = alpha + beta*excess_factor + gamma*down_market
         try:
-            X = np.column_stack([np.ones(len(excess_factor)), excess_factor, down_market])
+            X = np.column_stack(
+                [np.ones(len(excess_factor)), excess_factor, down_market]
+            )
             coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
             return coeffs[2]  # gamma coefficient
         except Exception as e:
@@ -1528,10 +1683,17 @@ class Empyrical:
         excess_factor = factor_aligned - risk_free
 
         # Market timing return is gamma * factor_squared
-        return gamma * np.mean(excess_factor ** 2)
+        return gamma * np.mean(excess_factor**2)
 
     @classmethod
-    def annual_alpha(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def annual_alpha(
+        cls,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Determines the annual alpha for each year."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -1546,7 +1708,9 @@ class Empyrical:
         def alpha_for_year(group_data):
             year_returns = group_data[0]
             year_factor = group_data[1]
-            return cls.alpha(year_returns, year_factor, risk_free, period, annualization)
+            return cls.alpha(
+                year_returns, year_factor, risk_free, period, annualization
+            )
 
         # Group by year and calculate alpha for each year
         grouped = returns.groupby(returns.index.year)
@@ -1557,7 +1721,9 @@ class Empyrical:
             if year in factor_grouped.groups.keys():
                 year_returns = grouped.get_group(year)
                 year_factor = factor_grouped.get_group(year)
-                alpha_val = cls.alpha(year_returns, year_factor, risk_free, period, annualization)
+                alpha_val = cls.alpha(
+                    year_returns, year_factor, risk_free, period, annualization
+                )
                 annual_alphas.append((year, alpha_val))
 
         if not annual_alphas:
@@ -1567,7 +1733,14 @@ class Empyrical:
         return pd.Series(alphas, index=years)
 
     @classmethod
-    def annual_beta(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def annual_beta(
+        cls,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Determines the annual beta for each year."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -1588,7 +1761,9 @@ class Empyrical:
             if year in factor_grouped.groups.keys():
                 year_returns = grouped.get_group(year)
                 year_factor = factor_grouped.get_group(year)
-                beta_val = cls.beta(year_returns, year_factor, risk_free, period, annualization)
+                beta_val = cls.beta(
+                    year_returns, year_factor, risk_free, period, annualization
+                )
                 annual_betas.append((year, beta_val))
 
         if not annual_betas:
@@ -1613,7 +1788,9 @@ class Empyrical:
         excess_factor = factor_aligned - risk_free
 
         # Calculate beta
-        beta_val = np.cov(excess_returns, excess_factor)[0, 1] / np.var(excess_factor, ddof=1)
+        beta_val = np.cov(excess_returns, excess_factor)[0, 1] / np.var(
+            excess_factor, ddof=1
+        )
 
         # Calculate residuals
         predicted_returns = beta_val * excess_factor
@@ -1671,8 +1848,7 @@ class Empyrical:
             return np.nan
 
         # Resample to weekly returns
-        weekly_returns = returns.resample('W').apply(lambda x:
-                                                     cls.cum_returns_final(x))
+        weekly_returns = returns.resample("W").apply(lambda x: cls.cum_returns_final(x))
 
         up_weeks = weekly_returns > 0
 
@@ -1694,7 +1870,7 @@ class Empyrical:
             return np.nan
 
         # Resample to weekly returns
-        weekly_returns = returns.resample('W').apply(lambda x: cls.cum_returns_final(x))
+        weekly_returns = returns.resample("W").apply(lambda x: cls.cum_returns_final(x))
 
         down_weeks = weekly_returns < 0
 
@@ -1716,8 +1892,9 @@ class Empyrical:
             return np.nan
 
         # Resample to monthly returns
-        monthly_returns = returns.resample('M').apply(lambda x:
-                                                      cls.cum_returns_final(x))
+        monthly_returns = returns.resample("M").apply(
+            lambda x: cls.cum_returns_final(x)
+        )
 
         up_months = monthly_returns > 0
 
@@ -1739,8 +1916,9 @@ class Empyrical:
             return np.nan
 
         # Resample to monthly returns
-        monthly_returns = returns.resample('M').apply(lambda x:
-                                                      cls.cum_returns_final(x))
+        monthly_returns = returns.resample("M").apply(
+            lambda x: cls.cum_returns_final(x)
+        )
 
         down_months = monthly_returns < 0
 
@@ -1773,7 +1951,11 @@ class Empyrical:
         win_rate_value = positive_count / total_count
 
         if returns_array.ndim == 1:
-            return win_rate_value.item() if isinstance(win_rate_value, np.ndarray) else win_rate_value
+            return (
+                win_rate_value.item()
+                if isinstance(win_rate_value, np.ndarray)
+                else win_rate_value
+            )
         else:
             return win_rate_value
 
@@ -1797,7 +1979,11 @@ class Empyrical:
         loss_rate_value = negative_count / total_count
 
         if returns_array.ndim == 1:
-            return loss_rate_value.item() if isinstance(loss_rate_value, np.ndarray) else loss_rate_value
+            return (
+                loss_rate_value.item()
+                if isinstance(loss_rate_value, np.ndarray)
+                else loss_rate_value
+            )
         else:
             return loss_rate_value
 
@@ -1874,14 +2060,59 @@ class Empyrical:
         return cls.cal_futures_market_correlation(returns, futures_returns)
 
     @classmethod
-    def up_alpha_beta(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    def cal_futures_market_correlation(cls, returns, futures_returns):
+        """Core implementation for futures market correlation.
+
+        This mirrors the logic of other *market_correlation helpers:
+        - align indices for pandas Series
+        - drop NaNs
+        - return NaN if there are fewer than 2 observations
+        - otherwise return Pearson correlation in [-1, 1]
+        """
+
+        if returns is None or futures_returns is None:
+            return np.nan
+
+        if isinstance(returns, pd.Series) and isinstance(
+            futures_returns, pd.Series
+        ):
+            returns, futures_returns = returns.align(
+                futures_returns, join="inner"
+            )
+
+        if len(returns) < 2 or len(futures_returns) < 2:
+            return np.nan
+
+        returns_array = np.asanyarray(returns)
+        futures_array = np.asanyarray(futures_returns)
+
+        valid_mask = ~(np.isnan(returns_array) | np.isnan(futures_array))
+        returns_clean = returns_array[valid_mask]
+        futures_clean = futures_array[valid_mask]
+
+        if len(returns_clean) < 2:
+            return np.nan
+
+        corr = np.corrcoef(returns_clean, futures_clean)[0, 1]
+        return float(corr) if not np.isnan(corr) else np.nan
+
+    @classmethod
+    def up_alpha_beta(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+    ):
         """Calculates alpha and beta for up-market periods only."""
         # Handle output array
         if out is None:
-            out = np.empty((2,), dtype='float64')
+            out = np.empty((2,), dtype="float64")
 
         if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-            returns, factor_returns = returns.align(factor_returns, join='inner')
+            returns, factor_returns = returns.align(factor_returns, join="inner")
 
         returns_array = np.asanyarray(returns)
         factor_array = np.asanyarray(factor_returns)
@@ -1931,14 +2162,22 @@ class Empyrical:
         return out
 
     @classmethod
-    def down_alpha_beta(cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    def down_alpha_beta(
+        cls,
+        returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        out=None,
+    ):
         """Calculates alpha and beta for down-market periods only."""
         # Handle output array
         if out is None:
-            out = np.empty((2,), dtype='float64')
+            out = np.empty((2,), dtype="float64")
 
         if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-            returns, factor_returns = returns.align(factor_returns, join='inner')
+            returns, factor_returns = returns.align(factor_returns, join="inner")
 
         returns_array = np.asanyarray(returns)
         factor_array = np.asanyarray(factor_returns)
@@ -1988,14 +2227,23 @@ class Empyrical:
         return out
 
     @classmethod
-    def alpha_percentile_rank(cls, strategy_returns, all_strategies_returns, factor_returns, risk_free=0.0,
-                              period=DAILY, annualization=None):
+    def alpha_percentile_rank(
+        cls,
+        strategy_returns,
+        all_strategies_returns,
+        factor_returns,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates the percentile rank of alpha relative to a universe."""
         if len(strategy_returns) < 3:
             return np.nan
 
         # Calculate alpha for the target strategy
-        strategy_alpha = cls.alpha(strategy_returns, factor_returns, risk_free, period, annualization)
+        strategy_alpha = cls.alpha(
+            strategy_returns, factor_returns, risk_free, period, annualization
+        )
 
         if np.isnan(strategy_alpha):
             return np.nan
@@ -2005,7 +2253,9 @@ class Empyrical:
         for other_returns in all_strategies_returns:
             if len(other_returns) < 3:
                 continue
-            other_alpha = cls.alpha(other_returns, factor_returns, risk_free, period, annualization)
+            other_alpha = cls.alpha(
+                other_returns, factor_returns, risk_free, period, annualization
+            )
             if not np.isnan(other_alpha):
                 all_alphas.append(other_alpha)
 
@@ -2054,9 +2304,13 @@ class Empyrical:
 
             # Perform multiple regression: y = α + β1*x1 + β2*x2
             # where x1 = excess_market_positive, x2 = excess_market_negative
-            X = np.column_stack([np.ones(len(excess_market)),
-                                 excess_market_positive,
-                                 excess_market_negative])
+            X = np.column_stack(
+                [
+                    np.ones(len(excess_market)),
+                    excess_market_positive,
+                    excess_market_negative,
+                ]
+            )
 
             # Solve using least squares
             coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
@@ -2089,11 +2343,17 @@ class Empyrical:
         correlation = np.corrcoef(returns_aligned, factor_aligned)[0, 1]
 
         # R-cubed is the cube of correlation
-        return correlation ** 3
+        return correlation**3
 
     @classmethod
-    def regression_annual_return(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY,
-                                 annualization=None):
+    def regression_annual_return(
+        cls,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates the annual return from regression (alpha + beta * benchmark_return)."""
         alpha_val = cls.alpha(returns, factor_returns, risk_free, period, annualization)
         beta_val = cls.beta(returns, factor_returns, risk_free, period, annualization)
@@ -2110,13 +2370,17 @@ class Empyrical:
         return alpha_val + beta_val * benchmark_annual
 
     @classmethod
-    def annualized_cumulative_return(cls, returns=None, period=DAILY, annualization=None):
+    def annualized_cumulative_return(
+        cls, returns=None, period=DAILY, annualization=None
+    ):
         """Calculates the annualized cumulative return."""
         # This is essentially the same as annual_return
         return cls.annual_return(returns, period, annualization)
 
     @classmethod
-    def annual_active_return(cls, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_return(
+        cls, returns=None, factor_returns=None, period=DAILY, annualization=None
+    ):
         """Calculates the annual active return (strategy - benchmark)."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -2137,7 +2401,9 @@ class Empyrical:
         return strategy_annual - benchmark_annual
 
     @classmethod
-    def annual_active_risk(cls, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_risk(
+        cls, returns=None, factor_returns=None, period=DAILY, annualization=None
+    ):
         """Calculates the annual active risk (tracking error)."""
         return cls.tracking_error(returns, factor_returns, period, annualization)
 
@@ -2163,7 +2429,9 @@ class Empyrical:
         return result
 
     @classmethod
-    def annual_active_return_by_year(cls, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_return_by_year(
+        cls, returns=None, factor_returns=None, period=DAILY, annualization=None
+    ):
         """Determines the annual active return for each year."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -2184,7 +2452,9 @@ class Empyrical:
             if year in factor_grouped.groups.keys():
                 year_returns = grouped.get_group(year)
                 year_factor = factor_grouped.get_group(year)
-                active_return = cls.annual_active_return(year_returns, year_factor, period, annualization)
+                active_return = cls.annual_active_return(
+                    year_returns, year_factor, period, annualization
+                )
                 annual_active_returns.append((year, active_return))
 
         if not annual_active_returns:
@@ -2194,23 +2464,31 @@ class Empyrical:
         return pd.Series(active_returns, index=years)
 
     @classmethod
-    def information_ratio_by_year(cls, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def information_ratio_by_year(
+        cls, returns=None, factor_returns=None, period=DAILY, annualization=None
+    ):
         """Determines the information ratio for each year."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
-            return np.array([]) if return_as_array else pd.Series(dtype='float64')
+            return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
         # Track whether input is array for return type
         return_as_array = isinstance(returns, np.ndarray)
 
         # Ensure we have datetime-indexed Series
-        if return_as_array or not hasattr(returns, 'index') or not isinstance(returns.index, pd.DatetimeIndex):
+        if (
+            return_as_array
+            or not hasattr(returns, "index")
+            or not isinstance(returns.index, pd.DatetimeIndex)
+        ):
             # For numpy arrays or non-datetime indexed data, convert to datetime-indexed series
             returns = cls._ensure_datetime_index_series(returns, period=period)
-            factor_returns = cls._ensure_datetime_index_series(factor_returns, period=period)
+            factor_returns = cls._ensure_datetime_index_series(
+                factor_returns, period=period
+            )
 
         # Align the series
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
@@ -2220,18 +2498,20 @@ class Empyrical:
             lambda x: cls._calculate_information_ratio_for_active_returns(
                 x - factor_aligned.loc[x.index],
                 period=period,
-                annualization=annualization
+                annualization=annualization,
             )
         )
 
         # Remove name attribute if it exists
-        if hasattr(information_ratios, 'name'):
+        if hasattr(information_ratios, "name"):
             information_ratios.name = None
 
         return information_ratios.values if return_as_array else information_ratios
 
     @classmethod
-    def _calculate_information_ratio_for_active_returns(cls, active_returns, period=DAILY, annualization=None):
+    def _calculate_information_ratio_for_active_returns(
+        cls, active_returns, period=DAILY, annualization=None
+    ):
         """Calculate information ratio from active returns."""
         ann_factor = cls.annualization_factor(period, annualization)
         mean_excess_return = active_returns.mean()
@@ -2239,7 +2519,9 @@ class Empyrical:
         if std_excess_return == 0:
             return np.nan
         else:
-            return (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
+            return (mean_excess_return * ann_factor) / (
+                std_excess_return * np.sqrt(ann_factor)
+            )
 
     @classmethod
     def second_max_drawdown(cls, returns=None):
@@ -2377,7 +2659,7 @@ class Empyrical:
         if recovery_mask.any():
             recovery_date = post_dd_data[recovery_mask].index[0]
             # Handle different index types
-            if hasattr(recovery_date - max_dd_date, 'days'):
+            if hasattr(recovery_date - max_dd_date, "days"):
                 # DatetimeIndex case
                 return (recovery_date - max_dd_date).days
             else:
@@ -2403,7 +2685,7 @@ class Empyrical:
         # Calculate rolling maximum
         rolling_max = cum_ret.expanding().max()
 
-        # Calculate drawdown  
+        # Calculate drawdown
         drawdown = (cum_ret - rolling_max) / rolling_max
 
         # Find the end date of maximum drawdown (lowest point)
@@ -2444,7 +2726,7 @@ class Empyrical:
         # Calculate rolling maximum
         rolling_max = cum_ret.expanding().max()
 
-        # Calculate drawdown  
+        # Calculate drawdown
         drawdown = (cum_ret - rolling_max) / rolling_max
 
         # Find the end date of maximum drawdown (lowest point)
@@ -2474,14 +2756,16 @@ class Empyrical:
         returns = cls._get_returns(returns)
         if len(returns) < 1:
             return_as_array = isinstance(returns, np.ndarray)
-            return np.array([]) if return_as_array else pd.Series(dtype='float64')
+            return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
         return_as_array = isinstance(returns, np.ndarray)
 
         returns = cls._ensure_datetime_index_series(returns, period=period)
 
         annual_vol_by_year = returns.groupby(returns.index.year).apply(
-            lambda x: cls.annual_volatility(x, period=period, annualization=annualization)
+            lambda x: cls.annual_volatility(
+                x, period=period, annualization=annualization
+            )
         )
 
         return annual_vol_by_year.values if return_as_array else annual_vol_by_year
@@ -2620,13 +2904,13 @@ class Empyrical:
         returns_series = pd.Series(returns_aligned)
         factor_returns_series = pd.Series(factor_aligned)
         pairs = pd.concat([returns_series, factor_returns_series], axis=1)
-        pairs.columns = ['returns', 'factor_returns']
+        pairs.columns = ["returns", "factor_returns"]
 
         # Exclude any rows where returns are nan
         pairs = pairs.dropna()
 
         # Sort by factor returns
-        pairs = pairs.sort_values(by=['factor_returns'], kind='mergesort')
+        pairs = pairs.sort_values(by=["factor_returns"], kind="mergesort")
 
         # Find the three vectors, using median of 3
         start_index = 0
@@ -2637,22 +2921,25 @@ class Empyrical:
         (mid_returns, mid_factor_returns) = pairs.iloc[mid_index]
         (end_returns, end_factor_returns) = pairs.iloc[end_index]
 
-        factor_returns_range = (end_factor_returns - start_factor_returns)
+        factor_returns_range = end_factor_returns - start_factor_returns
         start_returns_weight = 0.5
         end_returns_weight = 0.5
 
         # Find weights for the start and end returns using a convex combination
         if not factor_returns_range == 0:
-            start_returns_weight = \
-                (mid_factor_returns - start_factor_returns) / \
-                factor_returns_range
-            end_returns_weight = \
-                (end_factor_returns - mid_factor_returns) / \
-                factor_returns_range
+            start_returns_weight = (
+                mid_factor_returns - start_factor_returns
+            ) / factor_returns_range
+            end_returns_weight = (
+                end_factor_returns - mid_factor_returns
+            ) / factor_returns_range
 
         # Calculate fragility heuristic
-        heuristic = (start_returns_weight * start_returns) + \
-                    (end_returns_weight * end_returns) - mid_returns
+        heuristic = (
+            (start_returns_weight * start_returns)
+            + (end_returns_weight * end_returns)
+            - mid_returns
+        )
 
         return heuristic
 
@@ -2665,7 +2952,7 @@ class Empyrical:
     @classmethod
     def gpd_risk_estimates(cls, returns=None, var_p=0.01):
         """Estimate VaR and ES using the Generalized Pareto Distribution (GPD).
-        
+
         Returns
         -------
         [threshold, scale_param, shape_param, var_estimate, es_estimate] : list[float]
@@ -2700,14 +2987,20 @@ class Empyrical:
 
         while not finished and threshold > minimum_threshold:
             losses_beyond_threshold = losses[losses >= threshold]
-            param_result = cls._gpd_loglikelihood_minimizer_aligned(losses_beyond_threshold)
-            if (param_result[0] is not False and param_result[1] is not False):
+            param_result = cls._gpd_loglikelihood_minimizer_aligned(
+                losses_beyond_threshold
+            )
+            if param_result[0] is not False and param_result[1] is not False:
                 scale_param = param_result[0]
                 shape_param = param_result[1]
-                var_estimate = cls._gpd_var_calculator(threshold, scale_param,
-                                                       shape_param, var_p,
-                                                       len(losses),
-                                                       len(losses_beyond_threshold))
+                var_estimate = cls._gpd_var_calculator(
+                    threshold,
+                    scale_param,
+                    shape_param,
+                    var_p,
+                    len(losses),
+                    len(losses_beyond_threshold),
+                )
                 # non-negative shape parameter is required for fat tails
                 # non-negative VaR estimate is required for loss of some kind
                 if shape_param > 0 and var_estimate > 0:
@@ -2716,10 +3009,12 @@ class Empyrical:
                 threshold = threshold / 2
 
         if finished:
-            es_estimate = cls._gpd_es_calculator(var_estimate, threshold,
-                                                 scale_param, shape_param)
-            result = np.array([threshold, scale_param, shape_param,
-                               var_estimate, es_estimate])
+            es_estimate = cls._gpd_es_calculator(
+                var_estimate, threshold, scale_param, shape_param
+            )
+            result = np.array(
+                [threshold, scale_param, shape_param, var_estimate, es_estimate]
+            )
 
         if isinstance(returns, pd.Series):
             result = pd.Series(result)
@@ -2730,14 +3025,15 @@ class Empyrical:
         result = 0
         if (1 - shape_param) != 0:
             # this formula is from Gilli and Kellezi pg. 8
-            var_ratio = (var_estimate / (1 - shape_param))
-            param_ratio = ((scale_param - (shape_param * threshold)) /
-                           (1 - shape_param))
+            var_ratio = var_estimate / (1 - shape_param)
+            param_ratio = (scale_param - (shape_param * threshold)) / (1 - shape_param)
             result = var_ratio + param_ratio
         return result
 
     @classmethod
-    def _gpd_var_calculator(cls, threshold, scale_param, shape_param, probability, total_n, exceedance_n):
+    def _gpd_var_calculator(
+        cls, threshold, scale_param, shape_param, probability, total_n, exceedance_n
+    ):
         result = 0
         if exceedance_n > 0 and shape_param > 0:
             # this formula is from Gilli and Kellezi pg. 12
@@ -2749,15 +3045,20 @@ class Empyrical:
     @classmethod
     def _gpd_loglikelihood_minimizer_aligned(cls, price_data):
         from scipy import optimize
+
         result = [False, False]
         default_scale_param = 1
         default_shape_param = 1
         if len(price_data) > 0:
-            gpd_loglikelihood_lambda = lambda params: cls._gpd_loglikelihood(params, price_data)
+            gpd_loglikelihood_lambda = lambda params: cls._gpd_loglikelihood(
+                params, price_data
+            )
             try:
-                optimization_results = optimize.minimize(gpd_loglikelihood_lambda,
-                                                         [default_scale_param, default_shape_param],
-                                                         method='Nelder-Mead')
+                optimization_results = optimize.minimize(
+                    gpd_loglikelihood_lambda,
+                    [default_scale_param, default_shape_param],
+                    method="Nelder-Mead",
+                )
                 if optimization_results.success:
                     resulting_params = optimization_results.x
                     if len(resulting_params) == 2:
@@ -2770,7 +3071,9 @@ class Empyrical:
     @classmethod
     def _gpd_loglikelihood(cls, params, price_data):
         if params[1] != 0:
-            return -cls._gpd_loglikelihood_scale_and_shape(params[0], params[1], price_data)
+            return -cls._gpd_loglikelihood_scale_and_shape(
+                params[0], params[1], price_data
+            )
         else:
             return -cls._gpd_loglikelihood_scale_only(params[0], price_data)
 
@@ -2781,9 +3084,9 @@ class Empyrical:
         if scale != 0:
             param_factor = shape / scale
             if shape != 0 and param_factor >= 0 and scale >= 0:
-                result = ((-n * np.log(scale)) -
-                          (((1 / shape) + 1) *
-                           (np.log((shape / scale * price_data) + 1)).sum()))
+                result = (-n * np.log(scale)) - (
+                    ((1 / shape) + 1) * (np.log((shape / scale * price_data) + 1)).sum()
+                )
         return result
 
     @classmethod
@@ -2792,7 +3095,7 @@ class Empyrical:
         data_sum = price_data.sum()
         result = -1 * float_info.max
         if scale >= 0:
-            result = ((-n * np.log(scale)) - (data_sum / scale))
+            result = (-n * np.log(scale)) - (data_sum / scale)
         return result
 
     @classmethod
@@ -2814,10 +3117,10 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x['value'])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
 
         # Get second largest drawdown duration
-        return sorted_drawdowns[1]['duration']
+        return sorted_drawdowns[1]["duration"]
 
     @classmethod
     def second_max_drawdown_recovery_days(cls, returns=None):
@@ -2830,10 +3133,10 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x['value'])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
 
         # Get second-largest drawdown recovery duration
-        recovery_duration = sorted_drawdowns[1]['recovery_duration']
+        recovery_duration = sorted_drawdowns[1]["recovery_duration"]
         return recovery_duration if recovery_duration is not None else np.nan
 
     @classmethod
@@ -2847,10 +3150,10 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x['value'])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
 
         # Get third largest drawdown duration
-        return sorted_drawdowns[2]['duration']
+        return sorted_drawdowns[2]["duration"]
 
     @classmethod
     def third_max_drawdown_recovery_days(cls, returns=None):
@@ -2863,15 +3166,22 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x['value'])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
 
         # Get third-largest drawdown recovery duration
-        recovery_duration = sorted_drawdowns[2]['recovery_duration']
+        recovery_duration = sorted_drawdowns[2]["recovery_duration"]
         return recovery_duration if recovery_duration is not None else np.nan
 
     @classmethod
-    def roll_alpha(cls, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY,
-                   annualization=None):
+    def roll_alpha(
+        cls,
+        returns=None,
+        factor_returns=None,
+        window=252,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates rolling alpha over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -2883,19 +3193,29 @@ class Empyrical:
 
         rolling_alphas = []
         for i in range(window, len(returns_aligned) + 1):
-            window_returns = returns_aligned.iloc[i - window:i]
-            window_factor = factor_aligned.iloc[i - window:i]
+            window_returns = returns_aligned.iloc[i - window : i]
+            window_factor = factor_aligned.iloc[i - window : i]
 
-            alpha_val = cls.alpha(window_returns, window_factor, risk_free, period, annualization)
+            alpha_val = cls.alpha(
+                window_returns, window_factor, risk_free, period, annualization
+            )
             rolling_alphas.append(alpha_val)
 
         if isinstance(returns_aligned, pd.Series):
-            return pd.Series(rolling_alphas, index=returns_aligned.index[window - 1:])
+            return pd.Series(rolling_alphas, index=returns_aligned.index[window - 1 :])
         else:
             return pd.Series(rolling_alphas)
 
     @classmethod
-    def roll_beta(cls, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None):
+    def roll_beta(
+        cls,
+        returns=None,
+        factor_returns=None,
+        window=252,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates rolling beta over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -2907,20 +3227,29 @@ class Empyrical:
 
         rolling_betas = []
         for i in range(window, len(returns_aligned) + 1):
-            window_returns = returns_aligned.iloc[i - window:i]
-            window_factor = factor_aligned.iloc[i - window:i]
+            window_returns = returns_aligned.iloc[i - window : i]
+            window_factor = factor_aligned.iloc[i - window : i]
 
-            beta_val = cls.beta(window_returns, window_factor, risk_free, period, annualization)
+            beta_val = cls.beta(
+                window_returns, window_factor, risk_free, period, annualization
+            )
             rolling_betas.append(beta_val)
 
         if isinstance(returns_aligned, pd.Series):
-            return pd.Series(rolling_betas, index=returns_aligned.index[window - 1:])
+            return pd.Series(rolling_betas, index=returns_aligned.index[window - 1 :])
         else:
             return pd.Series(rolling_betas)
 
     @classmethod
-    def roll_alpha_beta(cls, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY,
-                        annualization=None):
+    def roll_alpha_beta(
+        cls,
+        returns=None,
+        factor_returns=None,
+        window=252,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+    ):
         """Calculates rolling alpha and beta over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
@@ -2930,22 +3259,26 @@ class Empyrical:
 
         if len(returns_aligned) < window:
             # Return empty DataFrame for consistent behavior
-            if isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray):
+            if isinstance(returns, np.ndarray) and isinstance(
+                factor_returns, np.ndarray
+            ):
                 return np.empty((0, 2), dtype=float)
             else:
-                return pd.DataFrame(columns=['alpha', 'beta'], dtype=float)
+                return pd.DataFrame(columns=["alpha", "beta"], dtype=float)
 
         rolling_results = []
         for i in range(window - 1, len(returns_aligned)):
-            if hasattr(returns_aligned, 'iloc'):
-                window_returns = returns_aligned.iloc[i - window + 1:i + 1]
-                window_factor = factor_aligned.iloc[i - window + 1:i + 1]
+            if hasattr(returns_aligned, "iloc"):
+                window_returns = returns_aligned.iloc[i - window + 1 : i + 1]
+                window_factor = factor_aligned.iloc[i - window + 1 : i + 1]
             else:
-                window_returns = returns_aligned[i - window + 1:i + 1]
-                window_factor = factor_aligned[i - window + 1:i + 1]
+                window_returns = returns_aligned[i - window + 1 : i + 1]
+                window_factor = factor_aligned[i - window + 1 : i + 1]
 
             try:
-                alpha_beta_result = cls.alpha_beta(window_returns, window_factor, risk_free, period, annualization)
+                alpha_beta_result = cls.alpha_beta(
+                    window_returns, window_factor, risk_free, period, annualization
+                )
                 rolling_results.append(alpha_beta_result)
             except Exception as e:
                 print(e)
@@ -2955,11 +3288,14 @@ class Empyrical:
         if isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray):
             return np.array(rolling_results)
         else:
-            if hasattr(returns_aligned, 'index'):
-                result_df = pd.DataFrame(rolling_results, columns=['alpha', 'beta'],
-                                         index=returns_aligned.index[window - 1:])
+            if hasattr(returns_aligned, "index"):
+                result_df = pd.DataFrame(
+                    rolling_results,
+                    columns=["alpha", "beta"],
+                    index=returns_aligned.index[window - 1 :],
+                )
             else:
-                result_df = pd.DataFrame(rolling_results, columns=['alpha', 'beta'])
+                result_df = pd.DataFrame(rolling_results, columns=["alpha", "beta"])
             return result_df
 
     @classmethod
@@ -2991,39 +3327,48 @@ class Empyrical:
                     # Start of a new drawdown period
                     in_drawdown = True
                     current_dd_info = {
-                        'value': dd_val,
-                        'start_idx': i,
-                        'end_idx': i,
-                        'min_idx': i,
-                        'peak_value': cum_ret.iloc[i] / (1 + dd_val)  # back-calculate peak
+                        "value": dd_val,
+                        "start_idx": i,
+                        "end_idx": i,
+                        "min_idx": i,
+                        "peak_value": cum_ret.iloc[i]
+                        / (1 + dd_val),  # back-calculate peak
                     }
                 else:
                     # Continue in drawdown, update if new minimum
-                    if dd_val < current_dd_info['value']:
-                        current_dd_info['value'] = dd_val
-                        current_dd_info['min_idx'] = i
-                    current_dd_info['end_idx'] = i
+                    if dd_val < current_dd_info["value"]:
+                        current_dd_info["value"] = dd_val
+                        current_dd_info["min_idx"] = i
+                    current_dd_info["end_idx"] = i
             else:
                 if in_drawdown:
                     # End of drawdown period - found recovery
-                    current_dd_info['recovery_idx'] = i
-                    current_dd_info['duration'] = current_dd_info['min_idx'] - current_dd_info['start_idx'] + 1
-                    current_dd_info['recovery_duration'] = i - current_dd_info['min_idx']
+                    current_dd_info["recovery_idx"] = i
+                    current_dd_info["duration"] = (
+                        current_dd_info["min_idx"] - current_dd_info["start_idx"] + 1
+                    )
+                    current_dd_info["recovery_duration"] = (
+                        i - current_dd_info["min_idx"]
+                    )
                     drawdown_periods.append(current_dd_info)
                     in_drawdown = False
                     current_dd_info = None
 
         # If still in drawdown at the end, add it without recovery
         if in_drawdown:
-            current_dd_info['recovery_idx'] = None
-            current_dd_info['duration'] = current_dd_info['min_idx'] - current_dd_info['start_idx'] + 1
-            current_dd_info['recovery_duration'] = None
+            current_dd_info["recovery_idx"] = None
+            current_dd_info["duration"] = (
+                current_dd_info["min_idx"] - current_dd_info["start_idx"] + 1
+            )
+            current_dd_info["recovery_duration"] = None
             drawdown_periods.append(current_dd_info)
 
         return drawdown_periods
 
     @classmethod
-    def roll_sharpe_ratio(cls, returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None):
+    def roll_sharpe_ratio(
+        cls, returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None
+    ):
         """Calculates rolling Sharpe ratio over a specified window."""
         returns = cls._get_returns(returns)
 
@@ -3035,12 +3380,14 @@ class Empyrical:
 
         rolling_sharpes = []
         for i in range(window - 1, len(returns)):
-            if hasattr(returns, 'iloc'):
-                window_returns = returns.iloc[i - window + 1:i + 1]
+            if hasattr(returns, "iloc"):
+                window_returns = returns.iloc[i - window + 1 : i + 1]
             else:
-                window_returns = returns[i - window + 1:i + 1]
+                window_returns = returns[i - window + 1 : i + 1]
             try:
-                sharpe = cls.sharpe_ratio(window_returns, risk_free, period, annualization)
+                sharpe = cls.sharpe_ratio(
+                    window_returns, risk_free, period, annualization
+                )
             except Exception as e:
                 print(e)
                 sharpe = np.nan
@@ -3049,7 +3396,7 @@ class Empyrical:
         if isinstance(returns, np.ndarray):
             return np.array(rolling_sharpes)
         else:
-            return pd.Series(rolling_sharpes, index=returns.index[window - 1:])
+            return pd.Series(rolling_sharpes, index=returns.index[window - 1 :])
 
     @classmethod
     def roll_max_drawdown(cls, returns=None, window=252):
@@ -3062,7 +3409,7 @@ class Empyrical:
         return roll(
             returns,
             window=window,
-            function=cls.cal_max_drawdown,
+            function=cls.max_drawdown,
         )
 
     @classmethod
@@ -3076,21 +3423,23 @@ class Empyrical:
 
         if len(returns_aligned) < window:
             empty_series = pd.Series([], dtype=float)
-            if isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray):
+            if isinstance(returns, np.ndarray) and isinstance(
+                factor_returns, np.ndarray
+            ):
                 return empty_series.values  # Return numpy array for numpy inputs
-            elif hasattr(returns_aligned, 'index'):
+            elif hasattr(returns_aligned, "index"):
                 return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             else:
                 return empty_series
 
         rolling_up_capture = []
         for i in range(window - 1, len(returns_aligned)):
-            if hasattr(returns_aligned, 'iloc'):
-                window_returns = returns_aligned.iloc[i - window + 1:i + 1]
-                window_factor = factor_aligned.iloc[i - window + 1:i + 1]
+            if hasattr(returns_aligned, "iloc"):
+                window_returns = returns_aligned.iloc[i - window + 1 : i + 1]
+                window_factor = factor_aligned.iloc[i - window + 1 : i + 1]
             else:
-                window_returns = returns_aligned[i - window + 1:i + 1]
-                window_factor = factor_aligned[i - window + 1:i + 1]
+                window_returns = returns_aligned[i - window + 1 : i + 1]
+                window_factor = factor_aligned[i - window + 1 : i + 1]
 
             try:
                 up_cap = cls.up_capture(window_returns, window_factor)
@@ -3099,8 +3448,10 @@ class Empyrical:
                 up_cap = np.nan
             rolling_up_capture.append(up_cap)
 
-        if hasattr(returns_aligned, 'index'):
-            result = pd.Series(rolling_up_capture, index=returns_aligned.index[window - 1:])
+        if hasattr(returns_aligned, "index"):
+            result = pd.Series(
+                rolling_up_capture, index=returns_aligned.index[window - 1 :]
+            )
         else:
             result = pd.Series(rolling_up_capture)
 
@@ -3121,21 +3472,23 @@ class Empyrical:
 
         if len(returns_aligned) < window:
             empty_series = pd.Series([], dtype=float)
-            if isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray):
+            if isinstance(returns, np.ndarray) and isinstance(
+                factor_returns, np.ndarray
+            ):
                 return empty_series.values  # Return numpy array for numpy inputs
-            elif hasattr(returns_aligned, 'index'):
+            elif hasattr(returns_aligned, "index"):
                 return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             else:
                 return empty_series
 
         rolling_down_capture = []
         for i in range(window - 1, len(returns_aligned)):
-            if hasattr(returns_aligned, 'iloc'):
-                window_returns = returns_aligned.iloc[i - window + 1:i + 1]
-                window_factor = factor_aligned.iloc[i - window + 1:i + 1]
+            if hasattr(returns_aligned, "iloc"):
+                window_returns = returns_aligned.iloc[i - window + 1 : i + 1]
+                window_factor = factor_aligned.iloc[i - window + 1 : i + 1]
             else:
-                window_returns = returns_aligned[i - window + 1:i + 1]
-                window_factor = factor_aligned[i - window + 1:i + 1]
+                window_returns = returns_aligned[i - window + 1 : i + 1]
+                window_factor = factor_aligned[i - window + 1 : i + 1]
 
             try:
                 down_cap = cls.down_capture(window_returns, window_factor)
@@ -3144,8 +3497,10 @@ class Empyrical:
                 down_cap = np.nan
             rolling_down_capture.append(down_cap)
 
-        if hasattr(returns_aligned, 'index'):
-            result = pd.Series(rolling_down_capture, index=returns_aligned.index[window - 1:])
+        if hasattr(returns_aligned, "index"):
+            result = pd.Series(
+                rolling_down_capture, index=returns_aligned.index[window - 1 :]
+            )
         else:
             result = pd.Series(rolling_down_capture)
 
@@ -3166,21 +3521,23 @@ class Empyrical:
 
         if len(returns_aligned) < window:
             empty_series = pd.Series([], dtype=float)
-            if isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray):
+            if isinstance(returns, np.ndarray) and isinstance(
+                factor_returns, np.ndarray
+            ):
                 return empty_series.values  # Return numpy array for numpy inputs
-            elif hasattr(returns_aligned, 'index'):
+            elif hasattr(returns_aligned, "index"):
                 return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             else:
                 return empty_series
 
         rolling_up_down_capture = []
         for i in range(window - 1, len(returns_aligned)):
-            if hasattr(returns_aligned, 'iloc'):
-                window_returns = returns_aligned.iloc[i - window + 1:i + 1]
-                window_factor = factor_aligned.iloc[i - window + 1:i + 1]
+            if hasattr(returns_aligned, "iloc"):
+                window_returns = returns_aligned.iloc[i - window + 1 : i + 1]
+                window_factor = factor_aligned.iloc[i - window + 1 : i + 1]
             else:
-                window_returns = returns_aligned[i - window + 1:i + 1]
-                window_factor = factor_aligned[i - window + 1:i + 1]
+                window_returns = returns_aligned[i - window + 1 : i + 1]
+                window_factor = factor_aligned[i - window + 1 : i + 1]
 
             try:
                 up_down_cap = cls.up_down_capture(window_returns, window_factor)
@@ -3189,8 +3546,10 @@ class Empyrical:
                 up_down_cap = np.nan
             rolling_up_down_capture.append(up_down_cap)
 
-        if hasattr(returns_aligned, 'index'):
-            result = pd.Series(rolling_up_down_capture, index=returns_aligned.index[window - 1:])
+        if hasattr(returns_aligned, "index"):
+            result = pd.Series(
+                rolling_up_down_capture, index=returns_aligned.index[window - 1 :]
+            )
         else:
             result = pd.Series(rolling_up_down_capture)
 
@@ -3200,10 +3559,11 @@ class Empyrical:
         else:
             return result
 
+    @classmethod
     def _get_all_drawdowns(cls, returns):
         """Helper function to find all distinct drawdown periods and their values."""
         detailed = cls._get_all_drawdowns_detailed(returns)
-        return [dd['value'] for dd in detailed]
+        return [dd["value"] for dd in detailed]
 
     @classmethod
     def model_returns_t_alpha_beta(cls, data, bmark, samples=2000, progressbar=True):
@@ -3242,24 +3602,18 @@ class Empyrical:
         data_bmark = pd.concat([data, bmark], axis=1).dropna()
 
         with pm.Model() as model:
-            sigma = pm.HalfCauchy(
-                'sigma',
-                beta=1)
-            nu = pm.Exponential('nu_minus_two', 1. / 10.)
+            sigma = pm.HalfCauchy("sigma", beta=1)
+            nu = pm.Exponential("nu_minus_two", 1.0 / 10.0)
 
             # alpha and beta
             X = data_bmark.iloc[:, 1]
             y = data_bmark.iloc[:, 0]
 
-            alpha_reg = pm.Normal('alpha', mu=0, sd=.1)
-            beta_reg = pm.Normal('beta', mu=0, sd=1)
+            alpha_reg = pm.Normal("alpha", mu=0, sd=0.1)
+            beta_reg = pm.Normal("beta", mu=0, sd=1)
 
             mu_reg = alpha_reg + beta_reg * X
-            pm.StudentT('returns',
-                        nu=nu + 2,
-                        mu=mu_reg,
-                        sd=sigma,
-                        observed=y)
+            pm.StudentT("returns", nu=nu + 2, mu=mu_reg, sd=sigma, observed=y)
             trace = pm.sample(samples, progressbar=progressbar)
 
         return model, trace
@@ -3287,18 +3641,18 @@ class Empyrical:
         """
 
         with pm.Model() as model:
-            mu = pm.Normal('mean returns', mu=0, sd=.01, testval=data.mean())
-            sigma = pm.HalfCauchy('volatility', beta=1, testval=data.std())
-            returns = pm.Normal('returns', mu=mu, sd=sigma, observed=data)
+            mu = pm.Normal("mean returns", mu=0, sd=0.01, testval=data.mean())
+            sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
+            returns = pm.Normal("returns", mu=mu, sd=sigma, observed=data)
             pm.Deterministic(
-                'annual volatility',
-                returns.distribution.variance ** .5 *
-                np.sqrt(252))
+                "annual volatility", returns.distribution.variance**0.5 * np.sqrt(252)
+            )
             pm.Deterministic(
-                'sharpe',
-                returns.distribution.mean /
-                returns.distribution.variance ** .5 *
-                np.sqrt(252))
+                "sharpe",
+                returns.distribution.mean
+                / returns.distribution.variance**0.5
+                * np.sqrt(252),
+            )
 
             trace = pm.sample(samples, progressbar=progressbar)
         return model, trace
@@ -3330,18 +3684,21 @@ class Empyrical:
         """
 
         with pm.Model() as model:
-            mu = pm.Normal('mean returns', mu=0, sd=.01, testval=data.mean())
-            sigma = pm.HalfCauchy('volatility', beta=1, testval=data.std())
-            nu = pm.Exponential('nu_minus_two', 1. / 10., testval=3.)
+            mu = pm.Normal("mean returns", mu=0, sd=0.01, testval=data.mean())
+            sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
+            nu = pm.Exponential("nu_minus_two", 1.0 / 10.0, testval=3.0)
 
-            returns = pm.StudentT('returns', nu=nu + 2, mu=mu, sd=sigma,
-                                  observed=data)
-            pm.Deterministic('annual volatility',
-                             returns.distribution.variance ** .5 * np.sqrt(252))
+            returns = pm.StudentT("returns", nu=nu + 2, mu=mu, sd=sigma, observed=data)
+            pm.Deterministic(
+                "annual volatility", returns.distribution.variance**0.5 * np.sqrt(252)
+            )
 
-            pm.Deterministic('sharpe', returns.distribution.mean /
-                             returns.distribution.variance ** .5 *
-                             np.sqrt(252))
+            pm.Deterministic(
+                "sharpe",
+                returns.distribution.mean
+                / returns.distribution.variance**0.5
+                * np.sqrt(252),
+            )
 
             trace = pm.sample(samples, progressbar=progressbar)
         return model, trace
@@ -3392,42 +3749,53 @@ class Empyrical:
         sigma_low = np.std(y) / 1000
         sigma_high = np.std(y) * 1000
         with pm.Model() as model:
-            group1_mean = pm.Normal('group1_mean', mu=mu_m, tau=mu_p,
-                                    testval=y1.mean())
-            group2_mean = pm.Normal('group2_mean', mu=mu_m, tau=mu_p,
-                                    testval=y2.mean())
-            group1_std = pm.Uniform('group1_std', lower=sigma_low,
-                                    upper=sigma_high, testval=y1.std())
-            group2_std = pm.Uniform('group2_std', lower=sigma_low,
-                                    upper=sigma_high, testval=y2.std())
-            nu = pm.Exponential('nu_minus_two', 1 / 29., testval=4.) + 2.
+            group1_mean = pm.Normal("group1_mean", mu=mu_m, tau=mu_p, testval=y1.mean())
+            group2_mean = pm.Normal("group2_mean", mu=mu_m, tau=mu_p, testval=y2.mean())
+            group1_std = pm.Uniform(
+                "group1_std", lower=sigma_low, upper=sigma_high, testval=y1.std()
+            )
+            group2_std = pm.Uniform(
+                "group2_std", lower=sigma_low, upper=sigma_high, testval=y2.std()
+            )
+            nu = pm.Exponential("nu_minus_two", 1 / 29.0, testval=4.0) + 2.0
 
-            returns_group1 = pm.StudentT('group1', nu=nu, mu=group1_mean,
-                                         lam=group1_std ** -2, observed=y1)
-            returns_group2 = pm.StudentT('group2', nu=nu, mu=group2_mean,
-                                         lam=group2_std ** -2, observed=y2)
+            returns_group1 = pm.StudentT(
+                "group1", nu=nu, mu=group1_mean, lam=group1_std**-2, observed=y1
+            )
+            returns_group2 = pm.StudentT(
+                "group2", nu=nu, mu=group2_mean, lam=group2_std**-2, observed=y2
+            )
 
-            diff_of_means = pm.Deterministic('difference of means',
-                                             group2_mean - group1_mean)
-            pm.Deterministic('difference of stds',
-                             group2_std - group1_std)
-            pm.Deterministic('effect size', diff_of_means /
-                             pm.math.sqrt((group1_std ** 2 +
-                                           group2_std ** 2) / 2))
+            diff_of_means = pm.Deterministic(
+                "difference of means", group2_mean - group1_mean
+            )
+            pm.Deterministic("difference of stds", group2_std - group1_std)
+            pm.Deterministic(
+                "effect size",
+                diff_of_means / pm.math.sqrt((group1_std**2 + group2_std**2) / 2),
+            )
 
-            pm.Deterministic('group1_annual_volatility',
-                             returns_group1.distribution.variance ** .5 *
-                             np.sqrt(252))
-            pm.Deterministic('group2_annual_volatility',
-                             returns_group2.distribution.variance ** .5 *
-                             np.sqrt(252))
+            pm.Deterministic(
+                "group1_annual_volatility",
+                returns_group1.distribution.variance**0.5 * np.sqrt(252),
+            )
+            pm.Deterministic(
+                "group2_annual_volatility",
+                returns_group2.distribution.variance**0.5 * np.sqrt(252),
+            )
 
-            pm.Deterministic('group1_sharpe', returns_group1.distribution.mean /
-                             returns_group1.distribution.variance ** .5 *
-                             np.sqrt(252))
-            pm.Deterministic('group2_sharpe', returns_group2.distribution.mean /
-                             returns_group2.distribution.variance ** .5 *
-                             np.sqrt(252))
+            pm.Deterministic(
+                "group1_sharpe",
+                returns_group1.distribution.mean
+                / returns_group1.distribution.variance**0.5
+                * np.sqrt(252),
+            )
+            pm.Deterministic(
+                "group2_sharpe",
+                returns_group2.distribution.mean
+                / returns_group2.distribution.variance**0.5
+                * np.sqrt(252),
+            )
 
             trace = pm.sample(samples, progressbar=progressbar)
         return model, trace
@@ -3465,19 +3833,20 @@ class Empyrical:
         from pymc.distributions.timeseries import GaussianRandomWalk
 
         with pm.Model() as model:
-            nu = pm.Exponential('nu', 1. / 10, testval=5.)
-            sigma = pm.Exponential('sigma', 1. / .02, testval=.1)
-            s = GaussianRandomWalk('s', sigma ** -2, shape=len(data))
-            volatility_process = pm.Deterministic('volatility_process',
-                                                  pm.math.exp(-2 * s))
-            pm.StudentT('r', nu, lam=volatility_process, observed=data)
+            nu = pm.Exponential("nu", 1.0 / 10, testval=5.0)
+            sigma = pm.Exponential("sigma", 1.0 / 0.02, testval=0.1)
+            s = GaussianRandomWalk("s", sigma**-2, shape=len(data))
+            volatility_process = pm.Deterministic(
+                "volatility_process", pm.math.exp(-2 * s)
+            )
+            pm.StudentT("r", nu, lam=volatility_process, observed=data)
 
             trace = pm.sample(samples, progressbar=progressbar)
 
         return model, trace
 
     @classmethod
-    def compute_bayes_cone(cls, preds, starting_value=1.):
+    def compute_bayes_cone(cls, preds, starting_value=1.0):
         """
         Compute 5, 25, 75 and 95 percentiles of cumulative returns, used
         for the Bayesian cone.
@@ -3498,8 +3867,7 @@ class Empyrical:
         """
 
         def scoreatpercentile(cum_preds, p):
-            return [stats.scoreatpercentile(
-                c, p) for c in cum_preds.T]
+            return [stats.scoreatpercentile(c, p) for c in cum_preds.T]
 
         cum_preds = np.cumprod(preds + 1, 1) * starting_value
         perc = {p: scoreatpercentile(cum_preds, p) for p in (5, 25, 75, 95)}
@@ -3526,20 +3894,30 @@ class Empyrical:
             outside of Bayesian cone.)
         """
 
-        returns_test_cum = Empyrical.cal_cum_returns(returns_test, starting_value=1.)
+        returns_test_cum = Empyrical.cal_cum_returns(returns_test, starting_value=1.0)
         cum_preds = np.cumprod(preds + 1, 1)
 
-        q = [sp.stats.percentileofscore(cum_preds[:, i],
-                                        returns_test_cum.iloc[i],
-                                        kind='weak')
-             for i in range(len(returns_test_cum))]
+        q = [
+            sp.stats.percentileofscore(
+                cum_preds[:, i], returns_test_cum.iloc[i], kind="weak"
+            )
+            for i in range(len(returns_test_cum))
+        ]
         # normalize to be from 100 (perfect median line) to 0 (completely outside
         # of cone)
-        return 100 - np.abs(50 - np.mean(q)) / .5
+        return 100 - np.abs(50 - np.mean(q)) / 0.5
 
     @classmethod
-    def run_model(cls, model, returns_train, returns_test=None,
-                  bmark=None, samples=500, ppc=False, progressbar=True):
+    def run_model(
+        cls,
+        model,
+        returns_train,
+        returns_test=None,
+        bmark=None,
+        samples=500,
+        ppc=False,
+        progressbar=True,
+    ):
         """
         Run one of the Bayesian models.
 
@@ -3576,30 +3954,37 @@ class Empyrical:
            PPC of shape samples x-len(returns_test).
         """
 
-        if model == 'alpha_beta':
-            model, trace = Empyrical.model_returns_t_alpha_beta(returns_train,
-                                                                bmark, samples,
-                                                                progressbar=progressbar)
-        elif model == 't':
-            model, trace = Empyrical.model_returns_t(returns_train, samples,
-                                                     progressbar=progressbar)
-        elif model == 'normal':
-            model, trace = Empyrical.model_returns_normal(returns_train, samples,
-                                                          progressbar=progressbar)
-        elif model == 'best':
-            model, trace = Empyrical.model_best(returns_train, returns_test,
-                                                samples=samples,
-                                                progressbar=progressbar)
+        if model == "alpha_beta":
+            model, trace = Empyrical.model_returns_t_alpha_beta(
+                returns_train, bmark, samples, progressbar=progressbar
+            )
+        elif model == "t":
+            model, trace = Empyrical.model_returns_t(
+                returns_train, samples, progressbar=progressbar
+            )
+        elif model == "normal":
+            model, trace = Empyrical.model_returns_normal(
+                returns_train, samples, progressbar=progressbar
+            )
+        elif model == "best":
+            model, trace = Empyrical.model_best(
+                returns_train, returns_test, samples=samples, progressbar=progressbar
+            )
         else:
             raise NotImplementedError(
-                'Model {} not found.'
-                'Use alpha_beta, t, normal, or best.'.format(model))
+                "Model {} not found."
+                "Use alpha_beta, t, normal, or best.".format(model)
+            )
 
         if ppc:
-            ppc_samples = pm.sample_ppc(trace, samples=samples,
-                                        model=model, size=len(returns_test),
-                                        progressbar=progressbar)
-            return trace, ppc_samples['returns']
+            ppc_samples = pm.sample_ppc(
+                trace,
+                samples=samples,
+                model=model,
+                size=len(returns_test),
+                progressbar=progressbar,
+            )
+            return trace, ppc_samples["returns"]
 
         return trace
 
@@ -3627,22 +4012,28 @@ class Empyrical:
             the corresponding ticker, respectively.
         """
 
-        transactions.index.name = 'date'
-        txn_daily = pd.DataFrame(transactions.assign(
-            amount=abs(transactions.amount)).groupby(
-            ['symbol', pd.Grouper(freq='D')]).sum()['amount'])
-        txn_daily['price'] = market_data['price'].unstack()
-        txn_daily['volume'] = market_data['volume'].unstack()
+        transactions.index.name = "date"
+        txn_daily = pd.DataFrame(
+            transactions.assign(amount=abs(transactions.amount))
+            .groupby(["symbol", pd.Grouper(freq="D")])
+            .sum()["amount"]
+        )
+        txn_daily["price"] = market_data["price"].unstack()
+        txn_daily["volume"] = market_data["volume"].unstack()
 
-        txn_daily = txn_daily.reset_index().set_index('date')
+        txn_daily = txn_daily.reset_index().set_index("date")
 
         return txn_daily
 
     @classmethod
-    def days_to_liquidate_positions(cls, positions, market_data,
-                                    max_bar_consumption=0.2,
-                                    capital_base=1e6,
-                                    mean_volume_window=5):
+    def days_to_liquidate_positions(
+        cls,
+        positions,
+        market_data,
+        max_bar_consumption=0.2,
+        capital_base=1e6,
+        mean_volume_window=5,
+    ):
         """
         Compute the number of days that would have been required to fully liquidate each position
         on each day, based on the trailing n day mean daily bar volume,
@@ -3680,27 +4071,33 @@ class Empyrical:
         """
         # print(market_data['volume'].info())
         # print(market_data['price'].info())
-        dv = market_data['volume'] * market_data['price']
+        dv = market_data["volume"] * market_data["price"]
         # DV = (market_data[market_data.index.get_level_values(1) == 'volume'] *
         #       market_data[market_data.index.get_level_values(1) == 'price'])
-        roll_mean_dv = dv.rolling(window=mean_volume_window,
-                                  center=False).mean().shift()
+        roll_mean_dv = (
+            dv.rolling(window=mean_volume_window, center=False).mean().shift()
+        )
         roll_mean_dv = roll_mean_dv.replace(0, np.nan)
 
         positions_alloc = Empyrical.get_percent_alloc(positions)
-        positions_alloc = positions_alloc.drop('cash', axis=1)
+        positions_alloc = positions_alloc.drop("cash", axis=1)
 
-        days_to_liquidate = (positions_alloc * capital_base) / \
-                            (max_bar_consumption * roll_mean_dv)
+        days_to_liquidate = (positions_alloc * capital_base) / (
+            max_bar_consumption * roll_mean_dv
+        )
 
         return days_to_liquidate.iloc[mean_volume_window:]
 
     @classmethod
-    def get_max_days_to_liquidate_by_ticker(cls, positions, market_data,
-                                            max_bar_consumption=0.2,
-                                            capital_base=1e6,
-                                            mean_volume_window=5,
-                                            last_n_days=None):
+    def get_max_days_to_liquidate_by_ticker(
+        cls,
+        positions,
+        market_data,
+        max_bar_consumption=0.2,
+        capital_base=1e6,
+        mean_volume_window=5,
+        last_n_days=None,
+    ):
         """
         Finds the longest estimated liquidation time for each traded
         name over the course of backtest (or last n days of the backtest).
@@ -3733,32 +4130,40 @@ class Empyrical:
             date and position_alloc on that day.
         """
 
-        dtlp = Empyrical.days_to_liquidate_positions(positions, market_data,
-                                                     max_bar_consumption=max_bar_consumption,
-                                                     capital_base=capital_base,
-                                                     mean_volume_window=mean_volume_window)
+        dtlp = Empyrical.days_to_liquidate_positions(
+            positions,
+            market_data,
+            max_bar_consumption=max_bar_consumption,
+            capital_base=capital_base,
+            mean_volume_window=mean_volume_window,
+        )
 
         if last_n_days is not None:
-            dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days):]
+            dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days) :]
 
         pos_alloc = Empyrical.get_percent_alloc(positions)
-        pos_alloc = pos_alloc.drop('cash', axis=1)
+        pos_alloc = pos_alloc.drop("cash", axis=1)
 
         liq_desc = pd.DataFrame()
-        liq_desc['days_to_liquidate'] = dtlp.unstack()
-        liq_desc['pos_alloc_pct'] = pos_alloc.unstack() * 100
+        liq_desc["days_to_liquidate"] = dtlp.unstack()
+        liq_desc["pos_alloc_pct"] = pos_alloc.unstack() * 100
         # liq_desc.index.levels[0].name = 'symbol'
         # liq_desc.index.levels[1].name = 'date'
-        liq_desc.index = liq_desc.index.set_names(['symbol', 'date'])
+        liq_desc.index = liq_desc.index.set_names(["symbol", "date"])
 
-        worst_liq = liq_desc.reset_index().sort_values(
-            'days_to_liquidate', ascending=False).groupby('symbol').first()
+        worst_liq = (
+            liq_desc.reset_index()
+            .sort_values("days_to_liquidate", ascending=False)
+            .groupby("symbol")
+            .first()
+        )
 
         return worst_liq
 
     @classmethod
-    def get_low_liquidity_transactions(cls, transactions, market_data,
-                                       last_n_days=None):
+    def get_low_liquidity_transactions(
+        cls, transactions, market_data, last_n_days=None
+    ):
         """
         For each traded name, find the daily transaction total that consumed
         the greatest proportion of available daily bar volume.
@@ -3777,7 +4182,7 @@ class Empyrical:
         """
 
         txn_daily_w_bar = Empyrical.daily_txns_with_bar_data(transactions, market_data)
-        txn_daily_w_bar.index.name = 'date'
+        txn_daily_w_bar.index.name = "date"
         txn_daily_w_bar = txn_daily_w_bar.reset_index()
 
         if last_n_days is not None:
@@ -3785,16 +4190,21 @@ class Empyrical:
             txn_daily_w_bar = txn_daily_w_bar[txn_daily_w_bar.date > md]
 
         bar_consumption = txn_daily_w_bar.assign(
-            max_pct_bar_consumed=(
-                                         txn_daily_w_bar.amount / txn_daily_w_bar.volume) * 100
-        ).sort_values('max_pct_bar_consumed', ascending=False)
-        max_bar_consumption = bar_consumption.groupby('symbol').first()
+            max_pct_bar_consumed=(txn_daily_w_bar.amount / txn_daily_w_bar.volume) * 100
+        ).sort_values("max_pct_bar_consumed", ascending=False)
+        max_bar_consumption = bar_consumption.groupby("symbol").first()
 
-        return max_bar_consumption[['date', 'max_pct_bar_consumed']]
+        return max_bar_consumption[["date", "max_pct_bar_consumed"]]
 
     @classmethod
-    def apply_slippage_penalty(cls, returns, txn_daily, simulate_starting_capital,
-                               backtest_starting_capital, impact=0.1):
+    def apply_slippage_penalty(
+        cls,
+        returns,
+        txn_daily,
+        simulate_starting_capital,
+        backtest_starting_capital,
+        impact=0.1,
+    ):
         """
         Applies a quadratic volume share slippage model to daily returns based
         on the proportion of the observed historical daily bar dollar volume
@@ -3827,19 +4237,21 @@ class Empyrical:
         simulate_traded_dollars = txn_daily.price * simulate_traded_shares
         simulate_pct_volume_used = simulate_traded_shares / txn_daily.volume
 
-        penalties = simulate_pct_volume_used ** 2 * impact * simulate_traded_dollars
+        penalties = simulate_pct_volume_used**2 * impact * simulate_traded_dollars
 
-        daily_penalty = penalties.resample('D').sum()
+        daily_penalty = penalties.resample("D").sum()
         daily_penalty = daily_penalty.reindex(returns.index)
-        daily_penalty = pd.to_numeric(daily_penalty, errors='coerce').fillna(0)
+        daily_penalty = pd.to_numeric(daily_penalty, errors="coerce").fillna(0)
         # daily_penalty = daily_penalty.reindex(returns.index).fillna(0)
 
         # Since we are scaling the numerator of the penalties linearly
         # by capital base, it makes the most sense to scale the denominator
         # similarly. In other words, since we aren't applying compounding to
         # simulate_traded_shares, we shouldn't apply compounding to pv.
-        portfolio_value = Empyrical.cum_returns(
-            returns, starting_value=backtest_starting_capital) * mult
+        portfolio_value = (
+            Empyrical.cum_returns(returns, starting_value=backtest_starting_capital)
+            * mult
+        )
 
         adj_returns = returns - (daily_penalty / portfolio_value)
 
@@ -3861,10 +4273,7 @@ class Empyrical:
             Positions and their allocations.
         """
 
-        return values.divide(
-            values.sum(axis='columns'),
-            axis='rows'
-        )
+        return values.divide(values.sum(axis="columns"), axis="rows")
 
     @classmethod
     def get_top_long_short_abs(cls, positions, top=10):
@@ -3888,7 +4297,7 @@ class Empyrical:
             Top absolute positions.
         """
 
-        positions = positions.drop('cash', axis='columns')
+        positions = positions.drop("cash", axis="columns")
         df_max = positions.max()
         df_min = positions.min()
         df_abs_max = positions.abs().max()
@@ -3916,16 +4325,16 @@ class Empyrical:
         """
 
         expos = Empyrical.get_percent_alloc(positions)
-        expos = expos.drop('cash', axis=1)
+        expos = expos.drop("cash", axis=1)
 
         longs = expos.where(expos.apply(lambda x: x > 0))
         shorts = expos.where(expos.apply(lambda x: x < 0))
 
         alloc_summary = pd.DataFrame()
-        alloc_summary['max_long'] = longs.max(axis=1)
-        alloc_summary['median_long'] = longs.median(axis=1)
-        alloc_summary['median_short'] = shorts.median(axis=1)
-        alloc_summary['max_short'] = shorts.min(axis=1)
+        alloc_summary["max_long"] = longs.max(axis=1)
+        alloc_summary["median_long"] = longs.median(axis=1)
+        alloc_summary["median_short"] = shorts.median(axis=1)
+        alloc_summary["max_short"] = shorts.min(axis=1)
 
         return alloc_summary
 
@@ -3952,13 +4361,13 @@ class Empyrical:
         """
 
         positions = positions.copy()
-        positions['values'] = positions.amount * positions.last_sale_price
+        positions["values"] = positions.amount * positions.last_sale_price
 
-        cash.name = 'cash'
+        cash.name = "cash"
 
-        values = positions.reset_index().pivot_table(index='index',
-                                                     columns='sid',
-                                                     values='values')
+        values = positions.reset_index().pivot_table(
+            index="index", columns="sid", values="values"
+        )
 
         if ZIPLINE:
             for asset in values.columns:
@@ -3969,7 +4378,7 @@ class Empyrical:
 
         # NOTE: Set the name of DataFrame.columns to sid, to match the behavior
         # of DataFrame.join in earlier versions of pandas.
-        values.columns.name = 'sid'
+        values.columns.name = "sid"
 
         return values
 
@@ -4006,21 +4415,22 @@ class Empyrical:
                 2004-01-13 -199.640 -100.980 100.0000
         """
 
-        cash = positions['cash']
-        positions = positions.drop('cash', axis=1)
+        cash = positions["cash"]
+        positions = positions.drop("cash", axis=1)
 
-        unmapped_pos = np.setdiff1d(positions.columns.values,
-                                    list(symbol_sector_map.keys()))
+        unmapped_pos = np.setdiff1d(
+            positions.columns.values, list(symbol_sector_map.keys())
+        )
         if len(unmapped_pos) > 0:
             warn_message = """Warning: Symbols {} have no sector mapping.
             They will not be included in sector allocations""".format(
-                ", ".join(map(str, unmapped_pos)))
+                ", ".join(map(str, unmapped_pos))
+            )
             warnings.warn(warn_message, UserWarning)
 
-        sector_exp = positions.groupby(
-            by=symbol_sector_map, axis=1).sum()
+        sector_exp = positions.groupby(by=symbol_sector_map, axis=1).sum()
 
-        sector_exp['cash'] = cash
+        sector_exp["cash"] = cash
 
         return sector_exp
 
@@ -4041,15 +4451,18 @@ class Empyrical:
             percentage of the total net liquidation
         """
 
-        pos_wo_cash = positions.drop('cash', axis=1)
+        pos_wo_cash = positions.drop("cash", axis=1)
         longs = pos_wo_cash[pos_wo_cash > 0].sum(axis=1).fillna(0)
         shorts = pos_wo_cash[pos_wo_cash < 0].sum(axis=1).fillna(0)
         cash = positions.cash
         net_liquidation = longs + shorts + cash
-        df_pos = pd.DataFrame({'long': longs.divide(net_liquidation, axis='index'),
-                               'short': shorts.divide(net_liquidation,
-                                                      axis='index')})
-        df_pos['net exposure'] = df_pos['long'] + df_pos['short']
+        df_pos = pd.DataFrame(
+            {
+                "long": longs.divide(net_liquidation, axis="index"),
+                "short": shorts.divide(net_liquidation, axis="index"),
+            }
+        )
+        df_pos["net exposure"] = df_pos["long"] + df_pos["short"]
         return df_pos
 
     @classmethod
@@ -4074,13 +4487,15 @@ class Empyrical:
             2017-04-05	-0.90132 1.13981
         """
 
-        positions_wo_cash = positions.drop('cash', axis='columns')
-        gross_exposure = positions_wo_cash.abs().sum(axis='columns')
+        positions_wo_cash = positions.drop("cash", axis="columns")
+        gross_exposure = positions_wo_cash.abs().sum(axis="columns")
 
-        style_factor_exposure = positions_wo_cash.multiply(risk_factor) \
-            .divide(gross_exposure, axis='index')
-        tot_style_factor_exposure = style_factor_exposure.sum(axis='columns',
-                                                              skipna=True)
+        style_factor_exposure = positions_wo_cash.multiply(risk_factor).divide(
+            gross_exposure, axis="index"
+        )
+        tot_style_factor_exposure = style_factor_exposure.sum(
+            axis="columns", skipna=True
+        )
 
         return tot_style_factor_exposure
 
@@ -4114,22 +4529,23 @@ class Empyrical:
         gross_exposures = []
         net_exposures = []
 
-        positions_wo_cash = positions.drop('cash', axis='columns')
-        long_exposure = positions_wo_cash[positions_wo_cash > 0] \
-            .sum(axis='columns')
-        short_exposure = positions_wo_cash[positions_wo_cash < 0] \
-            .abs().sum(axis='columns')
-        gross_exposure = positions_wo_cash.abs().sum(axis='columns')
+        positions_wo_cash = positions.drop("cash", axis="columns")
+        long_exposure = positions_wo_cash[positions_wo_cash > 0].sum(axis="columns")
+        short_exposure = (
+            positions_wo_cash[positions_wo_cash < 0].abs().sum(axis="columns")
+        )
+        gross_exposure = positions_wo_cash.abs().sum(axis="columns")
 
         for sector_id in sector_ids:
             in_sector = positions_wo_cash[sectors == sector_id]
 
-            long_sector = in_sector[in_sector > 0] \
-                .sum(axis='columns').divide(long_exposure)
-            short_sector = in_sector[in_sector < 0] \
-                .sum(axis='columns').divide(short_exposure)
-            gross_sector = in_sector.abs().sum(axis='columns') \
-                .divide(gross_exposure)
+            long_sector = (
+                in_sector[in_sector > 0].sum(axis="columns").divide(long_exposure)
+            )
+            short_sector = (
+                in_sector[in_sector < 0].sum(axis="columns").divide(short_exposure)
+            )
+            gross_sector = in_sector.abs().sum(axis="columns").divide(gross_exposure)
             net_sector = long_sector.subtract(short_sector)
 
             long_exposures.append(long_sector)
@@ -4161,23 +4577,27 @@ class Empyrical:
         gross_exposures = []
         net_exposures = []
 
-        positions_wo_cash = positions.drop('cash', axis='columns')
-        tot_gross_exposure = positions_wo_cash.abs().sum(axis='columns')
-        tot_long_exposure = positions_wo_cash[positions_wo_cash > 0] \
-            .sum(axis='columns')
-        tot_short_exposure = positions_wo_cash[positions_wo_cash < 0] \
-            .abs().sum(axis='columns')
+        positions_wo_cash = positions.drop("cash", axis="columns")
+        tot_gross_exposure = positions_wo_cash.abs().sum(axis="columns")
+        tot_long_exposure = positions_wo_cash[positions_wo_cash > 0].sum(axis="columns")
+        tot_short_exposure = (
+            positions_wo_cash[positions_wo_cash < 0].abs().sum(axis="columns")
+        )
 
         for bucket_name, boundaries in CAP_BUCKETS.items():
-            in_bucket = positions_wo_cash[(caps >= boundaries[0]) &
-                                          (caps <= boundaries[1])]
+            in_bucket = positions_wo_cash[
+                (caps >= boundaries[0]) & (caps <= boundaries[1])
+            ]
 
-            gross_bucket = in_bucket.abs().sum(axis='columns') \
-                .divide(tot_gross_exposure)
-            long_bucket = in_bucket[in_bucket > 0] \
-                .sum(axis='columns').divide(tot_long_exposure)
-            short_bucket = in_bucket[in_bucket < 0] \
-                .sum(axis='columns').divide(tot_short_exposure)
+            gross_bucket = (
+                in_bucket.abs().sum(axis="columns").divide(tot_gross_exposure)
+            )
+            long_bucket = (
+                in_bucket[in_bucket > 0].sum(axis="columns").divide(tot_long_exposure)
+            )
+            short_bucket = (
+                in_bucket[in_bucket < 0].sum(axis="columns").divide(tot_short_exposure)
+            )
             net_bucket = long_bucket.subtract(short_bucket)
 
             gross_exposures.append(gross_bucket)
@@ -4228,15 +4648,15 @@ class Empyrical:
 
         longed_threshold = 100 * longed_frac.apply(
             partial(np.nanpercentile, q=100 * percentile),
-            axis='columns',
+            axis="columns",
         )
         shorted_threshold = 100 * shorted_frac.apply(
             partial(np.nanpercentile, q=100 * percentile),
-            axis='columns',
+            axis="columns",
         )
         grossed_threshold = 100 * grossed_frac.apply(
             partial(np.nanpercentile, q=100 * percentile),
-            axis='columns',
+            axis="columns",
         )
 
         return longed_threshold, shorted_threshold, grossed_threshold
@@ -4257,20 +4677,22 @@ class Empyrical:
             Mapped transaction.
         """
 
-        if isinstance(txn['sid'], dict):
-            sid = txn['sid']['sid']
-            symbol = txn['sid']['symbol']
+        if isinstance(txn["sid"], dict):
+            sid = txn["sid"]["sid"]
+            symbol = txn["sid"]["symbol"]
         else:
-            sid = txn['sid']
-            symbol = txn['sid']
+            sid = txn["sid"]
+            symbol = txn["sid"]
 
-        return {'sid': sid,
-                'symbol': symbol,
-                'price': txn['price'],
-                'order_id': txn['order_id'],
-                'amount': txn['amount'],
-                'commission': txn['commission'],
-                'dt': txn['dt']}
+        return {
+            "sid": sid,
+            "symbol": symbol,
+            "price": txn["price"],
+            "order_id": txn["order_id"],
+            "amount": txn["amount"],
+            "commission": txn["commission"],
+            "dt": txn["dt"],
+        }
 
     @classmethod
     def make_transaction_frame(cls, transactions):
@@ -4298,8 +4720,8 @@ class Empyrical:
             for txn in txns:
                 txn = Empyrical.map_transaction(txn)
                 transaction_list.append(txn)
-        df = pd.DataFrame(sorted(transaction_list, key=lambda x: x['dt']))
-        df['txn_dollars'] = -df['amount'] * df['price']
+        df = pd.DataFrame(sorted(transaction_list, key=lambda x: x["dt"]))
+        df["txn_dollars"] = -df["amount"] * df["price"]
 
         df.index = list(map(pd.Timestamp, df.dt.values))
         return df
@@ -4335,8 +4757,9 @@ class Empyrical:
         return pd.concat([daily_values, daily_amounts], axis=1)
 
     @classmethod
-    def adjust_returns_for_slippage(cls, returns, positions, transactions,
-                                    slippage_bps):
+    def adjust_returns_for_slippage(
+        cls, returns, positions, transactions, slippage_bps
+    ):
         """
         Apply a slippage penalty for every dollar traded.
 
@@ -4371,7 +4794,7 @@ class Empyrical:
         return adjusted_returns
 
     @classmethod
-    def get_turnover(cls, positions, transactions, denominator='AGB'):
+    def get_turnover(cls, positions, transactions, denominator="AGB"):
         """
          Value of purchases and sales divided
         by either the actual gross book or the portfolio value
@@ -4407,16 +4830,16 @@ class Empyrical:
         txn_vol = Empyrical.get_txn_vol(transactions)
         traded_value = txn_vol.txn_volume
 
-        if denominator == 'AGB':
+        if denominator == "AGB":
             # Actual gross book is the same thing as the algo's GMV
             # We want our denom to be avg(AGB previous, AGB current)
-            agb = positions.drop('cash', axis=1).abs().sum(axis=1)
+            agb = positions.drop("cash", axis=1).abs().sum(axis=1)
             denom = agb.rolling(2).mean()
 
             # Since the first value of pd.rolling returns NaN, we
             # set our "day 0" AGB to 0.
             denom.iloc[0] = agb.iloc[0] / 2
-        elif denominator == 'portfolio_value':
+        elif denominator == "portfolio_value":
             denom = positions.sum(axis=1)
         else:
             raise ValueError(
@@ -4426,18 +4849,26 @@ class Empyrical:
             )
 
         denom.index = denom.index.normalize()
-        turnover = traded_value.div(denom, axis='index')
+        turnover = traded_value.div(denom, axis="index")
         # 增加一行代码，处理inf的值，避免画图的时候出错
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", FutureWarning)
-            turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects(copy=False)
+            turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects(
+                copy=False
+            )
         turnover = turnover.fillna(0)
-        turnover = turnover.astype('float')
+        turnover = turnover.astype("float")
         return turnover
 
     @classmethod
-    def perf_stats(cls, returns, factor_returns=None, positions=None,
-                   transactions=None, turnover_denom='AGB'):
+    def perf_stats(
+        cls,
+        returns,
+        factor_returns=None,
+        positions=None,
+        transactions=None,
+        turnover_denom="AGB",
+    ):
         """
         Calculates various performance metrics of a strategy, for use in
         plotting.show_perf_stats.
@@ -4473,11 +4904,11 @@ class Empyrical:
             stats[STAT_FUNC_NAMES[stat_func.__name__]] = stat_func(returns)
 
         if positions is not None:
-            stats['Gross leverage'] = Empyrical.gross_lev(positions).mean()
+            stats["Gross leverage"] = Empyrical.gross_lev(positions).mean()
             if transactions is not None:
-                stats['Daily turnover'] = Empyrical.get_turnover(positions,
-                                                                 transactions,
-                                                                 turnover_denom).mean()
+                stats["Daily turnover"] = Empyrical.get_turnover(
+                    positions, transactions, turnover_denom
+                ).mean()
         if factor_returns is not None:
             for stat_func in FACTOR_STAT_FUNCS:
                 res = stat_func(returns, factor_returns)
@@ -4486,8 +4917,9 @@ class Empyrical:
         return stats
 
     @classmethod
-    def perf_stats_bootstrap(cls, returns, factor_returns=None, return_stats=True,
-                             **_kwargs):
+    def perf_stats_bootstrap(
+        cls, returns, factor_returns=None, return_stats=True, **_kwargs
+    ):
         """Calculates various bootstrapped performance metrics of a strategy.
 
         Parameters
@@ -4520,22 +4952,20 @@ class Empyrical:
 
         for stat_func in SIMPLE_STAT_FUNCS:
             stat_name = STAT_FUNC_NAMES[stat_func.__name__]
-            bootstrap_values[stat_name] = Empyrical.calc_bootstrap(stat_func,
-                                                                   returns)
+            bootstrap_values[stat_name] = Empyrical.calc_bootstrap(stat_func, returns)
 
         if factor_returns is not None:
             for stat_func in FACTOR_STAT_FUNCS:
                 stat_name = STAT_FUNC_NAMES[stat_func.__name__]
                 bootstrap_values[stat_name] = Empyrical.calc_bootstrap(
-                    stat_func,
-                    returns,
-                    factor_returns=factor_returns)
+                    stat_func, returns, factor_returns=factor_returns
+                )
 
         bootstrap_values = pd.DataFrame(bootstrap_values)
 
         if return_stats:
             stats = bootstrap_values.apply(Empyrical.calc_distribution_stats)
-            return stats.T[['mean', 'median', '5%', '95%']]
+            return stats.T[["mean", "median", "5%", "95%"]]
         else:
             return bootstrap_values
 
@@ -4568,21 +4998,19 @@ class Empyrical:
             Bootstrapped sampling distribution of passed in func.
         """
 
-        n_samples = kwargs.pop('n_samples', 1000)
+        n_samples = kwargs.pop("n_samples", 1000)
         out = np.empty(n_samples)
 
-        factor_returns = kwargs.pop('factor_returns', None)
+        factor_returns = kwargs.pop("factor_returns", None)
 
         for i in range(n_samples):
             idx = np.random.randint(len(returns), size=len(returns))
             returns_i = returns.iloc[idx].reset_index(drop=True)
             if factor_returns is not None:
                 factor_returns_i = factor_returns.iloc[idx].reset_index(drop=True)
-                out[i] = func(returns_i, factor_returns_i,
-                              *args, **kwargs)
+                out[i] = func(returns_i, factor_returns_i, *args, **kwargs)
             else:
-                out[i] = func(returns_i,
-                              *args, **kwargs)
+                out[i] = func(returns_i, *args, **kwargs)
 
         return out
 
@@ -4602,16 +5030,18 @@ class Empyrical:
             95 percentiles of passed in values.
         """
 
-        return pd.Series({'mean': np.mean(x),
-                          'median': np.median(x),
-                          'std': np.std(x),
-                          '5%': np.percentile(x, 5),
-                          '25%': np.percentile(x, 25),
-                          '75%': np.percentile(x, 75),
-                          '95%': np.percentile(x, 95),
-                          'IQR': np.subtract.reduce(
-                              np.percentile(x, [75, 25])),
-                          })
+        return pd.Series(
+            {
+                "mean": np.mean(x),
+                "median": np.median(x),
+                "std": np.std(x),
+                "5%": np.percentile(x, 5),
+                "25%": np.percentile(x, 25),
+                "75%": np.percentile(x, 75),
+                "95%": np.percentile(x, 95),
+                "IQR": np.subtract.reduce(np.percentile(x, [75, 25])),
+            }
+        )
 
     @classmethod
     def get_max_drawdown_underwater(cls, underwater):
@@ -4723,8 +5153,7 @@ class Empyrical:
             peak, valley, recovery = Empyrical.get_max_drawdown_underwater(underwater)
             # Slice out draw-down period
             if not pd.isnull(recovery):
-                underwater.drop(underwater[peak: recovery].index[1:-1],
-                                inplace=True)
+                underwater.drop(underwater[peak:recovery].index[1:-1], inplace=True)
             else:
                 # the drawdown has not ended yet
                 underwater = underwater.loc[:peak]
@@ -4756,21 +5185,25 @@ class Empyrical:
 
         df_cum = Empyrical.cum_returns(returns, 1.0)
         drawdown_periods = Empyrical.get_top_drawdowns(returns, top=top)
-        df_drawdowns = pd.DataFrame(index=list(range(top)),
-                                    columns=['Net drawdown in %',
-                                             'Peak date',
-                                             'Valley date',
-                                             'Recovery date',
-                                             'Duration'])
+        df_drawdowns = pd.DataFrame(
+            index=list(range(top)),
+            columns=[
+                "Net drawdown in %",
+                "Peak date",
+                "Valley date",
+                "Recovery date",
+                "Duration",
+            ],
+        )
         # print(df_drawdowns)
         # print(drawdown_periods)
         for i, (peak, valley, recovery) in enumerate(drawdown_periods):
             if pd.isnull(recovery):
-                df_drawdowns.loc[i, 'Duration'] = np.nan
+                df_drawdowns.loc[i, "Duration"] = np.nan
             else:
-                df_drawdowns.loc[i, 'Duration'] = len(pd.date_range(peak,
-                                                                    recovery,
-                                                                    freq='B'))
+                df_drawdowns.loc[i, "Duration"] = len(
+                    pd.date_range(peak, recovery, freq="B")
+                )
             # to_pydatetime()疑似是老的API，使用pd.to_datetime替代
             # df_drawdowns.loc[i, 'Peak date'] = (peak.to_pydatetime()
             #                                     .strftime('%Y-%m-%d'))
@@ -4782,20 +5215,25 @@ class Empyrical:
             #     df_drawdowns.loc[i, 'Recovery date'] = (recovery.to_pydatetime()
             #                                             .strftime('%Y-%m-%d'))
 
-            df_drawdowns.loc[i, 'Peak date'] = (pd.to_datetime(peak).strftime('%Y-%m-%d'))
-            df_drawdowns.loc[i, 'Valley date'] = (pd.to_datetime(valley).strftime('%Y-%m-%d'))
+            df_drawdowns.loc[i, "Peak date"] = pd.to_datetime(peak).strftime("%Y-%m-%d")
+            df_drawdowns.loc[i, "Valley date"] = pd.to_datetime(valley).strftime(
+                "%Y-%m-%d"
+            )
 
             if isinstance(recovery, float):
-                df_drawdowns.loc[i, 'Recovery date'] = recovery
+                df_drawdowns.loc[i, "Recovery date"] = recovery
             else:
-                df_drawdowns.loc[i, 'Recovery date'] = (pd.to_datetime(recovery).strftime('%Y-%m-%d'))
+                df_drawdowns.loc[i, "Recovery date"] = pd.to_datetime(
+                    recovery
+                ).strftime("%Y-%m-%d")
 
-            df_drawdowns.loc[i, 'Net drawdown in %'] = ((df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[
-                peak]) * 100
+            df_drawdowns.loc[i, "Net drawdown in %"] = (
+                (df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[peak]
+            ) * 100
 
-        df_drawdowns['Peak date'] = pd.to_datetime(df_drawdowns['Peak date'])
-        df_drawdowns['Valley date'] = pd.to_datetime(df_drawdowns['Valley date'])
-        df_drawdowns['Recovery date'] = pd.to_datetime(df_drawdowns['Recovery date'])
+        df_drawdowns["Peak date"] = pd.to_datetime(df_drawdowns["Peak date"])
+        df_drawdowns["Valley date"] = pd.to_datetime(df_drawdowns["Valley date"])
+        df_drawdowns["Recovery date"] = pd.to_datetime(df_drawdowns["Recovery date"])
         # print(df_drawdowns)
         return df_drawdowns
 
@@ -4818,8 +5256,9 @@ class Empyrical:
             Rolling volatility.
         """
 
-        return returns.rolling(rolling_vol_window).std() \
-            * np.sqrt(APPROX_BDAYS_PER_YEAR)
+        return returns.rolling(rolling_vol_window).std() * np.sqrt(
+            APPROX_BDAYS_PER_YEAR
+        )
 
     @classmethod
     def rolling_sharpe(cls, returns, rolling_sharpe_window):
@@ -4848,8 +5287,9 @@ class Empyrical:
         return avg_returns / std_returns * np.sqrt(APPROX_BDAYS_PER_YEAR)
 
     @classmethod
-    def simulate_paths(cls, is_returns, num_days,
-                       _starting_value=1, num_samples=1000, random_seed=None):
+    def simulate_paths(
+        cls, is_returns, num_days, _starting_value=1, num_samples=1000, random_seed=None
+    ):
         """
         Generate alternate paths using available values from in-sample returns.
 
@@ -4878,13 +5318,12 @@ class Empyrical:
         samples = np.empty((num_samples, num_days))
         seed = np.random.RandomState(seed=random_seed)
         for i in range(num_samples):
-            samples[i, :] = is_returns.sample(num_days, replace=True,
-                                              random_state=seed)
+            samples[i, :] = is_returns.sample(num_days, replace=True, random_state=seed)
 
         return samples
 
     @classmethod
-    def summarize_paths(cls, samples, cone_std=(1., 1.5, 2.), starting_value=1.):
+    def summarize_paths(cls, samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
         """
         Generate the upper and lower bounds of an n standard deviation
         cone of forecasted cumulative returns.
@@ -4905,8 +5344,7 @@ class Empyrical:
 
         """
 
-        cum_samples = Empyrical.cum_returns(samples.T,
-                                            starting_value=starting_value).T
+        cum_samples = Empyrical.cum_returns(samples.T, starting_value=starting_value).T
 
         cum_mean = cum_samples.mean(axis=0)
         cum_std = cum_samples.std(axis=0)
@@ -4915,7 +5353,7 @@ class Empyrical:
             cone_std = [cone_std]
 
         # cone_bounds = pd.DataFrame(columns=pd.Float64Index([]))
-        cone_bounds = pd.DataFrame(columns=pd.Index([], dtype='float64'))
+        cone_bounds = pd.DataFrame(columns=pd.Index([], dtype="float64"))
         for num_std in cone_std:
             cone_bounds.loc[:, float(num_std)] = cum_mean + cum_std * num_std
             cone_bounds.loc[:, float(-num_std)] = cum_mean - cum_std * num_std
@@ -4923,9 +5361,15 @@ class Empyrical:
         return cone_bounds
 
     @classmethod
-    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1., 1.5, 2.),
-                                starting_value=1, num_samples=1000,
-                                random_seed=None):
+    def forecast_cone_bootstrap(
+        cls,
+        is_returns,
+        num_days,
+        cone_std=(1.0, 1.5, 2.0),
+        starting_value=1,
+        num_samples=1000,
+        random_seed=None,
+    ):
         """
         Determines the upper and lower bounds of an n standard deviation
         cone of forecasted cumulative returns. Future cumulative mean and
@@ -4969,13 +5413,11 @@ class Empyrical:
             num_days=num_days,
             _starting_value=starting_value,
             num_samples=num_samples,
-            random_seed=random_seed
+            random_seed=random_seed,
         )
 
         cone_bounds = Empyrical.summarize_paths(
-            samples=samples,
-            cone_std=cone_std,
-            starting_value=starting_value
+            samples=samples, cone_std=cone_std, starting_value=starting_value
         )
 
         return cone_bounds
@@ -5059,8 +5501,7 @@ class Empyrical:
             common sense ratio
         """
 
-        return Empyrical.tail_ratio(returns) * \
-            (1 + Empyrical.annual_return(returns))
+        return Empyrical.tail_ratio(returns) * (1 + Empyrical.annual_return(returns))
 
     @classmethod
     def normalize(cls, returns, starting_value=1):
@@ -5084,8 +5525,9 @@ class Empyrical:
         return starting_value * (returns / returns.iloc[0])
 
     @classmethod
-    def rolling_beta(cls, returns, factor_returns,
-                     rolling_window=APPROX_BDAYS_PER_MONTH * 6):
+    def rolling_beta(
+        cls, returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 6
+    ):
         """
         Determines the rolling beta of a strategy.
 
@@ -5115,22 +5557,28 @@ class Empyrical:
 
         if factor_returns.ndim > 1:
             # Apply column-wise
-            return factor_returns.apply(partial(Empyrical.rolling_beta, returns),
-                                        rolling_window=rolling_window)
+            return factor_returns.apply(
+                partial(Empyrical.rolling_beta, returns), rolling_window=rolling_window
+            )
         else:
             out = pd.Series(index=returns.index)
-            for beg, end in zip(returns.index[0:-rolling_window],
-                                returns.index[rolling_window:]):
+            for beg, end in zip(
+                returns.index[0:-rolling_window], returns.index[rolling_window:]
+            ):
                 out.loc[end] = Empyrical.beta(
-                    returns.loc[beg:end],
-                    factor_returns.loc[beg:end])
+                    returns.loc[beg:end], factor_returns.loc[beg:end]
+                )
 
             return out
 
     @classmethod
-    def rolling_regression(cls, returns, factor_returns,
-                           rolling_window=APPROX_BDAYS_PER_MONTH * 6,
-                           nan_threshold=0.1):
+    def rolling_regression(
+        cls,
+        returns,
+        factor_returns,
+        rolling_window=APPROX_BDAYS_PER_MONTH * 6,
+        nan_threshold=0.1,
+    ):
         """
         Computes rolling factor betas using a multivariate linear regression
         (separate linear regressions are problematic because the factors may be
@@ -5160,14 +5608,14 @@ class Empyrical:
         # We need to drop NaNs to regress
         ret_no_na = returns.dropna()
 
-        columns = ['alpha'] + factor_returns.columns.tolist()
-        rolling_risk = pd.DataFrame(columns=columns,
-                                    index=ret_no_na.index)
+        columns = ["alpha"] + factor_returns.columns.tolist()
+        rolling_risk = pd.DataFrame(columns=columns, index=ret_no_na.index)
 
-        rolling_risk.index.name = 'dt'
+        rolling_risk.index.name = "dt"
 
-        for beg, end in zip(ret_no_na.index[:-rolling_window],
-                            ret_no_na.index[rolling_window:]):
+        for beg, end in zip(
+            ret_no_na.index[:-rolling_window], ret_no_na.index[rolling_window:]
+        ):
             returns_period = ret_no_na[beg:end]
             factor_returns_period = factor_returns.loc[returns_period.index]
 
@@ -5175,9 +5623,10 @@ class Empyrical:
                 factor_returns_period_dnan = factor_returns_period.dropna()
                 reg = linear_model.LinearRegression(fit_intercept=True).fit(
                     factor_returns_period_dnan,
-                    returns_period.loc[factor_returns_period_dnan.index])
+                    returns_period.loc[factor_returns_period_dnan.index],
+                )
                 rolling_risk.loc[end, factor_returns.columns] = reg.coef_
-                rolling_risk.loc[end, 'alpha'] = reg.intercept_
+                rolling_risk.loc[end, "alpha"] = reg.intercept_
 
         return rolling_risk
 
@@ -5198,11 +5647,11 @@ class Empyrical:
             Gross leverage.
         """
 
-        exposure = positions.drop('cash', axis=1).abs().sum(axis=1)
+        exposure = positions.drop("cash", axis=1).abs().sum(axis=1)
         return exposure / positions.sum(axis=1)
 
     @classmethod
-    def value_at_risk(cls, returns, period=None, sigma=2.0):
+    def trading_value_at_risk(cls, returns, period=None, sigma=2.0):
         """
         Get value at risk (VaR).
 
@@ -5230,15 +5679,17 @@ class Empyrical:
     def agg_all_long_short(cls, round_trips, col, stats_dict):
         # Aggregating for all trades
         print("stats_dict = ", stats_dict)
-        stats_all = (round_trips.assign(ones=1).groupby('ones')[col])
+        stats_all = round_trips.assign(ones=1).groupby("ones")[col]
         stats_all = stats_all.agg(stats_dict)
-        stats_all = stats_all.T.rename(columns={1.0: 'All trades'})
+        stats_all = stats_all.T.rename(columns={1.0: "All trades"})
 
         # Aggregating for long and short trades
         # Use `rename(columns=...)` instead of `rename_axis`
-        stats_long_short = (round_trips.groupby('long')[col])
+        stats_long_short = round_trips.groupby("long")[col]
         stats_long_short = stats_long_short.agg(stats_dict)
-        stats_long_short = stats_long_short.T.rename(columns={False: 'Short trades', True: 'Long trades'})
+        stats_long_short = stats_long_short.T.rename(
+            columns={False: "Short trades", True: "Long trades"}
+        )
 
         # Join the two results
         return stats_all.join(stats_long_short)
@@ -5250,7 +5701,7 @@ class Empyrical:
         built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]
 
         # Aggregating for all trades
-        stats_all = (round_trips.assign(ones=1).groupby('ones')[col])
+        stats_all = round_trips.assign(ones=1).groupby("ones")[col]
 
         # Apply custom functions manually
         stats_all_custom = {}
@@ -5263,10 +5714,10 @@ class Empyrical:
 
         # Combine results
         stats_all = pd.concat([stats_all_custom, stats_all_built_in], axis=1)
-        stats_all = stats_all.T.rename(columns={1.0: 'All trades'})
+        stats_all = stats_all.T.rename(columns={1.0: "All trades"})
 
         # Aggregating for long and short trades
-        stats_long_short = (round_trips.groupby('long')[col])
+        stats_long_short = round_trips.groupby("long")[col]
 
         # Apply custom functions manually
         stats_long_short_custom = {}
@@ -5278,14 +5729,18 @@ class Empyrical:
         stats_long_short_built_in = stats_long_short.agg(built_in_funcs)
 
         # Combine results
-        stats_long_short = pd.concat([stats_long_short_custom, stats_long_short_built_in], axis=1)
-        stats_long_short = stats_long_short.T.rename(columns={False: 'Short trades', True: 'Long trades'})
+        stats_long_short = pd.concat(
+            [stats_long_short_custom, stats_long_short_built_in], axis=1
+        )
+        stats_long_short = stats_long_short.T.rename(
+            columns={False: "Short trades", True: "Long trades"}
+        )
 
         # Join the two results
         return stats_all.join(stats_long_short)
 
     @classmethod
-    def _groupby_consecutive(cls, txn, max_delta=pd.Timedelta('8h')):
+    def _groupby_consecutive(cls, txn, max_delta=pd.Timedelta("8h")):
         """Merge transactions of the same direction separated by less than
         max_delta time duration.
 
@@ -5308,44 +5763,46 @@ class Empyrical:
 
         def vwap(transaction):
             if transaction.amount.sum() == 0:
-                warnings.warn('Zero transacted shares, setting vwap to nan.')
+                warnings.warn("Zero transacted shares, setting vwap to nan.")
                 return np.nan
-            return (transaction.amount * transaction.price).sum() / \
-                transaction.amount.sum()
+            return (
+                transaction.amount * transaction.price
+            ).sum() / transaction.amount.sum()
 
         out = []
-        for sym, t in txn.groupby('symbol'):
+        for sym, t in txn.groupby("symbol"):
             t = t.sort_index()
-            t.index.name = 'dt'
+            t.index.name = "dt"
             t.index = pd.to_datetime(t.index)
             t = t.reset_index()
 
-            t['order_sign'] = t.amount > 0
-            t['block_dir'] = (t.order_sign.shift(
-                1) != t.order_sign).astype(int).cumsum()
-            t['block_time'] = ((t.dt - t.dt.shift(1)) > max_delta).astype(int).cumsum()
+            t["order_sign"] = t.amount > 0
+            t["block_dir"] = (
+                (t.order_sign.shift(1) != t.order_sign).astype(int).cumsum()
+            )
+            t["block_time"] = ((t.dt - t.dt.shift(1)) > max_delta).astype(int).cumsum()
             # grouped_price = (t.groupby(('block_dir',
             #                            'block_time'))
             #                   .apply(vwap))
             # grouped_price = t.groupby(['block_dir', 'block_time']).apply(vwap)
-            grouped_price = t.groupby(['block_dir', 'block_time'])[['amount', 'price']].apply(vwap)
-            grouped_price.name = 'price'
-            grouped_rest = t.groupby(['block_dir', 'block_time']).agg({
-                'amount': 'sum',
-                'symbol': 'first',
-                'dt': 'first'})
+            grouped_price = t.groupby(["block_dir", "block_time"])[
+                ["amount", "price"]
+            ].apply(vwap)
+            grouped_price.name = "price"
+            grouped_rest = t.groupby(["block_dir", "block_time"]).agg(
+                {"amount": "sum", "symbol": "first", "dt": "first"}
+            )
 
             grouped = grouped_rest.join(grouped_price)
 
             out.append(grouped)
 
         out = pd.concat(out)
-        out = out.set_index('dt')
+        out = out.set_index("dt")
         return out
 
     @classmethod
-    def extract_round_trips(cls, transactions,
-                            portfolio_value=None):
+    def extract_round_trips(cls, transactions, portfolio_value=None):
         """Group transactions into "round trips". First, transactions are
         grouped by day and directionality. Then, long and short
         transactions are matched to create round-trip round_trips for which
@@ -5397,21 +5854,21 @@ class Empyrical:
         transactions = Empyrical._groupby_consecutive(transactions)
         roundtrips = []
 
-        for sym, trans_sym in transactions.groupby('symbol'):
+        for sym, trans_sym in transactions.groupby("symbol"):
             trans_sym = trans_sym.sort_index()
             price_stack = deque()
             dt_stack = deque()
-            trans_sym['signed_price'] = trans_sym.price * np.sign(trans_sym.amount)
-            trans_sym['abs_amount'] = trans_sym.amount.abs().astype(int)
+            trans_sym["signed_price"] = trans_sym.price * np.sign(trans_sym.amount)
+            trans_sym["abs_amount"] = trans_sym.amount.abs().astype(int)
             for dt, t in trans_sym.iterrows():
                 if t.price < 0:
-                    warnings.warn('Negative price detected, ignoring for'
-                                  'round-trip.')
+                    warnings.warn("Negative price detected, ignoring for" "round-trip.")
                     continue
 
                 indiv_prices = [t.signed_price] * t.abs_amount
-                if (len(price_stack) == 0) or \
-                        (np.copysign(1, price_stack[-1]) == np.copysign(1, t.amount)):
+                if (len(price_stack) == 0) or (
+                    np.copysign(1, price_stack[-1]) == np.copysign(1, t.amount)
+                ):
                     price_stack.extend(indiv_prices)
                     dt_stack.extend([dt] * len(indiv_prices))
                 else:
@@ -5421,8 +5878,9 @@ class Empyrical:
                     cur_open_dts = []
 
                     for price in indiv_prices:
-                        if len(price_stack) != 0 and \
-                                (np.copysign(1, price_stack[-1]) != np.copysign(1, price)):
+                        if len(price_stack) != 0 and (
+                            np.copysign(1, price_stack[-1]) != np.copysign(1, price)
+                        ):
                             # Retrieve the first dt, stock-price pair from
                             # stack
                             prev_price = price_stack.popleft()
@@ -5437,36 +5895,40 @@ class Empyrical:
                             price_stack.append(price)
                             dt_stack.append(dt)
 
-                    roundtrips.append({'pnl': pnl,
-                                       'open_dt': cur_open_dts[0],
-                                       'close_dt': dt,
-                                       'long': price < 0,
-                                       'rt_returns': pnl / invested,
-                                       'symbol': sym,
-                                       })
+                    roundtrips.append(
+                        {
+                            "pnl": pnl,
+                            "open_dt": cur_open_dts[0],
+                            "close_dt": dt,
+                            "long": price < 0,
+                            "rt_returns": pnl / invested,
+                            "symbol": sym,
+                        }
+                    )
 
         roundtrips = pd.DataFrame(roundtrips)
 
-        roundtrips['duration'] = roundtrips['close_dt'].sub(roundtrips['open_dt'])
+        roundtrips["duration"] = roundtrips["close_dt"].sub(roundtrips["open_dt"])
 
         if portfolio_value is not None:
             # Need to normalize so that we can join
-            pv = pd.DataFrame(portfolio_value,
-                              columns=['portfolio_value']) \
-                .assign(date=portfolio_value.index)
+            pv = pd.DataFrame(portfolio_value, columns=["portfolio_value"]).assign(
+                date=portfolio_value.index
+            )
 
-            roundtrips['date'] = roundtrips.close_dt.apply(lambda x:
-                                                           x.replace(hour=0,
-                                                                     minute=0,
-                                                                     second=0))
+            roundtrips["date"] = roundtrips.close_dt.apply(
+                lambda x: x.replace(hour=0, minute=0, second=0)
+            )
             # Convert 'roundtrips.date' to UTC to match 'portfolio_value.index'
-            if pv.index.tz is not None:  # portfolio_value.index has a timezone (e.g., UTC)
-                roundtrips['date'] = roundtrips['date'].dt.tz_localize('UTC')
+            if (
+                pv.index.tz is not None
+            ):  # portfolio_value.index has a timezone (e.g., UTC)
+                roundtrips["date"] = roundtrips["date"].dt.tz_localize("UTC")
 
-            tmp = roundtrips.join(pv, on='date', lsuffix='_')
+            tmp = roundtrips.join(pv, on="date", lsuffix="_")
 
-            roundtrips['returns'] = tmp.pnl / tmp.portfolio_value
-            roundtrips = roundtrips.drop('date', axis='columns')
+            roundtrips["returns"] = tmp.pnl / tmp.portfolio_value
+            roundtrips = roundtrips.drop("date", axis="columns")
 
         return roundtrips
 
@@ -5491,9 +5953,9 @@ class Empyrical:
             Transactions with closing transactions appended.
         """
 
-        closed_txns = transactions[['symbol', 'amount', 'price']]
+        closed_txns = transactions[["symbol", "amount", "price"]]
 
-        pos_at_end = positions.drop('cash', axis=1).iloc[-1]
+        pos_at_end = positions.drop("cash", axis=1).iloc[-1]
         open_pos = pos_at_end.replace(0, np.nan).dropna()
         # Add closing round_trips one second after the close to be sure
         # they don't conflict with other round_trips executed at that time.
@@ -5505,9 +5967,11 @@ class Empyrical:
             ending_amount = txn_sym.amount.sum()
 
             ending_price = ending_val / ending_amount
-            closing_txn = {'symbol': sym,
-                           'amount': -ending_amount,
-                           'price': ending_price}
+            closing_txn = {
+                "symbol": sym,
+                "amount": -ending_amount,
+                "price": ending_price,
+            }
 
             closing_txn = pd.DataFrame(closing_txn, index=[end_dt])
             # closed_txns = closed_txns.append(closing_txn)
@@ -5539,7 +6003,8 @@ class Empyrical:
 
         sector_round_trips = round_trips.copy()
         sector_round_trips.symbol = sector_round_trips.symbol.apply(
-            lambda x: sector_mappings.get(x, 'No Sector Mapping'))
+            lambda x: sector_mappings.get(x, "No Sector Mapping")
+        )
         sector_round_trips = sector_round_trips.dropna(axis=0)
 
         return sector_round_trips
@@ -5615,22 +6080,31 @@ class Empyrical:
 
         # Generate statistics for pnl, summary, duration, and returns
         stats = {
-            'pnl': Empyrical.agg_all_long_short(round_trips, 'pnl', PNL_STATS),
-            'summary': Empyrical.agg_all_long_short(round_trips, 'pnl', SUMMARY_STATS),
-            'duration': Empyrical.agg_all_long_short(round_trips, 'duration', DURATION_STATS),
-            'returns': Empyrical.agg_all_long_short(round_trips, 'returns', RETURN_STATS),
-            'symbols': apply_custom_and_built_in_funcs(round_trips.groupby('symbol')['returns'], RETURN_STATS).T
+            "pnl": Empyrical.agg_all_long_short(round_trips, "pnl", PNL_STATS),
+            "summary": Empyrical.agg_all_long_short(round_trips, "pnl", SUMMARY_STATS),
+            "duration": Empyrical.agg_all_long_short(
+                round_trips, "duration", DURATION_STATS
+            ),
+            "returns": Empyrical.agg_all_long_short(
+                round_trips, "returns", RETURN_STATS
+            ),
+            "symbols": apply_custom_and_built_in_funcs(
+                round_trips.groupby("symbol")["returns"], RETURN_STATS
+            ).T,
         }
 
         return stats
 
     @classmethod
-    def perf_attrib(cls, returns,
-                    positions,
-                    factor_returns,
-                    factor_loadings,
-                    transactions=None,
-                    pos_in_dollars=True):
+    def perf_attrib(
+        cls,
+        returns,
+        positions,
+        factor_returns,
+        factor_loadings,
+        transactions=None,
+        pos_in_dollars=True,
+    ):
         """
         Attributes the performance of a `returns` stream to a set of risk factors.
 
@@ -5729,25 +6203,35 @@ class Empyrical:
                 2017-01-01 0.249087 0.935925 1.185012 1.185012
                 2017-01-02 -0.003194 -0.400786 -0.403980 -0.403980
         """
-        (returns,
-         positions,
-         factor_returns,
-         factor_loadings) = Empyrical._align_and_warn(returns,
-                                                      positions,
-                                                      factor_returns,
-                                                      factor_loadings,
-                                                      transactions=transactions,
-                                                      pos_in_dollars=pos_in_dollars)
+        (returns, positions, factor_returns, factor_loadings) = (
+            Empyrical._align_and_warn(
+                returns,
+                positions,
+                factor_returns,
+                factor_loadings,
+                transactions=transactions,
+                pos_in_dollars=pos_in_dollars,
+            )
+        )
 
         # Note that we convert positions to percentages *after* the checks
         # above, since get_turnover() expects positions in dollars.
-        positions = Empyrical._stack_positions(positions, pos_in_dollars=pos_in_dollars)
+        # Only stack if positions is not already a Series (already stacked)
+        if not isinstance(positions, pd.Series):
+            positions = Empyrical._stack_positions(
+                positions, pos_in_dollars=pos_in_dollars
+            )
 
-        return Empyrical.perf_attrib(returns, positions, factor_returns, factor_loadings)
+        # Delegate to the core implementation to avoid recursive calls to
+        # this higher-level wrapper.
+        return Empyrical._perf_attrib_core(
+            returns, positions, factor_returns, factor_loadings
+        )
 
     @classmethod
-    def compute_exposures(cls, positions, factor_loadings, stack_positions=True,
-                          pos_in_dollars=True):
+    def compute_exposures(
+        cls, positions, factor_loadings, stack_positions=True, pos_in_dollars=True
+    ):
         """
         Compute daily risk factor exposures.
 
@@ -5809,7 +6293,9 @@ class Empyrical:
                 2017-01-02 0.821872 1.520515
         """
         if stack_positions:
-            positions = Empyrical._stack_positions(positions, pos_in_dollars=pos_in_dollars)
+            positions = Empyrical._stack_positions(
+                positions, pos_in_dollars=pos_in_dollars
+            )
 
         return Empyrical._compute_exposures(positions, factor_loadings)
 
@@ -5820,73 +6306,87 @@ class Empyrical:
         multifactor alpha, multifactor sharpe, risk exposures.
         """
         summary = OrderedDict()
-        total_returns = perf_attrib_['total_returns']
-        specific_returns = perf_attrib_['specific_returns']
-        common_returns = perf_attrib_['common_returns']
+        total_returns = perf_attrib_["total_returns"]
+        specific_returns = perf_attrib_["specific_returns"]
+        common_returns = perf_attrib_["common_returns"]
 
-        summary['Annualized Specific Return'] = \
-            Empyrical.annual_return(specific_returns)
-        summary['Annualized Common Return'] = \
-            Empyrical.annual_return(common_returns)
-        summary['Annualized Total Return'] = \
-            Empyrical.annual_return(total_returns)
+        summary["Annualized Specific Return"] = Empyrical.annual_return(
+            specific_returns
+        )
+        summary["Annualized Common Return"] = Empyrical.annual_return(common_returns)
+        summary["Annualized Total Return"] = Empyrical.annual_return(total_returns)
 
-        summary['Specific Sharpe Ratio'] = \
-            Empyrical.sharpe_ratio(specific_returns)
+        summary["Specific Sharpe Ratio"] = Empyrical.sharpe_ratio(specific_returns)
 
-        summary['Cumulative Specific Return'] = \
-            Empyrical.cum_returns_final(specific_returns)
-        summary['Cumulative Common Return'] = \
-            Empyrical.cum_returns_final(common_returns)
-        summary['Total Returns'] = \
-            Empyrical.cum_returns_final(total_returns)
+        summary["Cumulative Specific Return"] = Empyrical.cum_returns_final(
+            specific_returns
+        )
+        summary["Cumulative Common Return"] = Empyrical.cum_returns_final(
+            common_returns
+        )
+        summary["Total Returns"] = Empyrical.cum_returns_final(total_returns)
 
-        summary = pd.Series(summary, name='')
+        summary = pd.Series(summary, name="")
 
-        annualized_returns_by_factor = [Empyrical.annual_return(perf_attrib_[c])
-                                        for c in risk_exposures.columns]
-        cumulative_returns_by_factor = [Empyrical.cum_returns_final(perf_attrib_[c])
-                                        for c in risk_exposures.columns]
+        annualized_returns_by_factor = [
+            Empyrical.annual_return(perf_attrib_[c]) for c in risk_exposures.columns
+        ]
+        cumulative_returns_by_factor = [
+            Empyrical.cum_returns_final(perf_attrib_[c]) for c in risk_exposures.columns
+        ]
 
         risk_exposure_summary = pd.DataFrame(
-            data=OrderedDict([
-                (
-                    'Average Risk Factor Exposure',
-                    risk_exposures.mean(axis='rows')
-                ),
-                ('Annualized Return', annualized_returns_by_factor),
-                ('Cumulative Return', cumulative_returns_by_factor),
-            ]),
+            data=OrderedDict(
+                [
+                    ("Average Risk Factor Exposure", risk_exposures.mean(axis="rows")),
+                    ("Annualized Return", annualized_returns_by_factor),
+                    ("Cumulative Return", cumulative_returns_by_factor),
+                ]
+            ),
             index=risk_exposures.columns,
         )
 
         return summary, risk_exposure_summary
 
-    @classmethod
-    def _align_and_warn(cls, returns,
-                        positions,
-                        factor_returns,
-                        factor_loadings,
-                        transactions=None,
-                        pos_in_dollars=True):
+    @staticmethod
+    def _align_and_warn(
+        returns,
+        positions,
+        factor_returns,
+        factor_loadings,
+        transactions=None,
+        pos_in_dollars=True,
+    ):
         """
         Make sure that all inputs have matching dates and tickers,
         and raise warnings if necessary.
         """
-        missing_stocks = positions.columns.difference(
+        # Handle both DataFrame (unstacked) and Series (stacked) positions
+        if isinstance(positions, pd.Series):
+            # Positions is already stacked (MultiIndex with dt, ticker)
+            # Extract unique tickers from the MultiIndex
+            position_tickers = positions.index.get_level_values(1).unique()
+        else:
+            # Positions is a DataFrame (columns are tickers)
+            position_tickers = positions.columns
+        
+        missing_stocks = position_tickers.difference(
             factor_loadings.index.get_level_values(1).unique()
         )
 
         # cash will not be in factor_loadings
-        num_stocks = len(positions.columns) - 1
-        missing_stocks = missing_stocks.drop('cash')
+        num_stocks = len(position_tickers) - (1 if "cash" in position_tickers else 0)
+        if "cash" in missing_stocks:
+            missing_stocks = missing_stocks.drop("cash")
         num_stocks_covered = num_stocks - len(missing_stocks)
-        missing_ratio = round(len(missing_stocks) / num_stocks, ndigits=3)
+        missing_ratio = round(len(missing_stocks) / num_stocks, ndigits=3) if num_stocks > 0 else 0.0
 
         if num_stocks_covered == 0:
-            raise ValueError("Could not perform performance attribution. "
-                             "No factor loadings were available for this "
-                             "algorithm's positions.")
+            raise ValueError(
+                "Could not perform performance attribution. "
+                "No factor loadings were available for this "
+                "algorithm's positions."
+            )
 
         if len(missing_stocks) > 0:
 
@@ -5894,9 +6394,11 @@ class Empyrical:
 
                 missing_stocks_displayed = (
                     " {} assets were missing factor loadings, including: {}..{}"
-                ).format(len(missing_stocks),
-                         ', '.join(missing_stocks[:5].map(str)),
-                         missing_stocks[-1])
+                ).format(
+                    len(missing_stocks),
+                    ", ".join(missing_stocks[:5].map(str)),
+                    missing_stocks[-1],
+                )
                 avg_allocation_msg = "selected missing assets"
 
             else:
@@ -5905,6 +6407,17 @@ class Empyrical:
                 ).format(list(missing_stocks))
                 avg_allocation_msg = "missing assets"
 
+            # Calculate average allocation for warning message
+            if isinstance(positions, pd.Series):
+                # For Series, filter by ticker level in MultiIndex
+                sample_stocks = missing_stocks[:5].union(missing_stocks[[-1]]) if len(missing_stocks) > 0 else []
+                if len(sample_stocks) > 0:
+                    avg_alloc = positions[positions.index.get_level_values(1).isin(sample_stocks)].mean()
+                else:
+                    avg_alloc = 0.0
+            else:
+                avg_alloc = positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean()
+            
             missing_stocks_warning_msg = (
                 "Could not determine risk exposures for some of this algorithm's "
                 "positions. Returns from the missing assets will not be properly "
@@ -5919,15 +6432,25 @@ class Empyrical:
                 missing_stocks_displayed,
                 missing_ratio,
                 avg_allocation_msg,
-                positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean(),
+                avg_alloc,
             )
 
             warnings.warn(missing_stocks_warning_msg)
 
-            positions = positions.drop(missing_stocks, axis='columns',
-                                       errors='ignore')
+            # Drop missing stocks from positions
+            if isinstance(positions, pd.Series):
+                # For Series, filter out tickers in missing_stocks
+                positions = positions[~positions.index.get_level_values(1).isin(missing_stocks)]
+            else:
+                positions = positions.drop(missing_stocks, axis="columns", errors="ignore")
 
-        missing_factor_loadings_index = positions.index.difference(
+        # Get date index from positions (different for Series vs DataFrame)
+        if isinstance(positions, pd.Series):
+            positions_dates = positions.index.get_level_values(0).unique()
+        else:
+            positions_dates = positions.index
+        
+        missing_factor_loadings_index = positions_dates.difference(
             factor_loadings.index.get_level_values(0).unique()
         )
 
@@ -5937,8 +6460,7 @@ class Empyrical:
                 missing_dates_displayed = (
                     "(first missing is {}, last missing is {})"
                 ).format(
-                    missing_factor_loadings_index[0],
-                    missing_factor_loadings_index[-1]
+                    missing_factor_loadings_index[0], missing_factor_loadings_index[-1]
                 )
             else:
                 missing_dates_displayed = list(missing_factor_loadings_index)
@@ -5950,11 +6472,16 @@ class Empyrical:
 
             warnings.warn(warning_msg)
 
-            positions = positions.drop(missing_factor_loadings_index,
-                                       errors='ignore')
-            returns = returns.drop(missing_factor_loadings_index, errors='ignore')
-            factor_returns = factor_returns.drop(missing_factor_loadings_index,
-                                                 errors='ignore')
+            # Drop dates from positions (handle both Series and DataFrame)
+            if isinstance(positions, pd.Series):
+                positions = positions[~positions.index.get_level_values(0).isin(missing_factor_loadings_index)]
+            else:
+                positions = positions.drop(missing_factor_loadings_index, errors="ignore")
+            
+            returns = returns.drop(missing_factor_loadings_index, errors="ignore")
+            factor_returns = factor_returns.drop(
+                missing_factor_loadings_index, errors="ignore"
+            )
 
         if transactions is not None and pos_in_dollars:
             turnover = Empyrical.get_turnover(positions, transactions).mean()
@@ -5996,11 +6523,11 @@ class Empyrical:
             positions = Empyrical.get_percent_alloc(positions)
 
         # remove cash after normalizing positions
-        positions = positions.drop('cash', axis='columns')
+        positions = positions.drop("cash", axis="columns")
 
         # convert positions to long format
         positions = positions.stack()
-        positions.index = positions.index.set_names(['dt', 'ticker'])
+        positions.index = positions.index.set_names(["dt", "ticker"])
 
         return positions
 
@@ -6017,5 +6544,5 @@ class Empyrical:
 # 导出所有函数和类
 __all__ = [
     # 新的类
-    'Empyrical'
+    "Empyrical"
 ]

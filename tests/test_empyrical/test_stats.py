@@ -19,7 +19,8 @@ except ImportError:
     from pandas.util.testing import assert_index_equal
 
 from fincore import empyrical
-from fincore.empyrical import Empyrical, utils as emutils
+from fincore.empyrical import Empyrical
+from fincore.utils import common_utils as emutils
 from fincore.constants import DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
 
 DECIMAL_PLACES = 8
@@ -260,9 +261,9 @@ class TestStats(BaseTestCase):
         (positive_returns, -0.0),
 
         # negative returns means the drawdown is just the returns
-        (negative_returns, Empyrical.cal_cum_returns_final(negative_returns)),
+        (negative_returns, Empyrical.cum_returns_final(negative_returns)),
         (all_negative_returns,
-         Empyrical.cal_cum_returns_final(all_negative_returns)),
+         Empyrical.cum_returns_final(all_negative_returns)),
 
         (
             pd.Series(
@@ -1799,7 +1800,7 @@ class TestStatsArrays(TestStats):
             index = returns_series.index
 
         normalized = pd.Series(np.asarray(returns_series.copy()), index=index)
-        aggregated = Empyrical.cal_aggregate_returns(normalized, convert_to)
+        aggregated = Empyrical.aggregate_returns(normalized, convert_to)
         aggregated_values = aggregated.values if hasattr(aggregated, 'values') else np.asarray(aggregated)
 
         assert len(aggregated_values) == len(expected)
@@ -1873,7 +1874,7 @@ class TestStatsIntIndex(TestStats):
         datetime_index = base_series.index if isinstance(base_series.index, pd.DatetimeIndex) else pd.date_range('2000-01-01', periods=len(base_series), freq='D')
 
         normalized = pd.Series(np.asarray(base_series.copy()), index=datetime_index)
-        aggregated = Empyrical.cal_aggregate_returns(normalized, convert_to)
+        aggregated = Empyrical.aggregate_returns(normalized, convert_to)
 
         # Convert back to int index to mimic suite expectations
         aggregated_values = aggregated.values if hasattr(aggregated, 'values') else np.asarray(aggregated)

@@ -68,7 +68,12 @@ class PerfAttribTestCase(unittest.TestCase):
             factor_loadings=factor_loadings,
         )
 
-        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
+        exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
+        )
 
         self.assertTrue(
             expected_perf_attrib_output.round(10).equals(
@@ -86,7 +91,12 @@ class PerfAttribTestCase(unittest.TestCase):
             factor_loadings=factor_loadings,
         )
 
-        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
+        exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
+        )
 
         expected_perf_attrib_output = pd.DataFrame(
             index=dts,
@@ -125,7 +135,12 @@ class PerfAttribTestCase(unittest.TestCase):
             factor_loadings=factor_loadings,
         )
 
-        exposures_portfolio, perf_attrib_output = emp.perf_attrib()
+        exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
+        )
 
         expected_perf_attrib_output = pd.DataFrame(
             index=dts,
@@ -210,7 +225,12 @@ class PerfAttribTestCase(unittest.TestCase):
             factor_loadings=factor_loadings,
         )
 
-        risk_exposures_portfolio, perf_attrib_output = emp.perf_attrib()
+        risk_exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
+            returns=returns,
+            positions=positions,
+            factor_returns=factor_returns,
+            factor_loadings=factor_loadings,
+        )
 
         specific_returns = perf_attrib_output['specific_returns']
         common_returns = perf_attrib_output['common_returns']
