@@ -7,7 +7,6 @@ import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
 from pathlib import Path
 from packaging import version
-from fincore import Empyrical
 from fincore.constants.color import COLORS
 from pandas.tseries.offsets import BDay
 from numpy.lib.stride_tricks import as_strided
@@ -276,8 +275,13 @@ def extract_rets_pos_txn_from_zipline(backtest):
     if not raw_positions:
         raise ValueError("The backtest does not have any positions.")
     positions = pd.concat(raw_positions)
+
+    # Lazy import to avoid circular dependency: fincore -> empyrical -> utils.common_utils
+    from fincore.empyrical import Empyrical
+
     positions = Empyrical.extract_pos(positions, backtest.ending_cash)
     transactions = Empyrical.make_transaction_frame(backtest.transactions)
+
     if transactions.index.tzinfo is None:
         transactions.index = transactions.index.tz_localize('utc')
 
@@ -617,9 +621,19 @@ def make_timezone_aware(timestamp, target_tz):
 # required by the register_returns_func and get_symbol_rets.
 
 # Settings dict to store functions/values that may
-# need to be overridden depending on the user's environment
+# need to be overridden depending on the user's environment. To avoid
+# circular imports with fincore.empyrical, we define the default as a
+# small wrapper that imports Empyrical lazily on first use.
+
+
+def _default_returns_func(*args, **kwargs):
+    from fincore.empyrical import Empyrical
+
+    return Empyrical.annual_return(*args, **kwargs)
+
+
 SETTINGS = {
-    'returns_func': Empyrical.annual_return
+    "returns_func": _default_returns_func
 }
 
 
