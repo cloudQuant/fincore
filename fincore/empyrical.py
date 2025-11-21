@@ -19,135 +19,24 @@ Empyrical - 金融性能分析库
 
 包含原有的所有empyrical函数，以及新的面向对象Empyrical类。
 """
-
+import warnings
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
 import math
 from scipy import stats
+import scipy as sp
 from six import iteritems
 from sys import float_info
-
+import pymc as pm
 from fincore.utils import nanmean, nanstd, nanmin, nanmax, nanargmax, nanargmin
-from fincore.utils import up, down, roll, rolling_window
-#     alpha_beta_aligned,
-#     annual_return,
-#     annual_volatility,
-#     beta,
-#     beta_aligned,
-#     cagr,
-#     beta_fragility_heuristic,
-#     beta_fragility_heuristic_aligned,
-#     gpd_risk_estimates,
-#     gpd_risk_estimates_aligned,
-#     calmar_ratio,
-#     capture,
-#     conditional_value_at_risk,
-#     cum_returns,
-#     cum_returns_final,
-#     down_alpha_beta,
-#     down_capture,
-#     downside_risk,
-#     excess_sharpe,
-#     max_drawdown,
-#     omega_ratio,
-#     roll_alpha,
-#     roll_alpha_aligned,
-#     roll_alpha_beta,
-#     roll_alpha_beta_aligned,
-#     roll_annual_volatility,
-#     roll_beta,
-#     roll_beta_aligned,
-#     roll_down_capture,
-#     roll_max_drawdown,
-#     roll_sharpe_ratio,
-#     roll_sortino_ratio,
-#     roll_up_capture,
-#     roll_up_down_capture,
-#     sharpe_ratio,
-#     simple_returns,
-#     sortino_ratio,
-#     stability_of_timeseries,
-#     tail_ratio,
-#     up_alpha_beta,
-#     up_capture,
-#     up_down_capture,
-#     value_at_risk,
-#     information_ratio,
-#     get_max_drawdown_period,
-#     tracking_error,
-#     roll_tracking_error,
-#     treynor_ratio,
-#     roll_treynor_ratio,
-#     m_squared,
-#     roll_m_squared,
-#     annual_active_risk,
-#     roll_annual_active_risk,
-#     annual_active_return,
-#     roll_annual_active_return,
-#     tracking_difference,
-#     annual_return_by_year,
-#     sharpe_ratio_by_year,
-#     information_ratio_by_year,
-#     annual_volatility_by_year,
-#     max_drawdown_by_year,
-#     max_drawdown_days,
-#     max_drawdown_weeks,
-#     max_drawdown_months,
-#     max_drawdown_recovery_days,
-#     max_drawdown_recovery_weeks,
-#     max_drawdown_recovery_months,
-#     second_max_drawdown,
-#     third_max_drawdown,
-#     second_max_drawdown_days,
-#     second_max_drawdown_recovery_days,
-#     third_max_drawdown_days,
-#     third_max_drawdown_recovery_days,
-#     win_rate,
-#     loss_rate,
-#     max_consecutive_up_days,
-#     max_consecutive_down_days,
-#     max_consecutive_up_weeks,
-#     max_consecutive_down_weeks,
-#     max_consecutive_up_months,
-#     max_consecutive_down_months,
-#     max_consecutive_gain,
-#     max_consecutive_loss,
-#     max_single_day_gain,
-#     max_single_day_loss,
-#     max_consecutive_up_start_date,
-#     max_consecutive_up_end_date,
-#     max_consecutive_down_start_date,
-#     max_consecutive_down_end_date,
-#     max_single_day_gain_date,
-#     max_single_day_loss_date,
-#     skewness,
-#     kurtosis,
-#     hurst_exponent,
-#     stock_market_correlation,
-#     bond_market_correlation,
-#     futures_market_correlation,
-#     serial_correlation,
-#     sterling_ratio,
-#     burke_ratio,
-#     kappa_three_ratio,
-#     adjusted_sharpe_ratio,
-#     stutzer_index,
-#     annual_alpha,
-#     annual_beta,
-#     residual_risk,
-#     conditional_sharpe_ratio,
-#     var_excess_return,
-#     regression_annual_return,
-#     r_cubed,
-#     annualized_cumulative_return,
-#     annual_active_return_by_year,
-#     treynor_mazuy_timing,
-#     henriksson_merton_timing,
-#     market_timing_return,
-#     alpha_percentile_rank,
-#     cornell_timing,
-# )
+from fincore.utils import up, down, rolling_window, roll
+from __future__ import division
+from collections import OrderedDict
+from functools import partial
+# from matplotlib.cm import gist_rainbow
+import matplotlib.pyplot as plt
+import numpy as np
 
 from fincore.constants import (
     DAILY,
@@ -161,6 +50,16 @@ from fincore.constants import (
 
 # 重新导出utils以保持向后兼容性
 from fincore import utils
+
+try:
+    from zipline.assets import Equity, Future
+    ZIPLINE = True
+except ImportError:
+    ZIPLINE = False
+    warnings.warn(
+        'Module "zipline.assets" not found; mutltipliers will not be applied' +
+        ' to position notionals.'
+    )
 
 __version__ = "0.6.0"
 
@@ -3815,40 +3714,2821 @@ class Empyrical:
         info += ")"
         return info
 
+    @classmethod
+    def model_returns_t_alpha_beta(cls, data, bmark, samples=2000, progressbar=True):
+        """
+        Run Bayesian alpha-beta-model with T distributed returns.
 
-# 为了向后兼容，在模块级别提供函数接口
-# 这样pyfolio等代码可以直接使用 empyrical.annual_return() 等函数
+        This model estimates intercept (alpha) and slope (beta) of two
+        return sets. Usually, these will be algorithm returns and
+        benchmark returns (e.g. S&P500). The data is assumed to be T-distributed and thus is robust to outliers and takes tail events
+        into account.  If a pandas.DataFrame is passed as a benchmark, then
+        multiple linear regression is used to estimate alpha and beta.
 
-# 常用统计函数的模块级别接口
-annual_return = Empyrical.cal_annual_return
-cum_returns_final = Empyrical.cal_cum_returns_final
-annual_volatility = Empyrical.cal_annual_volatility
-sharpe_ratio = Empyrical.cal_sharpe_ratio
-calmar_ratio = Empyrical.cal_calmar_ratio
-stability_of_timeseries = Empyrical.cal_stability_of_timeseries
-max_drawdown = Empyrical.cal_max_drawdown
-omega_ratio = Empyrical.cal_omega_ratio
-sortino_ratio = Empyrical.cal_sortino_ratio
-skewness = Empyrical.cal_skewness
-kurtosis = Empyrical.cal_kurtosis
-down_capture = Empyrical.cal_down_capture
-up_capture = Empyrical.cal_up_capture
-cum_returns = Empyrical.cal_cum_returns
-value_at_risk = Empyrical.cal_value_at_risk
-alpha_beta = Empyrical.cal_alpha_beta
-alpha = Empyrical.cal_alpha
-beta = Empyrical.cal_beta
-treynor_ratio = Empyrical.cal_treynor_ratio
-tail_ratio = Empyrical.cal_tail_ratio
+        Parameters
+        ----------
+        :param data : pandas.Series:
+            Series of simple returns of an algorithm or stock.
+        :param bmark : pandas.DataFrame:
+            DataFrame of benchmark returns (e.g., S&P500) or risk factors (e.g.,
+            Fama-French SMB, HML, and UMD).
+            If bmark has more recent returns than returns_train, these dates
+            will be treated as missing values and predictions will be
+            generated for them taking market correlations into account.
+        :param samples : Int (optional)
+            Number of posterior samples to draw.
+        :param progressbar : Bool (optional), default True
 
+        Returns
+        -------
+        model : pymc.Model object
+            PyMC3 model containing all random variables.
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+        """
+
+        data_bmark = pd.concat([data, bmark], axis=1).dropna()
+
+        with pm.Model() as model:
+            sigma = pm.HalfCauchy(
+                'sigma',
+                beta=1)
+            nu = pm.Exponential('nu_minus_two', 1. / 10.)
+
+            # alpha and beta
+            X = data_bmark.iloc[:, 1]
+            y = data_bmark.iloc[:, 0]
+
+            alpha_reg = pm.Normal('alpha', mu=0, sd=.1)
+            beta_reg = pm.Normal('beta', mu=0, sd=1)
+
+            mu_reg = alpha_reg + beta_reg * X
+            pm.StudentT('returns',
+                        nu=nu + 2,
+                        mu=mu_reg,
+                        sd=sigma,
+                        observed=y)
+            trace = pm.sample(samples, progressbar=progressbar)
+
+        return model, trace
+
+    @classmethod
+    def model_returns_normal(cls, data, samples=500, progressbar=True):
+        """
+        Run a Bayesian model assuming returns are normally distributed.
+
+        Parameters
+        ----------
+        :param data : pandas.Series:
+            Series of simple returns of an algorithm or stock.
+        :param samples : Int (optional)
+            Number of posterior samples to draw.
+        :param progressbar : Bool (optional), default True
+
+        Returns
+        -------
+        model : pymc.Model object
+            PyMC3 model containing all random variables.
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+        """
+
+        with pm.Model() as model:
+            mu = pm.Normal('mean returns', mu=0, sd=.01, testval=data.mean())
+            sigma = pm.HalfCauchy('volatility', beta=1, testval=data.std())
+            returns = pm.Normal('returns', mu=mu, sd=sigma, observed=data)
+            pm.Deterministic(
+                'annual volatility',
+                returns.distribution.variance ** .5 *
+                np.sqrt(252))
+            pm.Deterministic(
+                'sharpe',
+                returns.distribution.mean /
+                returns.distribution.variance ** .5 *
+                np.sqrt(252))
+
+            trace = pm.sample(samples, progressbar=progressbar)
+        return model, trace
+
+    @classmethod
+    def model_returns_t(cls, data, samples=500, progressbar=True):
+        """
+        Run Bayesian model assuming returns are Student-T distributed.
+
+        Compared with the normal model, this model assumes returns are
+        T-distributed and thus have a 3rd parameter (nu) that controls the
+        mass in the tails.
+
+        Parameters
+        ----------
+        :param data : pandas.Series:
+            Series of simple returns of an algorithm or stock.
+        :param samples : int, optional
+            Number of posterior samples to draw.
+        :param progressbar : bool, optional, default: True
+
+        Returns
+        -------
+        model : pymc.Model object
+            PyMC3 model containing all random variables.
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+        """
+
+        with pm.Model() as model:
+            mu = pm.Normal('mean returns', mu=0, sd=.01, testval=data.mean())
+            sigma = pm.HalfCauchy('volatility', beta=1, testval=data.std())
+            nu = pm.Exponential('nu_minus_two', 1. / 10., testval=3.)
+
+            returns = pm.StudentT('returns', nu=nu + 2, mu=mu, sd=sigma,
+                                  observed=data)
+            pm.Deterministic('annual volatility',
+                             returns.distribution.variance ** .5 * np.sqrt(252))
+
+            pm.Deterministic('sharpe', returns.distribution.mean /
+                             returns.distribution.variance ** .5 *
+                             np.sqrt(252))
+
+            trace = pm.sample(samples, progressbar=progressbar)
+        return model, trace
+
+    @classmethod
+    def model_best(cls, y1, y2, samples=1000, progressbar=True):
+        """
+        Bayesian Estimation Supersedes the T-Test
+
+        This model runs a Bayesian hypothesis comparing if y1 and y2 come
+        from the same distribution. Returns are assumed to be T-distributed.
+
+        In addition, it computes annual volatility and Sharpe of in and
+        out-of-sample periods.
+
+        This model replicates the example used in:
+        Kruschke, John. (2012) Bayesian estimation supersedes the t
+        test. Journal of Experimental Psychology: General.
+
+        Parameters
+        ----------
+        :param y1 : array-like
+            Array of returns (e.g., in-sample)
+        :param y2 : array-like
+            Array of returns (e.g., out-of-sample)
+        :param samples : int, optional
+            Number of posterior samples to draw.
+        :param progressbar: bool, optional, default True
+
+        Returns
+        -------
+        model : pymc.Model object
+            PyMC3 model containing all random variables.
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+
+        See Also
+        --------
+        plot_stoch_vol : plotting of the stochastic volatility model
+        """
+
+        y = np.concatenate((y1, y2))
+
+        mu_m = np.mean(y)
+        mu_p = 0.000001 * 1 / np.std(y) ** 2
+
+        sigma_low = np.std(y) / 1000
+        sigma_high = np.std(y) * 1000
+        with pm.Model() as model:
+            group1_mean = pm.Normal('group1_mean', mu=mu_m, tau=mu_p,
+                                    testval=y1.mean())
+            group2_mean = pm.Normal('group2_mean', mu=mu_m, tau=mu_p,
+                                    testval=y2.mean())
+            group1_std = pm.Uniform('group1_std', lower=sigma_low,
+                                    upper=sigma_high, testval=y1.std())
+            group2_std = pm.Uniform('group2_std', lower=sigma_low,
+                                    upper=sigma_high, testval=y2.std())
+            nu = pm.Exponential('nu_minus_two', 1 / 29., testval=4.) + 2.
+
+            returns_group1 = pm.StudentT('group1', nu=nu, mu=group1_mean,
+                                         lam=group1_std ** -2, observed=y1)
+            returns_group2 = pm.StudentT('group2', nu=nu, mu=group2_mean,
+                                         lam=group2_std ** -2, observed=y2)
+
+            diff_of_means = pm.Deterministic('difference of means',
+                                             group2_mean - group1_mean)
+            pm.Deterministic('difference of stds',
+                             group2_std - group1_std)
+            pm.Deterministic('effect size', diff_of_means /
+                             pm.math.sqrt((group1_std ** 2 +
+                                           group2_std ** 2) / 2))
+
+            pm.Deterministic('group1_annual_volatility',
+                             returns_group1.distribution.variance ** .5 *
+                             np.sqrt(252))
+            pm.Deterministic('group2_annual_volatility',
+                             returns_group2.distribution.variance ** .5 *
+                             np.sqrt(252))
+
+            pm.Deterministic('group1_sharpe', returns_group1.distribution.mean /
+                             returns_group1.distribution.variance ** .5 *
+                             np.sqrt(252))
+            pm.Deterministic('group2_sharpe', returns_group2.distribution.mean /
+                             returns_group2.distribution.variance ** .5 *
+                             np.sqrt(252))
+
+            trace = pm.sample(samples, progressbar=progressbar)
+        return model, trace
+
+    @classmethod
+    def model_stoch_vol(cls, data, samples=2000, progressbar=True):
+        """
+        Run a stochastic volatility model.
+
+        This model estimates the volatility of a `returns` series over time.
+        Returns are assumed to be T-distributed. lambda (width of
+        T-distributed) is assumed to follow a random-walk.
+
+        Parameters
+        ----------
+        :param data : pandas.Series
+            Return series to model.
+        :param samples : int, optional
+            Posterior samples to draw.
+        :param progressbar : bool, optional, default: True
+
+        Returns
+        -------
+        model : pymc.Model object
+            PyMC3 model containing all random variables.
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+
+        See Also
+        --------
+        plot_stoch_vol : plotting of a stochastic volatility model
+        """
+
+        from pymc.distributions.timeseries import GaussianRandomWalk
+
+        with pm.Model() as model:
+            nu = pm.Exponential('nu', 1. / 10, testval=5.)
+            sigma = pm.Exponential('sigma', 1. / .02, testval=.1)
+            s = GaussianRandomWalk('s', sigma ** -2, shape=len(data))
+            volatility_process = pm.Deterministic('volatility_process',
+                                                  pm.math.exp(-2 * s))
+            pm.StudentT('r', nu, lam=volatility_process, observed=data)
+
+            trace = pm.sample(samples, progressbar=progressbar)
+
+        return model, trace
+
+    @classmethod
+    def compute_bayes_cone(cls, preds, starting_value=1.):
+        """
+        Compute 5, 25, 75 and 95 percentiles of cumulative returns, used
+        for the Bayesian cone.
+
+        Parameters
+        ----------
+        preds : numpy.array
+            Multiple (simulated) cumulative returns.
+        starting_value : int (optional)
+            Have cumulative returns start around this value.
+            Default = 1.
+
+        Returns
+        -------
+        dict of percentiles over time
+            Dictionary mapping percentiles (5, 25, 75, 95) to a
+            timeseries.
+        """
+
+        def scoreatpercentile(cum_preds, p):
+            return [stats.scoreatpercentile(
+                c, p) for c in cum_preds.T]
+
+        cum_preds = np.cumprod(preds + 1, 1) * starting_value
+        perc = {p: scoreatpercentile(cum_preds, p) for p in (5, 25, 75, 95)}
+
+        return perc
+
+    @classmethod
+    def compute_consistency_score(cls, returns_test, preds):
+        """
+        Compute Bayesian consistency score.
+
+        Parameters
+        ----------
+        returns_test : pd.Series
+            Observed cumulative returns.
+        preds : numpy.array
+            Multiple (simulated) cumulative returns.
+
+        Returns
+        -------
+        Consistency score:
+            Score from 100 (returns_test perfectly on the median line of the
+            Bayesian cone spanned by preds) to 0 (returns_test completely
+            outside of Bayesian cone.)
+        """
+
+        returns_test_cum = Empyrical.cal_cum_returns(returns_test, starting_value=1.)
+        cum_preds = np.cumprod(preds + 1, 1)
+
+        q = [sp.stats.percentileofscore(cum_preds[:, i],
+                                        returns_test_cum.iloc[i],
+                                        kind='weak')
+             for i in range(len(returns_test_cum))]
+        # normalize to be from 100 (perfect median line) to 0 (completely outside
+        # of cone)
+        return 100 - np.abs(50 - np.mean(q)) / .5
+
+    @classmethod
+    def run_model(cls, model, returns_train, returns_test=None,
+                  bmark=None, samples=500, ppc=False, progressbar=True):
+        """
+        Run one of the Bayesian models.
+
+        Parameters
+        ----------
+        :param model : {'alpha_beta', 't', 'normal', 'best'}
+            Which model to run
+        :param returns_train : pd.Series
+            Timeseries of simple returns
+        :param returns_test : pd.Series (optional)
+            Out-of-sample returns. Datetimes in returns_test will be added to
+            returns_train as missing values and predictions will be generated
+            for them.
+        :param bmark : pd.Series or pd.DataFrame (optional) is
+            Only used for alpha_beta to estimate regression coefficients.
+            If bmark has more recent returns than returns_train, these dates
+            will be treated as missing values and predictions will be
+            generated for them taking market correlations into account.
+        :param samples : int (optional)
+            Number of posterior samples to draw.
+        :param ppc : boolean (optional)
+            Whether to run a posterior predictive check. Will generate
+            samples of length returns_test.  Returns a second argument
+            that contains the PPC of shape samples x len(returns_test).
+        :param progressbar: bool (optional), default True
+
+        Returns
+        -------
+        trace : pymc3.sampling.BaseTrace object
+            A PyMC3 trace object that contains samples for each parameter
+            of the posterior.
+
+        ppc : numpy.array (if ppc==True)
+           PPC of shape samples x-len(returns_test).
+        """
+
+        if model == 'alpha_beta':
+            model, trace = model_returns_t_alpha_beta(returns_train,
+                                                      bmark, samples,
+                                                      progressbar=progressbar)
+        elif model == 't':
+            model, trace = model_returns_t(returns_train, samples,
+                                           progressbar=progressbar)
+        elif model == 'normal':
+            model, trace = model_returns_normal(returns_train, samples,
+                                                progressbar=progressbar)
+        elif model == 'best':
+            model, trace = model_best(returns_train, returns_test,
+                                      samples=samples,
+                                      progressbar=progressbar)
+        else:
+            raise NotImplementedError(
+                'Model {} not found.'
+                'Use alpha_beta, t, normal, or best.'.format(model))
+
+        if ppc:
+            ppc_samples = pm.sample_ppc(trace, samples=samples,
+                                        model=model, size=len(returns_test),
+                                        progressbar=progressbar)
+            return trace, ppc_samples['returns']
+
+        return trace
+
+    def daily_txns_with_bar_data(transactions, market_data):
+        """
+        Sums the absolute value of shares traded in each name on each day.
+        Add columns containing the closing price and total daily volume for
+        each day-ticker combination.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Prices and `amounts` of executed trades. One row per trade.
+            - See full explanation in tears.create_full_tear_sheet
+        market_data : pd.Panel, use dict replace
+            Contains "volume" and "price" DataFrames for the tickers
+            in the dict of (name, dataframe)
+
+        Returns
+        -------
+        txn_daily : pd.DataFrame
+            Daily totals for transacted shares in each traded name.
+            Price and volume columns for close price and daily volume for
+            the corresponding ticker, respectively.
+        """
+
+        transactions.index.name = 'date'
+        txn_daily = pd.DataFrame(transactions.assign(
+            amount=abs(transactions.amount)).groupby(
+            ['symbol', pd.Grouper(freq='D')]).sum()['amount'])
+        txn_daily['price'] = market_data['price'].unstack()
+        txn_daily['volume'] = market_data['volume'].unstack()
+
+        txn_daily = txn_daily.reset_index().set_index('date')
+
+        return txn_daily
+
+    @classmethod
+    def days_to_liquidate_positions(cls, positions, market_data,
+                                    max_bar_consumption=0.2,
+                                    capital_base=1e6,
+                                    mean_volume_window=5):
+        """
+        Compute the number of days that would have been required to fully liquidate each position
+        on each day, based on the trailing n day mean daily bar volume,
+        and a limit on the proportion of a daily bar that we are allowed to consume.
+
+        This analysis uses portfolio allocations and a provided capital base
+        rather than the dollar values in the positions DataFrame to remove the
+        effect of compounding on days to liquidate. In other words, this function
+        assumes that the net liquidation portfolio value will always remain
+        constant at capital_base.
+
+        Parameters
+        ----------
+        positions: pd.DataFrame
+            Contains daily position values including cash
+            - See full explanation in tears.create_full_tear_sheet
+        market_data : pd.Panel, 因为pd不再使用面板数据，尝试使用dict代替
+            Panel with items axis of 'price' and 'volume' DataFrames.
+            The major and minor axes should match those of the
+            passed positions DataFrame (same dates and symbols).
+        max_bar_consumption : float
+            Max proportion of a daily bar that can be consumed in the
+            process of liquidating a position.
+        capital_base : integer
+            Capital base multiplied by portfolio allocation to compute
+            position value that needs liquidating.
+        mean_volume_window : float
+            Trailing window to use in mean volume calculation.
+
+        Returns
+        -------
+        days_to_liquidate : pd.DataFrame
+            Number of days required to fully liquidate daily positions.
+            Datetime index, symbols as columns.
+        """
+        # print(market_data['volume'].info())
+        # print(market_data['price'].info())
+        dv = market_data['volume'] * market_data['price']
+        # DV = (market_data[market_data.index.get_level_values(1) == 'volume'] *
+        #       market_data[market_data.index.get_level_values(1) == 'price'])
+        roll_mean_dv = dv.rolling(window=mean_volume_window,
+                                  center=False).mean().shift()
+        roll_mean_dv = roll_mean_dv.replace(0, np.nan)
+
+        positions_alloc = pos.get_percent_alloc(positions)
+        positions_alloc = positions_alloc.drop('cash', axis=1)
+
+        days_to_liquidate = (positions_alloc * capital_base) / \
+                            (max_bar_consumption * roll_mean_dv)
+
+        return days_to_liquidate.iloc[mean_volume_window:]
+
+    @classmethod
+    def get_max_days_to_liquidate_by_ticker(cls, positions, market_data,
+                                            max_bar_consumption=0.2,
+                                            capital_base=1e6,
+                                            mean_volume_window=5,
+                                            last_n_days=None):
+        """
+        Finds the longest estimated liquidation time for each traded
+        name over the course of backtest (or last n days of the backtest).
+
+        Parameters
+        ----------
+        positions: pd.DataFrame
+            Contains daily position values including cash
+            - See full explanation in tears.create_full_tear_sheet
+        market_data : pd.Panel:
+            Panel with items axis of 'price' and 'volume' DataFrames.
+            The major and minor axes should match those of the
+            passed positions DataFrame (same dates and symbols).
+        max_bar_consumption : float
+            Max proportion of a daily bar that can be consumed in the
+            process of liquidating a position.
+        capital_base : integer
+            Capital base multiplied by portfolio allocation to compute
+            position value that needs liquidating.
+        mean_volume_window : float
+            Trailing window to use in mean volume calculation.
+        last_n_days : integer
+            Compute for only the last n days of the passed backtest data.
+
+        Returns
+        -------
+        days_to_liquidate : pd.DataFrame
+            Max Number of days required to fully liquidate each traded name.
+            Index of symbols. Columns for days_to_liquidate and the corresponding
+            date and position_alloc on that day.
+        """
+
+        dtlp = days_to_liquidate_positions(positions, market_data,
+                                           max_bar_consumption=max_bar_consumption,
+                                           capital_base=capital_base,
+                                           mean_volume_window=mean_volume_window)
+
+        if last_n_days is not None:
+            dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days):]
+
+        pos_alloc = pos.get_percent_alloc(positions)
+        pos_alloc = pos_alloc.drop('cash', axis=1)
+
+        liq_desc = pd.DataFrame()
+        liq_desc['days_to_liquidate'] = dtlp.unstack()
+        liq_desc['pos_alloc_pct'] = pos_alloc.unstack() * 100
+        # liq_desc.index.levels[0].name = 'symbol'
+        # liq_desc.index.levels[1].name = 'date'
+        liq_desc.index = liq_desc.index.set_names(['symbol', 'date'])
+
+        worst_liq = liq_desc.reset_index().sort_values(
+            'days_to_liquidate', ascending=False).groupby('symbol').first()
+
+        return worst_liq
+
+    @classmethod
+    def get_low_liquidity_transactions(cls, transactions, market_data,
+                                       last_n_days=None):
+        """
+        For each traded name, find the daily transaction total that consumed
+        the greatest proportion of available daily bar volume.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Prices and `amounts` of executed trades. One row per trade.
+             - See full explanation in create_full_tear_sheet.
+        market_data : pd.Panel, use dict replace
+            Panel with `items` axis of 'price' and 'volume' DataFrames.
+            The major and minor axes should match those of the
+            passed positions DataFrame (same dates and symbols).
+        last_n_days : integer
+            Compute for only the last n days of the passed backtest data.
+        """
+
+        txn_daily_w_bar = daily_txns_with_bar_data(transactions, market_data)
+        txn_daily_w_bar.index.name = 'date'
+        txn_daily_w_bar = txn_daily_w_bar.reset_index()
+
+        if last_n_days is not None:
+            md = txn_daily_w_bar.date.max() - pd.Timedelta(days=last_n_days)
+            txn_daily_w_bar = txn_daily_w_bar[txn_daily_w_bar.date > md]
+
+        bar_consumption = txn_daily_w_bar.assign(
+            max_pct_bar_consumed=(
+                                         txn_daily_w_bar.amount / txn_daily_w_bar.volume) * 100
+        ).sort_values('max_pct_bar_consumed', ascending=False)
+        max_bar_consumption = bar_consumption.groupby('symbol').first()
+
+        return max_bar_consumption[['date', 'max_pct_bar_consumed']]
+
+    @classmethod
+    def apply_slippage_penalty(cls, returns, txn_daily, simulate_starting_capital,
+                               backtest_starting_capital, impact=0.1):
+        """
+        Applies a quadratic volume share slippage model to daily returns based
+        on the proportion of the observed historical daily bar dollar volume
+        consumed by the strategy's trades. Scales the size of trades based
+        on the ratio of the starting capital we wish to test to the starting
+        capital of the passed backtest data.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Time series of daily returns.
+        txn_daily : pd.Series
+            Daily transaciton totals, closing price, and daily volume for
+            each traded name. See price_volume_daily_txns for more details.
+        simulate_starting_capital : integer
+            capital at which we want to test
+        backtest_starting_capital: capital base at which backtest was
+            origionally run. impact: See Zipline volume share slippage model
+        impact : float
+            Scales the size of the slippage penalty.
+
+        Returns
+        -------
+        adj_returns : pd.Series
+            Slippage penalty adjusted daily returns.
+        """
+
+        mult = simulate_starting_capital / backtest_starting_capital
+        simulate_traded_shares = abs(mult * txn_daily.amount)
+        simulate_traded_dollars = txn_daily.price * simulate_traded_shares
+        simulate_pct_volume_used = simulate_traded_shares / txn_daily.volume
+
+        penalties = simulate_pct_volume_used ** 2 \
+                    * impact * simulate_traded_dollars
+
+        daily_penalty = penalties.resample('D').sum()
+        daily_penalty = daily_penalty.reindex(returns.index)
+        daily_penalty = pd.to_numeric(daily_penalty, errors='coerce').fillna(0)
+        # daily_penalty = daily_penalty.reindex(returns.index).fillna(0)
+
+        # Since we are scaling the numerator of the penalties linearly
+        # by capital base, it makes the most sense to scale the denominator
+        # similarly. In other words, since we aren't applying compounding to
+        # simulate_traded_shares, we shouldn't apply compounding to pv.
+        portfolio_value = ep.cum_returns(
+            returns, starting_value=backtest_starting_capital) * mult
+
+        adj_returns = returns - (daily_penalty / portfolio_value)
+
+        return adj_returns
+
+    @classmethod
+    def get_percent_alloc(cls, values):
+        """
+        Determines a portfolio's allocations.
+
+        Parameters
+        ----------
+        values : pd.DataFrame
+            Contains position values or amounts.
+
+        Returns
+        -------
+        allocations : pd.DataFrame
+            Positions and their allocations.
+        """
+
+        return values.divide(
+            values.sum(axis='columns'),
+            axis='rows'
+        )
+
+    @classmethod
+    def get_top_long_short_abs(cls, positions, top=10):
+        """
+        Finds the top long, short, and absolute positions.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            The positions that the strategy takes over time.
+        top : int, optional
+            How many of each to find (default 10).
+
+        Returns
+        -------
+        df_top_long : pd.DataFrame
+            Top long positions.
+        df_top_short : pd.DataFrame
+            Top short positions.
+        df_top_abs : pd.DataFrame
+            Top absolute positions.
+        """
+
+        positions = positions.drop('cash', axis='columns')
+        df_max = positions.max()
+        df_min = positions.min()
+        df_abs_max = positions.abs().max()
+        df_top_long = df_max[df_max > 0].nlargest(top)
+        df_top_short = df_min[df_min < 0].nsmallest(top)
+        df_top_abs = df_abs_max.nlargest(top)
+        return df_top_long, df_top_short, df_top_abs
+
+    @classmethod
+    def get_max_median_position_concentration(cls, positions):
+        """
+        Finds the max and median long and short position concentrations
+        in each time period specified by the index of positions.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            The positions that the strategy takes over time.
+
+        Returns
+        -------
+        pd.DataFrame
+            Columns are the max long, max short, median long, and median short
+            position concentrations.Rows are time periods.
+        """
+
+        expos = get_percent_alloc(positions)
+        expos = expos.drop('cash', axis=1)
+
+        longs = expos.where(expos.apply(lambda x: x > 0))
+        shorts = expos.where(expos.apply(lambda x: x < 0))
+
+        alloc_summary = pd.DataFrame()
+        alloc_summary['max_long'] = longs.max(axis=1)
+        alloc_summary['median_long'] = longs.median(axis=1)
+        alloc_summary['median_short'] = shorts.median(axis=1)
+        alloc_summary['max_short'] = shorts.min(axis=1)
+
+        return alloc_summary
+
+    @classmethod
+    def extract_pos(cls, positions, cash):
+        """
+        Extract position values from the backtest object as returned by
+        get_backtest() on the Quantopian research platform.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            timeseries containing one row per symbol (and potentially
+            duplicate datetime indices) and columns for amount and
+            last_sale_price.
+        cash : pd.Series
+            timeseries containing cash in the portfolio.
+
+        Returns
+        -------
+        pd.DataFrame
+            Daily net position values.
+             - See full explanation in tears.create_full_tear_sheet.
+        """
+
+        positions = positions.copy()
+        positions['values'] = positions.amount * positions.last_sale_price
+
+        cash.name = 'cash'
+
+        values = positions.reset_index().pivot_table(index='index',
+                                                     columns='sid',
+                                                     values='values')
+
+        if ZIPLINE:
+            for asset in values.columns:
+                if type(asset) in [Equity, Future]:
+                    values[asset] = values[asset] * asset.price_multiplier
+
+        values = values.join(cash).fillna(0)
+
+        # NOTE: Set the name of DataFrame.columns to sid, to match the behavior
+        # of DataFrame.join in earlier versions of pandas.
+        values.columns.name = 'sid'
+
+        return values
+
+    @classmethod
+    def get_sector_exposures(cls, positions, symbol_sector_map):
+        """
+        Sum position exposures by sector.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Contains position values or amounts.
+            - Example
+                index         'AAPL'         'MSFT'        'CHK'        cash
+                2004-01-09    13939.380     -15012.993    -403.870      1477.483
+                2004-01-12    14492.630     -18624.870    142.630       3989.610
+                2004-01-13    -13853.280    13653.640     -100.980      100.000
+        symbol_sector_map : dict or pd.Series
+            Security identifier to sector mapping.
+            Security ids as keys/index, sectors as values.
+            - `Example`:
+                {'AAPL': 'Technology'
+                 'MSFT': 'Technology'
+                 'CHK': 'Natural Resources'}
+
+        Returns
+        -------
+        sector_exp : pd.DataFrame
+            Sectors and their allocations.
+            - Example:
+                index         'Technology' 'Natural Resources' cash
+                2004-01-09 -1073.613 -403.870 1477.4830
+                2004-01-12 -4132.240 142.630 3989.6100
+                2004-01-13 -199.640 -100.980 100.0000
+        """
+
+        cash = positions['cash']
+        positions = positions.drop('cash', axis=1)
+
+        unmapped_pos = np.setdiff1d(positions.columns.values,
+                                    list(symbol_sector_map.keys()))
+        if len(unmapped_pos) > 0:
+            warn_message = """Warning: Symbols {} have no sector mapping.
+            They will not be included in sector allocations""".format(
+                ", ".join(map(str, unmapped_pos)))
+            warnings.warn(warn_message, UserWarning)
+
+        sector_exp = positions.groupby(
+            by=symbol_sector_map, axis=1).sum()
+
+        sector_exp['cash'] = cash
+
+        return sector_exp
+
+    @classmethod
+    def get_long_short_pos(cls, positions):
+        """
+        Determines the long and short allocations in a portfolio.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            The positions that the strategy takes over time.
+
+        Returns
+        -------
+        df_long_short : pd.DataFrame
+            Long and short allocations as a decimal
+            percentage of the total net liquidation
+        """
+
+        pos_wo_cash = positions.drop('cash', axis=1)
+        longs = pos_wo_cash[pos_wo_cash > 0].sum(axis=1).fillna(0)
+        shorts = pos_wo_cash[pos_wo_cash < 0].sum(axis=1).fillna(0)
+        cash = positions.cash
+        net_liquidation = longs + shorts + cash
+        df_pos = pd.DataFrame({'long': longs.divide(net_liquidation, axis='index'),
+                               'short': shorts.divide(net_liquidation,
+                                                      axis='index')})
+        df_pos['net exposure'] = df_pos['long'] + df_pos['short']
+        return df_pos
+
+    @classmethod
+    def compute_style_factor_exposures(cls, positions, risk_factor):
+        """
+        Return style factor exposure of an algorithm's positions
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Daily equity positions of algorithm, in dollars.
+            - See full explanation in create_risk_tear_sheet
+
+        risk_factor : pd.DataFrame
+            Daily risk factor per asset.
+            - DataFrame with dates as index and equities as columns
+            - Example:
+                             Equity(24 Equity(62
+                               [AAPL]) [ABT])
+            2017-04-03	-0.51284 1.39173
+            2017-04-04	-0.73381 0.98149
+            2017-04-05	-0.90132 1.13981
+        """
+
+        positions_wo_cash = positions.drop('cash', axis='columns')
+        gross_exposure = positions_wo_cash.abs().sum(axis='columns')
+
+        style_factor_exposure = positions_wo_cash.multiply(risk_factor) \
+            .divide(gross_exposure, axis='index')
+        tot_style_factor_exposure = style_factor_exposure.sum(axis='columns',
+                                                              skipna=True)
+
+        return tot_style_factor_exposure
+
+    @classmethod
+    def compute_sector_exposures(cls, positions, sectors, sector_dict=SECTORS):
+        """
+        Returns arrays of long, short and gross sector exposures of an algorithm's
+        positions
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Daily equity positions of algorithm, in dollars.
+            - See full explanation in compute_style_factor_exposures.
+
+        sectors : pd.DataFrame
+            Daily Morningstar sector code per asset
+            - See full explanation in create_risk_tear_sheet
+
+        sector_dict : dict or OrderedDict
+            Dictionary of all sectors
+            - Keys are sector codes (e.g., ints or strings) and values are sector
+              names (which must be strings)
+            - Defaults to Morningstar sectors
+        """
+
+        sector_ids = sector_dict.keys()
+
+        long_exposures = []
+        short_exposures = []
+        gross_exposures = []
+        net_exposures = []
+
+        positions_wo_cash = positions.drop('cash', axis='columns')
+        long_exposure = positions_wo_cash[positions_wo_cash > 0] \
+            .sum(axis='columns')
+        short_exposure = positions_wo_cash[positions_wo_cash < 0] \
+            .abs().sum(axis='columns')
+        gross_exposure = positions_wo_cash.abs().sum(axis='columns')
+
+        for sector_id in sector_ids:
+            in_sector = positions_wo_cash[sectors == sector_id]
+
+            long_sector = in_sector[in_sector > 0] \
+                .sum(axis='columns').divide(long_exposure)
+            short_sector = in_sector[in_sector < 0] \
+                .sum(axis='columns').divide(short_exposure)
+            gross_sector = in_sector.abs().sum(axis='columns') \
+                .divide(gross_exposure)
+            net_sector = long_sector.subtract(short_sector)
+
+            long_exposures.append(long_sector)
+            short_exposures.append(short_sector)
+            gross_exposures.append(gross_sector)
+            net_exposures.append(net_sector)
+
+        return long_exposures, short_exposures, gross_exposures, net_exposures
+
+    @classmethod
+    def compute_cap_exposures(cls, positions, caps):
+        """
+        Returns arrays of long, short and gross market cap exposures of an
+        algorithm's positions
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Daily equity positions of algorithm, in dollars.
+            - See full explanation in compute_style_factor_exposures.
+
+        caps : pd.DataFrame
+            Daily Morningstar sector code per asset
+            - See full explanation in create_risk_tear_sheet
+        """
+
+        long_exposures = []
+        short_exposures = []
+        gross_exposures = []
+        net_exposures = []
+
+        positions_wo_cash = positions.drop('cash', axis='columns')
+        tot_gross_exposure = positions_wo_cash.abs().sum(axis='columns')
+        tot_long_exposure = positions_wo_cash[positions_wo_cash > 0] \
+            .sum(axis='columns')
+        tot_short_exposure = positions_wo_cash[positions_wo_cash < 0] \
+            .abs().sum(axis='columns')
+
+        for bucket_name, boundaries in CAP_BUCKETS.items():
+            in_bucket = positions_wo_cash[(caps >= boundaries[0]) &
+                                          (caps <= boundaries[1])]
+
+            gross_bucket = in_bucket.abs().sum(axis='columns') \
+                .divide(tot_gross_exposure)
+            long_bucket = in_bucket[in_bucket > 0] \
+                .sum(axis='columns').divide(tot_long_exposure)
+            short_bucket = in_bucket[in_bucket < 0] \
+                .sum(axis='columns').divide(tot_short_exposure)
+            net_bucket = long_bucket.subtract(short_bucket)
+
+            gross_exposures.append(gross_bucket)
+            long_exposures.append(long_bucket)
+            short_exposures.append(short_bucket)
+            net_exposures.append(net_bucket)
+
+        return long_exposures, short_exposures, gross_exposures, net_exposures
+
+    @classmethod
+    def compute_volume_exposures(cls, shares_held, volumes, percentile):
+        """
+        Returns arrays of pth percentile of long, short and gross volume exposures
+        of an algorithm's held shares
+
+        Parameters
+        ----------
+        shares_held : pd.DataFrame
+            Daily number of shares held by an algorithm.
+            - See full explanation in create_risk_tear_sheet
+
+        volumes : pd.DataFrame
+            Daily volume per asset
+            - See full explanation in create_risk_tear_sheet
+
+        percentile : float
+            Percentile to use when computing and plotting volume exposures
+            - See full explanation in create_risk_tear_sheet
+        """
+
+        shares_held = shares_held.replace(0, np.nan)
+
+        shares_longed = shares_held[shares_held > 0]
+        shares_shorted = -1 * shares_held[shares_held < 0]
+        shares_grossed = shares_held.abs()
+
+        longed_frac = shares_longed.divide(volumes)
+        shorted_frac = shares_shorted.divide(volumes)
+        grossed_frac = shares_grossed.divide(volumes)
+
+        # NOTE: To work around a bug in `quantile` with nan-handling in
+        #       pandas 0.18, use np.nanpercentile by applying to each row of
+        #       the dataframe. This is fixed in pandas 0.19.
+        #
+        # longed_threshold = 100*longed_frac.quantile(percentile, axis='columns')
+        # shorted_threshold = 100*shorted_frac.quantile(percentile, axis='columns')
+        # grossed_threshold = 100*grossed_frac.quantile(percentile, axis='columns')
+
+        longed_threshold = 100 * longed_frac.apply(
+            partial(np.nanpercentile, q=100 * percentile),
+            axis='columns',
+        )
+        shorted_threshold = 100 * shorted_frac.apply(
+            partial(np.nanpercentile, q=100 * percentile),
+            axis='columns',
+        )
+        grossed_threshold = 100 * grossed_frac.apply(
+            partial(np.nanpercentile, q=100 * percentile),
+            axis='columns',
+        )
+
+        return longed_threshold, shorted_threshold, grossed_threshold
+
+    @classmethod
+    def map_transaction(cls, txn):
+        """
+        Maps a single transaction row to a dictionary.
+
+        Parameters
+        ----------
+        txn : pd.DataFrame
+            A single transaction object to convert to a dictionary.
+
+        Returns
+        -------
+        dict
+            Mapped transaction.
+        """
+
+        if isinstance(txn['sid'], dict):
+            sid = txn['sid']['sid']
+            symbol = txn['sid']['symbol']
+        else:
+            sid = txn['sid']
+            symbol = txn['sid']
+
+        return {'sid': sid,
+                'symbol': symbol,
+                'price': txn['price'],
+                'order_id': txn['order_id'],
+                'amount': txn['amount'],
+                'commission': txn['commission'],
+                'dt': txn['dt']}
+
+    @classmethod
+    def make_transaction_frame(cls, transactions):
+        """
+        Formats a transaction DataFrame.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Contains improperly formatted transactional data.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            Daily transaction volume and dollar amount.
+             - See full explanation in tears.create_full_tear_sheet.
+        """
+
+        transaction_list = []
+        for dt in transactions.index:
+            txns = transactions.loc[dt]
+            if len(txns) == 0:
+                continue
+
+            for txn in txns:
+                txn = map_transaction(txn)
+                transaction_list.append(txn)
+        df = pd.DataFrame(sorted(transaction_list, key=lambda x: x['dt']))
+        df['txn_dollars'] = -df['amount'] * df['price']
+
+        df.index = list(map(pd.Timestamp, df.dt.values))
+        return df
+
+    @classmethod
+    def get_txn_vol(cls, transactions):
+        """
+        Extract daily transaction data from a set of transaction objects.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Time series containing one row per symbol (and potentially
+            duplicate datetime indices) and columns for amount and
+            price.
+
+        Returns
+        -------
+        pd.DataFrame
+            Daily transaction volume and number of shares.
+             - See full explanation in tears.create_full_tear_sheet.
+        """
+
+        txn_norm = transactions.copy()
+        txn_norm.index = txn_norm.index.normalize()
+        amounts = txn_norm.amount.abs()
+        prices = txn_norm.price
+        values = amounts * prices
+        daily_amounts = amounts.groupby(amounts.index).sum()
+        daily_values = values.groupby(values.index).sum()
+        daily_amounts.name = "txn_shares"
+        daily_values.name = "txn_volume"
+        return pd.concat([daily_values, daily_amounts], axis=1)
+
+    @classmethod
+    def adjust_returns_for_slippage(cls, returns, positions, transactions,
+                                    slippage_bps):
+        """
+        Apply a slippage penalty for every dollar traded.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in create_full_tear_sheet.
+        positions : pd.DataFrame
+            Daily net position values.
+             - See full explanation in create_full_tear_sheet.
+        transactions : pd.DataFrame
+            Prices and `amounts` of executed trades.One row per trade.
+             - See full explanation in create_full_tear_sheet.
+        slippage_bps: int/float
+            Basis points of slippage to apply.
+
+        Returns
+        -------
+        pd.Series
+            Time series of daily returns, adjusted for slippage.
+        """
+
+        slippage = 0.0001 * slippage_bps
+        portfolio_value = positions.sum(axis=1)
+        pnl = portfolio_value * returns
+        traded_value = get_txn_vol(transactions).txn_volume
+        slippage_dollars = traded_value * slippage
+        adjusted_pnl = pnl.add(-slippage_dollars, fill_value=0)
+        adjusted_returns = returns * adjusted_pnl / pnl
+
+        return adjusted_returns
+
+    @classmethod
+    def get_turnover(cls, positions, transactions, denominator='AGB'):
+        """
+         Value of purchases and sales divided
+        by either the actual gross book or the portfolio value
+        for the time step.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Contains daily position values including cash.
+            - See full explanation in tears.create_full_tear_sheet
+        transactions : pd.DataFrame
+            Prices and `amounts` of executed trades.One row per trade.
+            - See full explanation in tears.create_full_tear_sheet
+        denominator : str, optional
+            Either 'AGB' or 'portfolio_value', default AGB.
+            - AGB (Actual gross book) is the gross market
+            value (GMV) of the specific algo being analyzed.
+            Swapping out an entire portfolio of stocks for
+            another will yield 200% turnover, not 100%, since
+            transactions are being made for both sides.
+            - We use average of the previous and the current end-of-period
+            AGB to avoid singularities when trading only into or
+            out of an entire book in one trading period.
+            - Portfolio_value is the total value of the algo's
+            positions end-of-period, including cash.
+
+        Returns
+        -------
+        turnover_rate : pd.Series
+            timeseries of portfolio turnover rates.
+        """
+
+        txn_vol = get_txn_vol(transactions)
+        traded_value = txn_vol.txn_volume
+
+        if denominator == 'AGB':
+            # Actual gross book is the same thing as the algo's GMV
+            # We want our denom to be avg(AGB previous, AGB current)
+            agb = positions.drop('cash', axis=1).abs().sum(axis=1)
+            denom = agb.rolling(2).mean()
+
+            # Since the first value of pd.rolling returns NaN, we
+            # set our "day 0" AGB to 0.
+            denom.iloc[0] = agb.iloc[0] / 2
+        elif denominator == 'portfolio_value':
+            denom = positions.sum(axis=1)
+        else:
+            raise ValueError(
+                "Unexpected value for denominator '{}'. The "
+                "denominator parameter must be either 'AGB'"
+                " or 'portfolio_value'.".format(denominator)
+            )
+
+        denom.index = denom.index.normalize()
+        turnover = traded_value.div(denom, axis='index')
+        # 增加一行代码，处理inf的值，避免画图的时候出错
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", FutureWarning)
+            turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects(copy=False)
+        turnover = turnover.fillna(0)
+        turnover = turnover.astype('float')
+        return turnover
+
+    @classmethod
+    def perf_stats(cls, returns, factor_returns=None, positions=None,
+                   transactions=None, turnover_denom='AGB'):
+        """
+        Calculates various performance metrics of a strategy, for use in
+        plotting.show_perf_stats.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        factor_returns : pd.Series, optional
+            Daily noncumulative returns of the benchmark factor to which betas are
+            computed. Usually a benchmark such as market returns.
+             - This is in the same style as returns.
+             - If `None`, do not compute the alpha, beta, and information ratio.
+        positions : pd.DataFrame
+            Daily net position values.
+             - See full explanation in tears.create_full_tear_sheet.
+        transactions : pd.DataFrame
+            Prices and `amounts` of executed trades. One row per trade.
+            - See full explanation in tears.create_full_tear_sheet.
+        turnover_denom : str
+            Either AGB or portfolio_value, default AGB.
+            - See full explanation in txn.get_turnover.
+
+        Returns
+        -------
+        pd.Series
+            Performance metrics.
+        """
+
+        stats = pd.Series()
+        for stat_func in SIMPLE_STAT_FUNCS:
+            stats[STAT_FUNC_NAMES[stat_func.__name__]] = stat_func(returns)
+
+        if positions is not None:
+            stats['Gross leverage'] = gross_lev(positions).mean()
+            if transactions is not None:
+                stats['Daily turnover'] = get_turnover(positions,
+                                                       transactions,
+                                                       turnover_denom).mean()
+        if factor_returns is not None:
+            for stat_func in FACTOR_STAT_FUNCS:
+                res = stat_func(returns, factor_returns)
+                stats[STAT_FUNC_NAMES[stat_func.__name__]] = res
+
+        return stats
+
+    @classmethod
+    def perf_stats_bootstrap(cls, returns, factor_returns=None, return_stats=True,
+                             **_kwargs):
+        """Calculates various bootstrapped performance metrics of a strategy.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        factor_returns : pd.Series, optional
+            Daily noncumulative returns of the benchmark factor to which betas are
+            computed. Usually a benchmark such as market returns.
+             - This is in the same style as returns.
+             - If `None`, do not compute the alpha, beta, and information ratio.
+        return_stats : boolean (optional)
+            If True, returns a DataFrame of mean, median, 5 and 95 percentiles
+            for each perf metric.
+            If False, return a DataFrame with the bootstrap samples for
+            each perf metric.
+
+        Returns
+        -------
+        pd.DataFrame
+            if return_stats is True:
+            - Distributional statistics of bootstrapped sampling
+            distribution of performance metrics.
+            If return_stats is False:
+            - Bootstrap samples for each performance metric.
+        """
+
+        bootstrap_values = OrderedDict()
+
+        for stat_func in SIMPLE_STAT_FUNCS:
+            stat_name = STAT_FUNC_NAMES[stat_func.__name__]
+            bootstrap_values[stat_name] = calc_bootstrap(stat_func,
+                                                         returns)
+
+        if factor_returns is not None:
+            for stat_func in FACTOR_STAT_FUNCS:
+                stat_name = STAT_FUNC_NAMES[stat_func.__name__]
+                bootstrap_values[stat_name] = calc_bootstrap(
+                    stat_func,
+                    returns,
+                    factor_returns=factor_returns)
+
+        bootstrap_values = pd.DataFrame(bootstrap_values)
+
+        if return_stats:
+            stats = bootstrap_values.apply(calc_distribution_stats)
+            return stats.T[['mean', 'median', '5%', '95%']]
+        else:
+            return bootstrap_values
+
+    @classmethod
+    def calc_bootstrap(cls, func, returns, *args, **kwargs):
+        """Performs a bootstrap analysis on a user-defined function returning
+        a summary statistic.
+
+        Parameters
+        ----------
+        func : function
+            either takes a single array (commonly returns)
+            or two arrays (commonly returns and factor returns) and
+            returns a single value (commonly a summary
+            statistic). Additional args and kwargs are passed as well.
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        :factor_returns : pd.Series, optional
+            Daily noncumulative returns of the benchmark factor to which betas are
+            computed. Usually a benchmark such as market returns.
+             - This is in the same style as returns.
+        :n_samples : int, optional
+            Number of bootstrap samples to draw. Default is 1000.
+            Increasing this will lead to more stable / accurate estimates.
+
+        Returns
+        -------
+        numpy.ndarray
+            Bootstrapped sampling distribution of passed in func.
+        """
+
+        n_samples = kwargs.pop('n_samples', 1000)
+        out = np.empty(n_samples)
+
+        factor_returns = kwargs.pop('factor_returns', None)
+
+        for i in range(n_samples):
+            idx = np.random.randint(len(returns), size=len(returns))
+            returns_i = returns.iloc[idx].reset_index(drop=True)
+            if factor_returns is not None:
+                factor_returns_i = factor_returns.iloc[idx].reset_index(drop=True)
+                out[i] = func(returns_i, factor_returns_i,
+                              *args, **kwargs)
+            else:
+                out[i] = func(returns_i,
+                              *args, **kwargs)
+
+        return out
+
+    @classmethod
+    def calc_distribution_stats(cls, x):
+        """Calculate various summary statistics of data.
+
+        Parameters
+        ----------
+        x : numpy.ndarray or pandas.Series
+            Array to compute summary statistics for.
+
+        Returns
+        -------
+        `pandas.Series` type
+            Series containing mean, median, std, as well as 5, 25, 75 and
+            95 percentiles of passed in values.
+        """
+
+        return pd.Series({'mean': np.mean(x),
+                          'median': np.median(x),
+                          'std': np.std(x),
+                          '5%': np.percentile(x, 5),
+                          '25%': np.percentile(x, 25),
+                          '75%': np.percentile(x, 75),
+                          '95%': np.percentile(x, 95),
+                          'IQR': np.subtract.reduce(
+                              np.percentile(x, [75, 25])),
+                          })
+
+    @classmethod
+    def get_max_drawdown_underwater(cls, underwater):
+        """
+        Determines peak, valley, and recovery dates given an 'underwater'
+        DataFrame.
+
+        An underwater DataFrame is a DataFrame that has precomputed
+        rolling drawdown.
+
+        Parameters
+        ----------
+        underwater : pd.Series
+           Underwater returns (rolling drawdown) of a strategy.
+
+        Returns
+        -------
+        peak : datetime
+            The maximum drawdown's peak.
+        valley : datetime
+            The maximum drawdown's valley.
+        recovery : datetime
+            The maximum drawdown's recovery.
+        """
+
+        # valley = np.argmin(underwater)  # end of the period
+        # # print(valley)
+        # # Find first 0
+        # peak = underwater[:valley][underwater[:valley] == 0].index[-1]
+        # # Find last 0
+        # try:
+        #     recovery = underwater[valley:][underwater[valley:] == 0].index[0]
+        # except IndexError:
+        #     recovery = np.nan  # drawdown not recovered
+        # # print("get_max_drawdown_underwater",underwater)
+        # # print("get_max_drawdown_underwater",underwater[:valley][underwater[:valley] == 0])
+        # # print("get_max_drawdown_underwater",peak, valley, recovery)
+        # # add a code,change index to datetime
+        # valley = list(underwater.index)[valley]
+        # return peak, valley, recovery
+        # 原版
+        valley = underwater.idxmin()  # end of the period
+        # Find first 0
+        peak = underwater[:valley][underwater[:valley] == 0].index[-1]
+        # Find last 0
+        try:
+            recovery = underwater[valley:][underwater[valley:] == 0].index[0]
+        except IndexError:
+            recovery = np.nan  # drawdown isn't recovered
+        # `print(peak, valley, recovery)`
+        return peak, valley, recovery
+
+    @classmethod
+    def get_max_drawdown(cls, returns):
+        """
+        Determines the maximum drawdown of a strategy.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+            - See full explanation in: func:`~pyfolio.timeseries.cum_returns`.
+
+        Returns
+        -------
+        float
+            Maximum drawdown.
+
+        Note
+        -----
+        See https://en.wikipedia.org/wiki/Drawdown_(economics) for more details.
+        """
+
+        returns = returns.copy()
+        df_cum = ep.cum_returns(returns, 1.0)
+        running_max = np.maximum.accumulate(df_cum)
+        underwater = df_cum / running_max - 1
+        return get_max_drawdown_underwater(underwater)
+
+    @classmethod
+    def get_top_drawdowns(cls, returns, top=10):
+        """
+        Finds top drawdowns, sorted by drawdown amount.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        top : int, optional
+            The `amount` of top drawdowns to find (default 10).
+
+        Returns
+        -------
+        drawdowns : list tye
+            List of drawdown peaks, valleys, and recoveries. See get_max_drawdown.
+        """
+
+        returns = returns.copy()
+        df_cum = ep.cum_returns(returns, 1.0)
+        running_max = np.maximum.accumulate(df_cum)
+        underwater = df_cum / running_max - 1
+        # print("df_cum",df_cum)
+        # print("running_max",running_max)
+        # print("underwater",underwater)
+        drawdowns = []
+        for t in range(top):
+            # print("len(underwater)",len(underwater))
+            peak, valley, recovery = get_max_drawdown_underwater(underwater)
+            # Slice out draw-down period
+            if not pd.isnull(recovery):
+                underwater.drop(underwater[peak: recovery].index[1:-1],
+                                inplace=True)
+            else:
+                # the drawdown has not ended yet
+                underwater = underwater.loc[:peak]
+            # print("get_top_drawdowns",peak, valley, recovery)
+            drawdowns.append((peak, valley, recovery))
+            if (len(returns) == 0) or (len(underwater) == 0):
+                break
+        # print(drawdowns)
+        return drawdowns
+
+    @classmethod
+    def gen_drawdown_table(cls, returns, top=10):
+        """
+        Places top drawdowns in a table.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        top : int, optional
+            The `amount` of top drawdowns to find (default 10).
+
+        Returns
+        -------
+        df_drawdowns : pd.DataFrame
+            Information about top drawdowns.
+        """
+
+        df_cum = ep.cum_returns(returns, 1.0)
+        drawdown_periods = get_top_drawdowns(returns, top=top)
+        df_drawdowns = pd.DataFrame(index=list(range(top)),
+                                    columns=['Net drawdown in %',
+                                             'Peak date',
+                                             'Valley date',
+                                             'Recovery date',
+                                             'Duration'])
+        # print(df_drawdowns)
+        # print(drawdown_periods)
+        for i, (peak, valley, recovery) in enumerate(drawdown_periods):
+            if pd.isnull(recovery):
+                df_drawdowns.loc[i, 'Duration'] = np.nan
+            else:
+                df_drawdowns.loc[i, 'Duration'] = len(pd.date_range(peak,
+                                                                    recovery,
+                                                                    freq='B'))
+            # to_pydatetime()疑似是老的API，使用pd.to_datetime替代
+            # df_drawdowns.loc[i, 'Peak date'] = (peak.to_pydatetime()
+            #                                     .strftime('%Y-%m-%d'))
+            # df_drawdowns.loc[i, 'Valley date'] = (valley.to_pydatetime()
+            #                                       .strftime('%Y-%m-%d'))
+            # if isinstance(recovery, float):
+            #     df_drawdowns.loc[i, 'Recovery date'] = recovery
+            # else:
+            #     df_drawdowns.loc[i, 'Recovery date'] = (recovery.to_pydatetime()
+            #                                             .strftime('%Y-%m-%d'))
+
+            df_drawdowns.loc[i, 'Peak date'] = (pd.to_datetime(peak).strftime('%Y-%m-%d'))
+            df_drawdowns.loc[i, 'Valley date'] = (pd.to_datetime(valley).strftime('%Y-%m-%d'))
+
+            if isinstance(recovery, float):
+                df_drawdowns.loc[i, 'Recovery date'] = recovery
+            else:
+                df_drawdowns.loc[i, 'Recovery date'] = (pd.to_datetime(recovery).strftime('%Y-%m-%d'))
+
+            df_drawdowns.loc[i, 'Net drawdown in %'] = (
+                                                               (df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[
+                                                           peak]) * 100
+
+        df_drawdowns['Peak date'] = pd.to_datetime(df_drawdowns['Peak date'])
+        df_drawdowns['Valley date'] = pd.to_datetime(df_drawdowns['Valley date'])
+        df_drawdowns['Recovery date'] = pd.to_datetime(df_drawdowns['Recovery date'])
+        # print(df_drawdowns)
+        return df_drawdowns
+
+    @classmethod
+    def rolling_volatility(cls, returns, rolling_vol_window):
+        """
+        Determines the rolling volatility of a strategy.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        rolling_vol_window : int
+            Length of the rolling window, in days, over which to compute.
+
+        Returns
+        -------
+        pd.Series
+            Rolling volatility.
+        """
+
+        return returns.rolling(rolling_vol_window).std() \
+            * np.sqrt(APPROX_BDAYS_PER_YEAR)
+
+    @classmethod
+    def rolling_sharpe(cls, returns, rolling_sharpe_window):
+        """
+        Determines the rolling Sharpe ratio of a strategy.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        rolling_sharpe_window : int
+            Length of the rolling window, in days, over which to compute.
+
+        Returns
+        -------
+        pd.Series
+            Rolling Sharpe ratio.
+
+        Note
+        -----
+        See https://en.wikipedia.org/wiki/Sharpe_ratio for more details.
+        """
+        avg_returns = returns.rolling(rolling_sharpe_window).mean()
+        std_returns = returns.rolling(rolling_sharpe_window).std()
+        return avg_returns / std_returns * np.sqrt(APPROX_BDAYS_PER_YEAR)
+
+    @classmethod
+    def simulate_paths(cls, is_returns, num_days,
+                       _starting_value=1, num_samples=1000, random_seed=None):
+        """
+        Generate alternate paths using available values from in-sample returns.
+
+        Parameters
+        ----------
+        is_returns : pandas.core.frame.DataFrame
+            Non-cumulative in-sample returns.
+        num_days : int
+            Number of days to project the probability cone forward.
+        _starting_value : int or float
+            Starting value of the out sample period.
+        num_samples : int
+            Number of samples to draw from the in-sample daily returns.
+            Each sample will be an array with length num_days.
+            A higher number of samples will generate a more accurate
+            bootstrap cone.
+        random_seed : int
+            Seed for the pseudorandom number generator used by the pandas
+            sample method.
+
+        Returns
+        -------
+        samples : numpy.ndarray
+        """
+
+        samples = np.empty((num_samples, num_days))
+        seed = np.random.RandomState(seed=random_seed)
+        for i in range(num_samples):
+            samples[i, :] = is_returns.sample(num_days, replace=True,
+                                              random_state=seed)
+
+        return samples
+
+    @classmethod
+    def summarize_paths(cls, samples, cone_std=(1., 1.5, 2.), starting_value=1.):
+        """
+        Generate the upper and lower bounds of an n standard deviation
+        cone of forecasted cumulative returns.
+
+        Parameters
+        ----------
+        :param samples : numpy.ndarray
+            Alternative paths, or series of possible outcomes.
+        :param cone_std : list of int/float
+            Number of standard deviations to use in the boundaries of
+            the cone. If multiple values are passed, cone bounds will
+            be generated for each value.
+        :param starting_value: default 1
+
+        Returns
+        -------
+        samples : pandas.core.frame.DataFrame
+
+        """
+
+        cum_samples = ep.cum_returns(samples.T,
+                                     starting_value=starting_value).T
+
+        cum_mean = cum_samples.mean(axis=0)
+        cum_std = cum_samples.std(axis=0)
+
+        if isinstance(cone_std, (float, int)):
+            cone_std = [cone_std]
+
+        # cone_bounds = pd.DataFrame(columns=pd.Float64Index([]))
+        cone_bounds = pd.DataFrame(columns=pd.Index([], dtype='float64'))
+        for num_std in cone_std:
+            cone_bounds.loc[:, float(num_std)] = cum_mean + cum_std * num_std
+            cone_bounds.loc[:, float(-num_std)] = cum_mean - cum_std * num_std
+
+        return cone_bounds
+
+    @classmethod
+    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1., 1.5, 2.),
+                                starting_value=1, num_samples=1000,
+                                random_seed=None):
+        """
+        Determines the upper and lower bounds of an n standard deviation
+        cone of forecasted cumulative returns. Future cumulative mean and
+        standard deviation are computed by repeatedly sampling from the
+        in-sample daily returns (i.e., bootstrap). This cone is non-parametric,
+        meaning it does not assume that returns are normally distributed.
+
+        Parameters
+        ----------
+        is_returns : pd.Series
+            In-sample daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        num_days : int
+            Number of days to project the probability cone forward.
+        cone_std : int, float, or list of int/float
+            Number of standard deviations to use in the boundaries of
+            the cone. If multiple values are passed, cone bounds will
+            be generated for each value.
+        starting_value : int or float
+            Starting value of the out sample period.
+        num_samples : int
+            Number of samples to draw from the in-sample daily returns.
+            Each sample will be an array with length num_days.
+            A higher number of samples will generate a more accurate
+            bootstrap cone.
+        random_seed : int
+            Seed for the pseudorandom number generator used by the pandas
+            sample method.
+
+        Returns
+        -------
+        pd.DataFrame
+            Contains upper and lower cone boundaries. Column names are
+            strings corresponding to the number of standard deviations
+            above (positive) or below (negative) the projected mean
+            cumulative returns.
+        """
+
+        samples = simulate_paths(
+            is_returns=is_returns,
+            num_days=num_days,
+            _starting_value=starting_value,
+            num_samples=num_samples,
+            random_seed=random_seed
+        )
+
+        cone_bounds = summarize_paths(
+            samples=samples,
+            cone_std=cone_std,
+            starting_value=starting_value
+        )
+
+        return cone_bounds
+
+    @classmethod
+    def extract_interesting_date_ranges(cls, returns):
+        """
+        Extracts returns based on interesting events. See
+        gen_date_range_interesting.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+
+        Returns
+        -------
+        ranges : OrderedDict
+            Date ranges, with returns, of all valid events.
+        """
+
+        returns_dupe = returns.copy()
+        returns_dupe.index = returns_dupe.index.map(pd.Timestamp)
+        ranges = OrderedDict()
+        for name, (start, end) in PERIODS.items():
+            try:
+                period = returns_dupe.loc[start:end]
+                if len(period) == 0:
+                    continue
+                ranges[name] = period
+            except BaseException as e:
+                print(e)
+                continue
+
+        return ranges
+
+    @classmethod
+    def var_cov_var_normal(cls, p, c, mu=0, sigma=1):
+        """
+        Variance-covariance calculation of daily Value-at-Risk in a
+        portfolio.
+
+        Parameters
+        ----------
+        :param p : float
+            Portfolio value.
+        :param c : float
+            Confidence level.
+        :param mu : float, optional
+            Mean.
+        :param sigma:
+
+        Returns
+        -------
+        float
+        """
+
+        alpha = sp.stats.norm.ppf(1 - c, mu, sigma)
+        return p - p * (alpha + 1)
+
+    @classmethod
+    def common_sense_ratio(cls, returns):
+        """
+        Common sense ratio is the multiplication of the tail ratio and the
+        Gain-to-Pain-Ratio -- sum(profits) / sum(losses).
+
+        See https://bit.ly/1ORzGBk for more information on the motivation of
+        this metric.
+
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+
+        Returns
+        -------
+        float
+            common sense ratio
+        """
+
+        return ep.tail_ratio(returns) * \
+            (1 + ep.annual_return(returns))
+
+    @classmethod
+    def normalize(cls, returns, starting_value=1):
+        """
+        Normalizes a returns timeseries based on the first value.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        starting_value : float, optional
+           The starting returns (default 1).
+
+        Returns
+        -------
+        pd.Series
+            Normalized returns.
+        """
+
+        return starting_value * (returns / returns.iloc[0])
+
+    @classmethod
+    def rolling_beta(cls, returns, factor_returns,
+                     rolling_window=APPROX_BDAYS_PER_MONTH * 6):
+        """
+        Determines the rolling beta of a strategy.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        factor_returns : pd.Series or pd.DataFrame
+            Daily noncumulative returns of the benchmark factor to which betas are
+            computed. Usually a benchmark such as market returns.
+             - If DataFrame is passed, computes rolling beta for each column.
+             - This is in the same style as returns.
+        rolling_window : int, optional
+            The size of the rolling window, in days, over which to compute
+            beta (default 6 months).
+
+        Returns
+        -------
+        pd.Series
+            Rolling beta.
+
+        Note
+        -----
+        See https://en.wikipedia.org/wiki/Beta_(finance) for more details.
+        """
+
+        if factor_returns.ndim > 1:
+            # Apply column-wise
+            return factor_returns.apply(partial(rolling_beta, returns),
+                                        rolling_window=rolling_window)
+        else:
+            out = pd.Series(index=returns.index)
+            for beg, end in zip(returns.index[0:-rolling_window],
+                                returns.index[rolling_window:]):
+                out.loc[end] = ep.beta(
+                    returns.loc[beg:end],
+                    factor_returns.loc[beg:end])
+
+            return out
+
+    @classmethod
+    def rolling_regression(cls, returns, factor_returns,
+                           rolling_window=APPROX_BDAYS_PER_MONTH * 6,
+                           nan_threshold=0.1):
+        """
+        Computes rolling factor betas using a multivariate linear regression
+        (separate linear regressions are problematic because the factors may be
+        confounded).
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        factor_returns : pd.DataFrame
+            Daily noncumulative returns of the benchmark factor to which betas are
+            computed. Usually a benchmark such as market returns.
+             - Computes rolling beta for each column.
+             - This is in the same style as returns.
+        rolling_window : int, optional
+            The `days` window over which to compute the beta. Defaults to 6 months.
+        nan_threshold : float, optionally, If there is more than this fraction of NaNs,
+            the rolling regression for the given date will be skipped.
+
+        Returns
+        -------
+        pandas.DataFrame type
+            DataFrame containing rolling beta coefficients to SMB, HML and UMD
+        """
+
+        # We need to drop NaNs to regress
+        ret_no_na = returns.dropna()
+
+        columns = ['alpha'] + factor_returns.columns.tolist()
+        rolling_risk = pd.DataFrame(columns=columns,
+                                    index=ret_no_na.index)
+
+        rolling_risk.index.name = 'dt'
+
+        for beg, end in zip(ret_no_na.index[:-rolling_window],
+                            ret_no_na.index[rolling_window:]):
+            returns_period = ret_no_na[beg:end]
+            factor_returns_period = factor_returns.loc[returns_period.index]
+
+            if np.all(factor_returns_period.isnull().mean()) < nan_threshold:
+                factor_returns_period_dnan = factor_returns_period.dropna()
+                reg = linear_model.LinearRegression(fit_intercept=True).fit(
+                    factor_returns_period_dnan,
+                    returns_period.loc[factor_returns_period_dnan.index])
+                rolling_risk.loc[end, factor_returns.columns] = reg.coef_
+                rolling_risk.loc[end, 'alpha'] = reg.intercept_
+
+        return rolling_risk
+
+    def gross_lev(positions):
+        """
+        Calculates the gross leverage of a strategy.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            Daily net position values.
+             - See full explanation in tears.create_full_tear_sheet.
+
+        Returns
+        -------
+        pd.Series
+            Gross leverage.
+        """
+
+        exposure = positions.drop('cash', axis=1).abs().sum(axis=1)
+        return exposure / positions.sum(axis=1)
+
+    @classmethod
+    def value_at_risk(cls, returns, period=None, sigma=2.0):
+        """
+        Get value at risk (VaR).
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Daily returns of the strategy, noncumulative.
+             - See full explanation in tears.create_full_tear_sheet.
+        period : str, optional
+            Period over which to calculate VaR. Set to 'weekly',
+            'monthly', or 'yearly', otherwise defaults to a period of
+            returns (typically daily).
+        sigma : float, optional
+            Standard deviations of VaR, default 2.
+        """
+        if period is not None:
+            returns_agg = ep.aggregate_returns(returns, period)
+        else:
+            returns_agg = returns.copy()
+
+        value_at_risk = returns_agg.mean() - sigma * returns_agg.std()
+        return value_at_risk
+
+    @classmethod
+    def agg_all_long_short(cls, round_trips, col, stats_dict):
+        # Aggregating for all trades
+        print("stats_dict = ", stats_dict)
+        stats_all = (round_trips
+        .assign(ones=1)
+        .groupby('ones')[col])
+        stats_all = stats_all.agg(stats_dict)
+        stats_all = stats_all.T.rename(columns={1.0: 'All trades'})
+
+        # Aggregating for long and short trades
+        # Use `rename(columns=...)` instead of `rename_axis`
+        stats_long_short = (round_trips
+        .groupby('long')[col])
+        stats_long_short = stats_long_short.agg(stats_dict)
+        stats_long_short = stats_long_short.T.rename(columns={False: 'Short trades', True: 'Long trades'})
+
+        # Join the two results
+        return stats_all.join(stats_long_short)
+
+    @classmethod
+    def agg_all_long_short(cls, round_trips, col, stats_dict):
+        # Separate custom functions from built-in functions
+        custom_funcs = {k: v for k, v in stats_dict.items() if callable(v)}
+        built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]
+
+        # Aggregating for all trades
+        stats_all = (round_trips
+        .assign(ones=1)
+        .groupby('ones')[col])
+
+        # Apply custom functions manually
+        stats_all_custom = {}
+        for func_name, func in custom_funcs.items():
+            stats_all_custom[func_name] = stats_all.apply(func)
+        stats_all_custom = pd.DataFrame(stats_all_custom)
+
+        # Apply built-in functions
+        stats_all_built_in = stats_all.agg(built_in_funcs)
+
+        # Combine results
+        stats_all = pd.concat([stats_all_custom, stats_all_built_in], axis=1)
+        stats_all = stats_all.T.rename(columns={1.0: 'All trades'})
+
+        # Aggregating for long and short trades
+        stats_long_short = (round_trips
+        .groupby('long')[col])
+
+        # Apply custom functions manually
+        stats_long_short_custom = {}
+        for func_name, func in custom_funcs.items():
+            stats_long_short_custom[func_name] = stats_long_short.apply(func)
+        stats_long_short_custom = pd.DataFrame(stats_long_short_custom)
+
+        # Apply built-in functions
+        stats_long_short_built_in = stats_long_short.agg(built_in_funcs)
+
+        # Combine results
+        stats_long_short = pd.concat([stats_long_short_custom, stats_long_short_built_in], axis=1)
+        stats_long_short = stats_long_short.T.rename(columns={False: 'Short trades', True: 'Long trades'})
+
+        # Join the two results
+        return stats_all.join(stats_long_short)
+
+    @classmethod
+    def _groupby_consecutive(cls, txn, max_delta=pd.Timedelta('8h')):
+        """Merge transactions of the same direction separated by less than
+        max_delta time duration.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Prices and amounts of executed round_trips. One row per trade.
+            - See full explanation in tears.create_full_tear_sheet
+
+        max_delta : pandas.Timedelta (optional)
+            Merge transactions in the same direction separated by less
+            than max_delta time duration.
+
+
+        Returns
+        -------
+        transactions : pd.DataFrame
+
+        """
+
+        def vwap(transaction):
+            if transaction.amount.sum() == 0:
+                warnings.warn('Zero transacted shares, setting vwap to nan.')
+                return np.nan
+            return (transaction.amount * transaction.price).sum() / \
+                transaction.amount.sum()
+
+        out = []
+        for sym, t in txn.groupby('symbol'):
+            t = t.sort_index()
+            t.index.name = 'dt'
+            t.index = pd.to_datetime(t.index)
+            t = t.reset_index()
+
+            t['order_sign'] = t.amount > 0
+            t['block_dir'] = (t.order_sign.shift(
+                1) != t.order_sign).astype(int).cumsum()
+            t['block_time'] = ((t.dt - t.dt.shift(1)) > max_delta).astype(int).cumsum()
+            # grouped_price = (t.groupby(('block_dir',
+            #                            'block_time'))
+            #                   .apply(vwap))
+            # grouped_price = t.groupby(['block_dir', 'block_time']).apply(vwap)
+            grouped_price = t.groupby(['block_dir', 'block_time'])[['amount', 'price']].apply(vwap)
+            grouped_price.name = 'price'
+            grouped_rest = t.groupby(['block_dir', 'block_time']).agg({
+                'amount': 'sum',
+                'symbol': 'first',
+                'dt': 'first'})
+
+            grouped = grouped_rest.join(grouped_price)
+
+            out.append(grouped)
+
+        out = pd.concat(out)
+        out = out.set_index('dt')
+        return out
+
+    @classmethod
+    def extract_round_trips(cls, transactions,
+                            portfolio_value=None):
+        """Group transactions into "round trips". First, transactions are
+        grouped by day and directionality. Then, long and short
+        transactions are matched to create round-trip round_trips for which
+        PnL, duration and returns are computed. Crossings where a position
+        changes from long to short and vice versa are handled correctly.
+
+        Under the hood, we reconstruct the individual shares in a
+        portfolio over time and match round_trips in a FIFO order.
+
+        For example, the following transactions would constitute one round trip:
+        index                  amount   price    symbol
+        2004-01-09 12:18:01    10       50      'AAPL'
+        2004-01-09 15:12:53    10       100      'AAPL'
+        2004-01-13 14:41:23    -10      100      'AAPL'
+        2004-01-13 15:23:34    -10      200       'AAPL'
+
+        First, the first two and last two round_trips will be merged into two
+        single transactions (computing the price via vwap). Then, during
+        the portfolio reconstruction, the two resulting transactions will
+        be merged and result in 1 round-trip trade with a PnL of
+        (150 * 20) - (75 * 20) = 1500.
+
+        Note that round trips do not have to close out positions
+        completely. For example, we could have removed the last
+        transaction in the example above and still generated a round-trip
+        over 10 shares with 10 shares left in the portfolio to be matched
+        with a later transaction.
+
+        Parameters
+        ----------
+        transactions : pd.DataFrame
+            Prices and amounts of executed round_trips. One row per trade.
+            - See full explanation in tears.create_full_tear_sheet
+
+        portfolio_value : pd.Series (optional)
+            Portfolio value (all net assets including cash) over time.
+            Note that portfolio_value needs to beginning of day, so either
+            use .shift() or positions.sum(axis='columns') / (1+returns).
+
+        Returns
+        -------
+        round_trips : pd.DataFrame:
+            DataFrame with one row per round trip.  The `returns` column
+            contains returns in respect to the portfolio value while
+            rt_returns are the returns in regard to the invested capital
+            into that particular round-trip.
+        """
+
+        transactions = _groupby_consecutive(transactions)
+        roundtrips = []
+
+        for sym, trans_sym in transactions.groupby('symbol'):
+            trans_sym = trans_sym.sort_index()
+            price_stack = deque()
+            dt_stack = deque()
+            trans_sym['signed_price'] = trans_sym.price * np.sign(trans_sym.amount)
+            trans_sym['abs_amount'] = trans_sym.amount.abs().astype(int)
+            for dt, t in trans_sym.iterrows():
+                if t.price < 0:
+                    warnings.warn('Negative price detected, ignoring for'
+                                  'round-trip.')
+                    continue
+
+                indiv_prices = [t.signed_price] * t.abs_amount
+                if (len(price_stack) == 0) or \
+                        (copysign(1, price_stack[-1]) == copysign(1, t.amount)):
+                    price_stack.extend(indiv_prices)
+                    dt_stack.extend([dt] * len(indiv_prices))
+                else:
+                    # Close round-trip
+                    pnl = 0
+                    invested = 0
+                    cur_open_dts = []
+
+                    for price in indiv_prices:
+                        if len(price_stack) != 0 and \
+                                (copysign(1, price_stack[-1]) != copysign(1, price)):
+                            # Retrieve the first dt, stock-price pair from
+                            # stack
+                            prev_price = price_stack.popleft()
+                            prev_dt = dt_stack.popleft()
+
+                            pnl += -(price + prev_price)
+                            cur_open_dts.append(prev_dt)
+                            invested += abs(prev_price)
+
+                        else:
+                            # Push additional stock prices onto the stack
+                            price_stack.append(price)
+                            dt_stack.append(dt)
+
+                    roundtrips.append({'pnl': pnl,
+                                       'open_dt': cur_open_dts[0],
+                                       'close_dt': dt,
+                                       'long': price < 0,
+                                       'rt_returns': pnl / invested,
+                                       'symbol': sym,
+                                       })
+
+        roundtrips = pd.DataFrame(roundtrips)
+
+        roundtrips['duration'] = roundtrips['close_dt'].sub(roundtrips['open_dt'])
+
+        if portfolio_value is not None:
+            # Need to normalize so that we can join
+            pv = pd.DataFrame(portfolio_value,
+                              columns=['portfolio_value']) \
+                .assign(date=portfolio_value.index)
+
+            roundtrips['date'] = roundtrips.close_dt.apply(lambda x:
+                                                           x.replace(hour=0,
+                                                                     minute=0,
+                                                                     second=0))
+            # Convert 'roundtrips.date' to UTC to match 'portfolio_value.index'
+            if pv.index.tz is not None:  # portfolio_value.index has a timezone (e.g., UTC)
+                roundtrips['date'] = roundtrips['date'].dt.tz_localize('UTC')
+
+            tmp = roundtrips.join(pv, on='date', lsuffix='_')
+
+            roundtrips['returns'] = tmp.pnl / tmp.portfolio_value
+            roundtrips = roundtrips.drop('date', axis='columns')
+
+        return roundtrips
+
+    @classmethod
+    def add_closing_transactions(cls, positions, transactions):
+        """
+        Appends transactions that close out all positions at the end of
+        the timespan covered by positions data. Utilizes pricing information
+        in the positions DataFrame to determine closing price.
+
+        Parameters
+        ----------
+        positions : pd.DataFrame
+            The positions that the strategy takes over time.
+        transactions : pd.DataFrame
+            Prices and amounts of executed round_trips. One row per trade.
+            - See full explanation in tears.create_full_tear_sheet
+
+        Returns
+        -------
+        closed_txns : pd.DataFrame
+            Transactions with closing transactions appended.
+        """
+
+        closed_txns = transactions[['symbol', 'amount', 'price']]
+
+        pos_at_end = positions.drop('cash', axis=1).iloc[-1]
+        open_pos = pos_at_end.replace(0, np.nan).dropna()
+        # Add closing round_trips one second after the close to be sure
+        # they don't conflict with other round_trips executed at that time.
+        end_dt = open_pos.name + pd.Timedelta(seconds=1)
+
+        for sym, ending_val in open_pos.items():
+            txn_sym = transactions[transactions.symbol == sym]
+
+            ending_amount = txn_sym.amount.sum()
+
+            ending_price = ending_val / ending_amount
+            closing_txn = {'symbol': sym,
+                           'amount': -ending_amount,
+                           'price': ending_price}
+
+            closing_txn = pd.DataFrame(closing_txn, index=[end_dt])
+            # closed_txns = closed_txns.append(closing_txn)
+            closed_txns = pd.concat([closed_txns, closing_txn], ignore_index=True)
+
+        closed_txns = closed_txns[closed_txns.amount != 0]
+
+        return closed_txns
+
+    @classmethod
+    def apply_sector_mappings_to_round_trips(cls, round_trips, sector_mappings):
+        """
+        Translates round trip symbols to sectors.
+
+        Parameters
+        ----------
+        round_trips : pd.DataFrame:
+            DataFrame with one row per-round-trip trade.
+            - See full explanation in round_trips.extract_round_trips
+        sector_mappings : dict or pd.Series, optional
+            Security identifier to sector mapping.
+            Security ids as keys, sectors as values.
+
+        Returns
+        -------
+        sector_round_trips : pd.DataFrame
+            Round trips with symbol names replaced by sector names.
+        """
+
+        sector_round_trips = round_trips.copy()
+        sector_round_trips.symbol = sector_round_trips.symbol.apply(
+            lambda x: sector_mappings.get(x, 'No Sector Mapping'))
+        sector_round_trips = sector_round_trips.dropna(axis=0)
+
+        return sector_round_trips
+
+    # @classmethod
+    # def gen_round_trip_stats(cls, round_trips):
+    #     """Generate various round-trip statistics.
+    #
+    #     Parameters
+    #     ----------
+    #     round_trips : pd.DataFrame:
+    #         DataFrame with one row per-round-trip trade.
+    #         - See full explanation in round_trips.extract_round_trips
+    #
+    #     Returns
+    #     -------
+    #     stats : dict
+    #        A dictionary where each value is a pandas DataFrame containing
+    #        various round-trip statistics.
+    #
+    #     See also
+    #     --------
+    #     round_trips.print_round_trip_stats
+    #     """
+    #
+    #     stats = {'pnl': agg_all_long_short(round_trips, 'pnl', PNL_STATS), 'summary': agg_all_long_short(round_trips, 'pnl',
+    #                                                                                                      SUMMARY_STATS),
+    #              'duration': agg_all_long_short(round_trips, 'duration',
+    #                                             DURATION_STATS), 'returns': agg_all_long_short(round_trips, 'returns',
+    #                                                                                            RETURN_STATS),
+    #              'symbols': round_trips.groupby('symbol')['returns'].agg(RETURN_STATS).T}
+    #
+    #     return stats
+
+    @classmethod
+    def gen_round_trip_stats(cls, round_trips):
+        """Generate various round-trip statistics.
+
+        Parameters
+        ----------
+        round_trips : pd.DataFrame:
+            DataFrame with one row per-round-trip trade.
+            - See full explanation in round_trips.extract_round_trips
+
+        Returns
+        -------
+        stats : dict
+           A dictionary where each value is a pandas DataFrame containing
+           various round-trip statistics.
+
+        See also
+        --------
+        round_trips.print_round_trip_stats
+        """
+
+        # Helper function to apply custom and built-in functions
+        def apply_custom_and_built_in_funcs(grouped, stats_dict):
+            # Separate custom functions from built-in functions
+            custom_funcs = {k: v for k, v in stats_dict.items() if callable(v)}
+            built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]
+
+            # Apply custom functions manually
+            custom_results = {}
+            for func_name, func in custom_funcs.items():
+                custom_results[func_name] = grouped.apply(func)
+            custom_results = pd.DataFrame(custom_results)
+
+            # Apply built-in functions
+            built_in_results = grouped.agg(built_in_funcs)
+
+            # Combine results
+            return pd.concat([custom_results, built_in_results], axis=1)
+
+        # Generate statistics for pnl, summary, duration, and returns
+        stats = {
+            'pnl': agg_all_long_short(round_trips, 'pnl', PNL_STATS),
+            'summary': agg_all_long_short(round_trips, 'pnl', SUMMARY_STATS),
+            'duration': agg_all_long_short(round_trips, 'duration', DURATION_STATS),
+            'returns': agg_all_long_short(round_trips, 'returns', RETURN_STATS),
+            'symbols': apply_custom_and_built_in_funcs(round_trips.groupby('symbol')['returns'], RETURN_STATS).T
+        }
+
+        return stats
+
+    @classmethod
+    def perf_attrib(cls, returns,
+                    positions,
+                    factor_returns,
+                    factor_loadings,
+                    transactions=None,
+                    pos_in_dollars=True):
+        """
+        Attributes the performance of a `returns` stream to a set of risk factors.
+
+        Preprocesses inputs, and then calls empyrical.perf_attrib. See
+        empyrical.perf_attrib for more info.
+
+        Performance attribution determines how much each risk factor, e.g.,
+        momentum, the technology sector, etc., contributed to total returns, as
+        well as the daily exposure to each of the risk factors. The returns that
+        can be attributed to one of the given risk factors are the
+        `common_returns`, and the returns that _cannot_ be attributed to a risk
+        factor are the `specific_returns`, or the alpha. The common_returns and
+        specific_returns summed together will always equal the total returns.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Returns for each day in the date range.
+            - Example:
+                2017-01-01 -0.017098
+                2017-01-02 0.002683
+                2017-01-03 -0.008669
+
+        positions: pd.DataFrame
+            Daily holdings (in dollars or percentages), indexed by date.
+            It Will be converted to percentages if positions are in dollars.
+            Short positions show up as cash in the 'cash' column.
+            - Examples:
+                            AAPL  TLT XOM cash
+                2017-01-01 34 58 10 0
+                2017-01-02 22 77 18 0
+                2017-01-03 -15 27 30 15
+
+                                AAPL       TLT       XOM  cash
+                2017-01-01  0.333333  0.568627  0.098039   0.0
+                2017-01-02  0.188034  0.658120  0.153846   0.0
+                2017-01-03  0.208333  0.375000  0.416667   0.0
+
+        factor_returns : pd.DataFrame
+            Returns by factor, with date as index and factors as columns
+            - Example:
+                            momentum  reversal
+                2017-01-01  0.002779 -0.005453
+                2017-01-02  0.001096  0.010290
+
+        factor_loadings : pd.DataFrame
+            Factor loadings for all days in the date range, with date and ticker as
+            index, and factors as columns.
+            - Example:
+                                   momentum  reversal
+                dt         ticker
+                2017-01-01 AAPL   -1.592914  0.852830
+                           TLT     0.184864  0.895534
+                           XOM     0.993160  1.149353
+                2017-01-02 AAPL   -0.140009 -0.524952
+                           TLT    -1.066978  0.185435
+                           XOM    -1.798401  0.761549
+
+
+        transactions : pd.DataFrame, optional
+            Executed trade volumes and fill prices. Used to check the turnover of
+            the algorithm. Default is None, in which case the turnover check is
+            skipped.
+
+            - One row per trade.
+            - Trades on different names that occur at the
+              same time will have identical indices.
+            - Example:
+                index                  amount   price    symbol
+                2004-01-09 12:18:01    483      324.12   'AAPL'
+                2004-01-09 12:18:01    122      83.10    'MSFT'
+                2004-01-13 14:12:23    -75      340.43   'AAPL'
+
+        pos_in_dollars : bool
+            Flag indicating whether `positions` are in dollars or percentages
+            If True, positions are in dollars.
+
+        Returns
+        -------
+        tuple of (risk_exposures_portfolio, perf_attribution)
+
+        risk_exposures_portfolio : pd.DataFrame
+            df indexed by datetime, with factors as columns
+            - Example:
+                            momentum  reversal
+                dt
+                2017-01-01 -0.238655 0.077123
+                2017-01-02 0.821872 1.520515
+
+        perf_attribution : pd.DataFrame
+            df with factors, common returns, and specific returns as columns,
+            and datetimes as index
+            - Example:
+                            momentum  reversal common_returns specific_returns
+                dt
+                2017-01-01 0.249087 0.935925 1.185012 1.185012
+                2017-01-02 -0.003194 -0.400786 -0.403980 -0.403980
+        """
+        (returns,
+         positions,
+         factor_returns,
+         factor_loadings) = _align_and_warn(returns,
+                                            positions,
+                                            factor_returns,
+                                            factor_loadings,
+                                            transactions=transactions,
+                                            pos_in_dollars=pos_in_dollars)
+
+        # Note that we convert positions to percentages *after* the checks
+        # above, since get_turnover() expects positions in dollars.
+        positions = _stack_positions(positions, pos_in_dollars=pos_in_dollars)
+
+        return ep.perf_attrib(returns, positions, factor_returns, factor_loadings)
+
+    @classmethod
+    def compute_exposures(cls, positions, factor_loadings, stack_positions=True,
+                          pos_in_dollars=True):
+        """
+        Compute daily risk factor exposures.
+
+        Normalizes positions (if necessary) and calls ep.compute_exposures.
+        See empyrical.compute_exposures for more info.
+
+        Parameters
+        ----------
+        positions: pd.DataFrame or pd.Series
+            Daily holdings (in dollars or percentages), indexed by date, OR
+            a series of holdings indexed by date and ticker.
+            - Examples:
+                            AAPL  TLT XOM cash
+                2017-01-01 34 58 10 0
+                2017-01-02 22 77 18 0
+                2017-01-03 -15 27 30 15
+
+                                AAPL       TLT       XOM  cash
+                2017-01-01  0.333333  0.568627  0.098039   0.0
+                2017-01-02  0.188034  0.658120  0.153846   0.0
+                2017-01-03  0.208333  0.375000  0.416667   0.0
+
+                Dt ticker
+                2017-01-01  AAPL      0.417582
+                            TLT       0.010989
+                            XOM       0.571429
+                2017-01-02  AAPL      0.202381
+                            TLT       0.535714
+                            XOM       0.261905
+
+        factor_loadings : pd.DataFrame
+            Factor loadings for all days in the date range, with date and ticker as
+            index, and factors as columns.
+            - Example:
+                                   momentum  reversal
+                dt         ticker
+                2017-01-01 AAPL   -1.592914  0.852830
+                           TLT     0.184864  0.895534
+                           XOM     0.993160  1.149353
+                2017-01-02 AAPL   -0.140009 -0.524952
+                           TLT    -1.066978  0.185435
+                           XOM    -1.798401  0.761549
+
+        stack_positions : bool
+            Flag indicating whether `positions` should be converted to long format.
+
+        pos_in_dollars : bool
+            Flag indicating whether `positions` are in dollars or percentages
+            If True, positions are in dollars.
+
+        Returns
+        -------
+        risk_exposures_portfolio : pd.DataFrame
+            df indexed by datetime, with factors as columns.
+            - Example:
+                            momentum  reversal
+                dt
+                2017-01-01 -0.238655 0.077123
+                2017-01-02 0.821872 1.520515
+        """
+        if stack_positions:
+            positions = _stack_positions(positions, pos_in_dollars=pos_in_dollars)
+
+        return ep.compute_exposures(positions, factor_loadings)
+
+    @classmethod
+    def create_perf_attrib_stats(cls, perf_attrib_, risk_exposures):
+        """
+        Takes perf attribution data over a period of time and computes annualized the
+        multifactor alpha, multifactor sharpe, risk exposures.
+        """
+        summary = OrderedDict()
+        total_returns = perf_attrib_['total_returns']
+        specific_returns = perf_attrib_['specific_returns']
+        common_returns = perf_attrib_['common_returns']
+
+        summary['Annualized Specific Return'] = \
+            ep.annual_return(specific_returns)
+        summary['Annualized Common Return'] = \
+            ep.annual_return(common_returns)
+        summary['Annualized Total Return'] = \
+            ep.annual_return(total_returns)
+
+        summary['Specific Sharpe Ratio'] = \
+            ep.sharpe_ratio(specific_returns)
+
+        summary['Cumulative Specific Return'] = \
+            ep.cum_returns_final(specific_returns)
+        summary['Cumulative Common Return'] = \
+            ep.cum_returns_final(common_returns)
+        summary['Total Returns'] = \
+            ep.cum_returns_final(total_returns)
+
+        summary = pd.Series(summary, name='')
+
+        annualized_returns_by_factor = [ep.annual_return(perf_attrib_[c])
+                                        for c in risk_exposures.columns]
+        cumulative_returns_by_factor = [ep.cum_returns_final(perf_attrib_[c])
+                                        for c in risk_exposures.columns]
+
+        risk_exposure_summary = pd.DataFrame(
+            data=OrderedDict([
+                (
+                    'Average Risk Factor Exposure',
+                    risk_exposures.mean(axis='rows')
+                ),
+                ('Annualized Return', annualized_returns_by_factor),
+                ('Cumulative Return', cumulative_returns_by_factor),
+            ]),
+            index=risk_exposures.columns,
+        )
+
+        return summary, risk_exposure_summary
+
+    @classmethod
+    def _align_and_warn(cls, returns,
+                        positions,
+                        factor_returns,
+                        factor_loadings,
+                        transactions=None,
+                        pos_in_dollars=True):
+        """
+        Make sure that all inputs have matching dates and tickers,
+        and raise warnings if necessary.
+        """
+        missing_stocks = positions.columns.difference(
+            factor_loadings.index.get_level_values(1).unique()
+        )
+
+        # cash will not be in factor_loadings
+        num_stocks = len(positions.columns) - 1
+        missing_stocks = missing_stocks.drop('cash')
+        num_stocks_covered = num_stocks - len(missing_stocks)
+        missing_ratio = round(len(missing_stocks) / num_stocks, ndigits=3)
+
+        if num_stocks_covered == 0:
+            raise ValueError("Could not perform performance attribution. "
+                             "No factor loadings were available for this "
+                             "algorithm's positions.")
+
+        if len(missing_stocks) > 0:
+
+            if len(missing_stocks) > 5:
+
+                missing_stocks_displayed = (
+                    " {} assets were missing factor loadings, including: {}..{}"
+                ).format(len(missing_stocks),
+                         ', '.join(missing_stocks[:5].map(str)),
+                         missing_stocks[-1])
+                avg_allocation_msg = "selected missing assets"
+
+            else:
+                missing_stocks_displayed = (
+                    "The following assets were missing factor loadings: {}."
+                ).format(list(missing_stocks))
+                avg_allocation_msg = "missing assets"
+
+            missing_stocks_warning_msg = (
+                "Could not determine risk exposures for some of this algorithm's "
+                "positions. Returns from the missing assets will not be properly "
+                "accounted for in performance attribution.\n"
+                "\n"
+                "{}. "
+                "Ignoring for exposure calculation and performance attribution. "
+                "Ratio of assets missing: {}. Average allocation of {}:\n"
+                "\n"
+                "{}.\n"
+            ).format(
+                missing_stocks_displayed,
+                missing_ratio,
+                avg_allocation_msg,
+                positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean(),
+            )
+
+            warnings.warn(missing_stocks_warning_msg)
+
+            positions = positions.drop(missing_stocks, axis='columns',
+                                       errors='ignore')
+
+        missing_factor_loadings_index = positions.index.difference(
+            factor_loadings.index.get_level_values(0).unique()
+        )
+
+        if len(missing_factor_loadings_index) > 0:
+
+            if len(missing_factor_loadings_index) > 5:
+                missing_dates_displayed = (
+                    "(first missing is {}, last missing is {})"
+                ).format(
+                    missing_factor_loadings_index[0],
+                    missing_factor_loadings_index[-1]
+                )
+            else:
+                missing_dates_displayed = list(missing_factor_loadings_index)
+
+            warning_msg = (
+                "Could not find factor loadings for {} dates: {}. "
+                "Truncating date range for performance attribution. "
+            ).format(len(missing_factor_loadings_index), missing_dates_displayed)
+
+            warnings.warn(warning_msg)
+
+            positions = positions.drop(missing_factor_loadings_index,
+                                       errors='ignore')
+            returns = returns.drop(missing_factor_loadings_index, errors='ignore')
+            factor_returns = factor_returns.drop(missing_factor_loadings_index,
+                                                 errors='ignore')
+
+        if transactions is not None and pos_in_dollars:
+            turnover = get_turnover(positions, transactions).mean()
+            if turnover > PERF_ATTRIB_TURNOVER_THRESHOLD:
+                warning_msg = (
+                    "This algorithm has relatively high turnover of its "
+                    "positions. As a result, performance attribution might not be "
+                    "fully accurate.\n"
+                    "\n"
+                    "Performance attribution is calculated based "
+                    "on end-of-day holdings and does not account for intraday "
+                    "activity. Algorithms that derive a high percentage of "
+                    "returns from buying and selling within the same day may "
+                    "receive inaccurate performance attribution.\n"
+                )
+                warnings.warn(warning_msg)
+
+        return returns, positions, factor_returns, factor_loadings
+
+    @classmethod
+    def _stack_positions(cls, positions, pos_in_dollars=True):
+        """
+        Convert positions to percentages if necessary, and change them
+        to long format.
+
+        Parameters
+        ----------
+        positions: pd.DataFrame
+            Daily holdings (in dollars or percentages), indexed by date.
+            It Will be converted to percentages if positions are in dollars.
+            Short positions show up as cash in the 'cash' column.
+
+        pos_in_dollars : bool
+            Flag indicating whether `positions` are in dollars or percentages
+            If True, positions are in dollars.
+        """
+        if pos_in_dollars:
+            # convert holdings to percentages
+            positions = get_percent_alloc(positions)
+
+        # remove cash after normalizing positions
+        positions = positions.drop('cash', axis='columns')
+
+        # convert positions to long format
+        positions = positions.stack()
+        positions.index = positions.index.set_names(['dt', 'ticker'])
+
+        return positions
+
+    @classmethod
+    def _cumulative_returns_less_costs(cls, returns, costs):
+        """
+        Compute cumulative returns, less costs.
+        """
+        if costs is None:
+            return ep.cum_returns(returns)
+        return ep.cum_returns(returns - costs)
 # 导出所有函数和类
 __all__ = [
     # 新的类
-    'Empyrical',
-    # 兼容性函数接口
-    'annual_return', 'cum_returns_final', 'annual_volatility', 'sharpe_ratio',
-    'calmar_ratio', 'stability_of_timeseries', 'max_drawdown', 'omega_ratio',
-    'sortino_ratio', 'skewness', 'kurtosis', 'down_capture', 'up_capture',
-    'cum_returns', 'value_at_risk', 'alpha_beta', 'alpha', 'beta', 'treynor_ratio',
-    'tail_ratio'
+    'Empyrical'
 ]
