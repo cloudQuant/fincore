@@ -20,3 +20,13 @@ ANNUALIZATION_FACTORS = {
     QUARTERLY: QTRS_PER_YEAR,
     YEARLY: 1,
 }
+
+
+# Period to frequency mapping
+PERIOD_TO_FREQ = {
+    DAILY: "D",
+    WEEKLY: "W",
+    MONTHLY: "M",
+    QUARTERLY: "Q",
+    YEARLY: "A",
+}

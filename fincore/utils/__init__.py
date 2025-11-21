@@ -19,25 +19,8 @@
 
 从原有empyrical/utils.py重构而来的工具函数集合。
 """
-
-from .math_utils import (
-    nanmean, nanstd, nansum, nanmax, nanmin, nanargmax, nanargmin
-)
-
-from .data_utils import (
-    rolling_window, up, down, roll
-)
-
-def default_returns_func(returns):
-    """
-    Default returns processing function.
-    
-    This is a simple passthrough function that returns the input as-is.
-    It's used by pyfolio for returns processing compatibility.
-    """
-    return returns
-
-__all__ = [
-    'nanmean', 'nanstd', 'nansum', 'nanmax', 'nanmin', 'nanargmax', 'nanargmin',
-    'rolling_window', 'up', 'down', 'roll', 'default_returns_func'
-]
+from .math_utils import *
+from .data_utils import *
+from .common_utils import *
+from .deprecate import *
+from .date_utils import *
