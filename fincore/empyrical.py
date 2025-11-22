@@ -2672,14 +2672,14 @@ class Empyrical:
         if len(returns) < 1:
             return np.nan
 
-        up_days = returns > 0
+        up_days: pd.Series = returns > 0  # type: ignore[assignment]
 
-        if not up_days.any():
+        if not up_days.any():  # type: ignore[union-attr]
             return 0
 
         # Find consecutive True values
-        groups = (up_days != up_days.shift(1)).cumsum()
-        consecutive_counts = up_days.groupby(groups).sum()
+        groups = (up_days != up_days.shift(1)).cumsum()  # type: ignore[union-attr]
+        consecutive_counts = up_days.groupby(groups).sum()  # type: ignore[union-attr]
 
         return consecutive_counts.max()
 
@@ -2701,14 +2701,14 @@ class Empyrical:
         if len(returns) < 1:
             return np.nan
 
-        down_days = returns < 0
+        down_days: pd.Series = returns < 0  # type: ignore[assignment]
 
-        if not down_days.any():
+        if not down_days.any():  # type: ignore[union-attr]
             return 0
 
         # Find consecutive True values
-        groups = (down_days != down_days.shift(1)).cumsum()
-        consecutive_counts = down_days.groupby(groups).sum()
+        groups = (down_days != down_days.shift(1)).cumsum()  # type: ignore[union-attr]
+        consecutive_counts = down_days.groupby(groups).sum()  # type: ignore[union-attr]
 
         return consecutive_counts.max()
 
@@ -2730,13 +2730,13 @@ class Empyrical:
         if len(returns) < 1:
             return np.nan
 
-        up_days = returns > 0
+        up_days: pd.Series = returns > 0  # type: ignore[assignment]
 
-        if not up_days.any():
+        if not up_days.any():  # type: ignore[union-attr]
             return np.nan
 
         # Calculate cumulative gains for consecutive positive periods
-        groups = (up_days != up_days.shift(1)).cumsum()
+        groups = (up_days != up_days.shift(1)).cumsum()  # type: ignore[union-attr]
         consecutive_gains = returns.where(up_days, 0).groupby(groups).sum()
 
         return consecutive_gains.max()
@@ -2760,13 +2760,13 @@ class Empyrical:
         if len(returns) < 1:
             return np.nan
 
-        down_days = returns < 0
+        down_days: pd.Series = returns < 0  # type: ignore[assignment]
 
-        if not down_days.any():
+        if not down_days.any():  # type: ignore[union-attr]
             return np.nan
 
         # Calculate cumulative losses for consecutive negative periods
-        groups = (down_days != down_days.shift(1)).cumsum()
+        groups = (down_days != down_days.shift(1)).cumsum()  # type: ignore[union-attr]
         consecutive_losses = returns.where(down_days, 0).groupby(groups).sum()
 
         return consecutive_losses.min()
@@ -4737,8 +4737,8 @@ class Empyrical:
         post_dd_data = cum_returns.loc[max_dd_date:]
         recovery_level = rolling_max.loc[max_dd_date]
 
-        recovery_mask = post_dd_data >= recovery_level
-        if recovery_mask.any():
+        recovery_mask: pd.Series = post_dd_data >= recovery_level  # type: ignore[assignment]
+        if recovery_mask.any():  # type: ignore[union-attr]
             recovery_date = post_dd_data[recovery_mask].index[0]
             # Handle different index types
             if hasattr(recovery_date - max_dd_date, "days"):
@@ -6115,9 +6115,9 @@ class Empyrical:
         with pm.Model() as model:
             nu = pm.Exponential("nu", 1.0 / 10, testval=5.0)
             sigma = pm.Exponential("sigma", 1.0 / 0.02, testval=0.1)
-            s = GaussianRandomWalk("s", sigma**-2, shape=len(data))
+            s = GaussianRandomWalk("s", sigma**-2, shape=len(data))  # type: ignore[arg-type,operator]
             volatility_process = pm.Deterministic(
-                "volatility_process", pm.math.exp(-2 * s)
+                "volatility_process", pm.math.exp(-2 * s)  # type: ignore[operator]
             )
             pm.StudentT("r", nu, lam=volatility_process, observed=data)
 
@@ -6256,7 +6256,7 @@ class Empyrical:
             )
 
         if ppc:
-            ppc_samples = pm.sample_ppc(
+            ppc_samples = pm.sample_ppc(  # type: ignore[attr-defined]
                 trace,
                 samples=samples,
                 model=model,
@@ -7347,9 +7347,9 @@ class Empyrical:
 
         for i in range(n_samples):
             idx = np.random.randint(len(returns), size=len(returns))
-            returns_i = returns.iloc[idx].reset_index(drop=True)
+            returns_i = returns.iloc[idx].reset_index(drop=True)  # type: ignore[union-attr]
             if factor_returns is not None:
-                factor_returns_i = factor_returns.iloc[idx].reset_index(
+                factor_returns_i = factor_returns.iloc[idx].reset_index(  # type: ignore[union-attr]
                     drop=True)
                 out[i] = func(returns_i, factor_returns_i, *args, **kwargs)
             else:
@@ -7661,7 +7661,7 @@ class Empyrical:
         samples = np.empty((num_samples, num_days))
         seed = np.random.RandomState(seed=random_seed)
         for i in range(num_samples):
-            samples[i, :] = is_returns.sample(
+            samples[i, :] = is_returns.sample(  # type: ignore[call-overload]
                 num_days, replace=True, random_state=seed)
 
         return samples
@@ -7824,7 +7824,7 @@ class Empyrical:
         -------
         float
         """
-        alpha = sp.stats.norm.ppf(1 - c, mu, sigma)
+        alpha = sp.stats.norm.ppf(1 - c, mu, sigma)  # type: ignore[attr-defined]
         return p - p * (alpha + 1)
 
     @classmethod
@@ -7976,7 +7976,7 @@ class Empyrical:
                     factor_returns_period_dnan,
                     returns_period.loc[factor_returns_period_dnan.index],
                 )
-                rolling_risk.loc[end, factor_returns.columns] = reg.coef_
+                rolling_risk.loc[end, factor_returns.columns] = reg.coef_  # type: ignore[attr-defined]
                 rolling_risk.loc[end, "alpha"] = reg.intercept_
 
         return rolling_risk
