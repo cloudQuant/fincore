@@ -934,12 +934,6 @@ class Empyrical:
             Non-cumulative benchmark or factor returns.
         risk_free : float, optional
             Risk-free rate used when computing excess returns. Default is 0.0.
-        period : str, optional
-            Frequency of the input data (for example ``DAILY``). Currently
-            unused here but kept for API compatibility.
-        annualization : float, optional
-            Optional annualization factor. Present for API compatibility; the
-            beta estimate itself is not annualized.
         out : np.ndarray, optional
             Optional pre-allocated output array. If given, the result is
             written in-place into this array.
@@ -5830,8 +5824,9 @@ class Empyrical:
 
         This model estimates intercept (alpha) and slope (beta) of two
         return sets. Usually, these will be algorithm returns and
-        benchmark returns (e.g. S&P500). The data is assumed to be T-distributed and thus is robust to outliers and takes tail events
-        into account.  If a pandas.DataFrame is passed as a benchmark, then
+        benchmark returns (e.g. S&P500). The data is assumed to be
+        T-distributed and thus is robust to outliers and takes tail events
+        into account. If a pandas.DataFrame is passed as a benchmark, then
         multiple linear regression is used to estimate alpha and beta.
 
         Parameters
@@ -6602,8 +6597,8 @@ class Empyrical:
         expos = Empyrical.get_percent_alloc(positions)
         expos = expos.drop("cash", axis=1)
 
-        longs = expos.where(expos.apply(lambda x: x > 0))
-        shorts = expos.where(expos.apply(lambda x: x < 0))
+        longs = expos.where(expos.apply(lambda val: val > 0))
+        shorts = expos.where(expos.apply(lambda val: val < 0))
 
         alloc_summary = pd.DataFrame()
         alloc_summary["max_long"] = longs.max(axis=1)
@@ -7171,7 +7166,7 @@ class Empyrical:
         # Use a local Series name that does not shadow scipy.stats
         perf_stats_series = pd.Series()
 
-        def _resolve_stat_func(entry):
+        def _resolve_stat_func(stat_entry):
             """Resolve a SIMPLE/FACTOR_STAT_FUNCS entry to (callable, key).
 
             Entries may be callables (backwards-compat) or strings defined in
@@ -7181,30 +7176,30 @@ class Empyrical:
             The returned key is the lookup key used for STAT_FUNC_NAMES.
             """
             # Already a callable (old-style configuration)
-            if callable(entry):
-                func = entry
-                key = getattr(entry, "__name__", str(entry))
-                return func, key
+            if callable(stat_entry):
+                stat_func = stat_entry
+                stat_key = getattr(stat_entry, "__name__", str(stat_entry))
+                return stat_func, stat_key
 
             # New-style configuration: string names
-            if isinstance(entry, str):
-                if entry.startswith("stats."):
-                    func_name = entry.split(".", 1)[1]
-                    func = getattr(stats, func_name)
-                    return func, func_name
+            if isinstance(stat_entry, str):
+                if stat_entry.startswith("stats."):
+                    func_name = stat_entry.split(".", 1)[1]
+                    stat_func = getattr(stats, func_name)
+                    return stat_func, func_name
 
                 # Default: Empyrical classmethod with the same name
-                func = getattr(Empyrical, entry)
-                return func, entry
+                stat_func = getattr(Empyrical, stat_entry)
+                return stat_func, stat_entry
 
             # Fallback: return as-is; any error will surface naturally
-            return entry, str(entry)
+            return stat_entry, str(stat_entry)
 
         # Simple (univariate) performance statistics
         for entry in SIMPLE_STAT_FUNCS:
-            func, key = _resolve_stat_func(entry)
-            label = STAT_FUNC_NAMES.get(key, key)
-            perf_stats_series[label] = func(returns)
+            stat_func, stat_key = _resolve_stat_func(entry)
+            label = STAT_FUNC_NAMES.get(stat_key, stat_key)
+            perf_stats_series[label] = stat_func(returns)
 
         # Position- and transaction-dependent statistics
         if positions is not None:
@@ -7217,10 +7212,10 @@ class Empyrical:
 
         # Factor-based statistics (alpha, beta, etc.)
         if factor_returns is not None:
-            for entry in FACTOR_STAT_FUNCS:
-                func, key = _resolve_stat_func(entry)
-                res = func(returns, factor_returns)
-                label = STAT_FUNC_NAMES.get(key, key)
+            for stat_entry in FACTOR_STAT_FUNCS:
+                stat_func, stat_key = _resolve_stat_func(stat_entry)
+                res = stat_func(returns, factor_returns)
+                label = STAT_FUNC_NAMES.get(stat_key, stat_key)
                 perf_stats_series[label] = res
 
         return perf_stats_series
@@ -7259,38 +7254,38 @@ class Empyrical:
         """
         bootstrap_values = OrderedDict()
 
-        def _resolve_stat_func(entry):
+        def _resolve_stat_func(stat_entry):
             """Apply same resolution logic as in perf_stats for bootstrap case."""
-            if callable(entry):
-                func = entry
-                key = getattr(entry, "__name__", str(entry))
-                return func, key
+            if callable(stat_entry):
+                stat_func = stat_entry
+                stat_key = getattr(stat_entry, "__name__", str(stat_entry))
+                return stat_func, stat_key
 
-            if isinstance(entry, str):
-                if entry.startswith("stats."):
-                    func_name = entry.split(".", 1)[1]
-                    func = getattr(stats, func_name)
-                    return func, func_name
+            if isinstance(stat_entry, str):
+                if stat_entry.startswith("stats."):
+                    func_name = stat_entry.split(".", 1)[1]
+                    stat_func = getattr(stats, func_name)
+                    return stat_func, func_name
 
-                func = getattr(Empyrical, entry)
-                return func, entry
+                stat_func = getattr(Empyrical, stat_entry)
+                return stat_func, stat_entry
 
-            return entry, str(entry)
+            return stat_entry, str(stat_entry)
 
         # Bootstrap for simple statistics
         for entry in SIMPLE_STAT_FUNCS:
-            func, key = _resolve_stat_func(entry)
-            stat_name = STAT_FUNC_NAMES.get(key, key)
+            stat_func, stat_key = _resolve_stat_func(entry)
+            stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
             bootstrap_values[stat_name] = Empyrical.calc_bootstrap(
-                func, returns)
+                stat_func, returns)
 
         # Bootstrap for factor-based statistics, if provided
         if factor_returns is not None:
             for entry in FACTOR_STAT_FUNCS:
-                func, key = _resolve_stat_func(entry)
-                stat_name = STAT_FUNC_NAMES.get(key, key)
+                stat_func, stat_key = _resolve_stat_func(entry)
+                stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
                 bootstrap_values[stat_name] = Empyrical.calc_bootstrap(
-                    func, returns, factor_returns=factor_returns
+                    stat_func, returns, factor_returns=factor_returns
                 )
 
         bootstrap_values = pd.DataFrame(bootstrap_values)
