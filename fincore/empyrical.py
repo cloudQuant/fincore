@@ -2928,13 +2928,13 @@ class Empyrical:
         if arr.size <= lag:
             return np.nan
 
-        x = arr[lag:]
-        y = arr[:-lag]
+        arr_lagged = arr[lag:]
+        arr_early = arr[:-lag]
 
-        if x.size < 2:
+        if arr_lagged.size < 2:
             return np.nan
 
-        corr = np.corrcoef(x, y)[0, 1]
+        corr = np.corrcoef(arr_lagged, arr_early)[0, 1]
         return float(corr) if not np.isnan(corr) else np.nan
 
     @classmethod
@@ -2976,10 +2976,10 @@ class Empyrical:
         # Multiple regression: excess_returns = alpha + beta*excess_factor +
         # gamma*factor_squared
         try:
-            X = np.column_stack(
+            design_matrix = np.column_stack(
                 [np.ones(len(excess_factor)), excess_factor, factor_squared]
             )
-            coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
+            coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
             return coeffs[2]  # gamma coefficient
         except Exception as e:
             print(e)
@@ -3024,10 +3024,10 @@ class Empyrical:
         # Multiple regression: excess_returns = alpha + beta*excess_factor +
         # gamma*down_market
         try:
-            X = np.column_stack(
+            design_matrix = np.column_stack(
                 [np.ones(len(excess_factor)), excess_factor, down_market]
             )
-            coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
+            coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
             return coeffs[2]  # gamma coefficient
         except Exception as e:
             print(e)
@@ -3113,13 +3113,6 @@ class Empyrical:
         if not isinstance(returns.index, pd.DatetimeIndex):
             return pd.Series([], dtype=float)
 
-        def alpha_for_year(group_data):
-            year_returns = group_data[0]
-            year_factor = group_data[1]
-            return cls.alpha(
-                year_returns, year_factor, risk_free, period, annualization
-            )
-
         # Group by year and calculate alpha for each year
         grouped = returns.groupby(returns.index.year)
         factor_grouped = factor_returns.groupby(factor_returns.index.year)
@@ -3127,10 +3120,10 @@ class Empyrical:
         annual_alphas = []
         for year in grouped.groups.keys():
             if year in factor_grouped.groups.keys():
-                year_returns = grouped.get_group(year)
-                year_factor = factor_grouped.get_group(year)
+                returns_for_year = grouped.get_group(year)
+                factor_for_year = factor_grouped.get_group(year)
                 alpha_val = cls.alpha(
-                    year_returns, year_factor, risk_free, period, annualization
+                    returns_for_year, factor_for_year, risk_free, period, annualization
                 )
                 annual_alphas.append((year, alpha_val))
 
@@ -3394,7 +3387,7 @@ class Empyrical:
 
         # Resample to weekly returns
         weekly_returns = returns.resample("W").apply(
-            lambda x: cls.cum_returns_final(x))
+            lambda group: cls.cum_returns_final(group))
 
         down_weeks = weekly_returns < 0
 
@@ -3430,7 +3423,7 @@ class Empyrical:
 
         # Resample to monthly returns
         monthly_returns = returns.resample("M").apply(
-            lambda x: cls.cum_returns_final(x)
+            lambda group: cls.cum_returns_final(group)
         )
 
         up_months = monthly_returns > 0
@@ -3467,7 +3460,7 @@ class Empyrical:
 
         # Resample to monthly returns
         monthly_returns = returns.resample("M").apply(
-            lambda x: cls.cum_returns_final(x)
+            lambda group: cls.cum_returns_final(group)
         )
 
         down_months = monthly_returns < 0
@@ -4056,7 +4049,7 @@ class Empyrical:
 
             # Perform multiple regression: y = α + β1*x1 + β2*x2
             # where x1 = excess_market_positive, x2 = excess_market_negative
-            X = np.column_stack(
+            design_matrix = np.column_stack(
                 [
                     np.ones(len(excess_market)),
                     excess_market_positive,
@@ -4065,7 +4058,7 @@ class Empyrical:
             )
 
             # Solve using least squares
-            coeffs = np.linalg.lstsq(X, excess_returns, rcond=None)[0]
+            coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
 
             # coeffs[0] = alpha, coeffs[1] = beta_up, coeffs[2] = beta_down
             beta_up = coeffs[1]
@@ -4881,8 +4874,8 @@ class Empyrical:
         returns = cls._ensure_datetime_index_series(returns, period=period)
 
         annual_vol_by_year = returns.groupby(returns.index.year).apply(
-            lambda x: cls.annual_volatility(
-                x, period=period, annualization=annualization
+            lambda ret: cls.annual_volatility(
+                ret, period=period, annualization=annualization
             )
         )
 
@@ -5267,7 +5260,7 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda item: item["value"])
 
         # Get second-largest drawdown recovery duration
         recovery_duration = sorted_drawdowns[1]["recovery_duration"]
@@ -5284,7 +5277,7 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda item: item["value"])
 
         # Get third largest drawdown duration
         return sorted_drawdowns[2]["duration"]
@@ -5300,7 +5293,7 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
+        sorted_drawdowns = sorted(drawdown_periods, key=lambda item: item["value"])
 
         # Get third-largest drawdown recovery duration
         recovery_duration = sorted_drawdowns[2]["recovery_duration"]
@@ -5870,13 +5863,13 @@ class Empyrical:
             nu = pm.Exponential("nu_minus_two", 1.0 / 10.0)
 
             # alpha and beta
-            X = data_bmark.iloc[:, 1]
+            x_values = data_bmark.iloc[:, 1]
             y = data_bmark.iloc[:, 0]
 
             alpha_reg = pm.Normal("alpha", mu=0, sd=0.1)
             beta_reg = pm.Normal("beta", mu=0, sd=1)
 
-            mu_reg = alpha_reg + beta_reg * X  # type: ignore[operator]
+            mu_reg = alpha_reg + beta_reg * x_values  # type: ignore[operator]
             pm.StudentT("returns", nu=nu + 2, mu=mu_reg, sd=sigma, observed=y)  # type: ignore[operator]
             trace = pm.sample(samples, progressbar=progressbar)
 
@@ -6143,8 +6136,8 @@ class Empyrical:
             timeseries.
         """
 
-        def scoreatpercentile(cum_preds, p):
-            return [stats.scoreatpercentile(c, p) for c in cum_preds.T]
+        def scoreatpercentile(cum_predictions, p):
+            return [stats.scoreatpercentile(c, p) for c in cum_predictions.T]
 
         cum_preds = np.cumprod(preds + 1, 1) * starting_value
         perc = {p: scoreatpercentile(cum_preds, p) for p in (5, 25, 75, 95)}
@@ -6200,9 +6193,9 @@ class Empyrical:
 
         Parameters
         ----------
-        :param model : {'alpha_beta', 't', 'normal', 'best'}
+        model : {'alpha_beta', 't', 'normal', 'best'}
             Which model to run
-        :param returns_train : pd.Series
+        returns_train : pd.Series
             Timeseries of simple returns
         returns_test : pd.Series, optional
             Out-of-sample returns. Datetimes in returns_test will be added to
@@ -6215,11 +6208,12 @@ class Empyrical:
             generated for them taking market correlations into account.
         samples : int, optional
             Number of posterior samples to draw.
-        :param ppc : boolean (optional)
+        ppc : boolean, optional
             Whether to run a posterior predictive check. Will generate
             samples of length returns_test.  Returns a second argument
             that contains the PPC of shape samples x len(returns_test).
-        :param progressbar: bool (optional), default True
+        progressbar : bool, optional
+            Whether to display a progress bar during sampling.
 
         Returns
         -------
