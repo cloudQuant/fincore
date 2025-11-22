@@ -3345,7 +3345,7 @@ class Empyrical:
 
         # Resample to weekly returns
         weekly_returns = returns.resample("W").apply(
-            lambda x: cls.cum_returns_final(x))
+            lambda weekly_group: cls.cum_returns_final(weekly_group))
 
         up_weeks = weekly_returns > 0
 
@@ -4458,8 +4458,8 @@ class Empyrical:
         information_ratios = returns_aligned.groupby(
             returns_aligned.index.year
         ).apply(
-            lambda x: cls._calculate_information_ratio_for_active_returns(
-                x - factor_aligned.loc[x.index],
+            lambda returns_group: cls._calculate_information_ratio_for_active_returns(
+                returns_group - factor_aligned.loc[returns_group.index],
                 period=period,
                 annualization=annualization,
             )
@@ -5238,7 +5238,9 @@ class Empyrical:
             return np.nan
 
         # Sort by drawdown value (most negative first)
-        sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
+        sorted_drawdowns = sorted(
+            drawdown_periods, key=lambda drawdown: drawdown["value"]
+        )
 
         # Get second largest drawdown duration
         return sorted_drawdowns[1]["duration"]
@@ -6992,7 +6994,7 @@ class Empyrical:
             for txn in txns:
                 txn = Empyrical.map_transaction(txn)
                 transaction_list.append(txn)
-        df = pd.DataFrame(sorted(transaction_list, key=lambda x: x["dt"]))
+        df = pd.DataFrame(sorted(transaction_list, key=lambda txn: txn["dt"]))
         df["txn_dollars"] = -df["amount"] * df["price"]
 
         df.index = list(map(pd.Timestamp, df.dt.values))
@@ -7172,7 +7174,7 @@ class Empyrical:
             Entries may be callables (backwards-compat) or strings defined in
             fincore.constants.style. String entries referring to SciPy stats
             functions use the "stats." prefix (for example "stats.skew").
-            Other strings are looked up as classmethods on Empyrical.
+            Other strings are looked up as classmethod on Empyrical.
             The returned key is the lookup key used for STAT_FUNC_NAMES.
             """
             # Already a callable (old-style configuration)
@@ -7304,21 +7306,19 @@ class Empyrical:
 
         Parameters
         ----------
-        func : function
-            either takes a single array (commonly returns)
-            or two arrays (commonly returns and factor returns) and
-            returns a single value (commonly a summary
-            statistic). Additional args and kwargs are passed as well.
+        func : callable
+            Function that either takes a single array (commonly ``returns``)
+            or two arrays (for example ``returns`` and ``factor_returns``) and
+            returns a single summary value.
         returns : pd.Series
             Daily returns of the strategy, noncumulative.
-             - See full explanation in tears.create_full_tear_sheet.
-        factor_returns : pd.Series, optional
-            Daily noncumulative returns of the benchmark factor to which betas are
-            computed. Usually a benchmark such as market returns.
-             - This is in the same style as returns.
-        :n_samples : int, optional
+             - See full explanation in ``tears.create_full_tear_sheet``.
+        n_samples : int, optional
             Number of bootstrap samples to draw. Default is 1000.
             Increasing this will lead to more stable / accurate estimates.
+        kwargs : dict, optional
+            Additional keyword arguments forwarded to ``func``. For
+            factor-based statistics this often includes ``factor_returns``.
 
         Returns
         -------
@@ -8253,11 +8253,11 @@ class Empyrical:
             # Need to normalize so that we can join
             pv = pd.DataFrame(
                 portfolio_value,
-                columns=["portfolio_value"]).assign(
-                date=portfolio_value.index)
+                columns=["portfolio_value"],
+            ).assign(date=portfolio_value.index)
 
             roundtrips["date"] = roundtrips.close_dt.apply(
-                lambda x: x.replace(hour=0, minute=0, second=0)
+                lambda close_dt: close_dt.replace(hour=0, minute=0, second=0)
             )
             # Convert 'roundtrips.date' to UTC to match 'portfolio_value.index'
             if (
@@ -8343,7 +8343,7 @@ class Empyrical:
         """
         sector_round_trips = round_trips.copy()
         sector_round_trips.symbol = sector_round_trips.symbol.apply(
-            lambda x: sector_mappings.get(x, "No Sector Mapping")
+            lambda symbol: sector_mappings.get(symbol, "No Sector Mapping")
         )
         sector_round_trips = sector_round_trips.dropna(axis=0)
 
@@ -8420,7 +8420,7 @@ class Empyrical:
             return pd.concat([custom_results, built_in_results], axis=1)
 
         # Generate statistics for pnl, summary, duration, and returns
-        stats = {
+        round_trip_stats = {
             "pnl": Empyrical.agg_all_long_short(round_trips, "pnl", PNL_STATS),
             "summary": Empyrical.agg_all_long_short(round_trips, "pnl", SUMMARY_STATS),
             "duration": Empyrical.agg_all_long_short(
@@ -8434,7 +8434,7 @@ class Empyrical:
             ).T,
         }
 
-        return stats
+        return round_trip_stats
 
     @classmethod
     def perf_attrib(
