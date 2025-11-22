@@ -29,8 +29,7 @@ import scipy as sp
 from six import iteritems
 from sys import float_info
 import pymc as pm
-from fincore.utils import nanmean, nanstd, nanmin, nanmax, nanargmax, nanargmin
-from fincore.utils import up, down, rolling_window, roll
+from fincore.utils import nanmean, nanstd, nanmin, roll
 from fincore.constants import *
 from sklearn import linear_model
 from collections import OrderedDict, deque
@@ -42,6 +41,16 @@ try:
     ZIPLINE = True
 except ImportError:
     ZIPLINE = False
+
+    class _ZiplineAssetStub:  # pragma: no cover - fallback for type checking
+        price_multiplier = 1
+
+    class Equity(_ZiplineAssetStub):
+        """Placeholder Equity asset when Zipline is unavailable."""
+
+    class Future(_ZiplineAssetStub):
+        """Placeholder Future asset when Zipline is unavailable."""
+
     warnings.warn(
         'Module "zipline.assets" not found; mutltipliers will not be applied'
         + " to position notionals."
@@ -4785,9 +4794,9 @@ class Empyrical:
         peak_value = cum_ret.loc[:end_idx].max()
 
         # Find recovery point (when cumulative returns exceed the peak again)
-        recovery_mask = cum_ret.loc[end_idx:] >= peak_value
-        if recovery_mask.any():
-            recovery_idx = recovery_mask.idxmax()
+        recovery_mask = cum_ret.loc[end_idx:] >= peak_value  # type: pd.Series
+        if recovery_mask.any():  # type: ignore[union-attr]
+            recovery_idx = recovery_mask.idxmax()  # type: ignore[union-attr]
 
             # Calculate weeks difference using index positions
             end_pos = returns.index.get_loc(end_idx)
@@ -4843,9 +4852,9 @@ class Empyrical:
         peak_value = cum_ret.loc[:end_idx].max()
 
         # Find recovery point (when cumulative returns exceed the peak again)
-        recovery_mask = cum_ret.loc[end_idx:] >= peak_value
-        if recovery_mask.any():
-            recovery_idx = recovery_mask.idxmax()
+        recovery_mask = cum_ret.loc[end_idx:] >= peak_value  # type: pd.Series
+        if recovery_mask.any():  # type: ignore[union-attr]
+            recovery_idx = recovery_mask.idxmax()  # type: ignore[union-attr]
 
             # Calculate months difference using index positions
             end_pos = returns.index.get_loc(end_idx)
@@ -5183,7 +5192,7 @@ class Empyrical:
             try:
                 optimization_results = optimize.minimize(
                     gpd_loglikelihood_lambda,
-                    [default_scale_param, default_shape_param],
+                    np.array([default_scale_param, default_shape_param]),
                     method="Nelder-Mead",
                 )
                 if optimization_results.success:
@@ -5871,8 +5880,8 @@ class Empyrical:
             alpha_reg = pm.Normal("alpha", mu=0, sd=0.1)
             beta_reg = pm.Normal("beta", mu=0, sd=1)
 
-            mu_reg = alpha_reg + beta_reg * X
-            pm.StudentT("returns", nu=nu + 2, mu=mu_reg, sd=sigma, observed=y)
+            mu_reg = alpha_reg + beta_reg * X  # type: ignore[operator]
+            pm.StudentT("returns", nu=nu + 2, mu=mu_reg, sd=sigma, observed=y)  # type: ignore[operator]
             trace = pm.sample(samples, progressbar=progressbar)
 
         return model, trace
@@ -5903,13 +5912,13 @@ class Empyrical:
             sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
             returns = pm.Normal("returns", mu=mu, sd=sigma, observed=data)
             pm.Deterministic(
-                "annual volatility", returns.distribution.variance**0.5 *
+                "annual volatility", returns.distribution.variance**0.5 *  # type: ignore[attr-defined]
                 np.sqrt(252)
             )
             pm.Deterministic(
                 "sharpe",
-                returns.distribution.mean
-                / returns.distribution.variance**0.5
+                returns.distribution.mean  # type: ignore[attr-defined]
+                / returns.distribution.variance**0.5  # type: ignore[attr-defined]
                 * np.sqrt(252),
             )
 
@@ -5946,17 +5955,17 @@ class Empyrical:
             sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
             nu = pm.Exponential("nu_minus_two", 1.0 / 10.0, testval=3.0)
 
-            returns = pm.StudentT("returns", nu=nu + 2,
+            returns = pm.StudentT("returns", nu=nu + 2,  # type: ignore[operator]
                                   mu=mu, sd=sigma, observed=data)
             pm.Deterministic(
-                "annual volatility", returns.distribution.variance**0.5 *
+                "annual volatility", returns.distribution.variance**0.5 *  # type: ignore[attr-defined]
                 np.sqrt(252)
             )
 
             pm.Deterministic(
                 "sharpe",
-                returns.distribution.mean
-                / returns.distribution.variance**0.5
+                returns.distribution.mean  # type: ignore[attr-defined]
+                / returns.distribution.variance**0.5  # type: ignore[attr-defined]
                 * np.sqrt(252),
             )
 
@@ -6022,50 +6031,50 @@ class Empyrical:
                 lower=sigma_low,
                 upper=sigma_high,
                 testval=y2.std())
-            nu = pm.Exponential("nu_minus_two", 1 / 29.0, testval=4.0) + 2.0
+            nu = pm.Exponential("nu_minus_two", 1 / 29.0, testval=4.0) + 2.0  # type: ignore[operator]
 
             returns_group1 = pm.StudentT(
                 "group1",
                 nu=nu,
                 mu=group1_mean,
-                lam=group1_std**-2,
+                lam=group1_std**-2,  # type: ignore[operator]
                 observed=y1)
             returns_group2 = pm.StudentT(
                 "group2",
                 nu=nu,
                 mu=group2_mean,
-                lam=group2_std**-2,
+                lam=group2_std**-2,  # type: ignore[operator]
                 observed=y2)
 
             diff_of_means = pm.Deterministic(
-                "difference of means", group2_mean - group1_mean
+                "difference of means", group2_mean - group1_mean  # type: ignore[operator]
             )
-            pm.Deterministic("difference of stds", group2_std - group1_std)
+            pm.Deterministic("difference of stds", group2_std - group1_std)  # type: ignore[operator]
             pm.Deterministic(
                 "effect size",
-                diff_of_means /
-                pm.math.sqrt((group1_std**2 + group2_std**2) / 2),
+                diff_of_means /  # type: ignore[operator]
+                pm.math.sqrt((group1_std**2 + group2_std**2) / 2),  # type: ignore[operator]
             )
 
             pm.Deterministic(
                 "group1_annual_volatility",
-                returns_group1.distribution.variance**0.5 * np.sqrt(252),
+                returns_group1.distribution.variance**0.5 * np.sqrt(252),  # type: ignore[attr-defined]
             )
             pm.Deterministic(
                 "group2_annual_volatility",
-                returns_group2.distribution.variance**0.5 * np.sqrt(252),
+                returns_group2.distribution.variance**0.5 * np.sqrt(252),  # type: ignore[attr-defined]
             )
 
             pm.Deterministic(
                 "group1_sharpe",
-                returns_group1.distribution.mean
-                / returns_group1.distribution.variance**0.5
+                returns_group1.distribution.mean  # type: ignore[attr-defined]
+                / returns_group1.distribution.variance**0.5  # type: ignore[attr-defined]
                 * np.sqrt(252),
             )
             pm.Deterministic(
                 "group2_sharpe",
-                returns_group2.distribution.mean
-                / returns_group2.distribution.variance**0.5
+                returns_group2.distribution.mean  # type: ignore[attr-defined]
+                / returns_group2.distribution.variance**0.5  # type: ignore[attr-defined]
                 * np.sqrt(252),
             )
 
