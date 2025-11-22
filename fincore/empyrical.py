@@ -446,18 +446,18 @@ class Empyrical:
             year depending on ``convert_to``.
         """
 
-        def cumulate_returns(x):
-            return cls.cum_returns(x).iloc[-1]
+        def cumulate_returns(ret):
+            return cls.cum_returns(ret).iloc[-1]
 
         if convert_to == WEEKLY:
-            grouping = [lambda x: x.year, lambda x: x.isocalendar()[1]]
+            grouping = [lambda dt: dt.year, lambda dt: dt.isocalendar()[1]]
         elif convert_to == MONTHLY:
-            grouping = [lambda x: x.year, lambda x: x.month]
+            grouping = [lambda dt: dt.year, lambda dt: dt.month]
         elif convert_to == QUARTERLY:
-            grouping = [lambda x: x.year, lambda x: int(
-                math.ceil(x.month / 3.0))]
+            grouping = [lambda dt: dt.year, lambda dt: int(
+                math.ceil(dt.month / 3.0))]
         elif convert_to == YEARLY:
-            grouping = [lambda x: x.year]
+            grouping = [lambda dt: dt.year]
         else:
             raise ValueError(
                 "convert_to must be {}, {} or {}".format(
@@ -916,8 +916,8 @@ class Empyrical:
         returns,
         factor_returns,
         risk_free=0.0,
-        period=DAILY,
-        annualization=None,
+        _period=DAILY,
+        _annualization=None,
         out=None,
     ):
         """Calculate beta versus a benchmark.
@@ -960,7 +960,6 @@ class Empyrical:
         return cls.beta_aligned(
             returns,
             factor_returns,
-            risk_free=risk_free,
             out=out,
         )
 
@@ -1115,7 +1114,7 @@ class Empyrical:
         return out
 
     @classmethod
-    def beta_aligned(cls, returns, factor_returns, risk_free=0.0, out=None):
+    def beta_aligned(cls, returns, factor_returns, risk_free=0.0, out=None):  # noqa: ARG003
         """Calculate beta for already-aligned data.
 
         This function assumes that ``returns`` and ``factor_returns`` are
@@ -2019,9 +2018,6 @@ class Empyrical:
         ann_vol = cls.annual_volatility(
             returns_aligned, period=period, annualization=annualization
         )
-        ann_factor_return = cls.annual_return(
-            factor_aligned, period=period, annualization=annualization
-        )
         ann_factor_vol = cls.annual_volatility(
             factor_aligned, period=period, annualization=annualization
         )
@@ -2074,8 +2070,8 @@ class Empyrical:
         returns = cls._ensure_datetime_index_series(returns, period=period)
 
         annual_returns = returns.groupby(returns.index.year).apply(
-            lambda x: cls.annual_return(
-                x, period=period, annualization=annualization)
+            lambda ret: cls.annual_return(
+                ret, period=period, annualization=annualization)
         )
 
         return annual_returns.values if return_as_array else annual_returns
@@ -2123,8 +2119,8 @@ class Empyrical:
 
         sharpe_by_year = returns.groupby(
             returns.index.year).apply(
-            lambda x: cls.sharpe_ratio(
-                x,
+            lambda ret: cls.sharpe_ratio(
+                ret,
                 risk_free=risk_free,
                 period=period,
                 annualization=annualization))
@@ -2163,7 +2159,7 @@ class Empyrical:
         returns = cls._ensure_datetime_index_series(returns, period=DAILY)
 
         max_dd_by_year = returns.groupby(returns.index.year).apply(
-            lambda x: cls.max_drawdown(x)
+            lambda ret: cls.max_drawdown(ret)
         )
         return max_dd_by_year.values if return_as_array else max_dd_by_year
 
@@ -2251,15 +2247,15 @@ class Empyrical:
         try:
             # Calculate cumulative deviate series
             mean_return = np.mean(returns_clean)
-            Y = np.cumsum(returns_clean - mean_return)
+            y_cumsum = np.cumsum(returns_clean - mean_return)
 
             # Calculate range R
-            R = np.max(Y) - np.min(Y)
+            r_range = np.max(y_cumsum) - np.min(y_cumsum)
 
             # Calculate standard deviation S
-            S = np.std(returns_clean, ddof=1)
+            s_std = np.std(returns_clean, ddof=1)
 
-            if S == 0 or R == 0:
+            if s_std == 0 or r_range == 0:
                 return np.nan
 
             # Use rescaled range method with multiple lags
@@ -2284,12 +2280,12 @@ class Empyrical:
                         continue
 
                     mean_sub = np.mean(sub_series)
-                    Y_sub = np.cumsum(sub_series - mean_sub)
-                    R_sub = np.max(Y_sub) - np.min(Y_sub)
-                    S_sub = np.std(sub_series, ddof=1)
+                    y_sub = np.cumsum(sub_series - mean_sub)
+                    r_sub = np.max(y_sub) - np.min(y_sub)
+                    s_sub = np.std(sub_series, ddof=1)
 
-                    if S_sub > 0 and R_sub > 0:
-                        rs_list.append(R_sub / S_sub)
+                    if s_sub > 0 and r_sub > 0:
+                        rs_list.append(r_sub / s_sub)
 
                 if rs_list:
                     rs_values.append((lag, np.mean(rs_list)))
@@ -2298,15 +2294,15 @@ class Empyrical:
             if len(rs_values) < 2:
                 # Fallback: use simple calculation for very short series
                 # H ≈ 0.5 + log(R/S) / log(2*n)
-                if S > 0 and R > 0:
-                    H = 0.5 + np.log(R / S) / np.log(2.0 * n)
-                    H = max(0.0, min(1.0, H))
-                    return float(H)
+                if s_std > 0 and r_range > 0:
+                    hurst = 0.5 + np.log(r_range / s_std) / np.log(2.0 * n)
+                    hurst = max(0.0, min(1.0, hurst))
+                    return float(hurst)
                 return np.nan
 
             # Fit log(R/S) vs log(lag) to get Hurst exponent
-            lags_array = np.array([x[0] for x in rs_values])
-            rs_array = np.array([x[1] for x in rs_values])
+            lags_array = np.array([item[0] for item in rs_values])
+            rs_array = np.array([item[1] for item in rs_values])
 
             # Filter out any invalid values
             valid_mask = (lags_array > 0) & (rs_array > 0)
@@ -2322,12 +2318,12 @@ class Empyrical:
 
             # Fit line: log(R/S) = H * log(lag) + constant
             poly = np.polyfit(log_lags, log_rs, 1)
-            H = poly[0]
+            hurst = poly[0]
 
             # Clamp to valid range [0, 1]
-            H = max(0.0, min(1.0, H))
+            hurst = max(0.0, min(1.0, hurst))
 
-            return float(H)
+            return float(hurst)
 
         except Exception as e:
             print(e)
