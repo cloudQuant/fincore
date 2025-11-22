@@ -1910,7 +1910,7 @@ class Empyrical:
     def m_squared(
         cls, returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """Calculate the ModiglianiModigliani (Mb2) measure.
+        r"""Calculate the Modigliani (Mb2) measure.
 
         The Mb2 measure scales the portfolio's risk-adjusted performance to
         the benchmark's volatility. It is defined as:
@@ -5067,7 +5067,7 @@ class Empyrical:
 
     @classmethod
     def gpd_risk_estimates_aligned(cls, returns=None, var_p=0.01):
-        """Calculates GPD risk estimates (aligned version for compatibility)."""
+        """Calculate GPD risk estimates (aligned version for compatibility)."""
         returns = cls._get_returns(returns)
 
         # For compatibility with original API, this is the same as gpd_risk_estimates
@@ -5075,7 +5075,7 @@ class Empyrical:
 
     @classmethod
     def second_max_drawdown_days(cls, returns=None):
-        """Calculates the duration of second maximum drawdown in days."""
+        """Calculate the duration of second maximum drawdown in days."""
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns_detailed(returns)
@@ -5091,7 +5091,7 @@ class Empyrical:
 
     @classmethod
     def second_max_drawdown_recovery_days(cls, returns=None):
-        """Calculates the recovery time from second maximum drawdown in days."""
+        """Calculate the recovery time from second maximum drawdown in days."""
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns_detailed(returns)
@@ -5108,7 +5108,7 @@ class Empyrical:
 
     @classmethod
     def third_max_drawdown_days(cls, returns=None):
-        """Calculates the duration of third maximum drawdown in days."""
+        """Calculate the duration of third maximum drawdown in days."""
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns_detailed(returns)
@@ -5124,7 +5124,7 @@ class Empyrical:
 
     @classmethod
     def third_max_drawdown_recovery_days(cls, returns=None):
-        """Calculates the recovery time from third maximum drawdown in days."""
+        """Calculate the recovery time from third maximum drawdown in days."""
         returns = cls._get_returns(returns)
 
         drawdown_periods = cls._get_all_drawdowns_detailed(returns)
@@ -5149,8 +5149,33 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates rolling alpha over a specified window."""
+        """
+        Calculate rolling alpha over a specified window.
+
+        Parameters
+        ----------
+        returns : pandas.Series or numpy.ndarray, optional
+            Returns of the strategy, non-null by default.
+        factor_returns : pandas.Series or numpy.ndarray, optional
+            Non-null benchmark returns to calculate alpha against.
+        window : int, optional
+            Length of window (default value is 252).
+        risk_free : float, optional
+            Risk free rate (default value is 0.0).
+        period : str, optional
+            Defines the periodicity of the 'returns' (day, week, month).
+            (default is 'daily').
+        annualization : int, optional
+            Factor to convert period returns to yearly returns.
+            (default is period-to-yearly-factor mapping).
+
+        Returns
+        -------
+        pandas.Series or numpy.ndarray
+            Rolling alpha.
+        """
         returns = cls._get_returns(returns)
+
         factor_returns = cls._get_factor_returns(factor_returns)
 
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
@@ -5183,8 +5208,33 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates rolling beta over a specified window."""
+        """
+        Calculate rolling beta over a specified window.
+
+        Parameters
+        ----------
+        returns : pandas.Series or numpy.ndarray, optional
+            Returns of the strategy, non-null by default.
+        factor_returns : pandas.Series or numpy.ndarray, optional
+            Non-null benchmark returns to calculate beta against.
+        window : int, optional
+            Length of window (default value is 252).
+        risk_free : float, optional
+            Risk free rate (default value is 0.0).
+        period : str, optional
+            Defines the periodicity of the 'returns' (day, week, month).
+            (default is 'daily').
+        annualization : int, optional
+            Factor to convert period returns to yearly returns.
+            (default is period-to-yearly-factor mapping).
+
+        Returns
+        -------
+        pandas.Series or numpy.ndarray
+            Rolling beta.
+        """
         returns = cls._get_returns(returns)
+
         factor_returns = cls._get_factor_returns(factor_returns)
 
         returns_aligned, factor_aligned = cls._aligned_series(returns, factor_returns)
@@ -5217,8 +5267,33 @@ class Empyrical:
         period=DAILY,
         annualization=None,
     ):
-        """Calculates rolling alpha and beta over a specified window."""
+        """
+        Calculate rolling alpha and beta over a specified window.
+
+        Parameters
+        ----------
+        returns : pandas.Series or numpy.ndarray, optional
+            Returns of the strategy, non-null by default.
+        factor_returns : pandas.Series or numpy.ndarray, optional
+            Non-null benchmark returns to calculate alpha and beta against.
+        window : int, optional
+            Length of window (default value is 252).
+        risk_free : float, optional
+            Risk free rate (default value is 0.0).
+        period : str, optional
+            Defines the periodicity of the 'returns' (day, week, month).
+            (default is 'daily').
+        annualization : int, optional
+            Factor to convert period returns to yearly returns.
+            (default is period-to-yearly-factor mapping).
+
+        Returns
+        -------
+        pandas.DataFrame or numpy.ndarray
+            Rolling alpha and beta.
+        """
         returns = cls._get_returns(returns)
+
         factor_returns = cls._get_factor_returns(factor_returns)
 
         # Align series
@@ -5267,7 +5342,19 @@ class Empyrical:
 
     @classmethod
     def _get_all_drawdowns_detailed(cls, returns):
-        """Helper function to find all distinct drawdown periods with detailed information."""
+        """
+        Find all distinct drawdown periods with detailed information.
+
+        Parameters
+        ----------
+        returns : pandas.Series or numpy.ndarray
+            Returns of the strategy.
+
+        Returns
+        -------
+        list
+            List of dictionaries containing detailed information about each drawdown period.
+        """
         if len(returns) < 1:
             return []
 
@@ -5336,7 +5423,7 @@ class Empyrical:
     def roll_sharpe_ratio(
         cls, returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """Calculates rolling Sharpe ratio over a specified window."""
+        """Calculate rolling Sharpe ratio over a specified window."""
         returns = cls._get_returns(returns)
 
         if len(returns) < window:
@@ -5367,7 +5454,7 @@ class Empyrical:
 
     @classmethod
     def roll_max_drawdown(cls, returns=None, window=252):
-        """Calculates rolling maximum drawdown over a specified window."""
+        """Calculate rolling maximum drawdown over a specified window."""
         returns = cls._get_returns(returns)
 
         # Use the common roll helper so that ndarray/Series behaviour and
@@ -5381,7 +5468,7 @@ class Empyrical:
 
     @classmethod
     def roll_up_capture(cls, returns=None, factor_returns=None, window=252):
-        """Calculates rolling up capture ratio over a specified window."""
+        """Calculate rolling up capture ratio over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -5430,7 +5517,7 @@ class Empyrical:
 
     @classmethod
     def roll_down_capture(cls, returns=None, factor_returns=None, window=252):
-        """Calculates rolling down capture ratio over a specified window."""
+        """Calculate rolling down capture ratio over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -5479,7 +5566,7 @@ class Empyrical:
 
     @classmethod
     def roll_up_down_capture(cls, returns=None, factor_returns=None, window=252):
-        """Calculates rolling up/down capture ratio over a specified window."""
+        """Calculate rolling up/down capture ratio over a specified window."""
         returns = cls._get_returns(returns)
         factor_returns = cls._get_factor_returns(factor_returns)
 
@@ -5528,7 +5615,7 @@ class Empyrical:
 
     @classmethod
     def _get_all_drawdowns(cls, returns):
-        """Helper function to find all distinct drawdown periods and their values."""
+        """Find all distinct drawdown periods and their values."""
         detailed = cls._get_all_drawdowns_detailed(returns)
         return [dd["value"] for dd in detailed]
 
@@ -5545,17 +5632,17 @@ class Empyrical:
 
         Parameters
         ----------
-        :param data : pandas.Series:
+        data : pandas.Series
             Series of simple returns of an algorithm or stock.
-        :param bmark : pandas.DataFrame:
+        bmark : pandas.DataFrame
             DataFrame of benchmark returns (e.g., S&P500) or risk factors (e.g.,
             Fama-French SMB, HML, and UMD).
             If bmark has more recent returns than returns_train, these dates
             will be treated as missing values and predictions will be
             generated for them taking market correlations into account.
-        :param samples : Int (optional)
+        samples : int, optional
             Number of posterior samples to draw.
-        :param progressbar : Bool (optional), default True
+        progressbar : bool, optional, default: True
 
         Returns
         -------
@@ -5565,7 +5652,6 @@ class Empyrical:
             A PyMC3 trace object that contains samples for each parameter
             of the posterior.
         """
-
         data_bmark = pd.concat([data, bmark], axis=1).dropna()
 
         with pm.Model() as model:
@@ -5606,7 +5692,6 @@ class Empyrical:
             A PyMC3 trace object that contains samples for each parameter
             of the posterior.
         """
-
         with pm.Model() as model:
             mu = pm.Normal("mean returns", mu=0, sd=0.01, testval=data.mean())
             sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
@@ -5649,7 +5734,6 @@ class Empyrical:
             A PyMC3 trace object that contains samples for each parameter
             of the posterior.
         """
-
         with pm.Model() as model:
             mu = pm.Normal("mean returns", mu=0, sd=0.01, testval=data.mean())
             sigma = pm.HalfCauchy("volatility", beta=1, testval=data.std())
@@ -5673,7 +5757,7 @@ class Empyrical:
     @classmethod
     def model_best(cls, y1, y2, samples=1000, progressbar=True):
         """
-        Bayesian Estimation Supersedes the T-Test
+        Bayesian Estimation Supersedes the T-Test.
 
         This model runs a Bayesian hypothesis comparing if y1 and y2 come
         from the same distribution. Returns are assumed to be T-distributed.
@@ -5707,7 +5791,6 @@ class Empyrical:
         --------
         plot_stoch_vol : plotting of the stochastic volatility model
         """
-
         y = np.concatenate((y1, y2))
 
         mu_m = np.mean(y)
@@ -5796,7 +5879,6 @@ class Empyrical:
         --------
         plot_stoch_vol : plotting of a stochastic volatility model
         """
-
         from pymc.distributions.timeseries import GaussianRandomWalk
 
         with pm.Model() as model:
@@ -5815,8 +5897,9 @@ class Empyrical:
     @classmethod
     def compute_bayes_cone(cls, preds, starting_value=1.0):
         """
-        Compute 5, 25, 75 and 95 percentiles of cumulative returns, used
-        for the Bayesian cone.
+        Compute 5, 25, 75 and 95 percentiles of cumulative returns.
+
+        Used for the Bayesian cone.
 
         Parameters
         ----------
@@ -5860,7 +5943,6 @@ class Empyrical:
             Bayesian cone spanned by preds) to 0 (returns_test completely
             outside of Bayesian cone.)
         """
-
         returns_test_cum = Empyrical.cum_returns(returns_test, starting_value=1.0)
         cum_preds = np.cumprod(preds + 1, 1)
 
@@ -5894,16 +5976,16 @@ class Empyrical:
             Which model to run
         :param returns_train : pd.Series
             Timeseries of simple returns
-        :param returns_test : pd.Series (optional)
+        returns_test : pd.Series, optional
             Out-of-sample returns. Datetimes in returns_test will be added to
             returns_train as missing values and predictions will be generated
             for them.
-        :param bmark : pd.Series or pd.DataFrame (optional) is
+        bmark : pd.Series or pd.DataFrame, optional
             Only used for alpha_beta to estimate regression coefficients.
             If bmark has more recent returns than returns_train, these dates
             will be treated as missing values and predictions will be
             generated for them taking market correlations into account.
-        :param samples : int (optional)
+        samples : int, optional
             Number of posterior samples to draw.
         :param ppc : boolean (optional)
             Whether to run a posterior predictive check. Will generate
@@ -5920,7 +6002,6 @@ class Empyrical:
         ppc : numpy.array (if ppc==True)
            PPC of shape samples x-len(returns_test).
         """
-
         if model == "alpha_beta":
             model, trace = Empyrical.model_returns_t_alpha_beta(
                 returns_train, bmark, samples, progressbar=progressbar
@@ -5958,7 +6039,8 @@ class Empyrical:
     @classmethod
     def daily_txns_with_bar_data(cls, transactions, market_data):
         """
-        Sums the absolute value of shares traded in each name on each day.
+        Sum the absolute value of shares traded in each name on each day.
+
         Add columns containing the closing price and total daily volume for
         each day-ticker combination.
 
@@ -5978,7 +6060,6 @@ class Empyrical:
             Price and volume columns for close price and daily volume for
             the corresponding ticker, respectively.
         """
-
         transactions.index.name = "date"
         txn_daily = pd.DataFrame(
             transactions.assign(amount=abs(transactions.amount))
@@ -6002,8 +6083,9 @@ class Empyrical:
         mean_volume_window=5,
     ):
         """
-        Compute the number of days that would have been required to fully liquidate each position
-        on each day, based on the trailing n day mean daily bar volume,
+        Compute the number of days required to fully liquidate each position.
+
+        Based on the trailing n day mean daily bar volume,
         and a limit on the proportion of a daily bar that we are allowed to consume.
 
         This analysis uses portfolio allocations and a provided capital base
@@ -6066,8 +6148,9 @@ class Empyrical:
         last_n_days=None,
     ):
         """
-        Finds the longest estimated liquidation time for each traded
-        name over the course of backtest (or last n days of the backtest).
+        Find the longest estimated liquidation time for each traded name.
+
+        Over the course of backtest (or last n days of the backtest).
 
         Parameters
         ----------
@@ -6096,7 +6179,6 @@ class Empyrical:
             Index of symbols. Columns for days_to_liquidate and the corresponding
             date and position_alloc on that day.
         """
-
         dtlp = Empyrical.days_to_liquidate_positions(
             positions,
             market_data,
@@ -6132,8 +6214,7 @@ class Empyrical:
         cls, transactions, market_data, last_n_days=None
     ):
         """
-        For each traded name, find the daily transaction total that consumed
-        the greatest proportion of available daily bar volume.
+        Find the daily transaction total that consumed the greatest proportion of available daily bar volume.
 
         Parameters
         ----------
@@ -6147,7 +6228,6 @@ class Empyrical:
         last_n_days : integer
             Compute for only the last n days of the passed backtest data.
         """
-
         txn_daily_w_bar = Empyrical.daily_txns_with_bar_data(transactions, market_data)
         txn_daily_w_bar.index.name = "date"
         txn_daily_w_bar = txn_daily_w_bar.reset_index()
@@ -6173,8 +6253,9 @@ class Empyrical:
         impact=0.1,
     ):
         """
-        Applies a quadratic volume share slippage model to daily returns based
-        on the proportion of the observed historical daily bar dollar volume
+        Apply a quadratic volume share slippage model to daily returns.
+
+        Based on the proportion of the observed historical daily bar dollar volume
         consumed by the strategy's trades. Scales the size of trades based
         on the ratio of the starting capital we wish to test to the starting
         capital of the passed backtest data.
@@ -6198,7 +6279,6 @@ class Empyrical:
         adj_returns : pd.Series
             Slippage penalty adjusted daily returns.
         """
-
         mult = simulate_starting_capital / backtest_starting_capital
         simulate_traded_shares = abs(mult * txn_daily.amount)
         simulate_traded_dollars = txn_daily.price * simulate_traded_shares
@@ -6227,7 +6307,7 @@ class Empyrical:
     @classmethod
     def get_percent_alloc(cls, values):
         """
-        Determines a portfolio's allocations.
+        Determine a portfolio's allocations.
 
         Parameters
         ----------
@@ -6239,13 +6319,12 @@ class Empyrical:
         allocations : pd.DataFrame
             Positions and their allocations.
         """
-
         return values.divide(values.sum(axis="columns"), axis="rows")
 
     @classmethod
     def get_top_long_short_abs(cls, positions, top=10):
         """
-        Finds the top long, short, and absolute positions.
+        Find the top long, short, and absolute positions.
 
         Parameters
         ----------
@@ -6263,7 +6342,6 @@ class Empyrical:
         df_top_abs : pd.DataFrame
             Top absolute positions.
         """
-
         positions = positions.drop("cash", axis="columns")
         df_max = positions.max()
         df_min = positions.min()
@@ -6276,8 +6354,7 @@ class Empyrical:
     @classmethod
     def get_max_median_position_concentration(cls, positions):
         """
-        Finds the max and median long and short position concentrations
-        in each time period specified by the index of positions.
+        Find the max and median long and short position concentrations.
 
         Parameters
         ----------
@@ -6290,7 +6367,6 @@ class Empyrical:
             Columns are the max long, max short, median long, and median short
             position concentrations.Rows are time periods.
         """
-
         expos = Empyrical.get_percent_alloc(positions)
         expos = expos.drop("cash", axis=1)
 
@@ -6308,8 +6384,7 @@ class Empyrical:
     @classmethod
     def extract_pos(cls, positions, cash):
         """
-        Extract position values from the backtest object as returned by
-        get_backtest() on the Quantopian research platform.
+        Extract position values from the backtest object as returned by get_backtest().
 
         Parameters
         ----------
@@ -6326,7 +6401,6 @@ class Empyrical:
             Daily net position values.
              - See full explanation in tears.create_full_tear_sheet.
         """
-
         positions = positions.copy()
         positions["values"] = positions.amount * positions.last_sale_price
 
@@ -6381,7 +6455,6 @@ class Empyrical:
                 2004-01-12 -4132.240 142.630 3989.6100
                 2004-01-13 -199.640 -100.980 100.0000
         """
-
         cash = positions["cash"]
         positions = positions.drop("cash", axis=1)
 
@@ -6404,7 +6477,7 @@ class Empyrical:
     @classmethod
     def get_long_short_pos(cls, positions):
         """
-        Determines the long and short allocations in a portfolio.
+        Determine the long and short allocations in a portfolio.
 
         Parameters
         ----------
@@ -6417,7 +6490,6 @@ class Empyrical:
             Long and short allocations as a decimal
             percentage of the total net liquidation
         """
-
         pos_wo_cash = positions.drop("cash", axis=1)
         longs = pos_wo_cash[pos_wo_cash > 0].sum(axis=1).fillna(0)
         shorts = pos_wo_cash[pos_wo_cash < 0].sum(axis=1).fillna(0)
@@ -6435,7 +6507,7 @@ class Empyrical:
     @classmethod
     def compute_style_factor_exposures(cls, positions, risk_factor):
         """
-        Return style factor exposure of an algorithm's positions
+        Return style factor exposure of an algorithm's positions.
 
         Parameters
         ----------
@@ -6453,7 +6525,6 @@ class Empyrical:
             2017-04-04	-0.73381 0.98149
             2017-04-05	-0.90132 1.13981
         """
-
         positions_wo_cash = positions.drop("cash", axis="columns")
         gross_exposure = positions_wo_cash.abs().sum(axis="columns")
 
@@ -6469,8 +6540,7 @@ class Empyrical:
     @classmethod
     def compute_sector_exposures(cls, positions, sectors, sector_dict=SECTORS):
         """
-        Returns arrays of long, short and gross sector exposures of an algorithm's
-        positions
+        Return arrays of long, short and gross sector exposures of an algorithm's positions.
 
         Parameters
         ----------
@@ -6488,7 +6558,6 @@ class Empyrical:
               names (which must be strings)
             - Defaults to Morningstar sectors
         """
-
         sector_ids = sector_dict.keys()
 
         long_exposures = []
@@ -6525,8 +6594,7 @@ class Empyrical:
     @classmethod
     def compute_cap_exposures(cls, positions, caps):
         """
-        Returns arrays of long, short and gross market cap exposures of an
-        algorithm's positions
+        Return arrays of long, short and gross market cap exposures of an algorithm's positions.
 
         Parameters
         ----------
@@ -6538,7 +6606,6 @@ class Empyrical:
             Daily Morningstar sector code per asset
             - See full explanation in create_risk_tear_sheet
         """
-
         long_exposures = []
         short_exposures = []
         gross_exposures = []
@@ -6577,8 +6644,7 @@ class Empyrical:
     @classmethod
     def compute_volume_exposures(cls, shares_held, volumes, percentile):
         """
-        Returns arrays of pth percentile of long, short and gross volume exposures
-        of an algorithm's held shares
+        Return arrays of pth percentile of long, short and gross volume exposures.
 
         Parameters
         ----------
@@ -6594,7 +6660,6 @@ class Empyrical:
             Percentile to use when computing and plotting volume exposures
             - See full explanation in create_risk_tear_sheet
         """
-
         shares_held = shares_held.replace(0, np.nan)
 
         shares_longed = shares_held[shares_held > 0]
@@ -6631,7 +6696,7 @@ class Empyrical:
     @classmethod
     def map_transaction(cls, txn):
         """
-        Maps a single transaction row to a dictionary.
+        Map a single transaction row to a dictionary.
 
         Parameters
         ----------
@@ -6643,7 +6708,6 @@ class Empyrical:
         dict
             Mapped transaction.
         """
-
         if isinstance(txn["sid"], dict):
             sid = txn["sid"]["sid"]
             symbol = txn["sid"]["symbol"]
@@ -6664,7 +6728,7 @@ class Empyrical:
     @classmethod
     def make_transaction_frame(cls, transactions):
         """
-        Formats a transaction DataFrame.
+        Format a transaction DataFrame.
 
         Parameters
         ----------
@@ -6677,7 +6741,6 @@ class Empyrical:
             Daily transaction volume and dollar amount.
              - See full explanation in tears.create_full_tear_sheet.
         """
-
         transaction_list = []
         for dt in transactions.index:
             txns = transactions.loc[dt]
@@ -6711,7 +6774,6 @@ class Empyrical:
             Daily transaction volume and number of shares.
              - See full explanation in tears.create_full_tear_sheet.
         """
-
         txn_norm = transactions.copy()
         txn_norm.index = txn_norm.index.normalize()
         amounts = txn_norm.amount.abs()
@@ -6749,7 +6811,6 @@ class Empyrical:
         pd.Series
             Time series of daily returns, adjusted for slippage.
         """
-
         slippage = 0.0001 * slippage_bps
         portfolio_value = positions.sum(axis=1)
         pnl = portfolio_value * returns
@@ -6763,9 +6824,7 @@ class Empyrical:
     @classmethod
     def get_turnover(cls, positions, transactions, denominator="AGB"):
         """
-         Value of purchases and sales divided
-        by either the actual gross book or the portfolio value
-        for the time step.
+        Calculate value of purchases and sales divided by either the actual gross book or the portfolio value.
 
         Parameters
         ----------
@@ -6793,7 +6852,6 @@ class Empyrical:
         turnover_rate : pd.Series
             timeseries of portfolio turnover rates.
         """
-
         txn_vol = Empyrical.get_txn_vol(transactions)
         traded_value = txn_vol.txn_volume
 
@@ -6837,8 +6895,7 @@ class Empyrical:
         turnover_denom="AGB",
     ):
         """
-        Calculates various performance metrics of a strategy, for use in
-        plotting.show_perf_stats.
+        Calculate various performance metrics of a strategy, for use in plotting.show_perf_stats.
 
         Parameters
         ----------
@@ -6877,7 +6934,6 @@ class Empyrical:
             Other strings are looked up as classmethods on Empyrical.
             The returned key is the lookup key used for STAT_FUNC_NAMES.
             """
-
             # Already a callable (old-style configuration)
             if callable(entry):
                 func = entry
@@ -6926,7 +6982,8 @@ class Empyrical:
     def perf_stats_bootstrap(
         cls, returns, factor_returns=None, return_stats=True, **_kwargs
     ):
-        """Calculates various bootstrapped performance metrics of a strategy.
+        """
+        Calculate various bootstrapped performance metrics of a strategy.
 
         Parameters
         ----------
@@ -6956,8 +7013,7 @@ class Empyrical:
         bootstrap_values = OrderedDict()
 
         def _resolve_stat_func(entry):
-            """Same resolution logic as in perf_stats for bootstrap case."""
-
+            """Apply same resolution logic as in perf_stats for bootstrap case."""
             if callable(entry):
                 func = entry
                 key = getattr(entry, "__name__", str(entry))
@@ -6999,8 +7055,8 @@ class Empyrical:
 
     @classmethod
     def calc_bootstrap(cls, func, returns, *args, **kwargs):
-        """Performs a bootstrap analysis on a user-defined function returning
-        a summary statistic.
+        """
+        Perform a bootstrap analysis on a user-defined function returning a summary statistic.
 
         Parameters
         ----------
@@ -7025,7 +7081,6 @@ class Empyrical:
         numpy.ndarray
             Bootstrapped sampling distribution of passed in func.
         """
-
         n_samples = kwargs.pop("n_samples", 1000)
         out = np.empty(n_samples)
 
@@ -7057,7 +7112,6 @@ class Empyrical:
             Series containing mean, median, std, as well as 5, 25, 75 and
             95 percentiles of passed in values.
         """
-
         return pd.Series(
             {
                 "mean": np.mean(x),
@@ -7074,8 +7128,7 @@ class Empyrical:
     @classmethod
     def get_max_drawdown_underwater(cls, underwater):
         """
-        Determines peak, valley, and recovery dates given an 'underwater'
-        DataFrame.
+        Determine peak, valley, and recovery dates given an 'underwater' DataFrame.
 
         An underwater DataFrame is a DataFrame that has precomputed
         rolling drawdown.
@@ -7094,7 +7147,6 @@ class Empyrical:
         recovery : datetime
             The maximum drawdown's recovery.
         """
-
         # valley = np.argmin(underwater)  # end of the period
         # # print(valley)
         # # Find first 0
@@ -7125,7 +7177,7 @@ class Empyrical:
     @classmethod
     def get_max_drawdown(cls, returns):
         """
-        Determines the maximum drawdown of a strategy.
+        Determine the maximum drawdown of a strategy.
 
         Parameters
         ----------
@@ -7142,7 +7194,6 @@ class Empyrical:
         -----
         See https://en.wikipedia.org/wiki/Drawdown_(economics) for more details.
         """
-
         returns = returns.copy()
         df_cum = Empyrical.cum_returns(returns, 1.0)
         running_max = np.maximum.accumulate(df_cum)
@@ -7152,7 +7203,7 @@ class Empyrical:
     @classmethod
     def get_top_drawdowns(cls, returns, top=10):
         """
-        Finds top drawdowns, sorted by drawdown amount.
+        Find top drawdowns, sorted by drawdown amount.
 
         Parameters
         ----------
@@ -7167,7 +7218,6 @@ class Empyrical:
         drawdowns : list tye
             List of drawdown peaks, valleys, and recoveries. See get_max_drawdown.
         """
-
         returns = returns.copy()
         df_cum = Empyrical.cum_returns(returns, 1.0)
         running_max = np.maximum.accumulate(df_cum)
@@ -7195,7 +7245,7 @@ class Empyrical:
     @classmethod
     def gen_drawdown_table(cls, returns, top=10):
         """
-        Places top drawdowns in a table.
+        Place top drawdowns in a table.
 
         Parameters
         ----------
@@ -7210,7 +7260,6 @@ class Empyrical:
         df_drawdowns : pd.DataFrame
             Information about top drawdowns.
         """
-
         df_cum = Empyrical.cum_returns(returns, 1.0)
         drawdown_periods = Empyrical.get_top_drawdowns(returns, top=top)
         df_drawdowns = pd.DataFrame(
@@ -7268,7 +7317,7 @@ class Empyrical:
     @classmethod
     def rolling_volatility(cls, returns, rolling_vol_window):
         """
-        Determines the rolling volatility of a strategy.
+        Determine the rolling volatility of a strategy.
 
         Parameters
         ----------
@@ -7283,7 +7332,6 @@ class Empyrical:
         pd.Series
             Rolling volatility.
         """
-
         return returns.rolling(rolling_vol_window).std() * np.sqrt(
             APPROX_BDAYS_PER_YEAR
         )
@@ -7291,7 +7339,7 @@ class Empyrical:
     @classmethod
     def rolling_sharpe(cls, returns, rolling_sharpe_window):
         """
-        Determines the rolling Sharpe ratio of a strategy.
+        Determine the rolling Sharpe ratio of a strategy.
 
         Parameters
         ----------
@@ -7342,7 +7390,6 @@ class Empyrical:
         -------
         samples : numpy.ndarray
         """
-
         samples = np.empty((num_samples, num_days))
         seed = np.random.RandomState(seed=random_seed)
         for i in range(num_samples):
@@ -7353,8 +7400,9 @@ class Empyrical:
     @classmethod
     def summarize_paths(cls, samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
         """
-        Generate the upper and lower bounds of an n standard deviation
-        cone of forecasted cumulative returns.
+        Generate the upper and lower bounds of an n standard deviation cone.
+
+        Forecasted cumulative returns.
 
         Parameters
         ----------
@@ -7369,9 +7417,7 @@ class Empyrical:
         Returns
         -------
         samples : pandas.core.frame.DataFrame
-
         """
-
         cum_samples = Empyrical.cum_returns(samples.T, starting_value=starting_value).T
 
         cum_mean = cum_samples.mean(axis=0)
@@ -7399,9 +7445,9 @@ class Empyrical:
         random_seed=None,
     ):
         """
-        Determines the upper and lower bounds of an n standard deviation
-        cone of forecasted cumulative returns. Future cumulative mean and
-        standard deviation are computed by repeatedly sampling from the
+        Determine the upper and lower bounds of an n standard deviation cone.
+
+        Future cumulative mean and standard deviation are computed by repeatedly sampling from the
         in-sample daily returns (i.e., bootstrap). This cone is non-parametric,
         meaning it does not assume that returns are normally distributed.
 
@@ -7435,7 +7481,6 @@ class Empyrical:
             above (positive) or below (negative) the projected mean
             cumulative returns.
         """
-
         samples = Empyrical.simulate_paths(
             is_returns=is_returns,
             num_days=num_days,
@@ -7453,8 +7498,9 @@ class Empyrical:
     @classmethod
     def extract_interesting_date_ranges(cls, returns):
         """
-        Extracts returns based on interesting events. See
-        gen_date_range_interesting.
+        Extract returns based on interesting events.
+
+        See gen_date_range_interesting.
 
         Parameters
         ----------
@@ -7467,7 +7513,6 @@ class Empyrical:
         ranges : OrderedDict
             Date ranges, with returns, of all valid events.
         """
-
         returns_dupe = returns.copy()
         returns_dupe.index = returns_dupe.index.map(pd.Timestamp)
         ranges = OrderedDict()
@@ -7486,8 +7531,7 @@ class Empyrical:
     @classmethod
     def var_cov_var_normal(cls, p, c, mu=0, sigma=1):
         """
-        Variance-covariance calculation of daily Value-at-Risk in a
-        portfolio.
+        Calculate variance-covariance of daily Value-at-Risk in a portfolio.
 
         Parameters
         ----------
@@ -7503,13 +7547,14 @@ class Empyrical:
         -------
         float
         """
-
         alpha = sp.stats.norm.ppf(1 - c, mu, sigma)
         return p - p * (alpha + 1)
 
     @classmethod
     def common_sense_ratio(cls, returns):
         """
+        Calculate common sense ratio.
+
         Common sense ratio is the multiplication of the tail ratio and the
         Gain-to-Pain-Ratio -- sum(profits) / sum(losses).
 
@@ -7528,13 +7573,12 @@ class Empyrical:
         float
             common sense ratio
         """
-
         return Empyrical.tail_ratio(returns) * (1 + Empyrical.annual_return(returns))
 
     @classmethod
     def normalize(cls, returns, starting_value=1):
         """
-        Normalizes a returns timeseries based on the first value.
+        Normalize a returns timeseries based on the first value.
 
         Parameters
         ----------
@@ -7549,7 +7593,6 @@ class Empyrical:
         pd.Series
             Normalized returns.
         """
-
         return starting_value * (returns / returns.iloc[0])
 
     @classmethod
@@ -7557,7 +7600,7 @@ class Empyrical:
         cls, returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 6
     ):
         """
-        Determines the rolling beta of a strategy.
+        Determine the rolling beta of a strategy.
 
         Parameters
         ----------
@@ -7582,7 +7625,6 @@ class Empyrical:
         -----
         See https://en.wikipedia.org/wiki/Beta_(finance) for more details.
         """
-
         if factor_returns.ndim > 1:
             # Apply column-wise
             return factor_returns.apply(
@@ -7608,9 +7650,10 @@ class Empyrical:
         nan_threshold=0.1,
     ):
         """
-        Computes rolling factor betas using a multivariate linear regression
-        (separate linear regressions are problematic because the factors may be
-        confounded).
+        Compute rolling factor betas using a multivariate linear regression.
+
+        Separate linear regressions are problematic because the factors may be
+        confounded.
 
         Parameters
         ----------
@@ -7632,7 +7675,6 @@ class Empyrical:
         pandas.DataFrame type
             DataFrame containing rolling beta coefficients to SMB, HML and UMD
         """
-
         # We need to drop NaNs to regress
         ret_no_na = returns.dropna()
 
@@ -7661,7 +7703,7 @@ class Empyrical:
     @classmethod
     def gross_lev(cls, positions):
         """
-        Calculates the gross leverage of a strategy.
+        Calculate the gross leverage of a strategy.
 
         Parameters
         ----------
@@ -7674,7 +7716,6 @@ class Empyrical:
         pd.Series
             Gross leverage.
         """
-
         exposure = positions.drop("cash", axis=1).abs().sum(axis=1)
         return exposure / positions.sum(axis=1)
 
@@ -7705,25 +7746,23 @@ class Empyrical:
 
     @classmethod
     def agg_all_long_short(cls, round_trips, col, stats_dict):
-        # Aggregating for all trades
-        print("stats_dict = ", stats_dict)
-        stats_all = round_trips.assign(ones=1).groupby("ones")[col]
-        stats_all = stats_all.agg(stats_dict)
-        stats_all = stats_all.T.rename(columns={1.0: "All trades"})
+        """
+        Aggregate returns for all trades and for long/short trades.
 
-        # Aggregating for long and short trades
-        # Use `rename(columns=...)` instead of `rename_axis`
-        stats_long_short = round_trips.groupby("long")[col]
-        stats_long_short = stats_long_short.agg(stats_dict)
-        stats_long_short = stats_long_short.T.rename(
-            columns={False: "Short trades", True: "Long trades"}
-        )
+        Parameters
+        ----------
+        round_trips : pd.DataFrame
+            DataFrame containing round trip trade information.
+        col : str
+            Column name to aggregate.
+        stats_dict : dict
+            Dictionary mapping statistic names to functions.
 
-        # Join the two results
-        return stats_all.join(stats_long_short)
-
-    @classmethod
-    def agg_all_long_short(cls, round_trips, col, stats_dict):
+        Returns
+        -------
+        pd.DataFrame
+            Aggregated statistics.
+        """
         # Separate custom functions from built-in functions
         custom_funcs = {k: v for k, v in stats_dict.items() if callable(v)}
         built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]
@@ -7769,8 +7808,8 @@ class Empyrical:
 
     @classmethod
     def _groupby_consecutive(cls, txn, max_delta=pd.Timedelta("8h")):
-        """Merge transactions of the same direction separated by less than
-        max_delta time duration.
+        """
+        Merge transactions of the same direction separated by less than max_delta time duration.
 
         Parameters
         ----------
@@ -7831,8 +7870,10 @@ class Empyrical:
 
     @classmethod
     def extract_round_trips(cls, transactions, portfolio_value=None):
-        """Group transactions into "round trips". First, transactions are
-        grouped by day and directionality. Then, long and short
+        """
+        Group transactions into "round trips".
+
+        First, transactions are grouped by day and directionality. Then, long and short
         transactions are matched to create round-trip round_trips for which
         PnL, duration and returns are computed. Crossings where a position
         changes from long to short and vice versa are handled correctly.
@@ -7878,7 +7919,6 @@ class Empyrical:
             rt_returns are the returns in regard to the invested capital
             into that particular round-trip.
         """
-
         transactions = Empyrical._groupby_consecutive(transactions)
         roundtrips = []
 
@@ -7963,9 +8003,9 @@ class Empyrical:
     @classmethod
     def add_closing_transactions(cls, positions, transactions):
         """
-        Appends transactions that close out all positions at the end of
-        the timespan covered by positions data. Utilizes pricing information
-        in the positions DataFrame to determine closing price.
+        Append transactions that close out all positions at the end of the timespan.
+
+        Utilizes pricing information in the positions DataFrame to determine closing price.
 
         Parameters
         ----------
@@ -7980,7 +8020,6 @@ class Empyrical:
         closed_txns : pd.DataFrame
             Transactions with closing transactions appended.
         """
-
         closed_txns = transactions[["symbol", "amount", "price"]]
 
         pos_at_end = positions.drop("cash", axis=1).iloc[-1]
@@ -8012,7 +8051,7 @@ class Empyrical:
     @classmethod
     def apply_sector_mappings_to_round_trips(cls, round_trips, sector_mappings):
         """
-        Translates round trip symbols to sectors.
+        Translate round trip symbols to sectors.
 
         Parameters
         ----------
@@ -8028,7 +8067,6 @@ class Empyrical:
         sector_round_trips : pd.DataFrame
             Round trips with symbol names replaced by sector names.
         """
-
         sector_round_trips = round_trips.copy()
         sector_round_trips.symbol = sector_round_trips.symbol.apply(
             lambda x: sector_mappings.get(x, "No Sector Mapping")
@@ -8069,7 +8107,8 @@ class Empyrical:
 
     @classmethod
     def gen_round_trip_stats(cls, round_trips):
-        """Generate various round-trip statistics.
+        """
+        Generate various round-trip statistics.
 
         Parameters
         ----------
@@ -8083,11 +8122,10 @@ class Empyrical:
            A dictionary where each value is a pandas DataFrame containing
            various round-trip statistics.
 
-        See also
+        See Also
         --------
         round_trips.print_round_trip_stats
         """
-
         # Helper function to apply custom and built-in functions
         def apply_custom_and_built_in_funcs(grouped, stats_dict):
             # Separate custom functions from built-in functions
@@ -8330,8 +8368,9 @@ class Empyrical:
     @classmethod
     def create_perf_attrib_stats(cls, perf_attrib_, risk_exposures):
         """
-        Takes perf attribution data over a period of time and computes annualized the
-        multifactor alpha, multifactor sharpe, risk exposures.
+        Take perf attribution data and compute annualized statistics.
+
+        Computes annualized multifactor alpha, multifactor sharpe, risk exposures.
         """
         summary = OrderedDict()
         total_returns = perf_attrib_["total_returns"]
@@ -8386,8 +8425,9 @@ class Empyrical:
         pos_in_dollars=True,
     ):
         """
-        Make sure that all inputs have matching dates and tickers,
-        and raise warnings if necessary.
+        Make sure that all inputs have matching dates and tickers.
+
+        Raise warnings if necessary.
         """
         # Handle both DataFrame (unstacked) and Series (stacked) positions
         if isinstance(positions, pd.Series):
@@ -8532,8 +8572,7 @@ class Empyrical:
     @classmethod
     def _stack_positions(cls, positions, pos_in_dollars=True):
         """
-        Convert positions to percentages if necessary, and change them
-        to long format.
+        Convert positions to percentages if necessary, and change them to long format.
 
         Parameters
         ----------
@@ -8561,9 +8600,7 @@ class Empyrical:
 
     @classmethod
     def _cumulative_returns_less_costs(cls, returns, costs):
-        """
-        Compute cumulative returns, less costs.
-        """
+        """Compute cumulative returns, less costs."""
         if costs is None:
             return Empyrical.cum_returns(returns)
         return Empyrical.cum_returns(returns - costs)
