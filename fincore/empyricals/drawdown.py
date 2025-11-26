@@ -446,12 +446,36 @@ def max_drawdown_days(returns):
 
 
 def max_drawdown_weeks(returns):
-    """Calculate the duration of the maximum drawdown in weeks."""
+    """Calculate the duration of the maximum drawdown in weeks.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of weeks between the peak and trough of the maximum
+        drawdown, or ``NaN`` if it cannot be determined.
+    """
     return max_drawdown_days(returns)
 
 
 def max_drawdown_months(returns):
-    """Calculate the duration of the maximum drawdown in months."""
+    """Calculate the duration of the maximum drawdown in months.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of months between the peak and trough of the maximum
+        drawdown, or ``NaN`` if it cannot be determined.
+    """
     return max_drawdown_days(returns)
 
 
@@ -500,12 +524,36 @@ def max_drawdown_recovery_days(returns):
 
 
 def max_drawdown_recovery_weeks(returns):
-    """Calculate the recovery time from maximum drawdown in weeks."""
+    """Calculate the recovery time from maximum drawdown in weeks.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of weeks from the trough to recovery, or ``NaN`` if
+        recovery does not occur or cannot be determined.
+    """
     return max_drawdown_recovery_days(returns)
 
 
 def max_drawdown_recovery_months(returns):
-    """Calculate the recovery time from maximum drawdown in months."""
+    """Calculate the recovery time from maximum drawdown in months.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of months from the trough to recovery, or ``NaN`` if
+        recovery does not occur or cannot be determined.
+    """
     return max_drawdown_recovery_days(returns)
 
 
@@ -562,7 +610,20 @@ def third_max_drawdown(returns):
 
 
 def second_max_drawdown_days(returns):
-    """Calculate the duration of second maximum drawdown in days."""
+    """Calculate the duration of the second maximum drawdown in days.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of days (or periods) between the peak and trough of the
+        second-largest drawdown, or ``NaN`` if there are fewer than two
+        drawdown periods.
+    """
     drawdown_periods = get_all_drawdowns_detailed(returns)
 
     if len(drawdown_periods) < 2:
@@ -573,7 +634,20 @@ def second_max_drawdown_days(returns):
 
 
 def second_max_drawdown_recovery_days(returns):
-    """Calculate the recovery time from second maximum drawdown in days."""
+    """Calculate the recovery time from the second maximum drawdown in days.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of days from the trough to recovery for the second-largest
+        drawdown, or ``NaN`` if recovery does not occur or there are fewer
+        than two drawdown periods.
+    """
     drawdown_periods = get_all_drawdowns_detailed(returns)
 
     if len(drawdown_periods) < 2:
@@ -585,7 +659,20 @@ def second_max_drawdown_recovery_days(returns):
 
 
 def third_max_drawdown_days(returns):
-    """Calculate the duration of third maximum drawdown in days."""
+    """Calculate the duration of the third maximum drawdown in days.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of days (or periods) between the peak and trough of the
+        third-largest drawdown, or ``NaN`` if there are fewer than three
+        drawdown periods.
+    """
     drawdown_periods = get_all_drawdowns_detailed(returns)
 
     if len(drawdown_periods) < 3:
@@ -596,7 +683,20 @@ def third_max_drawdown_days(returns):
 
 
 def third_max_drawdown_recovery_days(returns):
-    """Calculate the recovery time from third maximum drawdown in days."""
+    """Calculate the recovery time from the third maximum drawdown in days.
+
+    Parameters
+    ----------
+    returns : pd.Series or array-like
+        Non-cumulative returns indexed by date or position.
+
+    Returns
+    -------
+    int or float
+        Number of days from the trough to recovery for the third-largest
+        drawdown, or ``NaN`` if recovery does not occur or there are fewer
+        than three drawdown periods.
+    """
     drawdown_periods = get_all_drawdowns_detailed(returns)
 
     if len(drawdown_periods) < 3:

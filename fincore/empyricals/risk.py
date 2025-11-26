@@ -526,12 +526,45 @@ def gpd_risk_estimates(returns, var_p=0.01):
 
 
 def gpd_risk_estimates_aligned(returns, var_p=0.01):
-    """Calculate GPD risk estimates (aligned version for compatibility)."""
+    """Calculate GPD risk estimates (aligned version for compatibility).
+
+    This is a wrapper around :func:`gpd_risk_estimates` for API
+    compatibility.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    var_p : float, optional
+        Probability level for VaR/ES estimation. Default is 0.01.
+
+    Returns
+    -------
+    np.ndarray or pd.Series
+        Array of length 5 containing GPD risk estimates.
+    """
     return gpd_risk_estimates(returns, var_p)
 
 
 def beta_fragility_heuristic(returns, factor_returns):
-    """Estimate fragility to a drop in beta."""
+    """Estimate fragility to a drop in beta.
+
+    This heuristic measures how fragile a strategy's returns are to changes
+    in market conditions by comparing returns at different points in the
+    factor return distribution.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+
+    Returns
+    -------
+    float
+        Beta fragility heuristic, or ``NaN`` if there is insufficient data.
+    """
     if len(returns) < 3 or len(factor_returns) < 3:
         return np.nan
 
@@ -576,5 +609,21 @@ def beta_fragility_heuristic(returns, factor_returns):
 
 
 def beta_fragility_heuristic_aligned(returns, factor_returns):
-    """Calculate the beta fragility heuristic with aligned series."""
+    """Calculate the beta fragility heuristic with aligned series.
+
+    This is a wrapper around :func:`beta_fragility_heuristic` for API
+    compatibility.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+
+    Returns
+    -------
+    float
+        Beta fragility heuristic, or ``NaN`` if there is insufficient data.
+    """
     return beta_fragility_heuristic(returns, factor_returns)

@@ -31,7 +31,25 @@ __all__ = [
 
 
 def agg_all_long_short(round_trips, col, stats_dict):
-    """Aggregate statistics for long and short round trips."""
+    """Aggregate statistics for long and short round trips.
+
+    Computes statistics separately for long trades, short trades, and
+    all trades combined.
+
+    Parameters
+    ----------
+    round_trips : pd.DataFrame
+        DataFrame with one row per round-trip trade.
+    col : str
+        Column name to compute statistics on (e.g., 'pnl', 'duration').
+    stats_dict : dict
+        Dictionary mapping statistic names to functions or method names.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with statistics for 'All trades', 'long', and 'short'.
+    """
     stats_all = []
     stats_long_short = []
 
@@ -302,7 +320,20 @@ def add_closing_transactions(positions, transactions):
 
 
 def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
-    """Apply sector mappings to round trips."""
+    """Translate round trip symbols to sectors.
+
+    Parameters
+    ----------
+    round_trips : pd.DataFrame
+        DataFrame with one row per-round-trip trade.
+    sector_mappings : dict or pd.Series
+        Mapping from symbol to sector.
+
+    Returns
+    -------
+    pd.DataFrame
+        A copy of round_trips with an additional 'sector' column.
+    """
     round_trips = round_trips.copy()
     
     if 'symbol' in round_trips.columns:

@@ -544,7 +544,32 @@ def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizat
 
 def alpha_percentile_rank(strategy_returns, all_strategies_returns, factor_returns,
                           risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate the percentile rank of alpha versus a peer universe."""
+    """Calculate the percentile rank of alpha versus a peer universe.
+
+    This computes the strategy's alpha and compares it to the alphas of
+    all peer strategies, returning the percentile rank.
+
+    Parameters
+    ----------
+    strategy_returns : pd.Series
+        Non-cumulative returns of the strategy being evaluated.
+    all_strategies_returns : list of pd.Series
+        Non-cumulative returns of all peer strategies.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate (default 0.0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    float
+        Percentile rank of the strategy's alpha in [0, 1], or ``NaN``
+        if insufficient data.
+    """
     if len(strategy_returns) < 3:
         return np.nan
 

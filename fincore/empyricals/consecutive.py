@@ -274,14 +274,36 @@ def max_consecutive_down_months(returns):
 
 
 def max_single_day_gain(returns):
-    """Determine the maximum single-day gain."""
+    """Determine the maximum single-day gain.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative returns indexed by date.
+
+    Returns
+    -------
+    float
+        Maximum single-day return, or ``NaN`` if the input is empty.
+    """
     if len(returns) < 1:
         return np.nan
     return returns.max()
 
 
 def max_single_day_loss(returns):
-    """Determine the maximum single-day loss."""
+    """Determine the maximum single-day loss.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative returns indexed by date.
+
+    Returns
+    -------
+    float
+        Minimum (most negative) single-day return, or ``NaN`` if the input is empty.
+    """
     if len(returns) < 1:
         return np.nan
     return returns.min()

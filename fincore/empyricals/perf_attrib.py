@@ -32,7 +32,27 @@ __all__ = [
 
 
 def perf_attrib_core(returns, positions, factor_returns, factor_loadings):
-    """Core performance attribution computation."""
+    """Core performance attribution computation.
+
+    Computes risk exposures and performance attribution by factor.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    positions : pd.Series or pd.DataFrame
+        Daily position values with MultiIndex (dt, ticker).
+    factor_returns : pd.DataFrame
+        Daily factor returns with dates as index and factors as columns.
+    factor_loadings : pd.DataFrame
+        Factor loadings with MultiIndex (dt, ticker) and factors as columns.
+
+    Returns
+    -------
+    tuple
+        (risk_exposures_portfolio, perf_attribution) - Risk exposures over
+        time and performance attribution data.
+    """
     if positions is None:
         raise ValueError("Either provide positions or set positions data")
     if factor_returns is None:
@@ -87,7 +107,20 @@ def perf_attrib_core(returns, positions, factor_returns, factor_loadings):
 
 
 def compute_exposures_internal(positions, factor_loadings):
-    """Compute exposures from positions and factor loadings."""
+    """Compute exposures from positions and factor loadings.
+
+    Parameters
+    ----------
+    positions : pd.Series or pd.DataFrame
+        Daily position values with MultiIndex (dt, ticker).
+    factor_loadings : pd.DataFrame
+        Factor loadings with MultiIndex (dt, ticker) and factors as columns.
+
+    Returns
+    -------
+    pd.DataFrame
+        Portfolio risk exposures by factor and date.
+    """
     if positions is None:
         raise ValueError("Either provide positions or set positions data")
     if factor_loadings is None:
