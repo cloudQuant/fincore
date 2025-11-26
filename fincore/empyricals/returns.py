@@ -14,7 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""收益计算函数模块."""
+"""收益计算函数模块.
+
+本模块包含用于计算收益率相关指标的核心函数，包括：
+- 简单收益率计算
+- 累积收益率计算
+- 收益率聚合
+- 收益率标准化
+"""
 
 import math
 import numpy as np
@@ -31,14 +38,39 @@ __all__ = [
 
 
 def _get_annual_return():
-    """Lazy import to avoid circular dependency."""
+    """延迟导入以避免循环依赖.
+
+    Returns
+    -------
+    function
+        annual_return 函数.
+    """
     from fincore.empyricals.yearly import annual_return
     return annual_return
 
 
 # Re-export annual_return for backwards compatibility
 def annual_return(*args, **kwargs):
-    """Wrapper for annual_return from yearly module."""
+    """计算年化收益率(CAGR)的包装函数.
+
+    此函数为向后兼容而保留，实际实现委托给 yearly 模块.
+
+    Parameters
+    ----------
+    *args : tuple
+        传递给 yearly.annual_return 的位置参数.
+    **kwargs : dict
+        传递给 yearly.annual_return 的关键字参数.
+
+    Returns
+    -------
+    float
+        年化收益率.
+
+    See Also
+    --------
+    fincore.empyricals.yearly.annual_return : 实际实现函数.
+    """
     return _get_annual_return()(*args, **kwargs)
 
 
@@ -210,18 +242,33 @@ def aggregate_returns(returns, convert_to="monthly"):
 
 
 def normalize(returns, starting_value=1):
-    """Normalize a returns timeseries based on the first value.
+    """将收益时间序列标准化为从指定值开始.
+
+    此函数将收益序列按其第一个值进行缩放，使序列从
+    ``starting_value`` 开始。常用于将不同策略的收益
+    曲线对齐到同一起点进行比较。
 
     Parameters
     ----------
     returns : pd.Series
-        Daily returns of the strategy, noncumulative.
+        收益时间序列（通常为累积收益或价格序列）.
     starting_value : float, optional
-        The starting returns (default 1).
+        标准化后的起始值，默认为 1.
 
     Returns
     -------
     pd.Series
-        Normalized returns.
+        标准化后的收益序列，第一个值等于 ``starting_value``.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> returns = pd.Series([100, 110, 105, 115])
+    >>> normalize(returns, starting_value=1)
+    0    1.00
+    1    1.10
+    2    1.05
+    3    1.15
+    dtype: float64
     """
     return starting_value * (returns / returns.iloc[0])

@@ -192,7 +192,18 @@ def get_sector_exposures(positions, symbol_sector_map):
 
 
 def get_long_short_pos(positions):
-    """Get long and short positions."""
+    """Determine the long and short allocations in a portfolio.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        The positions that the strategy takes over time.
+
+    Returns
+    -------
+    tuple of pd.Series
+        (longs, shorts) - Long and short position sums.
+    """
     positions = positions.copy()
     
     if 'cash' in positions.columns:
@@ -205,7 +216,20 @@ def get_long_short_pos(positions):
 
 
 def compute_style_factor_exposures(positions, risk_factor):
-    """Compute style factor exposures."""
+    """Return style factor exposure of an algorithm's positions.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Daily equity positions of algorithm, in dollars.
+    risk_factor : pd.DataFrame
+        Daily risk factor per asset.
+
+    Returns
+    -------
+    pd.Series
+        Total style factor exposure over time.
+    """
     positions = positions.copy()
     
     aligned = positions.align(risk_factor, axis=0, join='inner')[0]
@@ -217,7 +241,22 @@ def compute_style_factor_exposures(positions, risk_factor):
 
 
 def compute_sector_exposures(positions, sectors, sector_dict=None):
-    """Compute sector exposures."""
+    """Return sector exposures of an algorithm's positions.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Daily equity positions of algorithm, in dollars.
+    sectors : list
+        List of sector names or codes.
+    sector_dict : dict, optional
+        Dictionary mapping security identifiers to sectors.
+
+    Returns
+    -------
+    pd.DataFrame
+        Sector exposures over time.
+    """
     positions = positions.copy()
     
     if sector_dict is None:
@@ -233,7 +272,20 @@ def compute_sector_exposures(positions, sectors, sector_dict=None):
 
 
 def compute_cap_exposures(positions, caps):
-    """Compute market cap exposures."""
+    """Compute market capitalization exposures.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Daily equity positions of algorithm, in dollars.
+    caps : dict
+        Dictionary mapping cap categories to lists of securities.
+
+    Returns
+    -------
+    pd.DataFrame
+        Market cap exposures over time.
+    """
     positions = positions.copy()
     
     exposures = {}
@@ -245,7 +297,22 @@ def compute_cap_exposures(positions, caps):
 
 
 def compute_volume_exposures(shares_held, volumes, percentile):
-    """Compute volume exposures."""
+    """Compute volume-based liquidity exposures.
+
+    Parameters
+    ----------
+    shares_held : pd.DataFrame
+        Number of shares held per security.
+    volumes : pd.DataFrame
+        Daily trading volumes per security.
+    percentile : float
+        Threshold percentile for days-to-liquidate.
+
+    Returns
+    -------
+    pd.Series
+        Count of positions exceeding the liquidity threshold.
+    """
     days_to_liquidate = shares_held.abs() / volumes
 
     return (days_to_liquidate > percentile).sum(axis=1)
@@ -269,7 +336,20 @@ def gross_lev(positions):
 
 
 def stack_positions(positions, pos_in_dollars=True):
-    """Stack positions into a multi-index DataFrame."""
+    """Stack positions into a multi-index Series.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Daily positions with tickers as columns.
+    pos_in_dollars : bool, optional
+        Whether positions are in dollars (default True).
+
+    Returns
+    -------
+    pd.Series
+        Stacked positions with MultiIndex (dt, ticker).
+    """
     positions = positions.copy()
     
     if 'cash' in positions.columns:

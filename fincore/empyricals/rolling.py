@@ -41,7 +41,28 @@ __all__ = [
 
 
 def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate rolling alpha over a specified window."""
+    """Calculate rolling alpha over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns to calculate alpha against.
+    window : int, optional
+        Length of the rolling window (default 252).
+    risk_free : float, optional
+        Risk-free rate (default 0.0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling alpha values.
+    """
     is_input_series = isinstance(returns, pd.Series)
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
@@ -80,7 +101,28 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
 
 
 def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate rolling beta over a specified window."""
+    """Calculate rolling beta over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns to calculate beta against.
+    window : int, optional
+        Length of the rolling window (default 252).
+    risk_free : float, optional
+        Risk-free rate (default 0.0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling beta values.
+    """
     is_input_series = isinstance(returns, pd.Series)
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
@@ -118,7 +160,28 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
 
 
 def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate rolling alpha and beta over a specified window."""
+    """Calculate rolling alpha and beta over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns to calculate alpha and beta against.
+    window : int, optional
+        Length of the rolling window (default 252).
+    risk_free : float, optional
+        Risk-free rate (default 0.0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.DataFrame or np.ndarray
+        Rolling alpha and beta values with columns ['alpha', 'beta'].
+    """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
     if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
@@ -156,7 +219,26 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
 
 
 def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate rolling Sharpe ratio over a specified window."""
+    """Calculate rolling Sharpe ratio over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    window : int, optional
+        Length of the rolling window (default 252).
+    risk_free : float, optional
+        Risk-free rate (default 0.0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling Sharpe ratio values.
+    """
     is_series = isinstance(returns, pd.Series)
     
     if len(returns) < window:
@@ -183,7 +265,20 @@ def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualiz
 
 
 def roll_max_drawdown(returns, window=252):
-    """Calculate rolling maximum drawdown over a specified window."""
+    """Calculate rolling maximum drawdown over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    window : int, optional
+        Length of the rolling window (default 252).
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling maximum drawdown values.
+    """
     is_series = isinstance(returns, pd.Series)
     
     if len(returns) < window:
@@ -210,7 +305,22 @@ def roll_max_drawdown(returns, window=252):
 
 
 def roll_up_capture(returns, factor_returns, window=252):
-    """Calculate rolling up capture over a specified window."""
+    """Calculate rolling up capture over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns.
+    window : int, optional
+        Length of the rolling window (default 252).
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling up capture values.
+    """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
     if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
@@ -247,7 +357,22 @@ def roll_up_capture(returns, factor_returns, window=252):
 
 
 def roll_down_capture(returns, factor_returns, window=252):
-    """Calculate rolling down capture over a specified window."""
+    """Calculate rolling down capture over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns.
+    window : int, optional
+        Length of the rolling window (default 252).
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling down capture values.
+    """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
     if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
@@ -284,7 +409,22 @@ def roll_down_capture(returns, factor_returns, window=252):
 
 
 def roll_up_down_capture(returns, factor_returns, window=252):
-    """Calculate rolling up/down capture ratio over a specified window."""
+    """Calculate rolling up/down capture ratio over a specified window.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns of the strategy.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns.
+    window : int, optional
+        Length of the rolling window (default 252).
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Rolling up/down capture ratio values.
+    """
     up_caps = roll_up_capture(returns, factor_returns, window)
     down_caps = roll_down_capture(returns, factor_returns, window)
 
@@ -293,12 +433,38 @@ def roll_up_down_capture(returns, factor_returns, window=252):
 
 
 def rolling_volatility(returns, rolling_vol_window):
-    """Calculate rolling volatility."""
+    """Determine the rolling volatility of a strategy.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    rolling_vol_window : int
+        Length of the rolling window.
+
+    Returns
+    -------
+    pd.Series
+        Rolling volatility, annualized.
+    """
     return returns.rolling(window=rolling_vol_window).std() * np.sqrt(252)
 
 
 def rolling_sharpe(returns, rolling_sharpe_window):
-    """Calculate rolling Sharpe ratio."""
+    """Determine the rolling Sharpe ratio of a strategy.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    rolling_sharpe_window : int
+        Length of the rolling window.
+
+    Returns
+    -------
+    pd.Series
+        Rolling Sharpe ratio, annualized.
+    """
     rolling_mean = returns.rolling(window=rolling_sharpe_window).mean()
     rolling_std = returns.rolling(window=rolling_sharpe_window).std()
 
@@ -344,7 +510,22 @@ def rolling_beta(returns, factor_returns, rolling_window=126):
 
 
 def rolling_regression(returns, factor_returns, rolling_window=126):
-    """Calculate rolling regression alpha and beta."""
+    """Calculate rolling regression alpha and beta.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    factor_returns : pd.Series
+        Daily returns of the benchmark factor.
+    rolling_window : int, optional
+        Length of the rolling window (default 126).
+
+    Returns
+    -------
+    pd.DataFrame
+        Rolling alpha and beta values with columns ['alpha', 'beta'].
+    """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
     
     if not isinstance(returns_aligned, (pd.Series, np.ndarray)):

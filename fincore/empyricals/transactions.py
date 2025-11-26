@@ -257,7 +257,18 @@ def get_percent_alloc(values):
 
 
 def map_transaction(txn):
-    """Map a single transaction."""
+    """Map a single transaction to a standardized format.
+
+    Parameters
+    ----------
+    txn : dict
+        Transaction dictionary with keys like 'amount', 'price', 'sid', 'symbol', 'dt'.
+
+    Returns
+    -------
+    dict
+        Standardized transaction dictionary.
+    """
     return {
         'amount': txn.get('amount', 0),
         'price': txn.get('price', 0),
@@ -268,7 +279,18 @@ def map_transaction(txn):
 
 
 def make_transaction_frame(transactions):
-    """Make transaction DataFrame."""
+    """Convert transactions to a DataFrame.
+
+    Parameters
+    ----------
+    transactions : list of dict or pd.DataFrame
+        List of transaction dictionaries or existing DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with transaction data indexed by datetime.
+    """
     if isinstance(transactions, pd.DataFrame):
         return transactions
 

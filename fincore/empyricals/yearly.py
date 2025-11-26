@@ -72,7 +72,22 @@ def annual_return(returns, period=DAILY, annualization=None):
 
 
 def annual_return_by_year(returns, period=DAILY, annualization=None):
-    """Determine the annual return for each calendar year."""
+    """Determine the annual return for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns indexed by date.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Annual return for each calendar year.
+    """
     if len(returns) < 1:
         return_as_array = isinstance(returns, np.ndarray)
         if return_as_array:
@@ -91,7 +106,24 @@ def annual_return_by_year(returns, period=DAILY, annualization=None):
 
 
 def sharpe_ratio_by_year(returns, risk_free=0, period=DAILY, annualization=None):
-    """Determine the Sharpe ratio for each calendar year."""
+    """Determine the Sharpe ratio for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns indexed by date.
+    risk_free : float, optional
+        Risk-free rate (default 0).
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Sharpe ratio for each calendar year.
+    """
     if len(returns) < 1:
         return_as_array = isinstance(returns, np.ndarray)
         return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -108,7 +140,18 @@ def sharpe_ratio_by_year(returns, risk_free=0, period=DAILY, annualization=None)
 
 
 def max_drawdown_by_year(returns):
-    """Determine the maximum drawdown for each calendar year."""
+    """Determine the maximum drawdown for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns indexed by date.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Maximum drawdown for each calendar year.
+    """
     if len(returns) < 1:
         return_as_array = isinstance(returns, np.ndarray)
         return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -124,7 +167,22 @@ def max_drawdown_by_year(returns):
 
 
 def annual_volatility_by_year(returns, period=DAILY, annualization=None):
-    """Determine the annual volatility for each year."""
+    """Determine the annual volatility for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative returns indexed by date.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Annualized volatility for each calendar year.
+    """
     if len(returns) < 1:
         return_as_array = isinstance(returns, np.ndarray)
         return np.array([]) if return_as_array else pd.Series(dtype="float64")
@@ -141,7 +199,24 @@ def annual_volatility_by_year(returns, period=DAILY, annualization=None):
 
 
 def annual_active_return(returns, factor_returns, period=DAILY, annualization=None):
-    """Calculate annual active return (strategy minus benchmark)."""
+    """Calculate annual active return (strategy minus benchmark).
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    float
+        Annual active return, or ``NaN`` if insufficient data.
+    """
     if len(returns) < 1:
         return np.nan
 
@@ -162,7 +237,24 @@ def annual_active_return(returns, factor_returns, period=DAILY, annualization=No
 
 
 def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualization=None):
-    """Determine the annual active return for each calendar year."""
+    """Determine the annual active return for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns indexed by date.
+    factor_returns : pd.Series
+        Non-cumulative benchmark returns indexed by date.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series
+        Annual active return for each calendar year.
+    """
     if len(returns) < 1:
         return pd.Series([], dtype=float)
 
@@ -188,7 +280,24 @@ def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualiz
 
 
 def information_ratio_by_year(returns, factor_returns, period=DAILY, annualization=None):
-    """Determine the information ratio for each calendar year."""
+    """Determine the information ratio for each calendar year.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative strategy returns indexed by date.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark returns indexed by date.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : int, optional
+        Factor to convert period returns to yearly returns.
+
+    Returns
+    -------
+    pd.Series or np.ndarray
+        Information ratio for each calendar year.
+    """
     from fincore.empyricals.ratios import information_ratio as calc_ir
 
     if len(returns) < 1:
