@@ -1,0 +1,400 @@
+#
+# Copyright 2016 Quantopian, Inc.
+# Copyright 2025 CloudQuant Team
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""贝叶斯模型函数模块."""
+
+import numpy as np
+import pandas as pd
+import pymc as pm
+from fincore.empyricals.returns import cum_returns
+
+__all__ = [
+    'model_returns_t_alpha_beta',
+    'model_returns_normal',
+    'model_returns_t',
+    'model_best',
+    'model_stoch_vol',
+    'compute_bayes_cone',
+    'compute_consistency_score',
+    'run_model',
+    'simulate_paths',
+    'summarize_paths',
+    'forecast_cone_bootstrap',
+]
+
+
+def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
+    """Run Bayesian alpha-beta model assuming returns are T-distributed.
+
+    Parameters
+    ----------
+    data : pd.Series
+        Daily returns of the strategy, noncumulative.
+    bmark : pd.Series
+        Daily noncumulative returns of the benchmark.
+    samples : int, optional
+        Number of posterior samples to draw.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model containing all random variables.
+    trace : pymc3.sampling.BaseTrace
+        A trace object that contains samples for each parameter.
+    """
+    if len(data) != len(bmark):
+        data = data.align(bmark, join='inner')[0]
+        bmark = bmark.align(data, join='inner')[1]
+
+    data_array = np.asarray(data)
+    bmark_array = np.asarray(bmark)
+
+    with pm.Model() as model:
+        sigma = pm.HalfCauchy('sigma', beta=1)
+        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
+
+        alpha = pm.Normal('alpha', mu=0, sigma=.1)
+        beta = pm.Normal('beta', mu=0, sigma=1)
+
+        mu = alpha + beta * bmark_array
+        
+        returns = pm.StudentT('returns', nu=nu, mu=mu, sigma=sigma, observed=data_array)
+
+        trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
+
+    return model, trace
+
+
+def model_returns_normal(data, samples=500, progressbar=True):
+    """Run Bayesian model assuming returns are normally distributed.
+
+    Parameters
+    ----------
+    data : pd.Series
+        Daily returns of the strategy, noncumulative.
+    samples : int, optional
+        Number of posterior samples to draw.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model containing all random variables.
+    trace : pymc3.sampling.BaseTrace
+        A trace object that contains samples for each parameter.
+    """
+    data_array = np.asarray(data)
+
+    with pm.Model() as model:
+        mu = pm.Normal('mean_returns', mu=0, sigma=.01)
+        sigma = pm.HalfCauchy('volatility', beta=1)
+        
+        returns = pm.Normal('returns', mu=mu, sigma=sigma, observed=data_array)
+
+        trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
+
+    return model, trace
+
+
+def model_returns_t(data, samples=500, progressbar=True):
+    """Run Bayesian model assuming returns are Student-T distributed.
+
+    Parameters
+    ----------
+    data : pd.Series
+        Daily returns of the strategy, noncumulative.
+    samples : int, optional
+        Number of posterior samples to draw.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model containing all random variables.
+    trace : pymc3.sampling.BaseTrace
+        A trace object that contains samples for each parameter.
+    """
+    data_array = np.asarray(data)
+
+    with pm.Model() as model:
+        mu = pm.Normal('mean_returns', mu=0, sigma=.01)
+        sigma = pm.HalfCauchy('volatility', beta=1)
+        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
+        
+        returns = pm.StudentT('returns', nu=nu, mu=mu, sigma=sigma, observed=data_array)
+
+        trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
+
+    return model, trace
+
+
+def model_best(y1, y2, samples=1000, progressbar=True):
+    """Bayesian Estimation Supersedes the T-Test.
+
+    This model runs a Bayesian hypothesis comparing if y1 and y2 come
+    from the same distribution. Returns are assumed to be T-distributed.
+
+    Parameters
+    ----------
+    y1 : array-like
+        Array of returns (e.g., in-sample).
+    y2 : array-like
+        Array of returns (e.g., out-of-sample).
+    samples : int, optional
+        Number of posterior samples to draw.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model containing all random variables.
+    trace : pymc3.sampling.BaseTrace
+        A trace object that contains samples for each parameter.
+    """
+    y = pd.DataFrame({'y1': y1, 'y2': y2})
+    y = y.dropna()
+
+    y1_array = np.asarray(y['y1'])
+    y2_array = np.asarray(y['y2'])
+
+    mu_m = np.mean(np.concatenate([y1_array, y2_array]))
+    mu_p = np.std(np.concatenate([y1_array, y2_array])) * 1000
+
+    sigma_low = np.std(np.concatenate([y1_array, y2_array])) / 1000
+    sigma_high = np.std(np.concatenate([y1_array, y2_array])) * 1000
+
+    with pm.Model() as model:
+        group1_mean = pm.Normal('group1_mean', mu=mu_m, sigma=mu_p)
+        group2_mean = pm.Normal('group2_mean', mu=mu_m, sigma=mu_p)
+        group1_std = pm.Uniform('group1_std', lower=sigma_low, upper=sigma_high)
+        group2_std = pm.Uniform('group2_std', lower=sigma_low, upper=sigma_high)
+        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
+
+        returns_1 = pm.StudentT('returns_1', nu=nu, mu=group1_mean, sigma=group1_std, observed=y1_array)
+        returns_2 = pm.StudentT('returns_2', nu=nu, mu=group2_mean, sigma=group2_std, observed=y2_array)
+
+        diff_of_means = pm.Deterministic('difference_of_means', group1_mean - group2_mean)
+
+        trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
+
+    return model, trace
+
+
+def model_stoch_vol(data, samples=2000, progressbar=True):
+    """Run a stochastic volatility model.
+
+    This model estimates the volatility of a returns series over time.
+    Returns are assumed to be T-distributed.
+
+    Parameters
+    ----------
+    data : pd.Series
+        Return series to model.
+    samples : int, optional
+        Posterior samples to draw.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model containing all random variables.
+    trace : pymc3.sampling.BaseTrace
+        A trace object that contains samples for each parameter.
+    """
+    data_array = np.asarray(data)
+
+    with pm.Model() as model:
+        sigma = pm.Exponential('sigma', 50.)
+        nu = pm.Exponential('nu', .1)
+        s = pm.GaussianRandomWalk('s', sigma=sigma, shape=len(data_array))
+        
+        r = pm.StudentT('r', nu=nu, sigma=pm.math.exp(-2 * s), observed=data_array)
+
+        trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
+
+    return model, trace
+
+
+def compute_bayes_cone(preds, starting_value=1.0):
+    """Compute Bayesian cone from predictions.
+
+    Parameters
+    ----------
+    preds : np.ndarray
+        Predicted returns from posterior samples.
+    starting_value : float, optional
+        Starting portfolio value.
+
+    Returns
+    -------
+    dict
+        Dictionary of percentiles (1, 5, 25, 50, 75, 95, 99).
+    """
+    cum_preds = np.cumprod(preds + 1, axis=1) * starting_value
+
+    def scoreatpercentile(cum_predictions, p):
+        return [np.percentile(cum_predictions[:, i], p) for i in range(cum_predictions.shape[1])]
+
+    perc = {
+        1: scoreatpercentile(cum_preds, 1),
+        5: scoreatpercentile(cum_preds, 5),
+        25: scoreatpercentile(cum_preds, 25),
+        50: scoreatpercentile(cum_preds, 50),
+        75: scoreatpercentile(cum_preds, 75),
+        95: scoreatpercentile(cum_preds, 95),
+        99: scoreatpercentile(cum_preds, 99),
+    }
+
+    return perc
+
+
+def compute_consistency_score(returns_test, preds):
+    """Compute consistency score.
+
+    Parameters
+    ----------
+    returns_test : pd.Series
+        Out-of-sample returns to evaluate.
+    preds : np.ndarray
+        Predicted returns from posterior samples.
+
+    Returns
+    -------
+    list
+        Consistency scores at each time point.
+    """
+    returns_test_cum = cum_returns(returns_test, starting_value=1.)
+
+    cum_preds = np.cumprod(preds + 1, axis=1)
+
+    q = [np.sum(cum_preds[:, i] < returns_test_cum.iloc[i]) / float(len(cum_preds)) 
+         for i in range(len(returns_test_cum))]
+
+    return q
+
+
+def run_model(model, returns_train, returns_test=None, bmark=None, samples=500, ppc=False, progressbar=True):
+    """Run Bayesian model on returns data.
+
+    Parameters
+    ----------
+    model : str
+        Model type: 'alpha_beta', 't', 'normal', or 'best'.
+    returns_train : pd.Series
+        Training returns.
+    returns_test : pd.Series, optional
+        Test returns for evaluation.
+    bmark : pd.Series, optional
+        Benchmark returns.
+    samples : int, optional
+        Number of posterior samples.
+    ppc : bool, optional
+        Whether to run posterior predictive check.
+    progressbar : bool, optional
+        Show progress bar during sampling.
+
+    Returns
+    -------
+    model : pymc.Model
+        PyMC model.
+    trace : pymc3.sampling.BaseTrace
+        Posterior trace.
+    """
+    if model == 'alpha_beta':
+        model_obj, trace = model_returns_t_alpha_beta(returns_train, bmark, samples=samples, progressbar=progressbar)
+    elif model == 't':
+        model_obj, trace = model_returns_t(returns_train, samples=samples, progressbar=progressbar)
+    elif model == 'normal':
+        model_obj, trace = model_returns_normal(returns_train, samples=samples, progressbar=progressbar)
+    elif model == 'best':
+        model_obj, trace = model_best(returns_train, bmark, samples=samples, progressbar=progressbar)
+    else:
+        raise NotImplementedError('Model {} not implemented.'.format(model))
+
+    return model_obj, trace
+
+
+def simulate_paths(samples, T, mu, sigma, starting_value=1.0, random_state=None):
+    """Simulate random paths using geometric Brownian motion.
+
+    Parameters
+    ----------
+    samples : int
+        Number of paths to simulate.
+    T : int
+        Number of time steps.
+    mu : float
+        Expected return per period.
+    sigma : float
+        Volatility per period.
+    starting_value : float, optional
+        Starting portfolio value.
+    random_state : int, optional
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    np.ndarray
+        Array of shape (samples, T) with simulated paths.
+    """
+    if random_state is not None:
+        np.random.seed(random_state)
+
+    paths = np.zeros((samples, T))
+    paths[:, 0] = starting_value
+
+    for t in range(1, T):
+        returns = np.random.normal(mu, sigma, samples)
+        paths[:, t] = paths[:, t - 1] * (1 + returns)
+
+    return paths
+
+
+def summarize_paths(paths, ci=[5, 25, 50, 75, 95]):
+    """Summarize simulated paths."""
+    summary = {}
+    for p in ci:
+        summary[p] = np.percentile(paths, p, axis=0)
+    return summary
+
+
+def forecast_cone_bootstrap(is_returns, num_days, cone_std=(1., 1.5, 2.), random_state=None, num_samples=1000):
+    """Bootstrap forecast cone."""
+    if random_state is not None:
+        np.random.seed(random_state)
+
+    is_returns = is_returns.values.flatten()
+
+    samples = np.random.choice(is_returns, size=(num_samples, num_days), replace=True)
+
+    cum_returns_samples = np.cumprod(1 + samples, axis=1)
+
+    cone = {}
+    cone['line'] = cum_returns_samples.mean(axis=0)
+
+    for std in cone_std:
+        upper_key = 'sd_{}+'.format(std)
+        lower_key = 'sd_{}-'.format(std)
+        cone[upper_key] = cone['line'] + cum_returns_samples.std(axis=0) * std
+        cone[lower_key] = cone['line'] - cum_returns_samples.std(axis=0) * std
+
+    return cone

@@ -1,0 +1,221 @@
+#
+# Copyright 2016 Quantopian, Inc.
+# Copyright 2025 CloudQuant Team
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""按年统计函数模块."""
+
+import numpy as np
+import pandas as pd
+from fincore.constants import DAILY
+from fincore.empyricals.basic import (
+    annualization_factor, ensure_datetime_index_series, aligned_series
+)
+from fincore.empyricals.returns import cum_returns_final
+from fincore.empyricals.drawdown import max_drawdown
+from fincore.empyricals.ratios import sharpe_ratio
+from fincore.empyricals.risk import annual_volatility
+
+__all__ = [
+    'annual_return',
+    'annual_return_by_year',
+    'sharpe_ratio_by_year',
+    'max_drawdown_by_year',
+    'annual_volatility_by_year',
+    'annual_active_return',
+    'annual_active_return_by_year',
+    'information_ratio_by_year',
+]
+
+
+def annual_return(returns, period=DAILY, annualization=None):
+    """Determine the mean annual growth rate of returns (CAGR).
+
+    This is effectively the compound annual growth rate assuming
+    reinvestment of returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative simple returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Annualized return. For 1D input a scalar is returned; for 2D input
+        one value is returned per column.
+    """
+    if len(returns) < 1:
+        return np.nan
+
+    ann_factor = annualization_factor(period, annualization)
+    num_years = len(returns) / ann_factor
+    ending_value = cum_returns_final(returns, starting_value=1)
+    return ending_value ** (1 / num_years) - 1
+
+
+def annual_return_by_year(returns, period=DAILY, annualization=None):
+    """Determine the annual return for each calendar year."""
+    if len(returns) < 1:
+        return_as_array = isinstance(returns, np.ndarray)
+        if return_as_array:
+            return np.array([])
+        return pd.Series(dtype="float64")
+
+    return_as_array = isinstance(returns, np.ndarray)
+
+    returns = ensure_datetime_index_series(returns, period=period)
+
+    annual_returns = returns.groupby(returns.index.year).apply(
+        lambda ret: annual_return(ret, period=period, annualization=annualization)
+    )
+
+    return annual_returns.values if return_as_array else annual_returns
+
+
+def sharpe_ratio_by_year(returns, risk_free=0, period=DAILY, annualization=None):
+    """Determine the Sharpe ratio for each calendar year."""
+    if len(returns) < 1:
+        return_as_array = isinstance(returns, np.ndarray)
+        return np.array([]) if return_as_array else pd.Series(dtype="float64")
+
+    return_as_array = isinstance(returns, np.ndarray)
+
+    returns = ensure_datetime_index_series(returns, period=period)
+
+    sharpe_by_year = returns.groupby(returns.index.year).apply(
+        lambda ret: sharpe_ratio(ret, risk_free=risk_free, period=period, annualization=annualization)
+    )
+
+    return sharpe_by_year.values if return_as_array else sharpe_by_year
+
+
+def max_drawdown_by_year(returns):
+    """Determine the maximum drawdown for each calendar year."""
+    if len(returns) < 1:
+        return_as_array = isinstance(returns, np.ndarray)
+        return np.array([]) if return_as_array else pd.Series(dtype="float64")
+
+    return_as_array = isinstance(returns, np.ndarray)
+
+    returns = ensure_datetime_index_series(returns, period=DAILY)
+
+    max_dd_by_year = returns.groupby(returns.index.year).apply(
+        lambda ret: max_drawdown(ret)
+    )
+    return max_dd_by_year.values if return_as_array else max_dd_by_year
+
+
+def annual_volatility_by_year(returns, period=DAILY, annualization=None):
+    """Determine the annual volatility for each year."""
+    if len(returns) < 1:
+        return_as_array = isinstance(returns, np.ndarray)
+        return np.array([]) if return_as_array else pd.Series(dtype="float64")
+
+    return_as_array = isinstance(returns, np.ndarray)
+
+    returns = ensure_datetime_index_series(returns, period=period)
+
+    annual_vol_by_year = returns.groupby(returns.index.year).apply(
+        lambda ret: annual_volatility(ret, period=period, annualization=annualization)
+    )
+
+    return annual_vol_by_year.values if return_as_array else annual_vol_by_year
+
+
+def annual_active_return(returns, factor_returns, period=DAILY, annualization=None):
+    """Calculate annual active return (strategy minus benchmark)."""
+    if len(returns) < 1:
+        return np.nan
+
+    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    
+    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
+        returns_aligned = pd.Series(list(returns_aligned))
+    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
+        factor_aligned = pd.Series(list(factor_aligned))
+
+    strategy_annual = annual_return(returns_aligned, period, annualization)
+    benchmark_annual = annual_return(factor_aligned, period, annualization)
+
+    if np.isnan(strategy_annual) or np.isnan(benchmark_annual):
+        return np.nan
+
+    return strategy_annual - benchmark_annual
+
+
+def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualization=None):
+    """Determine the annual active return for each calendar year."""
+    if len(returns) < 1:
+        return pd.Series([], dtype=float)
+
+    if not isinstance(returns.index, pd.DatetimeIndex):
+        return pd.Series([], dtype=float)
+
+    grouped = returns.groupby(returns.index.year)
+    factor_grouped = factor_returns.groupby(factor_returns.index.year)
+
+    annual_active_returns = []
+    for year in grouped.groups.keys():
+        if year in factor_grouped.groups.keys():
+            year_returns = grouped.get_group(year)
+            year_factor = factor_grouped.get_group(year)
+            active_return = annual_active_return(year_returns, year_factor, period, annualization)
+            annual_active_returns.append((year, active_return))
+
+    if not annual_active_returns:
+        return pd.Series([], dtype=float)
+
+    years, active_returns = zip(*annual_active_returns)
+    return pd.Series(active_returns, index=years)
+
+
+def information_ratio_by_year(returns, factor_returns, period=DAILY, annualization=None):
+    """Determine the information ratio for each calendar year."""
+    from fincore.empyricals.ratios import information_ratio as calc_ir
+
+    if len(returns) < 1:
+        return_as_array = isinstance(returns, np.ndarray)
+        return np.array([]) if return_as_array else pd.Series(dtype="float64")
+
+    return_as_array = isinstance(returns, np.ndarray)
+
+    returns = ensure_datetime_index_series(returns, period=period)
+    factor_returns = ensure_datetime_index_series(factor_returns, period=period)
+
+    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    
+    if not isinstance(returns_aligned, pd.Series):
+        returns_aligned = pd.Series(list(returns_aligned))
+    if not isinstance(factor_aligned, pd.Series):
+        factor_aligned = pd.Series(list(factor_aligned))
+
+    def calc_ir_for_year(returns_group):
+        factor_group = factor_aligned.loc[returns_group.index]
+        return calc_ir(returns_group, factor_group, period, annualization)
+
+    information_ratios = returns_aligned.groupby(returns_aligned.index.year).apply(calc_ir_for_year)
+
+    if hasattr(information_ratios, "name"):
+        information_ratios.name = None
+
+    if return_as_array:
+        return information_ratios.values
+    return information_ratios
