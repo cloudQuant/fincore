@@ -95,7 +95,34 @@ def annual_volatility(returns, period=DAILY, alpha_=2.0, annualization=None, out
 
 
 def downside_risk(returns, required_return=0, period=DAILY, annualization=None, out=None):
-    """Determine the annualized downside deviation below a threshold."""
+    """Determine the annualized downside deviation below a threshold.
+
+    Downside risk is computed as the annualized standard deviation of
+    returns that fall below ``required_return``.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative strategy returns.
+    required_return : float, optional
+        Minimum acceptable return threshold. Only returns below this
+        value contribute to the downside risk. Default is 0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    out : np.ndarray, optional
+        Optional pre-allocated output array. If given, the result is
+        written in-place into this array.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Annualized downside risk. For 1D input a scalar is returned; for
+        2D input one value is returned per column.
+    """
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
@@ -129,14 +156,49 @@ def downside_risk(returns, required_return=0, period=DAILY, annualization=None, 
 
 
 def value_at_risk(returns, cutoff=0.05):
-    """Calculate the (historical) value at risk (VaR) of returns."""
+    """Calculate the (historical) value at risk (VaR) of returns.
+
+    VaR is estimated as the ``cutoff``-percentile of the return
+    distribution.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    cutoff : float, optional
+        Left-tail probability level in (0, 1). For example ``0.05``
+        selects the 5th percentile. Default is 0.05.
+
+    Returns
+    -------
+    float
+        Historical VaR at the given confidence level, or ``NaN`` if there
+        are no observations.
+    """
     if len(returns) < 1:
         return np.nan
     return np.percentile(returns, cutoff * 100)
 
 
 def conditional_value_at_risk(returns, cutoff=0.05):
-    """Calculate the conditional value at risk (CVaR) of returns."""
+    """Calculate the conditional value at risk (CVaR) of returns.
+
+    CVaR (also known as Expected Shortfall) is the expected return
+    conditional on the return being at or below the VaR threshold.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    cutoff : float, optional
+        Left-tail probability level in (0, 1). Default is 0.05.
+
+    Returns
+    -------
+    float
+        Conditional VaR (expected shortfall) at the given confidence
+        level, or ``NaN`` if there are no observations.
+    """
     if len(returns) < 1:
         return np.nan
     cutoff_index = value_at_risk(returns, cutoff=cutoff)
@@ -144,7 +206,21 @@ def conditional_value_at_risk(returns, cutoff=0.05):
 
 
 def tail_ratio(returns):
-    """Determine the ratio of right- to left-tail percentiles of returns."""
+    """Determine the ratio of right- to left-tail percentiles of returns.
+
+    The tail ratio is defined as the absolute value of the 95th
+    percentile divided by the absolute value of the 5th percentile.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+
+    Returns
+    -------
+    float
+        Tail ratio, or ``NaN`` if there are no valid observations.
+    """
     if len(returns) < 1:
         return np.nan
 
@@ -157,7 +233,33 @@ def tail_ratio(returns):
 
 
 def tracking_error(returns, factor_returns, period=DAILY, annualization=None, out=None):
-    """Determine the annualized tracking error versus a benchmark."""
+    """Determine the annualized tracking error versus a benchmark.
+
+    Tracking error is defined as the annualized standard deviation of
+    the active returns (strategy minus benchmark).
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    out : np.ndarray, optional
+        Optional pre-allocated output array. If given, the result is
+        written in-place into this array.
+
+    Returns
+    -------
+    float or np.ndarray
+        Annualized tracking error. For 1D input a scalar is returned; for
+        2D input one value is returned per column.
+    """
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
@@ -184,7 +286,27 @@ def tracking_error(returns, factor_returns, period=DAILY, annualization=None, ou
 
 
 def residual_risk(returns, factor_returns, risk_free=0.0):
-    """Calculate residual risk (tracking error of alpha)."""
+    """Calculate residual risk (tracking error of alpha).
+
+    Residual risk is the annualized standard deviation of the residuals
+    from a single-factor regression of excess returns on benchmark
+    excess returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+
+    Returns
+    -------
+    float
+        Annualized residual risk, or ``NaN`` if there are fewer than two
+        aligned observations.
+    """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     if len(returns_aligned) < 2:
@@ -201,7 +323,24 @@ def residual_risk(returns, factor_returns, risk_free=0.0):
 
 
 def var_excess_return(returns, cutoff=0.05):
-    """Calculate the mean excess return in the VaR tail."""
+    """Calculate the mean excess return in the VaR tail.
+
+    This computes the mean of returns that fall at or below the VaR
+    threshold.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    cutoff : float, optional
+        Left-tail probability level in (0, 1). Default is 0.05.
+
+    Returns
+    -------
+    float
+        Mean return in the VaR tail, or ``NaN`` if there are fewer than
+        two observations or no returns fall below the VaR threshold.
+    """
     if len(returns) < 2:
         return np.nan
 
@@ -215,13 +354,48 @@ def var_excess_return(returns, cutoff=0.05):
 
 
 def var_cov_var_normal(p, c, mu=0, sigma=1):
-    """Calculate parametric Value at Risk using the normal distribution."""
+    """Calculate parametric Value at Risk using the normal distribution.
+
+    Parameters
+    ----------
+    p : float
+        Portfolio value.
+    c : float
+        Confidence level (e.g., 0.99 for 99% VaR).
+    mu : float, optional
+        Expected return. Default is 0.
+    sigma : float, optional
+        Standard deviation of returns. Default is 1.
+
+    Returns
+    -------
+    float
+        Parametric VaR at the given confidence level.
+    """
     alpha = stats.norm.ppf(1 - c, mu, sigma)
     return p - p * (alpha + 1)
 
 
 def trading_value_at_risk(returns, period=None, sigma=2.0):
-    """Calculate trading Value at Risk."""
+    """Calculate trading Value at Risk.
+
+    This computes a simplified VaR as ``mean - sigma * std``.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    period : str, optional
+        Frequency of the input data. Currently unused.
+    sigma : float, optional
+        Number of standard deviations to subtract from the mean.
+        Default is 2.0.
+
+    Returns
+    -------
+    float
+        Trading VaR, or ``NaN`` if there are fewer than two observations.
+    """
     if len(returns) < 2:
         return np.nan
 
@@ -232,7 +406,25 @@ def trading_value_at_risk(returns, period=None, sigma=2.0):
 
 
 def gpd_risk_estimates(returns, var_p=0.01):
-    """Estimate VaR and ES using the Generalized Pareto Distribution (GPD)."""
+    """Estimate VaR and ES using the Generalized Pareto Distribution (GPD).
+
+    This fits a GPD to the tail of the loss distribution and estimates
+    VaR and Expected Shortfall (ES).
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    var_p : float, optional
+        Probability level for VaR/ES estimation. Default is 0.01.
+
+    Returns
+    -------
+    np.ndarray or pd.Series
+        Array of length 5 containing:
+        ``[threshold, scale_param, shape_param, var_estimate, es_estimate]``.
+        Returns zeros if the estimation fails.
+    """
     from scipy import optimize
 
     if len(returns) < 3:

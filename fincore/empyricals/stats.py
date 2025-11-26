@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from fincore.empyricals.basic import aligned_series
+from fincore.empyricals.ratios import stability_of_timeseries
 
 __all__ = [
     'skewness',
@@ -37,25 +38,73 @@ __all__ = [
     'common_sense_ratio',
     'var_cov_var_normal',
     'normalize',
+    'stability_of_timeseries',
 ]
 
 
 def skewness(returns):
-    """Calculate the skewness of a return series."""
+    """Calculate the skewness of a return series.
+
+    This is a thin wrapper around :func:`scipy.stats.skew` with
+    ``nan_policy="omit"``.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative returns.
+
+    Returns
+    -------
+    float
+        Sample skewness of the return distribution, or ``NaN`` if there
+        are fewer than three observations.
+    """
     if len(returns) < 3:
         return np.nan
     return stats.skew(returns, nan_policy="omit")
 
 
 def kurtosis(returns):
-    """Calculate the kurtosis of a return series."""
+    """Calculate the kurtosis of a return series.
+
+    This is a thin wrapper around :func:`scipy.stats.kurtosis` with
+    ``nan_policy="omit"``.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative returns.
+
+    Returns
+    -------
+    float
+        Sample excess kurtosis of the return distribution, or ``NaN`` if
+        there are fewer than four observations.
+    """
     if len(returns) < 4:
         return np.nan
     return stats.kurtosis(returns, nan_policy="omit")
 
 
 def hurst_exponent(returns):
-    """Estimate the Hurst exponent of a return series."""
+    """Estimate the Hurst exponent of a return series.
+
+    The Hurst exponent is estimated via a rescaled range (R/S) analysis
+    with safeguards for short and noisy series. Values near 0.5 indicate
+    a random walk; values above 0.5 suggest persistence; values below 0.5
+    suggest mean reversion.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative returns.
+
+    Returns
+    -------
+    float
+        Estimated Hurst exponent in the interval [0, 1], or ``NaN`` when
+        there is insufficient data.
+    """
     min_length = 8
     if len(returns) < min_length:
         return np.nan
@@ -187,7 +236,23 @@ def stutzer_index(returns, target_return=0.0):
 
 
 def serial_correlation(returns, lag=1):
-    """Determine the serial correlation of returns."""
+    """Determine the serial correlation of returns.
+
+    This computes the correlation between ``r[t]`` and ``r[t-lag]``.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    lag : int, optional
+        Number of periods to lag. Default is 1.
+
+    Returns
+    -------
+    float
+        Pearson correlation coefficient between returns and lagged returns,
+        or ``NaN`` if there are fewer than ``lag + 1`` valid observations.
+    """
     if returns is None:
         return np.nan
 
@@ -212,7 +277,22 @@ def serial_correlation(returns, lag=1):
 
 
 def stock_market_correlation(returns, market_returns):
-    """Determine the correlation between strategy and stock market returns."""
+    """Determine the correlation between strategy and stock market returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    market_returns : array-like or pd.Series
+        Non-cumulative stock market (benchmark) returns.
+
+    Returns
+    -------
+    float
+        Pearson correlation coefficient in ``[-1, 1]`` between strategy
+        and market returns, or ``NaN`` if there are fewer than two valid
+        observations.
+    """
     if len(returns) < 2 or len(market_returns) < 2:
         return np.nan
 
@@ -238,7 +318,22 @@ def stock_market_correlation(returns, market_returns):
 
 
 def bond_market_correlation(returns, bond_returns):
-    """Determine the correlation between strategy and bond market returns."""
+    """Determine the correlation between strategy and bond market returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    bond_returns : array-like or pd.Series
+        Non-cumulative bond market benchmark returns.
+
+    Returns
+    -------
+    float
+        Pearson correlation coefficient in ``[-1, 1]`` between strategy
+        and bond market returns, or ``NaN`` if there are fewer than two
+        valid observations.
+    """
     if len(returns) < 2 or len(bond_returns) < 2:
         return np.nan
 
@@ -477,26 +572,26 @@ def common_sense_ratio(returns):
 
 
 def var_cov_var_normal(p, c, mu=0, sigma=1):
-    """Calculate parametric Value-at-Risk using normal distribution.
+    """Calculate variance-covariance of daily Value-at-Risk in a portfolio.
 
     Parameters
     ----------
     p : float
-        Confidence level (e.g., 0.01 for 99% VaR).
-    c : float
         Portfolio value.
+    c : float
+        Confidence level.
     mu : float, optional
-        Expected return. Default is 0.
+        Mean. Default is 0.
     sigma : float, optional
         Standard deviation. Default is 1.
 
     Returns
     -------
     float
-        Value-at-Risk at the given confidence level.
+        Value-at-Risk.
     """
-    alpha = stats.norm.ppf(1 - p, mu, sigma)
-    return c - c * (alpha + 1)
+    alpha = stats.norm.ppf(1 - c, mu, sigma)
+    return p - p * (alpha + 1)
 
 
 def normalize(returns, starting_value=1):

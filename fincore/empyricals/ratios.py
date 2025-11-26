@@ -24,6 +24,7 @@ from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
 from fincore.empyricals.basic import (
     annualization_factor, adjust_returns, aligned_series
 )
+from fincore.empyricals.risk import tail_ratio
 
 __all__ = [
     'sharpe_ratio',
@@ -46,6 +47,7 @@ __all__ = [
     'up_capture',
     'down_capture',
     'up_down_capture',
+    'tail_ratio',
 ]
 
 
@@ -104,7 +106,38 @@ def sharpe_ratio(returns, risk_free=0, period=DAILY, annualization=None, out=Non
 
 
 def sortino_ratio(returns, required_return=0, period=DAILY, annualization=None, out=None, _downside_risk=None):
-    """Determine the Sortino ratio of a strategy."""
+    """Determine the Sortino ratio of a strategy.
+
+    The Sortino ratio is defined as the annualized excess return divided
+    by the annualized downside risk. Only returns falling below
+    ``required_return`` contribute to the downside risk term.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative strategy returns.
+    required_return : float, optional
+        Minimum acceptable return used as the threshold when computing
+        downside risk. Default is 0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    out : np.ndarray, optional
+        Optional pre-allocated output array. If given, the result is
+        written in-place into this array.
+    _downside_risk : float or np.ndarray, optional
+        Optional pre-computed annualized downside risk. If provided, this
+        value is reused instead of recomputing downside risk.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Sortino ratio of the strategy. For 1D input a scalar is
+        returned; for 2D input one value is returned per column.
+    """
     from fincore.empyricals.risk import downside_risk as calc_downside_risk
 
     allocated_output = out is None
@@ -138,7 +171,29 @@ def sortino_ratio(returns, required_return=0, period=DAILY, annualization=None, 
 
 
 def excess_sharpe(returns, factor_returns, out=None):
-    """Determine the excess Sharpe ratio of a strategy."""
+    """Determine the excess Sharpe ratio of a strategy.
+
+    The excess Sharpe ratio is defined as the mean active return divided
+    by the tracking error, where active return is the difference between
+    the strategy returns and the benchmark (factor) returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative benchmark or factor returns, aligned to
+        ``returns``.
+    out : np.ndarray, optional
+        Optional pre-allocated output array. If given, the result is
+        written in-place into this array.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Excess Sharpe ratio. For 1D input a scalar is returned; for 2D
+        input one value is returned per column.
+    """
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
@@ -254,7 +309,28 @@ def conditional_sharpe_ratio(returns, cutoff=0.05):
 
 
 def calmar_ratio(returns, period=DAILY, annualization=None):
-    """Determine the Calmar ratio (return-to-drawdown ratio)."""
+    """Determine the Calmar ratio (return-to-drawdown ratio).
+
+    The Calmar ratio is defined as the annualized return divided by the
+    absolute value of the maximum drawdown.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series or pd.DataFrame
+        Non-cumulative simple returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize returns when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float
+        Calmar ratio of the return series. Returns ``NaN`` if maximum
+        drawdown is non-negative or infinite.
+    """
     from fincore.empyricals.drawdown import max_drawdown
     from fincore.empyricals.returns import cum_returns_final
 
@@ -321,7 +397,30 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPRO
 
 
 def information_ratio(returns, factor_returns, period=DAILY, annualization=None):
-    """Determine the information ratio versus a benchmark."""
+    """Determine the information ratio versus a benchmark.
+
+    The information ratio is defined as the annualized mean active return
+    divided by the annualized tracking error of the active returns.
+
+    Parameters
+    ----------
+    returns : pd.Series or pd.DataFrame
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series or pd.DataFrame
+        Non-cumulative benchmark or factor returns, aligned to
+        ``returns``.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float or pd.Series
+        Information ratio of the strategy versus the benchmark.
+    """
     returns, factor_returns = aligned_series(returns, factor_returns)
     super_returns = returns - factor_returns
 
@@ -333,7 +432,40 @@ def information_ratio(returns, factor_returns, period=DAILY, annualization=None)
 
 
 def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate the Treynor ratio of a strategy."""
+    r"""Calculate the Treynor ratio of a strategy.
+
+    The Treynor ratio is defined as the strategy's annualized excess
+    return divided by its beta with respect to a benchmark:
+
+    .. math::
+
+        T = \frac{R_p - R_f}{\beta_p}
+
+    where :math:`R_p` is the annualized portfolio return, :math:`R_f` is
+    the risk-free rate, and :math:`\beta_p` is the portfolio beta.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark or factor returns used to estimate beta.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize returns when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Treynor ratio. For 1D input a scalar is returned; for 2D input one
+        value is returned per column. Returns ``NaN`` when beta is zero,
+        negative, or ``NaN``.
+    """
     from fincore.empyricals.alpha_beta import beta_aligned
     from fincore.empyricals.returns import cum_returns_final
 
@@ -385,12 +517,68 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
 
 
 def treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
-    """Compute the Treynor ratio."""
+    """Compute the Treynor ratio.
+
+    This is a thin wrapper around :func:`cal_treynor_ratio`.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate. Default is 0.0.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
+
+    Returns
+    -------
+    float or np.ndarray or pd.Series
+        Treynor ratio.
+    """
     return cal_treynor_ratio(returns, factor_returns, risk_free, period, annualization)
 
 
 def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate the Modigliani (M²) measure."""
+    r"""Calculate the Modigliani (M²) measure.
+
+    The M² measure scales the portfolio's risk-adjusted performance to
+    the benchmark's volatility. It is defined as:
+
+    .. math::
+
+        M^2 = (R_p - R_f) \frac{\sigma_b}{\sigma_p} + R_f
+
+    where :math:`R_p` and :math:`R_f` are the annualized portfolio and
+    risk-free returns, and :math:`\sigma_p` and :math:`\sigma_b` are the
+    annualized volatilities of the portfolio and benchmark, respectively.
+
+    Parameters
+    ----------
+    returns : pd.Series or np.ndarray
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series or np.ndarray
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize returns and volatilities when ``annualization`` is
+        ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float
+        M² value of the strategy relative to the benchmark. Returns
+        ``NaN`` if the portfolio volatility is zero, negative, or
+        ``NaN``.
+    """
     from fincore.empyricals.risk import annual_volatility
     from fincore.empyricals.returns import cum_returns_final
 
@@ -416,7 +604,32 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
 
 
 def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate the Sterling ratio of a strategy."""
+    """Calculate the Sterling ratio of a strategy.
+
+    The Sterling ratio is defined as the annualized excess return divided
+    by the average drawdown. When no explicit drawdowns are detected,
+    this implementation falls back to using downside returns as a proxy
+    for risk.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize returns when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float
+        Sterling ratio of the strategy. Returns ``NaN`` when there is
+        effectively no drawdown risk.
+    """
     from fincore.empyricals.drawdown import get_all_drawdowns
     from fincore.empyricals.returns import cum_returns_final
 
@@ -453,7 +666,30 @@ def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
 
 
 def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
-    """Calculate the Burke ratio of a strategy."""
+    """Calculate the Burke ratio of a strategy.
+
+    The Burke ratio is defined as the annualized excess return divided by
+    the square root of the sum of squared drawdowns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize returns when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+
+    Returns
+    -------
+    float
+        Burke ratio of the strategy. Returns ``NaN`` when there is
+        effectively no drawdown risk.
+    """
     from fincore.empyricals.drawdown import get_all_drawdowns
     from fincore.empyricals.returns import cum_returns_final
 
@@ -491,7 +727,34 @@ def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
 
 
 def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, mar=0.0):
-    """Calculate the Kappa 3 ratio."""
+    """Calculate the Kappa 3 ratio based on third-order downside deviation.
+
+    This variant of the Kappa ratio uses the third-order lower partial
+    moment (LPM3) of returns below a minimum acceptable return (MAR) as
+    the risk measure.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize LPM3 when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    mar : float, optional
+        Minimum acceptable return (MAR) used when computing the lower
+        partial moment. Default is 0.0.
+
+    Returns
+    -------
+    float
+        Kappa 3 ratio of the strategy. Returns ``NaN`` when downside
+        risk is effectively zero.
+    """
     from fincore.empyricals.returns import cum_returns_final
 
     if len(returns) < 2:
@@ -534,7 +797,22 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
 
 
 def common_sense_ratio(returns):
-    """Calculate the common sense ratio."""
+    """Calculate the common sense ratio.
+
+    The common sense ratio combines the tail ratio with the win rate to
+    provide a measure of the risk-reward profile of a strategy.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+
+    Returns
+    -------
+    float
+        Common sense ratio. Returns ``NaN`` if there are insufficient
+        observations or if win rate is zero.
+    """
     from fincore.empyricals.risk import tail_ratio
     from fincore.empyricals.stats import win_rate
 
@@ -551,7 +829,23 @@ def common_sense_ratio(returns):
 
 
 def stability_of_timeseries(returns):
-    """Determine the R-squared of a linear fit to cumulative log returns."""
+    """Determine the R-squared of a linear fit to cumulative log returns.
+
+    This computes the coefficient of determination (R²) from a linear
+    regression of the cumulative log returns against time. Higher values
+    indicate a more stable (less noisy) growth profile.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative returns.
+
+    Returns
+    -------
+    float
+        R-squared of the linear fit to cumulative log returns. Returns
+        ``NaN`` if there are fewer than two valid observations.
+    """
     if len(returns) < 2:
         return np.nan
 
@@ -568,7 +862,28 @@ def stability_of_timeseries(returns):
 
 
 def capture(returns, factor_returns, period=DAILY):
-    """Calculate the capture ratio versus a benchmark."""
+    """Calculate the capture ratio versus a benchmark.
+
+    The capture ratio is defined as the strategy's annualized return
+    divided by the benchmark's annualized return over the same period.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        annualize both strategy and benchmark returns.
+
+    Returns
+    -------
+    float
+        Capture ratio (strategy annualized return divided by benchmark
+        annualized return). Returns ``NaN`` if there are insufficient
+        observations or the benchmark annualized return is zero.
+    """
     from fincore.empyricals.returns import cum_returns_final
 
     if len(returns) < 1 or len(factor_returns) < 1:
@@ -590,7 +905,26 @@ def capture(returns, factor_returns, period=DAILY):
 
 
 def up_capture(returns, factor_returns, period=DAILY):
-    """Calculate the capture ratio for up-market periods."""
+    """Calculate the capture ratio for up-market periods.
+
+    The up-capture ratio is defined as the capture ratio computed using
+    only those periods where the benchmark (factor) return is positive.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+
+    Returns
+    -------
+    float
+        Up-capture ratio of the strategy relative to the benchmark.
+        Returns ``NaN`` if there are no positive benchmark periods.
+    """
     returns, factor_returns = aligned_series(returns, factor_returns)
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
@@ -606,7 +940,26 @@ def up_capture(returns, factor_returns, period=DAILY):
 
 
 def down_capture(returns, factor_returns, period=DAILY):
-    """Calculate the capture ratio for down-market periods."""
+    """Calculate the capture ratio for down-market periods.
+
+    The down-capture ratio is defined as the capture ratio computed using
+    only those periods where the benchmark (factor) return is negative.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+
+    Returns
+    -------
+    float
+        Down-capture ratio of the strategy relative to the benchmark.
+        Returns ``NaN`` if there are no negative benchmark periods.
+    """
     returns, factor_returns = aligned_series(returns, factor_returns)
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
@@ -622,7 +975,26 @@ def down_capture(returns, factor_returns, period=DAILY):
 
 
 def up_down_capture(returns, factor_returns, period=DAILY):
-    """Calculate the ratio of up-capture to down-capture."""
+    """Calculate the ratio of up-capture to down-capture.
+
+    This computes ``up_capture / down_capture`` using
+    :func:`up_capture` and :func:`down_capture`.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+
+    Returns
+    -------
+    float
+        Ratio of up-capture to down-capture. Returns ``NaN`` if either
+        capture is ``NaN`` or if the down-capture is zero.
+    """
     up_cap = up_capture(returns, factor_returns, period=period)
     down_cap = down_capture(returns, factor_returns, period=period)
 

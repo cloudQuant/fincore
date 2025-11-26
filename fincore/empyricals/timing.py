@@ -18,13 +18,16 @@
 
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
 from fincore.empyricals.basic import aligned_series
+from fincore.constants.interesting_periods import PERIODS
 
 __all__ = [
     'treynor_mazuy_timing',
     'henriksson_merton_timing',
     'market_timing_return',
     'cornell_timing',
+    'extract_interesting_date_ranges',
 ]
 
 
@@ -228,3 +231,31 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
 
     except Exception:
         return np.nan
+
+
+def extract_interesting_date_ranges(returns):
+    """Extract returns based on interesting events.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+
+    Returns
+    -------
+    ranges : OrderedDict
+        Date ranges, with returns, of all valid events.
+    """
+    returns_dupe = returns.copy()
+    returns_dupe.index = returns_dupe.index.map(pd.Timestamp)
+    ranges = OrderedDict()
+    for name, (start, end) in PERIODS.items():
+        try:
+            period = returns_dupe.loc[start:end]
+            if len(period) == 0:
+                continue
+            ranges[name] = period
+        except BaseException:
+            continue
+
+    return ranges

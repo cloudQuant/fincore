@@ -84,7 +84,7 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     return pd.Series(stats)
 
 
-def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, num_samples=1000):
+def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwargs):
     """Calculate various bootstrapped performance metrics of a strategy.
 
     Parameters
@@ -92,119 +92,157 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, num_sa
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series, optional
-        Daily noncumulative returns of the benchmark factor.
+        Daily noncumulative returns of the benchmark factor to which betas are
+        computed. Usually a benchmark such as market returns.
     return_stats : bool, optional
-        If True, returns summary statistics (mean, median, percentiles).
-    num_samples : int, optional
-        Number of bootstrap samples to draw.
+        If True, returns a DataFrame of mean, median, 5 and 95 percentiles
+        for each perf metric.
+        If False, return a DataFrame with the bootstrap samples for
+        each perf metric.
 
     Returns
     -------
-    dict
-        Bootstrap statistics for each performance metric.
+    pd.DataFrame
+        if return_stats is True:
+        - Distributional statistics of bootstrapped sampling
+        distribution of performance metrics.
+        If return_stats is False:
+        - Bootstrap samples for each performance metric.
     """
-    bootstrap_stats = {}
+    from scipy import stats as scipy_stats
+    from fincore.constants.style import SIMPLE_STAT_FUNCS, FACTOR_STAT_FUNCS, STAT_FUNC_NAMES
+    from fincore.empyricals.ratios import omega_ratio, tail_ratio
+    from fincore.empyricals.risk import value_at_risk
+    from fincore.empyricals.stats import stability_of_timeseries
+    from fincore.empyricals.alpha_beta import alpha, beta
 
-    def _resolve_stat_func(spec):
-        if callable(spec):
-            return spec
-        stat_funcs = {
-            'annual_return': annual_return,
-            'sharpe_ratio': sharpe_ratio,
-            'max_drawdown': max_drawdown,
-            'annual_volatility': annual_volatility,
-        }
-        return stat_funcs.get(spec, lambda x: np.nan)
+    bootstrap_values = OrderedDict()
 
-    stat_specs = ['annual_return', 'sharpe_ratio', 'max_drawdown', 'annual_volatility']
+    def _resolve_stat_func(stat_entry):
+        """Apply same resolution logic as in perf_stats for bootstrap case."""
+        if callable(stat_entry):
+            stat_func = stat_entry
+            stat_key = getattr(stat_entry, "__name__", str(stat_entry))
+            return stat_func, stat_key
 
-    for spec in stat_specs:
-        func = _resolve_stat_func(spec)
-        bootstrap_result = calc_bootstrap(func, returns, num_samples=num_samples)
-        bootstrap_stats[spec] = bootstrap_result
+        if isinstance(stat_entry, str):
+            if stat_entry.startswith("stats."):
+                func_name = stat_entry.split(".", 1)[1]
+                stat_func = getattr(scipy_stats, func_name)
+                return stat_func, func_name
 
-    return bootstrap_stats
+            # Map to local functions
+            func_map = {
+                'annual_return': annual_return,
+                'cum_returns_final': cum_returns_final,
+                'annual_volatility': annual_volatility,
+                'sharpe_ratio': sharpe_ratio,
+                'calmar_ratio': calmar_ratio,
+                'stability_of_timeseries': stability_of_timeseries,
+                'max_drawdown': max_drawdown,
+                'omega_ratio': omega_ratio,
+                'sortino_ratio': sortino_ratio,
+                'tail_ratio': tail_ratio,
+                'value_at_risk': value_at_risk,
+                'alpha': alpha,
+                'beta': beta,
+            }
+            stat_func = func_map.get(stat_entry)
+            if stat_func is not None:
+                return stat_func, stat_entry
+
+        return stat_entry, str(stat_entry)
+
+    # Bootstrap for simple statistics
+    for entry in SIMPLE_STAT_FUNCS:
+        stat_func, stat_key = _resolve_stat_func(entry)
+        if stat_func is None:
+            continue
+        stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
+        bootstrap_values[stat_name] = calc_bootstrap(stat_func, returns)
+
+    # Bootstrap for factor-based statistics, if provided
+    if factor_returns is not None:
+        for entry in FACTOR_STAT_FUNCS:
+            stat_func, stat_key = _resolve_stat_func(entry)
+            if stat_func is None:
+                continue
+            stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
+            bootstrap_values[stat_name] = calc_bootstrap(
+                stat_func, returns, factor_returns=factor_returns
+            )
+
+    bootstrap_values = pd.DataFrame(bootstrap_values)
+
+    if return_stats:
+        stats_df = bootstrap_values.apply(calc_distribution_stats)
+        return stats_df.T[["mean", "median", "5%", "95%"]]
+    else:
+        return bootstrap_values
 
 
-def calc_bootstrap(func, returns, *args, num_samples=1000, **kwargs):
-    """Calculate bootstrap distribution for a statistic.
+def calc_bootstrap(func, returns, *args, **kwargs):
+    """Perform a bootstrap analysis on a user-defined function returning a summary statistic.
 
     Parameters
     ----------
     func : callable
-        Function to compute the statistic.
-    returns : pd.Series or array-like
-        Return series to bootstrap.
-    num_samples : int, optional
-        Number of bootstrap samples.
+        Function that either takes a single array (commonly ``returns``)
+        or two arrays (for example ``returns`` and ``factor_returns``) and
+        returns a single summary value.
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    n_samples : int, optional
+        Number of bootstrap samples to draw. Default is 1000.
+    kwargs : dict, optional
+        Additional keyword arguments forwarded to ``func``. For
+        factor-based statistics this often includes ``factor_returns``.
 
     Returns
     -------
-    dict
-        Dictionary with 'mean', 'std', 'ci_low', 'ci_high'.
+    numpy.ndarray
+        Bootstrapped sampling distribution of passed in func.
     """
-    n = len(returns)
-    bootstrap_values = []
+    n_samples = kwargs.pop("n_samples", 1000)
+    out = np.empty(n_samples)
 
-    for _ in range(num_samples):
-        indices = np.random.choice(n, size=n, replace=True)
-        sample_returns = returns.iloc[indices] if hasattr(returns, 'iloc') else returns[indices]
-        try:
-            value = func(sample_returns, *args, **kwargs)
-            bootstrap_values.append(value)
-        except Exception:
-            bootstrap_values.append(np.nan)
+    factor_returns = kwargs.pop("factor_returns", None)
 
-    bootstrap_values = np.array(bootstrap_values)
-    valid_values = bootstrap_values[~np.isnan(bootstrap_values)]
+    for i in range(n_samples):
+        idx = np.random.randint(len(returns), size=len(returns))
+        returns_i = returns.iloc[idx].reset_index(drop=True)
+        if factor_returns is not None:
+            factor_returns_i = factor_returns.iloc[idx].reset_index(drop=True)
+            out[i] = func(returns_i, factor_returns_i, *args, **kwargs)
+        else:
+            out[i] = func(returns_i, *args, **kwargs)
 
-    if len(valid_values) == 0:
-        return {
-            'mean': np.nan,
-            'std': np.nan,
-            'ci_low': np.nan,
-            'ci_high': np.nan,
-        }
-
-    return {
-        'mean': np.mean(valid_values),
-        'std': np.std(valid_values),
-        'ci_low': np.percentile(valid_values, 2.5),
-        'ci_high': np.percentile(valid_values, 97.5),
-    }
+    return out
 
 
 def calc_distribution_stats(x):
-    """Calculate distribution statistics.
+    """Calculate various summary statistics of data.
 
     Parameters
     ----------
-    x : array-like
-        Data array.
+    x : numpy.ndarray or pandas.Series
+        Array to compute summary statistics for.
 
     Returns
     -------
-    dict
-        Dictionary with 'mean', 'median', 'std', 'min', 'max', 'count'.
+    pandas.Series
+        Series containing mean, median, std, as well as 5, 25, 75 and
+        95 percentiles of passed in values.
     """
-    x = np.asarray(x)
-    x = x[~np.isnan(x)]
-
-    if len(x) == 0:
-        return {
-            'mean': np.nan,
-            'median': np.nan,
-            'std': np.nan,
-            'min': np.nan,
-            'max': np.nan,
-            'count': 0,
+    return pd.Series(
+        {
+            "mean": np.mean(x),
+            "median": np.median(x),
+            "std": np.std(x),
+            "5%": np.percentile(x, 5),
+            "25%": np.percentile(x, 25),
+            "75%": np.percentile(x, 75),
+            "95%": np.percentile(x, 95),
+            "IQR": np.subtract.reduce(np.percentile(x, [75, 25])),
         }
-
-    return {
-        'mean': np.mean(x),
-        'median': np.median(x),
-        'std': np.std(x),
-        'min': np.min(x),
-        'max': np.max(x),
-        'count': len(x),
-    }
+    )

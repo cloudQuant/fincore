@@ -30,6 +30,18 @@ __all__ = [
 ]
 
 
+def _get_annual_return():
+    """Lazy import to avoid circular dependency."""
+    from fincore.empyricals.yearly import annual_return
+    return annual_return
+
+
+# Re-export annual_return for backwards compatibility
+def annual_return(*args, **kwargs):
+    """Wrapper for annual_return from yearly module."""
+    return _get_annual_return()(*args, **kwargs)
+
+
 def simple_returns(prices):
     """Compute simple returns from a time series of prices.
 
@@ -198,18 +210,18 @@ def aggregate_returns(returns, convert_to="monthly"):
 
 
 def normalize(returns, starting_value=1):
-    """Normalize cumulative returns to start at a given value.
+    """Normalize a returns timeseries based on the first value.
 
     Parameters
     ----------
-    returns : pd.Series or np.ndarray
-        Non-cumulative returns.
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
     starting_value : float, optional
-        The value at which to start the normalized series. Default is 1.
+        The starting returns (default 1).
 
     Returns
     -------
-    pd.Series or np.ndarray
-        Cumulative returns normalized to start at ``starting_value``.
+    pd.Series
+        Normalized returns.
     """
-    return cum_returns(returns, starting_value=starting_value)
+    return starting_value * (returns / returns.iloc[0])

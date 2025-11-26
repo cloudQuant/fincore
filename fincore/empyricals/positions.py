@@ -36,48 +36,157 @@ __all__ = [
 
 
 def get_percent_alloc(values):
-    """Get percent allocation of values."""
-    return values / np.abs(values).sum()
+    """Determine a portfolio's allocations.
+
+    Parameters
+    ----------
+    values : pd.DataFrame
+        Contains position values or amounts.
+
+    Returns
+    -------
+    pd.DataFrame
+        Positions and their allocations.
+    """
+    return values.divide(values.sum(axis="columns"), axis="rows")
 
 
 def get_top_long_short_abs(positions, top=10):
-    """Get top long and short positions by absolute value."""
-    positions = positions.copy()
-    df_max = positions.abs().max(axis=0).nlargest(top)
-    return df_max
+    """Find the top long, short, and absolute positions.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        The positions that the strategy takes over time.
+    top : int, optional
+        How many of each to find (default 10).
+
+    Returns
+    -------
+    df_top_long : pd.DataFrame
+        Top long positions.
+    df_top_short : pd.DataFrame
+        Top short positions.
+    df_top_abs : pd.DataFrame
+        Top absolute positions.
+    """
+    positions = positions.drop("cash", axis="columns")
+    df_max = positions.max()
+    df_min = positions.min()
+    df_abs_max = positions.abs().max()
+    df_top_long = df_max[df_max > 0].nlargest(top)
+    df_top_short = df_min[df_min < 0].nsmallest(top)
+    df_top_abs = df_abs_max.nlargest(top)
+    return df_top_long, df_top_short, df_top_abs
 
 
 def get_max_median_position_concentration(positions):
-    """Get maximum and median position concentration."""
-    positions = positions.copy()
+    """Find the max and median long and short position concentrations.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        The positions that the strategy takes over time.
+
+    Returns
+    -------
+    pd.DataFrame
+        Columns are the max long, max short, median long, and median short
+        position concentrations. Rows are time periods.
+    """
+    from fincore.empyricals.transactions import get_percent_alloc as get_pct_alloc
     
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+    expos = get_pct_alloc(positions)
+    expos = expos.drop("cash", axis=1)
 
-    positions_pct = positions.apply(get_percent_alloc, axis=1)
+    longs = expos.where(expos.apply(lambda val: val > 0))
+    shorts = expos.where(expos.apply(lambda val: val < 0))
 
-    max_concentration = positions_pct.abs().max(axis=1).max()
-    median_concentration = positions_pct.abs().max(axis=1).median()
+    alloc_summary = pd.DataFrame()
+    alloc_summary["max_long"] = longs.max(axis=1)
+    alloc_summary["median_long"] = longs.median(axis=1)
+    alloc_summary["median_short"] = shorts.median(axis=1)
+    alloc_summary["max_short"] = shorts.min(axis=1)
 
-    return max_concentration, median_concentration
+    return alloc_summary
 
 
 def extract_pos(positions, cash):
-    """Extract positions and cash."""
+    """Extract position values from get_backtest() output.
+
+    Convert the backtest object's positions and cash series into a
+    DataFrame of daily net position values (one column per symbol).
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        timeseries containing one row per symbol (and potentially
+        duplicate datetime indices) and columns for amount and
+        last_sale_price.
+    cash : pd.Series
+        timeseries containing cash in the portfolio.
+
+    Returns
+    -------
+    pd.DataFrame
+        Daily net position values.
+    """
     positions = positions.copy()
-    if cash is not None:
-        if isinstance(cash, pd.Series):
-            positions['cash'] = cash
-        else:
-            positions['cash'] = cash
-    return positions
+    positions["values"] = positions.amount * positions.last_sale_price
+
+    cash.name = "cash"
+
+    values = positions.reset_index().pivot_table(
+        index="index",
+        columns="sid",
+        values="values",
+    )
+
+    values = values.join(cash).fillna(0)
+
+    # NOTE: Set the name of DataFrame.columns to sid, to match the behavior
+    # of DataFrame.join in earlier versions of pandas.
+    values.columns.name = "sid"
+
+    return values
 
 
 def get_sector_exposures(positions, symbol_sector_map):
-    """Get sector exposures from positions."""
-    positions = positions.copy()
-    
-    sector_exp = positions.T.groupby(symbol_sector_map).sum().T
+    """Sum position exposures by sector.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Contains position values or amounts.
+    symbol_sector_map : dict or pd.Series
+        Security identifier to sector mapping.
+
+    Returns
+    -------
+    pd.DataFrame
+        Sectors and their allocations.
+    """
+    import warnings
+
+    cash = positions["cash"]
+    positions = positions.drop("cash", axis=1)
+
+    unmapped_pos = np.setdiff1d(
+        positions.columns.values,
+        list(symbol_sector_map.keys()),
+    )
+    if len(unmapped_pos) > 0:
+        warn_message = (
+            "Warning: Symbols {} have no sector mapping. "
+            "They will not be included in sector allocations"
+        ).format(
+            ", ".join(map(str, unmapped_pos))
+        )
+        warnings.warn(warn_message, UserWarning)
+
+    sector_exp = positions.groupby(by=symbol_sector_map, axis=1).sum()
+
+    sector_exp["cash"] = cash
 
     return sector_exp
 
@@ -155,18 +264,8 @@ def gross_lev(positions):
     pd.Series
         Gross leverage.
     """
-    positions = positions.copy()
-    
-    if 'cash' in positions.columns:
-        cash = positions['cash']
-        positions = positions.drop('cash', axis=1)
-    else:
-        cash = pd.Series(0, index=positions.index)
-
-    gross = positions.abs().sum(axis=1)
-    net = gross + cash.abs()
-
-    return gross / net
+    exposure = positions.drop("cash", axis=1).abs().sum(axis=1)
+    return exposure / positions.sum(axis=1)
 
 
 def stack_positions(positions, pos_in_dollars=True):
