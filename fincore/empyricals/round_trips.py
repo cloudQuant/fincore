@@ -32,132 +32,273 @@ __all__ = [
 
 def agg_all_long_short(round_trips, col, stats_dict):
     """Aggregate statistics for long and short round trips."""
-    stats = []
-    
+    stats_all = []
+    stats_long_short = []
+
     for kind, group in round_trips.groupby('long'):
         if kind:
-            label = 'Long'
+            label = 'long'
         else:
-            label = 'Short'
+            label = 'short'
 
         stat = {}
-        stat['direction'] = label
-        
+        data = group[col]
+
         for name, func in stats_dict.items():
-            stat[name] = func(group[col])
+            try:
+                if callable(func):
+                    stat[name] = func(data)
+                elif isinstance(func, str):
+                    # Handle string method names like 'mean', 'sum', etc.
+                    stat[name] = getattr(data, func)()
+                else:
+                    stat[name] = np.nan
+            except Exception:
+                stat[name] = np.nan
 
-        stats.append(stat)
+        stat_series = pd.Series(stat, name=label)
+        stats_long_short.append(stat_series)
 
-    return pd.DataFrame(stats)
+    # Compute 'All' statistics
+    all_data = round_trips[col]
+    all_stat = {}
+    for name, func in stats_dict.items():
+        try:
+            if callable(func):
+                all_stat[name] = func(all_data)
+            elif isinstance(func, str):
+                all_stat[name] = getattr(all_data, func)()
+            else:
+                all_stat[name] = np.nan
+        except Exception:
+            all_stat[name] = np.nan
+
+    all_series = pd.Series(all_stat, name='All trades')
+    stats_all.append(all_series)
+
+    # Combine into DataFrame
+    if stats_long_short:
+        df_long_short = pd.concat(stats_long_short, axis=1).T
+    else:
+        df_long_short = pd.DataFrame()
+
+    df_all = pd.concat(stats_all, axis=1).T
+
+    return pd.concat([df_all, df_long_short], axis=0)
 
 
 def groupby_consecutive(txn, max_delta=pd.Timedelta("8h")):
-    """Group transactions by consecutive trades."""
-    txn = txn.sort_index()
-    
-    time_diff = txn.index.to_series().diff()
-    
-    group_ids = (time_diff > max_delta).cumsum()
-    
-    return group_ids
+    """Merge transactions of the same direction separated by less than max_delta time duration.
+
+    Parameters
+    ----------
+    txn : pd.DataFrame
+        Prices and amounts of executed round_trips. One row per trade.
+    max_delta : pandas.Timedelta (optional)
+        Merge transactions in the same direction separated by less
+        than max_delta time duration.
+
+    Returns
+    -------
+    transactions : pd.DataFrame
+    """
+    import warnings
+    import numpy as np
+
+    def vwap(transaction):
+        if transaction.amount.sum() == 0:
+            warnings.warn("Zero transacted shares, setting vwap to nan.")
+            return np.nan
+        return (
+            transaction.amount * transaction.price
+        ).sum() / transaction.amount.sum()
+
+    out = []
+    for sym, t in txn.groupby("symbol"):
+        t = t.sort_index()
+        t.index.name = "dt"
+        t.index = pd.to_datetime(t.index)
+        t = t.reset_index()
+
+        t["order_sign"] = t.amount > 0
+        t["block_dir"] = (
+            (t.order_sign.shift(1) != t.order_sign).astype(int).cumsum()
+        )
+        t["block_time"] = ((t.dt - t.dt.shift(1)) >
+                           max_delta).astype(int).cumsum()
+        grouped_price = t.groupby(["block_dir", "block_time"])[
+            ["amount", "price"]
+        ].apply(vwap)
+        grouped_price.name = "price"
+        grouped_rest = t.groupby(["block_dir", "block_time"]).agg(
+            {"amount": "sum", "symbol": "first", "dt": "first"}
+        )
+
+        grouped = grouped_rest.join(grouped_price)
+
+        out.append(grouped)
+
+    out = pd.concat(out)
+    out = out.set_index("dt")
+    return out
 
 
 def extract_round_trips(transactions, portfolio_value=None):
-    """Extract round trips from transactions."""
-    transactions = transactions.copy()
-    
-    if 'symbol' not in transactions.columns:
-        if 'sid' in transactions.columns:
-            transactions['symbol'] = transactions['sid']
-        else:
-            return pd.DataFrame()
+    """Group transactions into "round trips".
 
-    round_trips = []
-    open_trades = {}
+    First, transactions are grouped by day and directionality. Then, long and short
+    transactions are matched to create round-trip round_trips for which
+    PnL, duration and returns are computed. Crossings where a position
+    changes from long to short and vice versa are handled correctly.
 
-    for symbol in transactions['symbol'].unique():
-        symbol_txns = transactions[transactions['symbol'] == symbol].sort_index()
-        open_amount = 0
-        open_value = 0
-        open_dt = None
+    Under the hood, we reconstruct the individual shares in a
+    portfolio over time and match round_trips in a FIFO order.
 
-        for dt, txn in symbol_txns.iterrows():
-            amount = txn['amount']
-            price = txn['price']
+    Parameters
+    ----------
+    transactions : pd.DataFrame
+        Prices and amounts of executed round_trips. One row per trade.
 
-            if open_amount == 0:
-                # New position
-                open_amount = amount
-                open_value = amount * price
-                open_dt = dt
-            elif (open_amount > 0 and amount > 0) or (open_amount < 0 and amount < 0):
-                # Adding to position
-                open_amount += amount
-                open_value += amount * price
+    portfolio_value : pd.Series (optional)
+        Portfolio value (all net assets including cash) over time.
+
+    Returns
+    -------
+    round_trips : pd.DataFrame:
+        DataFrame with one row per round trip.
+    """
+    import warnings
+
+    transactions = groupby_consecutive(transactions)
+    roundtrips = []
+
+    for sym, trans_sym in transactions.groupby("symbol"):
+        trans_sym = trans_sym.sort_index()
+        price_stack = deque()
+        dt_stack = deque()
+        trans_sym["signed_price"] = trans_sym.price * np.sign(trans_sym.amount)
+        trans_sym["abs_amount"] = trans_sym.amount.abs().astype(int)
+        for dt, t in trans_sym.iterrows():
+            if t.price < 0:
+                warnings.warn("Negative price detected, ignoring for round-trip.")
+                continue
+
+            indiv_prices = [t.signed_price] * t.abs_amount
+            if (len(price_stack) == 0) or (
+                np.copysign(1, price_stack[-1]) == np.copysign(1, t.amount)
+            ):
+                price_stack.extend(indiv_prices)
+                dt_stack.extend([dt] * len(indiv_prices))
             else:
-                # Closing position (fully or partially)
-                close_amount = min(abs(amount), abs(open_amount))
-                if open_amount > 0:
-                    close_amount = close_amount
-                else:
-                    close_amount = -close_amount
+                # Close round-trip
+                pnl = 0
+                invested = 0
+                cur_open_dts = []
 
-                avg_open_price = open_value / open_amount if open_amount != 0 else 0
+                for price in indiv_prices:
+                    if len(price_stack) != 0 and (
+                        np.copysign(1, price_stack[-1]) != np.copysign(1, price)
+                    ):
+                        # Retrieve the first dt, stock-price pair from stack
+                        prev_price = price_stack.popleft()
+                        prev_dt = dt_stack.popleft()
 
-                round_trip = {
-                    'symbol': symbol,
-                    'open_dt': open_dt,
-                    'close_dt': dt,
-                    'long': open_amount > 0,
-                    'open_price': avg_open_price,
-                    'close_price': price,
-                    'pnl': (price - avg_open_price) * close_amount,
-                    'returns': (price / avg_open_price - 1) if avg_open_price != 0 else 0,
-                    'duration': (dt - open_dt).total_seconds() / 86400 if hasattr(dt - open_dt, 'total_seconds') else 1,
-                }
-                round_trips.append(round_trip)
+                        pnl += -(price + prev_price)
+                        cur_open_dts.append(prev_dt)
+                        invested += abs(prev_price)
+                    else:
+                        # Push additional stock prices onto the stack
+                        price_stack.append(price)
+                        dt_stack.append(dt)
 
-                remaining = abs(amount) - abs(close_amount)
-                if remaining > 0:
-                    open_amount = amount - close_amount if amount > 0 else -(abs(amount) - abs(close_amount))
-                    open_value = open_amount * price
-                    open_dt = dt
-                else:
-                    open_amount = 0
-                    open_value = 0
-                    open_dt = None
+                if cur_open_dts:  # Only add if we have valid data
+                    roundtrips.append(
+                        {
+                            "pnl": pnl,
+                            "open_dt": cur_open_dts[0],
+                            "close_dt": dt,
+                            "long": price < 0,
+                            "rt_returns": pnl / invested if invested != 0 else 0,
+                            "symbol": sym,
+                        }
+                    )
 
-    return pd.DataFrame(round_trips)
+    roundtrips = pd.DataFrame(roundtrips)
+
+    if len(roundtrips) == 0:
+        return roundtrips
+
+    roundtrips["duration"] = roundtrips["close_dt"].sub(roundtrips["open_dt"])
+
+    if portfolio_value is not None:
+        # Need to normalize so that we can join
+        pv = pd.DataFrame(
+            portfolio_value,
+            columns=["portfolio_value"],
+        ).assign(date=portfolio_value.index)
+
+        roundtrips["date"] = roundtrips.close_dt.apply(
+            lambda close_dt: close_dt.replace(hour=0, minute=0, second=0)
+        )
+        # Convert 'roundtrips.date' to UTC to match 'portfolio_value.index'
+        if pv.index.tz is not None:
+            # Only localize if not already tz-aware
+            if roundtrips["date"].dt.tz is None:
+                roundtrips["date"] = roundtrips["date"].dt.tz_localize("UTC")
+            else:
+                roundtrips["date"] = roundtrips["date"].dt.tz_convert("UTC")
+
+        tmp = roundtrips.join(pv, on="date", lsuffix="_")
+
+        roundtrips["returns"] = tmp.pnl / tmp.portfolio_value
+        roundtrips = roundtrips.drop("date", axis="columns")
+
+    return roundtrips
 
 
 def add_closing_transactions(positions, transactions):
-    """Add closing transactions for open positions."""
-    transactions = transactions.copy()
-    positions = positions.copy()
+    """Append transactions that close out all positions at the end of the timespan.
 
-    if len(positions) == 0:
-        return transactions
+    Utilizes pricing information in the positions DataFrame to determine closing price.
 
-    last_positions = positions.iloc[-1]
-    last_date = positions.index[-1]
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        The positions that the strategy takes over time.
+    transactions : pd.DataFrame
+        Prices and amounts of executed round_trips. One row per trade.
 
-    closing_txns = []
-    for symbol, amount in last_positions.items():
-        if symbol != 'cash' and amount != 0:
-            closing_txns.append({
-                'symbol': symbol,
-                'amount': -amount,
-                'price': np.nan,
-                'dt': last_date,
-            })
+    Returns
+    -------
+    pd.DataFrame
+        Transactions with closing transactions appended.
+    """
+    closed_txns = transactions[["symbol", "amount", "price"]]
 
-    if closing_txns:
-        closing_df = pd.DataFrame(closing_txns)
-        if 'dt' in closing_df.columns:
-            closing_df = closing_df.set_index('dt')
-        transactions = pd.concat([transactions, closing_df])
+    pos_at_end = positions.drop("cash", axis=1).iloc[-1]
+    open_pos = pos_at_end.replace(0, np.nan).dropna()
+    # Add closing transactions one second after the close to be sure
+    # they don't conflict with other transactions executed at that time.
+    end_dt = open_pos.name + pd.Timedelta(seconds=1)
 
-    return transactions
+    for sym, ending_val in open_pos.items():
+        txn_sym = transactions[transactions.symbol == sym]
+
+        ending_amount = txn_sym.amount.sum()
+
+        ending_price = ending_val / ending_amount
+        closing_txn = {
+            "symbol": sym,
+            "amount": -ending_amount,
+            "price": ending_price,
+        }
+
+        closing_txn = pd.DataFrame(closing_txn, index=[end_dt])
+        closed_txns = pd.concat([closed_txns, closing_txn], ignore_index=False)
+
+    closed_txns = closed_txns[closed_txns.amount != 0]
+
+    return closed_txns
 
 
 def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
@@ -171,49 +312,63 @@ def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
 
 
 def gen_round_trip_stats(round_trips):
-    """Generate round trip statistics."""
-    if len(round_trips) == 0:
-        return pd.DataFrame()
+    """Generate various round-trip statistics.
 
-    stats_dict = {
-        'count': len,
-        'mean': np.mean,
-        'median': np.median,
-        'std': np.std,
-        'sum': np.sum,
+    Parameters
+    ----------
+    round_trips : pd.DataFrame
+        DataFrame with one row per-round-trip trade.
+
+    Returns
+    -------
+    dict
+        A dictionary where each value is a pandas DataFrame containing
+        various round-trip statistics.
+    """
+    from fincore.constants.style import (
+        PNL_STATS, SUMMARY_STATS, DURATION_STATS, RETURN_STATS
+    )
+
+    if len(round_trips) == 0:
+        return {
+            "pnl": pd.DataFrame(),
+            "summary": pd.DataFrame(),
+            "duration": pd.DataFrame(),
+            "returns": pd.DataFrame(),
+            "symbols": pd.DataFrame(),
+        }
+
+    # Helper function to apply custom and built-in functions
+    def apply_custom_and_built_in_funcs(grouped, stats_dict):
+        # Separate custom functions from built-in functions
+        custom_funcs = {k: v for k, v in stats_dict.items() if callable(v)}
+        built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]
+
+        # Apply custom functions manually
+        custom_results = {}
+        for func_name, func in custom_funcs.items():
+            custom_results[func_name] = grouped.apply(func)
+        custom_results = pd.DataFrame(custom_results)
+
+        # Apply built-in functions
+        if built_in_funcs:
+            built_in_results = grouped.agg(built_in_funcs)
+            # Combine results
+            return pd.concat([custom_results, built_in_results], axis=1)
+        return custom_results
+
+    # Check if 'returns' column exists, if not use 'rt_returns'
+    returns_col = 'returns' if 'returns' in round_trips.columns else 'rt_returns'
+
+    # Generate statistics for pnl, summary, duration, and returns
+    round_trip_stats = {
+        "pnl": agg_all_long_short(round_trips, "pnl", PNL_STATS),
+        "summary": agg_all_long_short(round_trips, "pnl", SUMMARY_STATS),
+        "duration": agg_all_long_short(round_trips, "duration", DURATION_STATS),
+        "returns": agg_all_long_short(round_trips, returns_col, RETURN_STATS),
+        "symbols": apply_custom_and_built_in_funcs(
+            round_trips.groupby("symbol")[returns_col], RETURN_STATS
+        ).T,
     }
 
-    def apply_custom_and_built_in_funcs(grouped, stats_dict):
-        results = {}
-        for name, func in stats_dict.items():
-            try:
-                results[name] = func(grouped)
-            except Exception:
-                results[name] = np.nan
-        return pd.Series(results)
-
-    stats = {}
-
-    if 'pnl' in round_trips.columns:
-        pnl_stats = apply_custom_and_built_in_funcs(round_trips['pnl'], stats_dict)
-        for k, v in pnl_stats.items():
-            stats['pnl_' + k] = v
-
-    if 'returns' in round_trips.columns:
-        returns_stats = apply_custom_and_built_in_funcs(round_trips['returns'], stats_dict)
-        for k, v in returns_stats.items():
-            stats['returns_' + k] = v
-
-    if 'duration' in round_trips.columns:
-        duration_stats = apply_custom_and_built_in_funcs(round_trips['duration'], stats_dict)
-        for k, v in duration_stats.items():
-            stats['duration_' + k] = v
-
-    if 'long' in round_trips.columns:
-        stats['long_count'] = round_trips['long'].sum()
-        stats['short_count'] = (~round_trips['long']).sum()
-
-    if 'pnl' in round_trips.columns:
-        stats['win_rate'] = (round_trips['pnl'] > 0).mean()
-
-    return pd.DataFrame([stats])
+    return round_trip_stats

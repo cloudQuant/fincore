@@ -26,24 +26,24 @@ import pandas as pd
 import numpy as np
 from fincore.constants import *
 
-# 从empyricals模块导入所有函数
-from fincore.empyricals import basic as _basic
-from fincore.empyricals import returns as _returns
-from fincore.empyricals import drawdown as _drawdown
-from fincore.empyricals import risk as _risk
-from fincore.empyricals import ratios as _ratios
-from fincore.empyricals import alpha_beta as _alpha_beta
-from fincore.empyricals import stats as _stats
-from fincore.empyricals import consecutive as _consecutive
-from fincore.empyricals import rolling as _rolling
-from fincore.empyricals import bayesian as _bayesian
-from fincore.empyricals import positions as _positions
-from fincore.empyricals import transactions as _transactions
-from fincore.empyricals import round_trips as _round_trips
-from fincore.empyricals import perf_attrib as _perf_attrib
-from fincore.empyricals import perf_stats as _perf_stats
-from fincore.empyricals import timing as _timing
-from fincore.empyricals import yearly as _yearly
+# 从empyricals模块导入子模块（使用_module别名避免命名冲突）
+from fincore.empyricals import basic_module as _basic
+from fincore.empyricals import returns_module as _returns
+from fincore.empyricals import drawdown_module as _drawdown
+from fincore.empyricals import risk_module as _risk
+from fincore.empyricals import ratios_module as _ratios
+from fincore.empyricals import alpha_beta_module as _alpha_beta
+from fincore.empyricals import stats_module as _stats
+from fincore.empyricals import consecutive_module as _consecutive
+from fincore.empyricals import rolling_module as _rolling
+from fincore.empyricals import bayesian_module as _bayesian
+from fincore.empyricals import positions_module as _positions
+from fincore.empyricals import transactions_module as _transactions
+from fincore.empyricals import round_trips_module as _round_trips
+from fincore.empyricals import perf_attrib_module as _perf_attrib
+from fincore.empyricals import perf_stats_module as _perf_stats
+from fincore.empyricals import timing_module as _timing
+from fincore.empyricals import yearly_module as _yearly
 
 try:
     from zipline.assets import Equity, Future
@@ -1025,14 +1025,14 @@ class Empyrical:
         return _transactions.daily_txns_with_bar_data(transactions, market_data)
 
     @classmethod
-    def days_to_liquidate_positions(cls, positions, market_data, max_bar_consumption=0.05, capital_base=1e6):
+    def days_to_liquidate_positions(cls, positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5):
         """计算清仓天数."""
-        return _transactions.days_to_liquidate_positions(positions, market_data, max_bar_consumption, capital_base)
+        return _transactions.days_to_liquidate_positions(positions, market_data, max_bar_consumption, capital_base, mean_volume_window)
 
     @classmethod
-    def get_max_days_to_liquidate_by_ticker(cls, positions, market_data, max_bar_consumption=0.05, capital_base=1e6):
+    def get_max_days_to_liquidate_by_ticker(cls, positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5, last_n_days=None):
         """按标的获取最大清仓天数."""
-        return _transactions.get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption, capital_base)
+        return _transactions.get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption, capital_base, mean_volume_window, last_n_days)
 
     @classmethod
     def get_low_liquidity_transactions(cls, transactions, market_data, last_n_days=None):
@@ -1040,9 +1040,9 @@ class Empyrical:
         return _transactions.get_low_liquidity_transactions(transactions, market_data, last_n_days)
 
     @classmethod
-    def apply_slippage_penalty(cls, returns, txn_vol, slippage_bps=10):
+    def apply_slippage_penalty(cls, returns, txn_daily, simulate_starting_capital, backtest_starting_capital, impact=0.1):
         """应用滑点惩罚."""
-        return _transactions.apply_slippage_penalty(returns, txn_vol, slippage_bps)
+        return _transactions.apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backtest_starting_capital, impact)
 
     @classmethod
     def map_transaction(cls, txn):
@@ -1172,3 +1172,131 @@ class Empyrical:
         """提取有趣的日期范围."""
         returns = cls._get_returns(returns)
         return _timing.extract_interesting_date_ranges(returns)
+
+    # ================================
+    # 额外比率方法
+    # ================================
+
+    @classmethod
+    def treynor_ratio(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+        """计算特雷诺比率."""
+        returns = cls._get_returns(returns)
+        factor_returns = cls._get_factor_returns(factor_returns)
+        return _ratios.treynor_ratio(returns, factor_returns, risk_free, period, annualization)
+
+    @classmethod
+    def m_squared(cls, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+        """计算M²测度."""
+        returns = cls._get_returns(returns)
+        factor_returns = cls._get_factor_returns(factor_returns)
+        return _ratios.m_squared(returns, factor_returns, risk_free, period, annualization)
+
+    @classmethod
+    def sterling_ratio(cls, returns=None, risk_free=0.0, period=DAILY, annualization=None):
+        """计算斯特林比率."""
+        returns = cls._get_returns(returns)
+        return _ratios.sterling_ratio(returns, risk_free, period, annualization)
+
+    @classmethod
+    def burke_ratio(cls, returns=None, risk_free=0.0, period=DAILY, annualization=None):
+        """计算伯克比率."""
+        returns = cls._get_returns(returns)
+        return _ratios.burke_ratio(returns, risk_free, period, annualization)
+
+    @classmethod
+    def kappa_three_ratio(cls, returns=None, risk_free=0.0, period=DAILY, annualization=None, mar=0.0):
+        """计算Kappa3比率."""
+        returns = cls._get_returns(returns)
+        return _ratios.kappa_three_ratio(returns, risk_free, period, annualization, mar)
+
+    # ================================
+    # 额外风险方法
+    # ================================
+
+    @classmethod
+    def residual_risk(cls, returns=None, factor_returns=None, risk_free=0.0):
+        """计算残差风险."""
+        returns = cls._get_returns(returns)
+        factor_returns = cls._get_factor_returns(factor_returns)
+        return _risk.residual_risk(returns, factor_returns, risk_free)
+
+    @classmethod
+    def var_excess_return(cls, returns=None, cutoff=0.05):
+        """计算VaR超额收益."""
+        returns = cls._get_returns(returns)
+        return _risk.var_excess_return(returns, cutoff)
+
+    # ================================
+    # 额外回撤方法
+    # ================================
+
+    @classmethod
+    def max_drawdown_weeks(cls, returns=None):
+        """计算最大回撤周数."""
+        returns = cls._get_returns(returns)
+        return _drawdown.max_drawdown_weeks(returns)
+
+    @classmethod
+    def max_drawdown_months(cls, returns=None):
+        """计算最大回撤月数."""
+        returns = cls._get_returns(returns)
+        return _drawdown.max_drawdown_months(returns)
+
+    @classmethod
+    def max_drawdown_recovery_days(cls, returns=None):
+        """计算最大回撤恢复天数."""
+        returns = cls._get_returns(returns)
+        return _drawdown.max_drawdown_recovery_days(returns)
+
+    @classmethod
+    def max_drawdown_recovery_weeks(cls, returns=None):
+        """计算最大回撤恢复周数."""
+        returns = cls._get_returns(returns)
+        return _drawdown.max_drawdown_recovery_weeks(returns)
+
+    @classmethod
+    def max_drawdown_recovery_months(cls, returns=None):
+        """计算最大回撤恢复月数."""
+        returns = cls._get_returns(returns)
+        return _drawdown.max_drawdown_recovery_months(returns)
+
+    @classmethod
+    def _get_all_drawdowns(cls, returns):
+        """获取所有回撤值."""
+        return _drawdown.get_all_drawdowns(returns)
+
+    @classmethod
+    def _get_all_drawdowns_detailed(cls, returns):
+        """获取所有回撤详情."""
+        return _drawdown.get_all_drawdowns_detailed(returns)
+
+    # ================================
+    # 额外阿尔法贝塔方法
+    # ================================
+
+    @classmethod
+    def alpha_percentile_rank(cls, strategy_returns, all_strategies_returns, factor_returns,
+                              risk_free=0.0, period=DAILY, annualization=None):
+        """计算阿尔法百分位排名."""
+        return _alpha_beta.alpha_percentile_rank(strategy_returns, all_strategies_returns, factor_returns,
+                                                  risk_free, period, annualization)
+
+    # ================================
+    # 额外往返交易方法
+    # ================================
+
+    @classmethod
+    def _groupby_consecutive(cls, txn, max_delta=None):
+        """按连续交易分组."""
+        if max_delta is None:
+            max_delta = pd.Timedelta("8h")
+        return _round_trips.groupby_consecutive(txn, max_delta)
+
+    # ================================
+    # 额外绩效归因方法
+    # ================================
+
+    @classmethod
+    def _cumulative_returns_less_costs(cls, returns, costs):
+        """计算扣除成本后的累积收益."""
+        return _perf_attrib.cumulative_returns_less_costs(returns, costs)

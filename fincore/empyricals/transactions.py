@@ -34,59 +34,226 @@ __all__ = [
 
 
 def daily_txns_with_bar_data(transactions, market_data):
-    """Augment transactions with bar data."""
-    txns = transactions.copy()
-    
-    if market_data is None:
-        return txns
+    """Sum the absolute value of shares traded in each name on each day.
 
-    txns = txns.reset_index()
-    txns['date'] = pd.to_datetime(txns['date']).dt.date
-    txns = txns.set_index('date')
+    Add columns containing the closing price and total daily volume for
+    each day-ticker combination.
 
-    return txns
+    Parameters
+    ----------
+    transactions : pd.DataFrame
+        Prices and amounts of executed trades. One row per trade.
+    market_data : dict
+        Contains "volume" and "price" DataFrames for the tickers.
+
+    Returns
+    -------
+    pd.DataFrame
+        Daily totals for transacted shares in each traded name.
+        Price and volume columns for close price and daily volume for
+        the corresponding ticker, respectively.
+    """
+    transactions.index.name = "date"
+    txn_daily = pd.DataFrame(
+        transactions.assign(amount=abs(transactions.amount))
+        .groupby(["symbol", pd.Grouper(freq="D")])
+        .sum()["amount"]
+    )
+    txn_daily["price"] = market_data["price"].unstack()
+    txn_daily["volume"] = market_data["volume"].unstack()
+
+    txn_daily = txn_daily.reset_index().set_index("date")
+
+    return txn_daily
 
 
-def days_to_liquidate_positions(positions, market_data, max_bar_consumption=0.05, capital_base=1e6):
-    """Calculate days to liquidate positions."""
-    positions = positions.copy()
-    
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+def days_to_liquidate_positions(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5):
+    """Compute the number of days required to fully liquidate each position.
 
-    days_to_liquidate = pd.DataFrame(index=positions.index, columns=positions.columns)
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Contains daily position values including cash.
+    market_data : dict
+        Dict with keys 'price' and 'volume' DataFrames.
+    max_bar_consumption : float
+        Max proportion of a daily bar that can be consumed.
+    capital_base : int
+        Capital base for position value calculation.
+    mean_volume_window : int
+        Trailing window to use in mean volume calculation.
 
-    for col in positions.columns:
-        if col in market_data.columns:
-            volume = market_data[col]
-            max_tradable = volume * max_bar_consumption
-            pos_value = positions[col].abs()
-            days_to_liquidate[col] = pos_value / max_tradable
+    Returns
+    -------
+    pd.DataFrame
+        Number of days required to fully liquidate daily positions.
+    """
+    dv = market_data["volume"] * market_data["price"]
+    roll_mean_dv = (
+        dv.rolling(window=mean_volume_window, center=False).mean().shift()
+    )
+    roll_mean_dv = roll_mean_dv.replace(0, np.nan)
 
-    return days_to_liquidate
+    positions_alloc = get_percent_alloc(positions)
+    if "cash" in positions_alloc.columns:
+        positions_alloc = positions_alloc.drop("cash", axis=1)
+
+    days_to_liquidate = (positions_alloc * capital_base) / (
+        max_bar_consumption * roll_mean_dv
+    )
+
+    return days_to_liquidate.iloc[mean_volume_window:]
 
 
-def get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption=0.05, capital_base=1e6):
-    """Get maximum days to liquidate by ticker."""
-    dtl = days_to_liquidate_positions(positions, market_data, max_bar_consumption, capital_base)
-    return dtl.max(axis=0)
+def get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5, last_n_days=None):
+    """Find the longest estimated liquidation time for each traded name.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Contains daily position values including cash.
+    market_data : dict
+        Dict with keys 'price' and 'volume' DataFrames.
+    max_bar_consumption : float
+        Max proportion of a daily bar that can be consumed.
+    capital_base : int
+        Capital base for position value calculation.
+    mean_volume_window : int
+        Trailing window to use in mean volume calculation.
+    last_n_days : int, optional
+        Compute for only the last n days.
+
+    Returns
+    -------
+    pd.DataFrame
+        Max number of days required to fully liquidate each traded name.
+    """
+    dtlp = days_to_liquidate_positions(
+        positions,
+        market_data,
+        max_bar_consumption=max_bar_consumption,
+        capital_base=capital_base,
+        mean_volume_window=mean_volume_window,
+    )
+
+    if last_n_days is not None:
+        dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days):]
+
+    pos_alloc = get_percent_alloc(positions)
+    if "cash" in pos_alloc.columns:
+        pos_alloc = pos_alloc.drop("cash", axis=1)
+
+    liq_desc = pd.DataFrame()
+    liq_desc["days_to_liquidate"] = dtlp.unstack()
+    liq_desc["pos_alloc_pct"] = pos_alloc.unstack() * 100
+    liq_desc.index = liq_desc.index.set_names(["symbol", "date"])
+
+    worst_liq = (
+        liq_desc.reset_index()
+        .sort_values("days_to_liquidate", ascending=False)
+        .groupby("symbol")
+        .first()
+    )
+
+    return worst_liq
 
 
 def get_low_liquidity_transactions(transactions, market_data, last_n_days=None):
-    """Get low liquidity transactions."""
+    """Find the daily transaction consuming the most bar volume.
+
+    Parameters
+    ----------
+    transactions : pd.DataFrame
+        Prices and amounts of executed trades.
+    market_data : dict
+        Dict with keys 'price' and 'volume' DataFrames.
+    last_n_days : int, optional
+        Compute for only the last n days.
+
+    Returns
+    -------
+    pd.DataFrame
+        Max bar consumption per symbol.
+    """
+    txn_daily_w_bar = daily_txns_with_bar_data(transactions, market_data)
+    txn_daily_w_bar.index.name = "date"
+    txn_daily_w_bar = txn_daily_w_bar.reset_index()
+
     if last_n_days is not None:
-        transactions = transactions.iloc[-last_n_days:]
+        md = txn_daily_w_bar.date.max() - pd.Timedelta(days=last_n_days)
+        txn_daily_w_bar = txn_daily_w_bar[txn_daily_w_bar.date > md]
 
-    return transactions
+    bar_consumption = (
+        txn_daily_w_bar.assign(
+            max_pct_bar_consumed=(
+                txn_daily_w_bar.amount / txn_daily_w_bar.volume
+            )
+            * 100
+        ).sort_values("max_pct_bar_consumed", ascending=False)
+    )
+    max_bar_consumption = bar_consumption.groupby("symbol").first()
+
+    return max_bar_consumption[["date", "max_pct_bar_consumed"]]
 
 
-def apply_slippage_penalty(returns, txn_vol, slippage_bps=10):
-    """Apply slippage penalty to returns."""
-    returns = returns.copy()
-    
-    penalty = txn_vol * slippage_bps / 10000
-    
-    return returns - penalty
+def apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backtest_starting_capital, impact=0.1):
+    """Apply a quadratic volume share slippage model to daily returns.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Time series of daily returns.
+    txn_daily : pd.DataFrame
+        Daily transaction totals with 'amount', 'price', 'volume' columns.
+    simulate_starting_capital : int
+        Capital at which we want to test.
+    backtest_starting_capital : int
+        Capital base at which the backtest was originally run.
+    impact : float
+        Scales the size of the slippage penalty.
+
+    Returns
+    -------
+    pd.Series
+        Slippage penalty adjusted daily returns.
+    """
+    from fincore.empyricals.returns import cum_returns
+
+    mult = simulate_starting_capital / backtest_starting_capital
+    simulate_traded_shares = abs(mult * txn_daily.amount)
+    simulate_traded_dollars = txn_daily.price * simulate_traded_shares
+    simulate_pct_volume_used = simulate_traded_shares / txn_daily.volume
+
+    penalties = (
+        simulate_pct_volume_used**2 * impact * simulate_traded_dollars
+    )
+
+    daily_penalty = penalties.resample("D").sum()
+    daily_penalty = daily_penalty.reindex(returns.index)
+    daily_penalty = pd.to_numeric(daily_penalty, errors="coerce").fillna(0)
+
+    portfolio_value = cum_returns(returns, starting_value=backtest_starting_capital)
+    portfolio_value = portfolio_value * mult
+
+    adj_returns = returns - (daily_penalty / portfolio_value)
+
+    return adj_returns
+
+
+def get_percent_alloc(values):
+    """Determine a portfolio's allocations.
+
+    Parameters
+    ----------
+    values : pd.DataFrame
+        Contains position values or amounts.
+
+    Returns
+    -------
+    pd.DataFrame
+        Positions and their allocations.
+    """
+    return values.divide(values.sum(axis="columns"), axis="rows")
 
 
 def map_transaction(txn):
@@ -115,58 +282,109 @@ def make_transaction_frame(transactions):
 
 
 def get_txn_vol(transactions):
-    """Get transaction volume."""
-    transactions = transactions.copy()
-    
-    if 'amount' in transactions.columns and 'price' in transactions.columns:
-        transactions['value'] = transactions['amount'].abs() * transactions['price']
-        return transactions.groupby(transactions.index.date)['value'].sum()
-
-    return pd.Series(dtype=float)
-
-
-def adjust_returns_for_slippage(returns, positions, transactions, slippage_bps=10):
-    """Adjust returns for slippage."""
-    from fincore.empyricals.returns import cum_returns
-    
-    returns = returns.copy()
-    
-    turnover = get_turnover(positions, transactions)
-    penalty = turnover * slippage_bps / 10000
-
-    penalty = penalty.reindex(returns.index, fill_value=0)
-
-    return returns - penalty
-
-
-def get_turnover(positions, transactions, denominator="AGB"):
-    """Get portfolio turnover.
+    """Extract daily transaction data from a set of transaction objects.
 
     Parameters
     ----------
+    transactions : pd.DataFrame
+        Time series containing one row per symbol (and potentially
+        duplicate datetime indices) and columns for amount and price.
+
+    Returns
+    -------
+    pd.DataFrame
+        Daily transaction volume and number of shares.
+    """
+    txn_norm = transactions.copy()
+    txn_norm.index = txn_norm.index.normalize()
+    amounts = txn_norm.amount.abs()
+    prices = txn_norm.price
+    values = amounts * prices
+    daily_amounts = amounts.groupby(amounts.index).sum()
+    daily_values = values.groupby(values.index).sum()
+    daily_amounts.name = "txn_shares"
+    daily_values.name = "txn_volume"
+    return pd.concat([daily_values, daily_amounts], axis=1)
+
+
+def adjust_returns_for_slippage(returns, positions, transactions, slippage_bps):
+    """Apply a slippage penalty for every dollar traded.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
     positions : pd.DataFrame
         Daily net position values.
     transactions : pd.DataFrame
-        Executed trade prices and amounts.
-    denominator : str, optional
-        Either 'AGB' (average gross book) or 'portfolio_value'.
+        Prices and amounts of executed trades. One row per trade.
+    slippage_bps : int/float
+        Basis points of slippage to apply.
 
     Returns
     -------
     pd.Series
-        Time-series of daily turnover.
+        Time series of daily returns, adjusted for slippage.
     """
-    positions = positions.copy()
-    
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+    import warnings
 
-    abs_delta = positions.diff().abs().sum(axis=1)
+    slippage = 0.0001 * slippage_bps
+    portfolio_value = positions.sum(axis=1)
+    pnl = portfolio_value * returns
+    traded_value = get_txn_vol(transactions).txn_volume
+    slippage_dollars = traded_value * slippage
+    adjusted_pnl = pnl.add(-slippage_dollars, fill_value=0)
+    adjusted_returns = returns * adjusted_pnl / pnl
+
+    return adjusted_returns
+
+
+def get_turnover(positions, transactions, denominator="AGB"):
+    """Calculate value of purchases and sales divided by either the actual gross book or the portfolio value.
+
+    Parameters
+    ----------
+    positions : pd.DataFrame
+        Contains daily position values including cash.
+    transactions : pd.DataFrame
+        Prices and amounts of executed trades. One row per trade.
+    denominator : str, optional
+        Either 'AGB' or 'portfolio_value', default AGB.
+
+    Returns
+    -------
+    pd.Series
+        Timeseries of portfolio turnover rates.
+    """
+    import warnings
+
+    txn_vol = get_txn_vol(transactions)
+    traded_value = txn_vol.txn_volume
 
     if denominator == "AGB":
-        total_abs = positions.abs().sum(axis=1)
-        turnover = abs_delta / total_abs
-    else:
-        turnover = abs_delta
+        # Actual gross book is the same thing as the algo's GMV
+        # We want our denom to be avg(AGB previous, AGB current)
+        agb = positions.drop("cash", axis=1).abs().sum(axis=1)
+        denom = agb.rolling(2).mean()
 
+        # Since the first value of pd.rolling returns NaN, we
+        # set our "day 0" AGB to 0.
+        denom.iloc[0] = agb.iloc[0] / 2
+    elif denominator == "portfolio_value":
+        denom = positions.sum(axis=1)
+    else:
+        raise ValueError(
+            "Unexpected value for denominator '{}'. The "
+            "denominator parameter must be either 'AGB'"
+            " or 'portfolio_value'.".format(denominator)
+        )
+
+    denom.index = denom.index.normalize()
+    turnover = traded_value.div(denom, axis="index")
+    # 处理 inf 的值，避免画图的时候出错
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", FutureWarning)
+        turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects(copy=False)
+    turnover = turnover.fillna(0)
+    turnover = turnover.astype("float")
     return turnover

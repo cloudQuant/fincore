@@ -20,20 +20,21 @@ Empyricals - 拆分后的金融性能分析函数模块.
 这个包包含从 Empyrical 类中拆分出来的各个功能模块。
 """
 
-from fincore.empyricals.basic import *
-from fincore.empyricals.returns import *
-from fincore.empyricals.drawdown import *
-from fincore.empyricals.risk import *
-from fincore.empyricals.ratios import *
-from fincore.empyricals.alpha_beta import *
-from fincore.empyricals.stats import *
-from fincore.empyricals.consecutive import *
-from fincore.empyricals.rolling import *
-from fincore.empyricals.bayesian import *
-from fincore.empyricals.positions import *
-from fincore.empyricals.transactions import *
-from fincore.empyricals.round_trips import *
-from fincore.empyricals.perf_attrib import *
-from fincore.empyricals.perf_stats import *
-from fincore.empyricals.timing import *
-from fincore.empyricals.yearly import *
+# 导入子模块（保留模块引用，使用别名避免被覆盖）
+from fincore.empyricals import basic as basic_module
+from fincore.empyricals import returns as returns_module
+from fincore.empyricals import drawdown as drawdown_module
+from fincore.empyricals import risk as risk_module
+from fincore.empyricals import ratios as ratios_module
+from fincore.empyricals import alpha_beta as alpha_beta_module
+from fincore.empyricals import stats as stats_module
+from fincore.empyricals import consecutive as consecutive_module
+from fincore.empyricals import rolling as rolling_module
+from fincore.empyricals import bayesian as bayesian_module
+from fincore.empyricals import positions as positions_module
+from fincore.empyricals import transactions as transactions_module
+from fincore.empyricals import round_trips as round_trips_module
+from fincore.empyricals import perf_attrib as perf_attrib_module
+from fincore.empyricals import perf_stats as perf_stats_module
+from fincore.empyricals import timing as timing_module
+from fincore.empyricals import yearly as yearly_module
