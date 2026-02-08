@@ -20,12 +20,12 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from fincore.constants import DAILY
-from fincore.empyricals.yearly import annual_return
-from fincore.empyricals.returns import cum_returns_final
-from fincore.empyricals.risk import annual_volatility
-from fincore.empyricals.ratios import sharpe_ratio, sortino_ratio, calmar_ratio
-from fincore.empyricals.drawdown import max_drawdown
-from fincore.empyricals.stats import skewness, kurtosis
+from fincore.metrics.yearly import annual_return
+from fincore.metrics.returns import cum_returns_final
+from fincore.metrics.risk import annual_volatility
+from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, calmar_ratio
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.stats import skewness, kurtosis
 
 __all__ = [
     'perf_stats',
@@ -77,7 +77,7 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     stats['Daily value at risk'] = None  # Placeholder
 
     if factor_returns is not None:
-        from fincore.empyricals.alpha_beta import alpha, beta
+        from fincore.metrics.alpha_beta import alpha, beta
         stats['Alpha'] = alpha(returns, factor_returns)
         stats['Beta'] = beta(returns, factor_returns)
 
@@ -111,10 +111,10 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
     """
     from scipy import stats as scipy_stats
     from fincore.constants.style import SIMPLE_STAT_FUNCS, FACTOR_STAT_FUNCS, STAT_FUNC_NAMES
-    from fincore.empyricals.ratios import omega_ratio, tail_ratio
-    from fincore.empyricals.risk import value_at_risk
-    from fincore.empyricals.stats import stability_of_timeseries
-    from fincore.empyricals.alpha_beta import alpha, beta
+    from fincore.metrics.ratios import omega_ratio, tail_ratio
+    from fincore.metrics.risk import value_at_risk
+    from fincore.metrics.stats import stability_of_timeseries
+    from fincore.metrics.alpha_beta import alpha, beta
 
     bootstrap_values = OrderedDict()
 

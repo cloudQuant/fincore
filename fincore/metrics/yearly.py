@@ -19,13 +19,13 @@
 import numpy as np
 import pandas as pd
 from fincore.constants import DAILY
-from fincore.empyricals.basic import (
+from fincore.metrics.basic import (
     annualization_factor, ensure_datetime_index_series, aligned_series
 )
-from fincore.empyricals.returns import cum_returns_final
-from fincore.empyricals.drawdown import max_drawdown
-from fincore.empyricals.ratios import sharpe_ratio
-from fincore.empyricals.risk import annual_volatility
+from fincore.metrics.returns import cum_returns_final
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
+from fincore.metrics.risk import annual_volatility
 
 __all__ = [
     'annual_return',
@@ -298,7 +298,7 @@ def information_ratio_by_year(returns, factor_returns, period=DAILY, annualizati
     pd.Series or np.ndarray
         Information ratio for each calendar year.
     """
-    from fincore.empyricals.ratios import information_ratio as calc_ir
+    from fincore.metrics.ratios import information_ratio as calc_ir
 
     if len(returns) < 1:
         return_as_array = isinstance(returns, np.ndarray)

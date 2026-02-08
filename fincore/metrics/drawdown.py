@@ -19,7 +19,7 @@
 import numpy as np
 import pandas as pd
 from fincore.utils import nanmin
-from fincore.empyricals.returns import cum_returns, cum_returns_final
+from fincore.metrics.returns import cum_returns, cum_returns_final
 
 __all__ = [
     'max_drawdown',

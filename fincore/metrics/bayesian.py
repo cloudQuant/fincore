@@ -19,7 +19,7 @@
 import numpy as np
 import pandas as pd
 import pymc as pm
-from fincore.empyricals.returns import cum_returns
+from fincore.metrics.returns import cum_returns
 
 __all__ = [
     'model_returns_t_alpha_beta',
@@ -379,7 +379,7 @@ def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
     pandas.DataFrame
         Cone bounds.
     """
-    from fincore.empyricals.returns import cum_returns
+    from fincore.metrics.returns import cum_returns
     
     cum_samples = cum_returns(samples.T, starting_value=starting_value).T
 

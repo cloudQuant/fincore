@@ -19,8 +19,8 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
-from fincore.empyricals.basic import aligned_series
-from fincore.empyricals.ratios import stability_of_timeseries
+from fincore.metrics.basic import aligned_series
+from fincore.metrics.ratios import stability_of_timeseries
 
 __all__ = [
     'skewness',
@@ -510,7 +510,7 @@ def tracking_difference(returns, factor_returns):
     float
         Difference between cumulative strategy and benchmark returns.
     """
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 1:
         return np.nan
@@ -542,7 +542,7 @@ def common_sense_ratio(returns):
     float
         Common sense ratio, or ``NaN`` if there is insufficient data.
     """
-    from fincore.empyricals.ratios import tail_ratio
+    from fincore.metrics.ratios import tail_ratio
 
     if len(returns) < 1:
         return np.nan
@@ -609,6 +609,6 @@ def normalize(returns, starting_value=1):
     pd.Series or np.ndarray
         Normalized cumulative returns starting at ``starting_value``.
     """
-    from fincore.empyricals.returns import cum_returns
+    from fincore.metrics.returns import cum_returns
 
     return cum_returns(returns, starting_value=starting_value)

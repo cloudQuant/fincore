@@ -45,7 +45,7 @@ def _get_annual_return():
     function
         annual_return 函数.
     """
-    from fincore.empyricals.yearly import annual_return
+    from fincore.metrics.yearly import annual_return
     return annual_return
 
 
@@ -69,7 +69,7 @@ def annual_return(*args, **kwargs):
 
     See Also
     --------
-    fincore.empyricals.yearly.annual_return : 实际实现函数.
+    fincore.metrics.yearly.annual_return : 实际实现函数.
     """
     return _get_annual_return()(*args, **kwargs)
 

@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from fincore.utils import nanmean
 from fincore.constants import DAILY
-from fincore.empyricals.basic import (
+from fincore.metrics.basic import (
     annualization_factor, adjust_returns, aligned_series
 )
 

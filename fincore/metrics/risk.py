@@ -22,7 +22,7 @@ from scipy import stats
 from sys import float_info
 from fincore.utils import nanmean, nanstd
 from fincore.constants import DAILY
-from fincore.empyricals.basic import (
+from fincore.metrics.basic import (
     annualization_factor, adjust_returns, aligned_series
 )
 
