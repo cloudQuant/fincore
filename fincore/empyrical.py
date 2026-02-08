@@ -20,7 +20,6 @@ Empyrical - 金融性能分析库.
 包含原有的所有empyrical函数，以及新的面向对象Empyrical类。
 代码已重构，将具体实现拆分到metrics模块中。
 """
-from __future__ import division
 import warnings
 import pandas as pd
 import numpy as np

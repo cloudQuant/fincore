@@ -1,5 +1,8 @@
 """Project-wide period constants and annualization factors."""
 
+import pandas as pd
+from packaging import version as _pkg_version
+
 APPROX_BDAYS_PER_MONTH = 21
 APPROX_BDAYS_PER_YEAR = 252
 
@@ -22,11 +25,20 @@ ANNUALIZATION_FACTORS = {
 }
 
 
-# Period to frequency mapping
-PERIOD_TO_FREQ = {
-    DAILY: "D",
-    WEEKLY: "W",
-    MONTHLY: "M",
-    QUARTERLY: "Q",
-    YEARLY: "A",
-}
+# Period to frequency mapping (version-aware for pandas 2.2+)
+if _pkg_version.parse(pd.__version__) >= _pkg_version.parse("2.2.0"):
+    PERIOD_TO_FREQ = {
+        DAILY: "D",
+        WEEKLY: "W",
+        MONTHLY: "ME",
+        QUARTERLY: "QE",
+        YEARLY: "YE",
+    }
+else:
+    PERIOD_TO_FREQ = {
+        DAILY: "D",
+        WEEKLY: "W",
+        MONTHLY: "M",
+        QUARTERLY: "Q",
+        YEARLY: "A",
+    }

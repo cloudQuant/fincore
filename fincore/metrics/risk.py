@@ -229,7 +229,10 @@ def tail_ratio(returns):
     if len(returns) < 1:
         return np.nan
 
-    return np.abs(np.percentile(returns, 95)) / np.abs(np.percentile(returns, 5))
+    left_tail = np.abs(np.percentile(returns, 5))
+    if left_tail == 0:
+        return np.nan
+    return np.abs(np.percentile(returns, 95)) / left_tail
 
 
 def tracking_error(returns, factor_returns, period=DAILY, annualization=None, out=None):

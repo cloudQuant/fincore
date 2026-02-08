@@ -18,7 +18,6 @@
 
 import numpy as np
 import pandas as pd
-import pymc as pm
 from fincore.metrics.returns import cum_returns
 
 __all__ = [
@@ -57,6 +56,8 @@ def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
+    import pymc as pm
+
     if len(data) != len(bmark):
         data = data.align(bmark, join='inner')[0]
         bmark = bmark.align(data, join='inner')[1]
@@ -99,6 +100,8 @@ def model_returns_normal(data, samples=500, progressbar=True):
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
+    import pymc as pm
+
     data_array = np.asarray(data)
 
     with pm.Model() as model:
@@ -131,6 +134,8 @@ def model_returns_t(data, samples=500, progressbar=True):
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
+    import pymc as pm
+
     data_array = np.asarray(data)
 
     with pm.Model() as model:
@@ -169,6 +174,8 @@ def model_best(y1, y2, samples=1000, progressbar=True):
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
+    import pymc as pm
+
     y = pd.DataFrame({'y1': y1, 'y2': y2})
     y = y.dropna()
 
@@ -220,6 +227,8 @@ def model_stoch_vol(data, samples=2000, progressbar=True):
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
+    import pymc as pm
+
     data_array = np.asarray(data)
 
     with pm.Model() as model:

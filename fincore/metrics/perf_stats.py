@@ -23,9 +23,10 @@ from fincore.constants import DAILY
 from fincore.metrics.yearly import annual_return
 from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
-from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, calmar_ratio
+from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, calmar_ratio, omega_ratio
 from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.stats import skewness, kurtosis
+from fincore.metrics.stats import skewness, kurtosis, stability_of_timeseries
+from fincore.metrics.risk import tail_ratio, value_at_risk
 
 __all__ = [
     'perf_stats',
@@ -67,14 +68,14 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     stats['Annual volatility'] = annual_volatility(returns, period=period)
     stats['Sharpe ratio'] = sharpe_ratio(returns, period=period)
     stats['Calmar ratio'] = calmar_ratio(returns, period=period)
-    stats['Stability'] = None  # Placeholder
+    stats['Stability'] = stability_of_timeseries(returns)
     stats['Max drawdown'] = max_drawdown(returns)
-    stats['Omega ratio'] = None  # Placeholder
+    stats['Omega ratio'] = omega_ratio(returns)
     stats['Sortino ratio'] = sortino_ratio(returns, period=period)
     stats['Skew'] = skewness(returns)
     stats['Kurtosis'] = kurtosis(returns)
-    stats['Tail ratio'] = None  # Placeholder
-    stats['Daily value at risk'] = None  # Placeholder
+    stats['Tail ratio'] = tail_ratio(returns)
+    stats['Daily value at risk'] = value_at_risk(returns)
 
     if factor_returns is not None:
         from fincore.metrics.alpha_beta import alpha, beta
