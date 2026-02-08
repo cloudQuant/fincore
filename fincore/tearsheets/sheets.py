@@ -848,18 +848,20 @@ def create_risk_tear_sheet(
     """
     positions = check_intraday(estimate_intraday, returns, positions, transactions)
 
-    idx = positions.index & style_factor_panel.iloc[0].index & sectors.index \
-          & caps.index & shares_held.index & volumes.index
+    # style_factor_panel is expected to be a dict of DataFrames
+    if style_factor_panel is not None:
+        first_panel_df = next(iter(style_factor_panel.values()))
+        idx = positions.index & first_panel_df.index & sectors.index \
+              & caps.index & shares_held.index & volumes.index
+    else:
+        idx = positions.index & sectors.index \
+              & caps.index & shares_held.index & volumes.index
     positions = positions.loc[idx]
 
     vertical_sections = 0
     if style_factor_panel is not None:
-        vertical_sections += len(style_factor_panel.items)
-        new_style_dict = {}
-        for item in style_factor_panel.items:
-            new_style_dict.update({item: style_factor_panel.loc[item].loc[idx]})
-        style_factor_panel = pd.Panel()
-        style_factor_panel = style_factor_panel.from_dict(new_style_dict)
+        vertical_sections += len(style_factor_panel)
+        style_factor_panel = {k: v.loc[idx] for k, v in style_factor_panel.items()}
     if sectors is not None:
         vertical_sections += 4
         sectors = sectors.loc[idx]
@@ -880,7 +882,7 @@ def create_risk_tear_sheet(
     if style_factor_panel is not None:
         style_axes = []
         style_axes.append(fig.add_subplot(gs[0, :]))
-        for i in range(1, len(style_factor_panel.items)):
+        for i in range(1, len(style_factor_panel)):
             style_axes.append(fig.add_subplot(gs[i, :], sharex=style_axes[0]))
 
         j = 0

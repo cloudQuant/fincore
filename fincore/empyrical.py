@@ -574,35 +574,6 @@ class Empyrical:
         return _rolling.rolling_beta(returns, factor_returns, rolling_window)
 
     # ================================
-    # 贝叶斯模型方法
-    # ================================
-
-    @classmethod
-    def model_returns_t_alpha_beta(cls, data, bmark, samples=2000, progressbar=True):
-        """带t分布收益的贝叶斯阿尔法贝塔模型."""
-        return _bayesian.model_returns_t_alpha_beta(data, bmark, samples, progressbar)
-
-    @classmethod
-    def model_returns_normal(cls, data, samples=500, progressbar=True):
-        """正态分布收益的贝叶斯模型."""
-        return _bayesian.model_returns_normal(data, samples, progressbar)
-
-    @classmethod
-    def model_returns_t(cls, data, samples=500, progressbar=True):
-        """t分布收益的贝叶斯模型."""
-        return _bayesian.model_returns_t(data, samples, progressbar)
-
-    @classmethod
-    def compute_bayes_cone(cls, preds, starting_value=1.0):
-        """从预测计算贝叶斯锥形."""
-        return _bayesian.compute_bayes_cone(preds, starting_value)
-
-    @classmethod
-    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1., 1.5, 2.), random_state=None, num_samples=1000):
-        """引导法预测锥形."""
-        return _bayesian.forecast_cone_bootstrap(is_returns, num_days, cone_std, random_state, num_samples)
-
-    # ================================
     # 持仓分析方法
     # ================================
 
@@ -664,15 +635,15 @@ class Empyrical:
     # ================================
 
     @classmethod
-    def perf_attrib(cls, returns=None, positions=None, factor_returns=None, factor_loadings=None, pos_in_dollars=True, regression_style='OLS'):
+    def perf_attrib(cls, returns=None, positions=None, factor_returns=None, factor_loadings=None, transactions=None, pos_in_dollars=True, regression_style='OLS'):
         """计算绩效归因."""
         returns = cls._get_returns(returns) if returns is None else returns
-        return _perf_attrib.perf_attrib(returns, positions, factor_returns, factor_loadings, pos_in_dollars, regression_style)
+        return _perf_attrib.perf_attrib(returns, positions, factor_returns, factor_loadings, transactions, pos_in_dollars, regression_style)
 
     @classmethod
-    def compute_exposures(cls, positions=None, factor_loadings=None):
+    def compute_exposures(cls, positions=None, factor_loadings=None, stack_positions=True, pos_in_dollars=True):
         """从持仓计算因子敞口."""
-        return _perf_attrib.compute_exposures(positions, factor_loadings)
+        return _perf_attrib.compute_exposures(positions, factor_loadings, stack_positions, pos_in_dollars)
 
     # ================================
     # 绩效统计方法
@@ -743,19 +714,19 @@ class Empyrical:
         return _bayesian.run_model(model, returns_train, returns_test, bmark, samples, ppc, progressbar)
 
     @classmethod
-    def simulate_paths(cls, samples, T, mu, sigma, starting_value=1.0, random_state=None):
+    def simulate_paths(cls, is_returns, num_days, starting_value=1, num_samples=1000, random_seed=None):
         """模拟蒙特卡洛路径."""
-        return _bayesian.simulate_paths(samples, T, mu, sigma, starting_value, random_state)
+        return _bayesian.simulate_paths(is_returns, num_days, starting_value, num_samples, random_seed)
 
     @classmethod
-    def summarize_paths(cls, paths, ci=[5, 25, 50, 75, 95]):
-        """汇总模拟路径."""
-        return _bayesian.summarize_paths(paths, ci)
+    def summarize_paths(cls, samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
+        """汇总路径统计."""
+        return _bayesian.summarize_paths(samples, cone_std, starting_value)
 
     @classmethod
-    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1., 1.5, 2.), random_state=None, num_samples=1000):
-        """生成自助法预测锥."""
-        return _bayesian.forecast_cone_bootstrap(is_returns, num_days, cone_std, random_state, num_samples)
+    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1.0, 1.5, 2.0), starting_value=1, num_samples=1000, random_seed=None):
+        """自助法预测锥."""
+        return _bayesian.forecast_cone_bootstrap(is_returns, num_days, cone_std, starting_value, num_samples, random_seed)
 
     # ================================
     # 统计方法
@@ -1053,67 +1024,6 @@ class Empyrical:
         """调整滑点后的收益."""
         return _transactions.adjust_returns_for_slippage(returns, positions, transactions, slippage_bps)
 
-    @classmethod
-    def make_transaction_frame(cls, transactions):
-        """格式化交易DataFrame."""
-        return _transactions.make_transaction_frame(transactions)
-
-    @classmethod
-    def get_txn_vol(cls, transactions):
-        """获取交易量."""
-        return _transactions.get_txn_vol(transactions)
-
-    @classmethod
-    def get_long_short_pos(cls, positions):
-        """获取多空持仓."""
-        return _positions.get_long_short_pos(positions)
-
-    # ================================
-    # 回撤分析方法
-    # ================================
-
-    @classmethod
-    def get_max_drawdown_underwater(cls, underwater):
-        """获取最大回撤水下信息."""
-        return _drawdown.get_max_drawdown_underwater(underwater)
-
-    @classmethod
-    def get_max_drawdown(cls, returns=None):
-        """获取最大回撤详情."""
-        returns = cls._get_returns(returns)
-        return _drawdown.get_max_drawdown(returns)
-
-    @classmethod
-    def get_top_drawdowns(cls, returns=None, top=10):
-        """获取前N个回撤."""
-        returns = cls._get_returns(returns)
-        return _drawdown.get_top_drawdowns(returns, top)
-
-    @classmethod
-    def gen_drawdown_table(cls, returns=None, top=10):
-        """生成回撤表格."""
-        returns = cls._get_returns(returns)
-        return _drawdown.gen_drawdown_table(returns, top)
-
-    # ================================
-    # 蒙特卡洛模拟方法
-    # ================================
-
-    @classmethod
-    def simulate_paths(cls, is_returns, num_days, starting_value=1, num_samples=1000, random_seed=None):
-        """模拟蒙特卡洛路径."""
-        return _bayesian.simulate_paths(is_returns, num_days, starting_value, num_samples, random_seed)
-
-    @classmethod
-    def summarize_paths(cls, samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
-        """汇总路径统计."""
-        return _bayesian.summarize_paths(samples, cone_std, starting_value)
-
-    @classmethod
-    def forecast_cone_bootstrap(cls, is_returns, num_days, cone_std=(1.0, 1.5, 2.0), starting_value=1, num_samples=1000, random_seed=None):
-        """自助法预测锥."""
-        return _bayesian.forecast_cone_bootstrap(is_returns, num_days, cone_std, starting_value, num_samples, random_seed)
-
     # ================================
     # 往返交易方法
     # ================================
@@ -1124,11 +1034,6 @@ class Empyrical:
         return _round_trips.agg_all_long_short(round_trips, col, stats_dict)
 
     @classmethod
-    def extract_round_trips(cls, transactions, portfolio_value=None):
-        """提取往返交易."""
-        return _round_trips.extract_round_trips(transactions, portfolio_value)
-
-    @classmethod
     def add_closing_transactions(cls, positions, transactions):
         """添加平仓交易."""
         return _round_trips.add_closing_transactions(positions, transactions)
@@ -1137,25 +1042,6 @@ class Empyrical:
     def apply_sector_mappings_to_round_trips(cls, round_trips, sector_mappings):
         """应用行业映射到往返交易."""
         return _round_trips.apply_sector_mappings_to_round_trips(round_trips, sector_mappings)
-
-    @classmethod
-    def gen_round_trip_stats(cls, round_trips):
-        """生成往返交易统计."""
-        return _round_trips.gen_round_trip_stats(round_trips)
-
-    # ================================
-    # 绩效归因方法
-    # ================================
-
-    @classmethod
-    def perf_attrib(cls, returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True):
-        """绩效归因分析."""
-        return _perf_attrib.perf_attrib(returns, positions, factor_returns, factor_loadings, transactions, pos_in_dollars)
-
-    @classmethod
-    def compute_exposures(cls, positions, factor_loadings, stack_positions=True, pos_in_dollars=True):
-        """计算风险敞口."""
-        return _perf_attrib.compute_exposures(positions, factor_loadings, stack_positions, pos_in_dollars)
 
     @classmethod
     def create_perf_attrib_stats(cls, perf_attrib_, risk_exposures):
@@ -1258,16 +1144,6 @@ class Empyrical:
         """计算最大回撤恢复月数."""
         returns = cls._get_returns(returns)
         return _drawdown.max_drawdown_recovery_months(returns)
-
-    @classmethod
-    def _get_all_drawdowns(cls, returns):
-        """获取所有回撤值."""
-        return _drawdown.get_all_drawdowns(returns)
-
-    @classmethod
-    def _get_all_drawdowns_detailed(cls, returns):
-        """获取所有回撤详情."""
-        return _drawdown.get_all_drawdowns_detailed(returns)
 
     # ================================
     # 额外阿尔法贝塔方法

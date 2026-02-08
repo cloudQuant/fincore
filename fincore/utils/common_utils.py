@@ -515,19 +515,11 @@ def estimate_intraday(returns, positions, transactions, eod_hour=23):
         columns='symbol').replace(np.nan, 0)
 
     # Cumulate transaction amounts each day
-    # 此处应该有bug，进行修改
-    # txn_val['date'] = txn_val.index.date
-    # txn_val = txn_val.groupby('date').cumsum()
     txn_val['day'] = txn_val.index.date
     txn_val = txn_val.groupby('day').cumsum()
 
     # Calculate exposure, then take peak of exposure every day
     txn_val['exposure'] = txn_val.abs().sum(axis=1)
-    # 出现bug，疑似使用旧版本的API
-    # condition = (txn_val['exposure'] == txn_val.groupby(
-    #     pd.TimeGrouper('24H'))['exposure'].transform(max))
-    # condition = (txn_val['exposure'] == txn_val.groupby(
-    #     pd.Grouper(freq='24h'))['exposure'].transform(max))
     condition = (txn_val['exposure'] == txn_val.groupby(
         pd.Grouper(freq='24h'))['exposure'].transform('max'))
     txn_val = txn_val[condition].drop('exposure', axis=1)
