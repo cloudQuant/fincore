@@ -63,19 +63,11 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
     pd.Series or np.ndarray
         Rolling alpha values.
     """
-    is_input_series = isinstance(returns, pd.Series)
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    # Convert generators to lists/Series
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     is_series = isinstance(returns_aligned, pd.Series)
 
     if len(returns_aligned) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
@@ -123,18 +115,11 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
     pd.Series or np.ndarray
         Rolling beta values.
     """
-    is_input_series = isinstance(returns, pd.Series)
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     is_series = isinstance(returns_aligned, pd.Series)
 
     if len(returns_aligned) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
@@ -183,16 +168,10 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
         Rolling alpha and beta values with columns ['alpha', 'beta'].
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     is_series = isinstance(returns_aligned, pd.Series)
 
     if len(returns_aligned) < window:
-        # Return empty DataFrame with same index type as input
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
                 return pd.DataFrame(columns=['alpha', 'beta'], index=pd.DatetimeIndex([]))
@@ -322,16 +301,10 @@ def roll_up_capture(returns, factor_returns, window=252):
         Rolling up capture values.
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     is_series = isinstance(returns_aligned, pd.Series)
 
     if len(returns_aligned) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
@@ -374,16 +347,10 @@ def roll_down_capture(returns, factor_returns, window=252):
         Rolling down capture values.
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     is_series = isinstance(returns_aligned, pd.Series)
 
     if len(returns_aligned) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
@@ -527,11 +494,6 @@ def rolling_regression(returns, factor_returns, rolling_window=126):
         Rolling alpha and beta values with columns ['alpha', 'beta'].
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     if len(returns_aligned) < rolling_window:
         return pd.DataFrame(columns=['alpha', 'beta'])

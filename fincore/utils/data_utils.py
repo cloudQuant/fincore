@@ -68,25 +68,19 @@ def _roll_pandas(func, window, *args, **kwargs):
     if len(data) < window:
         return pd.Series([], dtype=float, index=data.index[:0])
 
-    results = {}
-    index_values = []
+    n = len(data) - window + 1
+    out = np.empty(n, dtype=float)
+    result_index = data.index[window - 1:]
 
     if len(args) == 1:
-        for i in range(window, len(data) + 1):
-            window_slice = data.iloc[i - window:i]
-            idx = data.index[i - 1]
-            index_values.append(idx)
-            results[idx] = func(window_slice, **kwargs)
+        for i in range(n):
+            out[i] = func(data.iloc[i:i + window], **kwargs)
     else:
         factor_returns = args[1]
-        for i in range(window, len(data) + 1):
-            window_returns = data.iloc[i - window:i]
-            window_factor = factor_returns.iloc[i - window:i]
-            idx = data.index[i - 1]
-            index_values.append(idx)
-            results[idx] = func(window_returns, window_factor, **kwargs)
+        for i in range(n):
+            out[i] = func(data.iloc[i:i + window], factor_returns.iloc[i:i + window], **kwargs)
 
-    return pd.Series(results, index=type(data.index)(index_values), dtype=float)
+    return pd.Series(out, index=result_index, dtype=float)
 
 
 def _roll_ndarray(func, window, *args, **kwargs):
@@ -100,27 +94,18 @@ def _roll_ndarray(func, window, *args, **kwargs):
     if len(data) < window:
         return np.array([], dtype=float)
 
-    results = []
+    n = len(data) - window + 1
+    out = np.empty(n, dtype=float)
 
     if len(args) == 1:
-        for i in range(window, len(data) + 1):
-            start_idx = i - window
-            end_idx = i
-            results.append(func(data[start_idx:end_idx], **kwargs))
+        for i in range(n):
+            out[i] = func(data[i:i + window], **kwargs)
     else:
         factor_returns = args[1]
-        for i in range(window, len(data) + 1):
-            start_idx = i - window
-            end_idx = i
-            results.append(
-                func(
-                    data[start_idx:end_idx],
-                    factor_returns[start_idx:end_idx],
-                    **kwargs,
-                )
-            )
+        for i in range(n):
+            out[i] = func(data[i:i + window], factor_returns[i:i + window], **kwargs)
 
-    return np.asarray(results, dtype=float)
+    return out
 
 
 def roll(*args, **kwargs):

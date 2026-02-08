@@ -127,27 +127,26 @@ def get_all_drawdowns(returns):
     # Calculate drawdown
     drawdown = (cum_ret - rolling_max) / rolling_max
 
-    # Find all local minima (drawdown troughs)
-    drawdown_periods = []
-    in_drawdown = False
-    current_min = 0
+    # Vectorized identification of drawdown periods
+    dd_vals = drawdown.values
+    is_dd = dd_vals < 0
 
-    for dd in drawdown:
-        if dd < 0:
-            if not in_drawdown:
-                in_drawdown = True
-                current_min = dd
-            else:
-                current_min = min(current_min, dd)
-        else:
-            if in_drawdown:
-                drawdown_periods.append(current_min)
-                in_drawdown = False
-                current_min = 0
+    if not is_dd.any():
+        return []
 
-    # Handle case where series ends in drawdown
-    if in_drawdown:
-        drawdown_periods.append(current_min)
+    # Detect transitions: start (False->True) and end (True->False)
+    shifted = np.empty_like(is_dd)
+    shifted[0] = False
+    shifted[1:] = is_dd[:-1]
+    starts = np.where(is_dd & ~shifted)[0]
+    ends = np.where(~is_dd & shifted)[0]
+
+    # If series ends in drawdown, add the end
+    if len(ends) < len(starts):
+        ends = np.append(ends, len(dd_vals))
+
+    # Extract minimum drawdown for each period
+    drawdown_periods = [float(dd_vals[s:e].min()) for s, e in zip(starts, ends)]
 
     return drawdown_periods
 
@@ -181,43 +180,39 @@ def get_all_drawdowns_detailed(returns):
     # Calculate drawdown
     drawdown = (cum_ret - rolling_max) / rolling_max
 
-    # Find all drawdown periods with details
+    # Vectorized identification of drawdown periods
+    dd_vals = drawdown.values
+    is_dd = dd_vals < 0
+
+    if not is_dd.any():
+        return []
+
+    shifted = np.empty_like(is_dd)
+    shifted[0] = False
+    shifted[1:] = is_dd[:-1]
+    starts = np.where(is_dd & ~shifted)[0]
+    ends = np.where(~is_dd & shifted)[0]
+
+    # If series ends in drawdown, mark end as length of array
+    ends_in_dd = len(ends) < len(starts)
+    if ends_in_dd:
+        ends = np.append(ends, len(dd_vals))
+
     drawdown_periods = []
-    in_drawdown = False
-    current_min = 0
-    start_idx = 0
-    trough_idx = 0
-
-    for i, dd in enumerate(drawdown):
-        if dd < 0:
-            if not in_drawdown:
-                in_drawdown = True
-                start_idx = i
-                current_min = dd
-                trough_idx = i
-            else:
-                if dd < current_min:
-                    current_min = dd
-                    trough_idx = i
+    for k, (s, e) in enumerate(zip(starts, ends)):
+        segment = dd_vals[s:e]
+        trough_offset = int(np.argmin(segment))
+        trough_idx = s + trough_offset
+        value = float(segment[trough_offset])
+        duration = trough_idx - s
+        if ends_in_dd and k == len(starts) - 1:
+            recovery_duration = None
         else:
-            if in_drawdown:
-                duration = trough_idx - start_idx
-                recovery_duration = i - trough_idx
-                drawdown_periods.append({
-                    'value': current_min,
-                    'duration': duration,
-                    'recovery_duration': recovery_duration
-                })
-                in_drawdown = False
-                current_min = 0
-
-    # Handle case where series ends in drawdown
-    if in_drawdown:
-        duration = trough_idx - start_idx
+            recovery_duration = e - trough_idx
         drawdown_periods.append({
-            'value': current_min,
+            'value': value,
             'duration': duration,
-            'recovery_duration': None
+            'recovery_duration': recovery_duration,
         })
 
     return drawdown_periods
