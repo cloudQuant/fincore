@@ -217,7 +217,7 @@ def apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backte
     pd.Series
         Slippage penalty adjusted daily returns.
     """
-    from fincore.empyricals.returns import cum_returns
+    from fincore.metrics.returns import cum_returns
 
     mult = simulate_starting_capital / backtest_starting_capital
     simulate_traded_shares = abs(mult * txn_daily.amount)

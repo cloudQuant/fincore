@@ -21,10 +21,10 @@ import pandas as pd
 from scipy import stats
 from fincore.utils import nanmean, nanstd
 from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
-from fincore.empyricals.basic import (
+from fincore.metrics.basic import (
     annualization_factor, adjust_returns, aligned_series
 )
-from fincore.empyricals.risk import tail_ratio
+from fincore.metrics.risk import tail_ratio
 
 __all__ = [
     'sharpe_ratio',
@@ -138,7 +138,7 @@ def sortino_ratio(returns, required_return=0, period=DAILY, annualization=None, 
         Sortino ratio of the strategy. For 1D input a scalar is
         returned; for 2D input one value is returned per column.
     """
-    from fincore.empyricals.risk import downside_risk as calc_downside_risk
+    from fincore.metrics.risk import downside_risk as calc_downside_risk
 
     allocated_output = out is None
     if allocated_output:
@@ -236,7 +236,7 @@ def adjusted_sharpe_ratio(returns, risk_free=0.0):
         Adjusted Sharpe ratio that accounts for non-normality. Returns
         ``NaN`` when there is insufficient data.
     """
-    from fincore.empyricals.stats import skewness, kurtosis
+    from fincore.metrics.stats import skewness, kurtosis
 
     if len(returns) < 4:
         return np.nan
@@ -331,8 +331,8 @@ def calmar_ratio(returns, period=DAILY, annualization=None):
         Calmar ratio of the return series. Returns ``NaN`` if maximum
         drawdown is non-negative or infinite.
     """
-    from fincore.empyricals.drawdown import max_drawdown
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.drawdown import max_drawdown
+    from fincore.metrics.returns import cum_returns_final
 
     max_dd = max_drawdown(returns=returns)
     if max_dd < 0:
@@ -466,8 +466,8 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
         value is returned per column. Returns ``NaN`` when beta is zero,
         negative, or ``NaN``.
     """
-    from fincore.empyricals.alpha_beta import beta_aligned
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.alpha_beta import beta_aligned
+    from fincore.metrics.returns import cum_returns_final
 
     allocated_output = True
     out = np.empty(returns.shape[1:])
@@ -579,8 +579,8 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
         ``NaN`` if the portfolio volatility is zero, negative, or
         ``NaN``.
     """
-    from fincore.empyricals.risk import annual_volatility
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.risk import annual_volatility
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -630,8 +630,8 @@ def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
         Sterling ratio of the strategy. Returns ``NaN`` when there is
         effectively no drawdown risk.
     """
-    from fincore.empyricals.drawdown import get_all_drawdowns
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.drawdown import get_all_drawdowns
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -690,8 +690,8 @@ def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
         Burke ratio of the strategy. Returns ``NaN`` when there is
         effectively no drawdown risk.
     """
-    from fincore.empyricals.drawdown import get_all_drawdowns
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.drawdown import get_all_drawdowns
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -755,7 +755,7 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
         Kappa 3 ratio of the strategy. Returns ``NaN`` when downside
         risk is effectively zero.
     """
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -813,8 +813,8 @@ def common_sense_ratio(returns):
         Common sense ratio. Returns ``NaN`` if there are insufficient
         observations or if win rate is zero.
     """
-    from fincore.empyricals.risk import tail_ratio
-    from fincore.empyricals.stats import win_rate
+    from fincore.metrics.risk import tail_ratio
+    from fincore.metrics.stats import win_rate
 
     if len(returns) < 2:
         return np.nan
@@ -884,7 +884,7 @@ def capture(returns, factor_returns, period=DAILY):
         annualized return). Returns ``NaN`` if there are insufficient
         observations or the benchmark annualized return is zero.
     """
-    from fincore.empyricals.returns import cum_returns_final
+    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 1 or len(factor_returns) < 1:
         return np.nan

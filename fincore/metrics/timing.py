@@ -19,7 +19,7 @@
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
-from fincore.empyricals.basic import aligned_series
+from fincore.metrics.basic import aligned_series
 from fincore.constants.interesting_periods import PERIODS
 
 __all__ = [

@@ -18,7 +18,7 @@
 Empyrical - 金融性能分析库.
 
 包含原有的所有empyrical函数，以及新的面向对象Empyrical类。
-代码已重构，将具体实现拆分到empyricals模块中。
+代码已重构，将具体实现拆分到metrics模块中。
 """
 from __future__ import division
 import warnings
@@ -26,24 +26,24 @@ import pandas as pd
 import numpy as np
 from fincore.constants import *
 
-# 从empyricals模块导入子模块（使用_module别名避免命名冲突）
-from fincore.empyricals import basic_module as _basic
-from fincore.empyricals import returns_module as _returns
-from fincore.empyricals import drawdown_module as _drawdown
-from fincore.empyricals import risk_module as _risk
-from fincore.empyricals import ratios_module as _ratios
-from fincore.empyricals import alpha_beta_module as _alpha_beta
-from fincore.empyricals import stats_module as _stats
-from fincore.empyricals import consecutive_module as _consecutive
-from fincore.empyricals import rolling_module as _rolling
-from fincore.empyricals import bayesian_module as _bayesian
-from fincore.empyricals import positions_module as _positions
-from fincore.empyricals import transactions_module as _transactions
-from fincore.empyricals import round_trips_module as _round_trips
-from fincore.empyricals import perf_attrib_module as _perf_attrib
-from fincore.empyricals import perf_stats_module as _perf_stats
-from fincore.empyricals import timing_module as _timing
-from fincore.empyricals import yearly_module as _yearly
+# 从metrics模块导入子模块（使用_module别名避免命名冲突）
+from fincore.metrics import basic_module as _basic
+from fincore.metrics import returns_module as _returns
+from fincore.metrics import drawdown_module as _drawdown
+from fincore.metrics import risk_module as _risk
+from fincore.metrics import ratios_module as _ratios
+from fincore.metrics import alpha_beta_module as _alpha_beta
+from fincore.metrics import stats_module as _stats
+from fincore.metrics import consecutive_module as _consecutive
+from fincore.metrics import rolling_module as _rolling
+from fincore.metrics import bayesian_module as _bayesian
+from fincore.metrics import positions_module as _positions
+from fincore.metrics import transactions_module as _transactions
+from fincore.metrics import round_trips_module as _round_trips
+from fincore.metrics import perf_attrib_module as _perf_attrib
+from fincore.metrics import perf_stats_module as _perf_stats
+from fincore.metrics import timing_module as _timing
+from fincore.metrics import yearly_module as _yearly
 
 try:
     from zipline.assets import Equity, Future
@@ -65,7 +65,7 @@ class Empyrical:
 
     这个类将所有empyrical模块的函数封装为类方法，提供统一的数据管理和计算接口。
     初始化参数与pyfolio的create_full_tear_sheet函数参数保持一致。
-    代码已重构，具体实现委托给empyricals子模块中的函数。
+    代码已重构，具体实现委托给metrics子模块中的函数。
     """
 
     def __init__(self, returns=None, positions=None, factor_returns=None, factor_loadings=None, **kwargs):

@@ -19,10 +19,10 @@
 import numpy as np
 import pandas as pd
 from fincore.constants import DAILY
-from fincore.empyricals.basic import aligned_series
-from fincore.empyricals.alpha_beta import alpha, beta
-from fincore.empyricals.ratios import sharpe_ratio, up_capture, down_capture
-from fincore.empyricals.drawdown import max_drawdown
+from fincore.metrics.basic import aligned_series
+from fincore.metrics.alpha_beta import alpha, beta
+from fincore.metrics.ratios import sharpe_ratio, up_capture, down_capture
+from fincore.metrics.drawdown import max_drawdown
 
 __all__ = [
     'roll_alpha',

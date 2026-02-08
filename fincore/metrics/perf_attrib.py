@@ -205,8 +205,8 @@ def create_perf_attrib_stats(perf_attrib_, risk_exposures):
     Computes annualized multifactor alpha, multifactor sharpe, risk exposures.
     """
     from collections import OrderedDict
-    from fincore.empyricals.returns import annual_return, cum_returns_final
-    from fincore.empyricals.ratios import sharpe_ratio
+    from fincore.metrics.returns import annual_return, cum_returns_final
+    from fincore.metrics.ratios import sharpe_ratio
 
     summary = OrderedDict()
     total_returns = perf_attrib_["total_returns"]
@@ -362,7 +362,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
         factor_returns = factor_returns.drop(missing_factor_loadings_index, errors="ignore")
 
     if transactions is not None and pos_in_dollars:
-        from fincore.empyricals.transactions import get_turnover
+        from fincore.metrics.transactions import get_turnover
         turnover = get_turnover(positions, transactions).mean()
         if turnover > PERF_ATTRIB_TURNOVER_THRESHOLD:
             warning_msg = (
@@ -396,7 +396,7 @@ def cumulative_returns_less_costs(returns, costs):
     pd.Series
         Cumulative returns after subtracting costs.
     """
-    from fincore.empyricals.returns import cum_returns
+    from fincore.metrics.returns import cum_returns
 
     if costs is None:
         return cum_returns(returns)

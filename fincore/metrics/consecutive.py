@@ -18,7 +18,7 @@
 
 import numpy as np
 import pandas as pd
-from fincore.empyricals.returns import cum_returns_final
+from fincore.metrics.returns import cum_returns_final
 
 __all__ = [
     'max_consecutive_up_days',

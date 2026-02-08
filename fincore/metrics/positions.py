@@ -94,7 +94,7 @@ def get_max_median_position_concentration(positions):
         Columns are the max long, max short, median long, and median short
         position concentrations. Rows are time periods.
     """
-    from fincore.empyricals.transactions import get_percent_alloc as get_pct_alloc
+    from fincore.metrics.transactions import get_percent_alloc as get_pct_alloc
     
     expos = get_pct_alloc(positions)
     expos = expos.drop("cash", axis=1)
