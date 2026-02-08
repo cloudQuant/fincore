@@ -18,7 +18,6 @@
 
 import numpy as np
 import pandas as pd
-from six import iteritems
 from fincore.constants import ANNUALIZATION_FACTORS, PERIOD_TO_FREQ, DAILY
 
 __all__ = [
@@ -223,9 +222,7 @@ def aligned_series(*many_series):
         return many_series
 
     # dataframe has no ``itervalues``
-    return (
+    return tuple(
         v
-        for _, v in iteritems(
-            pd.concat(map(to_pandas, many_series), axis=1)
-        )
+        for _, v in pd.concat(map(to_pandas, many_series), axis=1).items()
     )

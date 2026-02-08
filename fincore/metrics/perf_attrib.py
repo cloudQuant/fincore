@@ -164,33 +164,35 @@ def perf_attrib(returns, positions=None, factor_returns=None, factor_loadings=No
 
 def stack_positions(positions, pos_in_dollars=True):
     """Stack positions from DataFrame to Series with MultiIndex.
-    
+
+    Unlike :func:`fincore.metrics.positions.stack_positions`, this version
+    converts dollar positions to percentage weights when ``pos_in_dollars``
+    is True, which is required by the performance attribution pipeline.
+
     Parameters
     ----------
     positions : pd.DataFrame
         Daily holdings indexed by date with tickers as columns.
     pos_in_dollars : bool
         If True, convert positions from dollars to percentages.
-    
+
     Returns
     -------
     pd.Series
         Stacked positions with MultiIndex (dt, ticker).
     """
     positions = positions.copy()
-    
+
     if 'cash' in positions.columns:
         positions = positions.drop('cash', axis=1)
-    
+
     if pos_in_dollars:
-        # Convert to percentages
         total = positions.abs().sum(axis=1)
         positions = positions.divide(total, axis=0)
-    
-    # Stack to get MultiIndex Series
+
     stacked = positions.stack()
     stacked.index = stacked.index.set_names(['dt', 'ticker'])
-    
+
     return stacked
 
 

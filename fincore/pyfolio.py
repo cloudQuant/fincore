@@ -1,4 +1,3 @@
-from __future__ import division
 import os
 import warnings
 import time
@@ -23,14 +22,6 @@ from fincore.utils import *
 matplotlib.use('Agg')
 cmap = plt.get_cmap('gist_rainbow')
 
-with warnings.catch_warnings():
-    warnings.filterwarnings(
-        'ignore',
-        'axes.color_cycle is deprecated',
-        UserWarning,
-        'matplotlib',
-    )
-    from seaborn import *  # noqa
 
 from fincore.empyrical import Empyrical
 from fincore.utils.common_utils import customize

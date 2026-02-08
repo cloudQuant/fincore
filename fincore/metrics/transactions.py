@@ -243,6 +243,8 @@ def apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backte
 def get_percent_alloc(values):
     """Determine a portfolio's allocations.
 
+    Delegates to :func:`fincore.metrics.positions.get_percent_alloc`.
+
     Parameters
     ----------
     values : pd.DataFrame
@@ -253,7 +255,8 @@ def get_percent_alloc(values):
     pd.DataFrame
         Positions and their allocations.
     """
-    return values.divide(values.sum(axis="columns"), axis="rows")
+    from fincore.metrics.positions import get_percent_alloc as _gpa
+    return _gpa(values)
 
 
 def map_transaction(txn):

@@ -1,5 +1,3 @@
-from __future__ import division
-
 from copy import copy
 from operator import attrgetter
 from unittest import TestCase, SkipTest
@@ -10,7 +8,7 @@ from numpy.testing import assert_almost_equal, assert_allclose
 import pandas as pd
 from pandas.core.generic import NDFrame
 from scipy import stats
-from six import iteritems, wraps
+from functools import wraps
 
 try:
     from pandas.testing import assert_index_equal
@@ -2096,7 +2094,7 @@ class ReturnTypeEmpyricalProxy(object):
     def __call__(self, **kwargs):
         dupe = copy(self)
 
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             attr = '_' + k
             if hasattr(dupe, attr):
                 setattr(dupe, attr, v)
@@ -2137,7 +2135,7 @@ class ReturnTypeEmpyricalProxy(object):
             arg_copies = [(i, arg.copy()) for i, arg in enumerate(args)
                           if isinstance(arg, (NDFrame, np.ndarray))]
             kwarg_copies = {
-                k: v.copy() for k, v in iteritems(kwargs)
+                k: v.copy() for k, v in kwargs.items()
                 if isinstance(v, (NDFrame, np.ndarray))
             }
 
@@ -2152,7 +2150,7 @@ class ReturnTypeEmpyricalProxy(object):
                     err_msg="Input 'arg %s' mutated by %s"
                             % (i, func.__name__),
                 )
-            for kwarg_name, kwarg_copy in iteritems(kwarg_copies):
+            for kwarg_name, kwarg_copy in kwarg_copies.items():
                 assert_allclose(
                     kwargs[kwarg_name],
                     kwarg_copy,
@@ -2194,7 +2192,7 @@ class ConvertPandasEmpyricalProxy(ReturnTypeEmpyricalProxy):
                     for arg in args]
             kwargs = {
                 k: self._convert(v) if isinstance(v, NDFrame) else v
-                for k, v in iteritems(kwargs)
+                for k, v in kwargs.items()
             }
             return func(*args, **kwargs)
 

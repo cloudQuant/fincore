@@ -529,8 +529,7 @@ def tracking_difference(returns, factor_returns):
 def common_sense_ratio(returns):
     """Calculate the common sense ratio.
 
-    The common sense ratio is defined as the product of the tail ratio
-    and the gain-to-pain ratio.
+    Delegates to :func:`fincore.metrics.ratios.common_sense_ratio`.
 
     Parameters
     ----------
@@ -542,37 +541,14 @@ def common_sense_ratio(returns):
     float
         Common sense ratio, or ``NaN`` if there is insufficient data.
     """
-    from fincore.metrics.ratios import tail_ratio
-
-    if len(returns) < 1:
-        return np.nan
-
-    returns_array = np.asanyarray(returns)
-    returns_clean = returns_array[~np.isnan(returns_array)]
-
-    if len(returns_clean) < 1:
-        return np.nan
-
-    # Gain-to-pain ratio
-    gains = np.sum(returns_clean[returns_clean > 0])
-    losses = np.abs(np.sum(returns_clean[returns_clean < 0]))
-
-    if losses == 0:
-        return np.nan
-
-    gain_to_pain = gains / losses
-
-    # Tail ratio
-    tr = tail_ratio(returns)
-
-    if np.isnan(tr):
-        return np.nan
-
-    return gain_to_pain * tr
+    from fincore.metrics.ratios import common_sense_ratio as _csr
+    return _csr(returns)
 
 
 def var_cov_var_normal(p, c, mu=0, sigma=1):
     """Calculate variance-covariance of daily Value-at-Risk in a portfolio.
+
+    Delegates to :func:`fincore.metrics.risk.var_cov_var_normal`.
 
     Parameters
     ----------
@@ -590,12 +566,14 @@ def var_cov_var_normal(p, c, mu=0, sigma=1):
     float
         Value-at-Risk.
     """
-    alpha = stats.norm.ppf(1 - c, mu, sigma)
-    return p - p * (alpha + 1)
+    from fincore.metrics.risk import var_cov_var_normal as _vcv
+    return _vcv(p, c, mu, sigma)
 
 
 def normalize(returns, starting_value=1):
     """Normalize a returns series to start at a given value.
+
+    Delegates to :func:`fincore.metrics.returns.normalize`.
 
     Parameters
     ----------
@@ -609,6 +587,5 @@ def normalize(returns, starting_value=1):
     pd.Series or np.ndarray
         Normalized cumulative returns starting at ``starting_value``.
     """
-    from fincore.metrics.returns import cum_returns
-
-    return cum_returns(returns, starting_value=starting_value)
+    from fincore.metrics.returns import normalize as _normalize
+    return _normalize(returns, starting_value=starting_value)
