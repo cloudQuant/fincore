@@ -300,7 +300,7 @@ def get_top_drawdowns(returns, top=10):
 
         # Slice out draw-down period
         if not pd.isnull(recovery):
-            underwater.drop(underwater[peak:recovery].index[1:-1], inplace=True)
+            underwater = underwater.drop(underwater[peak:recovery].index[1:-1])
         else:
             # the drawdown has not ended yet
             underwater = underwater.loc[:peak]

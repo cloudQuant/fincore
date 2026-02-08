@@ -268,7 +268,7 @@ def adjusted_sharpe_ratio(returns, risk_free=0.0):
     return sharpe * adjustment
 
 
-def conditional_sharpe_ratio(returns, cutoff=0.05):
+def conditional_sharpe_ratio(returns, cutoff=0.05, period=DAILY, annualization=None):
     """Calculate the Sharpe ratio conditional on the left tail.
 
     The conditional Sharpe ratio is computed on the subset of returns
@@ -281,16 +281,23 @@ def conditional_sharpe_ratio(returns, cutoff=0.05):
     cutoff : float, optional
         Left-tail probability level in (0, 1). For example ``0.05``
         selects the worst 5% of returns. Default is 0.05.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``). Used to
+        infer the annualization factor when ``annualization`` is ``None``.
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
 
     Returns
     -------
     float
         Sharpe ratio computed on the conditional (left-tail) subsample,
-        annualized using a 252 trading-day convention. Returns ``NaN`` if
-        there are fewer than two observations.
+        annualized. Returns ``NaN`` if there are fewer than two observations.
     """
     if len(returns) < 2:
         return np.nan
+
+    ann_factor = annualization_factor(period, annualization)
 
     cutoff_value = np.percentile(returns, cutoff * 100)
     conditional_returns = returns[returns <= cutoff_value]
@@ -304,7 +311,7 @@ def conditional_sharpe_ratio(returns, cutoff=0.05):
     if std_ret == 0:
         return np.nan
 
-    return mean_ret / std_ret * np.sqrt(252)
+    return mean_ret / std_ret * np.sqrt(ann_factor)
 
 
 def calmar_ratio(returns, period=DAILY, annualization=None):
@@ -386,8 +393,8 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPRO
 
     returns_less_thresh = returns - risk_free - return_threshold
 
-    numer = sum(returns_less_thresh[returns_less_thresh > 0.0])
-    denom = -1.0 * sum(returns_less_thresh[returns_less_thresh < 0.0])
+    numer = np.nansum(returns_less_thresh[returns_less_thresh > 0.0])
+    denom = -1.0 * np.nansum(returns_less_thresh[returns_less_thresh < 0.0])
 
     if denom > 0.0:
         return numer / denom
@@ -423,10 +430,14 @@ def information_ratio(returns, factor_returns, period=DAILY, annualization=None)
     returns, factor_returns = aligned_series(returns, factor_returns)
     super_returns = returns - factor_returns
 
+    if len(super_returns) < 2:
+        return np.nan
+
     ann_factor = annualization_factor(period, annualization)
     mean_excess_return = super_returns.mean()
     std_excess_return = super_returns.std(ddof=1)
-    ir = (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ir = (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
     return ir
 
 
@@ -602,6 +613,19 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
     return excess_return * risk_ratio + risk_free
 
 
+def _compute_annualized_return(returns, period, annualization):
+    """Compute annualized return from non-cumulative returns.
+
+    Shared helper used by sterling_ratio, burke_ratio, kappa_three_ratio, etc.
+    """
+    from fincore.metrics.returns import cum_returns_final
+
+    ann_factor = annualization_factor(period, annualization)
+    num_years = len(returns) / ann_factor
+    ending_value = cum_returns_final(returns, starting_value=1)
+    return ending_value ** (1 / num_years) - 1
+
+
 def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
     """Calculate the Sterling ratio of a strategy.
 
@@ -630,7 +654,6 @@ def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
         effectively no drawdown risk.
     """
     from fincore.metrics.drawdown import get_all_drawdowns
-    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -649,17 +672,10 @@ def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
     else:
         avg_drawdown = abs(np.mean(drawdown_periods))
 
-    if avg_drawdown == 0 or avg_drawdown < 1e-10:
-        ann_factor = annualization_factor(period, annualization)
-        num_years = len(returns) / ann_factor
-        ending_value = cum_returns_final(returns, starting_value=1)
-        ann_ret = ending_value ** (1 / num_years) - 1
-        return np.inf if ann_ret - risk_free > 0 else np.nan
+    ann_ret = _compute_annualized_return(returns, period, annualization)
 
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    ann_ret = ending_value ** (1 / num_years) - 1
+    if avg_drawdown == 0 or avg_drawdown < 1e-10:
+        return np.inf if ann_ret - risk_free > 0 else np.nan
 
     return (ann_ret - risk_free) / avg_drawdown
 
@@ -690,7 +706,6 @@ def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
         effectively no drawdown risk.
     """
     from fincore.metrics.drawdown import get_all_drawdowns
-    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
@@ -710,17 +725,10 @@ def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
         squared_drawdowns = [dd**2 for dd in drawdown_periods]
         burke_risk = float(np.sqrt(np.sum(squared_drawdowns)))
 
-    if burke_risk == 0 or burke_risk < 1e-10:
-        ann_factor = annualization_factor(period, annualization)
-        num_years = len(returns) / ann_factor
-        ending_value = cum_returns_final(returns, starting_value=1)
-        ann_ret = ending_value ** (1 / num_years) - 1
-        return np.inf if ann_ret - risk_free > 0 else np.nan
+    ann_ret = _compute_annualized_return(returns, period, annualization)
 
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    ann_ret = ending_value ** (1 / num_years) - 1
+    if burke_risk == 0 or burke_risk < 1e-10:
+        return np.inf if ann_ret - risk_free > 0 else np.nan
 
     return (ann_ret - risk_free) / burke_risk
 
@@ -754,8 +762,6 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
         Kappa 3 ratio of the strategy. Returns ``NaN`` when downside
         risk is effectively zero.
     """
-    from fincore.metrics.returns import cum_returns_final
-
     if len(returns) < 2:
         return np.nan
 
@@ -769,13 +775,11 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
     lpm3 = np.mean(downside_deviations**3)
 
     ann_factor = annualization_factor(period, annualization)
+    ann_ret = _compute_annualized_return(returns, period, annualization)
 
     if lpm3 == 0 or lpm3 < 1e-30:
         std_dev = np.std(returns_clean)
         if std_dev < 1e-10:
-            num_years = len(returns) / ann_factor
-            ending_value = cum_returns_final(returns, starting_value=1)
-            ann_ret = ending_value ** (1 / num_years) - 1
             return np.inf if ann_ret - risk_free > 0 else np.nan
         lpm3_risk = std_dev * np.sqrt(ann_factor)
     else:
@@ -783,14 +787,7 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
         lpm3_risk = lpm3_annualized ** (1.0 / 3.0)
 
     if lpm3_risk == 0 or lpm3_risk < 1e-10:
-        num_years = len(returns) / ann_factor
-        ending_value = cum_returns_final(returns, starting_value=1)
-        ann_ret = ending_value ** (1 / num_years) - 1
         return np.inf if ann_ret - risk_free > 0 else np.nan
-
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    ann_ret = ending_value ** (1 / num_years) - 1
 
     return (ann_ret - risk_free) / lpm3_risk
 
@@ -888,14 +885,18 @@ def capture(returns, factor_returns, period=DAILY):
     if len(returns) < 1 or len(factor_returns) < 1:
         return np.nan
 
+    returns, factor_returns = aligned_series(returns, factor_returns)
+
+    if len(returns) < 1:
+        return np.nan
+
     ann_factor = annualization_factor(period, None)
     num_years = len(returns) / ann_factor
     strategy_ending = cum_returns_final(returns, starting_value=1)
     strategy_ann_return = strategy_ending ** (1 / num_years) - 1
 
-    benchmark_num_years = len(factor_returns) / ann_factor
     benchmark_ending = cum_returns_final(factor_returns, starting_value=1)
-    benchmark_ann_return = benchmark_ending ** (1 / benchmark_num_years) - 1
+    benchmark_ann_return = benchmark_ending ** (1 / num_years) - 1
 
     if benchmark_ann_return == 0:
         return np.nan
@@ -994,8 +995,21 @@ def up_down_capture(returns, factor_returns, period=DAILY):
         Ratio of up-capture to down-capture. Returns ``NaN`` if either
         capture is ``NaN`` or if the down-capture is zero.
     """
-    up_cap = up_capture(returns, factor_returns, period=period)
-    down_cap = down_capture(returns, factor_returns, period=period)
+    returns, factor_returns = aligned_series(returns, factor_returns)
+
+    returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
+    factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
+
+    up_returns = returns[factor_returns > 0]
+    up_factor_returns = factor_returns[factor_returns > 0]
+    down_returns = returns[factor_returns < 0]
+    down_factor_returns = factor_returns[factor_returns < 0]
+
+    if len(up_returns) < 1 or len(down_returns) < 1:
+        return np.nan
+
+    up_cap = capture(up_returns, up_factor_returns, period=period)
+    down_cap = capture(down_returns, down_factor_returns, period=period)
 
     if np.isnan(up_cap) or np.isnan(down_cap) or down_cap == 0:
         return np.nan

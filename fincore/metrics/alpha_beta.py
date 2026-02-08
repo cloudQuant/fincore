@@ -68,7 +68,6 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
         Beta of the strategy versus the benchmark. For 1D input a scalar
         is returned; for 2D input one value is returned per column.
     """
-    _ = risk_free  # API compatibility; not used
     nanmean_local = np.nanmean
     nan = np.nan
     isnan = np.isnan
@@ -87,11 +86,15 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
     elif out.ndim == 0:
         out = out[np.newaxis]
 
-    if len(returns) < 1 or len(factor_returns) < 2:
+    if len(returns) < 2 or len(factor_returns) < 2:
         out[()] = nan
         if returns_1d:
             out = out.item()
         return out
+
+    if risk_free != 0.0:
+        returns = returns - risk_free
+        factor_returns = factor_returns - risk_free
 
     independent = np.where(isnan(returns), nan, factor_returns)
     ind_residual = independent - nanmean_local(independent, axis=0)

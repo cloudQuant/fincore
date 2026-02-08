@@ -16,6 +16,7 @@
 
 """基础工具函数模块."""
 
+from functools import lru_cache
 import numpy as np
 import pandas as pd
 from fincore.constants import ANNUALIZATION_FACTORS, PERIOD_TO_FREQ, DAILY
@@ -118,6 +119,7 @@ def adjust_returns(returns, adjustment_factor):
     return returns - adjustment_factor
 
 
+@lru_cache(maxsize=32)
 def annualization_factor(period, annualization):
     """Return the annualization factor for a given period.
 

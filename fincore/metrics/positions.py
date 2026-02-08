@@ -97,8 +97,8 @@ def get_max_median_position_concentration(positions):
     expos = get_percent_alloc(positions)
     expos = expos.drop("cash", axis=1)
 
-    longs = expos.where(expos.apply(lambda val: val > 0))
-    shorts = expos.where(expos.apply(lambda val: val < 0))
+    longs = expos.where(expos > 0)
+    shorts = expos.where(expos < 0)
 
     alloc_summary = pd.DataFrame()
     alloc_summary["max_long"] = longs.max(axis=1)
