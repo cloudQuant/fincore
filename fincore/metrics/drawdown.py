@@ -19,6 +19,7 @@
 import numpy as np
 import pandas as pd
 from fincore.utils import nanmin
+from fincore.constants.periods import APPROX_BDAYS_PER_MONTH
 from fincore.metrics.returns import cum_returns, cum_returns_final
 
 __all__ = [
@@ -450,11 +451,14 @@ def max_drawdown_weeks(returns):
 
     Returns
     -------
-    int or float
+    float
         Number of weeks between the peak and trough of the maximum
         drawdown, or ``NaN`` if it cannot be determined.
     """
-    return max_drawdown_days(returns)
+    days = max_drawdown_days(returns)
+    if np.isnan(days):
+        return np.nan
+    return days / 5
 
 
 def max_drawdown_months(returns):
@@ -467,11 +471,14 @@ def max_drawdown_months(returns):
 
     Returns
     -------
-    int or float
+    float
         Number of months between the peak and trough of the maximum
         drawdown, or ``NaN`` if it cannot be determined.
     """
-    return max_drawdown_days(returns)
+    days = max_drawdown_days(returns)
+    if np.isnan(days):
+        return np.nan
+    return days / APPROX_BDAYS_PER_MONTH
 
 
 def max_drawdown_recovery_days(returns):
@@ -528,11 +535,14 @@ def max_drawdown_recovery_weeks(returns):
 
     Returns
     -------
-    int or float
+    float
         Number of weeks from the trough to recovery, or ``NaN`` if
         recovery does not occur or cannot be determined.
     """
-    return max_drawdown_recovery_days(returns)
+    days = max_drawdown_recovery_days(returns)
+    if np.isnan(days):
+        return np.nan
+    return days / 7
 
 
 def max_drawdown_recovery_months(returns):
@@ -545,11 +555,14 @@ def max_drawdown_recovery_months(returns):
 
     Returns
     -------
-    int or float
+    float
         Number of months from the trough to recovery, or ``NaN`` if
         recovery does not occur or cannot be determined.
     """
-    return max_drawdown_recovery_days(returns)
+    days = max_drawdown_recovery_days(returns)
+    if np.isnan(days):
+        return np.nan
+    return days / 30
 
 
 def second_max_drawdown(returns):
@@ -575,7 +588,7 @@ def second_max_drawdown(returns):
         return np.nan
 
     sorted_drawdowns = np.sort(drawdown_periods)
-    return sorted_drawdowns[-2]
+    return sorted_drawdowns[1]
 
 
 def third_max_drawdown(returns):
@@ -601,7 +614,7 @@ def third_max_drawdown(returns):
         return np.nan
 
     sorted_drawdowns = np.sort(drawdown_periods)
-    return sorted_drawdowns[-3]
+    return sorted_drawdowns[2]
 
 
 def second_max_drawdown_days(returns):

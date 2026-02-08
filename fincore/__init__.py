@@ -10,7 +10,10 @@ if not hasattr(_np, "unicode_"):
     _np.unicode_ = _np.str_
 
 from .empyrical import Empyrical
-from .pyfolio import Pyfolio
 
-__all__ = ["Empyrical", "Pyfolio"]
+try:
+    from .pyfolio import Pyfolio
+    __all__ = ["Empyrical", "Pyfolio"]
+except ImportError:
+    __all__ = ["Empyrical"]
 

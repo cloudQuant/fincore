@@ -318,7 +318,8 @@ def residual_risk(returns, factor_returns, risk_free=0.0):
     excess_returns = returns_aligned - risk_free
     excess_factor = factor_aligned - risk_free
 
-    beta_val = np.cov(excess_returns, excess_factor)[0, 1] / np.var(excess_factor, ddof=1)
+    from fincore.metrics.alpha_beta import beta_aligned
+    beta_val = beta_aligned(np.asanyarray(excess_returns), np.asanyarray(excess_factor))
     predicted_returns = beta_val * excess_factor
     residuals = excess_returns - predicted_returns
 
@@ -573,14 +574,11 @@ def beta_fragility_heuristic(returns, factor_returns):
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    returns_aligned = list(returns_aligned)
-    factor_aligned = list(factor_aligned)
-
     if len(returns_aligned) < 3 or len(factor_aligned) < 3:
         return np.nan
 
-    returns_series = pd.Series(returns_aligned)
-    factor_returns_series = pd.Series(factor_aligned)
+    returns_series = pd.Series(np.asanyarray(returns_aligned))
+    factor_returns_series = pd.Series(np.asanyarray(factor_aligned))
     pairs = pd.concat([returns_series, factor_returns_series], axis=1)
     pairs.columns = ["returns", "factor_returns"]
     pairs = pairs.dropna()

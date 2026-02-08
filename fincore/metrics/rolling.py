@@ -74,22 +74,20 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_alphas = []
-    for i in range(window, len(returns_aligned) + 1):
-        if is_series:
-            window_returns = returns_aligned.iloc[i - window: i]
-            window_factor = factor_aligned.iloc[i - window: i]
-        else:
-            window_returns = returns_aligned[i - window: i]
-            window_factor = factor_aligned[i - window: i]
+    if not is_series:
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        alpha_val = alpha(window_returns, window_factor, risk_free, period, annualization)
-        rolling_alphas.append(alpha_val)
+    n = len(returns_aligned) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = alpha(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
+                       risk_free, period, annualization)
 
     if is_series:
-        return pd.Series(rolling_alphas, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1:])
     else:
-        return np.array(rolling_alphas)
+        return out
 
 
 def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
@@ -126,22 +124,20 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_betas = []
-    for i in range(window, len(returns_aligned) + 1):
-        if is_series:
-            window_returns = returns_aligned.iloc[i - window: i]
-            window_factor = factor_aligned.iloc[i - window: i]
-        else:
-            window_returns = returns_aligned[i - window: i]
-            window_factor = factor_aligned[i - window: i]
+    if not is_series:
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        beta_val = beta(window_returns, window_factor, risk_free, period, annualization)
-        rolling_betas.append(beta_val)
+    n = len(returns_aligned) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = beta(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
+                      risk_free, period, annualization)
 
     if is_series:
-        return pd.Series(rolling_betas, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1:])
     else:
-        return np.array(rolling_betas)
+        return out
 
 
 def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
@@ -167,6 +163,7 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
     pd.DataFrame or np.ndarray
         Rolling alpha and beta values with columns ['alpha', 'beta'].
     """
+    from fincore.metrics.alpha_beta import alpha_beta
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     is_series = isinstance(returns_aligned, pd.Series)
@@ -178,23 +175,24 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
             return pd.DataFrame(columns=['alpha', 'beta'])
         return pd.DataFrame(columns=['alpha', 'beta'])
 
-    rolling_results = []
-    for i in range(window, len(returns_aligned) + 1):
-        if is_series:
-            window_returns = returns_aligned.iloc[i - window: i]
-            window_factor = factor_aligned.iloc[i - window: i]
-        else:
-            window_returns = returns_aligned[i - window: i]
-            window_factor = factor_aligned[i - window: i]
+    if not is_series:
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        alpha_val = alpha(window_returns, window_factor, risk_free, period, annualization)
-        beta_val = beta(window_returns, window_factor, risk_free, period, annualization)
-        rolling_results.append({'alpha': alpha_val, 'beta': beta_val})
+    n = len(returns_aligned) - window + 1
+    out_alpha = np.empty(n, dtype=float)
+    out_beta = np.empty(n, dtype=float)
+    for i in range(n):
+        ab = alpha_beta(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
+                        risk_free, period, annualization)
+        out_alpha[i] = ab[0]
+        out_beta[i] = ab[1]
 
+    idx = returns_aligned.index[window - 1:]
     if is_series:
-        return pd.DataFrame(rolling_results, index=returns_aligned.index[window - 1:])
+        return pd.DataFrame({'alpha': out_alpha, 'beta': out_beta}, index=idx)
     else:
-        return pd.DataFrame(rolling_results)
+        return pd.DataFrame({'alpha': out_alpha, 'beta': out_beta})
 
 
 def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
@@ -219,28 +217,26 @@ def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualiz
         Rolling Sharpe ratio values.
     """
     is_series = isinstance(returns, pd.Series)
-    
+
     if len(returns) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_sharpes = []
-    for i in range(window, len(returns) + 1):
-        if is_series:
-            window_returns = returns.iloc[i - window: i]
-        else:
-            window_returns = returns[i - window: i]
-        sharpe_val = sharpe_ratio(window_returns, risk_free, period, annualization)
-        rolling_sharpes.append(sharpe_val)
+    if not is_series:
+        returns = pd.Series(returns)
+
+    n = len(returns) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = sharpe_ratio(returns.iloc[i:i + window], risk_free, period, annualization)
 
     if is_series:
-        return pd.Series(rolling_sharpes, index=returns.index[window - 1:])
+        return pd.Series(out, index=returns.index[window - 1:])
     else:
-        return np.array(rolling_sharpes)
+        return out
 
 
 def roll_max_drawdown(returns, window=252):
@@ -268,19 +264,18 @@ def roll_max_drawdown(returns, window=252):
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_mdd = []
-    for i in range(window, len(returns) + 1):
-        if is_series:
-            window_returns = returns.iloc[i - window: i]
-        else:
-            window_returns = returns[i - window: i]
-        mdd_val = max_drawdown(window_returns)
-        rolling_mdd.append(mdd_val)
+    if not is_series:
+        returns = pd.Series(returns)
+
+    n = len(returns) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = max_drawdown(returns.iloc[i:i + window])
 
     if is_series:
-        return pd.Series(rolling_mdd, index=returns.index[window - 1:])
+        return pd.Series(out, index=returns.index[window - 1:])
     else:
-        return np.array(rolling_mdd)
+        return out
 
 
 def roll_up_capture(returns, factor_returns, window=252):
@@ -311,22 +306,19 @@ def roll_up_capture(returns, factor_returns, window=252):
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_up_caps = []
-    for i in range(window, len(returns_aligned) + 1):
-        if is_series:
-            window_returns = returns_aligned.iloc[i - window: i]
-            window_factor = factor_aligned.iloc[i - window: i]
-        else:
-            window_returns = returns_aligned[i - window: i]
-            window_factor = factor_aligned[i - window: i]
+    if not is_series:
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        up_cap_val = up_capture(window_returns, window_factor)
-        rolling_up_caps.append(up_cap_val)
+    n = len(returns_aligned) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = up_capture(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window])
 
     if is_series:
-        return pd.Series(rolling_up_caps, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1:])
     else:
-        return np.array(rolling_up_caps)
+        return out
 
 
 def roll_down_capture(returns, factor_returns, window=252):
@@ -357,22 +349,19 @@ def roll_down_capture(returns, factor_returns, window=252):
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    rolling_down_caps = []
-    for i in range(window, len(returns_aligned) + 1):
-        if is_series:
-            window_returns = returns_aligned.iloc[i - window: i]
-            window_factor = factor_aligned.iloc[i - window: i]
-        else:
-            window_returns = returns_aligned[i - window: i]
-            window_factor = factor_aligned[i - window: i]
+    if not is_series:
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        down_cap_val = down_capture(window_returns, window_factor)
-        rolling_down_caps.append(down_cap_val)
+    n = len(returns_aligned) - window + 1
+    out = np.empty(n, dtype=float)
+    for i in range(n):
+        out[i] = down_capture(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window])
 
     if is_series:
-        return pd.Series(rolling_down_caps, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1:])
     else:
-        return np.array(rolling_down_caps)
+        return out
 
 
 def roll_up_down_capture(returns, factor_returns, window=252):

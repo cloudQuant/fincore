@@ -261,7 +261,7 @@ def compute_bayes_cone(preds, starting_value=1.0):
     cum_preds = np.cumprod(preds + 1, axis=1) * starting_value
 
     def scoreatpercentile(cum_predictions, p):
-        return [np.percentile(cum_predictions[:, i], p) for i in range(cum_predictions.shape[1])]
+        return np.percentile(cum_predictions, p, axis=0).tolist()
 
     perc = {
         1: scoreatpercentile(cum_preds, 1),
@@ -362,10 +362,10 @@ def simulate_paths(is_returns, num_days, _starting_value=1, num_samples=1000, ra
     -------
     samples : numpy.ndarray
     """
-    samples = np.empty((num_samples, num_days))
-    seed = np.random.RandomState(seed=random_seed)
-    for i in range(num_samples):
-        samples[i, :] = is_returns.sample(num_days, replace=True, random_state=seed)
+    rng = np.random.RandomState(seed=random_seed)
+    is_values = np.asarray(is_returns)
+    indices = rng.randint(0, len(is_values), size=(num_samples, num_days))
+    samples = is_values[indices]
 
     return samples
 

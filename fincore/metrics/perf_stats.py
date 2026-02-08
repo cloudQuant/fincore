@@ -63,13 +63,18 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     """
     stats = OrderedDict()
 
-    stats['Annual return'] = annual_return(returns, period=period)
+    # Pre-compute shared intermediate results
+    mdd = max_drawdown(returns)
+    ann_ret = annual_return(returns, period=period)
+
+    stats['Annual return'] = ann_ret
     stats['Cumulative returns'] = cum_returns_final(returns, starting_value=0)
     stats['Annual volatility'] = annual_volatility(returns, period=period)
     stats['Sharpe ratio'] = sharpe_ratio(returns, period=period)
-    stats['Calmar ratio'] = calmar_ratio(returns, period=period)
+    # Calmar = annual_return / abs(max_drawdown), reuse pre-computed values
+    stats['Calmar ratio'] = ann_ret / abs(mdd) if mdd != 0 else np.nan
     stats['Stability'] = stability_of_timeseries(returns)
-    stats['Max drawdown'] = max_drawdown(returns)
+    stats['Max drawdown'] = mdd
     stats['Omega ratio'] = omega_ratio(returns)
     stats['Sortino ratio'] = sortino_ratio(returns, period=period)
     stats['Skew'] = skewness(returns)
@@ -78,9 +83,10 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     stats['Daily value at risk'] = value_at_risk(returns)
 
     if factor_returns is not None:
-        from fincore.metrics.alpha_beta import alpha, beta
-        stats['Alpha'] = alpha(returns, factor_returns)
-        stats['Beta'] = beta(returns, factor_returns)
+        from fincore.metrics.alpha_beta import alpha_beta
+        ab = alpha_beta(returns, factor_returns)
+        stats['Alpha'] = ab[0]
+        stats['Beta'] = ab[1]
 
     return pd.Series(stats)
 

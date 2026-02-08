@@ -750,7 +750,7 @@ class Empyrical:
     def common_sense_ratio(cls, returns=None):
         """计算常识比率."""
         returns = cls._get_returns(returns)
-        return _stats.common_sense_ratio(returns)
+        return _ratios.common_sense_ratio(returns)
 
     @classmethod
     def var_cov_var_normal(cls, p, c, mu=0, sigma=1):

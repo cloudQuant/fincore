@@ -342,8 +342,33 @@ def alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizati
                               annualization=annualization, out=out)
 
 
-def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
-    """Calculate alpha and beta for up-market periods only."""
+def _conditional_alpha_beta(returns, factor_returns, condition_func, risk_free=0.0,
+                            period=DAILY, annualization=None, out=None):
+    """Calculate alpha and beta for a conditional subset of market periods.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+    condition_func : callable
+        Function that takes a numpy array of factor returns and returns
+        a boolean mask selecting the desired market regime.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+    annualization : float, optional
+        Custom annualization factor.
+    out : np.ndarray, optional
+        pre-allocated array of length 2.
+
+    Returns
+    -------
+    np.ndarray
+        Array ``[alpha, beta]``. Elements are ``NaN`` if insufficient data.
+    """
     if out is None:
         out = np.empty((2,), dtype="float64")
 
@@ -353,28 +378,28 @@ def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     returns_array = np.asanyarray(returns)
     factor_array = np.asanyarray(factor_returns)
 
-    up_mask = factor_array > 0
-    up_returns = returns_array[up_mask]
-    up_factor = factor_array[up_mask]
+    mask = condition_func(factor_array)
+    masked_returns = returns_array[mask]
+    masked_factor = factor_array[mask]
 
-    if len(up_returns) < 2:
+    if len(masked_returns) < 2:
         out[0] = np.nan
         out[1] = np.nan
         return out
 
-    valid_mask = ~(np.isnan(up_returns) | np.isnan(up_factor))
-    up_returns_clean = up_returns[valid_mask]
-    up_factor_clean = up_factor[valid_mask]
+    valid_mask = ~(np.isnan(masked_returns) | np.isnan(masked_factor))
+    returns_clean = masked_returns[valid_mask]
+    factor_clean = masked_factor[valid_mask]
 
-    if len(up_returns_clean) < 2:
+    if len(returns_clean) < 2:
         out[0] = np.nan
         out[1] = np.nan
         return out
 
     ann_factor = annualization_factor(period, annualization)
 
-    returns_adj = up_returns_clean - risk_free
-    factor_returns_adj = up_factor_clean - risk_free
+    returns_adj = returns_clean - risk_free
+    factor_returns_adj = factor_clean - risk_free
 
     factor_var = np.var(factor_returns_adj, ddof=1)
     if factor_var == 0 or np.isnan(factor_var):
@@ -391,57 +416,76 @@ def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     out[0] = alpha_val
     out[1] = beta_val
     return out
+
+
+def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+    """Calculate alpha and beta for up-market periods only.
+
+    This helper restricts the sample to periods where the benchmark
+    (factor) return is positive and then estimates alpha and beta using
+    a single-factor model on excess returns.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    out : np.ndarray, optional
+        pre-allocated array of length 2, where index 0 receives
+        alpha and index 1 receives beta.
+
+    Returns
+    -------
+    np.ndarray
+        Array ``[alpha, beta]`` for up-market periods. Elements are
+        ``NaN`` if there is insufficient data.
+    """
+    return _conditional_alpha_beta(returns, factor_returns,
+                                   lambda f: f > 0,
+                                   risk_free, period, annualization, out)
 
 
 def down_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
-    """Calculate alpha and beta for down-market periods only."""
-    if out is None:
-        out = np.empty((2,), dtype="float64")
+    """Calculate alpha and beta for down-market periods only.
 
-    if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-        returns, factor_returns = returns.align(factor_returns, join="inner")
+    This helper restricts the sample to periods where the benchmark
+    (factor) return is non-positive and then estimates alpha and beta
+    using a single-factor model on excess returns.
 
-    returns_array = np.asanyarray(returns)
-    factor_array = np.asanyarray(factor_returns)
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the input data (for example ``DAILY``).
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
+    out : np.ndarray, optional
+        pre-allocated array of length 2, where index 0 receives
+        alpha and index 1 receives beta.
 
-    down_mask = factor_array <= 0
-    down_returns = returns_array[down_mask]
-    down_factor = factor_array[down_mask]
-
-    if len(down_returns) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    valid_mask = ~(np.isnan(down_returns) | np.isnan(down_factor))
-    down_returns_clean = down_returns[valid_mask]
-    down_factor_clean = down_factor[valid_mask]
-
-    if len(down_returns_clean) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    ann_factor = annualization_factor(period, annualization)
-
-    returns_adj = down_returns_clean - risk_free
-    factor_returns_adj = down_factor_clean - risk_free
-
-    factor_var = np.var(factor_returns_adj, ddof=1)
-    if factor_var == 0 or np.isnan(factor_var):
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    beta_val = np.cov(returns_adj, factor_returns_adj)[0, 1] / factor_var
-
-    alpha_series = returns_adj - (beta_val * factor_returns_adj)
-    mean_alpha = np.mean(alpha_series)
-    alpha_val = (1 + mean_alpha) ** ann_factor - 1
-
-    out[0] = alpha_val
-    out[1] = beta_val
-    return out
+    Returns
+    -------
+    np.ndarray
+        Array ``[alpha, beta]`` for down-market periods. Elements are
+        ``NaN`` if there is insufficient data.
+    """
+    return _conditional_alpha_beta(returns, factor_returns,
+                                   lambda f: f <= 0,
+                                   risk_free, period, annualization, out)
 
 
 def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
@@ -593,161 +637,3 @@ def alpha_percentile_rank(strategy_returns, all_strategies_returns, factor_retur
     percentile = rank / len(all_alphas)
 
     return float(percentile)
-
-
-def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
-    """Calculate alpha and beta for up-market periods only.
-
-    This helper restricts the sample to periods where the benchmark
-    (factor) return is positive and then estimates alpha and beta using
-    a single-factor model on excess returns.
-
-    Parameters
-    ----------
-    returns : array-like or pd.Series
-        Non-cumulative strategy returns.
-    factor_returns : array-like or pd.Series
-        Non-cumulative benchmark or factor returns.
-    risk_free : float, optional
-        Risk-free rate used when computing excess returns. Default is 0.0.
-    period : str, optional
-        Frequency of the input data (for example ``DAILY``).
-    annualization : float, optional
-        Custom annualization factor. If provided, this value is used
-        directly instead of inferring it from ``period``.
-    out : np.ndarray, optional
-        pre-allocated array of length 2, where index 0 receives
-        alpha and index 1 receives beta.
-
-    Returns
-    -------
-    np.ndarray
-        Array ``[alpha, beta]`` for up-market periods. Elements are
-        ``NaN`` if there is insufficient data.
-    """
-    if out is None:
-        out = np.empty((2,), dtype="float64")
-
-    if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-        returns, factor_returns = returns.align(factor_returns, join="inner")
-
-    returns_array = np.asanyarray(returns)
-    factor_array = np.asanyarray(factor_returns)
-
-    up_mask = factor_array > 0
-    up_returns = returns_array[up_mask]
-    up_factor = factor_array[up_mask]
-
-    if len(up_returns) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    valid_mask = ~(np.isnan(up_returns) | np.isnan(up_factor))
-    up_returns_clean = up_returns[valid_mask]
-    up_factor_clean = up_factor[valid_mask]
-
-    if len(up_returns_clean) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    ann_factor = annualization_factor(period, annualization)
-
-    returns_adj = up_returns_clean - risk_free
-    factor_returns_adj = up_factor_clean - risk_free
-
-    factor_var = np.var(factor_returns_adj, ddof=1)
-    if factor_var == 0 or np.isnan(factor_var):
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    beta_val = np.cov(returns_adj, factor_returns_adj)[0, 1] / factor_var
-
-    alpha_series = returns_adj - (beta_val * factor_returns_adj)
-    mean_alpha = np.mean(alpha_series)
-    alpha_val = (1 + mean_alpha) ** ann_factor - 1
-
-    out[0] = alpha_val
-    out[1] = beta_val
-    return out
-
-
-def down_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
-    """Calculate alpha and beta for down-market periods only.
-
-    This helper restricts the sample to periods where the benchmark
-    (factor) return is non-positive and then estimates alpha and beta
-    using a single-factor model on excess returns.
-
-    Parameters
-    ----------
-    returns : array-like or pd.Series
-        Non-cumulative strategy returns.
-    factor_returns : array-like or pd.Series
-        Non-cumulative benchmark or factor returns.
-    risk_free : float, optional
-        Risk-free rate used when computing excess returns. Default is 0.0.
-    period : str, optional
-        Frequency of the input data (for example ``DAILY``).
-    annualization : float, optional
-        Custom annualization factor. If provided, this value is used
-        directly instead of inferring it from ``period``.
-    out : np.ndarray, optional
-        pre-allocated array of length 2, where index 0 receives
-        alpha and index 1 receives beta.
-
-    Returns
-    -------
-    np.ndarray
-        Array ``[alpha, beta]`` for down-market periods. Elements are
-        ``NaN`` if there is insufficient data.
-    """
-    if out is None:
-        out = np.empty((2,), dtype="float64")
-
-    if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-        returns, factor_returns = returns.align(factor_returns, join="inner")
-
-    returns_array = np.asanyarray(returns)
-    factor_array = np.asanyarray(factor_returns)
-
-    down_mask = factor_array <= 0
-    down_returns = returns_array[down_mask]
-    down_factor = factor_array[down_mask]
-
-    if len(down_returns) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    valid_mask = ~(np.isnan(down_returns) | np.isnan(down_factor))
-    down_returns_clean = down_returns[valid_mask]
-    down_factor_clean = down_factor[valid_mask]
-
-    if len(down_returns_clean) < 2:
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    ann_factor = annualization_factor(period, annualization)
-
-    returns_adj = down_returns_clean - risk_free
-    factor_returns_adj = down_factor_clean - risk_free
-
-    factor_var = np.var(factor_returns_adj, ddof=1)
-    if factor_var == 0 or np.isnan(factor_var):
-        out[0] = np.nan
-        out[1] = np.nan
-        return out
-
-    beta_val = np.cov(returns_adj, factor_returns_adj)[0, 1] / factor_var
-
-    alpha_series = returns_adj - (beta_val * factor_returns_adj)
-    mean_alpha = np.mean(alpha_series)
-    alpha_val = (1 + mean_alpha) ** ann_factor - 1
-
-    out[0] = alpha_val
-    out[1] = beta_val
-    return out

@@ -74,4 +74,4 @@ PERIODS['Recovery'] = (pd.Timestamp('20090401'),
                        pd.Timestamp('20130101'))
 
 PERIODS['New Normal'] = (pd.Timestamp('20130101'),
-                         pd.Timestamp.now().normalize())
+                         pd.Timestamp('20251231'))
