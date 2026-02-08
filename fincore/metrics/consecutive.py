@@ -79,8 +79,8 @@ def consecutive_stats(returns):
         }
 
     # Resample once
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
 
     up = lambda s: s > 0
     down = lambda s: s < 0
@@ -224,7 +224,7 @@ def max_consecutive_up_weeks(returns):
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
     return _max_consecutive_run(weekly_returns, lambda s: s > 0)
 
 
@@ -244,7 +244,7 @@ def max_consecutive_down_weeks(returns):
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
     return _max_consecutive_run(weekly_returns, lambda s: s < 0)
 
 
@@ -264,7 +264,7 @@ def max_consecutive_up_months(returns):
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
     return _max_consecutive_run(monthly_returns, lambda s: s > 0)
 
 
@@ -284,7 +284,7 @@ def max_consecutive_down_months(returns):
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
     return _max_consecutive_run(monthly_returns, lambda s: s < 0)
 
 

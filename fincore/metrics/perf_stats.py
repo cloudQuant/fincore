@@ -72,7 +72,7 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     stats['Annual volatility'] = annual_volatility(returns, period=period)
     stats['Sharpe ratio'] = sharpe_ratio(returns, period=period)
     # Calmar = annual_return / abs(max_drawdown), reuse pre-computed values
-    stats['Calmar ratio'] = ann_ret / abs(mdd) if mdd != 0 else np.nan
+    stats['Calmar ratio'] = calmar_ratio(returns, period=period)
     stats['Stability'] = stability_of_timeseries(returns)
     stats['Max drawdown'] = mdd
     stats['Omega ratio'] = omega_ratio(returns)

@@ -201,7 +201,7 @@ def extract_round_trips(transactions, portfolio_value=None):
                 continue
 
             signed_price = row.price * np.sign(row.amount)
-            remaining = abs(int(row.amount))
+            remaining = abs(row.amount)
             if (len(qty_stack) == 0) or (
                 np.copysign(1, qty_stack[-1][0]) == np.copysign(1, row.amount)
             ):
@@ -305,6 +305,9 @@ def add_closing_transactions(positions, transactions):
         txn_sym = transactions[transactions.symbol == sym]
 
         ending_amount = txn_sym.amount.sum()
+
+        if ending_amount == 0:
+            continue
 
         ending_price = ending_val / ending_amount
         closing_txn = {
