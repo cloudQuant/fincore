@@ -139,22 +139,16 @@ def hurst_exponent(returns):
             if n_subseries < 1:
                 continue
 
-            rs_list = []
-            for i in range(n_subseries):
-                sub_series = returns_clean[i * lag: (i + 1) * lag]
-                if len(sub_series) < 2:
-                    continue
+            # Vectorized: reshape into (n_subseries, lag) matrix
+            block = returns_clean[:n_subseries * lag].reshape(n_subseries, lag)
+            means = block.mean(axis=1, keepdims=True)
+            cumdevs = np.cumsum(block - means, axis=1)
+            r_sub = cumdevs.max(axis=1) - cumdevs.min(axis=1)
+            s_sub = block.std(axis=1, ddof=1)
 
-                mean_sub = np.mean(sub_series)
-                y_sub = np.cumsum(sub_series - mean_sub)
-                r_sub = np.max(y_sub) - np.min(y_sub)
-                s_sub = np.std(sub_series, ddof=1)
-
-                if s_sub > 0 and r_sub > 0:
-                    rs_list.append(r_sub / s_sub)
-
-            if rs_list:
-                rs_values.append((lag, np.mean(rs_list)))
+            valid = (s_sub > 0) & (r_sub > 0)
+            if valid.any():
+                rs_values.append((lag, float(np.mean(r_sub[valid] / s_sub[valid]))))
 
         if len(rs_values) < 2:
             if s_std > 0 and r_range > 0:

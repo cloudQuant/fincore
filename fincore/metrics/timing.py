@@ -54,11 +54,6 @@ def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
         insufficient data.
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     if len(returns_aligned) < 10:
         return np.nan
@@ -101,11 +96,6 @@ def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
         insufficient data.
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     if len(returns_aligned) < 10:
         return np.nan
@@ -152,10 +142,7 @@ def market_timing_return(returns, factor_returns, risk_free=0.0):
         return np.nan
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
-    
+
     excess_factor = factor_aligned - risk_free
 
     return gamma * np.mean(excess_factor**2)
@@ -188,11 +175,6 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
         return np.nan
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     if len(returns_aligned) < 10:
         return np.nan

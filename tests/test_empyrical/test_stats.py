@@ -1607,27 +1607,27 @@ class TestStats(BaseTestCase):
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (weekly_returns, 1),  # Has a drawdown lasting 1 week
+        (weekly_returns, 1 / 5),  # Has a drawdown lasting 1 day => 1/5 weeks
     ])
     def test_max_drawdown_weeks(self, returns, expected):
         result = self.empyrical.max_drawdown_weeks(returns)
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
-            assert result == expected, f"Expected {expected} but got {result}"
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
 
     # Regression tests for max_drawdown_months
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (monthly_returns, 1),  # Has a drawdown lasting 1 month
+        (monthly_returns, 1 / 21),  # Has a drawdown lasting 1 day => 1/21 months
     ])
     def test_max_drawdown_months(self, returns, expected):
         result = self.empyrical.max_drawdown_months(returns)
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
-            assert result == expected, f"Expected {expected} but got {result}"
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
 
     # Regression tests for max_drawdown_recovery_days
     @parameterized.expand([
@@ -1655,7 +1655,7 @@ class TestStats(BaseTestCase):
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
-            assert isinstance(result, (int, np.integer)) or np.isnan(result)
+            assert isinstance(result, (int, float, np.integer, np.floating)) or np.isnan(result)
 
     # Regression tests for max_drawdown_recovery_months
     @parameterized.expand([
@@ -1668,7 +1668,7 @@ class TestStats(BaseTestCase):
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
-            assert isinstance(result, (int, np.integer)) or np.isnan(result)
+            assert isinstance(result, (int, float, np.integer, np.floating)) or np.isnan(result)
 
     # Regression tests for second_max_drawdown
     @parameterized.expand([

@@ -18,6 +18,8 @@
 
 import numpy as np
 import pandas as pd
+from fincore.constants import WEEKLY, MONTHLY
+from fincore.constants.periods import PERIOD_TO_FREQ
 from fincore.metrics.returns import cum_returns_final
 
 __all__ = [
@@ -37,7 +39,60 @@ __all__ = [
     'max_consecutive_up_end_date',
     'max_consecutive_down_start_date',
     'max_consecutive_down_end_date',
+    'consecutive_stats',
 ]
+
+
+def _max_consecutive_run(series, condition):
+    """Helper: compute max consecutive run length for a boolean condition."""
+    mask = condition(series)
+    if not mask.any():
+        return 0
+    groups = (mask != mask.shift(1)).cumsum()
+    return int(mask.groupby(groups).sum().max())
+
+
+def consecutive_stats(returns):
+    """Compute all consecutive up/down metrics in one pass.
+
+    This avoids redundant resample operations when computing multiple
+    consecutive indicators for the same return series.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative daily returns.
+
+    Returns
+    -------
+    dict
+        Dictionary with keys for all consecutive metrics.
+    """
+    if len(returns) < 1:
+        return {
+            'max_consecutive_up_days': np.nan,
+            'max_consecutive_down_days': np.nan,
+            'max_consecutive_up_weeks': np.nan,
+            'max_consecutive_down_weeks': np.nan,
+            'max_consecutive_up_months': np.nan,
+            'max_consecutive_down_months': np.nan,
+        }
+
+    # Resample once
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+
+    up = lambda s: s > 0
+    down = lambda s: s < 0
+
+    return {
+        'max_consecutive_up_days': _max_consecutive_run(returns, up),
+        'max_consecutive_down_days': _max_consecutive_run(returns, down),
+        'max_consecutive_up_weeks': _max_consecutive_run(weekly_returns, up),
+        'max_consecutive_down_weeks': _max_consecutive_run(weekly_returns, down),
+        'max_consecutive_up_months': _max_consecutive_run(monthly_returns, up),
+        'max_consecutive_down_months': _max_consecutive_run(monthly_returns, down),
+    }
 
 
 def max_consecutive_up_days(returns):
@@ -169,18 +224,8 @@ def max_consecutive_up_weeks(returns):
     """
     if len(returns) < 1:
         return np.nan
-
-    weekly_returns = returns.resample("W").apply(lambda g: cum_returns_final(g))
-
-    up_weeks = weekly_returns > 0
-
-    if not up_weeks.any():
-        return 0
-
-    groups = (up_weeks != up_weeks.shift(1)).cumsum()
-    consecutive_counts = up_weeks.groupby(groups).sum()
-
-    return consecutive_counts.max()
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
+    return _max_consecutive_run(weekly_returns, lambda s: s > 0)
 
 
 def max_consecutive_down_weeks(returns):
@@ -199,18 +244,8 @@ def max_consecutive_down_weeks(returns):
     """
     if len(returns) < 1:
         return np.nan
-
-    weekly_returns = returns.resample("W").apply(lambda g: cum_returns_final(g))
-
-    down_weeks = weekly_returns < 0
-
-    if not down_weeks.any():
-        return 0
-
-    groups = (down_weeks != down_weeks.shift(1)).cumsum()
-    consecutive_counts = down_weeks.groupby(groups).sum()
-
-    return consecutive_counts.max()
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(lambda g: cum_returns_final(g))
+    return _max_consecutive_run(weekly_returns, lambda s: s < 0)
 
 
 def max_consecutive_up_months(returns):
@@ -229,18 +264,8 @@ def max_consecutive_up_months(returns):
     """
     if len(returns) < 1:
         return np.nan
-
-    monthly_returns = returns.resample("M").apply(lambda g: cum_returns_final(g))
-
-    up_months = monthly_returns > 0
-
-    if not up_months.any():
-        return 0
-
-    groups = (up_months != up_months.shift(1)).cumsum()
-    consecutive_counts = up_months.groupby(groups).sum()
-
-    return consecutive_counts.max()
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+    return _max_consecutive_run(monthly_returns, lambda s: s > 0)
 
 
 def max_consecutive_down_months(returns):
@@ -259,18 +284,8 @@ def max_consecutive_down_months(returns):
     """
     if len(returns) < 1:
         return np.nan
-
-    monthly_returns = returns.resample("M").apply(lambda g: cum_returns_final(g))
-
-    down_months = monthly_returns < 0
-
-    if not down_months.any():
-        return 0
-
-    groups = (down_months != down_months.shift(1)).cumsum()
-    consecutive_counts = down_months.groupby(groups).sum()
-
-    return consecutive_counts.max()
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(lambda g: cum_returns_final(g))
+    return _max_consecutive_run(monthly_returns, lambda s: s < 0)
 
 
 def max_single_day_gain(returns):

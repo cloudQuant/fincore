@@ -47,7 +47,6 @@ __all__ = [
     'up_capture',
     'down_capture',
     'up_down_capture',
-    'tail_ratio',
 ]
 
 

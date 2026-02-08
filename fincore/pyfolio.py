@@ -19,7 +19,11 @@ import matplotlib
 from fincore.constants import *
 from fincore.utils import *
 
-matplotlib.use('Agg')
+if matplotlib.get_backend().lower() in ('', 'agg') or not hasattr(matplotlib, '_called_from_pytest'):
+    try:
+        matplotlib.use('Agg')
+    except Exception:
+        pass
 cmap = plt.get_cmap('gist_rainbow')
 
 

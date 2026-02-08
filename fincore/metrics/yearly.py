@@ -221,11 +221,6 @@ def annual_active_return(returns, factor_returns, period=DAILY, annualization=No
         return np.nan
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, (pd.Series, np.ndarray)):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, (pd.Series, np.ndarray)):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     strategy_annual = annual_return(returns_aligned, period, annualization)
     benchmark_annual = annual_return(factor_aligned, period, annualization)
@@ -310,11 +305,6 @@ def information_ratio_by_year(returns, factor_returns, period=DAILY, annualizati
     factor_returns = ensure_datetime_index_series(factor_returns, period=period)
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-    
-    if not isinstance(returns_aligned, pd.Series):
-        returns_aligned = pd.Series(list(returns_aligned))
-    if not isinstance(factor_aligned, pd.Series):
-        factor_aligned = pd.Series(list(factor_aligned))
 
     def calc_ir_for_year(returns_group):
         factor_group = factor_aligned.loc[returns_group.index]
