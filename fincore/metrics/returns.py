@@ -223,6 +223,12 @@ def aggregate_returns(returns, convert_to="monthly"):
     def cumulate_returns(ret):
         return cum_returns(ret).iloc[-1]
 
+    if not isinstance(returns.index, pd.DatetimeIndex):
+        raise ValueError(
+            "aggregate_returns requires returns with a DatetimeIndex, "
+            "got {} instead.".format(type(returns.index).__name__)
+        )
+
     if convert_to == WEEKLY:
         grouping = [lambda dt: dt.year, lambda dt: dt.isocalendar()[1]]
     elif convert_to == MONTHLY:
@@ -271,4 +277,9 @@ def normalize(returns, starting_value=1):
     3    1.15
     dtype: float64
     """
-    return starting_value * (returns / returns.iloc[0])
+    first_value = returns.iloc[0]
+    if first_value == 0:
+        import warnings
+        warnings.warn("First value of returns is 0, normalization will produce inf/nan values.")
+        return returns * np.nan
+    return starting_value * (returns / first_value)

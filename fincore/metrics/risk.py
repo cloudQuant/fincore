@@ -288,10 +288,10 @@ def tracking_error(returns, factor_returns, period=DAILY, annualization=None, ou
     return out
 
 
-def residual_risk(returns, factor_returns, risk_free=0.0):
-    """Calculate residual risk (tracking error of alpha).
+def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
+    """Calculate annualized residual risk (idiosyncratic risk).
 
-    Residual risk is the annualized standard deviation of the residuals
+    Residual risk is the standard deviation of regression residuals
     from a single-factor regression of excess returns on benchmark
     excess returns.
 
@@ -303,6 +303,11 @@ def residual_risk(returns, factor_returns, risk_free=0.0):
         Non-cumulative benchmark or factor returns.
     risk_free : float, optional
         Risk-free rate used when computing excess returns. Default is 0.0.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : float, optional
+        Custom annualization factor. If provided, this value is used
+        directly instead of inferring it from ``period``.
 
     Returns
     -------
@@ -323,7 +328,8 @@ def residual_risk(returns, factor_returns, risk_free=0.0):
     predicted_returns = beta_val * excess_factor
     residuals = excess_returns - predicted_returns
 
-    return np.std(residuals, ddof=1) * np.sqrt(APPROX_BDAYS_PER_YEAR)
+    ann_factor = annualization_factor(period, annualization)
+    return np.std(residuals, ddof=1) * np.sqrt(ann_factor)
 
 
 def var_excess_return(returns, cutoff=0.05):

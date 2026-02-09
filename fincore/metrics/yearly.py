@@ -68,6 +68,16 @@ def annual_return(returns, period=DAILY, annualization=None):
     ann_factor = annualization_factor(period, annualization)
     num_years = len(returns) / ann_factor
     ending_value = cum_returns_final(returns, starting_value=1)
+    if isinstance(ending_value, (pd.Series, np.ndarray)):
+        result = np.asarray(ending_value, dtype=float).copy()
+        mask = result <= 0
+        result[mask] = -1.0
+        result[~mask] = result[~mask] ** (1 / num_years) - 1
+        if isinstance(ending_value, pd.Series):
+            return pd.Series(result, index=ending_value.index)
+        return result
+    if ending_value <= 0:
+        return -1.0
     return ending_value ** (1 / num_years) - 1
 
 
