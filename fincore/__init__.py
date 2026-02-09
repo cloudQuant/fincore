@@ -14,6 +14,7 @@ __all__ = [
     "Empyrical",
     "Pyfolio",
     "analyze",
+    "create_strategy_report",
     # Commonly-used metric functions (flat API)
     "sharpe_ratio",
     "sortino_ratio",
@@ -81,6 +82,10 @@ def __getattr__(name: str):
         from .core.context import analyze
         globals()["analyze"] = analyze
         return analyze
+    if name == "create_strategy_report":
+        from .report import create_strategy_report
+        globals()["create_strategy_report"] = create_strategy_report
+        return create_strategy_report
 
     # Flat metric function API
     entry = _FLAT_API.get(name)
