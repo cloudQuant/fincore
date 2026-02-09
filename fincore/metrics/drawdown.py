@@ -251,6 +251,9 @@ def get_max_drawdown_underwater(underwater):
     recovery : datetime
         The date of recovery or NaT if not recovered.
     """
+    if underwater.min() >= 0:
+        return pd.NaT, pd.NaT, pd.NaT
+
     valley = underwater.idxmin()  # end of the period
     # Find first 0 (peak is where underwater == 0 before valley)
     try:

@@ -45,10 +45,15 @@ class _dual_method:
 
     def __get__(self, obj, objtype=None):
         if obj is None:
-            @functools.wraps(self.func)
-            def wrapper(*args, **kwargs):
-                return self.func(objtype, *args, **kwargs)
-            return wrapper
+            attr_name = '_cls_bound_' + self.__name__
+            try:
+                return objtype.__dict__[attr_name]
+            except KeyError:
+                @functools.wraps(self.func)
+                def wrapper(*args, **kwargs):
+                    return self.func(objtype, *args, **kwargs)
+                setattr(objtype, attr_name, wrapper)
+                return wrapper
         else:
             attr_name = '_bound_' + self.__name__
             try:

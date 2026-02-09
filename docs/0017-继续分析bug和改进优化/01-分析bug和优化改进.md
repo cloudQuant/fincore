@@ -173,3 +173,35 @@
 | 性能 1 | `calc_bootstrap` for 循环 | — | 通用接口限制，暂不优化 | ⏭️ 跳过 |
 | 性能 2 | `hurst_exponent` 遍历所有 lag | `fincore/metrics/stats.py` | 当 lag 范围 >30 时使用 `np.geomspace` 对数间隔采样 30 个点 | ✅ 已修复 |
 | 性能 3 | `get_all_drawdowns_detailed` for 循环 | — | 低优先级，暂不优化 | ⏭️ 跳过 |
+
+---
+
+### 六、0013-0017 遗留问题修复记录
+
+> 修复日期: 2026-02-09
+> 修复后测试: 1233个测试全部通过，81个warnings
+
+以下为对 0013-0017 各轮遗留未修复问题的集中处理：
+
+| 来源 | 问题 | 修复文件 | 修复内容 | 状态 |
+|------|------|---------|---------|------|
+| 0013-Bug10 | `get_max_drawdown_underwater` 全正收益时无限循环 | `fincore/metrics/drawdown.py` | 添加 `if underwater.min() >= 0: return (NaT, NaT, NaT)` 提前退出；同步更新测试预期（无回撤时返回空列表） | ✅ 已修复 |
+| 0014-Bug9 | `_dual_method` 类级闭包每次创建 | `fincore/empyrical.py` | 类级调用也缓存到 `objtype.__dict__['_cls_bound_' + name]`，避免重复创建闭包 | ✅ 已修复 |
+| 0014-Perf5 | `compute_consistency_score` 逐列循环 | `fincore/metrics/bayesian.py` | 向量化为 `(cum_preds < values[np.newaxis, :]).mean(axis=0)` | ✅ 已修复 |
+| 0016-Opt3 | `_market_correlation` 对齐方式不一致 | — | 保留 inner join（更高效且语义正确，NaN 过滤已覆盖外连接场景） | ⏭️ 保留现状 |
+| 0016-Perf1 | `roll_alpha`/`roll_alpha_beta` Python for 循环 | `fincore/metrics/rolling.py` | 尝试向量化但回退：`alpha_aligned` 使用复合年化 `(1+mean)^ann-1`，属非线性运算无法用 rolling 操作表达 | ⏭️ 不可向量化 |
+| 0017-Bug4 | `add_closing_transactions` 极端价格 | `fincore/metrics/round_trips.py` | 阈值从 `1e-10` 提高到 `1e-6` | ✅ 已修复 |
+| 0017-Opt4 | `stability_of_timeseries` 重复导出 | `fincore/metrics/stats.py` | 从 `stats.__all__` 中移除（保留导入供内部使用） | ✅ 已修复 |
+
+#### 仍未修复的遗留问题
+
+| 来源 | 问题 | 原因 |
+|------|------|------|
+| 0013-Bug8 | `aligned_series` 外连接保留 NaN | 改为 inner join 会破坏混合频率对齐行为，影响面过大 |
+| 0014-Bug8 | `perf_stats` 内联 Sharpe 维护风险 | 当前 `risk_free=0` 结果正确，仅维护风险 |
+| 0014-Opt3/0017-Opt3 | capture 函数重复对齐 | 需修改公共 API |
+| 0014-Opt4/0016-Opt1 | `consecutive.py` 重复 resample | 已有 `consecutive_stats()` 批量版本 |
+| 0014-Opt5/0017-Opt2 | drawdown 函数重复调用 `get_all_drawdowns_detailed` | 需新增统一接口 |
+| 0014-Opt7 | 重复 `rolling_window` 函数 | 两个实现用途不同（1D vs 多维） |
+| 0016-Perf1 | `roll_alpha`/`roll_alpha_beta` 向量化 | `alpha_aligned` 使用复合年化，非线性运算无法向量化 |
+| 0016-Perf2/Perf3 | `roll_up/down_capture`、`gpd_risk_estimates` 优化 | 低优先级，算法复杂度限制 |
