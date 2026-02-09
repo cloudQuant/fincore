@@ -223,6 +223,12 @@ def aligned_series(*many_series):
         # optimization: ndarrays of the same length are already aligned
         return many_series
 
+    if len(many_series) == 2 and isinstance(head, pd.Series) and isinstance(tail[0], pd.Series):
+        if head.index.equals(tail[0].index):
+            return many_series
+        combined = pd.concat([head, tail[0]], axis=1)
+        return tuple(combined.iloc[:, i] for i in range(2))
+
     # dataframe has no ``itervalues``
     return tuple(
         v

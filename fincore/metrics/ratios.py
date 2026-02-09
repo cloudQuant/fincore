@@ -857,6 +857,27 @@ def stability_of_timeseries(returns):
     return rhat**2
 
 
+def _capture_aligned(returns, factor_returns, period=DAILY):
+    """Compute capture ratio on pre-aligned data (no alignment step)."""
+    from fincore.metrics.returns import cum_returns_final
+
+    if len(returns) < 1:
+        return np.nan
+
+    ann_factor = annualization_factor(period, None)
+    num_years = len(returns) / ann_factor
+    strategy_ending = cum_returns_final(returns, starting_value=1)
+    strategy_ann_return = strategy_ending ** (1 / num_years) - 1
+
+    benchmark_ending = cum_returns_final(factor_returns, starting_value=1)
+    benchmark_ann_return = benchmark_ending ** (1 / num_years) - 1
+
+    if benchmark_ann_return == 0:
+        return np.nan
+
+    return strategy_ann_return / benchmark_ann_return
+
+
 def capture(returns, factor_returns, period=DAILY):
     """Calculate the capture ratio versus a benchmark.
 
@@ -880,28 +901,12 @@ def capture(returns, factor_returns, period=DAILY):
         annualized return). Returns ``NaN`` if there are insufficient
         observations or the benchmark annualized return is zero.
     """
-    from fincore.metrics.returns import cum_returns_final
-
     if len(returns) < 1 or len(factor_returns) < 1:
         return np.nan
 
     returns, factor_returns = aligned_series(returns, factor_returns)
 
-    if len(returns) < 1:
-        return np.nan
-
-    ann_factor = annualization_factor(period, None)
-    num_years = len(returns) / ann_factor
-    strategy_ending = cum_returns_final(returns, starting_value=1)
-    strategy_ann_return = strategy_ending ** (1 / num_years) - 1
-
-    benchmark_ending = cum_returns_final(factor_returns, starting_value=1)
-    benchmark_ann_return = benchmark_ending ** (1 / num_years) - 1
-
-    if benchmark_ann_return == 0:
-        return np.nan
-
-    return strategy_ann_return / benchmark_ann_return
+    return _capture_aligned(returns, factor_returns, period)
 
 
 def up_capture(returns, factor_returns, period=DAILY):
@@ -936,7 +941,7 @@ def up_capture(returns, factor_returns, period=DAILY):
     if len(up_returns) < 1:
         return np.nan
 
-    return capture(up_returns, up_factor_returns, period=period)
+    return _capture_aligned(up_returns, up_factor_returns, period=period)
 
 
 def down_capture(returns, factor_returns, period=DAILY):
@@ -971,7 +976,7 @@ def down_capture(returns, factor_returns, period=DAILY):
     if len(down_returns) < 1:
         return np.nan
 
-    return capture(down_returns, down_factor_returns, period=period)
+    return _capture_aligned(down_returns, down_factor_returns, period=period)
 
 
 def up_down_capture(returns, factor_returns, period=DAILY):
@@ -1008,8 +1013,8 @@ def up_down_capture(returns, factor_returns, period=DAILY):
     if len(up_returns) < 1 or len(down_returns) < 1:
         return np.nan
 
-    up_cap = capture(up_returns, up_factor_returns, period=period)
-    down_cap = capture(down_returns, down_factor_returns, period=period)
+    up_cap = _capture_aligned(up_returns, up_factor_returns, period=period)
+    down_cap = _capture_aligned(down_returns, down_factor_returns, period=period)
 
     if np.isnan(up_cap) or np.isnan(down_cap) or down_cap == 0:
         return np.nan

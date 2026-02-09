@@ -255,12 +255,10 @@ def beta(returns, factor_returns, risk_free=0.0, _period=DAILY, _annualization=N
         Beta of the strategy versus the benchmark. For 1D input a scalar
         is returned; for 2D input one value is returned per column.
     """
-    _ = (risk_free, _period, _annualization)
-
     if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
         returns, factor_returns = aligned_series(returns, factor_returns)
 
-    return beta_aligned(returns, factor_returns, out=out)
+    return beta_aligned(returns, factor_returns, risk_free=risk_free, out=out)
 
 
 def alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None):

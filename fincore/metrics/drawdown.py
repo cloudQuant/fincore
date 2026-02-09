@@ -267,7 +267,7 @@ def get_max_drawdown_underwater(underwater):
     try:
         recovery = underwater[valley:][underwater[valley:] == 0].index[0]
     except IndexError:
-        recovery = np.nan  # drawdown isn't recovered
+        recovery = pd.NaT  # drawdown isn't recovered
 
     return peak, valley, recovery
 
@@ -432,9 +432,7 @@ def max_drawdown_days(returns):
     start_idx = cum_ret.loc[:end_idx].idxmax()
 
     if isinstance(returns.index, pd.DatetimeIndex):
-        start_pos = returns.index.get_loc(start_idx)
-        end_pos = returns.index.get_loc(end_idx)
-        return end_pos - start_pos
+        return (end_idx - start_idx).days
     else:
         start_pos = returns.index.get_loc(start_idx)
         end_pos = returns.index.get_loc(end_idx)
@@ -458,7 +456,7 @@ def max_drawdown_weeks(returns):
     days = max_drawdown_days(returns)
     if np.isnan(days):
         return np.nan
-    return days / 5
+    return days / 7
 
 
 def max_drawdown_months(returns):

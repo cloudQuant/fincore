@@ -55,7 +55,7 @@ except ImportError:
         pass
     class Future(_ZiplineAssetStub):
         pass
-    warnings.warn('Module "zipline.assets" not found; multipliers will not be applied to position notionals.')
+    _ZIPLINE_WARNING = 'Module "zipline.assets" not found; multipliers will not be applied to position notionals.'
 
 
 class Empyrical:

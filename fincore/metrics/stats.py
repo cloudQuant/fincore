@@ -270,6 +270,47 @@ def serial_correlation(returns, lag=1):
     return float(corr) if not np.isnan(corr) else np.nan
 
 
+def _market_correlation(returns, benchmark_returns):
+    """Compute Pearson correlation between strategy and benchmark returns.
+
+    Shared implementation for stock/bond/futures market correlation.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    benchmark_returns : array-like or pd.Series
+        Non-cumulative benchmark returns.
+
+    Returns
+    -------
+    float
+        Pearson correlation coefficient in ``[-1, 1]``, or ``NaN`` if
+        there are fewer than two valid observations.
+    """
+    if returns is None or benchmark_returns is None:
+        return np.nan
+
+    if isinstance(returns, pd.Series) and isinstance(benchmark_returns, pd.Series):
+        returns, benchmark_returns = returns.align(benchmark_returns, join="inner")
+
+    if len(returns) < 2 or len(benchmark_returns) < 2:
+        return np.nan
+
+    returns_array = np.asanyarray(returns)
+    benchmark_array = np.asanyarray(benchmark_returns)
+
+    valid_mask = ~(np.isnan(returns_array) | np.isnan(benchmark_array))
+    returns_clean = returns_array[valid_mask]
+    benchmark_clean = benchmark_array[valid_mask]
+
+    if len(returns_clean) < 2:
+        return np.nan
+
+    corr = np.corrcoef(returns_clean, benchmark_clean)[0, 1]
+    return float(corr) if not np.isnan(corr) else np.nan
+
+
 def stock_market_correlation(returns, market_returns):
     """Determine the correlation between strategy and stock market returns.
 
@@ -287,28 +328,7 @@ def stock_market_correlation(returns, market_returns):
         and market returns, or ``NaN`` if there are fewer than two valid
         observations.
     """
-    if len(returns) < 2 or len(market_returns) < 2:
-        return np.nan
-
-    if isinstance(returns, pd.Series) and isinstance(market_returns, pd.Series):
-        returns, market_returns = returns.align(market_returns, join="inner")
-
-    if len(returns) < 2:
-        return np.nan
-
-    returns_array = np.asanyarray(returns)
-    market_array = np.asanyarray(market_returns)
-
-    valid_mask = ~(np.isnan(returns_array) | np.isnan(market_array))
-    returns_clean = returns_array[valid_mask]
-    market_clean = market_array[valid_mask]
-
-    if len(returns_clean) < 2:
-        return np.nan
-
-    correlation = np.corrcoef(returns_clean, market_clean)[0, 1]
-
-    return float(correlation) if not np.isnan(correlation) else np.nan
+    return _market_correlation(returns, market_returns)
 
 
 def bond_market_correlation(returns, bond_returns):
@@ -328,28 +348,7 @@ def bond_market_correlation(returns, bond_returns):
         and bond market returns, or ``NaN`` if there are fewer than two
         valid observations.
     """
-    if len(returns) < 2 or len(bond_returns) < 2:
-        return np.nan
-
-    if isinstance(returns, pd.Series) and isinstance(bond_returns, pd.Series):
-        returns, bond_returns = returns.align(bond_returns, join="inner")
-
-    if len(returns) < 2:
-        return np.nan
-
-    returns_array = np.asanyarray(returns)
-    bond_array = np.asanyarray(bond_returns)
-
-    valid_mask = ~(np.isnan(returns_array) | np.isnan(bond_array))
-    returns_clean = returns_array[valid_mask]
-    bond_clean = bond_array[valid_mask]
-
-    if len(returns_clean) < 2:
-        return np.nan
-
-    correlation = np.corrcoef(returns_clean, bond_clean)[0, 1]
-
-    return float(correlation) if not np.isnan(correlation) else np.nan
+    return _market_correlation(returns, bond_returns)
 
 
 def futures_market_correlation(returns, futures_returns):
@@ -369,27 +368,7 @@ def futures_market_correlation(returns, futures_returns):
         and futures market returns, or ``NaN`` if there are fewer than two
         valid observations.
     """
-    if returns is None or futures_returns is None:
-        return np.nan
-
-    if isinstance(returns, pd.Series) and isinstance(futures_returns, pd.Series):
-        returns, futures_returns = returns.align(futures_returns, join="inner")
-
-    if len(returns) < 2 or len(futures_returns) < 2:
-        return np.nan
-
-    returns_array = np.asanyarray(returns)
-    futures_array = np.asanyarray(futures_returns)
-
-    valid_mask = ~(np.isnan(returns_array) | np.isnan(futures_array))
-    returns_clean = returns_array[valid_mask]
-    futures_clean = futures_array[valid_mask]
-
-    if len(returns_clean) < 2:
-        return np.nan
-
-    corr = np.corrcoef(returns_clean, futures_clean)[0, 1]
-    return float(corr) if not np.isnan(corr) else np.nan
+    return _market_correlation(returns, futures_returns)
 
 
 def win_rate(returns):
