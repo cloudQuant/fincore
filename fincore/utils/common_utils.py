@@ -1,7 +1,6 @@
 import warnings
 from functools import wraps
 from itertools import cycle
-from matplotlib.pyplot import cm
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
@@ -763,16 +762,17 @@ def sample_colormap(cmap_name, n_samples):
         import matplotlib.pyplot as plt
         colormap = plt.colormaps[cmap_name]
     except (AttributeError, KeyError):
+        from matplotlib.pyplot import cm as _cm
         try:
             # Try intermediate API (matplotlib 3.5.0 - 3.7.x)
-            colormap = cm.get_cmap(cmap_name)
+            colormap = _cm.get_cmap(cmap_name)
         except (AttributeError, ValueError):
             try:
                 # Try older API (matplotlib < 3.5.0)
-                colormap = cm.cmap_d[cmap_name]
+                colormap = _cm.cmap_d[cmap_name]
             except AttributeError:
                 # Fallback to registry access
-                colormap = cm._colormaps[cmap_name]
+                colormap = _cm._colormaps[cmap_name]
 
     for i in np.linspace(0, 1, n_samples):
         colors.append(colormap(i))
