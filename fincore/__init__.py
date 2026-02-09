@@ -9,11 +9,26 @@ import numpy as _np
 if not hasattr(_np, "unicode_"):
     _np.unicode_ = _np.str_
 
-from .empyrical import Empyrical
+__all__ = ["Empyrical", "Pyfolio", "analyze"]
 
-try:
-    from .pyfolio import Pyfolio
-    __all__ = ["Empyrical", "Pyfolio"]
-except ImportError:
-    __all__ = ["Empyrical"]
+# ---------------------------------------------------------------------------
+# Lazy imports — defer heavy submodules until first attribute access.
+# ``from fincore import empyrical`` still works because Python resolves
+# sub-module names before calling ``__getattr__``.
+# ---------------------------------------------------------------------------
+
+def __getattr__(name: str):
+    if name == "Empyrical":
+        from .empyrical import Empyrical
+        globals()["Empyrical"] = Empyrical
+        return Empyrical
+    if name == "Pyfolio":
+        from .pyfolio import Pyfolio
+        globals()["Pyfolio"] = Pyfolio
+        return Pyfolio
+    if name == "analyze":
+        from .core.context import analyze
+        globals()["analyze"] = analyze
+        return analyze
+    raise AttributeError(f"module 'fincore' has no attribute {name!r}")
 

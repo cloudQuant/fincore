@@ -332,7 +332,8 @@ class TestBootstrap(TestCase):
                             true_mean)
 
         samples = Empyrical.calc_bootstrap(func, returns,
-                                           n_samples=10000)
+                                           n_samples=10000,
+                                           random_seed=123)
 
         # Calculate statistics of sampling distribution of the mean
         mean_of_mean = np.mean(returns)

@@ -113,6 +113,17 @@ class Empyrical:
         self.positions = positions
         self.factor_returns = factor_returns
         self.factor_loadings = factor_loadings
+        self._ctx = None
+        if returns is not None:
+            try:
+                from fincore.core.context import AnalysisContext
+                self._ctx = AnalysisContext(
+                    returns,
+                    factor_returns=factor_returns,
+                    positions=positions,
+                )
+            except Exception:
+                pass
 
     @_dual_method
     def _get_returns(self, returns):

@@ -23,7 +23,11 @@
 - 收益率标准化
 """
 
+from __future__ import annotations
+
 import math
+from typing import Optional, Union
+
 import numpy as np
 import pandas as pd
 from fincore.constants import DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
@@ -74,7 +78,9 @@ def annual_return(*args, **kwargs):
     return _get_annual_return()(*args, **kwargs)
 
 
-def simple_returns(prices):
+def simple_returns(
+    prices: Union[pd.Series, pd.DataFrame, np.ndarray],
+) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
     """Compute simple returns from a time series of prices.
 
     Parameters
@@ -101,7 +107,11 @@ def simple_returns(prices):
     return out
 
 
-def cum_returns(returns, starting_value=0, out=None):
+def cum_returns(
+    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
+    starting_value: float = 0,
+    out: Optional[np.ndarray] = None,
+) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
     """Compute cumulative returns from simple returns.
 
     This compounds the input returns and optionally scales by an initial
@@ -158,7 +168,10 @@ def cum_returns(returns, starting_value=0, out=None):
     return out
 
 
-def cum_returns_final(returns, starting_value=0):
+def cum_returns_final(
+    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
+    starting_value: float = 0,
+) -> Union[float, np.ndarray, pd.Series]:
     """Compute total cumulative return from a series of simple returns.
 
     This computes the cumulative return by compounding simple period
@@ -197,7 +210,10 @@ def cum_returns_final(returns, starting_value=0):
     return result
 
 
-def aggregate_returns(returns, convert_to="monthly"):
+def aggregate_returns(
+    returns: pd.Series,
+    convert_to: str = "monthly",
+) -> pd.Series:
     """Aggregate returns at a weekly/monthly/quarterly/yearly frequency.
 
     The function groups the input return series by calendar period and
@@ -247,7 +263,10 @@ def aggregate_returns(returns, convert_to="monthly"):
     return returns.groupby(grouping).apply(cumulate_returns)
 
 
-def normalize(returns, starting_value=1):
+def normalize(
+    returns: pd.Series,
+    starting_value: float = 1,
+) -> pd.Series:
     """将收益时间序列标准化为从指定值开始.
 
     此函数将收益序列按其第一个值进行缩放，使序列从
