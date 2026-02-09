@@ -489,10 +489,8 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
 
     returns, factor_returns = aligned_series(returns, factor_returns)
 
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    ann_return = ending_value ** (1 / num_years) - 1
+    from fincore.metrics.yearly import annual_return as _annual_return
+    ann_return = _annual_return(returns, period=period, annualization=annualization)
     ann_excess_return = ann_return - risk_free
 
     b = beta_aligned(returns, factor_returns, risk_free)
@@ -594,10 +592,8 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns_aligned) / ann_factor
-    ending_value = cum_returns_final(returns_aligned, starting_value=1)
-    ann_return = ending_value ** (1 / num_years) - 1
+    from fincore.metrics.yearly import annual_return as _annual_return
+    ann_return = _annual_return(returns_aligned, period=period, annualization=annualization)
 
     ann_vol = annual_volatility(returns_aligned, period=period, annualization=annualization)
     ann_factor_vol = annual_volatility(factor_aligned, period=period, annualization=annualization)
@@ -615,12 +611,8 @@ def _compute_annualized_return(returns, period, annualization):
 
     Shared helper used by sterling_ratio, burke_ratio, kappa_three_ratio, etc.
     """
-    from fincore.metrics.returns import cum_returns_final
-
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    return ending_value ** (1 / num_years) - 1
+    from fincore.metrics.yearly import annual_return
+    return annual_return(returns, period=period, annualization=annualization)
 
 
 def sterling_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
@@ -856,18 +848,13 @@ def stability_of_timeseries(returns):
 
 def _capture_aligned(returns, factor_returns, period=DAILY):
     """Compute capture ratio on pre-aligned data (no alignment step)."""
-    from fincore.metrics.returns import cum_returns_final
+    from fincore.metrics.yearly import annual_return
 
     if len(returns) < 1:
         return np.nan
 
-    ann_factor = annualization_factor(period, None)
-    num_years = len(returns) / ann_factor
-    strategy_ending = cum_returns_final(returns, starting_value=1)
-    strategy_ann_return = strategy_ending ** (1 / num_years) - 1
-
-    benchmark_ending = cum_returns_final(factor_returns, starting_value=1)
-    benchmark_ann_return = benchmark_ending ** (1 / num_years) - 1
+    strategy_ann_return = annual_return(returns, period=period)
+    benchmark_ann_return = annual_return(factor_returns, period=period)
 
     if benchmark_ann_return == 0:
         return np.nan

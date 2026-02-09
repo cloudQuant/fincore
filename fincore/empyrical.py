@@ -691,9 +691,9 @@ class Empyrical:
         return _perf_attrib.perf_attrib(returns, positions, factor_returns, factor_loadings, transactions, pos_in_dollars, regression_style)
 
     @classmethod
-    def compute_exposures(cls, positions=None, factor_loadings=None, stack_positions=True, pos_in_dollars=True):
+    def compute_exposures(cls, positions=None, factor_loadings=None):
         """从持仓计算因子敞口."""
-        return _perf_attrib.compute_exposures(positions, factor_loadings, stack_positions, pos_in_dollars)
+        return _perf_attrib.compute_exposures(positions, factor_loadings)
 
     # ================================
     # 绩效统计方法
@@ -1149,11 +1149,11 @@ class Empyrical:
     # ================================
 
     @_dual_method
-    def residual_risk(self, returns=None, factor_returns=None, risk_free=0.0):
+    def residual_risk(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
         """计算残差风险."""
         returns = self._get_returns(returns)
         factor_returns = self._get_factor_returns(factor_returns)
-        return _risk.residual_risk(returns, factor_returns, risk_free)
+        return _risk.residual_risk(returns, factor_returns, risk_free, period, annualization)
 
     @_dual_method
     def var_excess_return(self, returns=None, cutoff=0.05):
