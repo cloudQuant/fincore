@@ -149,55 +149,104 @@ print(f"{'=' * 60}")
 
 pf = Pyfolio(returns=daily_returns)
 
-# --- Returns Tear Sheet ---
-print("\n[1/4] 生成 Returns Tear Sheet ...")
-fig = pf.create_returns_tear_sheet(
+from matplotlib.backends.backend_pdf import PdfPages
+import fincore.utils.common_utils as _cu
+
+# ---------------------------------------------------------------------------
+# Monkey-patch print_table: 在原有 HTML 输出之外，额外生成 matplotlib figure，
+# 这样 create_full_tear_sheet 内部的 show_perf_stats / show_worst_drawdown_periods
+# 产生的表格也能被 plt.get_fignums() 捕获并写入 PDF。
+# ---------------------------------------------------------------------------
+_original_print_table = _cu.print_table
+
+
+def _print_table_with_figure(table, name=None, float_format=None,
+                             formatters=None, header_rows=None,
+                             run_flask_app=False):
+    """print_table 的增强版：同时生成 matplotlib 表格 figure。"""
+    if isinstance(table, pd.Series):
+        table = pd.DataFrame(table)
+
+    # 构建展示用的 DataFrame（含 header_rows）
+    display_df = table.copy()
+    if header_rows:
+        for k, v in reversed(header_rows.items()):
+            row = pd.DataFrame(
+                [[v] * len(display_df.columns)],
+                index=[k], columns=display_df.columns,
+            )
+            display_df = pd.concat([row, display_df])
+
+    title = name if name else ""
+    nrows = len(display_df)
+    fig, ax = plt.subplots(figsize=(12, max(2.5, 0.38 * nrows + 1.5)))
+    ax.axis("off")
+    if title:
+        ax.set_title(title, fontsize=13, fontweight="bold", pad=10)
+
+    # 格式化单元格
+    fmt = float_format or "{:.4f}".format
+    cell_text = []
+    for _, row in display_df.iterrows():
+        cells = []
+        for v in row:
+            if isinstance(v, (int, float, np.floating)):
+                try:
+                    cells.append(fmt(v))
+                except (ValueError, TypeError):
+                    cells.append(str(v))
+            else:
+                cells.append(str(v))
+        cell_text.append(cells)
+
+    tbl = ax.table(
+        cellText=cell_text,
+        rowLabels=[str(i) for i in display_df.index],
+        colLabels=[str(c) for c in display_df.columns],
+        cellLoc="center",
+        loc="center",
+    )
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(9)
+    tbl.scale(1.2, 1.4)
+    fig.tight_layout()
+    # figure 留在 plt 中，稍后统一收集
+
+
+# 应用 patch
+_cu.print_table = _print_table_with_figure
+# tearsheets 模块中的 print_table 引用也需要 patch
+import fincore.tearsheets.returns as _tr
+import fincore.tearsheets.transactions as _ttxn
+_tr.print_table = _print_table_with_figure
+if hasattr(_ttxn, 'print_table'):
+    _ttxn.print_table = _print_table_with_figure
+
+# --- 只调用一个函数：create_full_tear_sheet ---
+print("\n生成 Full Tear Sheet ...")
+pf.create_full_tear_sheet(
     daily_returns,
     positions=positions,
     transactions=transactions,
-    run_flask_app=True,  # 返回 fig 对象而不直接 show
 )
-if fig is not None:
-    fig.savefig(os.path.join(OUTPUT_DIR, "tearsheet_returns.pdf"), bbox_inches="tight")
-    plt.close(fig)
-    print(f"  → 已保存: output/tearsheet_returns.pdf")
 
-# --- Position Tear Sheet ---
-print("[2/4] 生成 Position Tear Sheet ...")
-fig = pf.create_position_tear_sheet(
-    daily_returns,
-    positions,
-    run_flask_app=True,
-)
-if fig is not None:
-    fig.savefig(os.path.join(OUTPUT_DIR, "tearsheet_positions.pdf"), bbox_inches="tight")
-    plt.close(fig)
-    print(f"  → 已保存: output/tearsheet_positions.pdf")
+# 恢复原始 print_table
+_cu.print_table = _original_print_table
+_tr.print_table = _original_print_table
+if hasattr(_ttxn, 'print_table'):
+    _ttxn.print_table = _original_print_table
 
-# --- Transaction Tear Sheet ---
-print("[3/4] 生成 Transaction Tear Sheet ...")
-fig = pf.create_txn_tear_sheet(
-    daily_returns,
-    positions,
-    transactions,
-    run_flask_app=True,
-)
-if fig is not None:
-    fig.savefig(os.path.join(OUTPUT_DIR, "tearsheet_txn.pdf"), bbox_inches="tight")
-    plt.close(fig)
-    print(f"  → 已保存: output/tearsheet_txn.pdf")
+# --- 收集所有 figure 保存为多页 PDF ---
+pdf_path = os.path.join(OUTPUT_DIR, "tearsheet_full.pdf")
+all_figs = [plt.figure(n) for n in plt.get_fignums()]
 
-# --- Interesting Times Tear Sheet ---
-print("[4/4] 生成 Interesting Times Tear Sheet ...")
-fig = pf.create_interesting_times_tear_sheet(
-    daily_returns,
-    run_flask_app=True,
-)
-if fig is not None:
-    fig.savefig(os.path.join(OUTPUT_DIR, "tearsheet_interesting_times.pdf"), bbox_inches="tight")
-    plt.close(fig)
-    print(f"  → 已保存: output/tearsheet_interesting_times.pdf")
+with PdfPages(pdf_path) as pdf:
+    for fig in all_figs:
+        pdf.savefig(fig, bbox_inches="tight")
+        plt.close(fig)
+
+print(f"  → 已保存: {pdf_path}  ({len(all_figs)} 页)")
 
 print(f"\n{'=' * 60}")
-print(f"所有 Tear Sheet 已保存到: {OUTPUT_DIR}/")
+print("完成")
 print(f"{'=' * 60}")
