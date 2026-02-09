@@ -153,7 +153,7 @@ def perf_attrib(returns, positions=None, factor_returns=None, factor_loadings=No
 
     # Stack positions if needed (convert from DataFrame to Series with MultiIndex)
     if not isinstance(positions, pd.Series):
-        positions = stack_positions(positions, pos_in_dollars=pos_in_dollars)
+        positions = normalize_and_stack_positions(positions, pos_in_dollars=pos_in_dollars)
 
     risk_exposures, perf_attrib_data = perf_attrib_core(
         returns, positions, factor_returns, factor_loadings
@@ -162,8 +162,8 @@ def perf_attrib(returns, positions=None, factor_returns=None, factor_loadings=No
     return risk_exposures, perf_attrib_data
 
 
-def stack_positions(positions, pos_in_dollars=True):
-    """Stack positions from DataFrame to Series with MultiIndex.
+def normalize_and_stack_positions(positions, pos_in_dollars=True):
+    """Normalize dollar positions to percentage weights and stack.
 
     Unlike :func:`fincore.metrics.positions.stack_positions`, this version
     converts dollar positions to percentage weights when ``pos_in_dollars``
@@ -189,6 +189,7 @@ def stack_positions(positions, pos_in_dollars=True):
     if pos_in_dollars:
         total = positions.abs().sum(axis=1)
         positions = positions.divide(total, axis=0)
+        positions = positions.replace([np.inf, -np.inf], np.nan)
 
     stacked = positions.stack()
     stacked.index = stacked.index.set_names(['dt', 'ticker'])

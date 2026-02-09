@@ -14,107 +14,119 @@
 ## 分析结果
 
 > 分析日期: 2026-02-09
-> 测试状态: 1233个测试全部通过，102个warnings
-> 备注: 0011-0014 中已报告并修复的问题不再重复列出。以下为本轮发现的**新问题**。
+> 测试状态: 1233个测试全部通过，81个warnings（较上轮减少21个）
+> 备注: 0011-0015 中已报告并修复的问题不再重复列出。以下为本轮发现的**新问题**。
+
+---
+
+### 零、上轮遗留修复
+
+在开始本轮分析前，先修复了 0015 中 Bug 1 的实现缺陷：
+
+**修复**: `beta_aligned` 空切片警告抑制方式错误
+
+- **文件**: `fincore/metrics/alpha_beta.py` 第100-106行
+- **问题**: 0015 使用 `np.errstate(invalid='ignore')` 抑制 `RuntimeWarning: Mean of empty slice`，但 numpy 的 `nanmean` 内部通过 `warnings.warn()` 发出警告，而非 numpy 浮点错误状态。因此 `np.errstate` 完全无效。
+- **修复**: 改为 `warnings.catch_warnings()` + `warnings.simplefilter("ignore", category=RuntimeWarning)`，并在文件顶部添加 `import warnings`。
+- **效果**: 将 `-W error::RuntimeWarning` 下的测试失败从 6 个降为 0 个；总 warnings 从 102 降为 81。
 
 ---
 
 ### 一、Bug分析
 
-#### Bug 1: `beta_aligned` 对全NaN输入产生 `RuntimeWarning: Mean of empty slice`（严重度：低-中）
+#### Bug 1: `perf_attrib.stack_positions` 除零未保护（严重度：中）
 
-- **文件**: `fincore/metrics/alpha_beta.py` 第99-104行
-- **问题**: 当 `returns` 或 `factor_returns` 全为 NaN 时，`nanmean` 对空切片计算会触发 `RuntimeWarning`。测试中观察到3条此类警告。虽然最终结果正确（返回 NaN），但警告会污染用户输出。
-- **影响**: 不影响计算正确性，但在批量运行时产生大量无意义警告。
-- **建议修复**:
+- **文件**: `fincore/metrics/perf_attrib.py` 第189-191行
+- **问题**:
   ```python
-  with np.errstate(invalid='ignore'):
-      ind_residual = independent - nanmean_local(independent, axis=0)
-      covariances = nanmean_local(ind_residual * returns, axis=0)
+  total = positions.abs().sum(axis=1)
+  positions = positions.divide(total, axis=0)
   ```
+  当某天所有持仓为零时（空仓日），`total` 为零，`divide` 产生 `inf`。这与 0015 中已修复的 `get_percent_alloc`（`positions.py`）和 `gross_lev` 是完全相同的模式，但 `perf_attrib.py` 中有独立的 `stack_positions` 副本，未同步修复。
+- **影响**: 空仓日的权重变为 `inf`，导致后续 `compute_exposures_internal` 的 `factor_loadings.multiply(positions)` 产生 `inf`，最终 `perf_attrib_core` 中的风险暴露和归因结果被污染。
+- **建议修复**: 在 `divide` 后添加 `positions = positions.replace([np.inf, -np.inf], np.nan)`。
 
-#### Bug 2: `adjust_returns_for_slippage` 除零风险（严重度：中）
+#### Bug 2: `apply_slippage_penalty` 除零未保护（严重度：低-中）
 
-- **文件**: `fincore/metrics/transactions.py` 第362-363行
-- **问题**: `adjusted_returns = returns * adjusted_pnl / pnl`，当 `pnl` 为零时（某天收益率为0且持仓为0），会产生 `0/0 = NaN` 或 `x/0 = inf`。虽然有 `np.errstate` 抑制警告并用 `fillna(0)` 处理，但 `inf * 0 = NaN` 仍可能存在于中间结果中。
-- **影响**: 当策略有空仓日时，调整后的收益率可能包含意外的 NaN。
-- **建议修复**: 在除法前使用 `pnl.replace(0, np.nan)` 使零值日自动变为 NaN，后续 `fillna(0)` 正确处理。
+- **文件**: `fincore/metrics/transactions.py` 第238行
+- **问题**: `adj_returns = returns - (daily_penalty / portfolio_value)`。`portfolio_value` 来自 `cum_returns(returns, starting_value=backtest_starting_capital) * mult`。如果策略曾损失 100% 本金（cumulative return 到 0），`portfolio_value` 为零，除法产生 `inf`。
+- **影响**: 极端情况下滑点调整后收益率变为 `inf`。
+- **建议修复**: `portfolio_value = portfolio_value.replace(0, np.nan)`，后续 `fillna(0)` 处理。
 
-#### Bug 3: `get_percent_alloc` 除零未保护（严重度：中）
+#### Bug 3: `transactions.py:adjust_returns_for_slippage` 残留未使用的 `import warnings`（严重度：低）
 
-- **文件**: `fincore/metrics/positions.py` 第51行
-- **问题**: `values.divide(values.sum(axis="columns"), axis="rows")` 当某天所有持仓为零时，`sum` 为零导致除零。与 `gross_lev` 类似的问题，但此函数被 `days_to_liquidate_positions`、`get_max_median_position_concentration` 等多处调用。
-- **影响**: 空仓日会产生 `inf` 或 `NaN`，可能影响下游 `get_max_median_position_concentration` 计算。
-- **建议修复**: 添加 `replace([np.inf, -np.inf], np.nan)` 或者在 `sum` 中排除零值行。
+- **文件**: `fincore/metrics/transactions.py` 第354行
+- **问题**: 0015 修复 Bug 2 后，`pnl_safe = pnl.replace(0, np.nan)` 替代了原本需要 `np.errstate` 的逻辑，但 `import warnings` 仍保留未使用。
+- **建议**: 移除。
 
-#### Bug 4: `perf_stats` 的 `Calmar ratio` 内联计算与 `calmar_ratio()` 行为不一致（严重度：低-中）
+#### Bug 4: `aligned_series` 返回外连接结果，可能包含意外 NaN（严重度：低）
 
-- **文件**: `fincore/metrics/perf_stats.py` 第83行
-- **问题**: `stats['Calmar ratio'] = ann_ret / abs(mdd) if mdd < 0 else np.nan`。但 `calmar_ratio()` 函数内部调用 `annual_return()` 重新计算年化收益率。0014中已统一了 `calmar_ratio` 使用 `annual_return()`，但 `perf_stats` 中的内联版本使用预计算的 `ann_ret`。当前结果一致，但如果 `calmar_ratio()` 的逻辑未来有变化，两者可能分歧。
-- **建议**: 维护风险提示。可考虑直接调用 `calmar_ratio(returns, period=period)` 以保持一致。
+- **文件**: `fincore/metrics/basic.py` 第226-230行
+- **问题**: `pd.concat([head, tail[0]], axis=1)` 默认使用 `join='outer'`，所以当两个 Series 的索引不完全一致时，结果包含 NaN 行。大多数下游函数（如 `nanmean`）能正确处理 NaN，但某些函数（如 `np.corrcoef`）不能。
+- **影响**: 实际影响低——绝大多数使用 `aligned_series` 的代码路径在后续有 NaN 保护。但语义上 `aligned_series` 名称暗示"内连接对齐"，行为却是外连接。
+- **建议**: 在文档中明确说明行为是外连接，或考虑添加 `dropna()` 以匹配函数名语义。注意需全面测试，因为这会改变全局行为。
 
-#### Bug 5: `annual_alpha`/`annual_beta` 未对齐 returns 和 factor_returns（严重度：中）
+#### Bug 5: `roll_sharpe_ratio` 中 `min_periods=1` 浪费计算（严重度：低）
 
-- **文件**: `fincore/metrics/alpha_beta.py` 第523-537行、第572-587行
-- **问题**: `annual_alpha` 和 `annual_beta` 按年分组后分别从 `returns.groupby(year)` 和 `factor_returns.groupby(year)` 取数据，但未预先对齐两者。如果 `returns` 和 `factor_returns` 有不同的日期索引（如交易日不匹配），同一年内的数据长度可能不一致，导致 `alpha()` 或 `beta()` 内部的 `aligned_series` 静默截断数据。
-- **影响**: 按年计算的 alpha/beta 可能基于不完整的匹配数据。
-- **建议修复**: 在分组前先调用 `aligned_series(returns, factor_returns)` 统一索引。
+- **文件**: `fincore/metrics/rolling.py` 第240-241行
+- **问题**:
+  ```python
+  rolling_mean = ret_adj.rolling(window, min_periods=1).mean()
+  rolling_std = ret_adj.rolling(window, min_periods=1).std(ddof=1)
+  ```
+  `min_periods=1` 使 pandas 为前 `window-1` 个不完整窗口也计算结果，但第246行 `result = result.iloc[window - 1:]` 立刻丢弃这些值。浪费了 O(window) 次计算。
+- **建议修复**: 移除 `min_periods=1`（默认值为 `window`），pandas 会自动为不完整窗口返回 NaN，然后截断同样有效。
 
 ---
 
 ### 二、代码优化分析
 
-#### 优化 1: `second_*/third_*` 回撤函数各自独立调用 `get_all_drawdowns_detailed`
+#### 优化 1: `consecutive.py` 个别函数各自独立 resample
 
-- **文件**: `fincore/metrics/drawdown.py` 第617-712行
-- **问题**: `second_max_drawdown_days`、`second_max_drawdown_recovery_days`、`third_max_drawdown_days`、`third_max_drawdown_recovery_days` 各自独立调用 `get_all_drawdowns_detailed(returns)` 后排序。如果用户同时调用多个函数，回撤分析被重复执行4次。
-- **建议**: 提供 `nth_drawdown_stats(returns, n)` 或在 Empyrical 中提供批量方法。
+- **文件**: `fincore/metrics/consecutive.py` 第211-288行
+- **问题**: `max_consecutive_up_weeks`、`max_consecutive_down_weeks`、`max_consecutive_up_months`、`max_consecutive_down_months` 各自独立调用 `returns.resample(...).apply(cum_returns_final)`。当 Empyrical 实例方法逐个调用这些函数时，resample 重复执行多次。
+- **注意**: 已有 `consecutive_stats()` 批量函数，但 Empyrical 的 wrapper 方法没有使用它。
+- **建议**: 在 Empyrical 中添加 `consecutive_stats()` 调用路径，或让个别函数内部缓存 resample 结果。
 
-#### 优化 2: `calc_bootstrap` 使用 Python for 循环
+#### 优化 2: `roll_alpha` 和 `roll_alpha_beta` 使用 Python for 循环逐窗口计算
 
-- **文件**: `fincore/metrics/perf_stats.py` 第226-233行
-- **问题**: `for i in range(n_samples)` 逐次采样并计算。1000次循环中每次调用一个 Python 函数。
-- **建议**: 对于可向量化的函数（如 `annual_return`、`annual_volatility`），预生成 `(n_samples, len(returns))` 的索引矩阵并批量计算。
+- **文件**: `fincore/metrics/rolling.py` 第85-87行、第190-194行
+- **问题**: `for i in range(n): out[i] = alpha_aligned(...)` 逐窗口调用 Python 函数。`roll_beta` 已使用 pandas `rolling().cov() / rolling().var()` 向量化实现，但 `roll_alpha` 没有。
+- **建议**: `roll_alpha` 可基于已有的 `roll_beta` 结果计算：`alpha = mean(returns) - beta * mean(factor_returns)` 的滚动版本，全部向量化。
 
-#### 优化 3: `Pyfolio.__init__` 参数过多
+#### 优化 3: `_market_correlation` 使用 `align` 而非 `aligned_series`
 
-- **文件**: `fincore/pyfolio.py` 第114-166行
-- **问题**: `Pyfolio.__init__` 接受20+个参数，大部分是存储为实例属性。但这些属性在 tear sheet 方法中又作为参数显式传递，导致冗余。
-- **建议**: 考虑使用 `**kwargs` 存储配置，或将配置抽取为独立的 `Config` 数据类。
+- **文件**: `fincore/metrics/stats.py` 第295行
+- **问题**: `_market_correlation` 使用 `returns.align(benchmark_returns, join="inner")`，这是内连接。而其他模块统一使用 `aligned_series()`（外连接）。两者语义不同，导致代码库内对齐行为不一致。
+- **建议**: 统一使用 `aligned_series()` 或统一使用 `align(join="inner")`。如果选择后者，需修改 `aligned_series` 为内连接。
 
-#### 优化 4: `m_squared` 中 `cum_returns_final` 导入未使用
+#### 优化 4: `perf_attrib.py` 与 `positions.py` 有两个独立的 `stack_positions` 函数
 
-- **文件**: `fincore/metrics/ratios.py` 第588行
-- **问题**: 0014中已将 `m_squared` 改为使用 `annual_return()`，但 `from fincore.metrics.returns import cum_returns_final` 导入仍然保留，不再被使用。
-- **建议**: 移除未使用的导入。
+- **文件**: `fincore/metrics/perf_attrib.py` 第165行 vs `fincore/metrics/positions.py` 第339行
+- **问题**: 两个 `stack_positions` 函数签名相似但行为不同：`perf_attrib` 版本会将美元持仓转为百分比权重（`positions.divide(total, axis=0)`），而 `positions` 版本只做简单 `stack()`。命名相同容易混淆。
+- **建议**: 重命名 `perf_attrib.stack_positions` 为 `stack_positions_pct` 或 `normalize_and_stack_positions` 以区分。
 
 ---
 
 ### 三、性能优化分析
 
-#### 性能问题 1: `get_top_drawdowns` 使用 O(n×top) 串行扫描
+#### 性能问题 1: `roll_alpha` 和 `roll_alpha_beta` 的 Python for 循环
 
-- **文件**: `fincore/metrics/drawdown.py` 第274-311行
-- **问题**: 循环 `top` 次，每次调用 `get_max_drawdown_underwater` 扫描整个 underwater 序列。
-- **建议**: 使用 `get_all_drawdowns_detailed` 单遍扫描后按严重度排序。
+- **文件**: `fincore/metrics/rolling.py` 第85-87行、第190-194行
+- **问题**: 逐窗口调用 `alpha_aligned` / `alpha_beta_aligned`。对于 2520 天（10年日频）和 252 窗口，需要 2269 次 Python 函数调用。
+- **建议**: 利用 `roll_beta` 的向量化结果，通过 `rolling_alpha = rolling_mean_ret - rolling_beta * rolling_mean_fac` 计算，全部向量化。然后年化：`rolling_alpha * ann_factor`。
 
-#### 性能问题 2: `roll_max_drawdown` 使用 Python for 循环
+#### 性能问题 2: `roll_up_capture` / `roll_down_capture` 的 Python for 循环
 
-- **文件**: `fincore/metrics/rolling.py` 第283-290行
-- **问题**: `for i in range(n)` 逐窗口计算 max_drawdown。每次计算包括 `cumprod` + `fmax.accumulate`。
-- **建议**: 较难完全向量化，但可通过 `numba.jit` 加速或使用滑动窗口优化减少重复计算。
+- **文件**: `fincore/metrics/rolling.py` 第332-333行、第375-376行
+- **问题**: 逐窗口调用 `up_capture` / `down_capture`，每次内部又调用 `cum_returns_final` 等。
+- **建议**: 预计算滚动年化收益率，然后按条件掩码（正/负 factor_returns）分别计算。
 
-#### 性能问题 3: `roll_up_capture` / `roll_down_capture` 使用 Python for 循环
+#### 性能问题 3: `gpd_risk_estimates` 的 while 循环优化
 
-- **文件**: `fincore/metrics/rolling.py` 第330-338行、第368-376行
-- **问题**: 逐窗口调用 `up_capture` / `down_capture`，每次内部又计算 `cum_returns_final` 等。
-- **建议**: 预计算滚动年化收益率，然后用条件掩码计算 up/down 子集。
-
-#### 性能问题 4: `hurst_exponent` 逐 lag 循环
-
-- **文件**: `fincore/metrics/stats.py` 第134-151行
-- **问题**: `for lag in range(min_lag, max_lag + 1)` 对长序列 `max_lag` 可达 3333。
-- **建议**: 使用对数等间距采样 lag 值，将循环次数控制在 50 次以内。
+- **文件**: `fincore/metrics/risk.py` 第504-527行
+- **问题**: 在阈值从 0.2 逐步二分到 1e-9 的循环中，每次都调用 `scipy.optimize.minimize`。最坏情况下循环约 28 次（log2(0.2/1e-9)），每次都做完整的优化。
+- **建议**: 可以先预计算一个合理的初始阈值（如使用 percentile-based 选择），减少循环次数。
 
 ---
 
@@ -122,32 +134,32 @@
 
 | 类别 | 数量 | 优先级建议 |
 |------|------|-----------|
-| Bug | 5个 | Bug 5（annual_alpha/beta未对齐）和 Bug 2-3（除零保护）应优先修复 |
-| 代码优化 | 4个 | 优化 4（移除未使用导入）最简单，优化 1（回撤去重）收益最大 |
-| 性能优化 | 4个 | 性能问题 1（get_top_drawdowns）和 性能问题 2（roll_max_drawdown）收益最高 |
+| 遗留修复 | 1个 | `beta_aligned` 警告抑制方式已修正（0015 Bug 1 的实现缺陷） |
+| Bug | 5个 | Bug 1（perf_attrib stack_positions 除零）应优先修复 |
+| 代码优化 | 4个 | 优化 3（对齐行为不一致）和 优化 4（重名函数）影响代码可维护性 |
+| 性能优化 | 3个 | 性能问题 1（roll_alpha 向量化）收益最高 |
 
 **推荐优先修复顺序**:
-1. Bug 5：修复 `annual_alpha`/`annual_beta` 缺少预对齐
-2. Bug 2-3：修复 `adjust_returns_for_slippage` 和 `get_percent_alloc` 除零
-3. Bug 1：抑制 `beta_aligned` 空切片警告
-4. 优化 4：移除 `m_squared` 中未使用的 `cum_returns_final` 导入
-5. Bug 4：维护风险，考虑统一 `perf_stats` 中 Calmar 内联计算
-6. 性能问题 1：优化 `get_top_drawdowns` 为单遍扫描
+1. Bug 1：修复 `perf_attrib.stack_positions` 除零
+2. Bug 2：修复 `apply_slippage_penalty` 除零
+3. Bug 3：移除 `adjust_returns_for_slippage` 未使用的 `import warnings`
+4. Bug 5：移除 `roll_sharpe_ratio` 多余的 `min_periods=1`
+5. 优化 4：重命名 `perf_attrib.stack_positions` 避免混淆
+6. 性能问题 1：向量化 `roll_alpha` 和 `roll_alpha_beta`
 
 ---
 
 ### 五、修复记录
 
 > 修复日期: 2026-02-09
-> 修复后测试: 1233个测试全部通过，102个warnings
+> 修复后测试: 1233个测试全部通过，81个warnings
 
 | 序号 | 问题 | 修复文件 | 修复内容 | 状态 |
 |------|------|---------|---------|------|
-| Bug 5 | `annual_alpha`/`annual_beta` 未预对齐 | `fincore/metrics/alpha_beta.py` | 在 groupby 前调用 `aligned_series(returns, factor_returns)` | ✅ 已修复 |
-| Bug 2 | `adjust_returns_for_slippage` 除零 | `fincore/metrics/transactions.py` | 除法前 `pnl.replace(0, np.nan)` | ✅ 已修复 |
-| Bug 3 | `get_percent_alloc` 除零 | `fincore/metrics/positions.py` | 除法后 `replace([np.inf, -np.inf], np.nan)` | ✅ 已修复 |
-| Bug 1 | `beta_aligned` 空切片警告 | `fincore/metrics/alpha_beta.py` | `np.errstate(invalid='ignore')` 包裹 nanmean 调用 | ✅ 已修复 |
-| 优化 4 | `m_squared` 未使用导入 | `fincore/metrics/ratios.py` | 移除 `from fincore.metrics.returns import cum_returns_final` | ✅ 已修复 |
-| Bug 4 | `perf_stats` Calmar 内联不一致 | `fincore/metrics/perf_stats.py` | 替换内联计算为 `calmar_ratio(returns, period=period)` | ✅ 已修复 |
-| 性能1 | `get_top_drawdowns` 串行扫描 | `fincore/metrics/drawdown.py` | 尝试单遍扫描优化但回退：测试依赖旧算法在无回撤时返回退化结果的行为 | ⏭️ 跳过 |
-
+| 遗留 | `beta_aligned` 警告抑制方式错误 | `fincore/metrics/alpha_beta.py` | `np.errstate` → `warnings.catch_warnings()` + `import warnings` | ✅ 已修复 |
+| Bug 1 | `perf_attrib.stack_positions` 除零 | `fincore/metrics/perf_attrib.py` | `divide` 后 `.replace([np.inf, -np.inf], np.nan)` | ✅ 已修复 |
+| Bug 2 | `apply_slippage_penalty` 除零 | `fincore/metrics/transactions.py` | `portfolio_value.replace(0, np.nan)` + `fillna(returns)` | ✅ 已修复 |
+| Bug 3 | 未使用的 `import warnings` | `fincore/metrics/transactions.py` | 移除 `adjust_returns_for_slippage` 中的 `import warnings` | ✅ 已修复 |
+| Bug 5 | `roll_sharpe_ratio` `min_periods=1` | `fincore/metrics/rolling.py` | 尝试移除但回退：`min_periods=1` 实际需要用于处理窗口内 NaN 值 | ⏭️ 跳过 |
+| 优化 4 | `stack_positions` 重名 | `fincore/metrics/perf_attrib.py` | 重命名为 `normalize_and_stack_positions` | ✅ 已修复 |
+| 性能 1 | `roll_alpha`/`roll_alpha_beta` 向量化 | `fincore/metrics/rolling.py` | 尝试向量化但回退：pandas `rolling().cov()` 对 NaN 的处理与 `beta_aligned` 的 `nanmean` 不一致，导致窗口内有 NaN 时结果不同 | ⏭️ 跳过 |
