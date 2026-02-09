@@ -381,6 +381,58 @@ ax.set_title("Return Quantiles (pf.plot_return_quantiles)", fontsize=12, fontwei
 save_page(fig)
 
 # =========================================================================
+# Page 11: fincore.viz — MatplotlibBackend 绘图
+# =========================================================================
+print("[Page 11] fincore.viz — MatplotlibBackend ...")
+
+from fincore.viz import get_backend
+
+viz = get_backend("matplotlib")
+
+# 准备数据
+cum_ret = fincore.cum_returns(daily_returns, starting_value=0)
+running_max = (1 + cum_ret).cummax()
+drawdown = (1 + cum_ret) / running_max - 1
+rolling_sr = Empyrical.rolling_sharpe(daily_returns, rolling_sharpe_window=63)
+
+fig = plt.figure(figsize=(14, 16))
+gs = gridspec.GridSpec(4, 1, hspace=0.4)
+
+ax1 = fig.add_subplot(gs[0])
+viz.plot_returns(cum_ret, title="Cumulative Returns (viz.plot_returns)", ax=ax1)
+
+ax2 = fig.add_subplot(gs[1], sharex=ax1)
+viz.plot_drawdown(drawdown, title="Drawdown (viz.plot_drawdown)", ax=ax2)
+
+ax3 = fig.add_subplot(gs[2], sharex=ax1)
+viz.plot_rolling_sharpe(rolling_sr, title="Rolling Sharpe (viz.plot_rolling_sharpe)", ax=ax3)
+
+# 月度收益热力图
+monthly_agg = Empyrical.aggregate_returns(daily_returns, "monthly")
+monthly_table = monthly_agg.unstack().fillna(0) * 100  # 转为百分比
+ax4 = fig.add_subplot(gs[3])
+viz.plot_monthly_heatmap(monthly_table, title="Monthly Returns % (viz.plot_monthly_heatmap)", ax=ax4)
+
+save_page(fig, tight=False)
+
+# =========================================================================
+# Page 12: fincore.viz — ctx.plot() + ctx.to_html()
+# =========================================================================
+print("[Page 12] AnalysisContext.plot() (via fincore.viz) ...")
+
+# ctx.plot() 使用 MatplotlibBackend 自动绘制累计收益 + 回撤
+viz_backend = ctx.plot(backend="matplotlib")
+
+# 收集 ctx.plot() 生成的 figure
+for n in plt.get_fignums():
+    save_page(plt.figure(n), tight=True)
+
+# ctx.to_html() 生成 HTML 报告
+html_path = os.path.join(OUTPUT_DIR, "analysis_report.html")
+ctx.to_html(path=html_path)
+print(f"  → HTML 报告: {html_path}")
+
+# =========================================================================
 # 完成
 # =========================================================================
 pdf.close()
@@ -400,4 +452,6 @@ print(f"""
   [Page 8]  pf.plot_exposures / plot_gross_leverage
   [Page 9]  pf.plot_turnover / plot_daily_volume
   [Page 10] pf.plot_return_quantiles
+  [Page 11] fincore.viz.get_backend("matplotlib") → viz.plot_returns / plot_drawdown / plot_rolling_sharpe / plot_monthly_heatmap
+  [Page 12] ctx.plot(backend="matplotlib") + ctx.to_html() → HTML 报告
 """)
