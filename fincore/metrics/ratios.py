@@ -338,14 +338,11 @@ def calmar_ratio(returns, period=DAILY, annualization=None):
         drawdown is non-negative or infinite.
     """
     from fincore.metrics.drawdown import max_drawdown
-    from fincore.metrics.returns import cum_returns_final
+    from fincore.metrics.yearly import annual_return
 
     max_dd = max_drawdown(returns=returns)
     if max_dd < 0:
-        ann_factor = annualization_factor(period, annualization)
-        num_years = len(returns) / ann_factor
-        ending_value = cum_returns_final(returns, starting_value=1)
-        ann_return = ending_value ** (1 / num_years) - 1
+        ann_return = annual_return(returns, period=period, annualization=annualization)
         temp = ann_return / abs(max_dd)
     else:
         return np.nan

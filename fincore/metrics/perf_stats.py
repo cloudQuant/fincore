@@ -22,8 +22,10 @@ from collections import OrderedDict
 from fincore.constants import DAILY
 from fincore.metrics.yearly import annual_return
 from fincore.metrics.returns import cum_returns_final
+from fincore.metrics.basic import annualization_factor
 from fincore.metrics.risk import annual_volatility
 from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, calmar_ratio, omega_ratio
+from fincore.utils import nanmean, nanstd
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.stats import skewness, kurtosis, stability_of_timeseries
 from fincore.metrics.risk import tail_ratio, value_at_risk
@@ -66,13 +68,19 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     # Pre-compute shared intermediate results
     mdd = max_drawdown(returns)
     ann_ret = annual_return(returns, period=period)
+    ann_factor = annualization_factor(period, None)
+    returns_arr = np.asanyarray(returns)
+    std_ret = nanstd(returns_arr, ddof=1, axis=0)
+    mean_ret = nanmean(returns_arr, axis=0)
+    sqrt_ann = np.sqrt(ann_factor)
 
     stats['Annual return'] = ann_ret
     stats['Cumulative returns'] = cum_returns_final(returns, starting_value=0)
-    stats['Annual volatility'] = annual_volatility(returns, period=period)
-    stats['Sharpe ratio'] = sharpe_ratio(returns, period=period)
+    stats['Annual volatility'] = std_ret * sqrt_ann
+    with np.errstate(divide='ignore', invalid='ignore'):
+        stats['Sharpe ratio'] = (mean_ret / std_ret) * sqrt_ann if len(returns) >= 2 else np.nan
     # Calmar = annual_return / abs(max_drawdown), reuse pre-computed values
-    stats['Calmar ratio'] = calmar_ratio(returns, period=period)
+    stats['Calmar ratio'] = ann_ret / abs(mdd) if mdd < 0 else np.nan
     stats['Stability'] = stability_of_timeseries(returns)
     stats['Max drawdown'] = mdd
     stats['Omega ratio'] = omega_ratio(returns)

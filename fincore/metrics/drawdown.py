@@ -19,7 +19,6 @@
 import numpy as np
 import pandas as pd
 from fincore.utils import nanmin
-from fincore.constants.periods import APPROX_BDAYS_PER_MONTH
 from fincore.metrics.returns import cum_returns, cum_returns_final
 
 __all__ = [
@@ -476,7 +475,7 @@ def max_drawdown_months(returns):
     days = max_drawdown_days(returns)
     if np.isnan(days):
         return np.nan
-    return days / APPROX_BDAYS_PER_MONTH
+    return days / 30
 
 
 def max_drawdown_recovery_days(returns):

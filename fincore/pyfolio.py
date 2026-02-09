@@ -118,7 +118,7 @@ class Pyfolio(Empyrical):
                  volumes=None, percentile=None, turnover_denom='AGB', set_context=True, factor_returns=None,
                  factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions=None):
         """
-        初始化Empyrical类实例
+        初始化Pyfolio类实例
 
         Parameters
         ----------
@@ -265,6 +265,7 @@ class Pyfolio(Empyrical):
         """
         return _plot_volume_exposures_gross(grossed_threshold, percentile, ax=ax)
 
+    @customize
     def create_full_tear_sheet(self, returns, positions=None, transactions=None,
                                market_data=None, benchmark_rets=None, slippage=None,
                                live_start_date=None, sector_mappings=None, bayesian=False,

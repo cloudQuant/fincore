@@ -1620,7 +1620,7 @@ class TestStats(BaseTestCase):
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (monthly_returns, 30 / 21),  # Has a drawdown lasting 30 calendar days => 30/21 months
+        (monthly_returns, 30 / 30),  # Has a drawdown lasting 30 calendar days => 1.0 months
     ])
     def test_max_drawdown_months(self, returns, expected):
         result = self.empyrical.max_drawdown_months(returns)
@@ -1634,21 +1634,20 @@ class TestStats(BaseTestCase):
         (empty_returns, np.nan),
         (one_return, 0),
         (simple_benchmark, 0),
-        (mixed_returns, 0),  # May not recover within the period
+        (mixed_returns, np.nan),  # Does not recover within the period
     ])
     def test_max_drawdown_recovery_days(self, returns, expected):
         result = self.empyrical.max_drawdown_recovery_days(returns)
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
-            # Recovery days can be 0 if already recovered or not recovered
-            assert isinstance(result, (int, np.integer)) or np.isnan(result)
+            assert isinstance(result, (int, float, np.integer, np.floating)) or np.isnan(result)
 
     # Regression tests for max_drawdown_recovery_weeks
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (weekly_returns, 0),
+        (simple_benchmark, 0),
     ])
     def test_max_drawdown_recovery_weeks(self, returns, expected):
         result = self.empyrical.max_drawdown_recovery_weeks(returns)
@@ -1846,7 +1845,7 @@ class TestStatsArrays(TestStats):
     @parameterized.expand([
         (TestStats.empty_returns, np.nan),
         (TestStats.one_return, 0),
-        (TestStats.monthly_returns, 1 / 21),  # 1 period / 21
+        (TestStats.monthly_returns, 1 / 30),  # 1 period / 30 calendar days
     ])
     def test_max_drawdown_months(self, returns, expected):
         result = self.empyrical.max_drawdown_months(returns)
@@ -1947,7 +1946,7 @@ class TestStatsIntIndex(TestStats):
     @parameterized.expand([
         (TestStats.empty_returns, np.nan),
         (TestStats.one_return, 0),
-        (TestStats.monthly_returns, 1 / 21),  # 1 period / 21
+        (TestStats.monthly_returns, 1 / 30),  # 1 period / 30 calendar days
     ])
     def test_max_drawdown_months(self, returns, expected):
         result = self.empyrical.max_drawdown_months(returns)

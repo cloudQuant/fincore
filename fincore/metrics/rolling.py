@@ -19,8 +19,8 @@
 import numpy as np
 import pandas as pd
 from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
-from fincore.metrics.basic import aligned_series
-from fincore.metrics.alpha_beta import alpha, beta
+from fincore.metrics.basic import aligned_series, annualization_factor
+from fincore.metrics.alpha_beta import alpha, alpha_aligned, alpha_beta_aligned, beta
 from fincore.metrics.ratios import sharpe_ratio, up_capture, down_capture
 from fincore.metrics.drawdown import max_drawdown
 
@@ -80,9 +80,11 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
 
     n = len(returns_aligned) - window + 1
     out = np.empty(n, dtype=float)
+    ret_arr = np.asanyarray(returns_aligned)
+    fac_arr = np.asanyarray(factor_aligned)
     for i in range(n):
-        out[i] = alpha(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
-                       risk_free, period, annualization)
+        out[i] = alpha_aligned(ret_arr[i:i + window], fac_arr[i:i + window],
+                               risk_free, period, annualization)
 
     if is_series:
         return pd.Series(out, index=returns_aligned.index[window - 1:])
@@ -165,7 +167,6 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
     pd.DataFrame or np.ndarray
         Rolling alpha and beta values with columns ['alpha', 'beta'].
     """
-    from fincore.metrics.alpha_beta import alpha_beta
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     is_series = isinstance(returns_aligned, pd.Series)
@@ -184,9 +185,11 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
     n = len(returns_aligned) - window + 1
     out_alpha = np.empty(n, dtype=float)
     out_beta = np.empty(n, dtype=float)
+    ret_arr = np.asanyarray(returns_aligned)
+    fac_arr = np.asanyarray(factor_aligned)
     for i in range(n):
-        ab = alpha_beta(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
-                        risk_free, period, annualization)
+        ab = alpha_beta_aligned(ret_arr[i:i + window], fac_arr[i:i + window],
+                                risk_free, period, annualization)
         out_alpha[i] = ab[0]
         out_beta[i] = ab[1]
 
@@ -230,15 +233,22 @@ def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualiz
     if not is_series:
         returns = pd.Series(returns)
 
-    n = len(returns) - window + 1
-    out = np.empty(n, dtype=float)
-    for i in range(n):
-        out[i] = sharpe_ratio(returns.iloc[i:i + window], risk_free, period, annualization)
+    ann_factor = annualization_factor(period, annualization)
+    sqrt_ann = np.sqrt(ann_factor)
+
+    ret_adj = returns - risk_free
+    rolling_mean = ret_adj.rolling(window, min_periods=1).mean()
+    rolling_std = ret_adj.rolling(window, min_periods=1).std(ddof=1)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        result = (rolling_mean / rolling_std) * sqrt_ann
+
+    result = result.iloc[window - 1:]
 
     if is_series:
-        return pd.Series(out, index=returns.index[window - 1:])
+        return result
     else:
-        return out
+        return result.values
 
 
 def roll_max_drawdown(returns, window=252):
@@ -259,20 +269,25 @@ def roll_max_drawdown(returns, window=252):
     is_series = isinstance(returns, pd.Series)
     
     if len(returns) < window:
-        # Return empty result with same type as input
         if is_series:
             if isinstance(returns.index, pd.DatetimeIndex):
                 return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    if not is_series:
-        returns = pd.Series(returns)
+    from fincore.utils import nanmin as _nanmin
 
-    n = len(returns) - window + 1
+    ret_arr = np.asanyarray(returns)
+    n = len(ret_arr) - window + 1
     out = np.empty(n, dtype=float)
     for i in range(n):
-        out[i] = max_drawdown(returns.iloc[i:i + window])
+        window_ret = ret_arr[i:i + window]
+        cumulative = np.empty(window + 1, dtype='float64')
+        cumulative[0] = 100.0
+        np.cumprod(1 + window_ret, out=cumulative[1:])
+        cumulative[1:] *= 100.0
+        max_return = np.fmax.accumulate(cumulative)
+        out[i] = _nanmin((cumulative - max_return) / max_return)
 
     if is_series:
         return pd.Series(out, index=returns.index[window - 1:])
@@ -390,44 +405,54 @@ def roll_up_down_capture(returns, factor_returns, window=252):
         return up_caps / down_caps
 
 
-def rolling_volatility(returns, rolling_vol_window):
+def rolling_volatility(returns, rolling_vol_window, period=DAILY, annualization=None):
     """Determine the rolling volatility of a strategy.
 
     Parameters
     ----------
     returns : pd.Series
-        Daily returns of the strategy, noncumulative.
+        Non-cumulative returns of the strategy.
     rolling_vol_window : int
         Length of the rolling window.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : float, optional
+        Custom annualization factor.
 
     Returns
     -------
     pd.Series
         Rolling volatility, annualized.
     """
-    return returns.rolling(window=rolling_vol_window).std() * np.sqrt(APPROX_BDAYS_PER_YEAR)
+    ann_factor = annualization_factor(period, annualization)
+    return returns.rolling(window=rolling_vol_window).std() * np.sqrt(ann_factor)
 
 
-def rolling_sharpe(returns, rolling_sharpe_window):
+def rolling_sharpe(returns, rolling_sharpe_window, period=DAILY, annualization=None):
     """Determine the rolling Sharpe ratio of a strategy.
 
     Parameters
     ----------
     returns : pd.Series
-        Daily returns of the strategy, noncumulative.
+        Non-cumulative returns of the strategy.
     rolling_sharpe_window : int
         Length of the rolling window.
+    period : str, optional
+        Frequency of the returns (default 'daily').
+    annualization : float, optional
+        Custom annualization factor.
 
     Returns
     -------
     pd.Series
         Rolling Sharpe ratio, annualized.
     """
+    ann_factor = annualization_factor(period, annualization)
     rolling_mean = returns.rolling(window=rolling_sharpe_window).mean()
     rolling_std = returns.rolling(window=rolling_sharpe_window).std()
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        return rolling_mean / rolling_std * np.sqrt(APPROX_BDAYS_PER_YEAR)
+        return rolling_mean / rolling_std * np.sqrt(ann_factor)
 
 
 def rolling_beta(returns, factor_returns, rolling_window=126):
@@ -466,6 +491,11 @@ def rolling_beta(returns, factor_returns, rolling_window=126):
 def rolling_regression(returns, factor_returns, rolling_window=126):
     """Calculate rolling regression alpha and beta.
 
+    Note: The alpha returned here is the **non-annualized** (daily-frequency)
+    regression intercept, unlike ``roll_alpha`` which returns annualized alpha.
+    To annualize, multiply by the appropriate annualization factor
+    (e.g. 252 for daily data).
+
     Parameters
     ----------
     returns : pd.Series
@@ -478,7 +508,8 @@ def rolling_regression(returns, factor_returns, rolling_window=126):
     Returns
     -------
     pd.DataFrame
-        Rolling alpha and beta values with columns ['alpha', 'beta'].
+        Rolling alpha (non-annualized) and beta values with columns
+        ['alpha', 'beta'].
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 

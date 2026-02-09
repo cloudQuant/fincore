@@ -458,10 +458,13 @@ def r_cubed(returns, factor_returns):
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    if len(returns_aligned) < 2:
+    ret_arr = np.asarray(returns_aligned, dtype=float)
+    fac_arr = np.asarray(factor_aligned, dtype=float)
+    mask = ~(np.isnan(ret_arr) | np.isnan(fac_arr))
+    if mask.sum() < 2:
         return np.nan
 
-    correlation = np.corrcoef(returns_aligned, factor_aligned)[0, 1]
+    correlation = np.corrcoef(ret_arr[mask], fac_arr[mask])[0, 1]
     return correlation ** 3
 
 
