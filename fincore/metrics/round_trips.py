@@ -306,7 +306,7 @@ def add_closing_transactions(positions, transactions):
 
         ending_amount = txn_sym.amount.sum()
 
-        if abs(ending_amount) < 1e-10:
+        if abs(ending_amount) < 1e-6:
             continue
 
         ending_price = ending_val / ending_amount

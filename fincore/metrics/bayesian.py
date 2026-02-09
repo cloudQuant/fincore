@@ -294,8 +294,7 @@ def compute_consistency_score(returns_test, preds):
 
     cum_preds = np.cumprod(preds + 1, axis=1)
 
-    q = [np.sum(cum_preds[:, i] < returns_test_cum.iloc[i]) / float(len(cum_preds)) 
-         for i in range(len(returns_test_cum))]
+    q = (cum_preds < returns_test_cum.values[np.newaxis, :]).mean(axis=0).tolist()
 
     return q
 

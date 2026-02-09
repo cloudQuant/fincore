@@ -38,7 +38,6 @@ __all__ = [
     'common_sense_ratio',
     'var_cov_var_normal',
     'normalize',
-    'stability_of_timeseries',
 ]
 
 

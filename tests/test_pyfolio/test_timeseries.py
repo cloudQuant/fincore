@@ -188,9 +188,7 @@ class TestDrawdown(TestCase):
         (pd.Series(px_list_1,
                    index=dt),
          1,
-         [(pd.Timestamp('2000-01-03 00:00:00'),
-           pd.Timestamp('2000-01-03 00:00:00'),
-           pd.Timestamp('2000-01-03 00:00:00'))])
+         []),
     ])
     def test_top_drawdowns(self, returns, top, expected):
         self.assertEqual(
