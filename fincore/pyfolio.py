@@ -16,8 +16,8 @@ import matplotlib.patches as patches
 from IPython.display import display, Markdown
 import matplotlib.gridspec as gridspec
 import matplotlib
-from fincore.constants import *
-from fincore.utils import *
+from fincore.constants import FACTOR_PARTITIONS, APPROX_BDAYS_PER_MONTH
+from fincore.utils.common_utils import customize
 
 if matplotlib.get_backend().lower() in ('', 'agg') or not hasattr(matplotlib, '_called_from_pytest'):
     try:
@@ -28,7 +28,6 @@ cmap = plt.get_cmap('gist_rainbow')
 
 
 from fincore.empyrical import Empyrical
-from fincore.utils.common_utils import customize
 
 # 从 tearsheets 模块导入绘图和显示函数
 from fincore.tearsheets import (
