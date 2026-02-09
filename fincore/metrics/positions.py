@@ -330,7 +330,9 @@ def gross_lev(positions):
         Gross leverage.
     """
     exposure = positions.drop("cash", axis=1).abs().sum(axis=1)
-    return exposure / positions.sum(axis=1)
+    total = positions.sum(axis=1)
+    result = exposure / total
+    return result.replace([np.inf, -np.inf], np.nan)
 
 
 def stack_positions(positions, pos_in_dollars=True):

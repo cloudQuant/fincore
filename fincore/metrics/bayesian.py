@@ -59,8 +59,7 @@ def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
     import pymc as pm
 
     if len(data) != len(bmark):
-        data = data.align(bmark, join='inner')[0]
-        bmark = bmark.align(data, join='inner')[1]
+        data, bmark = data.align(bmark, join='inner')
 
     data_array = np.asarray(data)
     bmark_array = np.asarray(bmark)

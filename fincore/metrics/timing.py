@@ -136,12 +136,12 @@ def market_timing_return(returns, factor_returns, risk_free=0.0):
         Estimated contribution of market timing to returns, or ``NaN`` if
         the timing coefficient cannot be estimated.
     """
-    gamma = treynor_mazuy_timing(returns, factor_returns, risk_free)
+    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+
+    gamma = treynor_mazuy_timing(returns_aligned, factor_aligned, risk_free)
 
     if np.isnan(gamma):
         return np.nan
-
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     excess_factor = factor_aligned - risk_free
 
