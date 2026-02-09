@@ -1,8 +1,9 @@
 # fincore | Quantitative Performance & Risk Analytics
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-0.1-blueviolet.svg" alt="Version 0.1" style="margin-right: 10px;"/>
+    <img src="https://img.shields.io/badge/version-0.1.0-blueviolet.svg" alt="Version 0.1.0" style="margin-right: 10px;"/>
     <img src="https://github.com/cloudQuant/fincore/workflows/Tests/badge.svg" alt="Tests" style="margin-right: 10px;"/>
+    <img src="https://img.shields.io/badge/tests-1299%20passed-brightgreen.svg" alt="1299 Tests Passed" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Supported Platforms: Mac, Linux, and Windows" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-brightgreen.svg" alt="Python Versions" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/license-MIT-orange" alt="License: MIT"/>
@@ -22,7 +23,12 @@ fincore is a Python library for calculating common financial risk and performanc
 ### Features
 
 - **Comprehensive Metrics**: Over 50 financial metrics including returns, risk, risk-adjusted returns, and market relationships
-- **Rolling Calculations**: Rolling window versions of most metrics for time-series analysis
+- **AnalysisContext**: One-liner `fincore.analyze()` API — lazy, cached metric computation with JSON/HTML export
+- **RollingEngine**: Batch rolling metric computation (`sharpe`, `volatility`, `max_drawdown`, `beta`, `sortino`, `mean_return`) in a single call
+- **Pluggable Visualization**: Backend-agnostic `VizBackend` protocol with built-in Matplotlib and HTML report generators
+- **Rolling Calculations**: Rolling window versions of most metrics for time-series analysis, with vectorized `roll_max_drawdown`
+- **Lazy Imports**: `import fincore` in ~0.06 s — heavy submodules load only on first access
+- **Type Hints**: Core modules (`basic`, `returns`, `drawdown`) fully annotated with centralized type definitions in `fincore._types`
 - **Flexible Input**: Supports pandas Series/DataFrame and numpy arrays
 - **NaN Handling**: Robust handling of missing data throughout all calculations
 - **Performance Attribution**: Factor-based performance decomposition
@@ -89,12 +95,7 @@ git clone https://gitee.com/yunjinqi/fincore
 git clone https://github.com/cloudQuant/fincore
 
 cd fincore
-
-# Windows
-install_win.bat
-
-# Linux/macOS
-sh install_unix.sh
+pip install -U .
 ```
 
 #### pip install 
@@ -103,9 +104,59 @@ sh install_unix.sh
 pip install -U git+https://github.com/cloudQuant/fincore.git
 ```
 
+#### Optional Dependencies
+
+```bash
+# Visualization (matplotlib, seaborn)
+pip install "fincore[viz]"
+
+# Bayesian analysis (pymc)
+pip install "fincore[bayesian]"
+
+# Everything
+pip install "fincore[all]"
+
+# Development (pytest, ruff, mypy, etc.)
+pip install "fincore[dev]"
+```
+
 ### Quick Start
 
-#### Basic Metrics
+#### AnalysisContext (Recommended)
+
+```python
+import pandas as pd
+import numpy as np
+import fincore
+
+# Create sample data
+dates = pd.bdate_range('2020-01-01', periods=252)
+returns = pd.Series(np.random.normal(0.001, 0.02, 252), index=dates)
+benchmark = pd.Series(np.random.normal(0.0005, 0.015, 252), index=dates)
+
+# One-liner analysis — metrics are computed lazily and cached
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+
+print(f"Sharpe Ratio:     {ctx.sharpe_ratio:.4f}")
+print(f"Max Drawdown:     {ctx.max_drawdown:.4f}")
+print(f"Annual Return:    {ctx.annual_return:.4f}")
+print(f"Annual Volatility:{ctx.annual_volatility:.4f}")
+print(f"Alpha:            {ctx.alpha:.6f}")
+print(f"Beta:             {ctx.beta:.6f}")
+
+# Full performance stats as a pandas Series
+stats = ctx.perf_stats()
+print(stats)
+
+# Export to JSON or dict
+json_str = ctx.to_json()
+stats_dict = ctx.to_dict()
+
+# Generate a self-contained HTML report
+ctx.to_html(path="report.html")
+```
+
+#### Basic Metrics (Classic API)
 
 ```python
 import numpy as np
@@ -128,7 +179,26 @@ alpha, beta = empyrical.alpha_beta(returns, benchmark_returns)
 print(f"Alpha: {alpha:.4f}, Beta: {beta:.2f}")
 ```
 
-#### Rolling Metrics
+#### RollingEngine
+
+```python
+import pandas as pd
+import numpy as np
+from fincore.core.engine import RollingEngine
+
+dates = pd.bdate_range('2020-01-01', periods=504)
+returns = pd.Series(np.random.normal(0.001, 0.02, 504), index=dates)
+benchmark = pd.Series(np.random.normal(0.0005, 0.015, 504), index=dates)
+
+# Compute multiple rolling metrics in a single call
+engine = RollingEngine(returns, factor_returns=benchmark, window=60)
+results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
+
+for name, series in results.items():
+    print(f"{name}: {len(series)} observations")
+```
+
+#### Rolling Metrics (Classic API)
 
 ```python
 import pandas as pd
@@ -141,8 +211,26 @@ returns = pd.Series(np.random.normal(0.001, 0.02, 100), index=dates)
 # Calculate 30-day rolling Sharpe ratio
 rolling_sharpe = empyrical.roll_sharpe_ratio(returns, window=30)
 
-# Calculate 30-day rolling max drawdown
+# Calculate 30-day rolling max drawdown (vectorized — fast!)
 rolling_mdd = empyrical.roll_max_drawdown(returns, window=30)
+```
+
+#### Visualization
+
+```python
+import fincore
+
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+
+# Matplotlib plots (requires matplotlib)
+ctx.plot(backend="matplotlib")
+
+# Self-contained HTML report (no extra dependencies)
+html = ctx.to_html(path="report.html")
+
+# Or use backends directly
+from fincore.viz import get_backend
+viz = get_backend("html")  # or "matplotlib"
 ```
 
 #### Advanced Usage with DataFrames
@@ -181,17 +269,51 @@ sharpe_daily = empyrical.sharpe_ratio(returns, period=DAILY)
 sharpe_monthly = empyrical.sharpe_ratio(returns, period=MONTHLY)
 ```
 
+### Project Architecture
+
+```
+fincore/
+├── __init__.py          # Lazy top-level exports (Empyrical, Pyfolio, analyze)
+├── _types.py            # Centralized type aliases & NamedTuples
+├── empyrical.py         # Empyrical facade class (150+ methods)
+├── pyfolio.py           # Pyfolio tearsheet class (extends Empyrical)
+├── constants/           # Period constants (DAILY, WEEKLY, ...)
+├── core/
+│   ├── context.py       # AnalysisContext — lazy cached metric computation
+│   └── engine.py        # RollingEngine — batch rolling metrics
+├── metrics/
+│   ├── __init__.py      # Lazy sub-module loading (17 modules)
+│   ├── basic.py         # Utility functions (align, annualize, flatten)
+│   ├── returns.py       # Return calculations
+│   ├── drawdown.py      # Drawdown analytics
+│   ├── risk.py          # Volatility, VaR, CVaR, downside risk
+│   ├── ratios.py        # Sharpe, Sortino, Calmar, Omega, ...
+│   ├── alpha_beta.py    # Alpha, beta, capture ratios
+│   ├── rolling.py       # Rolling window metrics (vectorized)
+│   ├── stats.py         # Stability, skewness, kurtosis
+│   ├── perf_stats.py    # Aggregated performance statistics
+│   └── ...              # bayesian, positions, transactions, etc.
+├── viz/
+│   ├── base.py          # VizBackend protocol + get_backend()
+│   ├── matplotlib_backend.py
+│   └── html_backend.py  # Self-contained HTML report builder
+├── tearsheets/          # Legacy plotting functions (used by Pyfolio)
+└── utils/               # Shared helpers (nanmean, nanstd, ...)
+```
+
 ### Testing
 
 ```bash
-# Run all tests
-pytest ./tests -n 4
+# Run all tests (1299 tests)
+pytest tests/ -n 4
 
-# Run specific test module
-pytest ./tests/test_stats.py
+# Run specific test suites
+pytest tests/test_empyrical/          # Empyrical metrics tests
+pytest tests/test_core/               # AnalysisContext, RollingEngine, Viz tests
+pytest tests/test_pyfolio/            # Pyfolio tearsheet tests
 
-# Run specific test
-pytest ./tests/test_stats.py::test_sharpe_ratio
+# Run a single test
+pytest tests/test_core/test_context.py::TestCaching
 ```
 
 ### Development
@@ -207,11 +329,8 @@ cd fincore
 conda create -n fincore-dev python=3.11
 conda activate fincore-dev
 
-# Install dependencies
-pip install -U -r requirements.txt
-
-# Install in development mode
-pip install -e .
+# Install with dev dependencies
+pip install -e ".[dev,viz]"
 ```
 
 #### Testing Across Python Versions
@@ -231,7 +350,7 @@ We welcome contributions! Please follow these steps:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature-name`)
 3. Make your changes and add tests
-4. Run tests to ensure everything works
+4. Run tests to ensure everything works (`pytest tests/ -q`)
 5. Submit a pull request
 
 ### License
@@ -254,7 +373,12 @@ fincore 是一个用于计算常见金融风险和绩效指标的 Python 库，�
 ### 特性
 
 - **全面的指标**：超过 50 个金融指标，包括收益、风险、风险调整收益和市场关系指标
-- **滚动计算**：大多数指标都有滚动窗口版本，用于时间序列分析
+- **AnalysisContext**：一行代码 `fincore.analyze()` 即可完成分析 — 惰性计算、自动缓存，支持 JSON/HTML 导出
+- **RollingEngine**：批量滚动指标引擎，一次调用计算 `sharpe`、`volatility`、`max_drawdown`、`beta`、`sortino`、`mean_return`
+- **可插拔可视化**：基于 `VizBackend` 协议的后端无关设计，内置 Matplotlib 和 HTML 报告生成器
+- **滚动计算**：大多数指标都有滚动窗口版本，`roll_max_drawdown` 已向量化加速
+- **惰性导入**：`import fincore` 仅需 ~0.06 秒 — 重型子模块仅在首次访问时加载
+- **类型注解**：核心模块（`basic`、`returns`、`drawdown`）已完成类型标注，集中定义于 `fincore._types`
 - **灵活的输入**：支持 pandas Series/DataFrame 和 numpy 数组
 - **NaN 处理**：在所有计算中都能稳健地处理缺失数据
 - **绩效归因**：基于因子的绩效分解
@@ -272,12 +396,7 @@ git clone https://gitee.com/yunjinqi/fincore
 git clone https://github.com/cloudQuant/fincore
 
 cd fincore
-
-# Windows 系统
-install_win.bat
-
-# Linux/macOS 系统
-sh install_unix.sh
+pip install -U .
 ```
 
 #### 从 PyPI 安装
@@ -286,9 +405,59 @@ sh install_unix.sh
 pip install fincore
 ```
 
+#### 可选依赖
+
+```bash
+# 可视化（matplotlib, seaborn）
+pip install "fincore[viz]"
+
+# 贝叶斯分析（pymc）
+pip install "fincore[bayesian]"
+
+# 全部可选依赖
+pip install "fincore[all]"
+
+# 开发依赖（pytest, ruff, mypy 等）
+pip install "fincore[dev]"
+```
+
 ### 快速开始
 
-#### 基本指标
+#### AnalysisContext（推荐用法）
+
+```python
+import pandas as pd
+import numpy as np
+import fincore
+
+# 创建示例数据
+dates = pd.bdate_range('2020-01-01', periods=252)
+returns = pd.Series(np.random.normal(0.001, 0.02, 252), index=dates)
+benchmark = pd.Series(np.random.normal(0.0005, 0.015, 252), index=dates)
+
+# 一行代码完成分析 — 指标惰性计算并自动缓存
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+
+print(f"夏普比率:   {ctx.sharpe_ratio:.4f}")
+print(f"最大回撤:   {ctx.max_drawdown:.4f}")
+print(f"年化收益:   {ctx.annual_return:.4f}")
+print(f"年化波动率: {ctx.annual_volatility:.4f}")
+print(f"Alpha:      {ctx.alpha:.6f}")
+print(f"Beta:       {ctx.beta:.6f}")
+
+# 完整绩效统计（返回 pandas Series）
+stats = ctx.perf_stats()
+print(stats)
+
+# 导出为 JSON 或字典
+json_str = ctx.to_json()
+stats_dict = ctx.to_dict()
+
+# 生成独立 HTML 报告
+ctx.to_html(path="report.html")
+```
+
+#### 基本指标（经典 API）
 
 ```python
 import numpy as np
@@ -300,21 +469,37 @@ benchmark_returns = np.array([0.02, 0.02, 0.03, -0.35, -0.05, -0.01])
 
 # 计算最大回撤
 mdd = empyrical.max_drawdown(returns)
-
 print(f"最大回撤: {mdd:.2%}")
 
 # 计算夏普比率（假设为日收益）
 sharpe = empyrical.sharpe_ratio(returns, risk_free=0.02/252)
-
 print(f"夏普比率: {sharpe:.2f}")
 
 # 计算 alpha 和 beta
 alpha, beta = empyrical.alpha_beta(returns, benchmark_returns)
-
 print(f"Alpha: {alpha:.4f}, Beta: {beta:.2f}")
 ```
 
-#### 滚动指标
+#### RollingEngine（滚动指标引擎）
+
+```python
+import pandas as pd
+import numpy as np
+from fincore.core.engine import RollingEngine
+
+dates = pd.bdate_range('2020-01-01', periods=504)
+returns = pd.Series(np.random.normal(0.001, 0.02, 504), index=dates)
+benchmark = pd.Series(np.random.normal(0.0005, 0.015, 504), index=dates)
+
+# 一次调用计算多个滚动指标
+engine = RollingEngine(returns, factor_returns=benchmark, window=60)
+results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
+
+for name, series in results.items():
+    print(f"{name}: {len(series)} 个观测值")
+```
+
+#### 滚动指标（经典 API）
 
 ```python
 import pandas as pd
@@ -327,8 +512,26 @@ returns = pd.Series(np.random.normal(0.001, 0.02, 100), index=dates)
 # 计算 30 天滚动夏普比率
 rolling_sharpe = empyrical.roll_sharpe_ratio(returns, window=30)
 
-# 计算 30 天滚动最大回撤
+# 计算 30 天滚动最大回撤（已向量化加速）
 rolling_mdd = empyrical.roll_max_drawdown(returns, window=30)
+```
+
+#### 可视化
+
+```python
+import fincore
+
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+
+# Matplotlib 绘图（需安装 matplotlib）
+ctx.plot(backend="matplotlib")
+
+# 独立 HTML 报告（无额外依赖）
+html = ctx.to_html(path="report.html")
+
+# 也可直接使用后端
+from fincore.viz import get_backend
+viz = get_backend("html")  # 或 "matplotlib"
 ```
 
 #### DataFrame 高级用法
@@ -387,9 +590,41 @@ print(calmar_ratios)
 #### 滚动指标
 大多数指标都有以 `roll_` 为前缀的滚动版本：
 - `roll_sharpe_ratio()`
-- `roll_max_drawdown()`
+- `roll_max_drawdown()` — 已向量化
 - `roll_beta()`
 - 以及更多...
+
+### 项目架构
+
+```
+fincore/
+├── __init__.py          # 惰性顶层导出 (Empyrical, Pyfolio, analyze)
+├── _types.py            # 集中类型定义 & NamedTuple
+├── empyrical.py         # Empyrical 门面类 (150+ 方法)
+├── pyfolio.py           # Pyfolio 报表类 (继承 Empyrical)
+├── constants/           # 周期常量 (DAILY, WEEKLY, ...)
+├── core/
+│   ├── context.py       # AnalysisContext — 惰性缓存指标计算
+│   └── engine.py        # RollingEngine — 批量滚动指标引擎
+├── metrics/
+│   ├── __init__.py      # 惰性子模块加载 (17 个模块)
+│   ├── basic.py         # 工具函数 (对齐, 年化, 展平)
+│   ├── returns.py       # 收益计算
+│   ├── drawdown.py      # 回撤分析
+│   ├── risk.py          # 波动率, VaR, CVaR, 下行风险
+│   ├── ratios.py        # Sharpe, Sortino, Calmar, Omega, ...
+│   ├── alpha_beta.py    # Alpha, Beta, 捕获比率
+│   ├── rolling.py       # 滚动窗口指标 (已向量化)
+│   ├── stats.py         # 稳定性, 偏度, 峰度
+│   ├── perf_stats.py    # 聚合绩效统计
+│   └── ...              # bayesian, positions, transactions 等
+├── viz/
+│   ├── base.py          # VizBackend 协议 + get_backend()
+│   ├── matplotlib_backend.py
+│   └── html_backend.py  # 独立 HTML 报告生成器
+├── tearsheets/          # 传统绘图函数 (Pyfolio 使用)
+└── utils/               # 共享工具 (nanmean, nanstd, ...)
+```
 
 ### 周期常量
 
@@ -404,14 +639,16 @@ sharpe_monthly = empyrical.sharpe_ratio(returns, period=MONTHLY)
 ### 测试
 
 ```bash
-# 运行所有测试
-pytest ./tests -n 4
+# 运行所有测试（1299 个测试）
+pytest tests/ -n 4
 
-# 运行特定测试模块
-pytest ./tests/test_stats.py
+# 运行特定测试套件
+pytest tests/test_empyrical/          # Empyrical 指标测试
+pytest tests/test_core/               # AnalysisContext、RollingEngine、可视化测试
+pytest tests/test_pyfolio/            # Pyfolio 报表测试
 
-# 运行特定测试
-pytest ./tests/test_stats.py::test_sharpe_ratio
+# 运行单个测试
+pytest tests/test_core/test_context.py::TestCaching
 ```
 
 ### 开发
@@ -427,11 +664,8 @@ cd fincore
 conda create -n fincore-dev python=3.11
 conda activate fincore-dev
 
-# 安装依赖
-pip install -U -r requirements.txt
-
-# 以开发模式安装
-pip install -e .
+# 安装开发依赖
+pip install -e ".[dev,viz]"
 ```
 
 #### 跨 Python 版本测试
@@ -451,7 +685,7 @@ test_python_versions_simple.bat
 1. Fork 仓库
 2. 创建功能分支（`git checkout -b feature-name`）
 3. 进行更改并添加测试
-4. 运行测试确保一切正常
+4. 运行测试确保一切正常（`pytest tests/ -q`）
 5. 提交 Pull Request
 
 ### 许可证

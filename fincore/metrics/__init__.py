@@ -20,21 +20,38 @@ Metrics - 拆分后的金融性能分析函数模块.
 这个包包含从 Empyrical 类中拆分出来的各个功能模块。
 """
 
-# 导入子模块（保留模块引用，使用别名避免被覆盖）
-from fincore.metrics import basic as basic_module
-from fincore.metrics import returns as returns_module
-from fincore.metrics import drawdown as drawdown_module
-from fincore.metrics import risk as risk_module
-from fincore.metrics import ratios as ratios_module
-from fincore.metrics import alpha_beta as alpha_beta_module
-from fincore.metrics import stats as stats_module
-from fincore.metrics import consecutive as consecutive_module
-from fincore.metrics import rolling as rolling_module
-from fincore.metrics import bayesian as bayesian_module
-from fincore.metrics import positions as positions_module
-from fincore.metrics import transactions as transactions_module
-from fincore.metrics import round_trips as round_trips_module
-from fincore.metrics import perf_attrib as perf_attrib_module
-from fincore.metrics import perf_stats as perf_stats_module
-from fincore.metrics import timing as timing_module
-from fincore.metrics import yearly as yearly_module
+# ---------------------------------------------------------------------------
+# Lazy sub-module loading — each ``*_module`` alias is resolved on first
+# attribute access via ``__getattr__``.  This avoids importing all 17
+# sub-modules (and their transitive dependencies) when
+# ``import fincore.metrics`` is executed.
+# ---------------------------------------------------------------------------
+import importlib as _importlib
+
+_MODULE_MAP = {
+    'basic_module': 'fincore.metrics.basic',
+    'returns_module': 'fincore.metrics.returns',
+    'drawdown_module': 'fincore.metrics.drawdown',
+    'risk_module': 'fincore.metrics.risk',
+    'ratios_module': 'fincore.metrics.ratios',
+    'alpha_beta_module': 'fincore.metrics.alpha_beta',
+    'stats_module': 'fincore.metrics.stats',
+    'consecutive_module': 'fincore.metrics.consecutive',
+    'rolling_module': 'fincore.metrics.rolling',
+    'bayesian_module': 'fincore.metrics.bayesian',
+    'positions_module': 'fincore.metrics.positions',
+    'transactions_module': 'fincore.metrics.transactions',
+    'round_trips_module': 'fincore.metrics.round_trips',
+    'perf_attrib_module': 'fincore.metrics.perf_attrib',
+    'perf_stats_module': 'fincore.metrics.perf_stats',
+    'timing_module': 'fincore.metrics.timing',
+    'yearly_module': 'fincore.metrics.yearly',
+}
+
+
+def __getattr__(name: str):
+    if name in _MODULE_MAP:
+        mod = _importlib.import_module(_MODULE_MAP[name])
+        globals()[name] = mod
+        return mod
+    raise AttributeError(f"module 'fincore.metrics' has no attribute {name!r}")

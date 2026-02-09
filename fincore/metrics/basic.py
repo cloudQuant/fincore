@@ -15,8 +15,11 @@
 # limitations under the License.
 
 """基础工具函数模块."""
+from __future__ import annotations
 
 from functools import lru_cache
+from typing import Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
 from fincore.constants import ANNUALIZATION_FACTORS, PERIOD_TO_FREQ, DAILY
@@ -31,7 +34,10 @@ __all__ = [
 ]
 
 
-def ensure_datetime_index_series(data, period=DAILY):
+def ensure_datetime_index_series(
+    data: Union[pd.Series, np.ndarray, list],
+    period: str = DAILY,
+) -> pd.Series:
     """Return a Series indexed by dates regardless of the input type.
 
     If the input is already a datetime-indexed Series, it is returned as
@@ -72,7 +78,7 @@ def ensure_datetime_index_series(data, period=DAILY):
     return pd.Series(values, index=index)
 
 
-def flatten(arr):
+def flatten(arr: Union[pd.Series, np.ndarray]) -> np.ndarray:
     """Flatten a pandas Series to a NumPy array.
 
     Parameters
@@ -89,7 +95,10 @@ def flatten(arr):
     return arr if not isinstance(arr, pd.Series) else arr.values
 
 
-def adjust_returns(returns, adjustment_factor):
+def adjust_returns(
+    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
+    adjustment_factor: Union[float, int, pd.Series, pd.DataFrame, np.ndarray],
+) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
     """Adjust returns by subtracting an adjustment factor.
 
     This is a convenience helper for computing excess returns or active
@@ -120,7 +129,7 @@ def adjust_returns(returns, adjustment_factor):
 
 
 @lru_cache(maxsize=32)
-def annualization_factor(period, annualization):
+def annualization_factor(period: str, annualization: Optional[float]) -> float:
     """Return the annualization factor for a given period.
 
     If a custom ``annualization`` value is provided, it is returned
@@ -162,7 +171,7 @@ def annualization_factor(period, annualization):
     return factor
 
 
-def to_pandas(ob):
+def to_pandas(ob: Union[np.ndarray, pd.Series, pd.DataFrame]) -> Union[pd.Series, pd.DataFrame]:
     """Convert an array-like to a pandas object.
 
     Parameters
@@ -195,7 +204,9 @@ def to_pandas(ob):
         )
 
 
-def aligned_series(*many_series):
+def aligned_series(
+    *many_series: Union[pd.Series, pd.DataFrame, np.ndarray],
+) -> Tuple[Union[pd.Series, pd.DataFrame, np.ndarray], ...]:
     """Return a new tuple of series with their indices aligned.
 
     This helper aligns multiple return series by their common index,

@@ -56,7 +56,6 @@ install_requires = [
     "numpy>=1.17.0",
     "pandas>=0.25.0",
     "scipy>=1.3.0",
-    "six>=1.10",
 ]
 
 extras_require = {
@@ -64,10 +63,23 @@ extras_require = {
         "pytest>=6.0",
         "pytest-xdist>=2.0",
         "pytest-cov>=2.10",
-        "flake8",
+        "pytest-benchmark>=3.2",
+        "parameterized",
+        "ruff>=0.4.0",
+        "mypy>=1.5",
+    ],
+    "viz": [
+        "matplotlib>=3.3",
+        "seaborn>=0.11",
+    ],
+    "bayesian": [
+        "pymc>=5.0",
     ],
     "datareader": [
         "pandas-datareader>=0.8.0",
+    ],
+    "all": [
+        "fincore[viz,bayesian,datareader]",
     ],
 }
 

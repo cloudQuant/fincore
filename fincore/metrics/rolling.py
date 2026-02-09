@@ -267,7 +267,7 @@ def roll_max_drawdown(returns, window=252):
         Rolling maximum drawdown values.
     """
     is_series = isinstance(returns, pd.Series)
-    
+
     if len(returns) < window:
         if is_series:
             if isinstance(returns.index, pd.DatetimeIndex):
@@ -275,19 +275,28 @@ def roll_max_drawdown(returns, window=252):
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
-    from fincore.utils import nanmin as _nanmin
-
-    ret_arr = np.asanyarray(returns)
+    ret_arr = np.asanyarray(returns, dtype=np.float64)
     n = len(ret_arr) - window + 1
-    out = np.empty(n, dtype=float)
-    for i in range(n):
-        window_ret = ret_arr[i:i + window]
-        cumulative = np.empty(window + 1, dtype='float64')
-        cumulative[0] = 100.0
-        np.cumprod(1 + window_ret, out=cumulative[1:])
-        cumulative[1:] *= 100.0
-        max_return = np.fmax.accumulate(cumulative)
-        out[i] = _nanmin((cumulative - max_return) / max_return)
+
+    # --- vectorised path using sliding_window_view ---
+    from numpy.lib.stride_tricks import sliding_window_view
+    windows = sliding_window_view(ret_arr, window)          # (n, window)
+
+    # cumulative product along each window row
+    cum = np.cumprod(1.0 + windows, axis=1) * 100.0         # (n, window)
+    # prepend the starting value 100 as column-0
+    start_col = np.full((n, 1), 100.0)
+    cum = np.concatenate([start_col, cum], axis=1)           # (n, window+1)
+
+    # running maximum along each window row
+    run_max = np.maximum.accumulate(cum, axis=1)
+
+    # drawdown at every point inside every window
+    with np.errstate(divide='ignore', invalid='ignore'):
+        dd = (cum - run_max) / run_max                       # (n, window+1)
+
+    # max drawdown per window (most negative value)
+    out = np.nanmin(dd, axis=1)                              # (n,)
 
     if is_series:
         return pd.Series(out, index=returns.index[window - 1:])

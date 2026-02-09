@@ -1,6 +1,75 @@
 [build-system]
-requires = [
-    "setuptools>=61",
-    "wheel"
-]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "fincore"
+version = "0.1.0"
+description = "Quantitative performance and risk analytics for Python"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "cloudQuant", email = "yunjinqi@gmail.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.17.0",
+    "pandas>=0.25.0",
+    "scipy>=1.3.0",
+]
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.3", "seaborn>=0.11"]
+bayesian = ["pymc>=5.0"]
+datareader = ["pandas-datareader>=0.8.0"]
+dev = [
+    "pytest>=6.0",
+    "pytest-xdist>=2.0",
+    "pytest-cov>=2.10",
+    "pytest-benchmark>=3.2",
+    "pytest-sugar>=0.9",
+    "parameterized",
+    "ruff>=0.4.0",
+    "mypy>=1.5",
+]
+all = ["fincore[viz,bayesian,datareader]"]
+
+[project.urls]
+Homepage = "https://github.com/cloudQuant/fincore"
+
+[tool.setuptools.packages.find]
+include = ["fincore*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
