@@ -48,7 +48,8 @@ def get_percent_alloc(values):
     pd.DataFrame
         Positions and their allocations.
     """
-    return values.divide(values.sum(axis="columns"), axis="rows")
+    result = values.divide(values.sum(axis="columns"), axis="rows")
+    return result.replace([np.inf, -np.inf], np.nan)
 
 
 def get_top_long_short_abs(positions, top=10):

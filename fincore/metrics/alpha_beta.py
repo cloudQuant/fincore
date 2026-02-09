@@ -97,11 +97,12 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
         factor_returns = factor_returns - risk_free
 
     independent = np.where(isnan(returns), nan, factor_returns)
-    ind_residual = independent - nanmean_local(independent, axis=0)
-    covariances = nanmean_local(ind_residual * returns, axis=0)
+    with np.errstate(invalid='ignore'):
+        ind_residual = independent - nanmean_local(independent, axis=0)
+        covariances = nanmean_local(ind_residual * returns, axis=0)
 
-    np.square(ind_residual, out=ind_residual)
-    independent_variances = nanmean_local(ind_residual, axis=0)
+        np.square(ind_residual, out=ind_residual)
+        independent_variances = nanmean_local(ind_residual, axis=0)
     independent_variances[independent_variances < 1.0e-30] = np.nan
 
     np.divide(covariances, independent_variances, out=out)
@@ -520,6 +521,10 @@ def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualiza
     if not isinstance(returns.index, pd.DatetimeIndex):
         return pd.Series([], dtype=float)
 
+    returns, factor_returns = aligned_series(returns, factor_returns)
+    if len(returns) < 1:
+        return pd.Series([], dtype=float)
+
     grouped = returns.groupby(returns.index.year)
     factor_grouped = factor_returns.groupby(factor_returns.index.year)
 
@@ -567,6 +572,10 @@ def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizat
         return pd.Series([], dtype=float)
 
     if not isinstance(returns.index, pd.DatetimeIndex):
+        return pd.Series([], dtype=float)
+
+    returns, factor_returns = aligned_series(returns, factor_returns)
+    if len(returns) < 1:
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
