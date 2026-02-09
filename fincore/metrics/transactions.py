@@ -359,8 +359,9 @@ def adjust_returns_for_slippage(returns, positions, transactions, slippage_bps):
     traded_value = get_txn_vol(transactions).txn_volume
     slippage_dollars = traded_value * slippage
     adjusted_pnl = pnl.add(-slippage_dollars, fill_value=0)
+    pnl_safe = pnl.replace(0, np.nan)
     with np.errstate(divide="ignore", invalid="ignore"):
-        adjusted_returns = returns * adjusted_pnl / pnl
+        adjusted_returns = returns * adjusted_pnl / pnl_safe
     adjusted_returns = adjusted_returns.fillna(0)
 
     return adjusted_returns

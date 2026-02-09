@@ -585,7 +585,6 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
         ``NaN``.
     """
     from fincore.metrics.risk import annual_volatility
-    from fincore.metrics.returns import cum_returns_final
 
     if len(returns) < 2:
         return np.nan
