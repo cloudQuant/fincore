@@ -21,7 +21,7 @@ import pandas as pd
 from scipy import stats
 from sys import float_info
 from fincore.utils import nanmean, nanstd
-from fincore.constants import DAILY
+from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
 from fincore.metrics.basic import (
     annualization_factor, adjust_returns, aligned_series
 )
@@ -323,7 +323,7 @@ def residual_risk(returns, factor_returns, risk_free=0.0):
     predicted_returns = beta_val * excess_factor
     residuals = excess_returns - predicted_returns
 
-    return np.std(residuals, ddof=1) * np.sqrt(252)
+    return np.std(residuals, ddof=1) * np.sqrt(APPROX_BDAYS_PER_YEAR)
 
 
 def var_excess_return(returns, cutoff=0.05):
@@ -515,7 +515,7 @@ def gpd_risk_estimates(returns, var_p=0.01):
                         )
                         if shape_param > 0 and var_estimate > 0:
                             finished = True
-            except Exception:
+            except (ValueError, RuntimeError, FloatingPointError):
                 pass
         if not finished:
             threshold = threshold / 2

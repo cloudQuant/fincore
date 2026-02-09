@@ -234,8 +234,8 @@ def aggregate_returns(returns, convert_to="monthly"):
         grouping = [lambda dt: dt.year]
     else:
         raise ValueError(
-            "convert_to must be {}, {} or {}".format(
-                WEEKLY, MONTHLY, YEARLY)
+            "convert_to must be {}, {}, {} or {}".format(
+                WEEKLY, MONTHLY, QUARTERLY, YEARLY)
         )
 
     return returns.groupby(grouping).apply(cumulate_returns)

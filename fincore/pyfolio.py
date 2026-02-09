@@ -138,9 +138,8 @@ class Pyfolio(Empyrical):
             Factor loadings for all days in the date range.
         ... (其他参数与create_full_tear_sheet保持一致)
         """
-        # 存储核心数据（保持传入参数与属性一一对应）
-        self.returns = returns
-        self.positions = positions
+        super().__init__(returns=returns, positions=positions,
+                         factor_returns=factor_returns, factor_loadings=factor_loadings)
         self.transactions = transactions
         self.market_data = market_data
         self.benchmark_rets = benchmark_rets
@@ -162,8 +161,6 @@ class Pyfolio(Empyrical):
         self.percentile = percentile
         self.turnover_denom = turnover_denom
         self.set_context = set_context
-        self.factor_returns = factor_returns
-        self.factor_loadings = factor_loadings
         self.pos_in_dollars = pos_in_dollars
         self.header_rows = header_rows
         self.factor_partitions = factor_partitions

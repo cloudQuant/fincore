@@ -18,7 +18,7 @@
 
 import numpy as np
 import pandas as pd
-from fincore.constants import DAILY
+from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
 from fincore.metrics.basic import aligned_series
 from fincore.metrics.alpha_beta import alpha, beta
 from fincore.metrics.ratios import sharpe_ratio, up_capture, down_capture
@@ -128,16 +128,18 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
         returns_aligned = pd.Series(returns_aligned)
         factor_aligned = pd.Series(factor_aligned)
 
-    n = len(returns_aligned) - window + 1
-    out = np.empty(n, dtype=float)
-    for i in range(n):
-        out[i] = beta(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window],
-                      risk_free, period, annualization)
+    ret_adj = returns_aligned - risk_free
+    fac_adj = factor_aligned - risk_free
+    rolling_cov = ret_adj.rolling(window).cov(fac_adj)
+    rolling_var = fac_adj.rolling(window).var()
+    with np.errstate(divide='ignore', invalid='ignore'):
+        result = rolling_cov / rolling_var
+    result = result.iloc[window - 1:]
 
     if is_series:
-        return pd.Series(out, index=returns_aligned.index[window - 1:])
+        return result
     else:
-        return out
+        return result.values
 
 
 def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
@@ -403,7 +405,7 @@ def rolling_volatility(returns, rolling_vol_window):
     pd.Series
         Rolling volatility, annualized.
     """
-    return returns.rolling(window=rolling_vol_window).std() * np.sqrt(252)
+    return returns.rolling(window=rolling_vol_window).std() * np.sqrt(APPROX_BDAYS_PER_YEAR)
 
 
 def rolling_sharpe(returns, rolling_sharpe_window):
@@ -425,7 +427,7 @@ def rolling_sharpe(returns, rolling_sharpe_window):
     rolling_std = returns.rolling(window=rolling_sharpe_window).std()
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        return rolling_mean / rolling_std * np.sqrt(252)
+        return rolling_mean / rolling_std * np.sqrt(APPROX_BDAYS_PER_YEAR)
 
 
 def rolling_beta(returns, factor_returns, rolling_window=126):
@@ -448,20 +450,16 @@ def rolling_beta(returns, factor_returns, rolling_window=126):
     from functools import partial
 
     if factor_returns.ndim > 1:
-        # Apply column-wise
         return factor_returns.apply(
             partial(rolling_beta, returns),
             rolling_window=rolling_window
         )
     else:
-        out = pd.Series(index=returns.index)
-        for beg, end in zip(
-            returns.index[0:-rolling_window], returns.index[rolling_window:]
-        ):
-            out.loc[end] = beta(
-                returns.loc[beg:end], factor_returns.loc[beg:end]
-            )
-
+        returns_aligned, factor_aligned = returns.align(factor_returns, join='inner')
+        rolling_cov = returns_aligned.rolling(rolling_window).cov(factor_aligned)
+        rolling_var = factor_aligned.rolling(rolling_window).var()
+        with np.errstate(divide='ignore', invalid='ignore'):
+            out = rolling_cov / rolling_var
         return out
 
 
@@ -487,17 +485,20 @@ def rolling_regression(returns, factor_returns, rolling_window=126):
     if len(returns_aligned) < rolling_window:
         return pd.DataFrame(columns=['alpha', 'beta'])
 
-    out = []
-    for beg, end in zip(range(0, len(returns_aligned) - rolling_window + 1),
-                        range(rolling_window, len(returns_aligned) + 1)):
-        window_returns = returns_aligned.iloc[beg:end]
-        window_factor = factor_aligned.iloc[beg:end]
+    if not isinstance(returns_aligned, pd.Series):
+        returns_aligned = pd.Series(returns_aligned)
+        factor_aligned = pd.Series(factor_aligned)
 
-        alpha_val = alpha(window_returns, window_factor)
-        beta_val = beta(window_returns, window_factor)
-        out.append({'alpha': alpha_val, 'beta': beta_val})
+    rolling_cov = returns_aligned.rolling(rolling_window).cov(factor_aligned)
+    rolling_var = factor_aligned.rolling(rolling_window).var()
+    with np.errstate(divide='ignore', invalid='ignore'):
+        rolling_beta_vals = rolling_cov / rolling_var
+    rolling_mean_ret = returns_aligned.rolling(rolling_window).mean()
+    rolling_mean_fac = factor_aligned.rolling(rolling_window).mean()
+    rolling_alpha_vals = rolling_mean_ret - rolling_beta_vals * rolling_mean_fac
 
-    if isinstance(returns_aligned, pd.Series):
-        return pd.DataFrame(out, index=returns_aligned.index[rolling_window - 1:])
-    else:
-        return pd.DataFrame(out)
+    result = pd.DataFrame({
+        'alpha': rolling_alpha_vals,
+        'beta': rolling_beta_vals
+    })
+    return result.dropna()

@@ -1607,7 +1607,7 @@ class TestStats(BaseTestCase):
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (weekly_returns, 1 / 5),  # Has a drawdown lasting 1 day => 1/5 weeks
+        (weekly_returns, 1.0),  # Has a drawdown lasting 7 calendar days => 7/7 = 1 week
     ])
     def test_max_drawdown_weeks(self, returns, expected):
         result = self.empyrical.max_drawdown_weeks(returns)
@@ -1620,7 +1620,7 @@ class TestStats(BaseTestCase):
     @parameterized.expand([
         (empty_returns, np.nan),
         (one_return, 0),
-        (monthly_returns, 1 / 21),  # Has a drawdown lasting 1 day => 1/21 months
+        (monthly_returns, 30 / 21),  # Has a drawdown lasting 30 calendar days => 30/21 months
     ])
     def test_max_drawdown_months(self, returns, expected):
         result = self.empyrical.max_drawdown_months(returns)
@@ -1829,6 +1829,32 @@ class TestStatsArrays(TestStats):
         )
         assert np.isnan(result), f"Expected NaN but got {result}"
 
+    # Override drawdown duration tests: arrays lose DatetimeIndex, so
+    # max_drawdown_days returns index-position diff (trading periods)
+    @parameterized.expand([
+        (TestStats.empty_returns, np.nan),
+        (TestStats.one_return, 0),
+        (TestStats.weekly_returns, 1 / 7),  # 1 period / 7
+    ])
+    def test_max_drawdown_weeks(self, returns, expected):
+        result = self.empyrical.max_drawdown_weeks(returns)
+        if np.isnan(expected):
+            assert np.isnan(result), f"Expected NaN but got {result}"
+        else:
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
+
+    @parameterized.expand([
+        (TestStats.empty_returns, np.nan),
+        (TestStats.one_return, 0),
+        (TestStats.monthly_returns, 1 / 21),  # 1 period / 21
+    ])
+    def test_max_drawdown_months(self, returns, expected):
+        result = self.empyrical.max_drawdown_months(returns)
+        if np.isnan(expected):
+            assert np.isnan(result), f"Expected NaN but got {result}"
+        else:
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
+
 
 class TestStatsIntIndex(TestStats):
     """
@@ -1903,6 +1929,32 @@ class TestStatsIntIndex(TestStats):
             self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=WEEKLY
         )
         assert np.isnan(result), f"Expected NaN but got {result}"
+
+    # Override drawdown duration tests: int-indexed Series lose DatetimeIndex,
+    # so max_drawdown_days returns index-position diff (trading periods)
+    @parameterized.expand([
+        (TestStats.empty_returns, np.nan),
+        (TestStats.one_return, 0),
+        (TestStats.weekly_returns, 1 / 7),  # 1 period / 7
+    ])
+    def test_max_drawdown_weeks(self, returns, expected):
+        result = self.empyrical.max_drawdown_weeks(returns)
+        if np.isnan(expected):
+            assert np.isnan(result), f"Expected NaN but got {result}"
+        else:
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
+
+    @parameterized.expand([
+        (TestStats.empty_returns, np.nan),
+        (TestStats.one_return, 0),
+        (TestStats.monthly_returns, 1 / 21),  # 1 period / 21
+    ])
+    def test_max_drawdown_months(self, returns, expected):
+        result = self.empyrical.max_drawdown_months(returns)
+        if np.isnan(expected):
+            assert np.isnan(result), f"Expected NaN but got {result}"
+        else:
+            assert abs(result - expected) < 1e-10, f"Expected {expected} but got {result}"
 
 
 class TestHelpers(BaseTestCase):
