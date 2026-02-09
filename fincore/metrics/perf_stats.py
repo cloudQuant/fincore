@@ -208,6 +208,9 @@ def calc_bootstrap(func, returns, *args, **kwargs):
         Daily returns of the strategy, noncumulative.
     n_samples : int, optional
         Number of bootstrap samples to draw. Default is 1000.
+    random_seed : int, optional
+        Seed for the pseudorandom number generator to make results
+        reproducible. Default is ``None`` (non-deterministic).
     kwargs : dict, optional
         Additional keyword arguments forwarded to ``func``. For
         factor-based statistics this often includes ``factor_returns``.
@@ -218,12 +221,14 @@ def calc_bootstrap(func, returns, *args, **kwargs):
         Bootstrapped sampling distribution of passed in func.
     """
     n_samples = kwargs.pop("n_samples", 1000)
+    random_seed = kwargs.pop("random_seed", None)
     out = np.empty(n_samples)
 
     factor_returns = kwargs.pop("factor_returns", None)
+    rng = np.random.RandomState(seed=random_seed)
 
     for i in range(n_samples):
-        idx = np.random.randint(len(returns), size=len(returns))
+        idx = rng.randint(len(returns), size=len(returns))
         returns_i = returns.iloc[idx].reset_index(drop=True)
         if factor_returns is not None:
             factor_returns_i = factor_returns.iloc[idx].reset_index(drop=True)

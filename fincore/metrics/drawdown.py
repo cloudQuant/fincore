@@ -98,6 +98,56 @@ def max_drawdown(returns, out=None):
     return out
 
 
+def _identify_drawdown_periods(returns):
+    """Identify distinct drawdown periods in a return series.
+
+    Shared helper used by :func:`get_all_drawdowns` and
+    :func:`get_all_drawdowns_detailed` to avoid duplicating the
+    cumulative-return / rolling-max / transition-detection logic.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative returns.
+
+    Returns
+    -------
+    tuple or None
+        ``(dd_vals, starts, ends, ends_in_dd)`` where *dd_vals* is the
+        drawdown array, *starts*/*ends* are index arrays of period
+        boundaries, and *ends_in_dd* indicates whether the series ends
+        while still in drawdown.  Returns ``None`` when there are no
+        drawdown periods.
+    """
+    if len(returns) < 1:
+        return None
+
+    if not isinstance(returns, pd.Series):
+        returns = pd.Series(returns)
+
+    cum_ret = cum_returns(returns, starting_value=100)
+    rolling_max = cum_ret.expanding().max()
+    drawdown = (cum_ret - rolling_max) / rolling_max
+
+    dd_vals = drawdown.values
+    is_dd = dd_vals < 0
+
+    if not is_dd.any():
+        return None
+
+    shifted = np.empty_like(is_dd)
+    shifted[0] = False
+    shifted[1:] = is_dd[:-1]
+    starts = np.where(is_dd & ~shifted)[0]
+    ends = np.where(~is_dd & shifted)[0]
+
+    ends_in_dd = len(ends) < len(starts)
+    if ends_in_dd:
+        ends = np.append(ends, len(dd_vals))
+
+    return dd_vals, starts, ends, ends_in_dd
+
+
 def get_all_drawdowns(returns):
     """Extract all distinct drawdown values from a return series.
 
@@ -112,43 +162,12 @@ def get_all_drawdowns(returns):
         List of drawdown magnitudes (negative values) for each distinct
         drawdown period.
     """
-    if len(returns) < 1:
+    result = _identify_drawdown_periods(returns)
+    if result is None:
         return []
 
-    if not isinstance(returns, pd.Series):
-        returns = pd.Series(returns)
-
-    # Calculate cumulative returns
-    cum_ret = cum_returns(returns, starting_value=100)
-
-    # Calculate rolling maximum
-    rolling_max = cum_ret.expanding().max()
-
-    # Calculate drawdown
-    drawdown = (cum_ret - rolling_max) / rolling_max
-
-    # Vectorized identification of drawdown periods
-    dd_vals = drawdown.values
-    is_dd = dd_vals < 0
-
-    if not is_dd.any():
-        return []
-
-    # Detect transitions: start (False->True) and end (True->False)
-    shifted = np.empty_like(is_dd)
-    shifted[0] = False
-    shifted[1:] = is_dd[:-1]
-    starts = np.where(is_dd & ~shifted)[0]
-    ends = np.where(~is_dd & shifted)[0]
-
-    # If series ends in drawdown, add the end
-    if len(ends) < len(starts):
-        ends = np.append(ends, len(dd_vals))
-
-    # Extract minimum drawdown for each period
-    drawdown_periods = [float(dd_vals[s:e].min()) for s, e in zip(starts, ends)]
-
-    return drawdown_periods
+    dd_vals, starts, ends, _ends_in_dd = result
+    return [float(dd_vals[s:e].min()) for s, e in zip(starts, ends)]
 
 
 def get_all_drawdowns_detailed(returns):
@@ -165,38 +184,11 @@ def get_all_drawdowns_detailed(returns):
         List of dictionaries with keys 'value', 'duration', 'recovery_duration'
         for each distinct drawdown period.
     """
-    if len(returns) < 1:
+    result = _identify_drawdown_periods(returns)
+    if result is None:
         return []
 
-    if not isinstance(returns, pd.Series):
-        returns = pd.Series(returns)
-
-    # Calculate cumulative returns
-    cum_ret = cum_returns(returns, starting_value=100)
-
-    # Calculate rolling maximum
-    rolling_max = cum_ret.expanding().max()
-
-    # Calculate drawdown
-    drawdown = (cum_ret - rolling_max) / rolling_max
-
-    # Vectorized identification of drawdown periods
-    dd_vals = drawdown.values
-    is_dd = dd_vals < 0
-
-    if not is_dd.any():
-        return []
-
-    shifted = np.empty_like(is_dd)
-    shifted[0] = False
-    shifted[1:] = is_dd[:-1]
-    starts = np.where(is_dd & ~shifted)[0]
-    ends = np.where(~is_dd & shifted)[0]
-
-    # If series ends in drawdown, mark end as length of array
-    ends_in_dd = len(ends) < len(starts)
-    if ends_in_dd:
-        ends = np.append(ends, len(dd_vals))
+    dd_vals, starts, ends, ends_in_dd = result
 
     drawdown_periods = []
     for k, (s, e) in enumerate(zip(starts, ends)):
@@ -261,7 +253,10 @@ def get_max_drawdown_underwater(underwater):
     """
     valley = underwater.idxmin()  # end of the period
     # Find first 0 (peak is where underwater == 0 before valley)
-    peak = underwater[:valley][underwater[:valley] == 0].index[-1]
+    try:
+        peak = underwater[:valley][underwater[:valley] == 0].index[-1]
+    except IndexError:
+        peak = underwater.index[0]
     # Find last 0 (recovery is where underwater == 0 after valley)
     try:
         recovery = underwater[valley:][underwater[valley:] == 0].index[0]

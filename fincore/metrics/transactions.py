@@ -234,8 +234,10 @@ def apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backte
 
     portfolio_value = cum_returns(returns, starting_value=backtest_starting_capital)
     portfolio_value = portfolio_value * mult
+    portfolio_value = portfolio_value.replace(0, np.nan)
 
     adj_returns = returns - (daily_penalty / portfolio_value)
+    adj_returns = adj_returns.fillna(returns)
 
     return adj_returns
 
@@ -351,8 +353,6 @@ def adjust_returns_for_slippage(returns, positions, transactions, slippage_bps):
     pd.Series
         Time series of daily returns, adjusted for slippage.
     """
-    import warnings
-
     slippage = 0.0001 * slippage_bps
     portfolio_value = positions.sum(axis=1)
     pnl = portfolio_value * returns

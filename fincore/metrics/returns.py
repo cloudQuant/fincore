@@ -277,6 +277,9 @@ def normalize(returns, starting_value=1):
     3    1.15
     dtype: float64
     """
+    if len(returns) < 1:
+        return returns.copy()
+
     first_value = returns.iloc[0]
     if first_value == 0:
         import warnings

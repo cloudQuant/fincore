@@ -16,6 +16,8 @@
 
 """阿尔法贝塔相关函数模块."""
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from fincore.utils import nanmean
@@ -97,7 +99,8 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
         factor_returns = factor_returns - risk_free
 
     independent = np.where(isnan(returns), nan, factor_returns)
-    with np.errstate(invalid='ignore'):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         ind_residual = independent - nanmean_local(independent, axis=0)
         covariances = nanmean_local(ind_residual * returns, axis=0)
 

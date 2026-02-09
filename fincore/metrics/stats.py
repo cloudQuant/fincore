@@ -131,7 +131,11 @@ def hurst_exponent(returns):
         max_lag = max(n // 3, 3)
         min_lag = 2
 
-        lags = range(min_lag, max_lag + 1)
+        max_points = 30
+        if max_lag - min_lag + 1 > max_points:
+            lags = np.unique(np.geomspace(min_lag, max_lag, num=max_points).astype(int))
+        else:
+            lags = range(min_lag, max_lag + 1)
         rs_values = []
 
         for lag in lags:
