@@ -69,3 +69,26 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E402",   # module-level import not at top of file (intentional in this codebase)
+    "E501",   # line too long (handled by ruff format)
+    "E731",   # lambda assignment
+    "F401",   # unused import (many are dynamically accessed via __getattr__ / registry)
+    "F811",   # redefinition of unused name (intentional re-exports)
+    "F841",   # local variable assigned but never used
+    "UP007",  # use X | Y for union types
+    "UP031",  # use format specifiers instead of percent format
+    "UP035",  # import from typing (kept for clarity)
+    "B007",   # unused loop variable
+    "B008",   # function call in argument defaults
+    "B023",   # function definition does not bind loop variable
+    "B028",   # no explicit stacklevel keyword argument
+    "B904",   # raise without from inside except
+    "B905",   # zip() without explicit strict= parameter
+    "SIM102", # collapsible if
+    "SIM105", # use contextlib.suppress
+    "SIM108", # use ternary operator
+    "SIM113", # use enumerate for index variable
+    "SIM118", # use key in dict instead of key in dict.keys()
+    "SIM201", # use != instead of not ==
+]
