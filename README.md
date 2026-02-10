@@ -2,11 +2,11 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/version-0.1.0-blueviolet.svg" alt="Version 0.1.0" style="margin-right: 10px;"/>
-    <img src="https://github.com/cloudQuant/fincore/workflows/Tests/badge.svg" alt="Tests" style="margin-right: 10px;"/>
+    <img src="https://github.com/cloudQuant/fincore/workflows/CI/badge.svg" alt="CI" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/tests-1299%20passed-brightgreen.svg" alt="1299 Tests Passed" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Supported Platforms: Mac, Linux, and Windows" style="margin-right: 10px;"/>
-    <img src="https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-brightgreen.svg" alt="Python Versions" style="margin-right: 10px;"/>
-    <img src="https://img.shields.io/badge/license-MIT-orange" alt="License: MIT"/>
+    <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions" style="margin-right: 10px;"/>
+    <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
 </p>
 
 **[English](#english-version) | [中文](#chinese-version)**
@@ -85,7 +85,13 @@ The library exposes a comprehensive indicator suite (everything exported by `fin
 
 ### Installation
 
-#### From Source (Recommended)
+#### From PyPI (Recommended)
+
+```bash
+pip install fincore
+```
+
+#### From Source
 
 ```bash
 # For users in China
@@ -96,12 +102,6 @@ git clone https://github.com/cloudQuant/fincore
 
 cd fincore
 pip install -U .
-```
-
-#### pip install 
-
-```bash
-pip install -U git+https://github.com/cloudQuant/fincore.git
 ```
 
 #### Optional Dependencies
@@ -326,7 +326,7 @@ git clone https://github.com/cloudQuant/fincore
 cd fincore
 
 # Create virtual environment (using conda)
-conda create -n fincore-dev python=3.11
+conda create -n fincore-dev python=3.11  # or 3.12, 3.13
 conda activate fincore-dev
 
 # Install with dev dependencies
@@ -661,7 +661,7 @@ git clone https://github.com/cloudQuant/fincore
 cd fincore
 
 # 创建虚拟环境（使用 conda）
-conda create -n fincore-dev python=3.11
+conda create -n fincore-dev python=3.11  # 或 3.12, 3.13
 conda activate fincore-dev
 
 # 安装开发依赖
