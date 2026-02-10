@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang='zh'><head><meta charset='utf-8'>
+<title>AbberationStrategy — Returns Only</title>
+<style>
+:root { --blue: #1e40af; --green: #16a34a; --red: #dc2626; --gray: #6b7280; --bg: #f9fafb; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       max-width: 1100px; margin: 0 auto; padding: 24px; color: #1f2937; line-height: 1.6; background: #fff; }
+h1 { color: var(--blue); border-bottom: 3px solid var(--blue); padding-bottom: 8px; margin-bottom: 16px; }
+h2 { color: var(--blue); margin: 28px 0 12px; font-size: 1.25em; }
+h3 { color: #374151; margin: 16px 0 8px; font-size: 1.05em; }
+.meta { color: var(--gray); font-size: 0.9em; margin-bottom: 20px; }
+.cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 18px;
+        min-width: 150px; text-align: center; background: var(--bg); }
+.card .val { font-size: 1.4em; font-weight: 700; }
+.card .lbl { font-size: 0.8em; color: var(--gray); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
+th, td { border: 1px solid #d1d5db; padding: 6px 10px; }
+th { background: #eff6ff; text-align: left; font-weight: 600; }
+td { text-align: right; }
+tr:nth-child(even) { background: var(--bg); }
+.section { margin-bottom: 24px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+.footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb;
+          font-size: 0.8em; color: #9ca3af; text-align: center; }
+</style>
+
+</head>
+<body>
+<h1>AbberationStrategy — Returns Only</h1>
+<div class="meta">2018-07-02 → 2021-08-03 | 753 trading days</div>
+<div class="cards"><div class="card"><div class="val pos">0.0602</div><div class="lbl">Sharpe Ratio</div></div>
+<div class="card"><div class="val neg">-0.53%</div><div class="lbl">Annual Return</div></div>
+<div class="card"><div class="val neg">-27.07%</div><div class="lbl">Max Drawdown</div></div>
+<div class="card"><div class="val pos">18.00%</div><div class="lbl">Annual Volatility</div></div>
+<div class="card"><div class="val pos">0.0896</div><div class="lbl">Sortino Ratio</div></div>
+<div class="card"><div class="val neg">-0.0196</div><div class="lbl">Calmar Ratio</div></div></div>
+<div class="two-col"><div class="section">
+<h2>Performance Statistics</h2>
+<table><tr><th>Annual Return</th><td class="neg">-0.53%</td></tr>
+<tr><th>Cumulative Returns</th><td class="neg">-1.58%</td></tr>
+<tr><th>Annual Volatility</th><td class="pos">18.00%</td></tr>
+<tr><th>Sharpe Ratio</th><td class="pos">0.0602</td></tr>
+<tr><th>Sortino Ratio</th><td class="pos">0.0896</td></tr>
+<tr><th>Calmar Ratio</th><td class="neg">-0.0196</td></tr>
+<tr><th>Max Drawdown</th><td class="neg">-27.07%</td></tr>
+<tr><th>Omega Ratio</th><td class="pos">1.0120</td></tr>
+<tr><th>Stability</th><td class="pos">0.2228</td></tr>
+<tr><th>Skewness</th><td class="pos">0.2495</td></tr>
+<tr><th>Kurtosis</th><td class="pos">8.4610</td></tr>
+<tr><th>Tail Ratio</th><td class="pos">1.1807</td></tr>
+<tr><th>Value at Risk (5%)</th><td class="neg">-1.53%</td></tr>
+<tr><th>Downside Risk</th><td class="pos">12.08%</td></tr></table>
+</div><div class='section'>
+<h2>Extended Risk Metrics</h2>
+<table><tr><th>Win Rate</th><td class="pos">0.4037</td></tr>
+<tr><th>Loss Rate</th><td class="pos">0.4489</td></tr>
+<tr><th>Serial Correlation</th><td class="neg">-0.0204</td></tr>
+<tr><th>Common Sense Ratio</th><td class="pos">0.7994</td></tr>
+<tr><th>Sterling Ratio</th><td class="neg">-0.0768</td></tr>
+<tr><th>Burke Ratio</th><td class="neg">-0.0190</td></tr>
+<tr><th>Max Drawdown Days</th><td class="pos">936</td></tr>
+<tr><th>2nd Max Drawdown</th><td class="neg">-0.0472</td></tr>
+<tr><th>Max Consecutive Up Days</th><td class="pos">9</td></tr>
+<tr><th>Max Consecutive Down Days</th><td class="pos">12</td></tr>
+<tr><th>Max Single Day Gain</th><td class="pos">0.0608</td></tr>
+<tr><th>Max Single Day Loss</th><td class="neg">-0.0737</td></tr>
+<tr><th>Hurst Exponent</th><td class="pos">0.6103</td></tr></table>
+</div></div>
+<div class="section">
+<h2>Yearly Statistics</h2>
+<table><tr><th></th><th>Annual Return</th><th>Sharpe Ratio</th><th>Max Drawdown</th></tr>
+<tr><th>2018</th><td class="neg">-0.1131</td><td class="neg">-0.4429</td><td class="neg">-0.1728</td></tr>
+<tr><th>2019</th><td class="neg">-0.0119</td><td class="neg">-0.0090</td><td class="neg">-0.1437</td></tr>
+<tr><th>2020</th><td class="neg">-0.0378</td><td class="neg">-0.1357</td><td class="neg">-0.1346</td></tr>
+<tr><th>2021</th><td class="pos">0.1772</td><td class="pos">0.8931</td><td class="neg">-0.1205</td></tr></table>
+</div>
+<div class="section">
+<h2>Worst Drawdown Periods</h2>
+<table><tr><th></th><th>Net drawdown in %</th><th>Peak date</th><th>Valley date</th><th>Recovery date</th><th>Duration</th></tr>
+<tr><th>0</th><td class="pos">27.07</td><td>2018-09-27 00:00:00</td><td>2021-04-20 00:00:00</td><td>NaT</td><td class="">nan</td></tr>
+<tr><th>1</th><td class="pos">4.72</td><td>2018-08-20 00:00:00</td><td>2018-09-05 00:00:00</td><td>2018-09-18 00:00:00</td><td>22</td></tr>
+<tr><th>2</th><td class="pos">3.45</td><td>2018-07-12 00:00:00</td><td>2018-07-25 00:00:00</td><td>2018-07-31 00:00:00</td><td>14</td></tr>
+<tr><th>3</th><td class="pos">2.53</td><td>2018-08-13 00:00:00</td><td>2018-08-16 00:00:00</td><td>2018-08-17 00:00:00</td><td>5</td></tr>
+<tr><th>4</th><td class="pos">2.42</td><td>2018-07-31 00:00:00</td><td>2018-08-10 00:00:00</td><td>2018-08-13 00:00:00</td><td>10</td></tr></table>
+</div>
+<div class="section">
+<h2>Monthly Returns</h2>
+<table><tr><th></th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th></tr>
+<tr><th>2018</th><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="pos">7.64</td><td class="pos">1.70</td><td class="pos">3.25</td><td class="neg">-8.28</td><td class="pos">0.79</td><td class="neg">-9.79</td></tr>
+<tr><th>2019</th><td class="pos">0.44</td><td class="neg">-2.86</td><td class="neg">-7.90</td><td class="pos">8.01</td><td class="pos">1.39</td><td class="pos">6.26</td><td class="neg">-7.15</td><td class="pos">2.04</td><td class="neg">-0.45</td><td class="neg">-3.62</td><td class="pos">3.63</td><td class="pos">0.35</td></tr>
+<tr><th>2020</th><td class="pos">0.20</td><td class="pos">7.45</td><td class="neg">-10.07</td><td class="pos">0.24</td><td class="pos">1.84</td><td class="neg">-1.34</td><td class="pos">0.43</td><td class="pos">0.58</td><td class="neg">-0.36</td><td class="pos">1.46</td><td class="pos">2.63</td><td class="neg">-5.73</td></tr>
+<tr><th>2021</th><td class="neg">-3.74</td><td class="pos">6.46</td><td class="neg">-5.92</td><td class="neg">-1.66</td><td class="pos">20.59</td><td class="neg">-5.09</td><td class="neg">-1.72</td><td class="pos">2.82</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td></tr></table>
+</div>
+<div class="footer">Generated by <strong>fincore</strong> | create_strategy_report()</div>
+</body></html>
