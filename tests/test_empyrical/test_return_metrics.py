@@ -1,12 +1,12 @@
 """
 Tests for additional return metrics.
 """
-from __future__ import division
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_almost_equal
-from unittest import TestCase
 
 from fincore.empyrical import Empyrical
 
@@ -18,22 +18,26 @@ class TestReturnMetrics(TestCase):
 
     # Simple returns for testing
     simple_returns = pd.Series(
-        np.array([1., 2., 1., 1., 1., 1., 1., 1., 1., 1.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # Multi-year returns
     multi_year_returns = pd.Series(
         np.random.randn(500) / 100 + 0.0003,  # Slight positive drift
-        index=pd.date_range('2020-1-1', periods=500, freq='D'))
+        index=pd.date_range("2020-1-1", periods=500, freq="D"),
+    )
 
     multi_year_benchmark = pd.Series(
         np.random.randn(500) / 100 + 0.0002,  # Slight positive drift
-        index=pd.date_range('2020-1-1', periods=500, freq='D'))
+        index=pd.date_range("2020-1-1", periods=500, freq="D"),
+    )
 
     # Negative returns
     negative_returns = pd.Series(
-        np.array([-1., -2., -1., -1., -1., -1., -1., -1., -1., -1.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([-1.0, -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     empty_returns = pd.Series([], dtype=float)
 
@@ -75,10 +79,7 @@ class TestReturnMetrics(TestCase):
     def test_annual_active_return_by_year(self):
         """Test annual active return by year."""
         emp = Empyrical()
-        result = emp.annual_active_return_by_year(
-            self.multi_year_returns,
-            self.multi_year_benchmark
-        )
+        result = emp.annual_active_return_by_year(self.multi_year_returns, self.multi_year_benchmark)
         # Should return a Series
         assert isinstance(result, pd.Series)
         # Should have at least one year
@@ -89,10 +90,7 @@ class TestReturnMetrics(TestCase):
     def test_annual_active_return_by_year_values(self):
         """Test that annual active returns are reasonable."""
         emp = Empyrical()
-        result = emp.annual_active_return_by_year(
-            self.multi_year_returns,
-            self.multi_year_benchmark
-        )
+        result = emp.annual_active_return_by_year(self.multi_year_returns, self.multi_year_benchmark)
         # All values should be valid numbers
         if len(result) > 0:
             assert not result.isnull().any()
@@ -100,19 +98,13 @@ class TestReturnMetrics(TestCase):
     def test_annual_active_return_by_year_empty(self):
         """Test that empty returns give empty Series."""
         emp = Empyrical()
-        result = emp.annual_active_return_by_year(
-            self.empty_returns,
-            self.multi_year_benchmark
-        )
+        result = emp.annual_active_return_by_year(self.empty_returns, self.multi_year_benchmark)
         assert len(result) == 0
 
     def test_annual_active_return_by_year_consistency(self):
         """Test consistency with annual_return_by_year."""
         emp = Empyrical()
-        active_by_year = emp.annual_active_return_by_year(
-            self.multi_year_returns,
-            self.multi_year_benchmark
-        )
+        active_by_year = emp.annual_active_return_by_year(self.multi_year_returns, self.multi_year_benchmark)
 
         strategy_by_year = emp.annual_return_by_year(self.multi_year_returns)
         benchmark_by_year = emp.annual_return_by_year(self.multi_year_benchmark)
@@ -122,5 +114,6 @@ class TestReturnMetrics(TestCase):
             if year in strategy_by_year.index and year in benchmark_by_year.index:
                 expected = strategy_by_year[year] - benchmark_by_year[year]
                 actual = active_by_year[year]
-                assert_almost_equal(actual, expected, decimal=4,
-                                  err_msg=f"Year {year}: expected {expected}, got {actual}")
+                assert_almost_equal(
+                    actual, expected, decimal=4, err_msg=f"Year {year}: expected {expected}, got {actual}"
+                )

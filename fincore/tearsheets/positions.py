@@ -1,19 +1,17 @@
-# -*- coding: utf-8 -*-
 """
 持仓相关的绘图和显示函数
 
 包含持仓暴露、杠杆、holdings 等绘图函数。
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 
-from fincore.utils import print_table, format_asset, get_month_end_freq
+from fincore.utils import format_asset, get_month_end_freq, print_table
 
 
-def plot_holdings(empyrical_instance, returns, positions, legend_loc='best',
-                  ax=None, **kwargs):
+def plot_holdings(empyrical_instance, returns, positions, legend_loc="best", ax=None, **kwargs):
     """
     Plots total amount of stocks with an active position, either short
     or long. Displays daily total, daily average per month, and
@@ -42,38 +40,30 @@ def plot_holdings(empyrical_instance, returns, positions, legend_loc='best',
     if ax is None:
         ax = plt.gca()
 
-    positions = positions.copy().drop('cash', axis='columns')
+    positions = positions.copy().drop("cash", axis="columns")
     df_holdings = positions.replace(0, np.nan).count(axis=1)
     df_holdings_by_month = df_holdings.resample(get_month_end_freq()).mean()
-    df_holdings.plot(color='steelblue', alpha=0.6, lw=0.5, ax=ax, **kwargs)
-    df_holdings_by_month.plot(
-        color='orangered',
-        lw=2,
-        ax=ax,
-        **kwargs)
-    ax.axhline(
-        df_holdings.values.mean(),
-        color='steelblue',
-        ls='--',
-        lw=3)
+    df_holdings.plot(color="steelblue", alpha=0.6, lw=0.5, ax=ax, **kwargs)
+    df_holdings_by_month.plot(color="orangered", lw=2, ax=ax, **kwargs)
+    ax.axhline(df_holdings.values.mean(), color="steelblue", ls="--", lw=3)
 
     ax.set_xlim((returns.index[0], returns.index[-1]))
 
-    leg = ax.legend(['Daily holdings',
-                     'Average daily holdings, by month',
-                     'Average daily holdings, overall'],
-                    loc=legend_loc, frameon=True,
-                    framealpha=0.5)
-    leg.get_frame().set_edgecolor('black')
+    leg = ax.legend(
+        ["Daily holdings", "Average daily holdings, by month", "Average daily holdings, overall"],
+        loc=legend_loc,
+        frameon=True,
+        framealpha=0.5,
+    )
+    leg.get_frame().set_edgecolor("black")
 
-    ax.set_title('Total holdings')
-    ax.set_ylabel('Holdings')
-    ax.set_xlabel('')
+    ax.set_title("Total holdings")
+    ax.set_ylabel("Holdings")
+    ax.set_xlabel("")
     return ax
 
 
-def plot_long_short_holdings(returns, positions,
-                             legend_loc='upper left', ax=None, **_kwargs):
+def plot_long_short_holdings(returns, positions, legend_loc="upper left", ax=None, **_kwargs):
     """
     Plots total amount of stocks with an active position, breaking out
     short and long into transparent-filled regions.
@@ -99,29 +89,31 @@ def plot_long_short_holdings(returns, positions,
     if ax is None:
         ax = plt.gca()
 
-    positions = positions.drop('cash', axis='columns')
+    positions = positions.drop("cash", axis="columns")
     positions = positions.replace(0, np.nan)
     df_longs = positions[positions > 0].count(axis=1)
     df_shorts = positions[positions < 0].count(axis=1)
-    lf = ax.fill_between(df_longs.index, 0, df_longs.values,
-                         color='g', alpha=0.5, lw=2.0)
-    sf = ax.fill_between(df_shorts.index, 0, df_shorts.values,
-                         color='r', alpha=0.5, lw=2.0)
+    lf = ax.fill_between(df_longs.index, 0, df_longs.values, color="g", alpha=0.5, lw=2.0)
+    sf = ax.fill_between(df_shorts.index, 0, df_shorts.values, color="r", alpha=0.5, lw=2.0)
 
-    bf = patches.Rectangle([0, 0], 1, 1, color='darkgoldenrod')
-    leg = ax.legend([lf, sf, bf],
-                    ['Long (max: %s, min: %s)' % (df_longs.max(),
-                                                  df_longs.min()),
-                     'Short (max: %s, min: %s)' % (df_shorts.max(),
-                                                   df_shorts.min()),
-                     'Overlap'], loc=legend_loc, frameon=True,
-                    framealpha=0.5)
-    leg.get_frame().set_edgecolor('black')
+    bf = patches.Rectangle([0, 0], 1, 1, color="darkgoldenrod")
+    leg = ax.legend(
+        [lf, sf, bf],
+        [
+            f"Long (max: {df_longs.max()}, min: {df_longs.min()})",
+            f"Short (max: {df_shorts.max()}, min: {df_shorts.min()})",
+            "Overlap",
+        ],
+        loc=legend_loc,
+        frameon=True,
+        framealpha=0.5,
+    )
+    leg.get_frame().set_edgecolor("black")
 
     ax.set_xlim((returns.index[0], returns.index[-1]))
-    ax.set_title('Long and short holdings')
-    ax.set_ylabel('Holdings')
-    ax.set_xlabel('')
+    ax.set_title("Long and short holdings")
+    ax.set_ylabel("Holdings")
+    ax.set_xlabel("")
     return ax
 
 
@@ -148,27 +140,20 @@ def plot_exposures(returns, positions, ax=None, **_kwargs):
     if ax is None:
         ax = plt.gca()
 
-    pos_no_cash = positions.drop('cash', axis=1)
+    pos_no_cash = positions.drop("cash", axis=1)
     l_exp = pos_no_cash[pos_no_cash > 0].sum(axis=1) / positions.sum(axis=1)
     s_exp = pos_no_cash[pos_no_cash < 0].sum(axis=1) / positions.sum(axis=1)
     net_exp = pos_no_cash.sum(axis=1) / positions.sum(axis=1)
 
-    ax.fill_between(l_exp.index,
-                    0,
-                    l_exp.values,
-                    label='Long', color='green', alpha=0.5)
-    ax.fill_between(s_exp.index,
-                    0,
-                    s_exp.values,
-                    label='Short', color='red', alpha=0.5)
-    ax.plot(net_exp.index, net_exp.values,
-            label='Net', color='black', linestyle='dotted')
+    ax.fill_between(l_exp.index, 0, l_exp.values, label="Long", color="green", alpha=0.5)
+    ax.fill_between(s_exp.index, 0, s_exp.values, label="Short", color="red", alpha=0.5)
+    ax.plot(net_exp.index, net_exp.values, label="Net", color="black", linestyle="dotted")
 
     ax.set_xlim((returns.index[0], returns.index[-1]))
     ax.set_title("Exposure")
-    ax.set_ylabel('Exposure')
-    ax.legend(loc='lower left', frameon=True, framealpha=0.5)
-    ax.set_xlabel('')
+    ax.set_ylabel("Exposure")
+    ax.legend(loc="lower left", frameon=True, framealpha=0.5)
+    ax.set_xlabel("")
     return ax
 
 
@@ -200,18 +185,17 @@ def plot_gross_leverage(empyrical_instance, _returns, positions, ax=None, **kwar
     if ax is None:
         ax = plt.gca()
     gl = empyrical_instance.gross_lev(positions)
-    gl.plot(lw=0.5, color='limegreen', legend=False, ax=ax, **kwargs)
+    gl.plot(lw=0.5, color="limegreen", legend=False, ax=ax, **kwargs)
 
-    ax.axhline(gl.mean(), color='g', linestyle='--', lw=3)
+    ax.axhline(gl.mean(), color="g", linestyle="--", lw=3)
 
-    ax.set_title('Gross leverage')
-    ax.set_ylabel('Gross leverage')
-    ax.set_xlabel('')
+    ax.set_title("Gross leverage")
+    ax.set_ylabel("Gross leverage")
+    ax.set_xlabel("")
     return ax
 
 
-def plot_max_median_position_concentration(empyrical_instance, positions,
-                                           ax=None, **_kwargs):
+def plot_max_median_position_concentration(empyrical_instance, positions, ax=None, **_kwargs):
     """
     Plots the max and median of long and short position concentrations
     over the time.
@@ -234,12 +218,12 @@ def plot_max_median_position_concentration(empyrical_instance, positions,
         ax = plt.gca()
 
     alloc_summary = empyrical_instance.get_max_median_position_concentration(positions)
-    colors = ['mediumblue', 'steelblue', 'tomato', 'firebrick']
+    colors = ["mediumblue", "steelblue", "tomato", "firebrick"]
     alloc_summary.plot(linewidth=1, color=colors, alpha=0.6, ax=ax)
 
-    ax.legend(loc='center left', frameon=True, framealpha=0.5)
-    ax.set_ylabel('Exposure')
-    ax.set_title('Long/short max and median position concentration')
+    ax.legend(loc="center left", frameon=True, framealpha=0.5)
+    ax.set_ylabel("Exposure")
+    ax.set_title("Long/short max and median position concentration")
 
     return ax
 
@@ -267,29 +251,32 @@ def plot_sector_allocations(_returns, sector_alloc, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    sector_alloc.plot(title='Sector allocation over time',
-                      alpha=0.5, ax=ax, **kwargs)
+    sector_alloc.plot(title="Sector allocation over time", alpha=0.5, ax=ax, **kwargs)
 
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                     box.width, box.height * 0.9])
+    ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
 
     # Put a legend below current axis
-    ax.legend(loc='upper center', frameon=True, framealpha=0.5,
-              bbox_to_anchor=(0.5, -0.14), ncol=5)
+    ax.legend(loc="upper center", frameon=True, framealpha=0.5, bbox_to_anchor=(0.5, -0.14), ncol=5)
 
     ax.set_xlim((sector_alloc.index[0], sector_alloc.index[-1]))
-    ax.set_ylabel('Exposure by sector')
-    ax.set_xlabel('')
+    ax.set_ylabel("Exposure by sector")
+    ax.set_xlabel("")
 
     return ax
 
 
-def show_and_plot_top_positions(empyrical_instance, returns, positions_alloc,
-                                show_and_plot=2, hide_positions=False,
-                                legend_loc='real_best', ax=None,
-                                run_flask_app=False,
-                                **kwargs):
+def show_and_plot_top_positions(
+    empyrical_instance,
+    returns,
+    positions_alloc,
+    show_and_plot=2,
+    hide_positions=False,
+    legend_loc="real_best",
+    ax=None,
+    run_flask_app=False,
+    **kwargs,
+):
     """
     Prints and/or plots the exposures of the top 10 held positions of
     all time.
@@ -327,48 +314,50 @@ def show_and_plot_top_positions(empyrical_instance, returns, positions_alloc,
     positions_alloc = positions_alloc.copy()
     positions_alloc.columns = positions_alloc.columns.map(format_asset)
 
-    df_top_long, df_top_short, df_top_abs = empyrical_instance.get_top_long_short_abs(
-        positions_alloc)
+    df_top_long, df_top_short, df_top_abs = empyrical_instance.get_top_long_short_abs(positions_alloc)
 
     if show_and_plot == 1 or show_and_plot == 2:
-        print_table(pd.DataFrame(df_top_long * 100, columns=['max']),
-                    float_format='{0:.2f}%'.format,
-                    name='Top 10 long positions of all time',
-                    run_flask_app=run_flask_app)
+        print_table(
+            pd.DataFrame(df_top_long * 100, columns=["max"]),
+            float_format="{:.2f}%".format,
+            name="Top 10 long positions of all time",
+            run_flask_app=run_flask_app,
+        )
 
-        print_table(pd.DataFrame(df_top_short * 100, columns=['max']),
-                    float_format='{0:.2f}%'.format,
-                    name='Top 10 short positions of all time',
-                    run_flask_app=run_flask_app)
+        print_table(
+            pd.DataFrame(df_top_short * 100, columns=["max"]),
+            float_format="{:.2f}%".format,
+            name="Top 10 short positions of all time",
+            run_flask_app=run_flask_app,
+        )
 
-        print_table(pd.DataFrame(df_top_abs * 100, columns=['max']),
-                    float_format='{0:.2f}%'.format,
-                    name='Top 10 positions of all time',
-                    run_flask_app=run_flask_app)
+        print_table(
+            pd.DataFrame(df_top_abs * 100, columns=["max"]),
+            float_format="{:.2f}%".format,
+            name="Top 10 positions of all time",
+            run_flask_app=run_flask_app,
+        )
 
     if show_and_plot == 0 or show_and_plot == 2:
-
         if ax is None:
             ax = plt.gca()
 
         positions_alloc[df_top_abs.index].plot(
-            title='Portfolio allocation over time, only top 10 holdings',
-            alpha=0.5, ax=ax, **kwargs)
+            title="Portfolio allocation over time, only top 10 holdings", alpha=0.5, ax=ax, **kwargs
+        )
 
         # Place legend below plot, shrink plot by 20%
-        if legend_loc == 'real_best':
+        if legend_loc == "real_best":
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                             box.width, box.height * 0.9])
+            ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
 
             # Put a legend below current axis
-            ax.legend(loc='upper center', frameon=True, framealpha=0.5,
-                      bbox_to_anchor=(0.5, -0.14), ncol=5)
+            ax.legend(loc="upper center", frameon=True, framealpha=0.5, bbox_to_anchor=(0.5, -0.14), ncol=5)
         else:
             ax.legend(loc=legend_loc)
 
         ax.set_xlim((returns.index[0], returns.index[-1]))
-        ax.set_ylabel('Exposure by holding')
+        ax.set_ylabel("Exposure by holding")
 
         if hide_positions:
             ax.legend_.remove()

@@ -1,4 +1,5 @@
 """Tests for visualization backends and AnalysisContext viz methods."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -29,6 +30,7 @@ def ctx(returns):
 # Backend registry
 # ------------------------------------------------------------------
 
+
 class TestGetBackend:
     def test_matplotlib(self):
         backend = get_backend("matplotlib")
@@ -51,6 +53,7 @@ class TestGetBackend:
 # Protocol conformance
 # ------------------------------------------------------------------
 
+
 class TestProtocol:
     def test_matplotlib_is_viz_backend(self):
         assert isinstance(MatplotlibBackend(), VizBackend)
@@ -62,6 +65,7 @@ class TestProtocol:
 # ------------------------------------------------------------------
 # HtmlReportBuilder
 # ------------------------------------------------------------------
+
 
 class TestHtmlReportBuilder:
     def test_build_empty(self):
@@ -93,12 +97,7 @@ class TestHtmlReportBuilder:
         assert "metric-card" in html
 
     def test_chaining(self, ctx):
-        html = (
-            HtmlReportBuilder()
-            .add_title("Report")
-            .add_stats_table(ctx.perf_stats())
-            .build()
-        )
+        html = HtmlReportBuilder().add_title("Report").add_stats_table(ctx.perf_stats()).build()
         assert "Report" in html
 
     def test_save(self, ctx, tmp_path):
@@ -116,9 +115,11 @@ class TestHtmlReportBuilder:
 # MatplotlibBackend
 # ------------------------------------------------------------------
 
+
 class TestMatplotlibBackend:
     def test_plot_returns(self, returns):
         import matplotlib
+
         matplotlib.use("Agg")
         backend = MatplotlibBackend()
         cum_ret = (1 + returns).cumprod() - 1
@@ -127,6 +128,7 @@ class TestMatplotlibBackend:
 
     def test_plot_drawdown(self, returns):
         import matplotlib
+
         matplotlib.use("Agg")
         backend = MatplotlibBackend()
         cum_ret = (1 + returns).cumprod()
@@ -136,6 +138,7 @@ class TestMatplotlibBackend:
 
     def test_plot_rolling_sharpe(self, returns):
         import matplotlib
+
         matplotlib.use("Agg")
         backend = MatplotlibBackend()
         rolling_sharpe = returns.rolling(60).mean() / returns.rolling(60).std()
@@ -146,6 +149,7 @@ class TestMatplotlibBackend:
 # ------------------------------------------------------------------
 # AnalysisContext integration
 # ------------------------------------------------------------------
+
 
 class TestContextVisualization:
     def test_to_html(self, ctx):
@@ -167,6 +171,7 @@ class TestContextVisualization:
 
     def test_plot_matplotlib_backend(self, ctx):
         import matplotlib
+
         matplotlib.use("Agg")
         viz = ctx.plot(backend="matplotlib")
         assert isinstance(viz, MatplotlibBackend)

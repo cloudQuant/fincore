@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
 """
 贝叶斯分析相关的绘图函数
 
 包含 BEST 分析、随机波动率、贝叶斯锥形图等绘图函数。
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
 from fincore.empyrical import Empyrical
 
 
-def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None,
-              samples=1000, burn=200, axs=None):
+def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None, samples=1000, burn=200, axs=None):
     """
     Plot the BEST significance analysis.
 
@@ -46,7 +44,7 @@ def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None,
     """
     if trace is None:
         if (data_train is not None) or (data_test is not None):
-            raise ValueError('Either pass trace or data_train and data_test')
+            raise ValueError("Either pass trace or data_train and data_test")
         trace = empyrical_instance.model_best(data_train, data_test, samples=samples)
 
     trace = trace[burn:]
@@ -55,51 +53,37 @@ def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None,
 
     def distplot_w_perc(trace_data, ax):
         sns.histplot(trace_data, ax=ax)
-        ax.axvline(
-            stats.scoreatpercentile(trace_data, 2.5),
-            color='0.5', label='2.5 and 97.5 percentiles')
-        ax.axvline(
-            stats.scoreatpercentile(trace_data, 97.5),
-            color='0.5')
+        ax.axvline(stats.scoreatpercentile(trace_data, 2.5), color="0.5", label="2.5 and 97.5 percentiles")
+        ax.axvline(stats.scoreatpercentile(trace_data, 97.5), color="0.5")
 
-    sns.histplot(trace['group1_mean'], ax=axs[0], label='Backtest')
-    sns.histplot(trace['group2_mean'], ax=axs[0], label='Forward')
+    sns.histplot(trace["group1_mean"], ax=axs[0], label="Backtest")
+    sns.histplot(trace["group2_mean"], ax=axs[0], label="Forward")
     axs[0].legend(loc=0, frameon=True, framealpha=0.5)
     axs[1].legend(loc=0, frameon=True, framealpha=0.5)
 
-    distplot_w_perc(trace['difference of means'], axs[1])
+    distplot_w_perc(trace["difference of means"], axs[1])
 
-    axs[0].set(xlabel='Mean', ylabel='Belief', yticklabels=[])
-    axs[1].set(xlabel='Difference of means', yticklabels=[])
+    axs[0].set(xlabel="Mean", ylabel="Belief", yticklabels=[])
+    axs[1].set(xlabel="Difference of means", yticklabels=[])
 
-    sns.histplot(trace['group1_annual_volatility'], ax=axs[2],
-                 label='Backtest')
-    sns.histplot(trace['group2_annual_volatility'], ax=axs[2],
-                 label='Forward')
-    distplot_w_perc(trace['group2_annual_volatility'] -
-                    trace['group1_annual_volatility'], axs[3])
-    axs[2].set(xlabel='Annual volatility', ylabel='Belief',
-               yticklabels=[])
+    sns.histplot(trace["group1_annual_volatility"], ax=axs[2], label="Backtest")
+    sns.histplot(trace["group2_annual_volatility"], ax=axs[2], label="Forward")
+    distplot_w_perc(trace["group2_annual_volatility"] - trace["group1_annual_volatility"], axs[3])
+    axs[2].set(xlabel="Annual volatility", ylabel="Belief", yticklabels=[])
     axs[2].legend(loc=0, frameon=True, framealpha=0.5)
-    axs[3].set(xlabel='Difference of volatility', yticklabels=[])
+    axs[3].set(xlabel="Difference of volatility", yticklabels=[])
 
-    sns.histplot(trace['group1_sharpe'], ax=axs[4], label='Backtest')
-    sns.histplot(trace['group2_sharpe'], ax=axs[4], label='Forward')
-    distplot_w_perc(trace['group2_sharpe'] - trace['group1_sharpe'],
-                    axs[5])
-    axs[4].set(xlabel='Sharpe', ylabel='Belief', yticklabels=[])
+    sns.histplot(trace["group1_sharpe"], ax=axs[4], label="Backtest")
+    sns.histplot(trace["group2_sharpe"], ax=axs[4], label="Forward")
+    distplot_w_perc(trace["group2_sharpe"] - trace["group1_sharpe"], axs[5])
+    axs[4].set(xlabel="Sharpe", ylabel="Belief", yticklabels=[])
     axs[4].legend(loc=0, frameon=True, framealpha=0.5)
-    axs[5].set(xlabel='Difference of Sharpes', yticklabels=[])
+    axs[5].set(xlabel="Difference of Sharpes", yticklabels=[])
 
-    sns.histplot(trace['effect size'], ax=axs[6])
-    axs[6].axvline(
-        stats.scoreatpercentile(trace['effect size'], 2.5),
-        color='0.5')
-    axs[6].axvline(
-        stats.scoreatpercentile(trace['effect size'], 97.5),
-        color='0.5')
-    axs[6].set(xlabel='Difference of means normalized by volatility',
-               ylabel='Belief', yticklabels=[])
+    sns.histplot(trace["effect size"], ax=axs[6])
+    axs[6].axvline(stats.scoreatpercentile(trace["effect size"], 2.5), color="0.5")
+    axs[6].axvline(stats.scoreatpercentile(trace["effect size"], 97.5), color="0.5")
+    axs[6].set(xlabel="Difference of means normalized by volatility", ylabel="Belief", yticklabels=[])
 
 
 def plot_stoch_vol(empyrical_instance, data, trace=None, ax=None):
@@ -129,16 +113,14 @@ def plot_stoch_vol(empyrical_instance, data, trace=None, ax=None):
         fig, ax = plt.subplots(figsize=(15, 8))
 
     data.abs().plot(ax=ax)
-    ax.plot(data.index, np.exp(trace['s', ::30].T), 'r', alpha=.03)
-    ax.set(title='Stochastic volatility', xlabel='Time', ylabel='Volatility')
-    ax.legend(['Abs returns', 'Stochastic volatility process'],
-              frameon=True, framealpha=0.5)
+    ax.plot(data.index, np.exp(trace["s", ::30].T), "r", alpha=0.03)
+    ax.set(title="Stochastic volatility", xlabel="Time", ylabel="Volatility")
+    ax.legend(["Abs returns", "Stochastic volatility process"], frameon=True, framealpha=0.5)
 
     return ax
 
 
-def _plot_bayes_cone(empyrical_instance, returns_train, returns_test,
-                     preds, plot_train_len=None, ax=None):
+def _plot_bayes_cone(empyrical_instance, returns_train, returns_test, preds, plot_train_len=None, ax=None):
     """
     Internal function to plot Bayesian cone.
 
@@ -177,28 +159,26 @@ def _plot_bayes_cone(empyrical_instance, returns_train, returns_test,
 
     returns_test_cum_rel = returns_test_cum
     # Stitch together train and test
-    returns_train_cum.loc[returns_test_cum_rel.index[0]] = \
-        returns_test_cum_rel.iloc[0]
+    returns_train_cum.loc[returns_test_cum_rel.index[0]] = returns_test_cum_rel.iloc[0]
 
     # Plotting
     if plot_train_len is not None:
         returns_train_cum = returns_train_cum.iloc[-plot_train_len:]
 
-    returns_train_cum.plot(ax=ax, color='g', label='In-sample')
-    returns_test_cum_rel.plot(ax=ax, color='r', label='Out-of-sample')
+    returns_train_cum.plot(ax=ax, color="g", label="In-sample")
+    returns_test_cum_rel.plot(ax=ax, color="r", label="Out-of-sample")
 
-    ax.fill_between(returns_test.index, perc[5], perc[95], alpha=.3)
-    ax.fill_between(returns_test.index, perc[25], perc[75], alpha=.6)
-    ax.legend(loc='best', frameon=True, framealpha=0.5)
-    ax.set_title('Bayesian cone')
-    ax.set_xlabel('')
-    ax.set_ylabel('Cumulative returns')
+    ax.fill_between(returns_test.index, perc[5], perc[95], alpha=0.3)
+    ax.fill_between(returns_test.index, perc[25], perc[75], alpha=0.6)
+    ax.legend(loc="best", frameon=True, framealpha=0.5)
+    ax.set_title("Bayesian cone")
+    ax.set_xlabel("")
+    ax.set_ylabel("Cumulative returns")
 
     return ax
 
 
-def plot_bayes_cone(empyrical_instance, returns_train, returns_test, ppc,
-                    plot_train_len=50, ax=None):
+def plot_bayes_cone(empyrical_instance, returns_train, returns_test, ppc, plot_train_len=50, ax=None):
     """
     Generate cumulative returns plot with Bayesian cone.
 
@@ -224,21 +204,15 @@ def plot_bayes_cone(empyrical_instance, returns_train, returns_test, ppc,
     """
     score = empyrical_instance.compute_consistency_score(returns_test, ppc)
 
-    ax = _plot_bayes_cone(
-        empyrical_instance,
-        returns_train,
-        returns_test,
-        ppc,
-        plot_train_len=plot_train_len,
-        ax=ax)
+    ax = _plot_bayes_cone(empyrical_instance, returns_train, returns_test, ppc, plot_train_len=plot_train_len, ax=ax)
     ax.text(
         0.40,
         0.90,
-        'Consistency score: %.1f' % score,
-        verticalalignment='bottom',
-        horizontalalignment='right',
+        "Consistency score: %.1f" % score,
+        verticalalignment="bottom",
+        horizontalalignment="right",
         transform=ax.transAxes,
     )
 
-    ax.set_ylabel('Cumulative returns')
+    ax.set_ylabel("Cumulative returns")
     return score

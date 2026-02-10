@@ -15,43 +15,45 @@
 # limitations under the License.
 
 """回撤相关函数模块."""
+
 from __future__ import annotations
 
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from fincore.utils import nanmin
+
 from fincore.metrics.returns import cum_returns, cum_returns_final
+from fincore.utils import nanmin
 
 __all__ = [
-    'max_drawdown',
-    'get_all_drawdowns',
-    'get_all_drawdowns_detailed',
-    'get_max_drawdown',
-    'get_max_drawdown_underwater',
-    'get_top_drawdowns',
-    'gen_drawdown_table',
-    'get_max_drawdown_period',
-    'max_drawdown_days',
-    'max_drawdown_weeks',
-    'max_drawdown_months',
-    'max_drawdown_recovery_days',
-    'max_drawdown_recovery_weeks',
-    'max_drawdown_recovery_months',
-    'second_max_drawdown',
-    'third_max_drawdown',
-    'second_max_drawdown_days',
-    'second_max_drawdown_recovery_days',
-    'third_max_drawdown_days',
-    'third_max_drawdown_recovery_days',
+    "max_drawdown",
+    "get_all_drawdowns",
+    "get_all_drawdowns_detailed",
+    "get_max_drawdown",
+    "get_max_drawdown_underwater",
+    "get_top_drawdowns",
+    "gen_drawdown_table",
+    "get_max_drawdown_period",
+    "max_drawdown_days",
+    "max_drawdown_weeks",
+    "max_drawdown_months",
+    "max_drawdown_recovery_days",
+    "max_drawdown_recovery_weeks",
+    "max_drawdown_recovery_months",
+    "second_max_drawdown",
+    "third_max_drawdown",
+    "second_max_drawdown_days",
+    "second_max_drawdown_recovery_days",
+    "third_max_drawdown_days",
+    "third_max_drawdown_recovery_days",
 ]
 
 
 def max_drawdown(
-    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
-    out: Optional[np.ndarray] = None,
-) -> Union[float, np.ndarray, pd.Series]:
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray | pd.Series:
     """Determine the maximum drawdown of a return series.
 
     Maximum drawdown is defined as the minimum (most negative) percentage
@@ -90,8 +92,7 @@ def max_drawdown(
         dtype="float64",
     )
     cumulative[0] = start = 100
-    cum_returns(returns_array, starting_value=start,
-                out=cumulative[1:])
+    cum_returns(returns_array, starting_value=start, out=cumulative[1:])
 
     max_return = np.fmax.accumulate(cumulative, axis=0)
 
@@ -105,8 +106,8 @@ def max_drawdown(
 
 
 def _identify_drawdown_periods(
-    returns: Union[pd.Series, np.ndarray],
-) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray, bool]]:
+    returns: pd.Series | np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, bool] | None:
     """Identify distinct drawdown periods in a return series.
 
     Shared helper used by :func:`get_all_drawdowns` and
@@ -156,7 +157,7 @@ def _identify_drawdown_periods(
     return dd_vals, starts, ends, ends_in_dd
 
 
-def get_all_drawdowns(returns: Union[pd.Series, np.ndarray]) -> List[float]:
+def get_all_drawdowns(returns: pd.Series | np.ndarray) -> list[float]:
     """Extract all distinct drawdown values from a return series.
 
     Parameters
@@ -178,7 +179,7 @@ def get_all_drawdowns(returns: Union[pd.Series, np.ndarray]) -> List[float]:
     return [float(dd_vals[s:e].min()) for s, e in zip(starts, ends)]
 
 
-def get_all_drawdowns_detailed(returns: Union[pd.Series, np.ndarray]) -> List[dict]:
+def get_all_drawdowns_detailed(returns: pd.Series | np.ndarray) -> list[dict]:
     """Extract detailed information about all drawdown periods.
 
     Parameters
@@ -209,18 +210,20 @@ def get_all_drawdowns_detailed(returns: Union[pd.Series, np.ndarray]) -> List[di
             recovery_duration = None
         else:
             recovery_duration = e - trough_idx
-        drawdown_periods.append({
-            'value': value,
-            'duration': duration,
-            'recovery_duration': recovery_duration,
-        })
+        drawdown_periods.append(
+            {
+                "value": value,
+                "duration": duration,
+                "recovery_duration": recovery_duration,
+            }
+        )
 
     return drawdown_periods
 
 
 def get_max_drawdown(
     returns: pd.Series,
-) -> Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]:
+) -> tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]:
     """Determine the maximum drawdown of a strategy.
 
     Parameters
@@ -246,7 +249,7 @@ def get_max_drawdown(
 
 def get_max_drawdown_underwater(
     underwater: pd.Series,
-) -> Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]:
+) -> tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]:
     """Determines peak, valley, and recovery dates given an underwater returns.
 
     Parameters
@@ -284,7 +287,7 @@ def get_max_drawdown_underwater(
 def get_top_drawdowns(
     returns: pd.Series,
     top: int = 10,
-) -> List[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
+) -> list[tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
     """Find top drawdowns, sorted by severity.
 
     Parameters
@@ -356,9 +359,7 @@ def gen_drawdown_table(returns: pd.Series, top: int = 10) -> pd.DataFrame:
         if pd.isnull(recovery):
             df_drawdowns.loc[i, "Duration"] = np.nan
         else:
-            df_drawdowns.loc[i, "Duration"] = len(
-                pd.date_range(peak, recovery, freq="B")
-            )
+            df_drawdowns.loc[i, "Duration"] = len(pd.date_range(peak, recovery, freq="B"))
 
         df_drawdowns.loc[i, "Peak date"] = pd.to_datetime(peak).strftime("%Y-%m-%d")
         df_drawdowns.loc[i, "Valley date"] = pd.to_datetime(valley).strftime("%Y-%m-%d")
@@ -368,9 +369,7 @@ def gen_drawdown_table(returns: pd.Series, top: int = 10) -> pd.DataFrame:
         else:
             df_drawdowns.loc[i, "Recovery date"] = pd.to_datetime(recovery).strftime("%Y-%m-%d")
 
-        df_drawdowns.loc[i, "Net drawdown in %"] = (
-            (df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[peak]
-        ) * 100
+        df_drawdowns.loc[i, "Net drawdown in %"] = ((df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[peak]) * 100
 
     df_drawdowns["Peak date"] = pd.to_datetime(df_drawdowns["Peak date"])
     df_drawdowns["Valley date"] = pd.to_datetime(df_drawdowns["Valley date"])
@@ -381,7 +380,7 @@ def gen_drawdown_table(returns: pd.Series, top: int = 10) -> pd.DataFrame:
 
 def get_max_drawdown_period(
     returns: pd.Series,
-) -> Tuple[Optional[pd.Timestamp], Optional[pd.Timestamp]]:
+) -> tuple[pd.Timestamp | None, pd.Timestamp | None]:
     """Get the start and end dates of the maximum drawdown period.
 
     Parameters
@@ -418,7 +417,7 @@ def get_max_drawdown_period(
     return start_date, end_date
 
 
-def max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the duration of the maximum drawdown in days.
 
     Parameters
@@ -453,7 +452,7 @@ def max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float
         return end_pos - start_pos
 
 
-def max_drawdown_weeks(returns: Union[pd.Series, np.ndarray]) -> float:
+def max_drawdown_weeks(returns: pd.Series | np.ndarray) -> float:
     """Calculate the duration of the maximum drawdown in weeks.
 
     Parameters
@@ -473,7 +472,7 @@ def max_drawdown_weeks(returns: Union[pd.Series, np.ndarray]) -> float:
     return days / 7
 
 
-def max_drawdown_months(returns: Union[pd.Series, np.ndarray]) -> float:
+def max_drawdown_months(returns: pd.Series | np.ndarray) -> float:
     """Calculate the duration of the maximum drawdown in months.
 
     Parameters
@@ -493,7 +492,7 @@ def max_drawdown_months(returns: Union[pd.Series, np.ndarray]) -> float:
     return days / 30
 
 
-def max_drawdown_recovery_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the recovery time from maximum drawdown in days.
 
     This computes the number of days (or periods) from the trough of the
@@ -537,7 +536,7 @@ def max_drawdown_recovery_days(returns: Union[pd.Series, np.ndarray]) -> Union[i
         return np.nan
 
 
-def max_drawdown_recovery_weeks(returns: Union[pd.Series, np.ndarray]) -> float:
+def max_drawdown_recovery_weeks(returns: pd.Series | np.ndarray) -> float:
     """Calculate the recovery time from maximum drawdown in weeks.
 
     Parameters
@@ -557,7 +556,7 @@ def max_drawdown_recovery_weeks(returns: Union[pd.Series, np.ndarray]) -> float:
     return days / 7
 
 
-def max_drawdown_recovery_months(returns: Union[pd.Series, np.ndarray]) -> float:
+def max_drawdown_recovery_months(returns: pd.Series | np.ndarray) -> float:
     """Calculate the recovery time from maximum drawdown in months.
 
     Parameters
@@ -577,7 +576,7 @@ def max_drawdown_recovery_months(returns: Union[pd.Series, np.ndarray]) -> float
     return days / 30
 
 
-def second_max_drawdown(returns: Union[pd.Series, np.ndarray]) -> float:
+def second_max_drawdown(returns: pd.Series | np.ndarray) -> float:
     """Determine the second-largest drawdown of a strategy.
 
     This identifies all distinct drawdown periods and returns the
@@ -603,7 +602,7 @@ def second_max_drawdown(returns: Union[pd.Series, np.ndarray]) -> float:
     return sorted_drawdowns[1]
 
 
-def third_max_drawdown(returns: Union[pd.Series, np.ndarray]) -> float:
+def third_max_drawdown(returns: pd.Series | np.ndarray) -> float:
     """Determine the third-largest drawdown of a strategy.
 
     This identifies all distinct drawdown periods and returns the
@@ -629,7 +628,7 @@ def third_max_drawdown(returns: Union[pd.Series, np.ndarray]) -> float:
     return sorted_drawdowns[2]
 
 
-def second_max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def second_max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the duration of the second maximum drawdown in days.
 
     Parameters
@@ -653,7 +652,7 @@ def second_max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int
     return sorted_drawdowns[1]["duration"]
 
 
-def second_max_drawdown_recovery_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def second_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the recovery time from the second maximum drawdown in days.
 
     Parameters
@@ -678,7 +677,7 @@ def second_max_drawdown_recovery_days(returns: Union[pd.Series, np.ndarray]) -> 
     return recovery_duration if recovery_duration is not None else np.nan
 
 
-def third_max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def third_max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the duration of the third maximum drawdown in days.
 
     Parameters
@@ -702,7 +701,7 @@ def third_max_drawdown_days(returns: Union[pd.Series, np.ndarray]) -> Union[int,
     return sorted_drawdowns[2]["duration"]
 
 
-def third_max_drawdown_recovery_days(returns: Union[pd.Series, np.ndarray]) -> Union[int, float]:
+def third_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
     """Calculate the recovery time from the third maximum drawdown in days.
 
     Parameters

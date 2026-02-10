@@ -18,24 +18,23 @@
 
 import numpy as np
 import pandas as pd
+
 from fincore.constants import DAILY
-from fincore.metrics.basic import (
-    annualization_factor, ensure_datetime_index_series, aligned_series
-)
-from fincore.metrics.returns import cum_returns_final
+from fincore.metrics.basic import aligned_series, annualization_factor, ensure_datetime_index_series
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.ratios import sharpe_ratio
+from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
 
 __all__ = [
-    'annual_return',
-    'annual_return_by_year',
-    'sharpe_ratio_by_year',
-    'max_drawdown_by_year',
-    'annual_volatility_by_year',
-    'annual_active_return',
-    'annual_active_return_by_year',
-    'information_ratio_by_year',
+    "annual_return",
+    "annual_return_by_year",
+    "sharpe_ratio_by_year",
+    "max_drawdown_by_year",
+    "annual_volatility_by_year",
+    "annual_active_return",
+    "annual_active_return_by_year",
+    "information_ratio_by_year",
 ]
 
 
@@ -170,9 +169,7 @@ def max_drawdown_by_year(returns):
 
     returns = ensure_datetime_index_series(returns, period=DAILY)
 
-    max_dd_by_year = returns.groupby(returns.index.year).apply(
-        lambda ret: max_drawdown(ret)
-    )
+    max_dd_by_year = returns.groupby(returns.index.year).apply(lambda ret: max_drawdown(ret))
     return max_dd_by_year.values if return_as_array else max_dd_by_year
 
 

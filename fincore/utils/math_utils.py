@@ -21,6 +21,7 @@
 """
 
 from functools import wraps
+
 import numpy as np
 
 try:
@@ -30,7 +31,7 @@ try:
     def _wrap_function(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            out = kwargs.pop('out', None)
+            out = kwargs.pop("out", None)
             data = f(*args, **kwargs)
             if out is None:
                 out = data
@@ -48,7 +49,7 @@ try:
     nanmin = _wrap_function(bn.nanmin)
     nanargmax = _wrap_function(bn.nanargmax)
     nanargmin = _wrap_function(bn.nanargmin)
-    
+
 except ImportError:
     # 回退到numpy版本
     nanmean = np.nanmean
@@ -60,6 +61,4 @@ except ImportError:
     nanargmin = np.nanargmin
 
 
-__all__ = [
-    'nanmean', 'nanstd', 'nansum', 'nanmax', 'nanmin', 'nanargmax', 'nanargmin'
-]
+__all__ = ["nanmean", "nanstd", "nansum", "nanmax", "nanmin", "nanargmax", "nanargmin"]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 收益相关的绘图和显示函数
 
@@ -7,20 +6,23 @@
 
 from collections import OrderedDict
 
+import matplotlib
+import matplotlib.lines
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.lines
-from matplotlib.ticker import FuncFormatter
 import seaborn as sns
+from matplotlib.ticker import FuncFormatter
 
 from fincore.constants import APPROX_BDAYS_PER_MONTH, STAT_FUNCS_PCT
-from fincore.utils import (
-    percentage, two_dec_places, print_table,
-    get_month_end_freq, make_timezone_aware,
-)
 from fincore.empyrical import Empyrical
+from fincore.utils import (
+    get_month_end_freq,
+    make_timezone_aware,
+    percentage,
+    print_table,
+    two_dec_places,
+)
 
 
 def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs):
@@ -46,7 +48,7 @@ def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs)
     if ax is None:
         ax = plt.gca()
 
-    monthly_ret_table = empyrical_instance.aggregate_returns(returns, 'monthly')
+    monthly_ret_table = empyrical_instance.aggregate_returns(returns, "monthly")
     monthly_ret_table = monthly_ret_table.unstack().round(3)
 
     sns.heatmap(
@@ -57,9 +59,11 @@ def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs)
         center=0.0,
         cbar=False,
         cmap=matplotlib.cm.RdYlGn,
-        ax=ax, **kwargs)
-    ax.set_ylabel('Year')
-    ax.set_xlabel('Month')
+        ax=ax,
+        **kwargs,
+    )
+    ax.set_ylabel("Year")
+    ax.set_xlabel("Month")
     ax.set_title("Monthly returns (%)")
     return ax
 
@@ -89,25 +93,18 @@ def plot_annual_returns(empyrical_instance, returns, ax=None, **kwargs):
 
     x_axis_formatter = FuncFormatter(percentage)
     ax.xaxis.set_major_formatter(FuncFormatter(x_axis_formatter))
-    ax.tick_params(axis='x', which='major')
+    ax.tick_params(axis="x", which="major")
 
-    ann_ret_df = pd.DataFrame(
-        empyrical_instance.aggregate_returns(returns, 'yearly'))
+    ann_ret_df = pd.DataFrame(empyrical_instance.aggregate_returns(returns, "yearly"))
 
-    ax.axvline(
-        100 * ann_ret_df.values.mean(),
-        color='steelblue',
-        linestyle='--',
-        lw=4,
-        alpha=0.7)
-    (100 * ann_ret_df.sort_index(ascending=False)
-     ).plot(ax=ax, kind='barh', alpha=0.70, **kwargs)
-    ax.axvline(0.0, color='black', linestyle='-', lw=3)
+    ax.axvline(100 * ann_ret_df.values.mean(), color="steelblue", linestyle="--", lw=4, alpha=0.7)
+    (100 * ann_ret_df.sort_index(ascending=False)).plot(ax=ax, kind="barh", alpha=0.70, **kwargs)
+    ax.axvline(0.0, color="black", linestyle="-", lw=3)
 
-    ax.set_ylabel('Year')
-    ax.set_xlabel('Returns')
+    ax.set_ylabel("Year")
+    ax.set_xlabel("Returns")
     ax.set_title("Annual returns")
-    ax.legend(['Mean'], frameon=True, framealpha=0.5)
+    ax.legend(["Mean"], frameon=True, framealpha=0.5)
     return ax
 
 
@@ -136,28 +133,18 @@ def plot_monthly_returns_dist(empyrical_instance, returns, ax=None, **kwargs):
 
     x_axis_formatter = FuncFormatter(percentage)
     ax.xaxis.set_major_formatter(FuncFormatter(x_axis_formatter))
-    ax.tick_params(axis='x', which='major')
+    ax.tick_params(axis="x", which="major")
 
-    monthly_ret_table = empyrical_instance.aggregate_returns(returns, 'monthly')
+    monthly_ret_table = empyrical_instance.aggregate_returns(returns, "monthly")
 
-    ax.hist(
-        100 * monthly_ret_table,
-        color='orangered',
-        alpha=0.80,
-        bins=20,
-        **kwargs)
+    ax.hist(100 * monthly_ret_table, color="orangered", alpha=0.80, bins=20, **kwargs)
 
-    ax.axvline(
-        100 * monthly_ret_table.mean(),
-        color='gold',
-        linestyle='--',
-        lw=4,
-        alpha=1.0)
+    ax.axvline(100 * monthly_ret_table.mean(), color="gold", linestyle="--", lw=4, alpha=1.0)
 
-    ax.axvline(0.0, color='black', linestyle='-', lw=3, alpha=0.75)
-    ax.legend(['Mean'], frameon=True, framealpha=0.5)
-    ax.set_ylabel('Number of months')
-    ax.set_xlabel('Returns')
+    ax.axvline(0.0, color="black", linestyle="-", lw=3, alpha=0.75)
+    ax.legend(["Mean"], frameon=True, framealpha=0.5)
+    ax.set_ylabel("Number of months")
+    ax.set_xlabel("Returns")
     ax.set_title("Distribution of monthly returns")
     return ax
 
@@ -187,8 +174,8 @@ def plot_returns(returns, live_start_date=None, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    ax.set_label('')
-    ax.set_ylabel('Returns')
+    ax.set_label("")
+    ax.set_ylabel("Returns")
 
     if live_start_date is not None:
         if isinstance(live_start_date, str):
@@ -196,23 +183,27 @@ def plot_returns(returns, live_start_date=None, ax=None):
         live_start_date = make_timezone_aware(live_start_date, returns.index[0].tz)
         is_returns = returns.loc[returns.index < live_start_date]
         oos_returns = returns.loc[returns.index >= live_start_date]
-        is_returns.plot(ax=ax, color='g')
-        oos_returns.plot(ax=ax, color='r')
+        is_returns.plot(ax=ax, color="g")
+        oos_returns.plot(ax=ax, color="r")
     else:
-        returns.plot(ax=ax, color='g')
+        returns.plot(ax=ax, color="g")
 
     return ax
 
 
-def plot_rolling_returns(empyrical_instance, returns,
-                         factor_returns=None,
-                         live_start_date=None,
-                         logy=False,
-                         cone_std=None,
-                         legend_loc='best',
-                         volatility_match=False,
-                         cone_function=None,
-                         ax=None, **kwargs):
+def plot_rolling_returns(
+    empyrical_instance,
+    returns,
+    factor_returns=None,
+    live_start_date=None,
+    logy=False,
+    cone_std=None,
+    legend_loc="best",
+    volatility_match=False,
+    cone_function=None,
+    ax=None,
+    **kwargs,
+):
     """
     Plots cumulative rolling returns versus some benchmarks'.
 
@@ -255,12 +246,12 @@ def plot_rolling_returns(empyrical_instance, returns,
     if ax is None:
         ax = plt.gca()
 
-    ax.set_xlabel('')
-    ax.set_ylabel('Cumulative returns')
-    ax.set_yscale('log' if logy else 'linear')
+    ax.set_xlabel("")
+    ax.set_ylabel("Cumulative returns")
+    ax.set_yscale("log" if logy else "linear")
 
     if volatility_match and factor_returns is None:
-        raise ValueError('volatility_match requires passing of factor_returns.')
+        raise ValueError("volatility_match requires passing of factor_returns.")
     elif volatility_match and factor_returns is not None:
         bmark_vol = factor_returns.loc[returns.index].std()
         returns = (returns / returns.std()) * bmark_vol
@@ -271,11 +262,8 @@ def plot_rolling_returns(empyrical_instance, returns,
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     if factor_returns is not None:
-        cum_factor_returns = empyrical_instance.cum_returns(
-            factor_returns[cum_rets.index], 1.0)
-        cum_factor_returns.plot(lw=2, color='gray',
-                                label=factor_returns.name, alpha=0.60,
-                                ax=ax, **kwargs)
+        cum_factor_returns = empyrical_instance.cum_returns(factor_returns[cum_rets.index], 1.0)
+        cum_factor_returns.plot(lw=2, color="gray", label=factor_returns.name, alpha=0.60, ax=ax, **kwargs)
 
     if live_start_date is not None:
         if isinstance(live_start_date, str):
@@ -287,12 +275,10 @@ def plot_rolling_returns(empyrical_instance, returns,
         is_cum_returns = cum_rets
         oos_cum_returns = pd.Series([])
 
-    is_cum_returns.plot(lw=3, color='forestgreen', alpha=0.6,
-                        label='Backtest', ax=ax, **kwargs)
+    is_cum_returns.plot(lw=3, color="forestgreen", alpha=0.6, label="Backtest", ax=ax, **kwargs)
 
     if len(oos_cum_returns) > 0:
-        oos_cum_returns.plot(lw=4, color='red', alpha=0.6,
-                             label='Live', ax=ax, **kwargs)
+        oos_cum_returns.plot(lw=4, color="red", alpha=0.6, label="Live", ax=ax, **kwargs)
 
         if cone_std is not None:
             if isinstance(cone_std, (float, int)):
@@ -300,27 +286,23 @@ def plot_rolling_returns(empyrical_instance, returns,
 
             is_returns = returns.loc[returns.index < live_start_date]
             cone_bounds = cone_function(
-                is_returns,
-                len(oos_cum_returns),
-                cone_std=cone_std,
-                starting_value=is_cum_returns.iloc[-1])
+                is_returns, len(oos_cum_returns), cone_std=cone_std, starting_value=is_cum_returns.iloc[-1]
+            )
 
             cone_bounds = cone_bounds.set_index(oos_cum_returns.index)
             for std in cone_std:
-                ax.fill_between(cone_bounds.index,
-                                cone_bounds[float(std)],
-                                cone_bounds[float(-std)],
-                                color='steelblue', alpha=0.5)
+                ax.fill_between(
+                    cone_bounds.index, cone_bounds[float(std)], cone_bounds[float(-std)], color="steelblue", alpha=0.5
+                )
 
     if legend_loc is not None:
         ax.legend(loc=legend_loc, frameon=True, framealpha=0.5)
-    ax.axhline(1.0, linestyle='--', color='black', lw=2)
+    ax.axhline(1.0, linestyle="--", color="black", lw=2)
 
     return ax
 
 
-def plot_rolling_beta(empyrical_instance, returns, factor_returns, legend_loc='best',
-                      ax=None, **kwargs):
+def plot_rolling_beta(empyrical_instance, returns, factor_returns, legend_loc="best", ax=None, **kwargs):
     """
     Plots the rolling 6-month and 12-month beta versus date.
 
@@ -351,26 +333,23 @@ def plot_rolling_beta(empyrical_instance, returns, factor_returns, legend_loc='b
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     ax.set_title("Rolling portfolio beta to " + str(factor_returns.name))
-    ax.set_ylabel('Beta')
-    rb_1 = empyrical_instance.rolling_beta(
-        returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 6)
-    rb_1.plot(color='steelblue', lw=3, alpha=0.6, ax=ax, **kwargs)
-    rb_2 = empyrical_instance.rolling_beta(
-        returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 12)
-    rb_2.plot(color='grey', lw=3, alpha=0.4, ax=ax, **kwargs)
-    ax.axhline(rb_1.mean(), color='steelblue', linestyle='--', lw=3)
-    ax.axhline(0.0, color='black', linestyle='-', lw=2)
+    ax.set_ylabel("Beta")
+    rb_1 = empyrical_instance.rolling_beta(returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 6)
+    rb_1.plot(color="steelblue", lw=3, alpha=0.6, ax=ax, **kwargs)
+    rb_2 = empyrical_instance.rolling_beta(returns, factor_returns, rolling_window=APPROX_BDAYS_PER_MONTH * 12)
+    rb_2.plot(color="grey", lw=3, alpha=0.4, ax=ax, **kwargs)
+    ax.axhline(rb_1.mean(), color="steelblue", linestyle="--", lw=3)
+    ax.axhline(0.0, color="black", linestyle="-", lw=2)
 
-    ax.set_xlabel('')
-    ax.legend(['6-mo', '12-mo'],
-              loc=legend_loc, frameon=True, framealpha=0.5)
+    ax.set_xlabel("")
+    ax.legend(["6-mo", "12-mo"], loc=legend_loc, frameon=True, framealpha=0.5)
     ax.set_ylim((-1.0, 1.0))
     return ax
 
 
-def plot_rolling_volatility(empyrical_instance, returns, factor_returns=None,
-                            rolling_window=None,
-                            legend_loc='best', ax=None, **kwargs):
+def plot_rolling_volatility(
+    empyrical_instance, returns, factor_returns=None, rolling_window=None, legend_loc="best", ax=None, **kwargs
+):
     """
     Plots the rolling volatility versus date.
 
@@ -406,30 +385,29 @@ def plot_rolling_volatility(empyrical_instance, returns, factor_returns=None,
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     rolling_vol_ts = empyrical_instance.rolling_volatility(returns, rolling_window)
-    rolling_vol_ts.plot(alpha=.7, lw=3, color='orangered', ax=ax, **kwargs)
+    rolling_vol_ts.plot(alpha=0.7, lw=3, color="orangered", ax=ax, **kwargs)
     if factor_returns is not None:
-        rolling_vol_ts_factor = empyrical_instance.rolling_volatility(
-            factor_returns, rolling_window)
-        rolling_vol_ts_factor.plot(alpha=.7, lw=3, color='grey', ax=ax, **kwargs)
+        rolling_vol_ts_factor = empyrical_instance.rolling_volatility(factor_returns, rolling_window)
+        rolling_vol_ts_factor.plot(alpha=0.7, lw=3, color="grey", ax=ax, **kwargs)
 
-    ax.set_title('Rolling volatility (6-month)')
-    ax.axhline(rolling_vol_ts.mean(), color='steelblue', linestyle='--', lw=3)
-    ax.axhline(0.0, color='black', linestyle='-', lw=2)
+    ax.set_title("Rolling volatility (6-month)")
+    ax.axhline(rolling_vol_ts.mean(), color="steelblue", linestyle="--", lw=3)
+    ax.axhline(0.0, color="black", linestyle="-", lw=2)
 
-    ax.set_ylabel('Volatility')
-    ax.set_xlabel('')
+    ax.set_ylabel("Volatility")
+    ax.set_xlabel("")
     if factor_returns is None:
-        ax.legend(['Volatility', 'Average volatility'],
-                  loc=legend_loc, frameon=True, framealpha=0.5)
+        ax.legend(["Volatility", "Average volatility"], loc=legend_loc, frameon=True, framealpha=0.5)
     else:
-        ax.legend(['Volatility', 'Benchmark volatility', 'Average volatility'],
-                  loc=legend_loc, frameon=True, framealpha=0.5)
+        ax.legend(
+            ["Volatility", "Benchmark volatility", "Average volatility"], loc=legend_loc, frameon=True, framealpha=0.5
+        )
     return ax
 
 
-def plot_rolling_sharpe(empyrical_instance, returns, factor_returns=None,
-                        rolling_window=None,
-                        legend_loc='best', ax=None, **kwargs):
+def plot_rolling_sharpe(
+    empyrical_instance, returns, factor_returns=None, rolling_window=None, legend_loc="best", ax=None, **kwargs
+):
     """
     Plots the rolling Sharpe ratio versus date.
 
@@ -465,25 +443,22 @@ def plot_rolling_sharpe(empyrical_instance, returns, factor_returns=None,
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     rolling_sharpe_ts = empyrical_instance.rolling_sharpe(returns, rolling_window)
-    rolling_sharpe_ts.plot(alpha=.7, lw=3, color='orangered', ax=ax, **kwargs)
+    rolling_sharpe_ts.plot(alpha=0.7, lw=3, color="orangered", ax=ax, **kwargs)
 
     if factor_returns is not None:
-        rolling_sharpe_ts_factor = empyrical_instance.rolling_sharpe(
-            factor_returns, rolling_window)
-        rolling_sharpe_ts_factor.plot(alpha=.7, lw=3, color='grey', ax=ax, **kwargs)
+        rolling_sharpe_ts_factor = empyrical_instance.rolling_sharpe(factor_returns, rolling_window)
+        rolling_sharpe_ts_factor.plot(alpha=0.7, lw=3, color="grey", ax=ax, **kwargs)
 
-    ax.set_title('Rolling Sharpe ratio (6-month)')
-    ax.axhline(rolling_sharpe_ts.mean(), color='steelblue', linestyle='--', lw=3)
-    ax.axhline(0.0, color='black', linestyle='-', lw=3)
+    ax.set_title("Rolling Sharpe ratio (6-month)")
+    ax.axhline(rolling_sharpe_ts.mean(), color="steelblue", linestyle="--", lw=3)
+    ax.axhline(0.0, color="black", linestyle="-", lw=3)
 
-    ax.set_ylabel('Sharpe ratio')
-    ax.set_xlabel('')
+    ax.set_ylabel("Sharpe ratio")
+    ax.set_xlabel("")
     if factor_returns is None:
-        ax.legend(['Sharpe', 'Average'],
-                  loc=legend_loc, frameon=True, framealpha=0.5)
+        ax.legend(["Sharpe", "Average"], loc=legend_loc, frameon=True, framealpha=0.5)
     else:
-        ax.legend(['Sharpe', 'Benchmark Sharpe', 'Average'],
-                  loc=legend_loc, frameon=True, framealpha=0.5)
+        ax.legend(["Sharpe", "Benchmark Sharpe", "Average"], loc=legend_loc, frameon=True, framealpha=0.5)
 
     return ax
 
@@ -523,21 +498,15 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
 
     lim = ax.get_ylim()
     colors = sns.cubehelix_palette(len(df_drawdowns))[::-1]
-    for i, (peak, recovery) in df_drawdowns[
-        ['Peak date', 'Recovery date']].iterrows():
+    for i, (peak, recovery) in df_drawdowns[["Peak date", "Recovery date"]].iterrows():
         if pd.isnull(recovery):
             recovery = returns.index[-1]
-        ax.fill_between((peak, recovery),
-                        lim[0],
-                        lim[1],
-                        alpha=.4,
-                        color=colors[i])
+        ax.fill_between((peak, recovery), lim[0], lim[1], alpha=0.4, color=colors[i])
     ax.set_ylim(lim)
-    ax.set_title('Top %i drawdown periods' % top)
-    ax.set_ylabel('Cumulative returns')
-    ax.legend(['Portfolio'], loc='upper left',
-              frameon=True, framealpha=0.5)
-    ax.set_xlabel('')
+    ax.set_title("Top %i drawdown periods" % top)
+    ax.set_ylabel("Cumulative returns")
+    ax.legend(["Portfolio"], loc="upper left", frameon=True, framealpha=0.5)
+    ax.set_xlabel("")
     return ax
 
 
@@ -571,15 +540,14 @@ def plot_drawdown_underwater(empyrical_instance, returns, ax=None, **kwargs):
     df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
     running_max = np.maximum.accumulate(df_cum_rets)
     underwater = -100 * ((running_max - df_cum_rets) / running_max)
-    underwater.plot(ax=ax, kind='area', color='coral', alpha=0.7, **kwargs)
-    ax.set_ylabel('Drawdown')
-    ax.set_title('Underwater plot')
-    ax.set_xlabel('')
+    underwater.plot(ax=ax, kind="area", color="coral", alpha=0.7, **kwargs)
+    ax.set_ylabel("Drawdown")
+    ax.set_title("Underwater plot")
+    ax.set_xlabel("")
     return ax
 
 
-def plot_return_quantiles(empyrical_instance, returns, live_start_date=None,
-                          ax=None, **kwargs):
+def plot_return_quantiles(empyrical_instance, returns, live_start_date=None, ax=None, **kwargs):
     """
     Creates a box plot of daily, weekly, and monthly return distributions.
 
@@ -610,33 +578,31 @@ def plot_return_quantiles(empyrical_instance, returns, live_start_date=None,
             live_start_date = pd.to_datetime(live_start_date)
         live_start_date = make_timezone_aware(live_start_date, returns.index[0].tz)
         is_returns = returns.loc[returns.index < live_start_date]
-    is_weekly = empyrical_instance.aggregate_returns(is_returns, 'weekly')
-    is_monthly = empyrical_instance.aggregate_returns(is_returns, 'monthly')
-    data = pd.concat([
-        pd.DataFrame({'value': is_returns, 'category': 'returns'}),
-        pd.DataFrame({'value': is_weekly, 'category': 'weekly'}),
-        pd.DataFrame({'value': is_monthly, 'category': 'monthly'})
-    ])
+    is_weekly = empyrical_instance.aggregate_returns(is_returns, "weekly")
+    is_monthly = empyrical_instance.aggregate_returns(is_returns, "monthly")
+    data = pd.concat(
+        [
+            pd.DataFrame({"value": is_returns, "category": "returns"}),
+            pd.DataFrame({"value": is_weekly, "category": "weekly"}),
+            pd.DataFrame({"value": is_monthly, "category": "monthly"}),
+        ]
+    )
     data = data.dropna()
-    sns.boxplot(data=data, x='category', y='value',
-                palette=["#4c72B0", "#55A868", "#CCB974"],
-                ax=ax, hue='category', **kwargs)
+    sns.boxplot(
+        data=data, x="category", y="value", palette=["#4c72B0", "#55A868", "#CCB974"], ax=ax, hue="category", **kwargs
+    )
 
     if live_start_date is not None:
         oos_returns = returns.loc[returns.index >= live_start_date]
-        oos_weekly = empyrical_instance.aggregate_returns(oos_returns, 'weekly')
-        oos_monthly = empyrical_instance.aggregate_returns(oos_returns, 'monthly')
+        oos_weekly = empyrical_instance.aggregate_returns(oos_returns, "weekly")
+        oos_monthly = empyrical_instance.aggregate_returns(oos_returns, "monthly")
 
-        sns.swarmplot(data=[oos_returns, oos_weekly, oos_monthly], ax=ax,
-                      color="red",
-                      marker="d", **kwargs)
-        red_dots = matplotlib.lines.Line2D([], [], color="red", marker="d",
-                                           label="Out-of-sample data",
-                                           linestyle='')
+        sns.swarmplot(data=[oos_returns, oos_weekly, oos_monthly], ax=ax, color="red", marker="d", **kwargs)
+        red_dots = matplotlib.lines.Line2D([], [], color="red", marker="d", label="Out-of-sample data", linestyle="")
         ax.legend(handles=[red_dots], frameon=True, framealpha=0.5)
     ax.set_xticks([0, 1, 2])
-    ax.set_xticklabels(['Daily', 'Weekly', 'Monthly'])
-    ax.set_title('Return quantiles')
+    ax.set_xticklabels(["Daily", "Weekly", "Monthly"])
+    ax.set_title("Return quantiles")
 
     return ax
 
@@ -661,18 +627,17 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
     ax : matplotlib.Axes
         The axes that were plotted on.
     """
+
     def cumulate_returns(x):
         return empyrical_instance.cum_returns(x)[-1]
 
     if ax is None:
         ax = plt.gca()
 
-    monthly_rets = returns.resample('M').apply(lambda x: cumulate_returns(x))
+    monthly_rets = returns.resample("M").apply(lambda x: cumulate_returns(x))
     monthly_rets = monthly_rets.to_period()
 
-    sns.barplot(x=monthly_rets.index,
-                y=monthly_rets.values,
-                color='steelblue')
+    sns.barplot(x=monthly_rets.index, y=monthly_rets.values, color="steelblue")
 
     locs, labels = plt.xticks()
     plt.setp(labels, rotation=90)
@@ -686,10 +651,10 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
             xticks_label.append(i)
             xticks_coord.append(count)
             # plot yearly boundary line
-            ax.axvline(count, color='gray', ls='--', alpha=0.3)
+            ax.axvline(count, color="gray", ls="--", alpha=0.3)
         count += 1
 
-    ax.axhline(0.0, color='darkgray', ls='-')
+    ax.axhline(0.0, color="darkgray", ls="-")
     ax.set_xticks(xticks_coord)
     ax.set_xticklabels(xticks_label)
 
@@ -720,21 +685,26 @@ def plot_perf_stats(empyrical_instance, returns, factor_returns, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    bootstrap_values = empyrical_instance.perf_stats_bootstrap(returns,
-                                                               factor_returns,
-                                                               return_stats=False)
-    bootstrap_values = bootstrap_values.drop('Kurtosis', axis='columns')
+    bootstrap_values = empyrical_instance.perf_stats_bootstrap(returns, factor_returns, return_stats=False)
+    bootstrap_values = bootstrap_values.drop("Kurtosis", axis="columns")
 
-    sns.boxplot(data=bootstrap_values, orient='h', ax=ax)
+    sns.boxplot(data=bootstrap_values, orient="h", ax=ax)
 
     return ax
 
 
-def show_perf_stats(empyrical_instance, returns, factor_returns=None, positions=None,
-                    transactions=None, turnover_denom='AGB',
-                    live_start_date=None, bootstrap=False,
-                    header_rows=None,
-                    run_flask_app=False):
+def show_perf_stats(
+    empyrical_instance,
+    returns,
+    factor_returns=None,
+    positions=None,
+    transactions=None,
+    turnover_denom="AGB",
+    live_start_date=None,
+    bootstrap=False,
+    header_rows=None,
+    run_flask_app=False,
+):
     """
     Prints some performance metrics of the strategy.
 
@@ -771,12 +741,13 @@ def show_perf_stats(empyrical_instance, returns, factor_returns=None, positions=
         factor_returns=factor_returns,
         positions=positions,
         transactions=transactions,
-        turnover_denom=turnover_denom)
+        turnover_denom=turnover_denom,
+    )
 
     date_rows = OrderedDict()
     if len(returns.index) > 0:
-        date_rows['Start date'] = returns.index[0].strftime('%Y-%m-%d')
-        date_rows['End date'] = returns.index[-1].strftime('%Y-%m-%d')
+        date_rows["Start date"] = returns.index[0].strftime("%Y-%m-%d")
+        date_rows["End date"] = returns.index[-1].strftime("%Y-%m-%d")
 
     if live_start_date is not None:
         # Convert string to datetime once
@@ -810,27 +781,34 @@ def show_perf_stats(empyrical_instance, returns, factor_returns=None, positions=
             factor_returns=factor_returns,
             positions=positions_is,
             transactions=transactions_is,
-            turnover_denom=turnover_denom)
+            turnover_denom=turnover_denom,
+        )
 
         perf_stats_oos = perf_func(
             returns_oos,
             factor_returns=factor_returns,
             positions=positions_oos,
             transactions=transactions_oos,
-            turnover_denom=turnover_denom)
+            turnover_denom=turnover_denom,
+        )
         if len(returns.index) > 0:
-            date_rows['In-sample months'] = int(len(returns_is) / APPROX_BDAYS_PER_MONTH)
-            date_rows['Out-of-sample months'] = int(len(returns_oos) / APPROX_BDAYS_PER_MONTH)
+            date_rows["In-sample months"] = int(len(returns_is) / APPROX_BDAYS_PER_MONTH)
+            date_rows["Out-of-sample months"] = int(len(returns_oos) / APPROX_BDAYS_PER_MONTH)
 
-        perf_stats = pd.concat(OrderedDict([
-            ('In-sample', perf_stats_is),
-            ('Out-of-sample', perf_stats_oos),
-            ('All', perf_stats_all),
-        ]), axis=1)
+        perf_stats = pd.concat(
+            OrderedDict(
+                [
+                    ("In-sample", perf_stats_is),
+                    ("Out-of-sample", perf_stats_oos),
+                    ("All", perf_stats_all),
+                ]
+            ),
+            axis=1,
+        )
     else:
         if len(returns.index) > 0:
-            date_rows['Total months'] = int(len(returns) / APPROX_BDAYS_PER_MONTH)
-        perf_stats = pd.DataFrame(perf_stats_all, columns=['Backtest'])
+            date_rows["Total months"] = int(len(returns) / APPROX_BDAYS_PER_MONTH)
+        perf_stats = pd.DataFrame(perf_stats_all, columns=["Backtest"])
 
     for column in perf_stats.columns:
         perf_stats[column] = perf_stats[column].astype(object)
@@ -839,19 +817,14 @@ def show_perf_stats(empyrical_instance, returns, factor_returns=None, positions=
                 if np.isnan(value):
                     perf_stats.loc[stat, column] = np.nan
                 else:
-                    perf_stats.loc[stat, column] = str(np.round(value * 100, 1)) + '%'
+                    perf_stats.loc[stat, column] = str(np.round(value * 100, 1)) + "%"
     if header_rows is None:
         header_rows = date_rows
     else:
         header_rows = OrderedDict(header_rows)
         header_rows.update(date_rows)
 
-    print_table(
-        perf_stats,
-        float_format='{0:.2f}'.format,
-        header_rows=header_rows,
-        run_flask_app=run_flask_app
-    )
+    print_table(perf_stats, float_format="{:.2f}".format, header_rows=header_rows, run_flask_app=run_flask_app)
 
 
 def show_worst_drawdown_periods(empyrical_instance, returns, top=5, run_flask_app=False):
@@ -871,8 +844,8 @@ def show_worst_drawdown_periods(empyrical_instance, returns, top=5, run_flask_ap
     """
     drawdown_df = empyrical_instance.gen_drawdown_table(returns, top=top)
     print_table(
-        drawdown_df.sort_values('Net drawdown in %', ascending=False),
-        name='Worst drawdown periods',
-        float_format='{0:.2f}'.format,
-        run_flask_app=run_flask_app
+        drawdown_df.sort_values("Net drawdown in %", ascending=False),
+        name="Worst drawdown periods",
+        float_format="{:.2f}".format,
+        run_flask_app=run_flask_app,
     )

@@ -1,11 +1,11 @@
 """
 Tests for statistical properties (skewness, kurtosis, hurst exponent).
 """
-from __future__ import division
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from unittest import TestCase
 from parameterized import parameterized
 
 from fincore.empyrical import Empyrical
@@ -19,46 +19,53 @@ class TestStatisticalProperties(TestCase):
     # Normal-like returns
     normal_returns = pd.Series(
         np.array([0.1, -0.1, 0.2, -0.2, 0.15, -0.15, 0.05, -0.05]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        index=pd.date_range("2000-1-1", periods=8, freq="D"),
+    )
 
     # Positively skewed returns (more extreme positive values)
     positive_skew_returns = pd.Series(
-        np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 1.0, 2.0]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.5, 1.0, 2.0]) / 100, index=pd.date_range("2000-1-1", periods=8, freq="D")
+    )
 
     # Negatively skewed returns (more extreme negative values)
     negative_skew_returns = pd.Series(
         np.array([-0.1, -0.1, -0.1, -0.1, -0.1, -0.5, -1.0, -2.0]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        index=pd.date_range("2000-1-1", periods=8, freq="D"),
+    )
 
     # High kurtosis returns (fat tails, more extreme values)
     high_kurtosis_returns = pd.Series(
         np.array([0.01, 0.01, 0.01, 5.0, -5.0, 0.01, 0.01, 0.01]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        index=pd.date_range("2000-1-1", periods=8, freq="D"),
+    )
 
     # Trending returns for Hurst exponent
     trending_returns = pd.Series(
-        np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]) / 100, index=pd.date_range("2000-1-1", periods=8, freq="D")
+    )
 
     # Random-like returns for Hurst exponent
     random_returns = pd.Series(
         np.array([0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, -0.1]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        index=pd.date_range("2000-1-1", periods=8, freq="D"),
+    )
 
     # Mean-reverting returns
     mean_reverting_returns = pd.Series(
         np.array([0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5]) / 100,
-        index=pd.date_range('2000-1-1', periods=8, freq='D'))
+        index=pd.date_range("2000-1-1", periods=8, freq="D"),
+    )
 
     empty_returns = pd.Series([], dtype=float)
 
     # Test skewness
-    @parameterized.expand([
-        (positive_skew_returns,),  # Should have positive skew
-        (negative_skew_returns,),  # Should have negative skew
-        (normal_returns,),  # Should be close to 0
-    ])
+    @parameterized.expand(
+        [
+            (positive_skew_returns,),  # Should have positive skew
+            (negative_skew_returns,),  # Should have negative skew
+            (normal_returns,),  # Should be close to 0
+        ]
+    )
     def test_skewness(self, returns):
         emp = Empyrical()
         result = emp.skewness(returns)
@@ -85,10 +92,12 @@ class TestStatisticalProperties(TestCase):
         assert np.isnan(result)
 
     # Test kurtosis
-    @parameterized.expand([
-        (high_kurtosis_returns,),  # Should have high kurtosis
-        (normal_returns,),  # Should have lower kurtosis
-    ])
+    @parameterized.expand(
+        [
+            (high_kurtosis_returns,),  # Should have high kurtosis
+            (normal_returns,),  # Should have lower kurtosis
+        ]
+    )
     def test_kurtosis(self, returns):
         emp = Empyrical()
         result = emp.kurtosis(returns)
@@ -102,8 +111,9 @@ class TestStatisticalProperties(TestCase):
         result_high = emp.kurtosis(self.high_kurtosis_returns)
         result_normal = emp.kurtosis(self.normal_returns)
         # High kurtosis returns should have higher kurtosis than normal returns
-        assert result_high > result_normal, \
+        assert result_high > result_normal, (
             f"Expected high kurtosis ({result_high}) > normal kurtosis ({result_normal})"
+        )
 
     def test_kurtosis_empty(self):
         """Test that empty returns give NaN."""
@@ -143,7 +153,7 @@ class TestStatisticalProperties(TestCase):
 
     def test_hurst_exponent_too_short(self):
         """Test that very short series give NaN."""
-        short_returns = pd.Series([0.01, 0.02], index=pd.date_range('2000-1-1', periods=2, freq='D'))
+        short_returns = pd.Series([0.01, 0.02], index=pd.date_range("2000-1-1", periods=2, freq="D"))
         emp = Empyrical()
         result = emp.hurst_exponent(short_returns)
         assert np.isnan(result)

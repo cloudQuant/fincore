@@ -7,6 +7,7 @@ Usage::
     print(ctx.sharpe_ratio)
     print(ctx.perf_stats())
 """
+
 from __future__ import annotations
 
 import json
@@ -18,28 +19,36 @@ import pandas as pd
 
 from fincore.constants import DAILY
 from fincore.metrics.basic import annualization_factor as _ann_factor
-from fincore.metrics.returns import cum_returns, cum_returns_final
 from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.risk import (
-    annual_volatility,
-    downside_risk,
-    value_at_risk,
-    conditional_value_at_risk,
-    tail_ratio,
+from fincore.metrics.ratios import (
+    calmar_ratio as _calmar_ratio,
+)
+from fincore.metrics.ratios import (
+    information_ratio as _information_ratio,
+)
+from fincore.metrics.ratios import (
+    omega_ratio as _omega_ratio,
 )
 from fincore.metrics.ratios import (
     sharpe_ratio as _sharpe_ratio,
+)
+from fincore.metrics.ratios import (
     sortino_ratio as _sortino_ratio,
-    calmar_ratio as _calmar_ratio,
-    omega_ratio as _omega_ratio,
-    information_ratio as _information_ratio,
+)
+from fincore.metrics.returns import cum_returns, cum_returns_final
+from fincore.metrics.risk import (
+    annual_volatility,
+    conditional_value_at_risk,
+    downside_risk,
+    tail_ratio,
+    value_at_risk,
+)
+from fincore.metrics.stats import (
+    kurtosis,
+    skewness,
+    stability_of_timeseries,
 )
 from fincore.metrics.yearly import annual_return as _annual_return
-from fincore.metrics.stats import (
-    stability_of_timeseries,
-    skewness,
-    kurtosis,
-)
 from fincore.utils import nanmean, nanstd
 
 
@@ -68,9 +77,9 @@ class AnalysisContext:
         self,
         returns: pd.Series,
         *,
-        factor_returns: Optional[pd.Series] = None,
-        positions: Optional[pd.DataFrame] = None,
-        transactions: Optional[pd.DataFrame] = None,
+        factor_returns: pd.Series | None = None,
+        positions: pd.DataFrame | None = None,
+        transactions: pd.DataFrame | None = None,
         period: str = DAILY,
     ) -> None:
         self._returns = returns
@@ -171,6 +180,7 @@ class AnalysisContext:
         if self._factor_returns is None:
             return np.nan
         from fincore.metrics.alpha_beta import alpha_beta
+
         return float(alpha_beta(self._returns, self._factor_returns)[0])
 
     @cached_property
@@ -178,6 +188,7 @@ class AnalysisContext:
         if self._factor_returns is None:
             return np.nan
         from fincore.metrics.alpha_beta import alpha_beta
+
         return float(alpha_beta(self._returns, self._factor_returns)[1])
 
     @cached_property
@@ -197,7 +208,8 @@ class AnalysisContext:
         calls are essentially free after the first computation.
         """
         from collections import OrderedDict
-        stats: Dict[str, Any] = OrderedDict()
+
+        stats: dict[str, Any] = OrderedDict()
         stats["Annual return"] = self.annual_return
         stats["Cumulative returns"] = self.cumulative_returns
         stats["Annual volatility"] = self.annual_volatility
@@ -218,7 +230,7 @@ class AnalysisContext:
 
         return pd.Series(stats)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return metrics as a plain dict (JSON-friendly values)."""
         s = self.perf_stats()
         return {k: (float(v) if np.isfinite(v) else None) for k, v in s.items()}
@@ -244,6 +256,7 @@ class AnalysisContext:
         Depends on the backend (e.g. matplotlib Figure or HTML string).
         """
         from fincore.viz.base import get_backend
+
         viz = get_backend(backend)
 
         cum_ret = cum_returns(self._returns, starting_value=0)
@@ -255,7 +268,7 @@ class AnalysisContext:
 
         return viz
 
-    def to_html(self, path: Optional[str] = None) -> str:
+    def to_html(self, path: str | None = None) -> str:
         """Generate a self-contained HTML performance report.
 
         Parameters
@@ -269,12 +282,12 @@ class AnalysisContext:
             The HTML report as a string.
         """
         from fincore.viz.html_backend import HtmlReportBuilder
+
         builder = HtmlReportBuilder()
         builder.add_title("Performance Report")
         builder.add_metric_cards(
             self.perf_stats(),
-            keys=["Annual return", "Sharpe ratio", "Max drawdown",
-                   "Annual volatility", "Calmar ratio"],
+            keys=["Annual return", "Sharpe ratio", "Max drawdown", "Annual volatility", "Calmar ratio"],
         )
         builder.add_heading("Performance Statistics")
         builder.add_stats_table(self.perf_stats())
@@ -294,8 +307,7 @@ class AnalysisContext:
         for attr in list(self.__dict__):
             if attr.startswith("_") and not attr.startswith("__"):
                 # preserve the constructor-set private attrs
-                if attr in ("_returns", "_factor_returns", "_positions",
-                            "_transactions", "_period"):
+                if attr in ("_returns", "_factor_returns", "_positions", "_transactions", "_period"):
                     continue
             # remove cached_property entries
             if isinstance(getattr(cls, attr, None), cached_property):
@@ -317,12 +329,13 @@ class AnalysisContext:
 # Convenience constructor
 # ------------------------------------------------------------------
 
+
 def analyze(
     returns: pd.Series,
     *,
-    factor_returns: Optional[pd.Series] = None,
-    positions: Optional[pd.DataFrame] = None,
-    transactions: Optional[pd.DataFrame] = None,
+    factor_returns: pd.Series | None = None,
+    positions: pd.DataFrame | None = None,
+    transactions: pd.DataFrame | None = None,
     period: str = DAILY,
 ) -> AnalysisContext:
     """Create an :class:`AnalysisContext` — the recommended entry point.

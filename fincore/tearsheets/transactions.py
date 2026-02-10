@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 交易相关的绘图和显示函数
 
@@ -7,18 +6,17 @@
 
 import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
-import seaborn as sns
 import pytz
+import seaborn as sns
+from matplotlib.ticker import FuncFormatter
 
-from fincore.utils import two_dec_places, get_month_end_freq
+from fincore.utils import get_month_end_freq, two_dec_places
 
 
-def plot_turnover(empyrical_instance, returns, transactions, positions,
-                  legend_loc='best', ax=None, **kwargs):
+def plot_turnover(empyrical_instance, returns, transactions, positions, legend_loc="best", ax=None, **kwargs):
     """
     Plots turnover vs. date.
 
@@ -58,24 +56,20 @@ def plot_turnover(empyrical_instance, returns, transactions, positions,
 
     df_turnover = empyrical_instance.get_turnover(positions, transactions)
     df_turnover_by_month = df_turnover.resample(get_month_end_freq()).mean()
-    df_turnover.plot(color='steelblue', alpha=1.0, lw=0.5, ax=ax, **kwargs)
-    df_turnover_by_month.plot(
-        color='orangered',
-        alpha=0.5,
-        lw=2,
-        ax=ax,
-        **kwargs)
-    ax.axhline(
-        df_turnover.mean(), color='steelblue', linestyle='--', lw=3, alpha=1.0)
-    ax.legend(['Daily turnover',
-               'Average daily turnover, by month',
-               'Average daily turnover, net'],
-              loc=legend_loc, frameon=True, framealpha=0.5)
-    ax.set_title('Daily turnover')
+    df_turnover.plot(color="steelblue", alpha=1.0, lw=0.5, ax=ax, **kwargs)
+    df_turnover_by_month.plot(color="orangered", alpha=0.5, lw=2, ax=ax, **kwargs)
+    ax.axhline(df_turnover.mean(), color="steelblue", linestyle="--", lw=3, alpha=1.0)
+    ax.legend(
+        ["Daily turnover", "Average daily turnover, by month", "Average daily turnover, net"],
+        loc=legend_loc,
+        frameon=True,
+        framealpha=0.5,
+    )
+    ax.set_title("Daily turnover")
     ax.set_xlim((returns.index[0], returns.index[-1]))
     ax.set_ylim((0, 2))
-    ax.set_ylabel('Turnover')
-    ax.set_xlabel('')
+    ax.set_ylabel("Turnover")
+    ax.set_xlabel("")
     return ax
 
 
@@ -107,17 +101,15 @@ def plot_daily_volume(empyrical_instance, returns, transactions, ax=None, **kwar
         ax = plt.gca()
     daily_txn = empyrical_instance.get_txn_vol(transactions)
     daily_txn.txn_shares.plot(alpha=1.0, lw=0.5, ax=ax, **kwargs)
-    ax.axhline(daily_txn.txn_shares.mean(), color='steelblue',
-               linestyle='--', lw=3, alpha=1.0)
-    ax.set_title('Daily trading volume')
+    ax.axhline(daily_txn.txn_shares.mean(), color="steelblue", linestyle="--", lw=3, alpha=1.0)
+    ax.set_title("Daily trading volume")
     ax.set_xlim((returns.index[0], returns.index[-1]))
-    ax.set_ylabel('Amount of shares traded')
-    ax.set_xlabel('')
+    ax.set_ylabel("Amount of shares traded")
+    ax.set_xlabel("")
     return ax
 
 
-def plot_daily_turnover_hist(empyrical_instance, transactions, positions,
-                             ax=None, **kwargs):
+def plot_daily_turnover_hist(empyrical_instance, transactions, positions, ax=None, **kwargs):
     """
     Plots a histogram of daily turnover rates.
 
@@ -143,13 +135,12 @@ def plot_daily_turnover_hist(empyrical_instance, transactions, positions,
         ax = plt.gca()
     turnover = empyrical_instance.get_turnover(positions, transactions)
     sns.histplot(turnover, ax=ax, kde=True, **kwargs)
-    ax.set_title('Distribution of daily turnover rates')
-    ax.set_xlabel('Turnover rate')
+    ax.set_title("Distribution of daily turnover rates")
+    ax.set_xlabel("Turnover rate")
     return ax
 
 
-def plot_txn_time_hist(transactions, bin_minutes=5, tz='America/New_York',
-                       ax=None, **kwargs):
+def plot_txn_time_hist(transactions, bin_minutes=5, tz="America/New_York", ax=None, **kwargs):
     """
     Plots a histogram of transaction times, binning the times into
     buckets of a given duration.
@@ -179,14 +170,12 @@ def plot_txn_time_hist(transactions, bin_minutes=5, tz='America/New_York',
 
     txn_time.index = txn_time.index.tz_convert(pytz.timezone(tz))
     txn_time.index = txn_time.index.map(lambda x: x.hour * 60 + x.minute)
-    txn_time['trade_value'] = (txn_time.amount * txn_time.price).abs()
+    txn_time["trade_value"] = (txn_time.amount * txn_time.price).abs()
     txn_time = txn_time.groupby(level=0).sum().reindex(index=range(570, 961))
     txn_time.index = (txn_time.index / bin_minutes).astype(int) * bin_minutes
     txn_time = txn_time.groupby(level=0).sum()
 
-    txn_time['time_str'] = txn_time.index.map(lambda x:
-                                              str(datetime.time(int(x / 60),
-                                                                x % 60))[:-3])
+    txn_time["time_str"] = txn_time.index.map(lambda x: str(datetime.time(int(x / 60), x % 60))[:-3])
 
     trade_value_sum = txn_time.trade_value.sum()
     txn_time.trade_value = txn_time.trade_value.fillna(0) / trade_value_sum
@@ -194,17 +183,17 @@ def plot_txn_time_hist(transactions, bin_minutes=5, tz='America/New_York',
     ax.bar(txn_time.index, txn_time.trade_value, width=bin_minutes, **kwargs)
 
     ax.set_xlim(570, 960)
-    ax.set_xticks(txn_time.index[::int(30 / bin_minutes)])
-    ax.set_xticklabels(txn_time.time_str[::int(30 / bin_minutes)])
-    ax.set_title('Transaction time distribution')
-    ax.set_ylabel('Proportion')
-    ax.set_xlabel('')
+    ax.set_xticks(txn_time.index[:: int(30 / bin_minutes)])
+    ax.set_xticklabels(txn_time.time_str[:: int(30 / bin_minutes)])
+    ax.set_title("Transaction time distribution")
+    ax.set_ylabel("Proportion")
+    ax.set_xlabel("")
     return ax
 
 
-def plot_slippage_sweep(empyrical_instance, returns, positions, transactions,
-                        slippage_params=(3, 8, 10, 12, 15, 20, 50),
-                        ax=None, **_kwargs):
+def plot_slippage_sweep(
+    empyrical_instance, returns, positions, transactions, slippage_params=(3, 8, 10, 12, 15, 20, 50), ax=None, **_kwargs
+):
     """
     Plots equity curves at different per-dollar slippage assumptions.
 
@@ -237,23 +226,21 @@ def plot_slippage_sweep(empyrical_instance, returns, positions, transactions,
 
     slippage_sweep = pd.DataFrame()
     for bps in slippage_params:
-        adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions,
-                                                                     transactions, bps)
+        adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions, transactions, bps)
         label = str(bps) + " bps"
         slippage_sweep[label] = empyrical_instance.cum_returns(adj_returns, 1)
 
     slippage_sweep.plot(alpha=1.0, lw=0.5, ax=ax)
 
-    ax.set_title('Cumulative returns given additional per-dollar slippage')
-    ax.set_ylabel('')
+    ax.set_title("Cumulative returns given additional per-dollar slippage")
+    ax.set_ylabel("")
 
-    ax.legend(loc='center left', frameon=True, framealpha=0.5)
+    ax.legend(loc="center left", frameon=True, framealpha=0.5)
 
     return ax
 
 
-def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactions,
-                              ax=None, **_kwargs):
+def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactions, ax=None, **_kwargs):
     """
     Plots curve relating per-dollar slippage to average annual returns.
 
@@ -283,16 +270,15 @@ def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactio
 
     avg_returns_given_slippage = pd.Series()
     for bps in range(1, 100):
-        adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions,
-                                                                     transactions, bps)
+        adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions, transactions, bps)
         avg_returns = empyrical_instance.annual_return(adj_returns)
         avg_returns_given_slippage.loc[bps] = avg_returns
 
     avg_returns_given_slippage.plot(alpha=1.0, lw=2, ax=ax)
 
-    ax.set_title('Average annual returns given additional per-dollar slippage')
+    ax.set_title("Average annual returns given additional per-dollar slippage")
     ax.set_xticks(np.arange(0, 100, 10))
-    ax.set_ylabel('Average annual return')
-    ax.set_xlabel('Per-dollar slippage (bps)')
+    ax.set_ylabel("Average annual return")
+    ax.set_xlabel("Per-dollar slippage (bps)")
 
     return ax

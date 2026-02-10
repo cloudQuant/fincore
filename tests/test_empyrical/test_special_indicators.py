@@ -1,11 +1,11 @@
 """
 Tests for special indicators.
 """
-from __future__ import division
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from unittest import TestCase
 
 from fincore.empyrical import Empyrical
 
@@ -18,26 +18,27 @@ class TestSpecialIndicators(TestCase):
     # Standard returns
     normal_returns = pd.Series(
         np.array([0.5, -0.3, 0.4, -0.2, 0.3, 0.1, -0.1, 0.2, -0.2, 0.3]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # Returns with some extreme values
     extreme_returns = pd.Series(
         np.array([0.5, -0.3, 5.0, -0.2, 0.3, -4.0, 0.1, 0.2, -0.2, 0.3]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # Multi-year returns for RAR
-    multi_year_returns = pd.Series(
-        np.random.randn(500) / 100,
-        index=pd.date_range('2020-1-1', periods=500, freq='D'))
+    multi_year_returns = pd.Series(np.random.randn(500) / 100, index=pd.date_range("2020-1-1", periods=500, freq="D"))
 
     multi_year_market = pd.Series(
-        np.random.randn(500) / 100 * 0.8,
-        index=pd.date_range('2020-1-1', periods=500, freq='D'))
+        np.random.randn(500) / 100 * 0.8, index=pd.date_range("2020-1-1", periods=500, freq="D")
+    )
 
     # Positive returns
     positive_returns = pd.Series(
-        np.array([1., 2., 1., 1., 1., 1., 1., 1., 1., 1.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     empty_returns = pd.Series([], dtype=float)
 
@@ -99,30 +100,21 @@ class TestSpecialIndicators(TestCase):
     def test_regression_annual_return(self):
         """Test regression annual return calculation."""
         emp = Empyrical()
-        result = emp.regression_annual_return(
-            self.multi_year_returns,
-            self.multi_year_market
-        )
+        result = emp.regression_annual_return(self.multi_year_returns, self.multi_year_market)
         # Should return a valid number
         assert isinstance(result, (float, np.floating))
 
     def test_regression_annual_return_empty(self):
         """Test that empty returns give NaN."""
         emp = Empyrical()
-        result = emp.regression_annual_return(
-            self.empty_returns,
-            self.multi_year_market
-        )
+        result = emp.regression_annual_return(self.empty_returns, self.multi_year_market)
         assert np.isnan(result)
 
     # Test R-cubed
     def test_r_cubed(self):
         """Test R-cubed calculation."""
         emp = Empyrical()
-        result = emp.r_cubed(
-            self.multi_year_returns,
-            self.multi_year_market
-        )
+        result = emp.r_cubed(self.multi_year_returns, self.multi_year_market)
         # Should return a valid number
         assert isinstance(result, (float, np.floating))
         if not np.isnan(result):
@@ -149,17 +141,11 @@ class TestSpecialIndicators(TestCase):
     def test_conditional_sharpe_custom_cutoff(self):
         """Test conditional Sharpe with custom cutoff."""
         emp = Empyrical()
-        result = emp.conditional_sharpe_ratio(
-            self.normal_returns,
-            cutoff=0.01
-        )
+        result = emp.conditional_sharpe_ratio(self.normal_returns, cutoff=0.01)
         assert isinstance(result, (float, np.floating))
 
     def test_var_excess_return_custom_cutoff(self):
         """Test VaR excess return with custom cutoff."""
         emp = Empyrical()
-        result = emp.var_excess_return(
-            self.normal_returns,
-            cutoff=0.01
-        )
+        result = emp.var_excess_return(self.normal_returns, cutoff=0.01)
         assert isinstance(result, (float, np.floating))

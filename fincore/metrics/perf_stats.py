@@ -16,30 +16,30 @@
 
 """绩效统计函数模块."""
 
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-from collections import OrderedDict
+
 from fincore.constants import DAILY
-from fincore.metrics.yearly import annual_return
-from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.basic import annualization_factor
-from fincore.metrics.risk import annual_volatility
-from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, calmar_ratio, omega_ratio
-from fincore.utils import nanmean, nanstd
 from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.stats import skewness, kurtosis, stability_of_timeseries
-from fincore.metrics.risk import tail_ratio, value_at_risk
+from fincore.metrics.ratios import calmar_ratio, omega_ratio, sharpe_ratio, sortino_ratio
+from fincore.metrics.returns import cum_returns_final
+from fincore.metrics.risk import annual_volatility, tail_ratio, value_at_risk
+from fincore.metrics.stats import kurtosis, skewness, stability_of_timeseries
+from fincore.metrics.yearly import annual_return
+from fincore.utils import nanmean, nanstd
 
 __all__ = [
-    'perf_stats',
-    'perf_stats_bootstrap',
-    'calc_bootstrap',
-    'calc_distribution_stats',
+    "perf_stats",
+    "perf_stats_bootstrap",
+    "calc_bootstrap",
+    "calc_distribution_stats",
 ]
 
 
-def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
-               turnover_denom='AGB', period=DAILY):
+def perf_stats(returns, factor_returns=None, positions=None, transactions=None, turnover_denom="AGB", period=DAILY):
     """Calculate various performance metrics of a strategy.
 
     Parameters
@@ -74,26 +74,27 @@ def perf_stats(returns, factor_returns=None, positions=None, transactions=None,
     mean_ret = nanmean(returns_arr, axis=0)
     sqrt_ann = np.sqrt(ann_factor)
 
-    stats['Annual return'] = ann_ret
-    stats['Cumulative returns'] = cum_returns_final(returns, starting_value=0)
-    stats['Annual volatility'] = std_ret * sqrt_ann
-    with np.errstate(divide='ignore', invalid='ignore'):
-        stats['Sharpe ratio'] = (mean_ret / std_ret) * sqrt_ann if len(returns) >= 2 else np.nan
-    stats['Calmar ratio'] = calmar_ratio(returns, period=period)
-    stats['Stability'] = stability_of_timeseries(returns)
-    stats['Max drawdown'] = mdd
-    stats['Omega ratio'] = omega_ratio(returns)
-    stats['Sortino ratio'] = sortino_ratio(returns, period=period)
-    stats['Skew'] = skewness(returns)
-    stats['Kurtosis'] = kurtosis(returns)
-    stats['Tail ratio'] = tail_ratio(returns)
-    stats['Daily value at risk'] = value_at_risk(returns)
+    stats["Annual return"] = ann_ret
+    stats["Cumulative returns"] = cum_returns_final(returns, starting_value=0)
+    stats["Annual volatility"] = std_ret * sqrt_ann
+    with np.errstate(divide="ignore", invalid="ignore"):
+        stats["Sharpe ratio"] = (mean_ret / std_ret) * sqrt_ann if len(returns) >= 2 else np.nan
+    stats["Calmar ratio"] = calmar_ratio(returns, period=period)
+    stats["Stability"] = stability_of_timeseries(returns)
+    stats["Max drawdown"] = mdd
+    stats["Omega ratio"] = omega_ratio(returns)
+    stats["Sortino ratio"] = sortino_ratio(returns, period=period)
+    stats["Skew"] = skewness(returns)
+    stats["Kurtosis"] = kurtosis(returns)
+    stats["Tail ratio"] = tail_ratio(returns)
+    stats["Daily value at risk"] = value_at_risk(returns)
 
     if factor_returns is not None:
         from fincore.metrics.alpha_beta import alpha_beta
+
         ab = alpha_beta(returns, factor_returns)
-        stats['Alpha'] = ab[0]
-        stats['Beta'] = ab[1]
+        stats["Alpha"] = ab[0]
+        stats["Beta"] = ab[1]
 
     return pd.Series(stats)
 
@@ -124,11 +125,12 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
         - Bootstrap samples for each performance metric.
     """
     from scipy import stats as scipy_stats
-    from fincore.constants.style import SIMPLE_STAT_FUNCS, FACTOR_STAT_FUNCS, STAT_FUNC_NAMES
+
+    from fincore.constants.style import FACTOR_STAT_FUNCS, SIMPLE_STAT_FUNCS, STAT_FUNC_NAMES
+    from fincore.metrics.alpha_beta import alpha, beta
     from fincore.metrics.ratios import omega_ratio, tail_ratio
     from fincore.metrics.risk import value_at_risk
     from fincore.metrics.stats import stability_of_timeseries
-    from fincore.metrics.alpha_beta import alpha, beta
 
     bootstrap_values = OrderedDict()
 
@@ -147,19 +149,19 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
 
             # Map to local functions
             func_map = {
-                'annual_return': annual_return,
-                'cum_returns_final': cum_returns_final,
-                'annual_volatility': annual_volatility,
-                'sharpe_ratio': sharpe_ratio,
-                'calmar_ratio': calmar_ratio,
-                'stability_of_timeseries': stability_of_timeseries,
-                'max_drawdown': max_drawdown,
-                'omega_ratio': omega_ratio,
-                'sortino_ratio': sortino_ratio,
-                'tail_ratio': tail_ratio,
-                'value_at_risk': value_at_risk,
-                'alpha': alpha,
-                'beta': beta,
+                "annual_return": annual_return,
+                "cum_returns_final": cum_returns_final,
+                "annual_volatility": annual_volatility,
+                "sharpe_ratio": sharpe_ratio,
+                "calmar_ratio": calmar_ratio,
+                "stability_of_timeseries": stability_of_timeseries,
+                "max_drawdown": max_drawdown,
+                "omega_ratio": omega_ratio,
+                "sortino_ratio": sortino_ratio,
+                "tail_ratio": tail_ratio,
+                "value_at_risk": value_at_risk,
+                "alpha": alpha,
+                "beta": beta,
             }
             stat_func = func_map.get(stat_entry)
             if stat_func is not None:
@@ -182,9 +184,7 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
             if stat_func is None:
                 continue
             stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
-            bootstrap_values[stat_name] = calc_bootstrap(
-                stat_func, returns, factor_returns=factor_returns
-            )
+            bootstrap_values[stat_name] = calc_bootstrap(stat_func, returns, factor_returns=factor_returns)
 
     bootstrap_values = pd.DataFrame(bootstrap_values)
 

@@ -20,16 +20,16 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    'daily_txns_with_bar_data',
-    'days_to_liquidate_positions',
-    'get_max_days_to_liquidate_by_ticker',
-    'get_low_liquidity_transactions',
-    'apply_slippage_penalty',
-    'map_transaction',
-    'make_transaction_frame',
-    'get_txn_vol',
-    'adjust_returns_for_slippage',
-    'get_turnover',
+    "daily_txns_with_bar_data",
+    "days_to_liquidate_positions",
+    "get_max_days_to_liquidate_by_ticker",
+    "get_low_liquidity_transactions",
+    "apply_slippage_penalty",
+    "map_transaction",
+    "make_transaction_frame",
+    "get_txn_vol",
+    "adjust_returns_for_slippage",
+    "get_turnover",
 ]
 
 
@@ -55,9 +55,7 @@ def daily_txns_with_bar_data(transactions, market_data):
     """
     transactions.index.name = "date"
     txn_daily = pd.DataFrame(
-        transactions.assign(amount=abs(transactions.amount))
-        .groupby(["symbol", pd.Grouper(freq="D")])
-        .sum()["amount"]
+        transactions.assign(amount=abs(transactions.amount)).groupby(["symbol", pd.Grouper(freq="D")]).sum()["amount"]
     )
     txn_daily["price"] = market_data["price"].unstack()
     txn_daily["volume"] = market_data["volume"].unstack()
@@ -67,7 +65,9 @@ def daily_txns_with_bar_data(transactions, market_data):
     return txn_daily
 
 
-def days_to_liquidate_positions(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5):
+def days_to_liquidate_positions(
+    positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5
+):
     """Compute the number of days required to fully liquidate each position.
 
     Parameters
@@ -89,23 +89,21 @@ def days_to_liquidate_positions(positions, market_data, max_bar_consumption=0.2,
         Number of days required to fully liquidate daily positions.
     """
     dv = market_data["volume"] * market_data["price"]
-    roll_mean_dv = (
-        dv.rolling(window=mean_volume_window, center=False).mean().shift()
-    )
+    roll_mean_dv = dv.rolling(window=mean_volume_window, center=False).mean().shift()
     roll_mean_dv = roll_mean_dv.replace(0, np.nan)
 
     positions_alloc = get_percent_alloc(positions)
     if "cash" in positions_alloc.columns:
         positions_alloc = positions_alloc.drop("cash", axis=1)
 
-    days_to_liquidate = (positions_alloc * capital_base) / (
-        max_bar_consumption * roll_mean_dv
-    )
+    days_to_liquidate = (positions_alloc * capital_base) / (max_bar_consumption * roll_mean_dv)
 
     return days_to_liquidate.iloc[mean_volume_window:]
 
 
-def get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5, last_n_days=None):
+def get_max_days_to_liquidate_by_ticker(
+    positions, market_data, max_bar_consumption=0.2, capital_base=1e6, mean_volume_window=5, last_n_days=None
+):
     """Find the longest estimated liquidation time for each traded name.
 
     Parameters
@@ -137,7 +135,7 @@ def get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumpt
     )
 
     if last_n_days is not None:
-        dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days):]
+        dtlp = dtlp.loc[dtlp.index.max() - pd.Timedelta(days=last_n_days) :]
 
     pos_alloc = get_percent_alloc(positions)
     if "cash" in pos_alloc.columns:
@@ -148,12 +146,7 @@ def get_max_days_to_liquidate_by_ticker(positions, market_data, max_bar_consumpt
     liq_desc["pos_alloc_pct"] = pos_alloc.unstack() * 100
     liq_desc.index = liq_desc.index.set_names(["symbol", "date"])
 
-    worst_liq = (
-        liq_desc.reset_index()
-        .sort_values("days_to_liquidate", ascending=False)
-        .groupby("symbol")
-        .first()
-    )
+    worst_liq = liq_desc.reset_index().sort_values("days_to_liquidate", ascending=False).groupby("symbol").first()
 
     return worst_liq
 
@@ -183,14 +176,9 @@ def get_low_liquidity_transactions(transactions, market_data, last_n_days=None):
         md = txn_daily_w_bar.date.max() - pd.Timedelta(days=last_n_days)
         txn_daily_w_bar = txn_daily_w_bar[txn_daily_w_bar.date > md]
 
-    bar_consumption = (
-        txn_daily_w_bar.assign(
-            max_pct_bar_consumed=(
-                txn_daily_w_bar.amount / txn_daily_w_bar.volume
-            )
-            * 100
-        ).sort_values("max_pct_bar_consumed", ascending=False)
-    )
+    bar_consumption = txn_daily_w_bar.assign(
+        max_pct_bar_consumed=(txn_daily_w_bar.amount / txn_daily_w_bar.volume) * 100
+    ).sort_values("max_pct_bar_consumed", ascending=False)
     max_bar_consumption = bar_consumption.groupby("symbol").first()
 
     return max_bar_consumption[["date", "max_pct_bar_consumed"]]
@@ -224,9 +212,7 @@ def apply_slippage_penalty(returns, txn_daily, simulate_starting_capital, backte
     simulate_traded_dollars = txn_daily.price * simulate_traded_shares
     simulate_pct_volume_used = simulate_traded_shares / txn_daily.volume
 
-    penalties = (
-        simulate_pct_volume_used**2 * impact * simulate_traded_dollars
-    )
+    penalties = simulate_pct_volume_used**2 * impact * simulate_traded_dollars
 
     daily_penalty = penalties.resample("D").sum()
     daily_penalty = daily_penalty.reindex(returns.index)
@@ -258,6 +244,7 @@ def get_percent_alloc(values):
         Positions and their allocations.
     """
     from fincore.metrics.positions import get_percent_alloc as _gpa
+
     return _gpa(values)
 
 
@@ -275,11 +262,11 @@ def map_transaction(txn):
         Standardized transaction dictionary.
     """
     return {
-        'amount': txn.get('amount', 0),
-        'price': txn.get('price', 0),
-        'sid': txn.get('sid', None),
-        'symbol': txn.get('symbol', ''),
-        'dt': txn.get('dt', None),
+        "amount": txn.get("amount", 0),
+        "price": txn.get("price", 0),
+        "sid": txn.get("sid", None),
+        "symbol": txn.get("symbol", ""),
+        "dt": txn.get("dt", None),
     }
 
 
@@ -302,8 +289,8 @@ def make_transaction_frame(transactions):
     txns = [map_transaction(t) for t in transactions]
     df = pd.DataFrame(txns)
 
-    if 'dt' in df.columns:
-        df = df.set_index('dt')
+    if "dt" in df.columns:
+        df = df.set_index("dt")
 
     return df
 
@@ -402,17 +389,17 @@ def get_turnover(positions, transactions, denominator="AGB"):
         denom = positions.sum(axis=1)
     else:
         raise ValueError(
-            "Unexpected value for denominator '{}'. The "
+            f"Unexpected value for denominator '{denominator}'. The "
             "denominator parameter must be either 'AGB'"
-            " or 'portfolio_value'.".format(denominator)
+            " or 'portfolio_value'."
         )
 
     denom.index = denom.index.normalize()
     turnover = traded_value.div(denom, axis="index")
     # 处理 inf 的值，避免画图的时候出错
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", FutureWarning)
-        turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects(copy=False)
+        warnings.simplefilter("ignore")
+        turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects()
     turnover = turnover.fillna(0)
     turnover = turnover.astype("float")
     return turnover

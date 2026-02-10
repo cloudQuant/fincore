@@ -16,18 +16,20 @@
 
 """市场时机函数模块."""
 
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-from collections import OrderedDict
-from fincore.metrics.basic import aligned_series
+
 from fincore.constants.interesting_periods import PERIODS
+from fincore.metrics.basic import aligned_series
 
 __all__ = [
-    'treynor_mazuy_timing',
-    'henriksson_merton_timing',
-    'market_timing_return',
-    'cornell_timing',
-    'extract_interesting_date_ranges',
+    "treynor_mazuy_timing",
+    "henriksson_merton_timing",
+    "market_timing_return",
+    "cornell_timing",
+    "extract_interesting_date_ranges",
 ]
 
 
@@ -64,9 +66,7 @@ def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
     factor_squared = excess_factor**2
 
     try:
-        design_matrix = np.column_stack(
-            [np.ones(len(excess_factor)), excess_factor, factor_squared]
-        )
+        design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, factor_squared])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
         return coeffs[2]  # gamma coefficient
     except Exception:
@@ -106,9 +106,7 @@ def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
     down_market = (excess_factor < 0).astype(float)
 
     try:
-        design_matrix = np.column_stack(
-            [np.ones(len(excess_factor)), excess_factor, down_market]
-        )
+        design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, down_market])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
         return coeffs[2]  # gamma coefficient
     except Exception:
@@ -196,11 +194,13 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
         excess_market_positive = np.maximum(0, excess_market)
         excess_market_negative = np.minimum(0, excess_market)
 
-        design_matrix = np.column_stack([
-            np.ones(len(excess_market)),
-            excess_market_positive,
-            excess_market_negative,
-        ])
+        design_matrix = np.column_stack(
+            [
+                np.ones(len(excess_market)),
+                excess_market_positive,
+                excess_market_negative,
+            ]
+        )
 
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
 

@@ -27,6 +27,7 @@
         output="report.pdf",
     )
 """
+
 from __future__ import annotations
 
 import warnings
@@ -40,10 +41,10 @@ import pandas as pd
 def create_strategy_report(
     returns: pd.Series,
     *,
-    benchmark_rets: Optional[pd.Series] = None,
-    positions: Optional[pd.DataFrame] = None,
-    transactions: Optional[pd.DataFrame] = None,
-    trades: Optional[pd.DataFrame] = None,
+    benchmark_rets: pd.Series | None = None,
+    positions: pd.DataFrame | None = None,
+    transactions: pd.DataFrame | None = None,
+    trades: pd.DataFrame | None = None,
     title: str = "Strategy Report",
     output: str = "report.html",
     rolling_window: int = 63,
@@ -77,15 +78,25 @@ def create_strategy_report(
     """
     if output.lower().endswith(".pdf"):
         return _generate_pdf(
-            returns, benchmark_rets=benchmark_rets, positions=positions,
-            transactions=transactions, trades=trades, title=title,
-            output=output, rolling_window=rolling_window,
+            returns,
+            benchmark_rets=benchmark_rets,
+            positions=positions,
+            transactions=transactions,
+            trades=trades,
+            title=title,
+            output=output,
+            rolling_window=rolling_window,
         )
     else:
         return _generate_html(
-            returns, benchmark_rets=benchmark_rets, positions=positions,
-            transactions=transactions, trades=trades, title=title,
-            output=output, rolling_window=rolling_window,
+            returns,
+            benchmark_rets=benchmark_rets,
+            positions=positions,
+            transactions=transactions,
+            trades=trades,
+            title=title,
+            output=output,
+            rolling_window=rolling_window,
         )
 
 
@@ -93,8 +104,14 @@ def create_strategy_report(
 # 内部：计算引擎
 # =========================================================================
 
+
 def _compute_sections(
-    returns, benchmark_rets, positions, transactions, trades, rolling_window,
+    returns,
+    benchmark_rets,
+    positions,
+    transactions,
+    trades,
+    rolling_window,
 ):
     """计算所有需要的统计数据，返回 sections dict。"""
     from fincore import Empyrical
@@ -184,20 +201,18 @@ def _compute_sections(
     cum_ret_0 = Empyrical.cum_returns(returns, starting_value=0)
     running_max = (1 + cum_ret_0).cummax()
     sections["drawdown"] = (1 + cum_ret_0) / running_max - 1
-    sections["rolling_sharpe"] = Empyrical.rolling_sharpe(
-        returns, rolling_sharpe_window=rolling_window
-    )
-    sections["rolling_volatility"] = Empyrical.rolling_volatility(
-        returns, rolling_vol_window=rolling_window
-    )
+    sections["rolling_sharpe"] = Empyrical.rolling_sharpe(returns, rolling_sharpe_window=rolling_window)
+    sections["rolling_volatility"] = Empyrical.rolling_volatility(returns, rolling_vol_window=rolling_window)
     sections["dd_table"] = Empyrical.gen_drawdown_table(returns, top=5)
 
     # ------ 按年统计 ------
-    sections["yearly_stats"] = pd.DataFrame({
-        "Annual Return": Empyrical.annual_return_by_year(returns),
-        "Sharpe Ratio": Empyrical.sharpe_ratio_by_year(returns),
-        "Max Drawdown": Empyrical.max_drawdown_by_year(returns),
-    })
+    sections["yearly_stats"] = pd.DataFrame(
+        {
+            "Annual Return": Empyrical.annual_return_by_year(returns),
+            "Sharpe Ratio": Empyrical.sharpe_ratio_by_year(returns),
+            "Max Drawdown": Empyrical.max_drawdown_by_year(returns),
+        }
+    )
     # ------ 按月统计 ------
     sections["monthly_returns"] = Empyrical.aggregate_returns(returns, "monthly")
     # 按月收益统计
@@ -229,7 +244,9 @@ def _compute_sections(
 
         sections["benchmark_cum"] = Empyrical.cum_returns(benchmark_rets, starting_value=1.0)
         sections["rolling_beta"] = Empyrical.rolling_beta(
-            returns, benchmark_rets, rolling_window=rolling_window,
+            returns,
+            benchmark_rets,
+            rolling_window=rolling_window,
         )
 
     # ------ Positions 相关 ------
@@ -272,9 +289,7 @@ def _compute_sections(
         txn_norm = txn.copy()
         txn_norm.index = txn_norm.index.normalize()
         sections["daily_txn_count"] = txn_norm.groupby(txn_norm.index).size()
-        sections["daily_txn_value"] = (
-            txn_norm["amount"].abs() * txn_norm["price"]
-        ).groupby(txn_norm.index).sum()
+        sections["daily_txn_value"] = (txn_norm["amount"].abs() * txn_norm["price"]).groupby(txn_norm.index).sum()
 
         # 交易时间分布（小时）
         if hasattr(txn.index, "hour"):
@@ -465,38 +480,56 @@ def _metric_cards(d, keys, pct_keys=None):
         css = _css_class(v)
         pct = k in pct_keys
         cards.append(
-            f'<div class="card"><div class="val {css}">{_fmt(v, pct=pct)}</div>'
-            f'<div class="lbl">{k}</div></div>'
+            f'<div class="card"><div class="val {css}">{_fmt(v, pct=pct)}</div><div class="lbl">{k}</div></div>'
         )
     return '<div class="cards">' + "\n".join(cards) + "</div>"
 
 
-def _generate_html(returns, benchmark_rets, positions, transactions, trades,
-                   title, output, rolling_window):
+def _generate_html(returns, benchmark_rets, positions, transactions, trades, title, output, rolling_window):
     """生成 HTML 报告。"""
-    s = _compute_sections(returns, benchmark_rets, positions, transactions,
-                          trades, rolling_window)
+    s = _compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
 
     parts = []
     parts.append(f"<h1>{title}</h1>")
-    parts.append(f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]} '
-                 f'| {s["n_days"]} trading days | ~{s["n_months"]} months</div>')
+    parts.append(
+        f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]} '
+        f"| {s['n_days']} trading days | ~{s['n_months']} months</div>"
+    )
 
     # --- 核心指标卡片 ---
-    parts.append(_metric_cards(
-        s["perf_stats"],
-        ["Sharpe Ratio", "Annual Return", "Max Drawdown", "Annual Volatility",
-         "Sortino Ratio", "Calmar Ratio", "Omega Ratio", "Stability"],
-        pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
-    ))
+    parts.append(
+        _metric_cards(
+            s["perf_stats"],
+            [
+                "Sharpe Ratio",
+                "Annual Return",
+                "Max Drawdown",
+                "Annual Volatility",
+                "Sortino Ratio",
+                "Calmar Ratio",
+                "Omega Ratio",
+                "Stability",
+            ],
+            pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
+        )
+    )
 
     # --- 绩效统计 ---
     parts.append('<div class="two-col"><div class="section">')
     parts.append("<h2>Performance Statistics</h2>")
-    pct_keys = {"Annual Return", "Cumulative Returns", "Annual Volatility",
-                "Max Drawdown", "Downside Risk", "Daily Value at Risk",
-                "Daily Mean Return", "Daily Std Return", "Best Day", "Worst Day",
-                "Avg Daily Turnover"}
+    pct_keys = {
+        "Annual Return",
+        "Cumulative Returns",
+        "Annual Volatility",
+        "Max Drawdown",
+        "Downside Risk",
+        "Daily Value at Risk",
+        "Daily Mean Return",
+        "Daily Std Return",
+        "Best Day",
+        "Worst Day",
+        "Avg Daily Turnover",
+    }
     parts.append(_dict_to_table(s["perf_stats"], pct_keys=pct_keys))
     parts.append("</div><div class='section'>")
     parts.append("<h2>Extended Risk Metrics</h2>")
@@ -508,10 +541,10 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades,
     parts.append("<h2>Return Quantiles</h2>")
     q = s["return_quantiles"]
     q_rows = "".join(
-        f'<tr class="quantile-row"><td>{p}</td><td class="{_css_class(v)}">{v*100:.4f}%</td></tr>'
+        f'<tr class="quantile-row"><td>{p}</td><td class="{_css_class(v)}">{v * 100:.4f}%</td></tr>'
         for p, v in q.items()
     )
-    parts.append(f'<table><tr><th>Percentile</th><th>Return</th></tr>{q_rows}</table>')
+    parts.append(f"<table><tr><th>Percentile</th><th>Return</th></tr>{q_rows}</table>")
     parts.append("</div>")
 
     # --- 月/年极值 ---
@@ -530,11 +563,21 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades,
     if "benchmark_stats" in s:
         parts.append('<div class="section">')
         parts.append("<h2>Benchmark Comparison</h2>")
-        parts.append(_metric_cards(
-            s["benchmark_stats"],
-            ["Alpha", "Beta", "Information Ratio", "Tracking Error",
-             "Up Capture", "Down Capture", "Capture Ratio", "Correlation"],
-        ))
+        parts.append(
+            _metric_cards(
+                s["benchmark_stats"],
+                [
+                    "Alpha",
+                    "Beta",
+                    "Information Ratio",
+                    "Tracking Error",
+                    "Up Capture",
+                    "Down Capture",
+                    "Capture Ratio",
+                    "Correlation",
+                ],
+            )
+        )
         parts.append(_dict_to_table(s["benchmark_stats"]))
         parts.append("</div>")
 
@@ -565,10 +608,12 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades,
     if "has_positions" in s:
         parts.append('<div class="section">')
         parts.append("<h2>Position Analysis</h2>")
-        parts.append(_metric_cards(
-            s["position_summary"],
-            list(s["position_summary"].keys()),
-        ))
+        parts.append(
+            _metric_cards(
+                s["position_summary"],
+                list(s["position_summary"].keys()),
+            )
+        )
         parts.append(_dict_to_table(s["position_summary"]))
         parts.append("</div>")
 
@@ -585,21 +630,17 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades,
         parts.append("<h2>Trade Statistics</h2>")
         ts = s["trade_stats"]
         pct_keys_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
-        card_keys = ["Total Trades", "Win Rate", "Profit/Loss Ratio",
-                     "Total PnL", "Expectancy", "Avg PnL per Trade"]
+        card_keys = ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"]
         parts.append(_metric_cards(ts, card_keys, pct_keys=pct_keys_t))
         parts.append(_dict_to_table(ts, pct_keys=pct_keys_t))
         parts.append("</div>")
 
     # --- Footer ---
-    parts.append('<div class="footer">Generated by <strong>fincore</strong> | '
-                 'create_strategy_report()</div>')
+    parts.append('<div class="footer">Generated by <strong>fincore</strong> | create_strategy_report()</div>')
 
     html = (
         "<!DOCTYPE html>\n<html lang='zh'><head><meta charset='utf-8'>\n"
-        f"<title>{title}</title>\n{_HTML_CSS}\n</head>\n<body>\n"
-        + "\n".join(parts)
-        + "\n</body></html>"
+        f"<title>{title}</title>\n{_HTML_CSS}\n</head>\n<body>\n" + "\n".join(parts) + "\n</body></html>"
     )
 
     with open(output, "w", encoding="utf-8") as f:
@@ -612,18 +653,18 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades,
 # PDF 报告生成
 # =========================================================================
 
-def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
-                  title, output, rolling_window):
+
+def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, title, output, rolling_window):
     """生成 PDF 报告（使用 matplotlib）。"""
     import matplotlib
+
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
     import matplotlib.colors as mcolors
+    import matplotlib.gridspec as gridspec
+    import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
 
-    s = _compute_sections(returns, benchmark_rets, positions, transactions,
-                          trades, rolling_window)
+    s = _compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
 
     pdf = PdfPages(output)
     page_count = 0
@@ -644,8 +685,7 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
         for k, v in d.items():
             pct = k in pct_keys
             cell_text.append([k, _fmt(v, pct=pct)])
-        tbl = ax.table(cellText=cell_text, colLabels=["Metric", "Value"],
-                       cellLoc="center", loc="center")
+        tbl = ax.table(cellText=cell_text, colLabels=["Metric", "Value"], cellLoc="center", loc="center")
         tbl.auto_set_font_size(False)
         tbl.set_fontsize(9)
         tbl.scale(1.2, 1.4)
@@ -666,24 +706,35 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
                 else:
                     cells.append(str(v))
             cell_text.append(cells)
-        tbl = ax.table(cellText=cell_text,
-                       rowLabels=[str(i) for i in df.index],
-                       colLabels=[str(c) for c in df.columns],
-                       cellLoc="center", loc="center")
+        tbl = ax.table(
+            cellText=cell_text,
+            rowLabels=[str(i) for i in df.index],
+            colLabels=[str(c) for c in df.columns],
+            cellLoc="center",
+            loc="center",
+        )
         tbl.auto_set_font_size(False)
         tbl.set_fontsize(9)
         tbl.scale(1.1, 1.4)
         fig.tight_layout()
         return fig
 
-    pct_perf = {"Annual Return", "Cumulative Returns", "Annual Volatility",
-                "Max Drawdown", "Downside Risk", "Daily Value at Risk",
-                "Daily Mean Return", "Daily Std Return", "Best Day", "Worst Day",
-                "Avg Daily Turnover"}
+    pct_perf = {
+        "Annual Return",
+        "Cumulative Returns",
+        "Annual Volatility",
+        "Max Drawdown",
+        "Downside Risk",
+        "Daily Value at Risk",
+        "Daily Mean Return",
+        "Daily Std Return",
+        "Best Day",
+        "Worst Day",
+        "Avg Daily Turnover",
+    }
 
     # === P1: Performance Statistics ===
-    save_page(dict_to_fig(s["perf_stats"],
-              f"{title}\nPerformance Statistics", pct_keys=pct_perf))
+    save_page(dict_to_fig(s["perf_stats"], f"{title}\nPerformance Statistics", pct_keys=pct_perf))
 
     # === P2: Extended Metrics ===
     save_page(dict_to_fig(s["extended_stats"], "Extended Risk Metrics"))
@@ -703,19 +754,36 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
     gs = gridspec.GridSpec(2, 1, hspace=0.35)
 
     ax1 = fig.add_subplot(gs[0])
-    ax1.plot(s["cum_returns"].index, s["cum_returns"].values,
-             color="steelblue", linewidth=1.2, label="Strategy")
+    ax1.plot(s["cum_returns"].index, s["cum_returns"].values, color="steelblue", linewidth=1.2, label="Strategy")
     if "benchmark_cum" in s:
-        ax1.plot(s["benchmark_cum"].index, s["benchmark_cum"].values,
-                 color="gray", linewidth=0.9, alpha=0.7, label="Benchmark")
+        ax1.plot(
+            s["benchmark_cum"].index,
+            s["benchmark_cum"].values,
+            color="gray",
+            linewidth=0.9,
+            alpha=0.7,
+            label="Benchmark",
+        )
         ax1.legend()
     ax1.axhline(y=1.0, color="gray", linestyle="--", linewidth=0.6)
     ax1.set_title("Cumulative Returns", fontsize=12, fontweight="bold")
     ax1.set_ylabel("Growth of $1")
-    ax1.fill_between(s["cum_returns"].index, 1.0, s["cum_returns"].values,
-                     where=s["cum_returns"].values >= 1.0, alpha=0.1, color="green")
-    ax1.fill_between(s["cum_returns"].index, 1.0, s["cum_returns"].values,
-                     where=s["cum_returns"].values < 1.0, alpha=0.1, color="red")
+    ax1.fill_between(
+        s["cum_returns"].index,
+        1.0,
+        s["cum_returns"].values,
+        where=s["cum_returns"].values >= 1.0,
+        alpha=0.1,
+        color="green",
+    )
+    ax1.fill_between(
+        s["cum_returns"].index,
+        1.0,
+        s["cum_returns"].values,
+        where=s["cum_returns"].values < 1.0,
+        alpha=0.1,
+        color="red",
+    )
     ax1.grid(True, alpha=0.3)
 
     ax2 = fig.add_subplot(gs[1], sharex=ax1)
@@ -729,11 +797,16 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
 
     # === P7: Cumulative Returns (Log Scale) ===
     fig, ax = plt.subplots(figsize=(14, 5))
-    ax.semilogy(s["cum_returns"].index, s["cum_returns"].values,
-                color="steelblue", linewidth=1.2, label="Strategy")
+    ax.semilogy(s["cum_returns"].index, s["cum_returns"].values, color="steelblue", linewidth=1.2, label="Strategy")
     if "benchmark_cum" in s:
-        ax.semilogy(s["benchmark_cum"].index, s["benchmark_cum"].values,
-                    color="gray", linewidth=0.9, alpha=0.7, label="Benchmark")
+        ax.semilogy(
+            s["benchmark_cum"].index,
+            s["benchmark_cum"].values,
+            color="gray",
+            linewidth=0.9,
+            alpha=0.7,
+            label="Benchmark",
+        )
         ax.legend()
     ax.set_title("Cumulative Returns (Log Scale)", fontsize=12, fontweight="bold")
     ax.set_ylabel("Growth of $1 (log)")
@@ -746,19 +819,16 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
     gs = gridspec.GridSpec(2, 2, hspace=0.35, wspace=0.3)
 
     ax1 = fig.add_subplot(gs[0, :])
-    ax1.bar(rets.index, rets.values, color=["green" if v >= 0 else "red" for v in rets.values],
-            alpha=0.5, width=1)
+    ax1.bar(rets.index, rets.values, color=["green" if v >= 0 else "red" for v in rets.values], alpha=0.5, width=1)
     ax1.axhline(y=0, color="gray", linewidth=0.5)
     ax1.set_title("Daily Returns", fontsize=12, fontweight="bold")
     ax1.set_ylabel("Return")
     ax1.grid(True, alpha=0.3)
 
     ax2 = fig.add_subplot(gs[1, 0])
-    ax2.hist(rets.values, bins=min(80, len(rets) // 5 + 1),
-             color="steelblue", alpha=0.7, edgecolor="white")
+    ax2.hist(rets.values, bins=min(80, len(rets) // 5 + 1), color="steelblue", alpha=0.7, edgecolor="white")
     ax2.axvline(x=0, color="gray", linestyle="--", linewidth=1)
-    ax2.axvline(x=rets.mean(), color="blue", linestyle="-", linewidth=1,
-                label=f"Mean: {rets.mean()*100:.3f}%")
+    ax2.axvline(x=rets.mean(), color="blue", linestyle="-", linewidth=1, label=f"Mean: {rets.mean() * 100:.3f}%")
     ax2.legend(fontsize=9)
     ax2.set_title("Daily Returns Distribution", fontsize=11, fontweight="bold")
     ax2.set_xlabel("Return")
@@ -766,8 +836,7 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
 
     ax3 = fig.add_subplot(gs[1, 1])
     q = s["return_quantiles"]
-    ax3.barh(range(len(q)), q.values * 100,
-             color=["green" if v >= 0 else "red" for v in q.values], alpha=0.7)
+    ax3.barh(range(len(q)), q.values * 100, color=["green" if v >= 0 else "red" for v in q.values], alpha=0.7)
     ax3.set_yticks(range(len(q)))
     ax3.set_yticklabels([str(p) for p in q.index])
     ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.6)
@@ -783,10 +852,8 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
     ax1 = fig.add_subplot(gs[0])
     rs = s["rolling_sharpe"].dropna()
     ax1.plot(rs.index, rs.values, color="steelblue", linewidth=0.9)
-    ax1.fill_between(rs.index, 0, rs.values,
-                     where=rs.values >= 0, alpha=0.1, color="green")
-    ax1.fill_between(rs.index, 0, rs.values,
-                     where=rs.values < 0, alpha=0.1, color="red")
+    ax1.fill_between(rs.index, 0, rs.values, where=rs.values >= 0, alpha=0.1, color="green")
+    ax1.fill_between(rs.index, 0, rs.values, where=rs.values < 0, alpha=0.1, color="red")
     ax1.axhline(y=0, color="gray", linestyle="--", linewidth=0.6)
     ax1.set_title(f"Rolling Sharpe Ratio ({rolling_window}d)", fontsize=12, fontweight="bold")
     ax1.grid(True, alpha=0.3)
@@ -845,8 +912,9 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
 
     ax3 = fig.add_subplot(gs[2])
     monthly_vals = monthly.values
-    ax3.hist(monthly_vals * 100, bins=min(30, len(monthly_vals) // 2 + 1),
-             color="steelblue", alpha=0.7, edgecolor="white")
+    ax3.hist(
+        monthly_vals * 100, bins=min(30, len(monthly_vals) // 2 + 1), color="steelblue", alpha=0.7, edgecolor="white"
+    )
     ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.6)
     ax3.set_title("Monthly Returns Dist (%)", fontsize=11, fontweight="bold")
     ax3.set_xlabel("Return (%)")
@@ -863,10 +931,8 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
         gs = gridspec.GridSpec(3, 1, hspace=0.35)
 
         ax1 = fig.add_subplot(gs[0])
-        ax1.fill_between(s["pos_long"].index, s["pos_long"].values, 0,
-                         color="green", alpha=0.3, label="Long")
-        ax1.fill_between(s["pos_short"].index, s["pos_short"].values, 0,
-                         color="red", alpha=0.3, label="Short")
+        ax1.fill_between(s["pos_long"].index, s["pos_long"].values, 0, color="green", alpha=0.3, label="Long")
+        ax1.fill_between(s["pos_short"].index, s["pos_short"].values, 0, color="red", alpha=0.3, label="Short")
         ax1.legend()
         ax1.set_title("Long / Short Exposure", fontsize=12, fontweight="bold")
         ax1.grid(True, alpha=0.3)
@@ -893,9 +959,9 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
         pos_alloc = s["pos_alloc"]
         if len(pos_alloc.columns) <= 20:
             fig, ax = plt.subplots(figsize=(14, 6))
-            ax.stackplot(pos_alloc.index,
-                         *[pos_alloc[c].values for c in pos_alloc.columns],
-                         labels=pos_alloc.columns, alpha=0.7)
+            ax.stackplot(
+                pos_alloc.index, *[pos_alloc[c].values for c in pos_alloc.columns], labels=pos_alloc.columns, alpha=0.7
+            )
             ax.legend(loc="upper left", fontsize=8, ncol=min(5, len(pos_alloc.columns)))
             ax.set_title("Holdings Allocation Over Time", fontsize=12, fontweight="bold")
             ax.set_ylabel("Allocation")
@@ -971,10 +1037,10 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
             n_bins = max(10, min(50, len(pnl) // 3 + 1))
             ax.hist(pnl, bins=n_bins, color="steelblue", alpha=0.7, edgecolor="white")
             ax.axvline(x=0, color="gray", linestyle="--", linewidth=1)
-            ax.axvline(x=np.mean(pnl), color="blue", linestyle="-", linewidth=1,
-                       label=f"Mean: {np.mean(pnl):,.0f}")
-            ax.axvline(x=np.median(pnl), color="orange", linestyle="-", linewidth=1,
-                       label=f"Median: {np.median(pnl):,.0f}")
+            ax.axvline(x=np.mean(pnl), color="blue", linestyle="-", linewidth=1, label=f"Mean: {np.mean(pnl):,.0f}")
+            ax.axvline(
+                x=np.median(pnl), color="orange", linestyle="-", linewidth=1, label=f"Median: {np.median(pnl):,.0f}"
+            )
             ax.legend()
             ax.set_title("Trade PnL Distribution (All Trades)", fontsize=12, fontweight="bold")
             ax.set_xlabel("PnL (after commission)")
@@ -986,11 +1052,17 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
 
                 ax2 = fig.add_subplot(gs[1, 0])
                 if len(pnl_l) > 0:
-                    ax2.hist(pnl_l, bins=max(5, min(30, len(pnl_l) // 3 + 1)),
-                             color="green", alpha=0.7, edgecolor="white")
+                    ax2.hist(
+                        pnl_l, bins=max(5, min(30, len(pnl_l) // 3 + 1)), color="green", alpha=0.7, edgecolor="white"
+                    )
                     ax2.axvline(x=0, color="gray", linestyle="--", linewidth=0.8)
-                    ax2.axvline(x=np.mean(pnl_l), color="darkgreen", linestyle="-",
-                                linewidth=1, label=f"Mean: {np.mean(pnl_l):,.0f}")
+                    ax2.axvline(
+                        x=np.mean(pnl_l),
+                        color="darkgreen",
+                        linestyle="-",
+                        linewidth=1,
+                        label=f"Mean: {np.mean(pnl_l):,.0f}",
+                    )
                     ax2.legend(fontsize=9)
                 ax2.set_title("Long Trades PnL", fontsize=11, fontweight="bold")
                 ax2.set_xlabel("PnL")
@@ -998,11 +1070,17 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
 
                 ax3 = fig.add_subplot(gs[1, 1])
                 if len(pnl_s) > 0:
-                    ax3.hist(pnl_s, bins=max(5, min(30, len(pnl_s) // 3 + 1)),
-                             color="red", alpha=0.7, edgecolor="white")
+                    ax3.hist(
+                        pnl_s, bins=max(5, min(30, len(pnl_s) // 3 + 1)), color="red", alpha=0.7, edgecolor="white"
+                    )
                     ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.8)
-                    ax3.axvline(x=np.mean(pnl_s), color="darkred", linestyle="-",
-                                linewidth=1, label=f"Mean: {np.mean(pnl_s):,.0f}")
+                    ax3.axvline(
+                        x=np.mean(pnl_s),
+                        color="darkred",
+                        linestyle="-",
+                        linewidth=1,
+                        label=f"Mean: {np.mean(pnl_s):,.0f}",
+                    )
                     ax3.legend(fontsize=9)
                 ax3.set_title("Short Trades PnL", fontsize=11, fontweight="bold")
                 ax3.set_xlabel("PnL")
@@ -1014,12 +1092,17 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades,
         if "trade_barlen" in s:
             fig, ax = plt.subplots(figsize=(12, 5))
             barlen = s["trade_barlen"]
-            ax.hist(barlen, bins=max(10, min(50, len(barlen) // 3 + 1)),
-                    color="teal", alpha=0.7, edgecolor="white")
-            ax.axvline(x=np.mean(barlen), color="blue", linestyle="-", linewidth=1,
-                       label=f"Mean: {np.mean(barlen):.1f} bars")
-            ax.axvline(x=np.median(barlen), color="orange", linestyle="-", linewidth=1,
-                       label=f"Median: {np.median(barlen):.0f} bars")
+            ax.hist(barlen, bins=max(10, min(50, len(barlen) // 3 + 1)), color="teal", alpha=0.7, edgecolor="white")
+            ax.axvline(
+                x=np.mean(barlen), color="blue", linestyle="-", linewidth=1, label=f"Mean: {np.mean(barlen):.1f} bars"
+            )
+            ax.axvline(
+                x=np.median(barlen),
+                color="orange",
+                linestyle="-",
+                linewidth=1,
+                label=f"Median: {np.median(barlen):.0f} bars",
+            )
             ax.legend()
             ax.set_title("Trade Holding Time Distribution", fontsize=12, fontweight="bold")
             ax.set_xlabel("Holding Time (bars)")

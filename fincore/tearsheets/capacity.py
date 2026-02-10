@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 容量分析相关的绘图函数
 
@@ -12,12 +11,17 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from fincore.constants import MM_DISPLAY_UNIT
 
 
-def plot_capacity_sweep(empyrical_instance, returns, transactions, market_data,
-                        bt_starting_capital,
-                        min_pv=100000,
-                        max_pv=300000000,
-                        step_size=1000000,
-                        ax=None):
+def plot_capacity_sweep(
+    empyrical_instance,
+    returns,
+    transactions,
+    market_data,
+    bt_starting_capital,
+    min_pv=100000,
+    max_pv=300000000,
+    step_size=1000000,
+    ax=None,
+):
     """
     Plots capacity sweep showing Sharpe ratio vs. capital base.
 
@@ -49,15 +53,11 @@ def plot_capacity_sweep(empyrical_instance, returns, transactions, market_data,
     """
     import pandas as pd
 
-    txn_daily_w_bar = empyrical_instance.daily_txns_with_bar_data(transactions,
-                                                                  market_data)
+    txn_daily_w_bar = empyrical_instance.daily_txns_with_bar_data(transactions, market_data)
 
     captial_base_sweep = pd.Series()
     for start_pv in range(min_pv, max_pv, step_size):
-        adj_ret = empyrical_instance.apply_slippage_penalty(returns,
-                                                            txn_daily_w_bar,
-                                                            start_pv,
-                                                            bt_starting_capital)
+        adj_ret = empyrical_instance.apply_slippage_penalty(returns, txn_daily_w_bar, start_pv, bt_starting_capital)
         sharpe = empyrical_instance.sharpe_ratio(adj_ret)
         if sharpe < -1:
             break
@@ -68,15 +68,24 @@ def plot_capacity_sweep(empyrical_instance, returns, transactions, market_data,
         ax = plt.gca()
 
     captial_base_sweep.plot(ax=ax)
-    ax.set_xlabel('Capital base ($mm)')
-    ax.set_ylabel('Sharpe ratio')
-    ax.set_title('Capital base performance sweep')
+    ax.set_xlabel("Capital base ($mm)")
+    ax.set_ylabel("Sharpe ratio")
+    ax.set_title("Capital base performance sweep")
 
     return ax
 
 
-def plot_cones(empyrical_instance, name, bounds, oos_returns, _num_samples=1000,
-               ax=None, cone_std=(1., 1.5, 2.), _random_seed=None, num_strikes=3):
+def plot_cones(
+    empyrical_instance,
+    name,
+    bounds,
+    oos_returns,
+    _num_samples=1000,
+    ax=None,
+    cone_std=(1.0, 1.5, 2.0),
+    _random_seed=None,
+    num_strikes=3,
+):
     """
     Plots the upper and lower bounds of an n standard deviation
     cone of forecasted cumulative returns. Redraws a new cone when
@@ -118,7 +127,7 @@ def plot_cones(empyrical_instance, name, bounds, oos_returns, _num_samples=1000,
     else:
         axes = ax
 
-    returns = empyrical_instance.cum_returns(oos_returns, starting_value=1.)
+    returns = empyrical_instance.cum_returns(oos_returns, starting_value=1.0)
     bounds_tmp = bounds.copy()
     returns_tmp = returns.copy()
     cone_start = returns.index[0]
@@ -127,28 +136,27 @@ def plot_cones(empyrical_instance, name, bounds, oos_returns, _num_samples=1000,
     for c in range(num_strikes + 1):
         if c > 0:
             tmp = returns.loc[cone_start:]
-            bounds_tmp = bounds_tmp.iloc[0:len(tmp)]
+            bounds_tmp = bounds_tmp.iloc[0 : len(tmp)]
             bounds_tmp = bounds_tmp.set_index(tmp.index)
-            crossing = (tmp < bounds_tmp[float(-2.)].iloc[:len(tmp)])
+            crossing = tmp < bounds_tmp[(-2.0)].iloc[: len(tmp)]
             if crossing.sum() <= 0:
                 break
             cone_start = crossing.loc[crossing].index[0]
             returns_tmp = returns.loc[cone_start:]
-            bounds_tmp = (bounds - (1 - returns.loc[cone_start]))
+            bounds_tmp = bounds - (1 - returns.loc[cone_start])
         for std in cone_std:
             x = returns_tmp.index
-            y1 = bounds_tmp[float(std)].iloc[:len(returns_tmp)]
-            y2 = bounds_tmp[float(-std)].iloc[:len(returns_tmp)]
+            y1 = bounds_tmp[float(std)].iloc[: len(returns_tmp)]
+            y2 = bounds_tmp[float(-std)].iloc[: len(returns_tmp)]
             axes.fill_between(x, y1, y2, color=colors[c], alpha=0.5)
 
     # Plot returns line graph
-    label = 'Cumulative returns = {:.2f}%'.format((returns.iloc[-1] - 1) * 100)
-    axes.plot(returns.index, returns.values, color='black', lw=3.,
-              label=label)
+    label = f"Cumulative returns = {(returns.iloc[-1] - 1) * 100:.2f}%"
+    axes.plot(returns.index, returns.values, color="black", lw=3.0, label=label)
 
     if name is not None:
         axes.set_title(name)
-    axes.axhline(1, color='black', alpha=0.2)
+    axes.axhline(1, color="black", alpha=0.2)
     axes.legend(frameon=True, framealpha=0.5)
 
     if ax is None:

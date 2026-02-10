@@ -20,18 +20,18 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    'get_percent_alloc',
-    'get_top_long_short_abs',
-    'get_max_median_position_concentration',
-    'extract_pos',
-    'get_sector_exposures',
-    'get_long_short_pos',
-    'compute_style_factor_exposures',
-    'compute_sector_exposures',
-    'compute_cap_exposures',
-    'compute_volume_exposures',
-    'gross_lev',
-    'stack_positions',
+    "get_percent_alloc",
+    "get_top_long_short_abs",
+    "get_max_median_position_concentration",
+    "extract_pos",
+    "get_sector_exposures",
+    "get_long_short_pos",
+    "compute_style_factor_exposures",
+    "compute_sector_exposures",
+    "compute_cap_exposures",
+    "compute_volume_exposures",
+    "gross_lev",
+    "stack_positions",
 ]
 
 
@@ -176,11 +176,8 @@ def get_sector_exposures(positions, symbol_sector_map):
     )
     if len(unmapped_pos) > 0:
         warn_message = (
-            "Warning: Symbols {} have no sector mapping. "
-            "They will not be included in sector allocations"
-        ).format(
-            ", ".join(map(str, unmapped_pos))
-        )
+            "Warning: Symbols {} have no sector mapping. They will not be included in sector allocations"
+        ).format(", ".join(map(str, unmapped_pos)))
         warnings.warn(warn_message, UserWarning)
 
     sector_exp = positions.T.groupby(by=symbol_sector_map).sum().T
@@ -204,9 +201,9 @@ def get_long_short_pos(positions):
         (longs, shorts) - Long and short position sums.
     """
     positions = positions.copy()
-    
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+
+    if "cash" in positions.columns:
+        positions = positions.drop("cash", axis=1)
 
     longs = positions.where(positions > 0, 0).sum(axis=1)
     shorts = positions.where(positions < 0, 0).abs().sum(axis=1)
@@ -230,8 +227,8 @@ def compute_style_factor_exposures(positions, risk_factor):
         Total style factor exposure over time.
     """
     positions = positions.copy()
-    
-    aligned = positions.align(risk_factor, axis=0, join='inner')[0]
+
+    aligned = positions.align(risk_factor, axis=0, join="inner")[0]
     risk_factor_aligned = risk_factor.loc[aligned.index]
 
     exposures = aligned.mul(risk_factor_aligned, axis=0).sum(axis=1)
@@ -257,7 +254,7 @@ def compute_sector_exposures(positions, sectors, sector_dict=None):
         Sector exposures over time.
     """
     positions = positions.copy()
-    
+
     if sector_dict is None:
         sector_dict = {}
 
@@ -286,7 +283,7 @@ def compute_cap_exposures(positions, caps):
         Market cap exposures over time.
     """
     positions = positions.copy()
-    
+
     exposures = {}
     for cap_category, cap_stocks in caps.items():
         cap_pos = positions[[c for c in positions.columns if c in cap_stocks]]
@@ -352,11 +349,11 @@ def stack_positions(positions, pos_in_dollars=True):
         Stacked positions with MultiIndex (dt, ticker).
     """
     positions = positions.copy()
-    
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+
+    if "cash" in positions.columns:
+        positions = positions.drop("cash", axis=1)
 
     stacked = positions.stack()
-    stacked.index.names = ['dt', 'ticker']
+    stacked.index.names = ["dt", "ticker"]
 
     return stacked

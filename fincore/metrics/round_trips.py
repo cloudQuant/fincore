@@ -16,17 +16,18 @@
 
 """往返交易函数模块."""
 
-import numpy as np
-import pandas as pd
 from collections import deque
 
+import numpy as np
+import pandas as pd
+
 __all__ = [
-    'agg_all_long_short',
-    'groupby_consecutive',
-    'extract_round_trips',
-    'add_closing_transactions',
-    'apply_sector_mappings_to_round_trips',
-    'gen_round_trip_stats',
+    "agg_all_long_short",
+    "groupby_consecutive",
+    "extract_round_trips",
+    "add_closing_transactions",
+    "apply_sector_mappings_to_round_trips",
+    "gen_round_trip_stats",
 ]
 
 
@@ -53,11 +54,11 @@ def agg_all_long_short(round_trips, col, stats_dict):
     stats_all = []
     stats_long_short = []
 
-    for kind, group in round_trips.groupby('long'):
+    for kind, group in round_trips.groupby("long"):
         if kind:
-            label = 'long'
+            label = "long"
         else:
-            label = 'short'
+            label = "short"
 
         stat = {}
         data = group[col]
@@ -91,7 +92,7 @@ def agg_all_long_short(round_trips, col, stats_dict):
         except Exception:
             all_stat[name] = np.nan
 
-    all_series = pd.Series(all_stat, name='All trades')
+    all_series = pd.Series(all_stat, name="All trades")
     stats_all.append(all_series)
 
     # Combine into DataFrame
@@ -121,15 +122,14 @@ def groupby_consecutive(txn, max_delta=pd.Timedelta("8h")):
     transactions : pd.DataFrame
     """
     import warnings
+
     import numpy as np
 
     def vwap(transaction):
         if transaction.amount.sum() == 0:
             warnings.warn("Zero transacted shares, setting vwap to nan.")
             return np.nan
-        return (
-            transaction.amount * transaction.price
-        ).sum() / transaction.amount.sum()
+        return (transaction.amount * transaction.price).sum() / transaction.amount.sum()
 
     out = []
     for sym, t in txn.groupby("symbol"):
@@ -139,18 +139,11 @@ def groupby_consecutive(txn, max_delta=pd.Timedelta("8h")):
         t = t.reset_index()
 
         t["order_sign"] = t.amount > 0
-        t["block_dir"] = (
-            (t.order_sign.shift(1) != t.order_sign).astype(int).cumsum()
-        )
-        t["block_time"] = ((t.dt - t.dt.shift(1)) >
-                           max_delta).astype(int).cumsum()
-        grouped_price = t.groupby(["block_dir", "block_time"])[
-            ["amount", "price"]
-        ].apply(vwap)
+        t["block_dir"] = (t.order_sign.shift(1) != t.order_sign).astype(int).cumsum()
+        t["block_time"] = ((t.dt - t.dt.shift(1)) > max_delta).astype(int).cumsum()
+        grouped_price = t.groupby(["block_dir", "block_time"])[["amount", "price"]].apply(vwap)
         grouped_price.name = "price"
-        grouped_rest = t.groupby(["block_dir", "block_time"]).agg(
-            {"amount": "sum", "symbol": "first", "dt": "first"}
-        )
+        grouped_rest = t.groupby(["block_dir", "block_time"]).agg({"amount": "sum", "symbol": "first", "dt": "first"})
 
         grouped = grouped_rest.join(grouped_price)
 
@@ -202,9 +195,7 @@ def extract_round_trips(transactions, portfolio_value=None):
 
             signed_price = row.price * np.sign(row.amount)
             remaining = abs(row.amount)
-            if (len(qty_stack) == 0) or (
-                np.copysign(1, qty_stack[-1][0]) == np.copysign(1, row.amount)
-            ):
+            if (len(qty_stack) == 0) or (np.copysign(1, qty_stack[-1][0]) == np.copysign(1, row.amount)):
                 qty_stack.append((signed_price, remaining, dt))
             else:
                 # Close round-trip(s)
@@ -212,8 +203,10 @@ def extract_round_trips(transactions, portfolio_value=None):
                 invested = 0.0
                 first_open_dt = None
 
-                while remaining > 0 and len(qty_stack) > 0 and (
-                    np.copysign(1, qty_stack[0][0]) != np.copysign(1, signed_price)
+                while (
+                    remaining > 0
+                    and len(qty_stack) > 0
+                    and (np.copysign(1, qty_stack[0][0]) != np.copysign(1, signed_price))
                 ):
                     prev_price, prev_qty, prev_dt = qty_stack[0]
                     if first_open_dt is None:
@@ -257,9 +250,7 @@ def extract_round_trips(transactions, portfolio_value=None):
             columns=["portfolio_value"],
         ).assign(date=portfolio_value.index)
 
-        roundtrips["date"] = roundtrips.close_dt.apply(
-            lambda close_dt: close_dt.replace(hour=0, minute=0, second=0)
-        )
+        roundtrips["date"] = roundtrips.close_dt.apply(lambda close_dt: close_dt.replace(hour=0, minute=0, second=0))
         # Convert 'roundtrips.date' to UTC to match 'portfolio_value.index'
         if pv.index.tz is not None:
             # Only localize if not already tz-aware
@@ -340,9 +331,9 @@ def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
         A copy of round_trips with an additional 'sector' column.
     """
     round_trips = round_trips.copy()
-    
-    if 'symbol' in round_trips.columns:
-        round_trips['sector'] = round_trips['symbol'].map(sector_mappings)
+
+    if "symbol" in round_trips.columns:
+        round_trips["sector"] = round_trips["symbol"].map(sector_mappings)
 
     return round_trips
 
@@ -361,9 +352,7 @@ def gen_round_trip_stats(round_trips):
         A dictionary where each value is a pandas DataFrame containing
         various round-trip statistics.
     """
-    from fincore.constants.style import (
-        PNL_STATS, SUMMARY_STATS, DURATION_STATS, RETURN_STATS
-    )
+    from fincore.constants.style import DURATION_STATS, PNL_STATS, RETURN_STATS, SUMMARY_STATS
 
     if len(round_trips) == 0:
         return {
@@ -394,7 +383,7 @@ def gen_round_trip_stats(round_trips):
         return custom_results
 
     # Check if 'returns' column exists, if not use 'rt_returns'
-    returns_col = 'returns' if 'returns' in round_trips.columns else 'rt_returns'
+    returns_col = "returns" if "returns" in round_trips.columns else "rt_returns"
 
     # Generate statistics for pnl, summary, duration, and returns
     round_trip_stats = {
@@ -402,9 +391,7 @@ def gen_round_trip_stats(round_trips):
         "summary": agg_all_long_short(round_trips, "pnl", SUMMARY_STATS),
         "duration": agg_all_long_short(round_trips, "duration", DURATION_STATS),
         "returns": agg_all_long_short(round_trips, returns_col, RETURN_STATS),
-        "symbols": apply_custom_and_built_in_funcs(
-            round_trips.groupby("symbol")[returns_col], RETURN_STATS
-        ).T,
+        "symbols": apply_custom_and_built_in_funcs(round_trips.groupby("symbol")[returns_col], RETURN_STATS).T,
     }
 
     return round_trip_stats

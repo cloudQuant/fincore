@@ -3,9 +3,12 @@
 Provides type aliases and structured return types used across the library.
 All NamedTuple types are backward-compatible with plain tuple unpacking.
 """
+
 from __future__ import annotations
 
-from typing import NamedTuple, Optional, Union, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple, Optional, Union
+
 import numpy as np
 import pandas as pd
 
@@ -20,21 +23,25 @@ ReturnOrDataFrame = Union[pd.Series, pd.DataFrame, np.ndarray]
 # Structured return types (backward-compatible with tuple unpacking)
 # ---------------------------------------------------------------------------
 
+
 class DrawdownPeriod(NamedTuple):
     """A single drawdown period with peak, valley and optional recovery."""
+
     peak: pd.Timestamp
     valley: pd.Timestamp
-    recovery: Optional[pd.Timestamp]
+    recovery: pd.Timestamp | None
 
 
 class AlphaBeta(NamedTuple):
     """Alpha and beta from a regression of returns on a factor."""
+
     alpha: float
     beta: float
 
 
 class BootstrapResult(NamedTuple):
     """Result of a bootstrap analysis."""
+
     samples: np.ndarray
     mean: float
     median: float

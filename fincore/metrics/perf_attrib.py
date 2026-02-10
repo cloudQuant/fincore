@@ -16,18 +16,19 @@
 
 """绩效归因函数模块."""
 
-import numpy as np
-import pandas as pd
 from collections import OrderedDict
 
+import numpy as np
+import pandas as pd
+
 __all__ = [
-    'perf_attrib_core',
-    'compute_exposures_internal',
-    'perf_attrib',
-    'compute_exposures',
-    'create_perf_attrib_stats',
-    'align_and_warn',
-    'cumulative_returns_less_costs',
+    "perf_attrib_core",
+    "compute_exposures_internal",
+    "perf_attrib",
+    "compute_exposures",
+    "create_perf_attrib_stats",
+    "align_and_warn",
+    "cumulative_returns_less_costs",
 ]
 
 
@@ -91,16 +92,18 @@ def perf_attrib_core(returns, positions, factor_returns, factor_loadings):
     specific_returns = returns - common_returns
 
     returns_df = pd.DataFrame(
-        OrderedDict([
-            ("total_returns", returns),
-            ("common_returns", common_returns),
-            ("specific_returns", specific_returns),
-            ("tilt_returns", tilt_returns),
-            ("timing_returns", timing_returns),
-        ])
+        OrderedDict(
+            [
+                ("total_returns", returns),
+                ("common_returns", common_returns),
+                ("specific_returns", specific_returns),
+                ("tilt_returns", tilt_returns),
+                ("timing_returns", timing_returns),
+            ]
+        )
     )
 
-    perf_attribution = pd.concat([perf_attrib_by_factor, returns_df], axis="columns")
+    perf_attribution = pd.concat([perf_attrib_by_factor, returns_df], axis="columns", sort=False)
     perf_attribution.index = returns.index
 
     return risk_exposures_portfolio, perf_attribution
@@ -129,10 +132,17 @@ def compute_exposures_internal(positions, factor_loadings):
     return risk_exposures.groupby(level="dt").sum()
 
 
-def perf_attrib(returns, positions=None, factor_returns=None, factor_loadings=None,
-                transactions=None, pos_in_dollars=True, regression_style='OLS'):
+def perf_attrib(
+    returns,
+    positions=None,
+    factor_returns=None,
+    factor_loadings=None,
+    transactions=None,
+    pos_in_dollars=True,
+    regression_style="OLS",
+):
     """Calculate performance attribution.
-    
+
     Returns
     -------
     tuple
@@ -155,9 +165,7 @@ def perf_attrib(returns, positions=None, factor_returns=None, factor_loadings=No
     if not isinstance(positions, pd.Series):
         positions = normalize_and_stack_positions(positions, pos_in_dollars=pos_in_dollars)
 
-    risk_exposures, perf_attrib_data = perf_attrib_core(
-        returns, positions, factor_returns, factor_loadings
-    )
+    risk_exposures, perf_attrib_data = perf_attrib_core(returns, positions, factor_returns, factor_loadings)
 
     return risk_exposures, perf_attrib_data
 
@@ -183,8 +191,8 @@ def normalize_and_stack_positions(positions, pos_in_dollars=True):
     """
     positions = positions.copy()
 
-    if 'cash' in positions.columns:
-        positions = positions.drop('cash', axis=1)
+    if "cash" in positions.columns:
+        positions = positions.drop("cash", axis=1)
 
     if pos_in_dollars:
         total = positions.abs().sum(axis=1)
@@ -192,7 +200,7 @@ def normalize_and_stack_positions(positions, pos_in_dollars=True):
         positions = positions.replace([np.inf, -np.inf], np.nan)
 
     stacked = positions.stack()
-    stacked.index = stacked.index.set_names(['dt', 'ticker'])
+    stacked.index = stacked.index.set_names(["dt", "ticker"])
 
     return stacked
 
@@ -208,8 +216,9 @@ def create_perf_attrib_stats(perf_attrib_, risk_exposures):
     Computes annualized multifactor alpha, multifactor sharpe, risk exposures.
     """
     from collections import OrderedDict
-    from fincore.metrics.returns import annual_return, cum_returns_final
+
     from fincore.metrics.ratios import sharpe_ratio
+    from fincore.metrics.returns import annual_return, cum_returns_final
 
     summary = OrderedDict()
     total_returns = perf_attrib_["total_returns"]
@@ -245,10 +254,10 @@ def create_perf_attrib_stats(perf_attrib_, risk_exposures):
     return summary, risk_exposure_summary
 
 
-def align_and_warn(returns, positions, factor_returns, factor_loadings,
-                   transactions=None, pos_in_dollars=True):
+def align_and_warn(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True):
     """Make sure that all inputs have matching dates and tickers. Raise warnings if necessary."""
     import warnings
+
     from fincore.constants.style import PERF_ATTRIB_TURNOVER_THRESHOLD
 
     # Handle both DataFrame (unstacked) and Series (stacked) positions
@@ -257,9 +266,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
     else:
         position_tickers = positions.columns
 
-    missing_stocks = position_tickers.difference(
-        factor_loadings.index.get_level_values(1).unique()
-    )
+    missing_stocks = position_tickers.difference(factor_loadings.index.get_level_values(1).unique())
 
     # cash will not be in factor_loadings
     num_stocks = len(position_tickers) - (1 if "cash" in position_tickers else 0)
@@ -276,18 +283,14 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
 
     if len(missing_stocks) > 0:
         if len(missing_stocks) > 5:
-            missing_stocks_displayed = (
-                " {} assets were missing factor loadings, including: {}..{}"
-            ).format(
+            missing_stocks_displayed = (" {} assets were missing factor loadings, including: {}..{}").format(
                 len(missing_stocks),
                 ", ".join(missing_stocks[:5].map(str)),
                 missing_stocks[-1],
             )
             avg_allocation_msg = "selected missing assets"
         else:
-            missing_stocks_displayed = (
-                "The following assets were missing factor loadings: {}."
-            ).format(list(missing_stocks))
+            missing_stocks_displayed = (f"The following assets were missing factor loadings: {list(missing_stocks)}.")
             avg_allocation_msg = "missing assets"
 
         # Calculate average allocation for warning message
@@ -305,16 +308,11 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
             "positions. Returns from the missing assets will not be properly "
             "accounted for in performance attribution.\n"
             "\n"
-            "{}. "
+            f"{missing_stocks_displayed}. "
             "Ignoring for exposure calculation and performance attribution. "
-            "Ratio of assets missing: {}. Average allocation of {}:\n"
+            f"Ratio of assets missing: {missing_ratio}. Average allocation of {avg_allocation_msg}:\n"
             "\n"
-            "{}.\n"
-        ).format(
-            missing_stocks_displayed,
-            missing_ratio,
-            avg_allocation_msg,
-            avg_alloc,
+            f"{avg_alloc}.\n"
         )
 
         warnings.warn(missing_stocks_warning_msg)
@@ -331,26 +329,16 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
     else:
         positions_dates = positions.index
 
-    missing_factor_loadings_index = positions_dates.difference(
-        factor_loadings.index.get_level_values(0).unique()
-    )
+    missing_factor_loadings_index = positions_dates.difference(factor_loadings.index.get_level_values(0).unique())
 
     if len(missing_factor_loadings_index) > 0:
         if len(missing_factor_loadings_index) > 5:
-            missing_dates_displayed = (
-                "(first missing is {}, last missing is {})"
-            ).format(
-                missing_factor_loadings_index[0], missing_factor_loadings_index[-1]
-            )
+            missing_dates_displayed = (f"(first missing is {missing_factor_loadings_index[0]}, last missing is {missing_factor_loadings_index[-1]})")
         else:
             missing_dates_displayed = list(missing_factor_loadings_index)
 
         warning_msg = (
-            "Could not find factor loadings for {} dates: {}. "
-            "Truncating date range for performance attribution. "
-        ).format(
-            len(missing_factor_loadings_index),
-            missing_dates_displayed
+            f"Could not find factor loadings for {len(missing_factor_loadings_index)} dates: {missing_dates_displayed}. Truncating date range for performance attribution. "
         )
 
         warnings.warn(warning_msg)
@@ -366,6 +354,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings,
 
     if transactions is not None and pos_in_dollars:
         from fincore.metrics.transactions import get_turnover
+
         turnover = get_turnover(positions, transactions).mean()
         if turnover > PERF_ATTRIB_TURNOVER_THRESHOLD:
             warning_msg = (

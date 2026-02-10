@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 往返交易相关的绘图和显示函数
 
 包含往返交易生命周期、盈利概率等绘图函数。
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy import stats
 
-from fincore.utils import print_table, format_asset
+from fincore.utils import format_asset, print_table
 
 
 def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
@@ -38,20 +37,18 @@ def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
 
     symbols_sample = round_trips.symbol.unique()
     np.random.seed(1)
-    sample = np.random.choice(symbols_sample, replace=False,
-                              size=min(disp_amount, len(symbols_sample)))
+    sample = np.random.choice(symbols_sample, replace=False, size=min(disp_amount, len(symbols_sample)))
     sample_round_trips = round_trips[round_trips.symbol.isin(sample)]
 
     import pandas as pd
+
     symbol_idx = pd.Series(np.arange(len(sample)), index=sample)
 
-    for symbol, sym_round_trips in sample_round_trips.groupby('symbol'):
+    for symbol, sym_round_trips in sample_round_trips.groupby("symbol"):
         for _, row in sym_round_trips.iterrows():
-            c = 'b' if row.long else 'r'
+            c = "b" if row.long else "r"
             y_ix = symbol_idx[symbol] + 0.05
-            ax.plot([row['open_dt'], row['close_dt']],
-                    [y_ix, y_ix], color=c,
-                    linewidth=lsize, solid_capstyle='butt')
+            ax.plot([row["open_dt"], row["close_dt"]], [y_ix, y_ix], color=c, linewidth=lsize, solid_capstyle="butt")
 
     # Adjust the number of y-ticks to match the number of symbols in the sample
     num_ticks = len(sample)
@@ -59,11 +56,10 @@ def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
     ax.set_yticklabels([format_asset(s) for s in sample])
 
     ax.set_ylim((-0.5, num_ticks - 0.5))
-    blue = patches.Rectangle([0, 0], 1, 1, color='b', label='Long')
-    red = patches.Rectangle([0, 0], 1, 1, color='r', label='Short')
-    leg = ax.legend(handles=[blue, red], loc='lower left',
-                    frameon=True, framealpha=0.5)
-    leg.get_frame().set_edgecolor('black')
+    blue = patches.Rectangle([0, 0], 1, 1, color="b", label="Long")
+    red = patches.Rectangle([0, 0], 1, 1, color="r", label="Short")
+    leg = ax.legend(handles=[blue, red], loc="lower left", frameon=True, framealpha=0.5)
+    leg.get_frame().set_edgecolor("black")
     ax.grid(False)
 
     return ax
@@ -86,36 +82,34 @@ def plot_prob_profit_trade(round_trips, ax=None):
     ax : matplotlib.Axes
         The axes that were plotted on.
     """
-    x = np.linspace(0, 1., 500)
+    x = np.linspace(0, 1.0, 500)
 
-    round_trips['profitable'] = round_trips.pnl > 0
+    round_trips["profitable"] = round_trips.pnl > 0
 
-    dist = stats.beta(round_trips.profitable.sum(),
-                      (~round_trips.profitable).sum())
+    dist = stats.beta(round_trips.profitable.sum(), (~round_trips.profitable).sum())
     y = dist.pdf(x)
-    lower_perc = dist.ppf(.025)
-    upper_perc = dist.ppf(.975)
+    lower_perc = dist.ppf(0.025)
+    upper_perc = dist.ppf(0.975)
 
-    lower_plot = dist.ppf(.001)
-    upper_plot = dist.ppf(.999)
+    lower_plot = dist.ppf(0.001)
+    upper_plot = dist.ppf(0.999)
 
     if ax is None:
         ax = plt.subplot()
 
     ax.plot(x, y)
-    ax.axvline(lower_perc, color='0.5')
-    ax.axvline(upper_perc, color='0.5')
+    ax.axvline(lower_perc, color="0.5")
+    ax.axvline(upper_perc, color="0.5")
 
-    ax.set_xlabel('Probability of making a profitable decision')
-    ax.set_ylabel('Belief')
+    ax.set_xlabel("Probability of making a profitable decision")
+    ax.set_ylabel("Belief")
     ax.set_xlim(lower_plot, upper_plot)
-    ax.set_ylim((0, y.max() + 1.))
+    ax.set_ylim((0, y.max() + 1.0))
 
     return ax
 
 
-def print_round_trip_stats(empyrical_instance, round_trips, hide_pos=False,
-                           run_flask_app=False):
+def print_round_trip_stats(empyrical_instance, round_trips, hide_pos=False, run_flask_app=False):
     """
     Print various round-trip statistics.
 
@@ -132,29 +126,16 @@ def print_round_trip_stats(empyrical_instance, round_trips, hide_pos=False,
     """
     stats = empyrical_instance.gen_round_trip_stats(round_trips)
 
-    print_table(stats['summary'],
-                float_format='{:.2f}'.format,
-                name='Summary stats',
-                run_flask_app=run_flask_app)
-    print_table(stats['pnl'],
-                float_format='${:.2f}'.format,
-                name='PnL stats',
-                run_flask_app=run_flask_app)
-    print_table(stats['duration'],
-                float_format='{:.2f}'.format,
-                name='Duration stats',
-                run_flask_app=run_flask_app)
-    print_table(stats['returns'] * 100,
-                float_format='{:.2f}%'.format,
-                name='Return stats',
-                run_flask_app=run_flask_app)
+    print_table(stats["summary"], float_format="{:.2f}".format, name="Summary stats", run_flask_app=run_flask_app)
+    print_table(stats["pnl"], float_format="${:.2f}".format, name="PnL stats", run_flask_app=run_flask_app)
+    print_table(stats["duration"], float_format="{:.2f}".format, name="Duration stats", run_flask_app=run_flask_app)
+    print_table(stats["returns"] * 100, float_format="{:.2f}%".format, name="Return stats", run_flask_app=run_flask_app)
 
     if not hide_pos:
-        stats['symbols'].columns = stats['symbols'].columns.map(format_asset)
-        print_table(stats['symbols'] * 100,
-                    float_format='{:.2f}%'.format,
-                    name='Symbol stats',
-                    run_flask_app=run_flask_app)
+        stats["symbols"].columns = stats["symbols"].columns.map(format_asset)
+        print_table(
+            stats["symbols"] * 100, float_format="{:.2f}%".format, name="Symbol stats", run_flask_app=run_flask_app
+        )
 
 
 def show_profit_attribution(round_trips, run_flask_app=False):
@@ -168,9 +149,9 @@ def show_profit_attribution(round_trips, run_flask_app=False):
     run_flask_app : bool, optional, default=False
         Whether to run the flask app to display the plot.
     """
-    total_pnl = round_trips['pnl'].sum()
-    pnl_attribution = round_trips.groupby('symbol')['pnl'].sum() / total_pnl
-    pnl_attribution.name = ''
+    total_pnl = round_trips["pnl"].sum()
+    pnl_attribution = round_trips.groupby("symbol")["pnl"].sum() / total_pnl
+    pnl_attribution.name = ""
 
     pnl_attribution.index = pnl_attribution.index.map(format_asset)
     print_table(
@@ -178,7 +159,7 @@ def show_profit_attribution(round_trips, run_flask_app=False):
             inplace=False,
             ascending=False,
         ),
-        name='Profitability (PnL / PnL total) per name',
-        float_format='{:.2%}'.format,
-        run_flask_app=run_flask_app
+        name="Profitability (PnL / PnL total) per name",
+        float_format="{:.2%}".format,
+        run_flask_app=run_flask_app,
     )
