@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tearsheets 工具函数
 
@@ -8,7 +7,7 @@ Tearsheets 工具函数
 import seaborn as sns
 
 
-def plotting_context(context='notebook', font_scale=1.5, rc=None):
+def plotting_context(context="notebook", font_scale=1.5, rc=None):
     """
     Create pyfolio default plotting style context.
 
@@ -43,7 +42,7 @@ def plotting_context(context='notebook', font_scale=1.5, rc=None):
     if rc is None:
         rc = {}
 
-    rc_default = {'lines.linewidth': 1.5}
+    rc_default = {"lines.linewidth": 1.5}
 
     # Add defaults if they do not exist
     for name, val in rc_default.items():
@@ -52,7 +51,7 @@ def plotting_context(context='notebook', font_scale=1.5, rc=None):
     return sns.plotting_context(context=context, font_scale=font_scale, rc=rc)
 
 
-def axes_style(style='darkgrid', rc=None):
+def axes_style(style="darkgrid", rc=None):
     """
     Create pyfolio default axes style context.
 

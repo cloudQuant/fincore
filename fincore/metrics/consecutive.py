@@ -18,28 +18,29 @@
 
 import numpy as np
 import pandas as pd
-from fincore.constants import WEEKLY, MONTHLY
+
+from fincore.constants import MONTHLY, WEEKLY
 from fincore.constants.periods import PERIOD_TO_FREQ
 from fincore.metrics.returns import cum_returns_final
 
 __all__ = [
-    'max_consecutive_up_days',
-    'max_consecutive_down_days',
-    'max_consecutive_gain',
-    'max_consecutive_loss',
-    'max_consecutive_up_weeks',
-    'max_consecutive_down_weeks',
-    'max_consecutive_up_months',
-    'max_consecutive_down_months',
-    'max_single_day_gain',
-    'max_single_day_loss',
-    'max_single_day_gain_date',
-    'max_single_day_loss_date',
-    'max_consecutive_up_start_date',
-    'max_consecutive_up_end_date',
-    'max_consecutive_down_start_date',
-    'max_consecutive_down_end_date',
-    'consecutive_stats',
+    "max_consecutive_up_days",
+    "max_consecutive_down_days",
+    "max_consecutive_gain",
+    "max_consecutive_loss",
+    "max_consecutive_up_weeks",
+    "max_consecutive_down_weeks",
+    "max_consecutive_up_months",
+    "max_consecutive_down_months",
+    "max_single_day_gain",
+    "max_single_day_loss",
+    "max_single_day_gain_date",
+    "max_single_day_loss_date",
+    "max_consecutive_up_start_date",
+    "max_consecutive_up_end_date",
+    "max_consecutive_down_start_date",
+    "max_consecutive_down_end_date",
+    "consecutive_stats",
 ]
 
 
@@ -70,12 +71,12 @@ def consecutive_stats(returns):
     """
     if len(returns) < 1:
         return {
-            'max_consecutive_up_days': np.nan,
-            'max_consecutive_down_days': np.nan,
-            'max_consecutive_up_weeks': np.nan,
-            'max_consecutive_down_weeks': np.nan,
-            'max_consecutive_up_months': np.nan,
-            'max_consecutive_down_months': np.nan,
+            "max_consecutive_up_days": np.nan,
+            "max_consecutive_down_days": np.nan,
+            "max_consecutive_up_weeks": np.nan,
+            "max_consecutive_down_weeks": np.nan,
+            "max_consecutive_up_months": np.nan,
+            "max_consecutive_down_months": np.nan,
         }
 
     # Resample once
@@ -86,12 +87,12 @@ def consecutive_stats(returns):
     down = lambda s: s < 0
 
     return {
-        'max_consecutive_up_days': _max_consecutive_run(returns, up),
-        'max_consecutive_down_days': _max_consecutive_run(returns, down),
-        'max_consecutive_up_weeks': _max_consecutive_run(weekly_returns, up),
-        'max_consecutive_down_weeks': _max_consecutive_run(weekly_returns, down),
-        'max_consecutive_up_months': _max_consecutive_run(monthly_returns, up),
-        'max_consecutive_down_months': _max_consecutive_run(monthly_returns, down),
+        "max_consecutive_up_days": _max_consecutive_run(returns, up),
+        "max_consecutive_down_days": _max_consecutive_run(returns, down),
+        "max_consecutive_up_weeks": _max_consecutive_run(weekly_returns, up),
+        "max_consecutive_down_weeks": _max_consecutive_run(weekly_returns, down),
+        "max_consecutive_up_months": _max_consecutive_run(monthly_returns, up),
+        "max_consecutive_down_months": _max_consecutive_run(monthly_returns, down),
     }
 
 

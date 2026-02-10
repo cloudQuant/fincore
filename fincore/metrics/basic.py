@@ -15,6 +15,7 @@
 # limitations under the License.
 
 """基础工具函数模块."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -22,20 +23,21 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from fincore.constants import ANNUALIZATION_FACTORS, PERIOD_TO_FREQ, DAILY
+
+from fincore.constants import ANNUALIZATION_FACTORS, DAILY, PERIOD_TO_FREQ
 
 __all__ = [
-    'ensure_datetime_index_series',
-    'flatten',
-    'adjust_returns',
-    'annualization_factor',
-    'to_pandas',
-    'aligned_series',
+    "ensure_datetime_index_series",
+    "flatten",
+    "adjust_returns",
+    "annualization_factor",
+    "to_pandas",
+    "aligned_series",
 ]
 
 
 def ensure_datetime_index_series(
-    data: Union[pd.Series, np.ndarray, list],
+    data: pd.Series | np.ndarray | list,
     period: str = DAILY,
 ) -> pd.Series:
     """Return a Series indexed by dates regardless of the input type.
@@ -59,16 +61,10 @@ def ensure_datetime_index_series(
         with a ``DatetimeIndex``. Empty input returns an empty
         Series.
     """
-    if isinstance(
-            data,
-            pd.Series) and isinstance(
-            data.index,
-            pd.DatetimeIndex):
+    if isinstance(data, pd.Series) and isinstance(data.index, pd.DatetimeIndex):
         return data
 
-    values = (
-        data.values if isinstance(data, pd.Series) else np.asarray(data)
-    )
+    values = data.values if isinstance(data, pd.Series) else np.asarray(data)
 
     if values.size == 0:
         return pd.Series(values)
@@ -78,7 +74,7 @@ def ensure_datetime_index_series(
     return pd.Series(values, index=index)
 
 
-def flatten(arr: Union[pd.Series, np.ndarray]) -> np.ndarray:
+def flatten(arr: pd.Series | np.ndarray) -> np.ndarray:
     """Flatten a pandas Series to a NumPy array.
 
     Parameters
@@ -96,9 +92,9 @@ def flatten(arr: Union[pd.Series, np.ndarray]) -> np.ndarray:
 
 
 def adjust_returns(
-    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
-    adjustment_factor: Union[float, int, pd.Series, pd.DataFrame, np.ndarray],
-) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    adjustment_factor: float | int | pd.Series | pd.DataFrame | np.ndarray,
+) -> pd.Series | pd.DataFrame | np.ndarray:
     """Adjust returns by subtracting an adjustment factor.
 
     This is a convenience helper for computing excess returns or active
@@ -120,16 +116,13 @@ def adjust_returns(
         Adjusted returns ``returns - adjustment_factor``, or the original
         ``returns`` if ``adjustment_factor`` is zero.
     """
-    if (
-        isinstance(adjustment_factor, (float, int))
-        and adjustment_factor == 0
-    ):
+    if isinstance(adjustment_factor, (float, int)) and adjustment_factor == 0:
         return returns
     return returns - adjustment_factor
 
 
 @lru_cache(maxsize=32)
-def annualization_factor(period: str, annualization: Optional[float]) -> float:
+def annualization_factor(period: str, annualization: float | None) -> float:
     """Return the annualization factor for a given period.
 
     If a custom ``annualization`` value is provided, it is returned
@@ -161,17 +154,14 @@ def annualization_factor(period: str, annualization: Optional[float]) -> float:
             factor = ANNUALIZATION_FACTORS[period]
         except KeyError:
             raise ValueError(
-                "Period cannot be '{}'. "
-                "Can be '{}'.".format(
-                    period, "', '".join(ANNUALIZATION_FACTORS.keys())
-                )
+                "Period cannot be '{}'. Can be '{}'.".format(period, "', '".join(ANNUALIZATION_FACTORS.keys()))
             )
     else:
         factor = annualization
     return factor
 
 
-def to_pandas(ob: Union[np.ndarray, pd.Series, pd.DataFrame]) -> Union[pd.Series, pd.DataFrame]:
+def to_pandas(ob: np.ndarray | pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:
     """Convert an array-like to a pandas object.
 
     Parameters
@@ -205,8 +195,8 @@ def to_pandas(ob: Union[np.ndarray, pd.Series, pd.DataFrame]) -> Union[pd.Series
 
 
 def aligned_series(
-    *many_series: Union[pd.Series, pd.DataFrame, np.ndarray],
-) -> Tuple[Union[pd.Series, pd.DataFrame, np.ndarray], ...]:
+    *many_series: pd.Series | pd.DataFrame | np.ndarray,
+) -> tuple[pd.Series | pd.DataFrame | np.ndarray, ...]:
     """Return a new tuple of series with their indices aligned.
 
     This helper aligns multiple return series by their common index,
@@ -228,9 +218,7 @@ def aligned_series(
     head = many_series[0]
     tail = many_series[1:]
     n = len(head)
-    if isinstance(head, np.ndarray) and all(
-        len(s) == n and isinstance(s, np.ndarray) for s in tail
-    ):
+    if isinstance(head, np.ndarray) and all(len(s) == n and isinstance(s, np.ndarray) for s in tail):
         # optimization: ndarrays of the same length are already aligned
         return many_series
 
@@ -241,7 +229,4 @@ def aligned_series(
         return tuple(combined.iloc[:, i] for i in range(2))
 
     # dataframe has no ``itervalues``
-    return tuple(
-        v
-        for _, v in pd.concat(map(to_pandas, many_series), axis=1).items()
-    )
+    return tuple(v for _, v in pd.concat(map(to_pandas, many_series), axis=1).items())

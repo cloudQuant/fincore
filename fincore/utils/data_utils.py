@@ -41,19 +41,19 @@ def rolling_window(array, length):
     rolling_windows : np.ndarray
         Rolling windows of the input array.
     """
-    # Make sure the array is a numpy array 
+    # Make sure the array is a numpy array
     array = np.asarray(array)
-    
+
     if array.ndim != 1:
         raise ValueError("Rolling window only supports 1D arrays")
-    
+
     if length > len(array):
         raise ValueError("Window length cannot be greater than array length")
-    
+
     # Create the rolling window using stride tricks
     shape = (array.size - length + 1, length)
     strides = (array.strides[0], array.strides[0])
-    
+
     return as_strided(array, shape=shape, strides=strides)
 
 
@@ -70,15 +70,15 @@ def _roll_pandas(func, window, *args, **kwargs):
 
     n = len(data) - window + 1
     out = np.empty(n, dtype=float)
-    result_index = data.index[window - 1:]
+    result_index = data.index[window - 1 :]
 
     if len(args) == 1:
         for i in range(n):
-            out[i] = func(data.iloc[i:i + window], **kwargs)
+            out[i] = func(data.iloc[i : i + window], **kwargs)
     else:
         factor_returns = args[1]
         for i in range(n):
-            out[i] = func(data.iloc[i:i + window], factor_returns.iloc[i:i + window], **kwargs)
+            out[i] = func(data.iloc[i : i + window], factor_returns.iloc[i : i + window], **kwargs)
 
     return pd.Series(out, index=result_index, dtype=float)
 
@@ -99,11 +99,11 @@ def _roll_ndarray(func, window, *args, **kwargs):
 
     if len(args) == 1:
         for i in range(n):
-            out[i] = func(data[i:i + window], **kwargs)
+            out[i] = func(data[i : i + window], **kwargs)
     else:
         factor_returns = args[1]
         for i in range(n):
-            out[i] = func(data[i:i + window], factor_returns[i:i + window], **kwargs)
+            out[i] = func(data[i : i + window], factor_returns[i : i + window], **kwargs)
 
     return out
 
@@ -134,9 +134,9 @@ def roll(*args, **kwargs):
 
         A Series or ndarray of the results.
     """
-    func = kwargs.pop('function')
-    window = kwargs.pop('window')
-    
+    func = kwargs.pop("function")
+    window = kwargs.pop("window")
+
     if len(args) > 2:
         raise ValueError("Cannot pass more than 2 return sets")
 
@@ -168,7 +168,7 @@ def up(returns, factor_returns, **kwargs):
     -------
     Same as the return of the function
     """
-    func = kwargs.pop('function')
+    func = kwargs.pop("function")
     returns = returns[factor_returns > 0]
     factor_returns = factor_returns[factor_returns > 0]
     return func(returns, factor_returns, **kwargs)
@@ -193,10 +193,10 @@ def down(returns, factor_returns, **kwargs):
     -------
     Same as the return of the function
     """
-    func = kwargs.pop('function')
+    func = kwargs.pop("function")
     returns = returns[factor_returns < 0]
     factor_returns = factor_returns[factor_returns < 0]
     return func(returns, factor_returns, **kwargs)
 
 
-__all__ = ['rolling_window', 'roll', 'up', 'down']
+__all__ = ["rolling_window", "roll", "up", "down"]

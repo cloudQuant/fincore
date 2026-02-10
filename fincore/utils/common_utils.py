@@ -1,27 +1,27 @@
 import warnings
 from functools import wraps
 from itertools import cycle
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_frame_equal, assert_series_equal
-from pathlib import Path
-from packaging import version
-from fincore.constants.color import COLORS
-from pandas.tseries.offsets import BDay
 from numpy.lib.stride_tricks import as_strided
+from packaging import version
+from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.tseries.offsets import BDay
+
+from fincore.constants.color import COLORS
 
 try:
-    from IPython.display import display, HTML
+    from IPython.display import HTML, display
 
     HAS_IPYTHON = True
 except ImportError:
     HAS_IPYTHON = False
 
-
     # Define dummy functions for non-IPython environments
     def display(obj):
         print(obj)
-
 
     def HTML(string):
         return string
@@ -53,6 +53,7 @@ def customize(func):
         return func(*args, **kwargs)
 
     return call_w_context
+
 
 def analyze_dataframe_differences(daily_txn, expected):
     """
@@ -114,8 +115,11 @@ def analyze_dataframe_differences(daily_txn, expected):
     if not daily_txn.equals(expected):
         print("Values are different:")
         print("Differences in daily_txn vs expected:")
-        print(pd.concat([daily_txn, expected], axis=1, keys=['daily_txn', 'expected']).swaplevel(axis=1).sort_index(
-            axis=1))
+        print(
+            pd.concat([daily_txn, expected], axis=1, keys=["daily_txn", "expected"])
+            .swaplevel(axis=1)
+            .sort_index(axis=1)
+        )
     else:
         print("Values are identical.")
 
@@ -180,9 +184,10 @@ def analyze_series_differences(series1, series2):
     if not series1.equals(series2):
         print("Values are different:")
         print("Differences in series1 vs series2:")
-        differences = pd.concat([series1, series2], axis=1, keys=['series1', 'series2']).swaplevel(axis=1).sort_index(
-            axis=1)
-        print(differences[differences['series1'] != differences['series2']])
+        differences = (
+            pd.concat([series1, series2], axis=1, keys=["series1", "series2"]).swaplevel(axis=1).sort_index(axis=1)
+        )
+        print(differences[differences["series1"] != differences["series2"]])
     else:
         print("Values are identical.")
 
@@ -201,7 +206,7 @@ def one_dec_places(x, pos):
     Adds 1/10th decimal to plot ticks.
     """
 
-    return '%.1f' % x
+    return "%.1f" % x
 
 
 def two_dec_places(x, pos):
@@ -209,7 +214,7 @@ def two_dec_places(x, pos):
     Adds 1/100th decimal to plot ticks.
     """
 
-    return '%.2f' % x
+    return "%.2f" % x
 
 
 def percentage(x, pos):
@@ -217,7 +222,7 @@ def percentage(x, pos):
     Adds percentage sign to plot ticks.
     """
 
-    return '%.0f%%' % x
+    return "%.0f%%" % x
 
 
 def format_asset(asset):
@@ -291,7 +296,7 @@ def extract_rets_pos_txn_from_zipline(backtest):
 
     backtest.index = backtest.index.normalize()
     if backtest.index.tzinfo is None:
-        backtest.index = backtest.index.tz_localize('UTC')
+        backtest.index = backtest.index.tz_localize("UTC")
     returns = backtest.returns
     raw_positions = []
     for dt, pos_row in backtest.positions.items():
@@ -309,17 +314,12 @@ def extract_rets_pos_txn_from_zipline(backtest):
     transactions = Empyrical.make_transaction_frame(backtest.transactions)
 
     if transactions.index.tzinfo is None:
-        transactions.index = transactions.index.tz_localize('utc')
+        transactions.index = transactions.index.tz_localize("utc")
 
     return returns, positions, transactions
 
 
-def print_table(table,
-                name=None,
-                float_format=None,
-                formatters=None,
-                header_rows=None,
-                run_flask_app=False):
+def print_table(table, name=None, float_format=None, formatters=None, header_rows=None, run_flask_app=False):
     """
     Pretty print a pandas DataFrame.
 
@@ -355,15 +355,18 @@ def print_table(table,
 
     if header_rows is not None:
         # Count the number of columns for the text to span
-        n_cols = html.split('<thead>')[1].split('</thead>')[0].count('<th>')
+        n_cols = html.split("<thead>")[1].split("</thead>")[0].count("<th>")
 
         # Generate the HTML for the extra rows
-        rows = ''
+        rows = ""
         for name, value in header_rows.items():
-            rows += ('\n    <tr style="text-align: right;"><th>%s</th>' +
-                     '<td colspan=%d>%s</td></tr>') % (name, n_cols, value)
+            rows += ('\n    <tr style="text-align: right;"><th>%s</th>' + "<td colspan=%d>%s</td></tr>") % (
+                name,
+                n_cols,
+                value,
+            )
         # Inject the new HTML
-        html = html.replace('<thead>', '<thead>' + rows)
+        html = html.replace("<thead>", "<thead>" + rows)
     if run_flask_app:
         # 检查pyfolio中是否存在static文件夹,如果存在,就保存数据到static中
         # 获取 pyfolio 的根目录
@@ -427,7 +430,7 @@ def detect_intraday(positions, transactions, threshold=0.25):
     daily_txn = transactions.copy()
     daily_txn.index = daily_txn.index.date
     txn_count = daily_txn.groupby(level=0).symbol.nunique().sum()
-    daily_pos = positions.drop('cash', axis=1).replace(0, np.nan)
+    daily_pos = positions.drop("cash", axis=1).replace(0, np.nan)
     return daily_pos.count(axis=1).sum() / txn_count < threshold
 
 
@@ -456,12 +459,13 @@ def check_intraday(estimate, returns, positions, transactions):
         Daily net position values, adjusted for intraday movement.
     """
 
-    if estimate == 'infer':
+    if estimate == "infer":
         if positions is not None and transactions is not None:
             if detect_intraday(positions, transactions):
                 warnings.warn(
-                    'Detected intraday strategy; inferring positions from transactions. Set estimate_intraday' +
-                    '=False to disable.')
+                    "Detected intraday strategy; inferring positions from transactions. Set estimate_intraday"
+                    + "=False to disable."
+                )
                 return estimate_intraday(returns, positions, transactions)
             else:
                 return positions
@@ -472,7 +476,7 @@ def check_intraday(estimate, returns, positions, transactions):
         if positions is not None and transactions is not None:
             return estimate_intraday(returns, positions, transactions)
         else:
-            raise ValueError('Positions and txns needed to estimate intraday')
+            raise ValueError("Positions and txns needed to estimate intraday")
     else:
         return positions
 
@@ -507,24 +511,21 @@ def estimate_intraday(returns, positions, transactions, eod_hour=23):
 
     # Construct DataFrame of transaction amounts
     txn_val = transactions.copy()
-    txn_val.index.names = ['date']
-    txn_val['value'] = txn_val.amount * txn_val.price
-    txn_val = txn_val.reset_index().pivot_table(
-        index='date', values='value',
-        columns='symbol').replace(np.nan, 0)
+    txn_val.index.names = ["date"]
+    txn_val["value"] = txn_val.amount * txn_val.price
+    txn_val = txn_val.reset_index().pivot_table(index="date", values="value", columns="symbol").replace(np.nan, 0)
 
     # Cumulate transaction amounts each day
-    txn_val['day'] = txn_val.index.date
-    txn_val = txn_val.groupby('day').cumsum()
+    txn_val["day"] = txn_val.index.date
+    txn_val = txn_val.groupby("day").cumsum()
 
     # Calculate exposure, then take peak of exposure every day
-    txn_val['exposure'] = txn_val.abs().sum(axis=1)
-    condition = (txn_val['exposure'] == txn_val.groupby(
-        pd.Grouper(freq='24h'))['exposure'].transform('max'))
-    txn_val = txn_val[condition].drop('exposure', axis=1)
+    txn_val["exposure"] = txn_val.abs().sum(axis=1)
+    condition = txn_val["exposure"] == txn_val.groupby(pd.Grouper(freq="24h"))["exposure"].transform("max")
+    txn_val = txn_val[condition].drop("exposure", axis=1)
 
     # Compute cash delta
-    txn_val['cash'] = -txn_val.sum(axis=1)
+    txn_val["cash"] = -txn_val.sum(axis=1)
 
     # Shift EOD positions to positions at start of next trading day
     positions_shifted = positions.copy().shift(1).fillna(0)
@@ -534,13 +535,13 @@ def estimate_intraday(returns, positions, transactions, eod_hour=23):
         divisor = 1.0
     starting_capital = positions.iloc[0].sum() / divisor
     # positions_shifted.cash[0] = starting_capital
-    positions_shifted.iloc[0, positions_shifted.columns.get_loc('cash')] = starting_capital
+    positions_shifted.iloc[0, positions_shifted.columns.get_loc("cash")] = starting_capital
 
     # Format and add start positions to intraday position changes
     txn_val.index = txn_val.index.normalize()
     corrected_positions = positions_shifted.add(txn_val, fill_value=0)
-    corrected_positions.index.name = 'period_close'
-    corrected_positions.columns.name = 'sid'
+    corrected_positions.index.name = "period_close"
+    corrected_positions.columns.name = "sid"
 
     return corrected_positions
 
@@ -566,8 +567,7 @@ def clip_returns_to_benchmark(rets, benchmark_rets):
         benchmark returns.
     """
 
-    if (rets.index[0] < benchmark_rets.index[0]) \
-            or (rets.index[-1] > benchmark_rets.index[-1]):
+    if (rets.index[0] < benchmark_rets.index[0]) or (rets.index[-1] > benchmark_rets.index[-1]):
         clipped_rets = rets[benchmark_rets.index]
     else:
         clipped_rets = rets
@@ -581,9 +581,9 @@ def to_utc(df):
     """
 
     try:
-        df.index = df.index.tz_localize('UTC')
+        df.index = df.index.tz_localize("UTC")
     except TypeError:
-        df.index = df.index.tz_convert('UTC')
+        df.index = df.index.tz_convert("UTC")
 
     return df
 
@@ -606,9 +606,9 @@ def get_month_end_freq():
         'M' for pandas < 2.2.0, 'ME' for pandas >= 2.2.0
     """
     if version.parse(pd.__version__) < version.parse("2.2.0"):
-        return 'M'
+        return "M"
     else:
-        return 'ME'
+        return "ME"
 
 
 def make_timezone_aware(timestamp, target_tz):
@@ -653,9 +653,7 @@ def _default_returns_func(*args, **kwargs):
     return Empyrical.annual_return(*args, **kwargs)
 
 
-SETTINGS = {
-    "returns_func": _default_returns_func
-}
+SETTINGS = {"returns_func": _default_returns_func}
 
 
 def register_return_func(func):
@@ -678,7 +676,7 @@ def register_return_func(func):
     None
     """
 
-    SETTINGS['returns_func'] = func
+    SETTINGS["returns_func"] = func
 
 
 def get_symbol_rets(symbol, start=None, end=None):
@@ -704,13 +702,10 @@ def get_symbol_rets(symbol, start=None, end=None):
         Returned by the current 'returns_func'
     """
 
-    return SETTINGS['returns_func'](symbol,
-                                    start=start,
-                                    end=end)
+    return SETTINGS["returns_func"](symbol, start=start, end=end)
 
 
-def configure_legend(ax, autofmt_xdate=True, change_colors=False,
-                     rotation=30, ha='right'):
+def configure_legend(ax, autofmt_xdate=True, change_colors=False, rotation=30, ha="right"):
     """
     Format legend for perf attribution plots:
     - put legend to the right of plot instead of overlapping with it
@@ -718,30 +713,28 @@ def configure_legend(ax, autofmt_xdate=True, change_colors=False,
     - set colors, according to colormap
     """
     chart_box = ax.get_position()
-    ax.set_position([chart_box.x0, chart_box.y0,
-                     chart_box.width * 0.75, chart_box.height])
+    ax.set_position([chart_box.x0, chart_box.y0, chart_box.width * 0.75, chart_box.height])
 
     # make legend order match graph lines
     handles, labels = ax.get_legend_handles_labels()
-    handles_and_labels_sorted = sorted(zip(handles, labels),
-                                       key=lambda x: x[0].get_ydata()[-1],
-                                       reverse=True)
+    handles_and_labels_sorted = sorted(zip(handles, labels), key=lambda x: x[0].get_ydata()[-1], reverse=True)
 
     handles_sorted = [h[0] for h in handles_and_labels_sorted]
     labels_sorted = [h[1] for h in handles_and_labels_sorted]
 
     if change_colors:
-        for handle, color in zip(handles_sorted,
-                                 cycle(COLORS)):
+        for handle, color in zip(handles_sorted, cycle(COLORS)):
             handle.set_color(color)
 
-    ax.legend(handles=handles_sorted,
-              labels=labels_sorted,
-              frameon=True,
-              framealpha=0.5,
-              loc='upper left',
-              bbox_to_anchor=(1.05, 1),
-              fontsize='large')
+    ax.legend(
+        handles=handles_sorted,
+        labels=labels_sorted,
+        frameon=True,
+        framealpha=0.5,
+        loc="upper left",
+        bbox_to_anchor=(1.05, 1),
+        fontsize="large",
+    )
 
     # manually rotate xticklabels instead of using matplotlib's autofmt_xdate
     # because it disables xticklabels for all but the last plot
@@ -760,9 +753,11 @@ def sample_colormap(cmap_name, n_samples):
     try:
         # Try modern API first (matplotlib >= 3.8.0)
         import matplotlib.pyplot as plt
+
         colormap = plt.colormaps[cmap_name]
     except (AttributeError, KeyError):
         from matplotlib.pyplot import cm as _cm
+
         try:
             # Try intermediate API (matplotlib 3.5.0 - 3.7.x)
             colormap = _cm.get_cmap(cmap_name)
@@ -780,10 +775,8 @@ def sample_colormap(cmap_name, n_samples):
     return colors
 
 
-from fincore.utils.math_utils import nanmean, nanstd, nansum, nanmax, nanmin, nanargmax, nanargmin
-
-
-from fincore.utils.data_utils import roll, up, down, _roll_ndarray, _roll_pandas
+from fincore.utils.data_utils import _roll_ndarray, _roll_pandas, down, roll, up
+from fincore.utils.math_utils import nanargmax, nanargmin, nanmax, nanmean, nanmin, nanstd, nansum
 
 
 def get_utc_timestamp(dt):
@@ -804,9 +797,9 @@ def get_utc_timestamp(dt):
 
     dt = pd.to_datetime(dt)
     try:
-        dt = dt.tz_localize('UTC')
+        dt = dt.tz_localize("UTC")
     except TypeError:
-        dt = dt.tz_convert('UTC')
+        dt = dt.tz_convert("UTC")
     return dt
 
 
@@ -880,14 +873,10 @@ def rolling_window(array, length, mutable=False):
         raise IndexError("Can't restride a scalar.")
     elif orig_shape[0] < length:
         raise IndexError(
-            "Can't restride array of shape {shape} with"
-            " a window length of {len}".format(
-                shape=orig_shape,
-                len=length,
-            )
+            f"Can't restride array of shape {orig_shape} with a window length of {length}"
         )
 
-    num_windows = (orig_shape[0] - length + 1)
+    num_windows = orig_shape[0] - length + 1
     new_shape = (num_windows, length) + orig_shape[1:]
 
     new_strides = (array.strides[0],) + array.strides

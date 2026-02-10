@@ -18,20 +18,21 @@
 
 import numpy as np
 import pandas as pd
+
 from fincore.metrics.returns import cum_returns
 
 __all__ = [
-    'model_returns_t_alpha_beta',
-    'model_returns_normal',
-    'model_returns_t',
-    'model_best',
-    'model_stoch_vol',
-    'compute_bayes_cone',
-    'compute_consistency_score',
-    'run_model',
-    'simulate_paths',
-    'summarize_paths',
-    'forecast_cone_bootstrap',
+    "model_returns_t_alpha_beta",
+    "model_returns_normal",
+    "model_returns_t",
+    "model_best",
+    "model_stoch_vol",
+    "compute_bayes_cone",
+    "compute_consistency_score",
+    "run_model",
+    "simulate_paths",
+    "summarize_paths",
+    "forecast_cone_bootstrap",
 ]
 
 
@@ -59,21 +60,21 @@ def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
     import pymc as pm
 
     if len(data) != len(bmark):
-        data, bmark = data.align(bmark, join='inner')
+        data, bmark = data.align(bmark, join="inner")
 
     data_array = np.asarray(data)
     bmark_array = np.asarray(bmark)
 
     with pm.Model() as model:
-        sigma = pm.HalfCauchy('sigma', beta=1)
-        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
+        sigma = pm.HalfCauchy("sigma", beta=1)
+        nu = pm.Exponential("nu_minus_two", 1 / 29.0) + 2.0
 
-        alpha = pm.Normal('alpha', mu=0, sigma=.1)
-        beta = pm.Normal('beta', mu=0, sigma=1)
+        alpha = pm.Normal("alpha", mu=0, sigma=0.1)
+        beta = pm.Normal("beta", mu=0, sigma=1)
 
         mu = alpha + beta * bmark_array
-        
-        returns = pm.StudentT('returns', nu=nu, mu=mu, sigma=sigma, observed=data_array)
+
+        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -104,10 +105,10 @@ def model_returns_normal(data, samples=500, progressbar=True):
     data_array = np.asarray(data)
 
     with pm.Model() as model:
-        mu = pm.Normal('mean_returns', mu=0, sigma=.01)
-        sigma = pm.HalfCauchy('volatility', beta=1)
-        
-        returns = pm.Normal('returns', mu=mu, sigma=sigma, observed=data_array)
+        mu = pm.Normal("mean_returns", mu=0, sigma=0.01)
+        sigma = pm.HalfCauchy("volatility", beta=1)
+
+        returns = pm.Normal("returns", mu=mu, sigma=sigma, observed=data_array)
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -138,11 +139,11 @@ def model_returns_t(data, samples=500, progressbar=True):
     data_array = np.asarray(data)
 
     with pm.Model() as model:
-        mu = pm.Normal('mean_returns', mu=0, sigma=.01)
-        sigma = pm.HalfCauchy('volatility', beta=1)
-        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
-        
-        returns = pm.StudentT('returns', nu=nu, mu=mu, sigma=sigma, observed=data_array)
+        mu = pm.Normal("mean_returns", mu=0, sigma=0.01)
+        sigma = pm.HalfCauchy("volatility", beta=1)
+        nu = pm.Exponential("nu_minus_two", 1 / 29.0) + 2.0
+
+        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -175,11 +176,11 @@ def model_best(y1, y2, samples=1000, progressbar=True):
     """
     import pymc as pm
 
-    y = pd.DataFrame({'y1': y1, 'y2': y2})
+    y = pd.DataFrame({"y1": y1, "y2": y2})
     y = y.dropna()
 
-    y1_array = np.asarray(y['y1'])
-    y2_array = np.asarray(y['y2'])
+    y1_array = np.asarray(y["y1"])
+    y2_array = np.asarray(y["y2"])
 
     mu_m = np.mean(np.concatenate([y1_array, y2_array]))
     mu_p = np.std(np.concatenate([y1_array, y2_array])) * 1000
@@ -188,16 +189,16 @@ def model_best(y1, y2, samples=1000, progressbar=True):
     sigma_high = np.std(np.concatenate([y1_array, y2_array])) * 1000
 
     with pm.Model() as model:
-        group1_mean = pm.Normal('group1_mean', mu=mu_m, sigma=mu_p)
-        group2_mean = pm.Normal('group2_mean', mu=mu_m, sigma=mu_p)
-        group1_std = pm.Uniform('group1_std', lower=sigma_low, upper=sigma_high)
-        group2_std = pm.Uniform('group2_std', lower=sigma_low, upper=sigma_high)
-        nu = pm.Exponential('nu_minus_two', 1 / 29.) + 2.
+        group1_mean = pm.Normal("group1_mean", mu=mu_m, sigma=mu_p)
+        group2_mean = pm.Normal("group2_mean", mu=mu_m, sigma=mu_p)
+        group1_std = pm.Uniform("group1_std", lower=sigma_low, upper=sigma_high)
+        group2_std = pm.Uniform("group2_std", lower=sigma_low, upper=sigma_high)
+        nu = pm.Exponential("nu_minus_two", 1 / 29.0) + 2.0
 
-        returns_1 = pm.StudentT('returns_1', nu=nu, mu=group1_mean, sigma=group1_std, observed=y1_array)
-        returns_2 = pm.StudentT('returns_2', nu=nu, mu=group2_mean, sigma=group2_std, observed=y2_array)
+        returns_1 = pm.StudentT("returns_1", nu=nu, mu=group1_mean, sigma=group1_std, observed=y1_array)
+        returns_2 = pm.StudentT("returns_2", nu=nu, mu=group2_mean, sigma=group2_std, observed=y2_array)
 
-        diff_of_means = pm.Deterministic('difference_of_means', group1_mean - group2_mean)
+        diff_of_means = pm.Deterministic("difference_of_means", group1_mean - group2_mean)
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -231,11 +232,11 @@ def model_stoch_vol(data, samples=2000, progressbar=True):
     data_array = np.asarray(data)
 
     with pm.Model() as model:
-        sigma = pm.Exponential('sigma', 50.)
-        nu = pm.Exponential('nu', .1)
-        s = pm.GaussianRandomWalk('s', sigma=sigma, shape=len(data_array))
-        
-        r = pm.StudentT('r', nu=nu, sigma=pm.math.exp(-2 * s), observed=data_array)
+        sigma = pm.Exponential("sigma", 50.0)
+        nu = pm.Exponential("nu", 0.1)
+        s = pm.GaussianRandomWalk("s", sigma=sigma, shape=len(data_array))
+
+        r = pm.StudentT("r", nu=nu, sigma=pm.math.exp(-2 * s), observed=data_array)
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -290,7 +291,7 @@ def compute_consistency_score(returns_test, preds):
     list
         Consistency scores at each time point.
     """
-    returns_test_cum = cum_returns(returns_test, starting_value=1.)
+    returns_test_cum = cum_returns(returns_test, starting_value=1.0)
 
     cum_preds = np.cumprod(preds + 1, axis=1)
 
@@ -326,16 +327,16 @@ def run_model(model, returns_train, returns_test=None, bmark=None, samples=500, 
     trace : pymc3.sampling.BaseTrace
         Posterior trace.
     """
-    if model == 'alpha_beta':
+    if model == "alpha_beta":
         model_obj, trace = model_returns_t_alpha_beta(returns_train, bmark, samples=samples, progressbar=progressbar)
-    elif model == 't':
+    elif model == "t":
         model_obj, trace = model_returns_t(returns_train, samples=samples, progressbar=progressbar)
-    elif model == 'normal':
+    elif model == "normal":
         model_obj, trace = model_returns_normal(returns_train, samples=samples, progressbar=progressbar)
-    elif model == 'best':
+    elif model == "best":
         model_obj, trace = model_best(returns_train, bmark, samples=samples, progressbar=progressbar)
     else:
-        raise NotImplementedError('Model {} not implemented.'.format(model))
+        raise NotImplementedError(f"Model {model} not implemented.")
 
     return model_obj, trace
 
@@ -387,7 +388,7 @@ def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
         Cone bounds.
     """
     from fincore.metrics.returns import cum_returns
-    
+
     cum_samples = cum_returns(samples.T, starting_value=starting_value).T
 
     cum_mean = cum_samples.mean(axis=0)
@@ -404,7 +405,9 @@ def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
     return cone_bounds
 
 
-def forecast_cone_bootstrap(is_returns, num_days, cone_std=(1., 1.5, 2.), starting_value=1, num_samples=1000, random_seed=None):
+def forecast_cone_bootstrap(
+    is_returns, num_days, cone_std=(1.0, 1.5, 2.0), starting_value=1, num_samples=1000, random_seed=None
+):
     """Determine the upper and lower bounds of an n standard deviation cone.
 
     Future cumulative mean and standard deviation are computed by repeatedly sampling from the
@@ -441,8 +444,6 @@ def forecast_cone_bootstrap(is_returns, num_days, cone_std=(1., 1.5, 2.), starti
         random_seed=random_seed,
     )
 
-    cone_bounds = summarize_paths(
-        samples=samples, cone_std=cone_std, starting_value=starting_value
-    )
+    cone_bounds = summarize_paths(samples=samples, cone_std=cone_std, starting_value=starting_value)
 
     return cone_bounds

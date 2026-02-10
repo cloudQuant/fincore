@@ -18,25 +18,26 @@
 
 import numpy as np
 import pandas as pd
-from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
-from fincore.metrics.basic import aligned_series, annualization_factor
+
+from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
 from fincore.metrics.alpha_beta import alpha, alpha_aligned, alpha_beta_aligned, beta
-from fincore.metrics.ratios import sharpe_ratio, up_capture, down_capture
+from fincore.metrics.basic import aligned_series, annualization_factor
 from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import down_capture, sharpe_ratio, up_capture
 
 __all__ = [
-    'roll_alpha',
-    'roll_beta',
-    'roll_alpha_beta',
-    'roll_sharpe_ratio',
-    'roll_max_drawdown',
-    'roll_up_capture',
-    'roll_down_capture',
-    'roll_up_down_capture',
-    'rolling_volatility',
-    'rolling_sharpe',
-    'rolling_beta',
-    'rolling_regression',
+    "roll_alpha",
+    "roll_beta",
+    "roll_alpha_beta",
+    "roll_sharpe_ratio",
+    "roll_max_drawdown",
+    "roll_up_capture",
+    "roll_down_capture",
+    "roll_up_down_capture",
+    "rolling_volatility",
+    "rolling_sharpe",
+    "rolling_beta",
+    "rolling_regression",
 ]
 
 
@@ -70,7 +71,7 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
     if len(returns_aligned) < window:
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -83,11 +84,10 @@ def roll_alpha(returns, factor_returns, window=252, risk_free=0.0, period=DAILY,
     ret_arr = np.asanyarray(returns_aligned)
     fac_arr = np.asanyarray(factor_aligned)
     for i in range(n):
-        out[i] = alpha_aligned(ret_arr[i:i + window], fac_arr[i:i + window],
-                               risk_free, period, annualization)
+        out[i] = alpha_aligned(ret_arr[i : i + window], fac_arr[i : i + window], risk_free, period, annualization)
 
     if is_series:
-        return pd.Series(out, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1 :])
     else:
         return out
 
@@ -122,7 +122,7 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
     if len(returns_aligned) < window:
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -134,9 +134,9 @@ def roll_beta(returns, factor_returns, window=252, risk_free=0.0, period=DAILY, 
     fac_adj = factor_aligned - risk_free
     rolling_cov = ret_adj.rolling(window).cov(fac_adj)
     rolling_var = fac_adj.rolling(window).var()
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         result = rolling_cov / rolling_var
-    result = result.iloc[window - 1:]
+    result = result.iloc[window - 1 :]
 
     if is_series:
         return result
@@ -174,9 +174,9 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
     if len(returns_aligned) < window:
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
-                return pd.DataFrame(columns=['alpha', 'beta'], index=pd.DatetimeIndex([]))
-            return pd.DataFrame(columns=['alpha', 'beta'])
-        return pd.DataFrame(columns=['alpha', 'beta'])
+                return pd.DataFrame(columns=["alpha", "beta"], index=returns_aligned.index[:0])
+            return pd.DataFrame(columns=["alpha", "beta"])
+        return pd.DataFrame(columns=["alpha", "beta"])
 
     if not is_series:
         returns_aligned = pd.Series(returns_aligned)
@@ -188,16 +188,15 @@ def roll_alpha_beta(returns, factor_returns, window=252, risk_free=0.0, period=D
     ret_arr = np.asanyarray(returns_aligned)
     fac_arr = np.asanyarray(factor_aligned)
     for i in range(n):
-        ab = alpha_beta_aligned(ret_arr[i:i + window], fac_arr[i:i + window],
-                                risk_free, period, annualization)
+        ab = alpha_beta_aligned(ret_arr[i : i + window], fac_arr[i : i + window], risk_free, period, annualization)
         out_alpha[i] = ab[0]
         out_beta[i] = ab[1]
 
-    idx = returns_aligned.index[window - 1:]
+    idx = returns_aligned.index[window - 1 :]
     if is_series:
-        return pd.DataFrame({'alpha': out_alpha, 'beta': out_beta}, index=idx)
+        return pd.DataFrame({"alpha": out_alpha, "beta": out_beta}, index=idx)
     else:
-        return pd.DataFrame({'alpha': out_alpha, 'beta': out_beta})
+        return pd.DataFrame({"alpha": out_alpha, "beta": out_beta})
 
 
 def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualization=None):
@@ -226,7 +225,7 @@ def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualiz
     if len(returns) < window:
         if is_series:
             if isinstance(returns.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -240,10 +239,10 @@ def roll_sharpe_ratio(returns, window=252, risk_free=0.0, period=DAILY, annualiz
     rolling_mean = ret_adj.rolling(window, min_periods=1).mean()
     rolling_std = ret_adj.rolling(window, min_periods=1).std(ddof=1)
 
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         result = (rolling_mean / rolling_std) * sqrt_ann
 
-    result = result.iloc[window - 1:]
+    result = result.iloc[window - 1 :]
 
     if is_series:
         return result
@@ -271,7 +270,7 @@ def roll_max_drawdown(returns, window=252):
     if len(returns) < window:
         if is_series:
             if isinstance(returns.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -280,26 +279,27 @@ def roll_max_drawdown(returns, window=252):
 
     # --- vectorised path using sliding_window_view ---
     from numpy.lib.stride_tricks import sliding_window_view
-    windows = sliding_window_view(ret_arr, window)          # (n, window)
+
+    windows = sliding_window_view(ret_arr, window)  # (n, window)
 
     # cumulative product along each window row
-    cum = np.cumprod(1.0 + windows, axis=1) * 100.0         # (n, window)
+    cum = np.cumprod(1.0 + windows, axis=1) * 100.0  # (n, window)
     # prepend the starting value 100 as column-0
     start_col = np.full((n, 1), 100.0)
-    cum = np.concatenate([start_col, cum], axis=1)           # (n, window+1)
+    cum = np.concatenate([start_col, cum], axis=1)  # (n, window+1)
 
     # running maximum along each window row
     run_max = np.maximum.accumulate(cum, axis=1)
 
     # drawdown at every point inside every window
-    with np.errstate(divide='ignore', invalid='ignore'):
-        dd = (cum - run_max) / run_max                       # (n, window+1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd = (cum - run_max) / run_max  # (n, window+1)
 
     # max drawdown per window (most negative value)
-    out = np.nanmin(dd, axis=1)                              # (n,)
+    out = np.nanmin(dd, axis=1)  # (n,)
 
     if is_series:
-        return pd.Series(out, index=returns.index[window - 1:])
+        return pd.Series(out, index=returns.index[window - 1 :])
     else:
         return out
 
@@ -328,7 +328,7 @@ def roll_up_capture(returns, factor_returns, window=252):
     if len(returns_aligned) < window:
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -339,10 +339,10 @@ def roll_up_capture(returns, factor_returns, window=252):
     n = len(returns_aligned) - window + 1
     out = np.empty(n, dtype=float)
     for i in range(n):
-        out[i] = up_capture(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window])
+        out[i] = up_capture(returns_aligned.iloc[i : i + window], factor_aligned.iloc[i : i + window])
 
     if is_series:
-        return pd.Series(out, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1 :])
     else:
         return out
 
@@ -371,7 +371,7 @@ def roll_down_capture(returns, factor_returns, window=252):
     if len(returns_aligned) < window:
         if is_series:
             if isinstance(returns_aligned.index, pd.DatetimeIndex):
-                return pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+                return pd.Series([], dtype=float, index=returns_aligned.index[:0])
             return pd.Series([], dtype=float)
         return np.array([], dtype=float)
 
@@ -382,10 +382,10 @@ def roll_down_capture(returns, factor_returns, window=252):
     n = len(returns_aligned) - window + 1
     out = np.empty(n, dtype=float)
     for i in range(n):
-        out[i] = down_capture(returns_aligned.iloc[i:i + window], factor_aligned.iloc[i:i + window])
+        out[i] = down_capture(returns_aligned.iloc[i : i + window], factor_aligned.iloc[i : i + window])
 
     if is_series:
-        return pd.Series(out, index=returns_aligned.index[window - 1:])
+        return pd.Series(out, index=returns_aligned.index[window - 1 :])
     else:
         return out
 
@@ -484,15 +484,12 @@ def rolling_beta(returns, factor_returns, rolling_window=126):
     from functools import partial
 
     if factor_returns.ndim > 1:
-        return factor_returns.apply(
-            partial(rolling_beta, returns),
-            rolling_window=rolling_window
-        )
+        return factor_returns.apply(partial(rolling_beta, returns), rolling_window=rolling_window)
     else:
-        returns_aligned, factor_aligned = returns.align(factor_returns, join='inner')
+        returns_aligned, factor_aligned = returns.align(factor_returns, join="inner")
         rolling_cov = returns_aligned.rolling(rolling_window).cov(factor_aligned)
         rolling_var = factor_aligned.rolling(rolling_window).var()
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             out = rolling_cov / rolling_var
         return out
 
@@ -523,7 +520,7 @@ def rolling_regression(returns, factor_returns, rolling_window=126):
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     if len(returns_aligned) < rolling_window:
-        return pd.DataFrame(columns=['alpha', 'beta'])
+        return pd.DataFrame(columns=["alpha", "beta"])
 
     if not isinstance(returns_aligned, pd.Series):
         returns_aligned = pd.Series(returns_aligned)
@@ -531,14 +528,11 @@ def rolling_regression(returns, factor_returns, rolling_window=126):
 
     rolling_cov = returns_aligned.rolling(rolling_window).cov(factor_aligned)
     rolling_var = factor_aligned.rolling(rolling_window).var()
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         rolling_beta_vals = rolling_cov / rolling_var
     rolling_mean_ret = returns_aligned.rolling(rolling_window).mean()
     rolling_mean_fac = factor_aligned.rolling(rolling_window).mean()
     rolling_alpha_vals = rolling_mean_ret - rolling_beta_vals * rolling_mean_fac
 
-    result = pd.DataFrame({
-        'alpha': rolling_alpha_vals,
-        'beta': rolling_beta_vals
-    })
+    result = pd.DataFrame({"alpha": rolling_alpha_vals, "beta": rolling_beta_vals})
     return result.dropna()

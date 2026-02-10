@@ -16,31 +16,31 @@
 
 """风险指标函数模块."""
 
+from sys import float_info
+
 import numpy as np
 import pandas as pd
 from scipy import stats
-from sys import float_info
+
+from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
+from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.utils import nanmean, nanstd
-from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
-from fincore.metrics.basic import (
-    annualization_factor, adjust_returns, aligned_series
-)
 
 __all__ = [
-    'annual_volatility',
-    'downside_risk',
-    'value_at_risk',
-    'conditional_value_at_risk',
-    'tail_ratio',
-    'tracking_error',
-    'residual_risk',
-    'var_excess_return',
-    'var_cov_var_normal',
-    'trading_value_at_risk',
-    'gpd_risk_estimates',
-    'gpd_risk_estimates_aligned',
-    'beta_fragility_heuristic',
-    'beta_fragility_heuristic_aligned',
+    "annual_volatility",
+    "downside_risk",
+    "value_at_risk",
+    "conditional_value_at_risk",
+    "tail_ratio",
+    "tracking_error",
+    "residual_risk",
+    "var_excess_return",
+    "var_cov_var_normal",
+    "trading_value_at_risk",
+    "gpd_risk_estimates",
+    "gpd_risk_estimates_aligned",
+    "beta_fragility_heuristic",
+    "beta_fragility_heuristic_aligned",
 ]
 
 
@@ -324,6 +324,7 @@ def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     excess_factor = factor_aligned - risk_free
 
     from fincore.metrics.alpha_beta import beta_aligned
+
     beta_val = beta_aligned(np.asanyarray(excess_returns), np.asanyarray(excess_factor))
     predicted_returns = beta_val * excess_factor
     residuals = excess_returns - predicted_returns
@@ -472,9 +473,7 @@ def gpd_risk_estimates(returns, var_p=0.01):
         if scale != 0:
             param_factor = shape / scale
             if shape != 0 and param_factor >= 0 and scale >= 0:
-                result = (-n * np.log(scale)) - (
-                    ((1 / shape) + 1) * (np.log((shape / scale * price_data) + 1)).sum()
-                )
+                result = (-n * np.log(scale)) - (((1 / shape) + 1) * (np.log((shape / scale * price_data) + 1)).sum())
         return result
 
     def _gpd_loglikelihood_scale_only(scale, price_data):
@@ -516,8 +515,7 @@ def gpd_risk_estimates(returns, var_p=0.01):
                         scale_param = resulting_params[0]
                         shape_param = resulting_params[1]
                         var_estimate = _gpd_var_calculator(
-                            threshold, scale_param, shape_param, var_p,
-                            len(losses), len(losses_beyond_threshold)
+                            threshold, scale_param, shape_param, var_p, len(losses), len(losses_beyond_threshold)
                         )
                         if shape_param > 0 and var_estimate > 0:
                             finished = True
@@ -606,11 +604,7 @@ def beta_fragility_heuristic(returns, factor_returns):
         start_returns_weight = (mid_factor_returns - start_factor_returns) / factor_returns_range
         end_returns_weight = (end_factor_returns - mid_factor_returns) / factor_returns_range
 
-    heuristic = (
-        (start_returns_weight * start_returns)
-        + (end_returns_weight * end_returns)
-        - mid_returns
-    )
+    heuristic = (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
 
     return heuristic
 

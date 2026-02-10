@@ -3,6 +3,7 @@
 Provides a concrete :class:`MatplotlibBackend` implementing the
 :class:`~fincore.viz.base.VizBackend` protocol using matplotlib.
 """
+
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -20,6 +21,7 @@ class MatplotlibBackend:
 
     def _import_plt(self):
         import matplotlib.pyplot as plt
+
         return plt
 
     def plot_returns(
@@ -27,7 +29,7 @@ class MatplotlibBackend:
         cum_returns: pd.Series,
         *,
         title: str = "Cumulative Returns",
-        ax: Optional[Any] = None,
+        ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
         plt = self._import_plt()
@@ -45,14 +47,13 @@ class MatplotlibBackend:
         drawdown: pd.Series,
         *,
         title: str = "Drawdown",
-        ax: Optional[Any] = None,
+        ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 3))
-        ax.fill_between(drawdown.index, drawdown.values, 0,
-                        color="red", alpha=0.3, **kwargs)
+        ax.fill_between(drawdown.index, drawdown.values, 0, color="red", alpha=0.3, **kwargs)
         ax.plot(drawdown.index, drawdown.values, color="red", linewidth=0.8)
         ax.set_title(title)
         ax.set_ylabel("Drawdown")
@@ -64,7 +65,7 @@ class MatplotlibBackend:
         rolling_sharpe: pd.Series,
         *,
         title: str = "Rolling Sharpe Ratio",
-        ax: Optional[Any] = None,
+        ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
         plt = self._import_plt()
@@ -82,18 +83,16 @@ class MatplotlibBackend:
         monthly_returns: pd.DataFrame,
         *,
         title: str = "Monthly Returns (%)",
-        ax: Optional[Any] = None,
+        ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 5))
         import matplotlib.colors as mcolors
-        norm = mcolors.TwoSlopeNorm(vmin=monthly_returns.min().min(),
-                                     vcenter=0,
-                                     vmax=monthly_returns.max().max())
-        im = ax.imshow(monthly_returns.values, cmap="RdYlGn", norm=norm,
-                       aspect="auto")
+
+        norm = mcolors.TwoSlopeNorm(vmin=monthly_returns.min().min(), vcenter=0, vmax=monthly_returns.max().max())
+        im = ax.imshow(monthly_returns.values, cmap="RdYlGn", norm=norm, aspect="auto")
         ax.set_xticks(range(monthly_returns.shape[1]))
         ax.set_xticklabels(monthly_returns.columns, fontsize=8)
         ax.set_yticks(range(monthly_returns.shape[0]))

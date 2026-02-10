@@ -10,6 +10,7 @@ Usage::
     results = engine.compute(['sharpe', 'volatility', 'max_drawdown'])
     # results is a dict[str, pd.Series]
 """
+
 from __future__ import annotations
 
 from typing import Dict, List, Optional, Union
@@ -20,16 +21,17 @@ import pandas as pd
 from fincore.constants import DAILY
 from fincore.metrics.basic import annualization_factor as _ann_factor
 
-
 # Registry of available rolling metric names
-_AVAILABLE_METRICS = frozenset({
-    'sharpe',
-    'volatility',
-    'max_drawdown',
-    'beta',
-    'sortino',
-    'mean_return',
-})
+_AVAILABLE_METRICS = frozenset(
+    {
+        "sharpe",
+        "volatility",
+        "max_drawdown",
+        "beta",
+        "sortino",
+        "mean_return",
+    }
+)
 
 
 class RollingEngine:
@@ -51,7 +53,7 @@ class RollingEngine:
         self,
         returns: pd.Series,
         *,
-        factor_returns: Optional[pd.Series] = None,
+        factor_returns: pd.Series | None = None,
         window: int = 252,
         period: str = DAILY,
     ) -> None:
@@ -71,8 +73,9 @@ class RollingEngine:
     # ------------------------------------------------------------------
 
     def compute(
-        self, metrics: Union[List[str], str] = 'all',
-    ) -> Dict[str, pd.Series]:
+        self,
+        metrics: list[str] | str = "all",
+    ) -> dict[str, pd.Series]:
         """Compute the requested rolling metrics.
 
         Parameters
@@ -86,17 +89,14 @@ class RollingEngine:
         dict[str, pd.Series]
             Mapping from metric name to rolling values.
         """
-        if metrics == 'all':
+        if metrics == "all":
             metrics = list(_AVAILABLE_METRICS)
 
-        results: Dict[str, pd.Series] = {}
+        results: dict[str, pd.Series] = {}
         for name in metrics:
-            fn = getattr(self, f'_compute_{name}', None)
+            fn = getattr(self, f"_compute_{name}", None)
             if fn is None:
-                raise ValueError(
-                    f"Unknown metric {name!r}. "
-                    f"Available: {sorted(_AVAILABLE_METRICS)}"
-                )
+                raise ValueError(f"Unknown metric {name!r}. Available: {sorted(_AVAILABLE_METRICS)}")
             results[name] = fn()
         return results
 
@@ -109,7 +109,7 @@ class RollingEngine:
         ret = self._returns
         rolling_mean = ret.rolling(w, min_periods=w).mean()
         rolling_std = ret.rolling(w, min_periods=w).std(ddof=1)
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             result = (rolling_mean / rolling_std) * self._sqrt_ann
         return result.dropna()
 
@@ -120,12 +120,14 @@ class RollingEngine:
 
     def _compute_max_drawdown(self) -> pd.Series:
         from fincore.metrics.rolling import roll_max_drawdown
+
         return roll_max_drawdown(self._returns, window=self._window)
 
     def _compute_beta(self) -> pd.Series:
         if self._factor_returns is None:
             raise ValueError("factor_returns required to compute 'beta'")
         from fincore.metrics.rolling import roll_beta
+
         return roll_beta(self._returns, self._factor_returns, window=self._window)
 
     def _compute_sortino(self) -> pd.Series:
@@ -136,7 +138,7 @@ class RollingEngine:
         downside = ret.copy()
         downside[downside > 0] = 0.0
         rolling_downside_std = downside.rolling(w, min_periods=w).std(ddof=1)
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             result = (rolling_mean / rolling_downside_std) * self._sqrt_ann
         return result.dropna()
 

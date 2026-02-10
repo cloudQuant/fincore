@@ -19,25 +19,26 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
+
 from fincore.metrics.basic import aligned_series
 from fincore.metrics.ratios import stability_of_timeseries
 
 __all__ = [
-    'skewness',
-    'kurtosis',
-    'hurst_exponent',
-    'stutzer_index',
-    'serial_correlation',
-    'stock_market_correlation',
-    'bond_market_correlation',
-    'futures_market_correlation',
-    'win_rate',
-    'loss_rate',
-    'r_cubed',
-    'tracking_difference',
-    'common_sense_ratio',
-    'var_cov_var_normal',
-    'normalize',
+    "skewness",
+    "kurtosis",
+    "hurst_exponent",
+    "stutzer_index",
+    "serial_correlation",
+    "stock_market_correlation",
+    "bond_market_correlation",
+    "futures_market_correlation",
+    "win_rate",
+    "loss_rate",
+    "r_cubed",
+    "tracking_difference",
+    "common_sense_ratio",
+    "var_cov_var_normal",
+    "normalize",
 ]
 
 
@@ -143,7 +144,7 @@ def hurst_exponent(returns):
                 continue
 
             # Vectorized: reshape into (n_subseries, lag) matrix
-            block = returns_clean[:n_subseries * lag].reshape(n_subseries, lag)
+            block = returns_clean[: n_subseries * lag].reshape(n_subseries, lag)
             means = block.mean(axis=1, keepdims=True)
             cumdevs = np.cumsum(block - means, axis=1)
             r_sub = cumdevs.max(axis=1) - cumdevs.min(axis=1)
@@ -468,7 +469,7 @@ def r_cubed(returns, factor_returns):
         return np.nan
 
     correlation = np.corrcoef(ret_arr[mask], fac_arr[mask])[0, 1]
-    return correlation ** 3
+    return correlation**3
 
 
 def tracking_difference(returns, factor_returns):
@@ -521,6 +522,7 @@ def common_sense_ratio(returns):
         Common sense ratio, or ``NaN`` if there is insufficient data.
     """
     from fincore.metrics.ratios import common_sense_ratio as _csr
+
     return _csr(returns)
 
 
@@ -546,6 +548,7 @@ def var_cov_var_normal(p, c, mu=0, sigma=1):
         Value-at-Risk.
     """
     from fincore.metrics.risk import var_cov_var_normal as _vcv
+
     return _vcv(p, c, mu, sigma)
 
 
@@ -567,4 +570,5 @@ def normalize(returns, starting_value=1):
         Normalized cumulative returns starting at ``starting_value``.
     """
     from fincore.metrics.returns import normalize as _normalize
+
     return _normalize(returns, starting_value=starting_value)

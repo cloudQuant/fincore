@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
 """
 风险相关的绘图函数
 
 包含风格因子暴露、行业暴露、市值暴露、成交量暴露等绘图函数。
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
-from fincore.constants import SECTORS, CAP_BUCKETS
+from fincore.constants import CAP_BUCKETS, SECTORS
 
 # 获取彩虹色图
-cmap = plt.get_cmap('gist_rainbow')
+cmap = plt.get_cmap("gist_rainbow")
 
 
-def plot_style_factor_exposures(tot_style_factor_exposure, factor_name=None,
-                                ax=None):
+def plot_style_factor_exposures(tot_style_factor_exposure, factor_name=None, ax=None):
     """
     Plots DataFrame output of compute_style_factor_exposures as a line graph.
 
@@ -40,23 +38,19 @@ def plot_style_factor_exposures(tot_style_factor_exposure, factor_name=None,
     if factor_name is None:
         factor_name = tot_style_factor_exposure.name
 
-    ax.plot(tot_style_factor_exposure.index, tot_style_factor_exposure,
-            label=factor_name)
+    ax.plot(tot_style_factor_exposure.index, tot_style_factor_exposure, label=factor_name)
     avg = tot_style_factor_exposure.mean()
-    ax.axhline(avg, linestyle='-.', label='Mean = {:.3}'.format(avg))
-    ax.axhline(0, color='k', linestyle='-')
+    ax.axhline(avg, linestyle="-.", label=f"Mean = {avg:.3}")
+    ax.axhline(0, color="k", linestyle="-")
     _, _, y1, y2 = plt.axis()
     lim = max(abs(y1), abs(y2))
-    ax.set(title='Exposure to {}'.format(factor_name),
-           ylabel='{} \n weighted exposure'.format(factor_name),
-           ylim=(-lim, lim))
+    ax.set(title=f"Exposure to {factor_name}", ylabel=f"{factor_name} \n weighted exposure", ylim=(-lim, lim))
     ax.legend(frameon=True, framealpha=0.5)
 
     return ax
 
 
-def plot_sector_exposures_longshort(long_exposures, short_exposures,
-                                    sector_dict=None, ax=None):
+def plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict=None, ax=None):
     """
     Plots outputs of compute_sector_exposures as area charts.
 
@@ -85,15 +79,13 @@ def plot_sector_exposures_longshort(long_exposures, short_exposures,
 
     color_list = cmap(np.linspace(0, 1, 11))
 
-    ax.stackplot(long_exposures[0].index, long_exposures,
-                 labels=sector_names, colors=color_list, alpha=0.8,
-                 baseline='zero')
-    ax.stackplot(long_exposures[0].index, short_exposures,
-                 colors=color_list, alpha=0.8, baseline='zero')
-    ax.axhline(0, color='k', linestyle='-')
-    ax.set(title='Long and short exposures to sectors',
-           ylabel='Proportion of long/short exposure in sectors')
-    ax.legend(loc='upper left', frameon=True, framealpha=0.5)
+    ax.stackplot(
+        long_exposures[0].index, long_exposures, labels=sector_names, colors=color_list, alpha=0.8, baseline="zero"
+    )
+    ax.stackplot(long_exposures[0].index, short_exposures, colors=color_list, alpha=0.8, baseline="zero")
+    ax.axhline(0, color="k", linestyle="-")
+    ax.set(title="Long and short exposures to sectors", ylabel="Proportion of long/short exposure in sectors")
+    ax.legend(loc="upper left", frameon=True, framealpha=0.5)
 
     return ax
 
@@ -126,12 +118,11 @@ def plot_sector_exposures_gross(gross_exposures, sector_dict=None, ax=None):
 
     color_list = cmap(np.linspace(0, 1, 11))
 
-    ax.stackplot(gross_exposures[0].index, gross_exposures,
-                 labels=sector_names, colors=color_list, alpha=0.8,
-                 baseline='zero')
-    ax.axhline(0, color='k', linestyle='-')
-    ax.set(title='Gross exposure to sectors',
-           ylabel='Proportion of gross exposure \n in sectors')
+    ax.stackplot(
+        gross_exposures[0].index, gross_exposures, labels=sector_names, colors=color_list, alpha=0.8, baseline="zero"
+    )
+    ax.axhline(0, color="k", linestyle="-")
+    ax.set(title="Gross exposure to sectors", ylabel="Proportion of gross exposure \n in sectors")
 
     return ax
 
@@ -165,10 +156,8 @@ def plot_sector_exposures_net(net_exposures, sector_dict=None, ax=None):
     color_list = cmap(np.linspace(0, 1, 11))
 
     for i in range(len(net_exposures)):
-        ax.plot(net_exposures[i], color=color_list[i], alpha=0.8,
-                label=sector_names[i])
-    ax.set(title='Net exposures to sectors',
-           ylabel='Proportion of net exposure \n in sectors')
+        ax.plot(net_exposures[i], color=color_list[i], alpha=0.8, label=sector_names[i])
+    ax.set(title="Net exposures to sectors", ylabel="Proportion of net exposure \n in sectors")
 
     return ax
 
@@ -195,15 +184,21 @@ def plot_cap_exposures_longshort(long_exposures, short_exposures, ax=None):
 
     color_list = cmap(np.linspace(0, 1, 5))
 
-    ax.stackplot(long_exposures[0].index, long_exposures,
-                 labels=CAP_BUCKETS.keys(), colors=color_list, alpha=0.8,
-                 baseline='zero')
-    ax.stackplot(long_exposures[0].index, short_exposures, colors=color_list,
-                 alpha=0.8, baseline='zero')
-    ax.axhline(0, color='k', linestyle='-')
-    ax.set(title='Long and short exposures to market caps',
-           ylabel='Proportion of long/short exposure in market cap buckets')
-    ax.legend(loc='upper left', frameon=True, framealpha=0.5)
+    ax.stackplot(
+        long_exposures[0].index,
+        long_exposures,
+        labels=CAP_BUCKETS.keys(),
+        colors=color_list,
+        alpha=0.8,
+        baseline="zero",
+    )
+    ax.stackplot(long_exposures[0].index, short_exposures, colors=color_list, alpha=0.8, baseline="zero")
+    ax.axhline(0, color="k", linestyle="-")
+    ax.set(
+        title="Long and short exposures to market caps",
+        ylabel="Proportion of long/short exposure in market cap buckets",
+    )
+    ax.legend(loc="upper left", frameon=True, framealpha=0.5)
 
     return ax
 
@@ -229,12 +224,16 @@ def plot_cap_exposures_gross(gross_exposures, ax=None):
 
     color_list = cmap(np.linspace(0, 1, 5))
 
-    ax.stackplot(gross_exposures[0].index, gross_exposures,
-                 labels=CAP_BUCKETS.keys(), colors=color_list, alpha=0.8,
-                 baseline='zero')
-    ax.axhline(0, color='k', linestyle='-')
-    ax.set(title='Gross exposure to market caps',
-           ylabel='Proportion of gross exposure \n in market cap buckets')
+    ax.stackplot(
+        gross_exposures[0].index,
+        gross_exposures,
+        labels=CAP_BUCKETS.keys(),
+        colors=color_list,
+        alpha=0.8,
+        baseline="zero",
+    )
+    ax.axhline(0, color="k", linestyle="-")
+    ax.set(title="Gross exposure to market caps", ylabel="Proportion of gross exposure \n in market cap buckets")
 
     return ax
 
@@ -262,17 +261,14 @@ def plot_cap_exposures_net(net_exposures, ax=None):
 
     cap_names = CAP_BUCKETS.keys()
     for i in range(len(net_exposures)):
-        ax.plot(net_exposures[i], color=color_list[i], alpha=0.8,
-                label=cap_names[i])
-    ax.axhline(0, color='k', linestyle='-')
-    ax.set(title='Net exposure to market caps',
-           ylabel='Proportion of net exposure \n in market cap buckets')
+        ax.plot(net_exposures[i], color=color_list[i], alpha=0.8, label=cap_names[i])
+    ax.axhline(0, color="k", linestyle="-")
+    ax.set(title="Net exposure to market caps", ylabel="Proportion of net exposure \n in market cap buckets")
 
     return ax
 
 
-def plot_volume_exposures_longshort(longed_threshold, shorted_threshold,
-                                    percentile, ax=None):
+def plot_volume_exposures_longshort(longed_threshold, shorted_threshold, percentile, ax=None):
     """
     Plots outputs of compute_volume_exposures as line graphs.
 
@@ -294,14 +290,13 @@ def plot_volume_exposures_longshort(longed_threshold, shorted_threshold,
     if ax is None:
         ax = plt.gca()
 
-    ax.plot(longed_threshold.index, longed_threshold,
-            color='b', label='long')
-    ax.plot(shorted_threshold.index, shorted_threshold,
-            color='r', label='short')
-    ax.axhline(0, color='k')
-    ax.set(title='Long and short exposures to ill_liquidity',
-           ylabel='{}th percentile of proportion of volume (%)'
-           .format(100 * percentile))
+    ax.plot(longed_threshold.index, longed_threshold, color="b", label="long")
+    ax.plot(shorted_threshold.index, shorted_threshold, color="r", label="short")
+    ax.axhline(0, color="k")
+    ax.set(
+        title="Long and short exposures to ill_liquidity",
+        ylabel=f"{100 * percentile}th percentile of proportion of volume (%)",
+    )
     ax.legend(frameon=True, framealpha=0.5)
 
     return ax
@@ -329,12 +324,12 @@ def plot_volume_exposures_gross(grossed_threshold, percentile, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    ax.plot(grossed_threshold.index, grossed_threshold,
-            color='b', label='gross')
-    ax.axhline(0, color='k')
-    ax.set(title='Gross exposure to ill_liquidity',
-           ylabel='{}th percentile of \n proportion of volume (%)'
-           .format(100 * percentile))
+    ax.plot(grossed_threshold.index, grossed_threshold, color="b", label="gross")
+    ax.axhline(0, color="k")
+    ax.set(
+        title="Gross exposure to ill_liquidity",
+        ylabel=f"{100 * percentile}th percentile of \n proportion of volume (%)",
+    )
     ax.legend(frameon=True, framealpha=0.5)
 
     return ax

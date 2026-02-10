@@ -30,14 +30,15 @@ from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-from fincore.constants import DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+
+from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 __all__ = [
-    'simple_returns',
-    'cum_returns',
-    'cum_returns_final',
-    'aggregate_returns',
-    'normalize',
+    "simple_returns",
+    "cum_returns",
+    "cum_returns_final",
+    "aggregate_returns",
+    "normalize",
 ]
 
 
@@ -50,6 +51,7 @@ def _get_annual_return():
         annual_return 函数.
     """
     from fincore.metrics.yearly import annual_return
+
     return annual_return
 
 
@@ -79,8 +81,8 @@ def annual_return(*args, **kwargs):
 
 
 def simple_returns(
-    prices: Union[pd.Series, pd.DataFrame, np.ndarray],
-) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
+    prices: pd.Series | pd.DataFrame | np.ndarray,
+) -> pd.Series | pd.DataFrame | np.ndarray:
     """Compute simple returns from a time series of prices.
 
     Parameters
@@ -108,10 +110,10 @@ def simple_returns(
 
 
 def cum_returns(
-    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
+    returns: pd.Series | pd.DataFrame | np.ndarray,
     starting_value: float = 0,
-    out: Optional[np.ndarray] = None,
-) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
+    out: np.ndarray | None = None,
+) -> pd.Series | pd.DataFrame | np.ndarray:
     """Compute cumulative returns from simple returns.
 
     This compounds the input returns and optionally scales by an initial
@@ -169,9 +171,9 @@ def cum_returns(
 
 
 def cum_returns_final(
-    returns: Union[pd.Series, pd.DataFrame, np.ndarray],
+    returns: pd.Series | pd.DataFrame | np.ndarray,
     starting_value: float = 0,
-) -> Union[float, np.ndarray, pd.Series]:
+) -> float | np.ndarray | pd.Series:
     """Compute total cumulative return from a series of simple returns.
 
     This computes the cumulative return by compounding simple period
@@ -241,8 +243,7 @@ def aggregate_returns(
 
     if not isinstance(returns.index, pd.DatetimeIndex):
         raise ValueError(
-            "aggregate_returns requires returns with a DatetimeIndex, "
-            "got {} instead.".format(type(returns.index).__name__)
+            f"aggregate_returns requires returns with a DatetimeIndex, got {type(returns.index).__name__} instead."
         )
 
     if convert_to == WEEKLY:
@@ -250,15 +251,11 @@ def aggregate_returns(
     elif convert_to == MONTHLY:
         grouping = [lambda dt: dt.year, lambda dt: dt.month]
     elif convert_to == QUARTERLY:
-        grouping = [lambda dt: dt.year, lambda dt: int(
-            math.ceil(dt.month / 3.0))]
+        grouping = [lambda dt: dt.year, lambda dt: int(math.ceil(dt.month / 3.0))]
     elif convert_to == YEARLY:
         grouping = [lambda dt: dt.year]
     else:
-        raise ValueError(
-            "convert_to must be {}, {}, {} or {}".format(
-                WEEKLY, MONTHLY, QUARTERLY, YEARLY)
-        )
+        raise ValueError(f"convert_to must be {WEEKLY}, {MONTHLY}, {QUARTERLY} or {YEARLY}")
 
     return returns.groupby(grouping).apply(cumulate_returns)
 
@@ -302,6 +299,7 @@ def normalize(
     first_value = returns.iloc[0]
     if first_value == 0:
         import warnings
+
         warnings.warn("First value of returns is 0, normalization will produce inf/nan values.")
         return returns * np.nan
     return starting_value * (returns / first_value)

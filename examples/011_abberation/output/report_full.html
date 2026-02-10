@@ -7,12 +7,13 @@
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
        max-width: 1100px; margin: 0 auto; padding: 24px; color: #1f2937; line-height: 1.6; background: #fff; }
 h1 { color: var(--blue); border-bottom: 3px solid var(--blue); padding-bottom: 8px; margin-bottom: 16px; }
-h2 { color: var(--blue); margin: 28px 0 12px; font-size: 1.25em; }
+h2 { color: var(--blue); margin: 28px 0 12px; font-size: 1.25em;
+     border-left: 4px solid var(--blue); padding-left: 10px; }
 h3 { color: #374151; margin: 16px 0 8px; font-size: 1.05em; }
 .meta { color: var(--gray); font-size: 0.9em; margin-bottom: 20px; }
 .cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
 .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 18px;
-        min-width: 150px; text-align: center; background: var(--bg); }
+        min-width: 150px; text-align: center; background: var(--bg); flex: 1; }
 .card .val { font-size: 1.4em; font-weight: 700; }
 .card .lbl { font-size: 0.8em; color: var(--gray); }
 .pos { color: var(--green); }
@@ -24,53 +25,83 @@ td { text-align: right; }
 tr:nth-child(even) { background: var(--bg); }
 .section { margin-bottom: 24px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
 .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb;
           font-size: 0.8em; color: #9ca3af; text-align: center; }
+.bar { height: 8px; border-radius: 4px; display: inline-block; }
+.bar-pos { background: var(--green); }
+.bar-neg { background: var(--red); }
+.quantile-row td:first-child { text-align: left; font-weight: 600; }
+.highlight { background: #fef3c7 !important; }
 </style>
 
 </head>
 <body>
 <h1>AbberationStrategy — Full Report</h1>
-<div class="meta">2018-07-02 → 2021-08-03 | 753 trading days</div>
+<div class="meta">2018-07-02 → 2021-08-03 | 753 trading days | ~35 months</div>
 <div class="cards"><div class="card"><div class="val pos">0.0602</div><div class="lbl">Sharpe Ratio</div></div>
 <div class="card"><div class="val neg">-0.53%</div><div class="lbl">Annual Return</div></div>
 <div class="card"><div class="val neg">-27.07%</div><div class="lbl">Max Drawdown</div></div>
 <div class="card"><div class="val pos">18.00%</div><div class="lbl">Annual Volatility</div></div>
 <div class="card"><div class="val pos">0.0896</div><div class="lbl">Sortino Ratio</div></div>
-<div class="card"><div class="val neg">-0.0196</div><div class="lbl">Calmar Ratio</div></div></div>
+<div class="card"><div class="val neg">-0.0196</div><div class="lbl">Calmar Ratio</div></div>
+<div class="card"><div class="val pos">1.0120</div><div class="lbl">Omega Ratio</div></div>
+<div class="card"><div class="val pos">0.2228</div><div class="lbl">Stability</div></div></div>
 <div class="two-col"><div class="section">
 <h2>Performance Statistics</h2>
 <table><tr><th>Annual Return</th><td class="neg">-0.53%</td></tr>
 <tr><th>Cumulative Returns</th><td class="neg">-1.58%</td></tr>
 <tr><th>Annual Volatility</th><td class="pos">18.00%</td></tr>
 <tr><th>Sharpe Ratio</th><td class="pos">0.0602</td></tr>
-<tr><th>Sortino Ratio</th><td class="pos">0.0896</td></tr>
 <tr><th>Calmar Ratio</th><td class="neg">-0.0196</td></tr>
+<tr><th>Stability</th><td class="pos">0.2228</td></tr>
 <tr><th>Max Drawdown</th><td class="neg">-27.07%</td></tr>
 <tr><th>Omega Ratio</th><td class="pos">1.0120</td></tr>
-<tr><th>Stability</th><td class="pos">0.2228</td></tr>
-<tr><th>Skewness</th><td class="pos">0.2495</td></tr>
+<tr><th>Sortino Ratio</th><td class="pos">0.0896</td></tr>
+<tr><th>Skew</th><td class="pos">0.2495</td></tr>
 <tr><th>Kurtosis</th><td class="pos">8.4610</td></tr>
 <tr><th>Tail Ratio</th><td class="pos">1.1807</td></tr>
-<tr><th>Value at Risk (5%)</th><td class="neg">-1.53%</td></tr>
-<tr><th>Downside Risk</th><td class="pos">12.08%</td></tr></table>
+<tr><th>Daily Value at Risk</th><td class="neg">-1.53%</td></tr>
+<tr><th>Downside Risk</th><td class="pos">12.08%</td></tr>
+<tr><th>Daily Mean Return</th><td class="pos">0.00%</td></tr>
+<tr><th>Daily Std Return</th><td class="pos">1.13%</td></tr>
+<tr><th>Best Day</th><td class="pos">6.08%</td></tr>
+<tr><th>Worst Day</th><td class="neg">-7.37%</td></tr>
+<tr><th>Avg Daily Turnover</th><td class="pos">102.75%</td></tr>
+<tr><th>Avg Gross Leverage</th><td class="pos">0.0679</td></tr>
+<tr><th>Max Gross Leverage</th><td class="pos">0.1281</td></tr></table>
 </div><div class='section'>
 <h2>Extended Risk Metrics</h2>
-<table><tr><th>Win Rate</th><td class="pos">0.4037</td></tr>
-<tr><th>Loss Rate</th><td class="pos">0.4489</td></tr>
+<table><tr><th>Win Rate (daily)</th><td class="pos">0.4037</td></tr>
+<tr><th>Loss Rate (daily)</th><td class="pos">0.4489</td></tr>
 <tr><th>Serial Correlation</th><td class="neg">-0.0204</td></tr>
 <tr><th>Common Sense Ratio</th><td class="pos">0.7994</td></tr>
 <tr><th>Sterling Ratio</th><td class="neg">-0.0768</td></tr>
 <tr><th>Burke Ratio</th><td class="neg">-0.0190</td></tr>
+<tr><th>Kappa Three Ratio</th><td class="neg">-0.0684</td></tr>
 <tr><th>Max Drawdown Days</th><td class="pos">936</td></tr>
+<tr><th>Max Drawdown Recovery Days</th><td class="">N/A</td></tr>
 <tr><th>2nd Max Drawdown</th><td class="neg">-0.0472</td></tr>
+<tr><th>3rd Max Drawdown</th><td class="neg">-0.0345</td></tr>
 <tr><th>Max Consecutive Up Days</th><td class="pos">9</td></tr>
 <tr><th>Max Consecutive Down Days</th><td class="pos">12</td></tr>
 <tr><th>Max Single Day Gain</th><td class="pos">0.0608</td></tr>
 <tr><th>Max Single Day Loss</th><td class="neg">-0.0737</td></tr>
 <tr><th>Hurst Exponent</th><td class="pos">0.6103</td></tr></table>
 </div></div>
+<div class="section">
+<h2>Return Quantiles</h2>
+<table><tr><th>Percentile</th><th>Return</th></tr><tr class="quantile-row"><td>0.01</td><td class="neg">-2.3380%</td></tr><tr class="quantile-row"><td>0.05</td><td class="neg">-1.5332%</td></tr><tr class="quantile-row"><td>0.25</td><td class="neg">-0.5281%</td></tr><tr class="quantile-row"><td>0.5</td><td class="">0.0000%</td></tr><tr class="quantile-row"><td>0.75</td><td class="pos">0.4405%</td></tr><tr class="quantile-row"><td>0.95</td><td class="pos">1.8102%</td></tr><tr class="quantile-row"><td>0.99</td><td class="pos">3.3238%</td></tr></table>
+</div>
+<div class="section">
+<h2>Periodic Extremes</h2>
+<table><tr><th>Best Month</th><td class="pos">20.59%</td></tr>
+<tr><th>Worst Month</th><td class="neg">-10.07%</td></tr>
+<tr><th>Avg Month</th><td class="pos">0.12%</td></tr>
+<tr><th>Best Year</th><td class="pos">9.63%</td></tr>
+<tr><th>Worst Year</th><td class="neg">-5.73%</td></tr></table>
+</div>
 <div class="section">
 <h2>Yearly Statistics</h2>
 <table><tr><th></th><th>Annual Return</th><th>Sharpe Ratio</th><th>Max Drawdown</th></tr>
@@ -89,7 +120,7 @@ tr:nth-child(even) { background: var(--bg); }
 <tr><th>4</th><td class="pos">2.42</td><td>2018-07-31 00:00:00</td><td>2018-08-10 00:00:00</td><td>2018-08-13 00:00:00</td><td>10</td></tr></table>
 </div>
 <div class="section">
-<h2>Monthly Returns</h2>
+<h2>Monthly Returns (%)</h2>
 <table><tr><th></th><th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th></tr>
 <tr><th>2018</th><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="">0.00</td><td class="pos">7.64</td><td class="pos">1.70</td><td class="pos">3.25</td><td class="neg">-8.28</td><td class="pos">0.79</td><td class="neg">-9.79</td></tr>
 <tr><th>2019</th><td class="pos">0.44</td><td class="neg">-2.86</td><td class="neg">-7.90</td><td class="pos">8.01</td><td class="pos">1.39</td><td class="pos">6.26</td><td class="neg">-7.15</td><td class="pos">2.04</td><td class="neg">-0.45</td><td class="neg">-3.62</td><td class="pos">3.63</td><td class="pos">0.35</td></tr>
@@ -98,38 +129,63 @@ tr:nth-child(even) { background: var(--bg); }
 </div>
 <div class="section">
 <h2>Position Analysis</h2>
+<div class="cards"><div class="card"><div class="val pos">0.0679</div><div class="lbl">Avg Gross Leverage</div></div>
+<div class="card"><div class="val pos">0.1281</div><div class="lbl">Max Gross Leverage</div></div>
+<div class="card"><div class="val pos">34140.5266</div><div class="lbl">Avg Long Exposure</div></div>
+<div class="card"><div class="val neg">-24472.6656</div><div class="lbl">Avg Short Exposure</div></div>
+<div class="card"><div class="val pos">0.6242</div><div class="lbl">Avg Max Position Concentration</div></div>
+<div class="card"><div class="val pos">1</div><div class="lbl">Number of Assets</div></div></div>
 <table><tr><th>Avg Gross Leverage</th><td class="pos">0.0679</td></tr>
 <tr><th>Max Gross Leverage</th><td class="pos">0.1281</td></tr>
 <tr><th>Avg Long Exposure</th><td class="pos">34140.5266</td></tr>
-<tr><th>Avg Short Exposure</th><td class="neg">-24472.6656</td></tr></table>
+<tr><th>Avg Short Exposure</th><td class="neg">-24472.6656</td></tr>
+<tr><th>Avg Max Position Concentration</th><td class="pos">0.6242</td></tr>
+<tr><th>Number of Assets</th><td class="pos">1</td></tr></table>
 </div>
 <div class="section">
 <h2>Transaction Analysis</h2>
-<table><tr><th>Total Transaction Days</th><td class="pos">380</td></tr>
+<table><tr><th>Total Transactions</th><td class="pos">489</td></tr>
+<tr><th>Total Transaction Days</th><td class="pos">380</td></tr>
 <tr><th>Avg Daily Trades</th><td class="pos">1.2868</td></tr>
+<tr><th>Max Daily Trades</th><td class="pos">4</td></tr>
 <tr><th>Avg Daily Volume</th><td class="pos">121696.8211</td></tr>
-<tr><th>Max Daily Volume</th><td class="pos">425194.2177</td></tr></table>
+<tr><th>Max Daily Volume</th><td class="pos">425194.2177</td></tr>
+<tr><th>Unique Symbols Traded</th><td class="pos">1</td></tr></table>
 </div>
 <div class="section">
 <h2>Trade Statistics</h2>
 <div class="cards"><div class="card"><div class="val pos">244</div><div class="lbl">Total Trades</div></div>
 <div class="card"><div class="val pos">37.70%</div><div class="lbl">Win Rate</div></div>
 <div class="card"><div class="val pos">1.5869</div><div class="lbl">Profit/Loss Ratio</div></div>
-<div class="card"><div class="val neg">-58183.2848</div><div class="lbl">Total PnL</div></div></div>
+<div class="card"><div class="val neg">-58183.2848</div><div class="lbl">Total PnL</div></div>
+<div class="card"><div class="val neg">-238.4561</div><div class="lbl">Expectancy</div></div>
+<div class="card"><div class="val neg">-238.4561</div><div class="lbl">Avg PnL per Trade</div></div></div>
 <table><tr><th>Total Trades</th><td class="pos">244</td></tr>
 <tr><th>Winning Trades</th><td class="pos">92</td></tr>
 <tr><th>Losing Trades</th><td class="pos">152</td></tr>
 <tr><th>Win Rate</th><td class="pos">37.70%</td></tr>
 <tr><th>Total PnL</th><td class="neg">-58183.2848</td></tr>
+<tr><th>Avg PnL per Trade</th><td class="neg">-238.4561</td></tr>
+<tr><th>Median PnL per Trade</th><td class="neg">-5054.1550</td></tr>
+<tr><th>PnL Std Dev</th><td class="pos">18779.6074</td></tr>
 <tr><th>Avg Win</th><td class="pos">15373.4571</td></tr>
 <tr><th>Avg Loss</th><td class="neg">-9687.7720</td></tr>
 <tr><th>Max Win</th><td class="pos">141365.7320</td></tr>
 <tr><th>Max Loss</th><td class="neg">-69465.5861</td></tr>
 <tr><th>Profit/Loss Ratio</th><td class="pos">1.5869</td></tr>
+<tr><th>Expectancy</th><td class="neg">-238.4561</td></tr>
 <tr><th>Total Commission</th><td class="pos">46150.6103</td></tr>
+<tr><th>Avg Commission per Trade</th><td class="pos">189.1418</td></tr>
 <tr><th>Long Trades</th><td class="pos">134</td></tr>
 <tr><th>Short Trades</th><td class="pos">110</td></tr>
+<tr><th>Long Win Rate</th><td class="pos">41.79%</td></tr>
+<tr><th>Long Avg PnL</th><td class="pos">1570.3841</td></tr>
+<tr><th>Long Total PnL</th><td class="pos">210431.4655</td></tr>
+<tr><th>Short Win Rate</th><td class="pos">32.73%</td></tr>
+<tr><th>Short Avg PnL</th><td class="neg">-2441.9523</td></tr>
+<tr><th>Short Total PnL</th><td class="neg">-268614.7503</td></tr>
 <tr><th>Avg Holding Bars</th><td class="pos">128.0369</td></tr>
+<tr><th>Median Holding Bars</th><td class="pos">105.5000</td></tr>
 <tr><th>Max Holding Bars</th><td class="pos">709</td></tr>
 <tr><th>Min Holding Bars</th><td class="pos">5</td></tr></table>
 </div>

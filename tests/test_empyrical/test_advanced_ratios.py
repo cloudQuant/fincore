@@ -1,11 +1,11 @@
 """
 Tests for advanced risk-adjusted return ratios.
 """
-from __future__ import division
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
-from unittest import TestCase
 
 from fincore.empyrical import Empyrical
 
@@ -17,23 +17,27 @@ class TestAdvancedRatios(TestCase):
 
     # Standard returns with drawdowns
     returns_with_drawdown = pd.Series(
-        np.array([1., 2., -5., 3., 2., -3., 4., 1., 2., -2.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([1.0, 2.0, -5.0, 3.0, 2.0, -3.0, 4.0, 1.0, 2.0, -2.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # Positive returns
     positive_returns = pd.Series(
-        np.array([1., 2., 1., 1., 1., 1., 1., 1., 1., 1.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # High volatility returns
     high_vol_returns = pd.Series(
-        np.array([5., -4., 6., -5., 7., -3., 4., -2., 3., -1.]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        np.array([5.0, -4.0, 6.0, -5.0, 7.0, -3.0, 4.0, -2.0, 3.0, -1.0]) / 100,
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     # Normal-like returns
     normal_returns = pd.Series(
         np.array([0.5, -0.3, 0.4, -0.2, 0.3, 0.1, -0.1, 0.2, -0.2, 0.3]) / 100,
-        index=pd.date_range('2000-1-1', periods=10, freq='D'))
+        index=pd.date_range("2000-1-1", periods=10, freq="D"),
+    )
 
     empty_returns = pd.Series([], dtype=float)
 
@@ -116,8 +120,7 @@ class TestAdvancedRatios(TestCase):
         regular = emp.sharpe_ratio(self.normal_returns)
         # For near-normal returns, they should be similar
         # (adjusted applies correction for skewness and kurtosis)
-        assert abs(adjusted - regular) < 1.0, \
-            f"Adjusted ({adjusted}) and regular ({regular}) Sharpe differ too much"
+        assert abs(adjusted - regular) < 1.0, f"Adjusted ({adjusted}) and regular ({regular}) Sharpe differ too much"
 
     def test_adjusted_sharpe_ratio_empty(self):
         """Test that empty returns give NaN."""

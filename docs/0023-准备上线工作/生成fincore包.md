@@ -1,12 +1,14 @@
-1. 这个包已经初步准备好了，准备现在实现ci/cd，在github上能够自动测试通过。
-2. 形成一个python包，可以通过pip install fincore来安装。
+优化一下ci/cd，确保可以在win11, linux, macos上,确保能在python3.11, python3.12, python3.13上都能够成功测试通过。
+
+然后希望能够把这个打包上传到pypi上，然后用户就可以通过pip install fincore来安装了。
 
 ## 已完成
 
 ### 1. CI/CD (GitHub Actions)
 
 **`.github/workflows/ci.yml`** — 每次 push/PR 到 master/main 自动触发：
-- **测试矩阵**: 3 OS (Ubuntu/macOS/Windows) × 5 Python (3.9–3.13) = 15 组合
+- **测试矩阵**: 3 OS (Ubuntu/macOS/Windows) × 3 Python (3.11/3.12/3.13) = 9 组合
+- **pip 缓存**: 使用 `setup-python` 内置 `cache: 'pip'`，自动处理跨平台缓存路径
 - **Lint**: ruff check
 - **覆盖率**: Ubuntu + Python 3.11 上生成 coverage 报告
 - **构建验证**: `python -m build` + `twine check`
@@ -17,17 +19,17 @@
 - 需要在 PyPI 设置 trusted publisher:
   - Owner: `cloudQuant`, Repository: `fincore`, Workflow: `publish.yml`, Environment: `pypi`
 
-### 2. Python 包 (pip install fincore)
+### 2. 配置更新
 
-**已验证**:
-- `python -m build` → 成功生成 `fincore-0.1.0.tar.gz` + `fincore-0.1.0-py3-none-any.whl`
-- `pip install dist/fincore-0.1.0-py3-none-any.whl` → 安装成功，`import fincore` 正常
+- **`pyproject.toml`** / **`setup.py`**: `requires-python >= 3.11`，classifiers 仅保留 3.11/3.12/3.13
+- **`pyproject.toml`**: ruff `target-version = "py311"`, mypy `python_version = "3.11"`
+- **`requirements-test.txt`**: 移除 `nose`（Python 3.12+ 不兼容）、`six`（未使用）、`pandas-datareader`（未使用）
 
-**修复的问题**:
-- 版本号统一为 `0.1.0`（`pyproject.toml` / `setup.py` / `fincore/__init__.py`）
-- License 修正为 `Apache-2.0`（与 LICENSE 文件一致，原来写的 MIT）
-- `pytest.ini` coverage source 从 `empyrical` 改为 `fincore`
-- 新增 `MANIFEST.in` 确保 sdist 包含所有必需文件
+### 3. 源码修复（测试全部通过 1299/1299）
+
+- **rolling.py**: 修复空 DatetimeIndex dtype 不匹配（`datetime64[s]` vs `datetime64[us]`）
+- **transactions.py**: 移除已废弃的 `infer_objects(copy=False)` 参数
+- **perf_attrib.py**: 添加 `sort=False` 到 `pd.concat` 消除 Pandas4Warning
 
 ### 发布流程
 

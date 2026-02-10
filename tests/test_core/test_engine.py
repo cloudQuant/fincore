@@ -1,4 +1,5 @@
 """Tests for RollingEngine and vectorized roll_max_drawdown."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -70,8 +71,8 @@ class TestRollMaxDrawdownVectorized:
         n = len(ret) - window + 1
         expected = np.empty(n, dtype=float)
         for i in range(n):
-            window_ret = ret[i:i + window]
-            cumulative = np.empty(window + 1, dtype='float64')
+            window_ret = ret[i : i + window]
+            cumulative = np.empty(window + 1, dtype="float64")
             cumulative[0] = 100.0
             np.cumprod(1 + window_ret, out=cumulative[1:])
             cumulative[1:] *= 100.0
@@ -85,51 +86,51 @@ class TestRollMaxDrawdownVectorized:
 class TestRollingEngine:
     def test_compute_sharpe(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['sharpe'])
-        assert 'sharpe' in results
-        assert len(results['sharpe']) > 0
+        results = engine.compute(["sharpe"])
+        assert "sharpe" in results
+        assert len(results["sharpe"]) > 0
 
     def test_compute_volatility(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['volatility'])
-        assert (results['volatility'] > 0).all()
+        results = engine.compute(["volatility"])
+        assert (results["volatility"] > 0).all()
 
     def test_compute_max_drawdown(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['max_drawdown'])
-        assert (results['max_drawdown'] <= 0).all()
+        results = engine.compute(["max_drawdown"])
+        assert (results["max_drawdown"] <= 0).all()
 
     def test_compute_beta(self, returns, factor_returns):
         engine = RollingEngine(returns, factor_returns=factor_returns, window=60)
-        results = engine.compute(['beta'])
-        assert 'beta' in results
+        results = engine.compute(["beta"])
+        assert "beta" in results
 
     def test_compute_beta_requires_factor(self, returns):
         engine = RollingEngine(returns, window=60)
         with pytest.raises(ValueError, match="factor_returns required"):
-            engine.compute(['beta'])
+            engine.compute(["beta"])
 
     def test_compute_multiple(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['sharpe', 'volatility', 'max_drawdown'])
+        results = engine.compute(["sharpe", "volatility", "max_drawdown"])
         assert len(results) == 3
 
     def test_compute_mean_return(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['mean_return'])
-        assert 'mean_return' in results
+        results = engine.compute(["mean_return"])
+        assert "mean_return" in results
 
     def test_unknown_metric(self, returns):
         engine = RollingEngine(returns, window=60)
         with pytest.raises(ValueError, match="Unknown metric"):
-            engine.compute(['nonexistent'])
+            engine.compute(["nonexistent"])
 
     def test_available_metrics(self, returns):
         engine = RollingEngine(returns, window=60)
-        assert 'sharpe' in engine.available_metrics
-        assert 'max_drawdown' in engine.available_metrics
+        assert "sharpe" in engine.available_metrics
+        assert "max_drawdown" in engine.available_metrics
 
     def test_compute_sortino(self, returns):
         engine = RollingEngine(returns, window=60)
-        results = engine.compute(['sortino'])
-        assert 'sortino' in results
+        results = engine.compute(["sortino"])
+        assert "sortino" in results

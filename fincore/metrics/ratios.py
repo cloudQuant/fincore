@@ -19,34 +19,33 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
-from fincore.utils import nanmean, nanstd
-from fincore.constants import DAILY, APPROX_BDAYS_PER_YEAR
-from fincore.metrics.basic import (
-    annualization_factor, adjust_returns, aligned_series
-)
+
+from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
+from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.metrics.risk import tail_ratio
+from fincore.utils import nanmean, nanstd
 
 __all__ = [
-    'sharpe_ratio',
-    'sortino_ratio',
-    'excess_sharpe',
-    'adjusted_sharpe_ratio',
-    'conditional_sharpe_ratio',
-    'calmar_ratio',
-    'omega_ratio',
-    'information_ratio',
-    'treynor_ratio',
-    'cal_treynor_ratio',
-    'm_squared',
-    'sterling_ratio',
-    'burke_ratio',
-    'kappa_three_ratio',
-    'common_sense_ratio',
-    'stability_of_timeseries',
-    'capture',
-    'up_capture',
-    'down_capture',
-    'up_down_capture',
+    "sharpe_ratio",
+    "sortino_ratio",
+    "excess_sharpe",
+    "adjusted_sharpe_ratio",
+    "conditional_sharpe_ratio",
+    "calmar_ratio",
+    "omega_ratio",
+    "information_ratio",
+    "treynor_ratio",
+    "cal_treynor_ratio",
+    "m_squared",
+    "sterling_ratio",
+    "burke_ratio",
+    "kappa_three_ratio",
+    "common_sense_ratio",
+    "stability_of_timeseries",
+    "capture",
+    "up_capture",
+    "down_capture",
+    "up_down_capture",
 ]
 
 
@@ -235,7 +234,7 @@ def adjusted_sharpe_ratio(returns, risk_free=0.0):
         Adjusted Sharpe ratio that accounts for non-normality. Returns
         ``NaN`` when there is insufficient data.
     """
-    from fincore.metrics.stats import skewness, kurtosis
+    from fincore.metrics.stats import kurtosis, skewness
 
     if len(returns) < 4:
         return np.nan
@@ -490,6 +489,7 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
     returns, factor_returns = aligned_series(returns, factor_returns)
 
     from fincore.metrics.yearly import annual_return as _annual_return
+
     ann_return = _annual_return(returns, period=period, annualization=annualization)
     ann_excess_return = ann_return - risk_free
 
@@ -592,6 +592,7 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     from fincore.metrics.yearly import annual_return as _annual_return
+
     ann_return = _annual_return(returns_aligned, period=period, annualization=annualization)
 
     ann_vol = annual_volatility(returns_aligned, period=period, annualization=annualization)
@@ -611,6 +612,7 @@ def _compute_annualized_return(returns, period, annualization):
     Shared helper used by sterling_ratio, burke_ratio, kappa_three_ratio, etc.
     """
     from fincore.metrics.yearly import annual_return
+
     return annual_return(returns, period=period, annualization=annualization)
 
 

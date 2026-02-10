@@ -4,6 +4,7 @@ Defines the :class:`VizBackend` protocol that all visualization backends
 must satisfy, plus a helper :func:`get_backend` to resolve a backend by
 name.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
@@ -54,10 +55,10 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
     name = name.lower().strip()
     if name == "matplotlib":
         from fincore.viz.matplotlib_backend import MatplotlibBackend
+
         return MatplotlibBackend()
     if name == "html":
         from fincore.viz.html_backend import HtmlReportBuilder
+
         return HtmlReportBuilder()
-    raise ValueError(
-        f"Unknown viz backend {name!r}. Available: 'matplotlib', 'html'"
-    )
+    raise ValueError(f"Unknown viz backend {name!r}. Available: 'matplotlib', 'html'")

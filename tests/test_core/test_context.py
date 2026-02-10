@@ -1,4 +1,5 @@
 """Tests for AnalysisContext — new tests, no modification to existing tests."""
+
 from __future__ import annotations
 
 import json
@@ -192,5 +193,6 @@ class TestAnalyzeConvenience:
 
     def test_fincore_analyze(self, returns):
         import fincore
+
         ctx = fincore.analyze(returns)
         assert isinstance(ctx, AnalysisContext)
