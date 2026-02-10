@@ -16,7 +16,7 @@
 from setuptools import setup, find_packages
 
 DISTNAME = "fincore"
-VERSION = "0.1"
+VERSION = "0.1.0"
 DESCRIPTION = """fincore is a Python library for quantitative performance and risk analytics"""
 LONG_DESCRIPTION = """fincore is a continuation of the empyrical analytics stack maintained by `cloudQuant`_.
 It delivers more than 50 return, risk, attribution, timing, and streak statistics with
@@ -32,7 +32,7 @@ MAINTAINER_EMAIL = "yunjinqi@gmail.com"
 AUTHOR = "cloudQuant"
 AUTHOR_EMAIL = "yunjinqi@gmail.com"
 URL = "https://github.com/cloudQuant/fincore"
-LICENSE = "MIT"
+LICENSE = "Apache-2.0"
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -45,7 +45,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Mathematics",

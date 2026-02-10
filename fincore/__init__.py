@@ -1,4 +1,4 @@
-__version__ = "0.1"
+__version__ = "0.1.0"
 
 # NumPy 2.0 dropped the ``np.unicode_`` alias which some optional
 # dependencies (for example, older versions of ``numexpr`` or PyMC) still
