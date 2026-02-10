@@ -52,6 +52,8 @@ install_requires = [
     "numpy>=1.17.0",
     "pandas>=0.25.0",
     "scipy>=1.3.0",
+    "pytz>=2023.3",
+    "packaging>=21.0",
 ]
 
 extras_require = {
@@ -67,6 +69,7 @@ extras_require = {
     "viz": [
         "matplotlib>=3.3",
         "seaborn>=0.11",
+        "ipython>=7.0",
     ],
     "bayesian": [
         "pymc>=5.0",
