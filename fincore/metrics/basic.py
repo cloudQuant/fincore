@@ -225,8 +225,8 @@ def aligned_series(
     if len(many_series) == 2 and isinstance(head, pd.Series) and isinstance(tail[0], pd.Series):
         if head.index.equals(tail[0].index):
             return many_series
-        combined = pd.concat([head, tail[0]], axis=1)
+        combined = pd.concat([head, tail[0]], axis=1, sort=False)
         return tuple(combined.iloc[:, i] for i in range(2))
 
     # dataframe has no ``itervalues``
-    return tuple(v for _, v in pd.concat(map(to_pandas, many_series), axis=1).items())
+    return tuple(v for _, v in pd.concat(map(to_pandas, many_series), axis=1, sort=False).items())
