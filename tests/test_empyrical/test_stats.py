@@ -2025,14 +2025,14 @@ class ReturnTypeEmpyricalProxy:
                     args[i],
                     arg_copy,
                     atol=0.5 * 10 ** (-DECIMAL_PLACES),
-                    err_msg="Input 'arg %s' mutated by %s" % (i, func.__name__),
+                    err_msg=f"Input 'arg {i}' mutated by {func.__name__}",
                 )
             for kwarg_name, kwarg_copy in kwarg_copies.items():
                 assert_allclose(
                     kwargs[kwarg_name],
                     kwarg_copy,
                     atol=0.5 * 10 ** (-DECIMAL_PLACES),
-                    err_msg="Input '%s' mutated by %s" % (kwarg_name, func.__name__),
+                    err_msg=f"Input '{kwarg_name}' mutated by {func.__name__}",
                 )
 
             return result

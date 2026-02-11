@@ -418,6 +418,13 @@ class Empyrical:
             self._get_returns(returns), risk_free, period, annualization, mar
         )
 
+    @_dual_method
+    def deflated_sharpe_ratio(self, returns=None, risk_free=0, num_trials=1, period=DAILY, annualization=None):
+        """计算Deflated Sharpe Ratio (DSR)."""
+        return _resolve_module("_ratios").deflated_sharpe_ratio(
+            self._get_returns(returns), risk_free, num_trials, period, annualization
+        )
+
     # ---- risk (returns only) ----
 
     @_dual_method
@@ -431,9 +438,21 @@ class Empyrical:
         return _resolve_module("_risk").gpd_risk_estimates_aligned(self._get_returns(returns), var_p)
 
     @_dual_method
-    def var_excess_return(self, returns=None, cutoff=0.05):
+    def var_excess_return(self, returns=None, cutoff=0.05, risk_free=0.0, period=DAILY, annualization=None):
         """计算VaR超额收益."""
-        return _resolve_module("_risk").var_excess_return(self._get_returns(returns), cutoff)
+        return _resolve_module("_risk").var_excess_return(
+            self._get_returns(returns), cutoff, risk_free, period, annualization
+        )
+
+    @_dual_method
+    def mar_ratio(self, returns=None, period=DAILY, annualization=None):
+        """计算MAR比率."""
+        return _resolve_module("_ratios").mar_ratio(self._get_returns(returns), period, annualization)
+
+    @_dual_method
+    def r_cubed_turtle(self, returns=None, period=DAILY, annualization=None):
+        """计算R³海龟指标."""
+        return _resolve_module("_stats").r_cubed_turtle(self._get_returns(returns), period, annualization)
 
     # ---- yearly (returns only) ----
 
@@ -476,6 +495,34 @@ class Empyrical:
     def r_cubed(self, returns=None, factor_returns=None):
         """计算R³指标."""
         return _resolve_module("_stats").r_cubed(self._get_returns(returns), self._get_factor_returns(factor_returns))
+
+    @_dual_method
+    def relative_win_rate(self, returns=None, factor_returns=None):
+        """计算相对胜率."""
+        return _resolve_module("_stats").relative_win_rate(
+            self._get_returns(returns), self._get_factor_returns(factor_returns)
+        )
+
+    @_dual_method
+    def capm_r_squared(self, returns=None, factor_returns=None):
+        """计算CAPM R²."""
+        return _resolve_module("_stats").capm_r_squared(
+            self._get_returns(returns), self._get_factor_returns(factor_returns)
+        )
+
+    @_dual_method
+    def up_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+        """计算上行捕获收益."""
+        return _resolve_module("_ratios").up_capture_return(
+            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+        )
+
+    @_dual_method
+    def down_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+        """计算下行捕获收益."""
+        return _resolve_module("_ratios").down_capture_return(
+            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+        )
 
     @_dual_method
     def tracking_difference(self, returns=None, factor_returns=None):

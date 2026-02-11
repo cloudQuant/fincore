@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from fincore.constants import DAILY
 from fincore.metrics.basic import aligned_series
 from fincore.metrics.ratios import stability_of_timeseries
 
@@ -34,7 +35,10 @@ __all__ = [
     "futures_market_correlation",
     "win_rate",
     "loss_rate",
+    "relative_win_rate",
     "r_cubed",
+    "r_cubed_turtle",
+    "capm_r_squared",
     "tracking_difference",
     "common_sense_ratio",
     "var_cov_var_normal",
@@ -191,6 +195,16 @@ def stutzer_index(returns, target_return=0.0):
     The Stutzer index is a downside-risk-adjusted performance measure
     based on an exponential tilting of the return distribution.
 
+    Formula
+    -------
+    I_P = max_θ { -log(mean(exp(θ × r_t))) }
+    Stutzer = (|r̄| / r̄) × sqrt(2 × I_P)
+
+    where r_t are the excess returns and r̄ is their mean.
+
+    Reference: Stutzer, M. (2000). "A Portfolio Performance Index."
+    Financial Analysts Journal, 56(3), 52-61.
+
     Parameters
     ----------
     returns : array-like or pd.Series
@@ -207,26 +221,39 @@ def stutzer_index(returns, target_return=0.0):
     if len(returns) < 2:
         return np.nan
 
-    excess_returns = returns - target_return
+    excess_returns = np.asanyarray(returns) - target_return
+    excess_returns = excess_returns[~np.isnan(excess_returns)]
 
-    if len(excess_returns) == 0:
+    if len(excess_returns) < 2:
         return np.nan
+
+    mean_excess = np.mean(excess_returns)
+
+    if abs(mean_excess) < 1e-15:
+        return 0.0
 
     try:
         from scipy.optimize import minimize_scalar
 
-        def neg_log_likelihood(theta):
-            if theta <= 0:
-                return np.inf
+        def neg_ip(theta):
+            """Negative of I_P: we minimize -I_P to find max I_P."""
             exp_theta_r = np.exp(theta * excess_returns)
             if np.any(np.isinf(exp_theta_r)) or np.any(np.isnan(exp_theta_r)):
-                return np.inf
-            return -np.log(exp_theta_r.mean()) / theta
+                return 0.0
+            log_mean = np.log(exp_theta_r.mean())
+            return log_mean
 
-        result = minimize_scalar(neg_log_likelihood, bounds=(1e-10, 10), method="bounded")
+        if mean_excess > 0:
+            result = minimize_scalar(neg_ip, bounds=(-50, -1e-10), method="bounded")
+        else:
+            result = minimize_scalar(neg_ip, bounds=(1e-10, 50), method="bounded")
 
         if result.success:
-            return -result.fun
+            ip = -result.fun
+            if ip < 0:
+                ip = 0.0
+            sign = 1.0 if mean_excess > 0 else -1.0
+            return sign * np.sqrt(2 * ip)
         else:
             return np.nan
     except Exception:
@@ -441,6 +468,39 @@ def loss_rate(returns):
         return loss_rate_value
 
 
+def relative_win_rate(returns, factor_returns):
+    """Calculate the win rate of strategy returns relative to a benchmark.
+
+    The relative win rate is the fraction of periods where the strategy
+    return exceeds the benchmark return.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark returns.
+
+    Returns
+    -------
+    float
+        Fraction of observations where ``returns > factor_returns`` in
+        ``[0, 1]``, or ``NaN`` if there are no valid observations.
+    """
+    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+
+    ret_arr = np.asarray(returns_aligned, dtype=float)
+    fac_arr = np.asarray(factor_aligned, dtype=float)
+    mask = ~(np.isnan(ret_arr) | np.isnan(fac_arr))
+
+    total = mask.sum()
+    if total == 0:
+        return np.nan
+
+    win_count = np.sum(ret_arr[mask] > fac_arr[mask])
+    return float(win_count / total)
+
+
 def r_cubed(returns, factor_returns):
     """Calculate the R-cubed (R³) measure.
 
@@ -470,6 +530,130 @@ def r_cubed(returns, factor_returns):
 
     correlation = np.corrcoef(ret_arr[mask], fac_arr[mask])[0, 1]
     return correlation**3
+
+
+def r_cubed_turtle(returns, period=DAILY, annualization=None):
+    """Calculate the R-cubed measure from the Turtle Trading system.
+
+    R³ (turtle) is defined as the Regression Annual Return (RAR) divided
+    by the average maximum annual drawdown.
+
+    RAR is the slope of a linear regression of cumulative NAV against time,
+    annualized.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
+
+    Returns
+    -------
+    float
+        R³ turtle measure, or ``NaN`` if insufficient data.
+    """
+    from fincore.metrics.basic import annualization_factor
+    from fincore.metrics.returns import cum_returns
+
+    if len(returns) < 2:
+        return np.nan
+
+    ann_factor = annualization_factor(period, annualization)
+    nav = cum_returns(returns, starting_value=1.0)
+    nav_arr = np.asarray(nav, dtype=float)
+    t = np.arange(len(nav_arr), dtype=float)
+
+    mask = ~np.isnan(nav_arr)
+    if mask.sum() < 2:
+        return np.nan
+
+    slope, _, _, _, _ = stats.linregress(t[mask], nav_arr[mask])
+    rar = slope * ann_factor
+
+    if isinstance(returns, pd.Series) and hasattr(returns.index, "year"):
+        years = returns.index.year.unique()
+    else:
+        n_obs = len(returns)
+        n_years = max(1, int(round(n_obs / ann_factor)))
+        years = range(n_years)
+
+    if len(years) < 1:
+        return np.nan
+
+    from fincore.metrics.drawdown import max_drawdown
+
+    max_dds = []
+    if isinstance(returns, pd.Series) and hasattr(returns.index, "year"):
+        for yr in years:
+            yr_returns = returns[returns.index.year == yr]
+            if len(yr_returns) > 0:
+                dd = max_drawdown(yr_returns)
+                max_dds.append(abs(dd))
+    else:
+        returns_arr = np.asanyarray(returns)
+        chunk_size = max(1, int(ann_factor))
+        for i in range(0, len(returns_arr), chunk_size):
+            chunk = returns_arr[i : i + chunk_size]
+            if len(chunk) > 0:
+                dd = max_drawdown(pd.Series(chunk))
+                max_dds.append(abs(dd))
+
+    if len(max_dds) == 0:
+        return np.nan
+
+    avg_max_dd = np.mean(max_dds)
+    if avg_max_dd < 1e-15:
+        return np.inf if rar > 0 else np.nan
+
+    return rar / avg_max_dd
+
+
+def capm_r_squared(returns, factor_returns):
+    """Calculate the CAPM R-squared.
+
+    R² = (β × σ_B / σ_P)², measuring the proportion of strategy return
+    variance explained by market (systematic) risk.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : array-like or pd.Series
+        Non-cumulative benchmark or factor returns.
+
+    Returns
+    -------
+    float
+        CAPM R-squared in ``[0, 1]``, or ``NaN`` if insufficient data.
+    """
+    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+
+    ret_arr = np.asarray(returns_aligned, dtype=float)
+    fac_arr = np.asarray(factor_aligned, dtype=float)
+    mask = ~(np.isnan(ret_arr) | np.isnan(fac_arr))
+    if mask.sum() < 2:
+        return np.nan
+
+    ret_clean = ret_arr[mask]
+    fac_clean = fac_arr[mask]
+
+    sigma_p = np.std(ret_clean, ddof=1)
+    sigma_b = np.std(fac_clean, ddof=1)
+
+    if sigma_p < 1e-15:
+        return np.nan
+
+    cov = np.cov(ret_clean, fac_clean, ddof=1)[0, 1]
+    var_b = sigma_b**2
+    if var_b < 1e-30:
+        return np.nan
+    beta = cov / var_b
+
+    r_sq = (beta * sigma_b / sigma_p) ** 2
+    return float(np.clip(r_sq, 0.0, 1.0))
 
 
 def tracking_difference(returns, factor_returns):

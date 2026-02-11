@@ -205,7 +205,10 @@ DUAL_RETURNS_REGISTRY = {
     "sterling_ratio": ("_ratios", "sterling_ratio"),
     "burke_ratio": ("_ratios", "burke_ratio"),
     "kappa_three_ratio": ("_ratios", "kappa_three_ratio"),
+    "deflated_sharpe_ratio": ("_ratios", "deflated_sharpe_ratio"),
     "annual_volatility_by_year": ("_yearly", "annual_volatility_by_year"),
+    "mar_ratio": ("_ratios", "mar_ratio"),
+    "r_cubed_turtle": ("_stats", "r_cubed_turtle"),
 }
 
 # ---------------------------------------------------------------------------
@@ -230,6 +233,10 @@ DUAL_RETURNS_FACTOR_REGISTRY = {
     "annual_active_return": ("_yearly", "annual_active_return"),
     "annual_active_return_by_year": ("_yearly", "annual_active_return_by_year"),
     "information_ratio_by_year": ("_yearly", "information_ratio_by_year"),
+    "relative_win_rate": ("_stats", "relative_win_rate"),
+    "capm_r_squared": ("_stats", "capm_r_squared"),
+    "up_capture_return": ("_ratios", "up_capture_return"),
+    "down_capture_return": ("_ratios", "down_capture_return"),
 }
 
 # ---------------------------------------------------------------------------

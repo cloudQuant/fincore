@@ -30,6 +30,7 @@
 
 from __future__ import annotations
 
+import json
 import warnings
 from collections import OrderedDict
 from typing import Any, Optional, Union
@@ -383,38 +384,59 @@ def _compute_sections(
 
 _HTML_CSS = """\
 <style>
-:root { --blue: #1e40af; --green: #16a34a; --red: #dc2626; --gray: #6b7280; --bg: #f9fafb; }
+:root {
+  --primary: #1a365d; --primary-lt: #2b6cb0; --accent: #3182ce;
+  --green: #38a169; --red: #e53e3e; --orange: #dd6b20;
+  --g50: #f7fafc; --g100: #edf2f7; --g200: #e2e8f0; --g300: #cbd5e0;
+  --g500: #718096; --g600: #4a5568; --g700: #2d3748; --sidebar-w: 200px;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-       max-width: 1100px; margin: 0 auto; padding: 24px; color: #1f2937; line-height: 1.6; background: #fff; }
-h1 { color: var(--blue); border-bottom: 3px solid var(--blue); padding-bottom: 8px; margin-bottom: 16px; }
-h2 { color: var(--blue); margin: 28px 0 12px; font-size: 1.25em;
-     border-left: 4px solid var(--blue); padding-left: 10px; }
-h3 { color: #374151; margin: 16px 0 8px; font-size: 1.05em; }
-.meta { color: var(--gray); font-size: 0.9em; margin-bottom: 20px; }
-.cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
-.card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 18px;
-        min-width: 150px; text-align: center; background: var(--bg); flex: 1; }
-.card .val { font-size: 1.4em; font-weight: 700; }
-.card .lbl { font-size: 0.8em; color: var(--gray); }
-.pos { color: var(--green); }
-.neg { color: var(--red); }
-table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.9em; }
-th, td { border: 1px solid #d1d5db; padding: 6px 10px; }
-th { background: #eff6ff; text-align: left; font-weight: 600; }
+       color: var(--g700); line-height: 1.6; background: var(--g50); }
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-w);
+           background: linear-gradient(180deg, var(--primary), #0d2137); color: #fff;
+           padding: 16px 0; overflow-y: auto; z-index: 100; }
+.sidebar h2 { font-size: 0.95em; padding: 0 16px 12px;
+              border-bottom: 1px solid rgba(255,255,255,.15); margin-bottom: 6px; }
+.sidebar a { display: block; padding: 7px 16px; color: rgba(255,255,255,.75);
+             text-decoration: none; font-size: 0.82em; transition: .2s; }
+.sidebar a:hover { background: rgba(255,255,255,.1); color: #fff;
+                   border-left: 3px solid var(--accent); }
+.content { margin-left: var(--sidebar-w); padding: 20px 28px; max-width: 1180px; }
+.content h1 { font-size: 1.4em; color: var(--primary);
+              border-bottom: 3px solid var(--primary); padding-bottom: 6px; margin-bottom: 4px; }
+.meta { color: var(--g500); font-size: 0.88em; margin-bottom: 18px; }
+.sec { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.07);
+       padding: 18px 22px; margin-bottom: 18px; }
+.sec-title { color: var(--primary); font-size: 1.1em; font-weight: 700; margin-bottom: 14px;
+             padding-bottom: 6px; border-bottom: 2px solid var(--g200);
+             display: flex; align-items: center; gap: 8px; }
+.sec-title::before { content: ''; width: 4px; height: 18px; background: var(--accent);
+                     border-radius: 2px; display: inline-block; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+         gap: 10px; margin-bottom: 16px; }
+.card { background: var(--g50); border: 1px solid var(--g200); border-radius: 8px;
+        padding: 12px 14px; text-align: center; }
+.card .val { font-size: 1.25em; font-weight: 700; margin-bottom: 2px; }
+.card .lbl { font-size: 0.76em; color: var(--g500); }
+.pos { color: var(--green); } .neg { color: var(--red); }
+table { border-collapse: collapse; width: 100%; font-size: 0.85em; margin: 10px 0; }
+th, td { border: 1px solid var(--g200); padding: 7px 10px; }
+th { background: var(--g100); font-weight: 600; text-align: left; }
 td { text-align: right; }
-tr:nth-child(even) { background: var(--bg); }
-.section { margin-bottom: 24px; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-@media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
-.footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb;
-          font-size: 0.8em; color: #9ca3af; text-align: center; }
-.bar { height: 8px; border-radius: 4px; display: inline-block; }
-.bar-pos { background: var(--green); }
-.bar-neg { background: var(--red); }
-.quantile-row td:first-child { text-align: left; font-weight: 600; }
-.highlight { background: #fef3c7 !important; }
+tr:nth-child(even) { background: var(--g50); }
+tr:hover { background: #ebf8ff; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.chart-box { width: 100%; height: 340px; margin: 10px 0; }
+.chart-sm { width: 100%; height: 260px; margin: 10px 0; }
+h3.sub { margin: 12px 0 6px; color: var(--primary); font-size: 1em; }
+footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
+         font-size: 0.78em; color: var(--g500); text-align: center; }
+@media (max-width: 860px) {
+  .sidebar { display: none; } .content { margin-left: 0; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 """
 
@@ -432,7 +454,8 @@ def _fmt(v, pct=False):
     return str(v)
 
 
-def _css_class(v):
+def _css_cls(v):
+    """Return CSS class for positive/negative coloring."""
     if isinstance(v, (int, float, np.integer, np.floating)):
         try:
             if np.isnan(v):
@@ -443,210 +466,492 @@ def _css_class(v):
     return ""
 
 
-def _dict_to_table(d, pct_keys=None):
-    """dict → HTML table."""
+def _html_table(d, pct_keys=None):
+    """OrderedDict → HTML table."""
     pct_keys = set(pct_keys or [])
     rows = []
     for k, v in d.items():
-        pct = k in pct_keys
-        css = _css_class(v)
-        rows.append(f'<tr><th>{k}</th><td class="{css}">{_fmt(v, pct=pct)}</td></tr>')
-    return "<table>" + "\n".join(rows) + "</table>"
+        css = _css_cls(v)
+        rows.append(f'<tr><th>{k}</th><td class="{css}">{_fmt(v, pct=k in pct_keys)}</td></tr>')
+    return "<table>" + "".join(rows) + "</table>"
 
 
-def _df_to_table(df, float_format=".4f"):
+def _html_df(df, float_format=".4f"):
     """DataFrame → HTML table."""
-    rows = []
-    header = "<tr><th></th>" + "".join(f"<th>{c}</th>" for c in df.columns) + "</tr>"
-    rows.append(header)
+    hdr = "<tr><th></th>" + "".join(f"<th>{c}</th>" for c in df.columns) + "</tr>"
+    rows = [hdr]
     for idx, row in df.iterrows():
         cells = f"<th>{idx}</th>"
         for v in row:
             if isinstance(v, (float, np.floating)):
-                css = _css_class(v)
-                cells += f'<td class="{css}">{v:{float_format}}</td>'
+                cells += f'<td class="{_css_cls(v)}">{v:{float_format}}</td>'
             else:
                 cells += f"<td>{v}</td>"
         rows.append(f"<tr>{cells}</tr>")
-    return "<table>" + "\n".join(rows) + "</table>"
+    return "<table>" + "".join(rows) + "</table>"
 
 
-def _metric_cards(d, keys, pct_keys=None):
-    """生成核心指标卡片 HTML。"""
+def _html_cards(d, keys, pct_keys=None):
+    """Render metric cards."""
     pct_keys = set(pct_keys or [])
     cards = []
     for k in keys:
         v = d.get(k, np.nan)
-        css = _css_class(v)
-        pct = k in pct_keys
+        css = _css_cls(v)
         cards.append(
-            f'<div class="card"><div class="val {css}">{_fmt(v, pct=pct)}</div><div class="lbl">{k}</div></div>'
+            f'<div class="card"><div class="val {css}">{_fmt(v, pct=k in pct_keys)}</div>'
+            f'<div class="lbl">{k}</div></div>'
         )
-    return '<div class="cards">' + "\n".join(cards) + "</div>"
+    return '<div class="cards">' + "".join(cards) + "</div>"
+
+
+def _safe_list(arr, decimals=6, pct=False):
+    """Convert numpy array to JSON-safe list."""
+    factor = 100.0 if pct else 1.0
+    out = []
+    for v in np.asanyarray(arr, dtype=float):
+        if np.isnan(v) or np.isinf(v):
+            out.append(None)
+        else:
+            out.append(round(float(v) * factor, decimals))
+    return out
+
+
+def _date_list(index):
+    """Convert DatetimeIndex to list of 'YYYY-MM-DD' strings."""
+    return [d.strftime("%Y-%m-%d") for d in index]
 
 
 def _generate_html(returns, benchmark_rets, positions, transactions, trades, title, output, rolling_window):
-    """生成 HTML 报告。"""
+    """生成交互式 HTML 报告（使用 ECharts 图表 + 侧边栏导航）。"""
     s = _compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
 
-    parts = []
-    parts.append(f"<h1>{title}</h1>")
-    parts.append(
-        f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]} '
-        f"| {s['n_days']} trading days | ~{s['n_months']} months</div>"
-    )
+    # ---- chart data ----
+    cd = {}
+    dates = _date_list(s["cum_returns"].index)
+    cd["dates"] = dates
+    cd["cumRet"] = _safe_list(s["cum_returns"])
+    cd["dd"] = _safe_list(s["drawdown"], decimals=4, pct=True)
+    cd["dailyRet"] = _safe_list(s["returns"], decimals=4, pct=True)
 
-    # --- 核心指标卡片 ---
-    parts.append(
-        _metric_cards(
-            s["perf_stats"],
-            [
-                "Sharpe Ratio",
-                "Annual Return",
-                "Max Drawdown",
-                "Annual Volatility",
-                "Sortino Ratio",
-                "Calmar Ratio",
-                "Omega Ratio",
-                "Stability",
-            ],
-            pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
-        )
-    )
+    rs = s["rolling_sharpe"].dropna()
+    cd["rsDates"], cd["rsVals"] = _date_list(rs.index), _safe_list(rs, decimals=4)
+    rv = s["rolling_volatility"].dropna()
+    cd["rvDates"], cd["rvVals"] = _date_list(rv.index), _safe_list(rv, decimals=4, pct=True)
 
-    # --- 绩效统计 ---
-    parts.append('<div class="two-col"><div class="section">')
-    parts.append("<h2>Performance Statistics</h2>")
-    pct_keys = {
-        "Annual Return",
-        "Cumulative Returns",
-        "Annual Volatility",
-        "Max Drawdown",
-        "Downside Risk",
-        "Daily Value at Risk",
-        "Daily Mean Return",
-        "Daily Std Return",
-        "Best Day",
-        "Worst Day",
-        "Avg Daily Turnover",
+    if "benchmark_cum" in s:
+        cd["benchCum"] = _safe_list(s["benchmark_cum"])
+    if "rolling_beta" in s:
+        rb = s["rolling_beta"].dropna()
+        cd["rbDates"], cd["rbVals"] = _date_list(rb.index), _safe_list(rb, decimals=4)
+
+    monthly_tbl = s["monthly_returns"].unstack().fillna(0)
+    hm_months = [f"{int(c):02d}" for c in monthly_tbl.columns]
+    hm_years = [str(y) for y in monthly_tbl.index]
+    hm_data = []
+    for yi, y in enumerate(monthly_tbl.index):
+        for mi, m in enumerate(monthly_tbl.columns):
+            hm_data.append([mi, yi, round(float(monthly_tbl.loc[y, m]) * 100, 2)])
+    cd["hmMonths"], cd["hmYears"], cd["hmData"] = hm_months, hm_years, hm_data
+
+    ys = s["yearly_stats"]
+    cd["yrLabels"] = [str(y) for y in ys.index]
+    cd["yrRets"] = [round(float(v) * 100, 2) for v in ys["Annual Return"].values]
+
+    ret_vals = s["returns"].values
+    hist, edges = np.histogram(ret_vals * 100, bins=min(60, max(10, len(ret_vals) // 5)))
+    cd["histBins"] = [round(float((edges[i] + edges[i + 1]) / 2), 3) for i in range(len(hist))]
+    cd["histCnts"] = [int(v) for v in hist]
+
+    if "has_positions" in s:
+        cd["posDates"] = _date_list(s["pos_long"].index)
+        cd["posLong"] = _safe_list(s["pos_long"], decimals=2)
+        cd["posShort"] = _safe_list(s["pos_short"], decimals=2)
+        gl = s["gross_leverage"].dropna()
+        cd["glDates"], cd["glVals"] = _date_list(gl.index), _safe_list(gl, decimals=4)
+
+    if "has_transactions" in s:
+        dv = s["daily_txn_value"]
+        cd["txnDates"], cd["txnVol"] = _date_list(dv.index), _safe_list(dv, decimals=2)
+
+    if "trade_pnl" in s:
+        pnl = s["trade_pnl"]
+        ph, pe = np.histogram(pnl, bins=max(10, min(40, len(pnl) // 3)))
+        cd["pnlBins"] = [round(float((pe[i] + pe[i + 1]) / 2), 2) for i in range(len(ph))]
+        cd["pnlCnts"] = [int(v) for v in ph]
+
+    chart_json = json.dumps(cd, ensure_ascii=False)
+
+    # ---- sidebar ----
+    nav = [
+        ("overview", "产品概览"),
+        ("performance", "绩效分析"),
+        ("returns", "收益分析"),
+        ("rolling", "滚动指标"),
+        ("drawdown", "回撤分析"),
+    ]
+    if "benchmark_stats" in s:
+        nav.append(("benchmark", "基准对比"))
+    if "has_positions" in s:
+        nav.append(("positions", "持仓分析"))
+    if "has_transactions" in s:
+        nav.append(("transactions", "交易分析"))
+    if "trade_stats" in s:
+        nav.append(("trades", "交易统计"))
+    sidebar = '<nav class="sidebar"><h2>📊 Report</h2>'
+    for aid, label in nav:
+        sidebar += f'<a href="#{aid}">{label}</a>'
+    sidebar += "</nav>"
+
+    # ---- body sections ----
+    pct_perf = {
+        "Annual Return", "Cumulative Returns", "Annual Volatility", "Max Drawdown",
+        "Downside Risk", "Daily Value at Risk", "Daily Mean Return", "Daily Std Return",
+        "Best Day", "Worst Day", "Avg Daily Turnover",
     }
-    parts.append(_dict_to_table(s["perf_stats"], pct_keys=pct_keys))
-    parts.append("</div><div class='section'>")
-    parts.append("<h2>Extended Risk Metrics</h2>")
-    parts.append(_dict_to_table(s["extended_stats"]))
-    parts.append("</div></div>")
+    b = []  # body parts
 
-    # --- 收益分位数 ---
-    parts.append('<div class="section">')
-    parts.append("<h2>Return Quantiles</h2>")
+    b.append(f"<h1>{title}</h1>")
+    b.append(
+        f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]}'
+        f' | {s["n_days"]} 交易日 | ~{s["n_months"]} 个月</div>'
+    )
+
+    # -- Overview --
+    b.append('<div class="sec" id="overview"><div class="sec-title">产品概览 Overview</div>')
+    b.append(_html_cards(
+        s["perf_stats"],
+        ["Sharpe Ratio", "Annual Return", "Max Drawdown", "Annual Volatility",
+         "Sortino Ratio", "Calmar Ratio", "Omega Ratio", "Stability"],
+        pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
+    ))
+    b.append('<div class="chart-box" id="c-cum"></div>')
+    b.append('<div class="chart-sm" id="c-dd"></div>')
+    b.append("</div>")
+
+    # -- Performance --
+    b.append('<div class="sec" id="performance"><div class="sec-title">绩效分析 Performance</div>')
+    b.append('<div class="grid-2"><div>')
+    b.append('<h3 class="sub">核心指标</h3>')
+    b.append(_html_table(s["perf_stats"], pct_keys=pct_perf))
+    b.append('</div><div>')
+    b.append('<h3 class="sub">扩展风险指标</h3>')
+    b.append(_html_table(s["extended_stats"]))
+    b.append("</div></div></div>")
+
+    # -- Returns --
+    b.append('<div class="sec" id="returns"><div class="sec-title">收益分析 Returns</div>')
+    b.append('<div class="grid-2">')
+    b.append('<div class="chart-sm" id="c-daily"></div>')
+    b.append('<div class="chart-sm" id="c-dist"></div>')
+    b.append("</div>")
     q = s["return_quantiles"]
+    b.append('<h3 class="sub">收益分位数</h3>')
     q_rows = "".join(
-        f'<tr class="quantile-row"><td>{p}</td><td class="{_css_class(v)}">{v * 100:.4f}%</td></tr>'
+        f'<tr><td style="text-align:left;font-weight:600">{p}</td>'
+        f'<td class="{_css_cls(v)}">{v * 100:.4f}%</td></tr>'
         for p, v in q.items()
     )
-    parts.append(f"<table><tr><th>Percentile</th><th>Return</th></tr>{q_rows}</table>")
-    parts.append("</div>")
-
-    # --- 月/年极值 ---
-    parts.append('<div class="section">')
-    parts.append("<h2>Periodic Extremes</h2>")
+    b.append(f'<table><tr><th>Percentile</th><th>Return</th></tr>{q_rows}</table>')
+    b.append('<div class="chart-box" id="c-hm" style="height:280px"></div>')
+    b.append('<h3 class="sub">月度收益 (%)</h3>')
+    mt = monthly_tbl.copy()
+    mt.columns = hm_months
+    b.append(_html_df(mt * 100, float_format=".2f"))
+    b.append('<div class="grid-2">')
+    b.append('<div class="chart-sm" id="c-yr"></div>')
+    b.append("<div>")
+    b.append('<h3 class="sub">年度统计</h3>')
+    b.append(_html_df(s["yearly_stats"]))
+    b.append("</div></div>")
     extremes = OrderedDict()
     extremes["Best Month"] = s["best_month"]
     extremes["Worst Month"] = s["worst_month"]
     extremes["Avg Month"] = s["avg_month"]
     extremes["Best Year"] = s["best_year"]
     extremes["Worst Year"] = s["worst_year"]
-    parts.append(_dict_to_table(extremes, pct_keys=set(extremes.keys())))
-    parts.append("</div>")
+    b.append('<h3 class="sub">月/年极值</h3>')
+    b.append(_html_table(extremes, pct_keys=set(extremes.keys())))
+    b.append("</div>")
 
-    # --- Benchmark ---
+    # -- Rolling --
+    b.append(f'<div class="sec" id="rolling"><div class="sec-title">滚动指标 Rolling ({rolling_window}d)</div>')
+    b.append('<div class="chart-box" id="c-rs"></div>')
+    b.append('<div class="chart-sm" id="c-rv"></div>')
+    b.append("</div>")
+
+    # -- Drawdown --
+    b.append('<div class="sec" id="drawdown"><div class="sec-title">回撤分析 Drawdown</div>')
+    b.append('<h3 class="sub">最大回撤区间</h3>')
+    b.append(_html_df(s["dd_table"], float_format=".2f"))
+    b.append("</div>")
+
+    # -- Benchmark --
     if "benchmark_stats" in s:
-        parts.append('<div class="section">')
-        parts.append("<h2>Benchmark Comparison</h2>")
-        parts.append(
-            _metric_cards(
-                s["benchmark_stats"],
-                [
-                    "Alpha",
-                    "Beta",
-                    "Information Ratio",
-                    "Tracking Error",
-                    "Up Capture",
-                    "Down Capture",
-                    "Capture Ratio",
-                    "Correlation",
-                ],
-            )
-        )
-        parts.append(_dict_to_table(s["benchmark_stats"]))
-        parts.append("</div>")
+        b.append('<div class="sec" id="benchmark"><div class="sec-title">基准对比 Benchmark</div>')
+        b.append(_html_cards(
+            s["benchmark_stats"],
+            ["Alpha", "Beta", "Information Ratio", "Tracking Error",
+             "Up Capture", "Down Capture", "Capture Ratio", "Correlation"],
+        ))
+        b.append(_html_table(s["benchmark_stats"]))
+        if "rolling_beta" in s:
+            b.append('<div class="chart-sm" id="c-rb"></div>')
+        b.append("</div>")
 
-    # --- 按年统计 ---
-    parts.append('<div class="section">')
-    parts.append("<h2>Yearly Statistics</h2>")
-    parts.append(_df_to_table(s["yearly_stats"]))
-    parts.append("</div>")
-
-    # --- Top 回撤 ---
-    parts.append('<div class="section">')
-    parts.append("<h2>Worst Drawdown Periods</h2>")
-    parts.append(_df_to_table(s["dd_table"], float_format=".2f"))
-    parts.append("</div>")
-
-    # --- 月度收益表 ---
-    parts.append('<div class="section">')
-    parts.append("<h2>Monthly Returns (%)</h2>")
-    monthly = s["monthly_returns"]
-    monthly_tbl = monthly.unstack()
-    if monthly_tbl is not None and len(monthly_tbl) > 0:
-        monthly_tbl = monthly_tbl.fillna(0)
-        monthly_tbl.columns = [f"{int(c):02d}" for c in monthly_tbl.columns]
-        parts.append(_df_to_table(monthly_tbl * 100, float_format=".2f"))
-    parts.append("</div>")
-
-    # --- 持仓分析 ---
+    # -- Positions --
     if "has_positions" in s:
-        parts.append('<div class="section">')
-        parts.append("<h2>Position Analysis</h2>")
-        parts.append(
-            _metric_cards(
-                s["position_summary"],
-                list(s["position_summary"].keys()),
-            )
-        )
-        parts.append(_dict_to_table(s["position_summary"]))
-        parts.append("</div>")
+        b.append('<div class="sec" id="positions"><div class="sec-title">持仓分析 Positions</div>')
+        b.append(_html_cards(s["position_summary"], list(s["position_summary"].keys())))
+        b.append(_html_table(s["position_summary"]))
+        b.append('<div class="chart-box" id="c-expo"></div>')
+        b.append('<div class="chart-sm" id="c-lev"></div>')
+        b.append("</div>")
 
-    # --- 交易分析 ---
+    # -- Transactions --
     if "has_transactions" in s:
-        parts.append('<div class="section">')
-        parts.append("<h2>Transaction Analysis</h2>")
-        parts.append(_dict_to_table(s["txn_summary"]))
-        parts.append("</div>")
+        b.append('<div class="sec" id="transactions"><div class="sec-title">交易分析 Transactions</div>')
+        b.append(_html_cards(s["txn_summary"], list(s["txn_summary"].keys())))
+        b.append(_html_table(s["txn_summary"]))
+        b.append('<div class="chart-sm" id="c-txn"></div>')
+        b.append("</div>")
 
-    # --- 交易统计 ---
+    # -- Trades --
     if "trade_stats" in s:
-        parts.append('<div class="section">')
-        parts.append("<h2>Trade Statistics</h2>")
         ts = s["trade_stats"]
-        pct_keys_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
-        card_keys = ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"]
-        parts.append(_metric_cards(ts, card_keys, pct_keys=pct_keys_t))
-        parts.append(_dict_to_table(ts, pct_keys=pct_keys_t))
-        parts.append("</div>")
+        pct_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
+        b.append('<div class="sec" id="trades"><div class="sec-title">交易统计 Trades</div>')
+        b.append(_html_cards(
+            ts,
+            ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"],
+            pct_keys=pct_t,
+        ))
+        b.append(_html_table(ts, pct_keys=pct_t))
+        if "trade_pnl" in s:
+            b.append('<div class="chart-sm" id="c-pnl"></div>')
+        b.append("</div>")
 
-    # --- Footer ---
-    parts.append('<div class="footer">Generated by <strong>fincore</strong> | create_strategy_report()</div>')
+    b.append('<footer>Generated by <strong>fincore</strong> | create_strategy_report()</footer>')
+    body_html = "\n".join(b)
+
+    # ---- ECharts JavaScript ----
+    js_parts = _build_echart_js(s, rolling_window)
+    js = "\n".join(js_parts)
 
     html = (
-        "<!DOCTYPE html>\n<html lang='zh'><head><meta charset='utf-8'>\n"
-        f"<title>{title}</title>\n{_HTML_CSS}\n</head>\n<body>\n" + "\n".join(parts) + "\n</body></html>"
+        f"<!DOCTYPE html>\n<html lang='zh'><head><meta charset='utf-8'>\n"
+        f"<title>{title}</title>\n"
+        f'<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>\n'
+        f"{_HTML_CSS}\n</head>\n<body>\n"
+        f"{sidebar}\n<main class='content'>\n{body_html}\n</main>\n"
+        f"<script>\nvar D={chart_json};\n"
+        f"function C(id,o){{var e=document.getElementById(id);if(!e)return;"
+        f"var c=echarts.init(e);c.setOption(o);"
+        f"window.addEventListener('resize',function(){{c.resize()}});return c;}}\n"
+        f"var B='#3182ce',G='#38a169',R='#e53e3e',O='#dd6b20',P='#805ad5',GY='#a0aec0';\n"
+        f"{js}\n</script>\n</body></html>"
     )
 
     with open(output, "w", encoding="utf-8") as f:
         f.write(html)
 
     return output
+
+
+def _build_echart_js(s, rw):
+    """Build ECharts initialization JavaScript statements."""
+    js = []
+    _grid = "grid:{left:60,right:30,bottom:30,top:40}"
+    _grid_s = "grid:{left:55,right:15,bottom:25,top:35}"
+    _zoom = "dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:4}]"
+    _zoom_s = "dataZoom:[{type:'inside'}]"
+
+    # Cumulative returns
+    bench_series = ""
+    if "benchmark_cum" in s:
+        bench_series = (",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
+                        "lineStyle:{width:1,color:GY,type:'dashed'}}")
+    js.append(
+        f"C('c-cum',{{"
+        f"title:{{text:'累计收益 Cumulative Returns',textStyle:{{fontSize:13}}}},"
+        f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},"
+        f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
+        f"{_zoom},"
+        f"series:[{{name:'Strategy',type:'line',data:D.cumRet,showSymbol:false,"
+        f"lineStyle:{{width:1.5,color:B}},"
+        f"areaStyle:{{color:{{type:'linear',x:0,y:0,x2:0,y2:1,"
+        f"colorStops:[{{offset:0,color:'rgba(49,130,206,0.15)'}},"
+        f"{{offset:1,color:'rgba(49,130,206,0.01)'}}]}}}}}}"
+        f"{bench_series}]"
+        f"}});"
+    )
+
+    # Drawdown
+    js.append(
+        f"C('c-dd',{{"
+        f"title:{{text:'回撤 Drawdown (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
+        f"{_grid_s},"
+        f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
+        f"{_zoom_s},"
+        f"series:[{{type:'line',data:D.dd,showSymbol:false,"
+        f"lineStyle:{{width:1,color:R}},areaStyle:{{color:'rgba(229,62,62,0.2)'}}}}]"
+        f"}});"
+    )
+
+    # Daily returns
+    js.append(
+        f"C('c-daily',{{"
+        f"title:{{text:'日收益率 (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(3)+'%'}}}},"
+        f"{_grid_s},"
+        f"xAxis:{{type:'category',data:D.dates,axisLabel:{{show:false}}}},"
+        f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
+        f"series:[{{type:'bar',data:D.dailyRet,barWidth:'60%',"
+        f"itemStyle:{{color:function(p){{return p.value>=0?G:R}}}}}}]"
+        f"}});"
+    )
+
+    # Return distribution
+    js.append(
+        f"C('c-dist',{{"
+        f"title:{{text:'收益分布 (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},"
+        f"{_grid_s},"
+        f"xAxis:{{type:'category',data:D.histBins,axisLabel:{{fontSize:9}}}},"
+        f"yAxis:{{type:'value',name:'频次',axisLabel:{{fontSize:10}}}},"
+        f"series:[{{type:'bar',data:D.histCnts,barWidth:'80%',"
+        f"itemStyle:{{color:B,borderRadius:[2,2,0,0]}}}}]"
+        f"}});"
+    )
+
+    # Monthly heatmap
+    js.append(
+        "C('c-hm',{"
+        "title:{text:'月度收益热力图 (%)',textStyle:{fontSize:12}},"
+        "tooltip:{formatter:function(p){return D.hmYears[p.value[1]]+'-'+D.hmMonths[p.value[0]]+': '+p.value[2]+'%'}},"
+        "grid:{left:60,right:80,bottom:20,top:35},"
+        "xAxis:{type:'category',data:D.hmMonths,splitArea:{show:true}},"
+        "yAxis:{type:'category',data:D.hmYears,splitArea:{show:true}},"
+        "visualMap:{min:-10,max:10,calculable:true,orient:'vertical',right:5,top:'center',"
+        "inRange:{color:['#c53030','#fc8181','#fff5f5','#f0fff4','#68d391','#276749']},"
+        "textStyle:{fontSize:10}},"
+        "series:[{type:'heatmap',data:D.hmData,label:{show:true,fontSize:9,"
+        "formatter:function(p){return p.value[2].toFixed(1)}}}]"
+        "});"
+    )
+
+    # Yearly returns
+    js.append(
+        f"C('c-yr',{{"
+        f"title:{{text:'年度收益 (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
+        f"{_grid_s},"
+        f"xAxis:{{type:'category',data:D.yrLabels}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'bar',data:D.yrRets,barWidth:'50%',"
+        f"itemStyle:{{color:function(p){{return p.value>=0?G:R}}}}}}]"
+        f"}});"
+    )
+
+    # Rolling Sharpe
+    js.append(
+        f"C('c-rs',{{"
+        f"title:{{text:'滚动夏普比率 ({rw}d)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},{_grid},{_zoom_s},"
+        f"xAxis:{{type:'category',data:D.rsDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'line',data:D.rsVals,showSymbol:false,"
+        f"lineStyle:{{width:1.2,color:B}},"
+        f"areaStyle:{{color:{{type:'linear',x:0,y:0,x2:0,y2:1,"
+        f"colorStops:[{{offset:0,color:'rgba(49,130,206,0.12)'}},"
+        f"{{offset:1,color:'rgba(49,130,206,0.01)'}}]}}}},"
+        f"markLine:{{data:[{{yAxis:0,lineStyle:{{color:GY,type:'dashed'}}}}]}}}}]"
+        f"}});"
+    )
+
+    # Rolling Volatility
+    js.append(
+        f"C('c-rv',{{"
+        f"title:{{text:'滚动波动率 ({rw}d, %)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
+        f"{_grid_s},{_zoom_s},"
+        f"xAxis:{{type:'category',data:D.rvDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'line',data:D.rvVals,showSymbol:false,"
+        f"lineStyle:{{width:1.2,color:O}},areaStyle:{{color:'rgba(221,107,32,0.12)'}}}}]"
+        f"}});"
+    )
+
+    # Rolling Beta
+    if "rolling_beta" in s:
+        js.append(
+            f"C('c-rb',{{"
+            f"title:{{text:'滚动 Beta ({rw}d)',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.rbDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'line',data:D.rbVals,showSymbol:false,"
+            f"lineStyle:{{width:1.2,color:P}},"
+            f"markLine:{{data:[{{yAxis:1.0,lineStyle:{{color:GY,type:'dashed'}}}}]}}}}]"
+            f"}});"
+        )
+
+    # Position exposure
+    if "has_positions" in s:
+        js.append(
+            f"C('c-expo',{{"
+            f"title:{{text:'多空暴露 Long/Short Exposure',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.posDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:["
+            f"{{name:'Long',type:'line',data:D.posLong,showSymbol:false,"
+            f"lineStyle:{{width:1,color:G}},areaStyle:{{color:'rgba(56,161,105,0.2)'}}}},"
+            f"{{name:'Short',type:'line',data:D.posShort,showSymbol:false,"
+            f"lineStyle:{{width:1,color:R}},areaStyle:{{color:'rgba(229,62,62,0.2)'}}}}]"
+            f"}});"
+        )
+        js.append(
+            f"C('c-lev',{{"
+            f"title:{{text:'总杠杆率 Gross Leverage',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.glDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'line',data:D.glVals,showSymbol:false,"
+            f"lineStyle:{{width:1.2,color:'#2b6cb0'}},"
+            f"areaStyle:{{color:'rgba(43,108,176,0.1)'}}}}]"
+            f"}});"
+        )
+
+    # Transaction volume
+    if "has_transactions" in s:
+        js.append(
+            f"C('c-txn',{{"
+            f"title:{{text:'日成交额 Daily Volume',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.txnDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.txnVol,barWidth:'60%',itemStyle:{{color:B}}}}]"
+            f"}});"
+        )
+
+    # PnL distribution
+    if "trade_pnl" in s:
+        js.append(
+            f"C('c-pnl',{{"
+            f"title:{{text:'交易盈亏分布 PnL Distribution',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.pnlBins,axisLabel:{{fontSize:9}}}},"
+            f"yAxis:{{type:'value',name:'频次'}},"
+            f"series:[{{type:'bar',data:D.pnlCnts,barWidth:'80%',"
+            f"itemStyle:{{color:function(p){{return D.pnlBins[p.dataIndex]>=0?G:R}}}}}}]"
+            f"}});"
+        )
+
+    return js
 
 
 # =========================================================================
