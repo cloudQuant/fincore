@@ -333,11 +333,13 @@ def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     return np.std(residuals, ddof=1) * np.sqrt(ann_factor)
 
 
-def var_excess_return(returns, cutoff=0.05):
-    """Calculate the mean excess return in the VaR tail.
+def var_excess_return(returns, cutoff=0.05, risk_free=0.0, period=DAILY, annualization=None):
+    """Calculate the excess-return-on-VaR ratio.
 
-    This computes the mean of returns that fall at or below the VaR
-    threshold.
+    Defined as ``(annualized_return - risk_free) / abs(VaR)``, where VaR
+    is the historical Value at Risk at the given cutoff level.
+
+    Reference: ER-VaR = (r_annual - rf) / |VaR|
 
     Parameters
     ----------
@@ -345,23 +347,31 @@ def var_excess_return(returns, cutoff=0.05):
         Non-cumulative strategy returns.
     cutoff : float, optional
         Left-tail probability level in (0, 1). Default is 0.05.
+    risk_free : float, optional
+        Annual risk-free rate. Default is 0.0.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
 
     Returns
     -------
     float
-        Mean return in the VaR tail, or ``NaN`` if there are fewer than
-        two observations or no returns fall below the VaR threshold.
+        Excess-return-on-VaR ratio, or ``NaN`` if there are fewer than
+        two observations or VaR is zero.
     """
     if len(returns) < 2:
         return np.nan
 
-    var_value = value_at_risk(returns, cutoff)
-    excess_returns = returns[returns <= var_value]
+    from fincore.metrics.yearly import annual_return
 
-    if len(excess_returns) == 0:
+    ann_ret = annual_return(returns, period=period, annualization=annualization)
+    var_value = value_at_risk(returns, cutoff=cutoff)
+
+    if var_value == 0 or np.isnan(var_value) or np.isnan(ann_ret):
         return np.nan
 
-    return np.mean(excess_returns)
+    return (ann_ret - risk_free) / abs(var_value)
 
 
 def var_cov_var_normal(p, c, mu=0, sigma=1):

@@ -1,4 +1,3 @@
-import gzip
 import os
 import warnings
 from collections import OrderedDict
@@ -149,10 +148,10 @@ class PositionsTestCase(TestCase):
 
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(os.path.dirname(__file__))))
 
-    test_returns = read_csv(gzip.open(__location__ + "/test_data/test_returns.csv.gz"), index_col=0, parse_dates=True)
+    test_returns = read_csv(__location__ + "/test_data/test_returns.csv.gz", index_col=0, parse_dates=True)
     test_returns = to_series(to_utc(test_returns))
-    test_txn = to_utc(read_csv(gzip.open(__location__ + "/test_data/test_txn.csv.gz"), index_col=0, parse_dates=True))
-    test_pos = to_utc(read_csv(gzip.open(__location__ + "/test_data/test_pos.csv.gz"), index_col=0, parse_dates=True))
+    test_txn = to_utc(read_csv(__location__ + "/test_data/test_txn.csv.gz", index_col=0, parse_dates=True))
+    test_pos = to_utc(read_csv(__location__ + "/test_data/test_pos.csv.gz", index_col=0, parse_dates=True))
 
     @parameterized.expand([(test_pos, test_txn, False), (test_pos.resample("1W").last(), test_txn, True)])
     def test_detect_intraday(self, positions, transactions, expected):

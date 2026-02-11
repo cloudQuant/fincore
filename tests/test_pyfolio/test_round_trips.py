@@ -1,4 +1,3 @@
-import gzip
 import os
 from unittest import TestCase
 
@@ -169,8 +168,8 @@ class RoundTripTestCase(TestCase):
     def test_txn_pnl_matches_round_trip_pnl(self):
         __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(os.path.dirname(__file__))))
 
-        test_txn = read_csv(gzip.open(__location__ + "/test_data/test_txn.csv.gz"), index_col=0, parse_dates=True)
-        test_pos = read_csv(gzip.open(__location__ + "/test_data/test_pos.csv.gz"), index_col=0, parse_dates=True)
+        test_txn = read_csv(__location__ + "/test_data/test_txn.csv.gz", index_col=0, parse_dates=True)
+        test_pos = read_csv(__location__ + "/test_data/test_pos.csv.gz", index_col=0, parse_dates=True)
 
         transactions_closed = Empyrical.add_closing_transactions(
             test_pos,

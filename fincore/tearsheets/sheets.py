@@ -686,9 +686,7 @@ def create_capacity_tear_sheet(
     llt = pyfolio_instance.get_low_liquidity_transactions(transactions, market_data)
     llt.index = llt.index.map(format_asset)
 
-    print(
-        f"Tickers with daily transactions consuming >{trade_daily_vol_limit * 100}% of daily bar \nall backtest:"
-    )
+    print(f"Tickers with daily transactions consuming >{trade_daily_vol_limit * 100}% of daily bar \nall backtest:")
     print_table(llt[llt["max_pct_bar_consumed"] > trade_daily_vol_limit * 100], run_flask_app=run_flask_app)
 
     llt = pyfolio_instance.get_low_liquidity_transactions(transactions, market_data, last_n_days=last_n_days)

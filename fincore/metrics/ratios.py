@@ -46,6 +46,9 @@ __all__ = [
     "up_capture",
     "down_capture",
     "up_down_capture",
+    "mar_ratio",
+    "up_capture_return",
+    "down_capture_return",
 ]
 
 
@@ -356,24 +359,87 @@ def calmar_ratio(returns, risk_free=0, period=DAILY, annualization=None):
     return temp
 
 
+def mar_ratio(returns, period=DAILY, annualization=None):
+    """Calculate the MAR ratio.
+
+    The MAR ratio is defined as the arithmetic mean annualized return
+    divided by the absolute value of the maximum drawdown.
+
+    Unlike the Calmar ratio (which uses CAGR), the MAR ratio uses
+    ``mean(returns) × annualization_factor`` as the numerator.
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
+
+    Returns
+    -------
+    float
+        MAR ratio, or ``NaN`` if the maximum drawdown is non-negative.
+    """
+    from fincore.metrics.drawdown import max_drawdown
+
+    if len(returns) < 2:
+        return np.nan
+
+    max_dd = max_drawdown(returns=returns)
+    if max_dd >= 0:
+        return np.nan
+
+    ann_factor = annualization_factor(period, annualization)
+    returns_arr = np.asanyarray(returns)
+    returns_clean = returns_arr[~np.isnan(returns_arr)]
+    if len(returns_clean) < 1:
+        return np.nan
+
+    ann_mean_return = np.mean(returns_clean) * ann_factor
+    result = ann_mean_return / abs(max_dd)
+
+    if np.isinf(result):
+        return np.nan
+
+    return result
+
+
 def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPROX_BDAYS_PER_YEAR):
-    """Determine the Omega ratio of a strategy.
+    r"""Determine the Omega ratio of a strategy.
 
     The Omega ratio is the probability-weighted ratio of gains over
-    losses above/below a required return threshold.
+    losses relative to a threshold :math:`\tau`.  In discrete form:
+
+    .. math::
+
+        \Omega(\tau) = \frac{\sum \max(R_t - \tau,\; 0)}
+                            {\sum \max(\tau - R_t,\; 0)}
+
+    The effective per-period threshold is computed as
+    :math:`\tau = \text{risk\_free} + (1 + \text{required\_return})^{1/q} - 1`,
+    where *q* is the ``annualization`` factor.
+
+    Reference
+    ---------
+    https://breakingdownfinance.com/finance-topics/performance-measurement/omega-ratio/
 
     Parameters
     ----------
     returns : array-like or pd.Series
         Non-cumulative simple returns.
     risk_free : float, optional
-        Risk-free rate used when computing excess returns. Default is 0.0.
+        Per-period risk-free rate added to the threshold. Default is 0.0.
     required_return : float, optional
-        Minimum acceptable return threshold. Default is 0.0.
+        Annualized minimum acceptable return (MAR). It is converted to a
+        per-period rate via compound de-annualization before being added
+        to ``risk_free`` to form the effective threshold :math:`\tau`.
+        Default is 0.0.
     annualization : float, optional
-        Number of periods per year used when interpreting
-        ``required_return`` as an annual rate (for example trading days
-        per year). Default is ``APPROX_BDAYS_PER_YEAR``.
+        Number of periods per year used when de-annualizing
+        ``required_return`` (for example trading days per year).
+        Default is ``APPROX_BDAYS_PER_YEAR``.
 
     Returns
     -------
@@ -391,7 +457,9 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPRO
     else:
         return_threshold = (1 + required_return) ** (1.0 / annualization) - 1
 
-    returns_less_thresh = returns - risk_free - return_threshold
+    # Effective per-period threshold τ = risk_free + de-annualized required_return
+    threshold = risk_free + return_threshold
+    returns_less_thresh = returns - threshold
 
     numer = np.nansum(returns_less_thresh[returns_less_thresh > 0.0])
     denom = -1.0 * np.nansum(returns_less_thresh[returns_less_thresh < 0.0])
@@ -728,33 +796,46 @@ def burke_ratio(returns, risk_free=0.0, period=DAILY, annualization=None):
 
 
 def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, mar=0.0):
-    """Calculate the Kappa 3 ratio based on third-order downside deviation.
+    r"""Calculate the Kappa 3 ratio based on third-order lower partial moment.
 
-    This variant of the Kappa ratio uses the third-order lower partial
-    moment (LPM3) of returns below a minimum acceptable return (MAR) as
-    the risk measure.
+    The Kappa ratio uses the n-th order Lower Partial Moment (LPM) as
+    the risk measure.  For Kappa 3 the formula is:
+
+    .. math::
+
+        K_3(\tau) = \frac{\mu - \tau}{\sqrt[3]{LPM_3(\tau)}}
+
+    where :math:`\mu` is the arithmetic mean of returns,
+    :math:`\tau` is the threshold (MAR), and
+
+    .. math::
+
+        LPM_3(\tau) = \frac{1}{T}\sum_{t=1}^{T}\max(\tau - R_t, 0)^3
+
+    Reference
+    ---------
+    https://breakingdownfinance.com/finance-topics/performance-measurement/kappa-ratio/
 
     Parameters
     ----------
     returns : array-like or pd.Series
         Non-cumulative strategy returns.
     risk_free : float, optional
-        Risk-free rate used when computing excess returns. Default is 0.0.
+        Kept for API compatibility. Not used in the current formula.
+        Default is 0.0.
     period : str, optional
-        Frequency of the input data (for example ``DAILY``). Used to
-        annualize LPM3 when ``annualization`` is ``None``.
+        Kept for API compatibility. Not used in the current formula.
     annualization : float, optional
-        Custom annualization factor. If provided, this value is used
-        directly instead of inferring it from ``period``.
+        Kept for API compatibility. Not used in the current formula.
     mar : float, optional
-        Minimum acceptable return (MAR) used when computing the lower
-        partial moment. Default is 0.0.
+        Minimum acceptable return (MAR), used as the threshold
+        :math:`\tau` in both the numerator and the LPM. Default is 0.0.
 
     Returns
     -------
     float
-        Kappa 3 ratio of the strategy. Returns ``NaN`` when downside
-        risk is effectively zero.
+        Kappa 3 ratio of the strategy. Returns ``NaN`` when there is
+        insufficient data or downside risk is effectively zero.
     """
     if len(returns) < 2:
         return np.nan
@@ -768,22 +849,144 @@ def kappa_three_ratio(returns, risk_free=0.0, period=DAILY, annualization=None, 
     downside_deviations = np.maximum(0, mar - returns_clean)
     lpm3 = np.mean(downside_deviations**3)
 
-    ann_factor = annualization_factor(period, annualization)
-    ann_ret = _compute_annualized_return(returns, period, annualization)
+    mu = np.mean(returns_clean)
 
-    if lpm3 == 0 or lpm3 < 1e-30:
-        std_dev = np.std(returns_clean)
-        if std_dev < 1e-10:
-            return np.inf if ann_ret - risk_free > 0 else np.nan
-        lpm3_risk = std_dev * np.sqrt(ann_factor)
+    if lpm3 < 1e-30:
+        return np.inf if mu > mar else np.nan
+
+    return (mu - mar) / (lpm3 ** (1.0 / 3.0))
+
+
+def deflated_sharpe_ratio(returns, risk_free=0, num_trials=1, period=DAILY, annualization=None):
+    r"""Calculate the Deflated Sharpe Ratio (DSR).
+
+    The DSR tests whether the observed Sharpe ratio is statistically
+    significant after correcting for:
+
+    1. Non-normality of returns (skewness and kurtosis).
+    2. Finite sample length.
+    3. Multiple testing (number of strategies tried).
+
+    It is computed in two steps:
+
+    **Step 1 — Expected maximum Sharpe ratio under the null hypothesis**:
+
+    .. math::
+
+        \widehat{SR}_0 \approx \sqrt{2 \ln N}
+        - \frac{\ln(\pi) + \ln(\ln N)}{2\sqrt{2 \ln N}}
+
+    where *N* is the number of independent trials (strategies tested).
+
+    **Step 2 — Probabilistic Sharpe Ratio (PSR)** evaluated at
+    :math:`SR^* = \widehat{SR}_0`:
+
+    .. math::
+
+        DSR = PSR(SR^*) = \Phi\!\left(
+            \frac{(\widehat{SR} - SR^*)\,\sqrt{T-1}}
+                 {\sqrt{1 - \hat{\gamma}_3\,\widehat{SR}
+                        + \frac{\hat{\gamma}_4 - 1}{4}\,\widehat{SR}^2}}
+        \right)
+
+    where :math:`\widehat{SR}` is the observed (non-annualized) Sharpe
+    ratio, *T* is the sample size, :math:`\hat{\gamma}_3` is the sample
+    skewness, :math:`\hat{\gamma}_4` is the sample excess kurtosis, and
+    :math:`\Phi` is the standard-normal CDF.
+
+    A DSR close to 1 indicates the observed Sharpe ratio is unlikely to
+    be the result of luck; a DSR close to 0 suggests the opposite.
+
+    Reference
+    ---------
+    - Bailey, D. and M. López de Prado (2014). "The Deflated Sharpe
+      Ratio: Correcting for Selection Bias, Backtest Over-fitting, and
+      Non-Normality." *Journal of Portfolio Management*, 40(5), 94–107.
+    - https://en.wikipedia.org/wiki/Deflated_Sharpe_ratio
+
+    Parameters
+    ----------
+    returns : array-like or pd.Series
+        Non-cumulative strategy returns.
+    risk_free : float, optional
+        Per-period risk-free rate. Default is 0.
+    num_trials : int, optional
+        Number of independent strategy trials (backtests) that were
+        conducted.  Used to estimate the expected maximum Sharpe ratio
+        under the null.  Default is 1 (no multiple-testing correction).
+    period : str, optional
+        Kept for API consistency. Not used in the current formula since
+        the DSR operates on per-period (non-annualized) Sharpe ratios.
+    annualization : float, optional
+        Kept for API consistency. Not used in the current formula.
+
+    Returns
+    -------
+    float
+        The Deflated Sharpe Ratio, a probability in [0, 1].
+        Returns ``NaN`` if there are fewer than 3 observations.
+    """
+    from scipy.stats import norm
+
+    returns_array = np.asanyarray(returns, dtype=float)
+    returns_clean = returns_array[~np.isnan(returns_array)]
+
+    T = len(returns_clean)
+    if T < 3:
+        return np.nan
+
+    excess = returns_clean - risk_free
+
+    std_excess = np.std(excess, ddof=1)
+    sr_hat = np.mean(excess) / std_excess if std_excess > 1e-15 else 0.0
+
+    gamma3 = _sample_skewness(excess)
+    gamma4 = _sample_excess_kurtosis(excess)
+
+    N = max(num_trials, 1)
+    if N <= 1:
+        sr_star = 0.0
     else:
-        lpm3_annualized = lpm3 * ann_factor
-        lpm3_risk = lpm3_annualized ** (1.0 / 3.0)
+        log_N = np.log(N)
+        if log_N < 1e-10:
+            sr_star = 0.0
+        else:
+            sr_star = np.sqrt(2.0 * log_N) - (np.log(np.pi) + np.log(log_N)) / (2.0 * np.sqrt(2.0 * log_N))
 
-    if lpm3_risk == 0 or lpm3_risk < 1e-10:
-        return np.inf if ann_ret - risk_free > 0 else np.nan
+    denom_sq = 1.0 - gamma3 * sr_hat + (gamma4 - 1) / 4.0 * sr_hat**2
+    if denom_sq <= 0:
+        return 1.0 if sr_hat > sr_star else 0.0
 
-    return (ann_ret - risk_free) / lpm3_risk
+    z = (sr_hat - sr_star) * np.sqrt(T - 1) / np.sqrt(denom_sq)
+
+    return float(norm.cdf(z))
+
+
+def _sample_skewness(x):
+    """Compute sample skewness (bias-corrected)."""
+    n = len(x)
+    if n < 3:
+        return 0.0
+    m = np.mean(x)
+    s = np.std(x, ddof=1)
+    if s == 0:
+        return 0.0
+    return (n / ((n - 1) * (n - 2))) * np.sum(((x - m) / s) ** 3)
+
+
+def _sample_excess_kurtosis(x):
+    """Compute sample excess kurtosis (bias-corrected, Fisher definition)."""
+    n = len(x)
+    if n < 4:
+        return 0.0
+    m = np.mean(x)
+    s = np.std(x, ddof=1)
+    if s == 0:
+        return 0.0
+    m4 = np.sum(((x - m) / s) ** 4)
+    kurt = (n * (n + 1) / ((n - 1) * (n - 2) * (n - 3))) * m4
+    correction = 3.0 * (n - 1) ** 2 / ((n - 2) * (n - 3))
+    return kurt - correction
 
 
 def common_sense_ratio(returns):
@@ -1009,3 +1212,77 @@ def up_down_capture(returns, factor_returns, period=DAILY):
         return np.nan
 
     return up_cap / down_cap
+
+
+def up_capture_return(returns, factor_returns, period=DAILY, annualization=None):
+    """Calculate the annualized return during up-market periods.
+
+    This computes the annualized return of the strategy using only
+    those periods where the benchmark return is positive.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
+
+    Returns
+    -------
+    float
+        Annualized strategy return during up-market periods, or ``NaN``
+        if there are no positive benchmark periods.
+    """
+    from fincore.metrics.yearly import annual_return
+
+    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
+    factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
+
+    up_returns = returns[factor_returns > 0]
+
+    if len(up_returns) < 1:
+        return np.nan
+
+    return annual_return(up_returns, period=period, annualization=annualization)
+
+
+def down_capture_return(returns, factor_returns, period=DAILY, annualization=None):
+    """Calculate the annualized return during down-market periods.
+
+    This computes the annualized return of the strategy using only
+    those periods where the benchmark return is negative.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Non-cumulative strategy returns.
+    factor_returns : pd.Series
+        Non-cumulative benchmark or factor returns.
+    period : str, optional
+        Frequency of the input data. Default is ``DAILY``.
+    annualization : float, optional
+        Custom annualization factor.
+
+    Returns
+    -------
+    float
+        Annualized strategy return during down-market periods, or ``NaN``
+        if there are no negative benchmark periods.
+    """
+    from fincore.metrics.yearly import annual_return
+
+    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
+    factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
+
+    down_returns = returns[factor_returns < 0]
+
+    if len(down_returns) < 1:
+        return np.nan
+
+    return annual_return(down_returns, period=period, annualization=annualization)

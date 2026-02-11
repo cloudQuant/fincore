@@ -290,7 +290,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
             )
             avg_allocation_msg = "selected missing assets"
         else:
-            missing_stocks_displayed = (f"The following assets were missing factor loadings: {list(missing_stocks)}.")
+            missing_stocks_displayed = f"The following assets were missing factor loadings: {list(missing_stocks)}."
             avg_allocation_msg = "missing assets"
 
         # Calculate average allocation for warning message
@@ -333,13 +333,11 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
 
     if len(missing_factor_loadings_index) > 0:
         if len(missing_factor_loadings_index) > 5:
-            missing_dates_displayed = (f"(first missing is {missing_factor_loadings_index[0]}, last missing is {missing_factor_loadings_index[-1]})")
+            missing_dates_displayed = f"(first missing is {missing_factor_loadings_index[0]}, last missing is {missing_factor_loadings_index[-1]})"
         else:
             missing_dates_displayed = list(missing_factor_loadings_index)
 
-        warning_msg = (
-            f"Could not find factor loadings for {len(missing_factor_loadings_index)} dates: {missing_dates_displayed}. Truncating date range for performance attribution. "
-        )
+        warning_msg = f"Could not find factor loadings for {len(missing_factor_loadings_index)} dates: {missing_dates_displayed}. Truncating date range for performance attribution. "
 
         warnings.warn(warning_msg)
 
