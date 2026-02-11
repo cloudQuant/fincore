@@ -267,7 +267,7 @@ def adjusted_sharpe_ratio(returns, risk_free=0.0):
     return sharpe * adjustment
 
 
-def conditional_sharpe_ratio(returns, cutoff=0.05, period=DAILY, annualization=None):
+def conditional_sharpe_ratio(returns, cutoff=0.05, risk_free=0, period=DAILY, annualization=None):
     """Calculate the Sharpe ratio conditional on the left tail.
 
     The conditional Sharpe ratio is computed on the subset of returns
@@ -280,6 +280,8 @@ def conditional_sharpe_ratio(returns, cutoff=0.05, period=DAILY, annualization=N
     cutoff : float, optional
         Left-tail probability level in (0, 1). For example ``0.05``
         selects the worst 5% of returns. Default is 0.05.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.
     period : str, optional
         Frequency of the input data (for example ``DAILY``). Used to
         infer the annualization factor when ``annualization`` is ``None``.
@@ -304,7 +306,7 @@ def conditional_sharpe_ratio(returns, cutoff=0.05, period=DAILY, annualization=N
     if len(conditional_returns) < 2:
         return np.nan
 
-    mean_ret = np.mean(conditional_returns)
+    mean_ret = np.mean(conditional_returns) - risk_free
     std_ret = np.std(conditional_returns, ddof=1)
 
     if std_ret == 0:
@@ -313,16 +315,18 @@ def conditional_sharpe_ratio(returns, cutoff=0.05, period=DAILY, annualization=N
     return mean_ret / std_ret * np.sqrt(ann_factor)
 
 
-def calmar_ratio(returns, period=DAILY, annualization=None):
+def calmar_ratio(returns, risk_free=0, period=DAILY, annualization=None):
     """Determine the Calmar ratio (return-to-drawdown ratio).
 
-    The Calmar ratio is defined as the annualized return divided by the
-    absolute value of the maximum drawdown.
+    The Calmar ratio is defined as the annualized excess return divided by
+    the absolute value of the maximum drawdown.
 
     Parameters
     ----------
     returns : array-like or pd.Series or pd.DataFrame
         Non-cumulative simple returns.
+    risk_free : float, optional
+        Risk-free rate used when computing excess returns. Default is 0.
     period : str, optional
         Frequency of the input data (for example ``DAILY``). Used to
         annualize returns when ``annualization`` is ``None``.
@@ -342,7 +346,7 @@ def calmar_ratio(returns, period=DAILY, annualization=None):
     max_dd = max_drawdown(returns=returns)
     if max_dd < 0:
         ann_return = annual_return(returns, period=period, annualization=annualization)
-        temp = ann_return / abs(max_dd)
+        temp = (ann_return - risk_free) / abs(max_dd)
     else:
         return np.nan
 
