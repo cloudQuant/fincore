@@ -4,137 +4,189 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Empyrical is a Python library for calculating common financial risk and performance metrics used in quantitative finance. Originally developed by Quantopian Inc., it provides statistical functions for analyzing investment returns, calculating risk metrics, and performing performance attribution.
+fincore is a Python library for quantitative finance risk and performance analytics. Originally based on empyrical from Quantopian, it continues development under cloudQuant with 150+ financial metrics, lazy-loading architecture, and self-contained HTML/PDF report generation.
 
 ## Development Commands
 
-### How to Query Available Virtual Environments
+### Installation
 
 ```bash
-conda env list
+# Install in development mode with dev and visualization dependencies
+pip install -e ".[dev,viz]"
+
+# Install all optional dependencies (viz, bayesian, datareader)
+pip install -e ".[all]"
+
+# Install from source
+pip install -U .
 ```
 
-### How to Create New Virtual Environments
+### Testing
 
 ```bash
-conda create -n py37 python=3.7
-conda create -n py38 python=3.8
-conda create -n py39 python=3.9
-conda create -n py310 python=3.10
-conda create -n py311 python=3.11
-conda create -n py312 python=3.12
-conda create -n py313 python=3.13
+# Run all tests (1299 tests) with 4 parallel workers
+pytest tests/ -n 4
+
+# Run with coverage
+pytest tests/ --cov=fincore --cov-report=term-missing
+
+# Run specific test suites
+pytest tests/test_empyrical/          # Empyrical metrics tests
+pytest tests/test_core/               # AnalysisContext, RollingEngine tests
+pytest tests/test_pyfolio/            # Pyfolio tearsheet tests
+
+# Run a single test
+pytest tests/test_core/test_context.py::TestCaching
+
+# Run tests across Python versions (requires conda environments)
+./test_python_versions_simple.sh
 ```
 
-### How to Activate Virtual Environments
+### Linting and Type Checking
 
 ```bash
-conda activate py37
-conda activate py38
-conda activate py39
-conda activate py310
-conda activate py311
-conda activate py312
-conda activate py313
-```
+# Ruff linting
+ruff check fincore/
 
-### How to Deactivate Virtual Environments
+# Ruff formatting
+ruff format fincore/
 
-```bash
-conda deactivate
-```
-
-### How to Install Dependencies
-```bash
-# Windows
-install_win.bat
-
-# Unix/Linux/MacOS
-sh install_unix.sh
-```
-
-### How to Run Tests
-```bash
-# Run all tests in parallel
-pytest ./empyrical/tests -n 4
-
-# Run a single test file
-pytest ./empyrical/tests/test_stats.py
-
-# Run a specific test
-pytest ./empyrical/tests/test_stats.py::test_function_name
-```
-
-### How to Set Up Development Environment
-```bash
-# Install dependencies
-pip install -U -r requirements.txt
-
-# Install package in development mode
-pip install -U ./empyrical
+# Type checking
+mypy fincore/
 ```
 
 ## Architecture Overview
 
-### Core Modules
+### Top-Level Structure
 
-1. **stats.py** (2,242 lines) - The main module containing all financial metrics calculations. Functions are organized by metric type:
-   - Return metrics (annual_return, cagr, cum_returns)
-   - Risk metrics (max_drawdown, value_at_risk, downside_risk)
-   - Risk-adjusted metrics (sharpe_ratio, sortino_ratio, calmar_ratio)
-   - Market relationship metrics (alpha, beta, capture ratios)
-   - Rolling versions of metrics (prefixed with `roll_`)
+- **`__init__.py`** - Lazy-loading module with flat API. Common functions (`sharpe_ratio`, `max_drawdown`, etc.) import directly without submodule access. Uses `__getattr__` to defer heavy module loading.
+- **`empyrical.py`** - Main facade class with 150+ methods. Uses `_registry.py` to auto-generate methods from metrics modules via `@_populate_from_registry` decorator.
+- **`pyfolio.py`** - Pyfolio tearsheet class extending Empyrical with additional plotting functionality.
+- **`report.py`** - `create_strategy_report()` for generating HTML/PDF strategy reports with progressive detail based on provided data.
+- **`_registry.py`** - Central registry mapping Empyrical method names to underlying metric functions. Eliminates ~1000 lines of boilerplate delegation code.
 
-2. **utils.py** (576 lines) - Utility functions for data validation, NaN handling, and return calculations. Key functions include:
-   - `nanmean`, `nanstd`, `nanmax`, `nanmin` - NaN-aware statistical operations (with bottleneck optimization)
-   - `simple_returns`, `cum_returns` - Calculate returns from prices
-   - `rolling_window` - Create rolling windows for calculations
-   - `_adjust_returns` - Adjust returns data type and handle required_return parameter
-   - `up`, `down` - Identify up/down market periods
+### Core Components
 
-3. **periods.py** (20 lines) - Constants defining annualization factors:
-   - DAILY=252, WEEKLY=52, MONTHLY=12, QUARTERLY=4, YEARLY=1
-   - ANNUALIZATION_FACTORS dict for period conversion
+**`core/context.py`** - AnalysisContext class:
+- Lazy, cached metric computation using `@cached_property`
+- Recommended entry point via `fincore.analyze(returns, factor_returns=benchmark)`
+- Exports: `perf_stats()`, `to_dict()`, `to_json()`, `to_html()`, `plot()`
 
-4. **perf_attrib.py** (161 lines) - Performance attribution functionality for decomposing returns
+**`core/engine.py`** - RollingEngine class:
+- Batch rolling metric computation in single call
+- Available metrics: `sharpe`, `volatility`, `max_drawdown`, `beta`, `sortino`, `mean_return`
+- Use when computing multiple rolling metrics to avoid redundant iteration
 
-5. **deprecate.py** (44 lines) - Deprecation warning utilities
+### Metrics Organization
 
-6. **__init__.py** (83 lines) - Module exports and public API surface
+Located in `fincore/metrics/` with 17+ modules:
 
-### Design Patterns
+| Module | Purpose |
+|--------|---------|
+| `basic.py` | Utilities (align, annualize, flatten, annualization_factor) |
+| `returns.py` | Return calculations (simple_returns, cum_returns, aggregate_returns) |
+| `drawdown.py` | Drawdown analytics (max_drawdown, drawdown periods, recovery) |
+| `risk.py` | Volatility, VaR, CVaR, downside_risk, tail_ratio |
+| `ratios.py` | Sharpe, Sortino, Calmar, Omega, Information, Capture ratios |
+| `alpha_beta.py` | Alpha, beta (regular and aligned), capture ratios |
+| `rolling.py` | Rolling window metrics with vectorized roll_max_drawdown |
+| `stats.py` | Skewness, kurtosis, stability, hurst_exponent, correlation |
+| `consecutive.py` | Streaks (max_consecutive_up/down, gain/loss events) |
+| `yearly.py` | Annual/breakdown metrics by year |
+| `timing.py` | Market-timing measures (treynor_mazuy, henriksson_merton) |
+| `positions.py` | Position analysis (exposure, concentration, leverage) |
+| `transactions.py` | Transaction analysis (turnover, slippage) |
+| `round_trips.py` | Round-trip trade statistics |
+| `perf_attrib.py` | Performance attribution and factor decomposition |
+| `perf_stats.py` | Aggregated performance statistics |
+| `bayesian.py` | Bayesian analysis (requires pymc) |
 
-- **Consistent Function Signatures**: Most metrics follow the pattern `metric(returns, risk_free=0, period=DAILY, **kwargs)`
-- **NaN Handling**: Functions use custom NaN-aware operations from utils.py with bottleneck optimization when available
-- **Rolling Calculations**: Rolling versions of metrics use `_create_unary_vectorized_roll_function` and `_create_binary_vectorized_roll_function` factory functions
-- **Pandas Integration**: All functions accept pandas Series/DataFrame and numpy arrays
-- **Aligned Calculations**: Many metrics have both regular and `_aligned` versions for handling misaligned data
+### Lazy Loading Architecture
 
-### Testing Approach
+The project uses lazy loading at three levels:
 
-- Tests use CSV files in `tests/test_data/` for realistic financial data:
-  - `returns.csv` - Price returns data
-  - `factor_returns.csv` - Benchmark/factor returns
-  - `positions.csv`, `factor_loadings.csv`, `residuals.csv` - Performance attribution data
-- Each metric has comprehensive tests covering edge cases (empty data, all NaN, single values)
-- Tests verify both correctness and consistency with expected financial calculations
-- Uses parameterized tests for multiple test cases
-- Test data includes 2 years of daily returns (2016-2017)
+1. **Top-level (`__init__.py`)**: `Empyrical`, `Pyfolio`, `analyze`, and flat API functions load on first access via `__getattr__`
+2. **Metrics (`metrics/__init__.py`)**: 17 submodules load via `__getattr__` when accessed
+3. **Empyrical class**: Methods generated from registry use `_resolve_module()` to lazy-load metric modules
 
-### Important Implementation Notes
+This keeps `import fincore` fast (~0.06s) by avoiding heavy transitive imports.
 
-1. **Annualization**: Many metrics use annualization factors from periods.py. Always check if a metric needs annualization.
+### Visualization System
 
-2. **Risk-Free Rate**: Most risk-adjusted metrics accept a `risk_free` parameter that can be a scalar or Series
+Pluggable backend system via `VizBackend` protocol:
 
-3. **Return Type Handling**: The library assumes simple returns (not log returns) as input
+- **`viz/base.py`** - Protocol definition and `get_backend(name)` resolver
+- **`viz/matplotlib_backend.py`** - Matplotlib implementation (requires matplotlib)
+- **`viz/html_backend.py`** - Self-contained HTML reports (no external dependencies)
 
-4. **DataFrame Support**: When DataFrames are passed, metrics are calculated for each column independently
+Backends implement: `plot_returns()`, `plot_drawdown()`, `plot_rolling_sharpe()`, `plot_monthly_heatmap()`
 
-5. **Period Detection**: Some functions attempt to infer the period from pandas DatetimeIndex if not specified
+### Constants (`constants/`)
 
-6. **Optional Dependencies**:
-   - `bottleneck` provides optimized NaN-aware operations for performance
-   - `pandas-datareader` is deprecated and being removed in future versions
+Period constants for annualization:
+- `DAILY=252`, `WEEKLY=52`, `MONTHLY=12`, `QUARTERLY=4`, `YEARLY=1`
+- `APPROX_BDAYS_PER_YEAR=252`
+- `FACTOR_PARTITIONS` dict for period conversion
 
-7. **Performance**: Vectorized operations throughout, with special rolling window implementations for efficiency
+### Type Definitions
+
+`_types.py` contains centralized type aliases and NamedTuples used across the codebase.
+
+## Key Design Patterns
+
+### Registry-Based Method Generation
+
+The `_registry.py` module contains four registries:
+- `STATIC_METHODS` - Utility helpers exposed as static methods
+- `CLASSMETHOD_REGISTRY` - Simple forwarding to module functions
+- `DUAL_RETURNS_REGISTRY` - Auto-fills `returns` from instance
+- `DUAL_RETURNS_FACTOR_REGISTRY` - Auto-fills `returns` AND `factor_returns` from instance
+
+This enables Empyrical class to expose 150+ methods without manual delegation code.
+
+### Dual Method Pattern
+
+The `@_dual_method` descriptor allows methods to work both as class-level calls (passing returns explicitly) and instance calls (auto-filling returns from instance state).
+
+Example:
+```python
+# Class-level usage
+Empyrical.sharpe_ratio(returns, risk_free=0.02)
+
+# Instance-level usage
+emp = Empyrical(returns=returns)
+emp.sharpe_ratio()  # returns auto-filled from instance
+```
+
+## Python Version Support
+
+- **Minimum**: Python 3.11
+- **Tested**: 3.11, 3.12, 3.13
+- CI runs on all three versions via GitHub Actions
+
+## Test Data
+
+Test fixtures use CSV files in `tests/test_data/`:
+- `returns.csv` - Price returns data
+- `factor_returns.csv` - Benchmark/factor returns
+- `positions.csv`, `factor_loadings.csv`, `residuals.csv` - Performance attribution
+
+`tests/index_data/` contains 100+ global market index data files for testing.
+
+## Optional Dependencies
+
+- **viz**: matplotlib, seaborn, ipython - for matplotlib visualization backend
+- **bayesian**: pymc - for Bayesian analysis functions
+- **datareader**: pandas-datareader - data fetching utilities
+
+## Important Notes
+
+1. **Annualization**: Most risk-adjusted metrics use annualization factors from constants. Check if metric needs annualization.
+
+2. **NaN Handling**: All functions use custom NaN-aware operations from utils with bottleneck optimization when available.
+
+3. **Return Type**: Library expects simple returns (not log returns) as input.
+
+4. **DataFrame Support**: When DataFrames are passed, metrics calculate for each column independently.
+
+5. **Report Generation**: `create_strategy_report()` generates progressively detailed reports based on provided data (returns → +benchmark → +positions → +transactions → +trades).
