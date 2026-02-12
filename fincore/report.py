@@ -375,6 +375,85 @@ def _compute_sections(
         if "barlen" in trades.columns:
             sections["trade_barlen"] = trades["barlen"].values
 
+    # ------ 区间收益 Period Returns ------
+    end_date = returns.index[-1]
+    _tz = getattr(end_date, "tzinfo", None)
+    _ytd_ts = pd.Timestamp(end_date.year, 1, 1, tz=_tz)
+    period_defs = [
+        ("近一周", 5), ("近一月", 21), ("近三月", 63), ("近六月", 126),
+        ("近一年", 252), ("近三年", 756), ("近五年", 1260),
+    ]
+    pr = OrderedDict()
+    for label, days in period_defs:
+        if len(returns) >= days:
+            pr[label] = float(Empyrical.cum_returns_final(returns.iloc[-days:]))
+        else:
+            pr[label] = np.nan
+    ytd_mask = returns.index >= _ytd_ts
+    if ytd_mask.sum() > 0:
+        pr["年初至今"] = float(Empyrical.cum_returns_final(returns[ytd_mask]))
+    pr["成立以来"] = float(Empyrical.cum_returns_final(returns))
+    sections["period_returns"] = pr
+
+    if benchmark_rets is not None:
+        _bm_tz = getattr(benchmark_rets.index[-1], "tzinfo", None)
+        _bm_ytd_ts = pd.Timestamp(end_date.year, 1, 1, tz=_bm_tz)
+        bpr = OrderedDict()
+        for label, days in period_defs:
+            if len(benchmark_rets) >= days:
+                bpr[label] = float(Empyrical.cum_returns_final(benchmark_rets.iloc[-days:]))
+            else:
+                bpr[label] = np.nan
+        bm_ytd = benchmark_rets[benchmark_rets.index >= _bm_ytd_ts]
+        if len(bm_ytd) > 0:
+            bpr["年初至今"] = float(Empyrical.cum_returns_final(bm_ytd))
+        bpr["成立以来"] = float(Empyrical.cum_returns_final(benchmark_rets))
+        sections["benchmark_period_returns"] = bpr
+
+    # ------ 区间胜率 Period Win Rates ------
+    wr = OrderedDict()
+    for label, days in period_defs:
+        if len(returns) >= days:
+            r = returns.iloc[-days:]
+            wr[label] = float((r > 0).sum() / len(r))
+        else:
+            wr[label] = np.nan
+    ytd_r = returns[ytd_mask]
+    if len(ytd_r) > 0:
+        wr["年初至今"] = float((ytd_r > 0).sum() / len(ytd_r))
+    wr["成立以来"] = float((returns > 0).sum() / len(returns))
+    sections["period_win_rates"] = wr
+
+    # ------ 总结文本 Summary Text ------
+    _ann = perf.get("Annual Return", np.nan)
+    _shp = perf.get("Sharpe Ratio", np.nan)
+    _mdd = perf.get("Max Drawdown", np.nan)
+    _vol = perf.get("Annual Volatility", np.nan)
+    _sor = perf.get("Sortino Ratio", np.nan)
+    _cal = perf.get("Calmar Ratio", np.nan)
+
+    def _perf_tag(sh):
+        if np.isnan(sh):
+            return "N/A"
+        return "优秀" if sh > 1.5 else ("良好" if sh > 1.0 else ("一般" if sh > 0.5 else "较差"))
+
+    def _risk_tag(dd):
+        if np.isnan(dd):
+            return "N/A"
+        a = abs(dd)
+        return "风险控制优秀" if a < 0.1 else ("风险控制良好" if a < 0.2 else ("风险控制一般" if a < 0.3 else "风险控制较差"))
+
+    _txt = (
+        f"报告区间内，产品年化收益率为{_ann * 100:.2f}%，表现{_perf_tag(_shp)}。"
+        f"夏普比率为{_shp:.2f}，索提诺比率为{_sor:.2f}，卡尔玛比率为{_cal:.2f}。"
+        f"最大回撤为{abs(_mdd) * 100:.2f}%，年化波动率为{_vol * 100:.2f}%，{_risk_tag(_mdd)}。"
+    )
+    if benchmark_rets is not None:
+        _a = perf.get("Alpha", np.nan)
+        _b = perf.get("Beta", np.nan)
+        _txt += f" Alpha为{_a:.4f}，Beta为{_b:.4f}。"
+    sections["summary_text"] = _txt
+
     return sections
 
 
@@ -437,6 +516,21 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
   .grid-2 { grid-template-columns: 1fr; }
   .cards { grid-template-columns: repeat(2, 1fr); }
 }
+.summary-box { background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
+               border-left: 4px solid var(--accent); border-radius: 6px;
+               padding: 14px 18px; margin-bottom: 16px; font-size: 0.92em;
+               line-height: 1.7; color: var(--g700); }
+.ptbl { font-size: 0.83em; }
+.ptbl th { background: var(--primary); color: #fff; text-align: center; padding: 8px 6px; }
+.ptbl td { text-align: center; padding: 7px 6px; }
+.ptbl tr:first-child td { font-weight: 700; }
+.card-hl { border-top: 3px solid var(--accent); }
+.card-hl.cg { border-top-color: var(--green); }
+.card-hl.cr { border-top-color: var(--red); }
+.card-hl.co { border-top-color: var(--orange); }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 860px) { .grid-3 { grid-template-columns: 1fr; } }
+.tbl-left td { text-align: left; }
 </style>
 """
 
@@ -444,12 +538,17 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
 def _fmt(v, pct=False):
     """格式化数值。"""
     if isinstance(v, (int, np.integer)):
-        return str(v)
+        return f"{v:,}" if abs(v) >= 10000 else str(v)
     if isinstance(v, (float, np.floating)):
         if np.isnan(v):
             return "N/A"
         if pct:
             return f"{v * 100:.2f}%"
+        a = abs(v)
+        if a >= 1e6:
+            return f"{v:,.0f}"
+        if a >= 100:
+            return f"{v:,.2f}"
         return f"{v:.4f}"
     return str(v)
 
@@ -476,19 +575,24 @@ def _html_table(d, pct_keys=None):
     return "<table>" + "".join(rows) + "</table>"
 
 
-def _html_df(df, float_format=".4f"):
+def _html_df(df, float_format=".4f", table_class="", left_align=False):
     """DataFrame → HTML table."""
+    cls_attr = f' class="{table_class}"' if table_class else ""
+    _td_sty = ' style="text-align:left"' if left_align else ""
     hdr = "<tr><th></th>" + "".join(f"<th>{c}</th>" for c in df.columns) + "</tr>"
     rows = [hdr]
     for idx, row in df.iterrows():
         cells = f"<th>{idx}</th>"
         for v in row:
             if isinstance(v, (float, np.floating)):
-                cells += f'<td class="{_css_cls(v)}">{v:{float_format}}</td>'
+                if np.isnan(v):
+                    cells += f'<td{_td_sty}></td>'
+                else:
+                    cells += f'<td class="{_css_cls(v)}"{_td_sty}>{v:{float_format}}</td>'
             else:
-                cells += f"<td>{v}</td>"
+                cells += f"<td{_td_sty}>{v}</td>"
         rows.append(f"<tr>{cells}</tr>")
-    return "<table>" + "".join(rows) + "</table>"
+    return f"<table{cls_attr}>" + "".join(rows) + "</table>"
 
 
 def _html_cards(d, keys, pct_keys=None):
@@ -545,13 +649,15 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         rb = s["rolling_beta"].dropna()
         cd["rbDates"], cd["rbVals"] = _date_list(rb.index), _safe_list(rb, decimals=4)
 
-    monthly_tbl = s["monthly_returns"].unstack().fillna(0)
+    monthly_tbl = s["monthly_returns"].unstack()
     hm_months = [f"{int(c):02d}" for c in monthly_tbl.columns]
     hm_years = [str(y) for y in monthly_tbl.index]
     hm_data = []
     for yi, y in enumerate(monthly_tbl.index):
         for mi, m in enumerate(monthly_tbl.columns):
-            hm_data.append([mi, yi, round(float(monthly_tbl.loc[y, m]) * 100, 2)])
+            val = monthly_tbl.loc[y, m]
+            if not (isinstance(val, (float, np.floating)) and np.isnan(val)):
+                hm_data.append([mi, yi, round(float(val) * 100, 2)])
     cd["hmMonths"], cd["hmYears"], cd["hmData"] = hm_months, hm_years, hm_data
 
     ys = s["yearly_stats"]
@@ -573,18 +679,77 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     if "has_transactions" in s:
         dv = s["daily_txn_value"]
         cd["txnDates"], cd["txnVol"] = _date_list(dv.index), _safe_list(dv, decimals=2)
+        dc = s["daily_txn_count"]
+        cd["txnCntDates"], cd["txnCnts"] = _date_list(dc.index), [int(v) for v in dc.values]
+        if "turnover" in s:
+            to = s["turnover"].dropna()
+            cd["toDates"], cd["toVals"] = _date_list(to.index), _safe_list(to, decimals=4)
+        if "txn_hours" in s:
+            hours = s["txn_hours"]
+            hh, he = np.histogram(hours, bins=range(25))
+            cd["txnHrLabels"] = [f"{int(he[i]):02d}" for i in range(len(hh))]
+            cd["txnHrCnts"] = [int(v) for v in hh]
 
     if "trade_pnl" in s:
         pnl = s["trade_pnl"]
         ph, pe = np.histogram(pnl, bins=max(10, min(40, len(pnl) // 3)))
         cd["pnlBins"] = [round(float((pe[i] + pe[i + 1]) / 2), 2) for i in range(len(ph))]
         cd["pnlCnts"] = [int(v) for v in ph]
+        if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
+            pl = s["trade_pnl_long"]
+            plh, ple = np.histogram(pl, bins=max(5, min(30, len(pl) // 3)))
+            cd["pnlLBins"] = [round(float((ple[i] + ple[i + 1]) / 2), 2) for i in range(len(plh))]
+            cd["pnlLCnts"] = [int(v) for v in plh]
+        if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
+            ps = s["trade_pnl_short"]
+            psh, pse = np.histogram(ps, bins=max(5, min(30, len(ps) // 3)))
+            cd["pnlSBins"] = [round(float((pse[i] + pse[i + 1]) / 2), 2) for i in range(len(psh))]
+            cd["pnlSCnts"] = [int(v) for v in psh]
+        if "trade_barlen" in s:
+            bl = s["trade_barlen"]
+            bh, be = np.histogram(bl, bins=max(10, min(50, len(bl) // 3)))
+            cd["blBins"] = [round(float((be[i] + be[i + 1]) / 2), 1) for i in range(len(bh))]
+            cd["blCnts"] = [int(v) for v in bh]
 
-    chart_json = json.dumps(cd, ensure_ascii=False)
+    # Position allocation data (for stacked area chart, max 20 assets)
+    if "pos_alloc" in s:
+        pa = s["pos_alloc"]
+        if len(pa.columns) <= 20:
+            cd["paDates"] = _date_list(pa.index)
+            cd["paNames"] = list(pa.columns)
+            cd["paData"] = {str(c): _safe_list(pa[c], decimals=4) for c in pa.columns}
+
+    # Return quantiles data
+    q = s["return_quantiles"]
+    cd["quantLabels"] = [str(p) for p in q.index]
+    cd["quantVals"] = [round(float(v) * 100, 4) for v in q.values]
+
+    # Monthly returns distribution
+    monthly_vals = s["monthly_returns"].dropna().values
+    if len(monthly_vals) > 2:
+        mh, me = np.histogram(monthly_vals * 100, bins=min(30, max(5, len(monthly_vals) // 2)))
+        cd["mDistBins"] = [round(float((me[i] + me[i + 1]) / 2), 2) for i in range(len(mh))]
+        cd["mDistCnts"] = [int(v) for v in mh]
+
+    # Period returns data
+    pr = s["period_returns"]
+    cd["prLabels"] = list(pr.keys())
+    cd["prVals"] = [round(float(v) * 100, 2) if not (isinstance(v, float) and np.isnan(v)) else None for v in pr.values()]
+    if "benchmark_period_returns" in s:
+        bpr = s["benchmark_period_returns"]
+        cd["bprVals"] = [round(float(bpr.get(k, np.nan)) * 100, 2) if not np.isnan(bpr.get(k, np.nan)) else None for k in pr]
+
+    # Position concentration data
+    if "pos_max_concentration" in s:
+        mc = s["pos_max_concentration"]
+        cd["mcDates"] = _date_list(mc.index)
+        cd["mcMax"] = _safe_list(mc, decimals=4, pct=True)
+        cd["mcMed"] = _safe_list(s["pos_median_concentration"], decimals=4, pct=True)
 
     # ---- sidebar ----
     nav = [
         ("overview", "产品概览"),
+        ("period", "区间收益"),
         ("performance", "绩效分析"),
         ("returns", "收益分析"),
         ("rolling", "滚动指标"),
@@ -617,6 +782,9 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         f' | {s["n_days"]} 交易日 | ~{s["n_months"]} 个月</div>'
     )
 
+    # -- Summary --
+    b.append(f'<div class="summary-box">{s["summary_text"]}</div>')
+
     # -- Overview --
     b.append('<div class="sec" id="overview"><div class="sec-title">产品概览 Overview</div>')
     b.append(_html_cards(
@@ -626,7 +794,44 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
     ))
     b.append('<div class="chart-box" id="c-cum"></div>')
+    b.append('<div class="chart-sm" id="c-cum-log"></div>')
     b.append('<div class="chart-sm" id="c-dd"></div>')
+    b.append("</div>")
+
+    # -- Period Returns --
+    b.append('<div class="sec" id="period"><div class="sec-title">区间收益 Period Returns</div>')
+    b.append('<div class="chart-sm" id="c-period"></div>')
+    _pr = s["period_returns"]
+    _has_bpr = "benchmark_period_returns" in s
+    _wr = s["period_win_rates"]
+    _phdr = '<tr><th>统计项</th>' + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
+    _prow1 = '<tr><td style="text-align:left;font-weight:600">本产品</td>'
+    for _k, _v in _pr.items():
+        _prow1 += f'<td class="{_css_cls(_v)}">{_fmt(_v, pct=True)}</td>'
+    _prow1 += "</tr>"
+    _prows = _phdr + _prow1
+    if _has_bpr:
+        _bpr = s["benchmark_period_returns"]
+        _prow2 = '<tr><td style="text-align:left;font-weight:600">基准</td>'
+        for _k in _pr:
+            _bv = _bpr.get(_k, np.nan)
+            _prow2 += f'<td class="{_css_cls(_bv)}">{_fmt(_bv, pct=True)}</td>'
+        _prow2 += "</tr>"
+        _prow3 = '<tr><td style="text-align:left;font-weight:600">超额收益</td>'
+        for _k in _pr:
+            _sv = _pr.get(_k, np.nan)
+            _bv2 = _bpr.get(_k, np.nan)
+            _exc = (_sv - _bv2) if not (np.isnan(_sv) or np.isnan(_bv2)) else np.nan
+            _prow3 += f'<td class="{_css_cls(_exc)}">{_fmt(_exc, pct=True)}</td>'
+        _prow3 += "</tr>"
+        _prows += _prow2 + _prow3
+    _prow_wr = '<tr><td style="text-align:left;font-weight:600">日胜率</td>'
+    for _k in _pr:
+        _wv = _wr.get(_k, np.nan)
+        _prow_wr += f'<td>{_fmt(_wv, pct=True)}</td>'
+    _prow_wr += "</tr>"
+    _prows += _prow_wr
+    b.append(f'<table class="ptbl">{_prows}</table>')
     b.append("</div>")
 
     # -- Performance --
@@ -645,25 +850,18 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     b.append('<div class="chart-sm" id="c-daily"></div>')
     b.append('<div class="chart-sm" id="c-dist"></div>')
     b.append("</div>")
-    q = s["return_quantiles"]
-    b.append('<h3 class="sub">收益分位数</h3>')
-    q_rows = "".join(
-        f'<tr><td style="text-align:left;font-weight:600">{p}</td>'
-        f'<td class="{_css_cls(v)}">{v * 100:.4f}%</td></tr>'
-        for p, v in q.items()
-    )
-    b.append(f'<table><tr><th>Percentile</th><th>Return</th></tr>{q_rows}</table>')
+    b.append('<div class="grid-2">')
+    b.append('<div class="chart-sm" id="c-quant"></div>')
+    b.append('<div class="chart-sm" id="c-mdist"></div>')
+    b.append("</div>")
     b.append('<div class="chart-box" id="c-hm" style="height:280px"></div>')
     b.append('<h3 class="sub">月度收益 (%)</h3>')
     mt = monthly_tbl.copy()
     mt.columns = hm_months
     b.append(_html_df(mt * 100, float_format=".2f"))
-    b.append('<div class="grid-2">')
     b.append('<div class="chart-sm" id="c-yr"></div>')
-    b.append("<div>")
     b.append('<h3 class="sub">年度统计</h3>')
-    b.append(_html_df(s["yearly_stats"]))
-    b.append("</div></div>")
+    b.append(_html_df(s["yearly_stats"], left_align=True))
     extremes = OrderedDict()
     extremes["Best Month"] = s["best_month"]
     extremes["Worst Month"] = s["worst_month"]
@@ -705,7 +903,12 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         b.append(_html_cards(s["position_summary"], list(s["position_summary"].keys())))
         b.append(_html_table(s["position_summary"]))
         b.append('<div class="chart-box" id="c-expo"></div>')
+        b.append('<div class="grid-2">')
         b.append('<div class="chart-sm" id="c-lev"></div>')
+        b.append('<div class="chart-sm" id="c-conc"></div>')
+        b.append('</div>')
+        if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
+            b.append('<div class="chart-box" id="c-alloc"></div>')
         b.append("</div>")
 
     # -- Transactions --
@@ -713,7 +916,14 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         b.append('<div class="sec" id="transactions"><div class="sec-title">交易分析 Transactions</div>')
         b.append(_html_cards(s["txn_summary"], list(s["txn_summary"].keys())))
         b.append(_html_table(s["txn_summary"]))
+        b.append('<div class="grid-2">')
         b.append('<div class="chart-sm" id="c-txn"></div>')
+        b.append('<div class="chart-sm" id="c-txn-cnt"></div>')
+        b.append('</div>')
+        if "turnover" in s:
+            b.append('<div class="chart-sm" id="c-turnover"></div>')
+        if "txn_hours" in s:
+            b.append('<div class="chart-sm" id="c-txn-hours"></div>')
         b.append("</div>")
 
     # -- Trades --
@@ -729,6 +939,13 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         b.append(_html_table(ts, pct_keys=pct_t))
         if "trade_pnl" in s:
             b.append('<div class="chart-sm" id="c-pnl"></div>')
+            if "trade_pnl_long" in s or "trade_pnl_short" in s:
+                b.append('<div class="grid-2">')
+                b.append('<div class="chart-sm" id="c-pnl-long"></div>')
+                b.append('<div class="chart-sm" id="c-pnl-short"></div>')
+                b.append('</div>')
+        if "trade_barlen" in s:
+            b.append('<div class="chart-sm" id="c-barlen"></div>')
         b.append("</div>")
 
     b.append('<footer>Generated by <strong>fincore</strong> | create_strategy_report()</footer>')
@@ -738,16 +955,34 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     js_parts = _build_echart_js(s, rolling_window)
     js = "\n".join(js_parts)
 
+    # Deduplicate date arrays to reduce JSON size
+    _dedup_aliases = []
+    _base_dates = cd.get("dates")
+    for _dk in ("posDates", "glDates", "mcDates"):
+        if _dk in cd and cd[_dk] == _base_dates:
+            del cd[_dk]
+            _dedup_aliases.append(f"D.{_dk}=D.dates;")
+    if "rvDates" in cd and "rsDates" in cd and cd["rvDates"] == cd["rsDates"]:
+        del cd["rvDates"]
+        _dedup_aliases.append("D.rvDates=D.rsDates;")
+    chart_json = json.dumps(cd, ensure_ascii=False)
+    _alias_js = "\n".join(_dedup_aliases)
+
     html = (
         f"<!DOCTYPE html>\n<html lang='zh'><head><meta charset='utf-8'>\n"
         f"<title>{title}</title>\n"
-        f'<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>\n'
         f"{_HTML_CSS}\n</head>\n<body>\n"
         f"{sidebar}\n<main class='content'>\n{body_html}\n</main>\n"
-        f"<script>\nvar D={chart_json};\n"
-        f"function C(id,o){{var e=document.getElementById(id);if(!e)return;"
-        f"var c=echarts.init(e);c.setOption(o);"
-        f"window.addEventListener('resize',function(){{c.resize()}});return c;}}\n"
+        f'<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>\n'
+        f'<script>window.echarts||document.write(\'<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"><\\/script>\')</script>\n'
+        f'<script>window.echarts||document.write(\'<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"><\\/script>\')</script>\n'
+        f"<script>\nvar D={chart_json};\n{_alias_js}\n"
+        f"var _charts=[];\n"
+        f"function C(id,o){{\n"
+        f"  var e=document.getElementById(id);if(!e)return;\n"
+        f"  var c=echarts.init(e);c.setOption(o);_charts.push(c);\n"
+        f"}}\n"
+        f"window.addEventListener('resize',function(){{_charts.forEach(function(c){{c.resize()}})}});\n"
         f"var B='#3182ce',G='#38a169',R='#e53e3e',O='#dd6b20',P='#805ad5',GY='#a0aec0';\n"
         f"{js}\n</script>\n</body></html>"
     )
@@ -761,10 +996,28 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
 def _build_echart_js(s, rw):
     """Build ECharts initialization JavaScript statements."""
     js = []
-    _grid = "grid:{left:60,right:30,bottom:30,top:40}"
-    _grid_s = "grid:{left:55,right:15,bottom:25,top:35}"
+    _grid = "grid:{left:60,right:30,bottom:30,top:50}"
+    _grid_s = "grid:{left:55,right:15,bottom:25,top:45}"
     _zoom = "dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:4}]"
     _zoom_s = "dataZoom:[{type:'inside'}]"
+
+    # Period returns comparison
+    bench_period = ""
+    if "benchmark_period_returns" in s:
+        bench_period = (",{name:'基准',type:'bar',data:D.bprVals,barWidth:'30%',"
+                        "itemStyle:{color:GY}}")
+    js.append(
+        f"C('c-period',{{"
+        f"title:{{text:'区间收益对比 (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v==null?'N/A':v.toFixed(2)+'%'}}}},"
+        f"legend:{{top:4,right:10}},{_grid_s},"
+        f"xAxis:{{type:'category',data:D.prLabels,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{name:'本产品',type:'bar',data:D.prVals,barWidth:'30%',"
+        f"itemStyle:{{color:B}}}}"
+        f"{bench_period}]"
+        f"}});"
+    )
 
     # Cumulative returns
     bench_series = ""
@@ -784,6 +1037,24 @@ def _build_echart_js(s, rw):
         f"colorStops:[{{offset:0,color:'rgba(49,130,206,0.15)'}},"
         f"{{offset:1,color:'rgba(49,130,206,0.01)'}}]}}}}}}"
         f"{bench_series}]"
+        f"}});"
+    )
+
+    # Cumulative returns (log scale)
+    bench_series_log = ""
+    if "benchmark_cum" in s:
+        bench_series_log = (",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
+                            "lineStyle:{width:1,color:GY,type:'dashed'}}")
+    js.append(
+        f"C('c-cum-log',{{"
+        f"title:{{text:'累计收益 (对数坐标)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid_s},"
+        f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'log',axisLabel:{{fontSize:10}}}},"
+        f"{_zoom_s},"
+        f"series:[{{name:'Strategy',type:'line',data:D.cumRet,showSymbol:false,"
+        f"lineStyle:{{width:1.2,color:B}}}}"
+        f"{bench_series_log}]"
         f"}});"
     )
 
@@ -821,11 +1092,39 @@ def _build_echart_js(s, rw):
         f"tooltip:{{trigger:'axis'}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.histBins,axisLabel:{{fontSize:9}}}},"
-        f"yAxis:{{type:'value',name:'频次',axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
         f"series:[{{type:'bar',data:D.histCnts,barWidth:'80%',"
         f"itemStyle:{{color:B,borderRadius:[2,2,0,0]}}}}]"
         f"}});"
     )
+
+    # Return quantiles horizontal bar
+    js.append(
+        f"C('c-quant',{{"
+        f"title:{{text:'收益分位数 (%)',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(4)+'%'}}}},"
+        f"grid:{{left:80,right:20,bottom:25,top:45}},"
+        f"yAxis:{{type:'category',data:D.quantLabels,axisLabel:{{fontSize:9}}}},"
+        f"xAxis:{{type:'value'}},"
+        f"series:[{{type:'bar',data:D.quantVals,barWidth:'60%',"
+        f"itemStyle:{{color:function(p){{return p.value>=0?G:R}}}}}}]"
+        f"}});"
+    )
+
+    # Monthly returns distribution
+    monthly_vals = s["monthly_returns"].dropna().values
+    if len(monthly_vals) > 2:
+        js.append(
+            f"C('c-mdist',{{"
+            f"title:{{text:'月度收益分布 (%)',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},"
+            f"{_grid_s},"
+            f"xAxis:{{type:'category',data:D.mDistBins,axisLabel:{{fontSize:9}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.mDistCnts,barWidth:'80%',"
+            f"itemStyle:{{color:B,borderRadius:[2,2,0,0]}}}}]"
+            f"}});"
+        )
 
     # Monthly heatmap
     js.append(
@@ -925,8 +1224,43 @@ def _build_echart_js(s, rw):
             f"areaStyle:{{color:'rgba(43,108,176,0.1)'}}}}]"
             f"}});"
         )
+        # Position concentration
+        if "pos_max_concentration" in s:
+            js.append(
+                f"C('c-conc',{{"
+                f"title:{{text:'持仓集中度 (%)',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
+                f"legend:{{top:4,right:10}},{_grid_s},{_zoom_s},"
+                f"xAxis:{{type:'category',data:D.mcDates,axisLabel:{{fontSize:10}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:["
+                f"{{name:'Max',type:'line',data:D.mcMax,showSymbol:false,"
+                f"lineStyle:{{width:1,color:'#c53030'}},areaStyle:{{color:'rgba(197,48,48,0.1)'}}}},"
+                f"{{name:'Median',type:'line',data:D.mcMed,showSymbol:false,"
+                f"lineStyle:{{width:1,color:O}},areaStyle:{{color:'rgba(221,107,32,0.08)'}}}}]"
+                f"}});"
+            )
+        # Holdings allocation stacked area
+        if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
+            _pa_colors = "['#3182ce','#38a169','#e53e3e','#dd6b20','#805ad5','#d69e2e','#319795','#b83280','#2b6cb0','#276749','#c53030','#9c4221','#6b46c1','#975a16','#2c7a7b','#97266d','#2a4365','#22543d','#742a2a','#7b341e']"
+            _pa_series = ",".join(
+                f"{{name:D.paNames[{i}],type:'line',stack:'alloc',data:D.paData[D.paNames[{i}]],"
+                f"showSymbol:false,areaStyle:{{}},lineStyle:{{width:0.5}}}}"
+                for i in range(len(s["pos_alloc"].columns))
+            )
+            js.append(
+                f"C('c-alloc',{{"
+                f"title:{{text:'持仓配置 Holdings Allocation',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10,textStyle:{{fontSize:9}}}},"
+                f"color:{_pa_colors},"
+                f"{_grid},{_zoom_s},"
+                f"xAxis:{{type:'category',data:D.paDates,axisLabel:{{fontSize:10}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{_pa_series}]"
+                f"}});"
+            )
 
-    # Transaction volume
+    # Transaction volume + count
     if "has_transactions" in s:
         js.append(
             f"C('c-txn',{{"
@@ -937,19 +1271,86 @@ def _build_echart_js(s, rw):
             f"series:[{{type:'bar',data:D.txnVol,barWidth:'60%',itemStyle:{{color:B}}}}]"
             f"}});"
         )
+        js.append(
+            f"C('c-txn-cnt',{{"
+            f"title:{{text:'日成交笔数 Daily Count',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.txnCntDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.txnCnts,barWidth:'60%',itemStyle:{{color:O}}}}]"
+            f"}});"
+        )
+        if "turnover" in s:
+            js.append(
+                f"C('c-turnover',{{"
+                f"title:{{text:'日换手率 Daily Turnover',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
+                f"xAxis:{{type:'category',data:D.toDates,axisLabel:{{fontSize:10}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{{type:'line',data:D.toVals,showSymbol:false,"
+                f"lineStyle:{{width:1.2,color:P}},areaStyle:{{color:'rgba(128,90,213,0.1)'}}}}]"
+                f"}});"
+            )
+        if "txn_hours" in s:
+            js.append(
+                f"C('c-txn-hours',{{"
+                f"title:{{text:'交易时间分布 (小时)',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},{_grid_s},"
+                f"xAxis:{{type:'category',data:D.txnHrLabels}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{{type:'bar',data:D.txnHrCnts,barWidth:'60%',"
+                f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
+                f"}});"
+            )
 
-    # PnL distribution
+    # PnL distribution (all trades)
     if "trade_pnl" in s:
         js.append(
             f"C('c-pnl',{{"
             f"title:{{text:'交易盈亏分布 PnL Distribution',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},"
             f"xAxis:{{type:'category',data:D.pnlBins,axisLabel:{{fontSize:9}}}},"
-            f"yAxis:{{type:'value',name:'频次'}},"
+            f"yAxis:{{type:'value'}},"
             f"series:[{{type:'bar',data:D.pnlCnts,barWidth:'80%',"
             f"itemStyle:{{color:function(p){{return D.pnlBins[p.dataIndex]>=0?G:R}}}}}}]"
             f"}});"
         )
+        # Long trades PnL
+        if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
+            js.append(
+                f"C('c-pnl-long',{{"
+                f"title:{{text:'多头交易盈亏 Long PnL',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},{_grid_s},"
+                f"xAxis:{{type:'category',data:D.pnlLBins,axisLabel:{{fontSize:9}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{{type:'bar',data:D.pnlLCnts,barWidth:'80%',"
+                f"itemStyle:{{color:function(p){{return D.pnlLBins[p.dataIndex]>=0?G:R}}}}}}]"
+                f"}});"
+            )
+        # Short trades PnL
+        if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
+            js.append(
+                f"C('c-pnl-short',{{"
+                f"title:{{text:'空头交易盈亏 Short PnL',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},{_grid_s},"
+                f"xAxis:{{type:'category',data:D.pnlSBins,axisLabel:{{fontSize:9}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{{type:'bar',data:D.pnlSCnts,barWidth:'80%',"
+                f"itemStyle:{{color:function(p){{return D.pnlSBins[p.dataIndex]>=0?G:R}}}}}}]"
+                f"}});"
+            )
+        # Holding time distribution
+        if "trade_barlen" in s:
+            js.append(
+                f"C('c-barlen',{{"
+                f"title:{{text:'持仓时间分布 Holding Time',textStyle:{{fontSize:12}}}},"
+                f"tooltip:{{trigger:'axis'}},{_grid_s},"
+                f"xAxis:{{type:'category',data:D.blBins,axisLabel:{{fontSize:9}}}},"
+                f"yAxis:{{type:'value'}},"
+                f"series:[{{type:'bar',data:D.blCnts,barWidth:'80%',"
+                f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
+                f"}});"
+            )
 
     return js
 
@@ -969,6 +1370,19 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, titl
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
 
+    # Configure CJK font for Chinese text
+    try:
+        from matplotlib.font_manager import fontManager
+        _sys_fonts = {f.name for f in fontManager.ttflist}
+        for _cjk in ["PingFang SC", "Heiti SC", "Heiti TC", "STHeiti", "STSong",
+                      "Microsoft YaHei", "SimHei", "WenQuanYi Micro Hei", "Noto Sans CJK SC"]:
+            if _cjk in _sys_fonts:
+                plt.rcParams["font.sans-serif"] = [_cjk] + plt.rcParams.get("font.sans-serif", [])
+                plt.rcParams["axes.unicode_minus"] = False
+                break
+    except Exception:
+        pass
+
     s = _compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
 
     pdf = PdfPages(output)
@@ -980,28 +1394,54 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, titl
         plt.close(fig)
         page_count += 1
 
+    _CLR_HDR = "#1a365d"
+    _CLR_ROW0 = "#f0f4f8"
+    _CLR_ROW1 = "#ffffff"
+    _CLR_POS = "#38a169"
+    _CLR_NEG = "#e53e3e"
+    _CLR_EDGE = "#e2e8f0"
+
+    def _style_tbl(tbl, n_rows, n_cols, data_items=None):
+        """Apply professional styling to a matplotlib table."""
+        for j in range(n_cols):
+            cell = tbl[0, j]
+            cell.set_facecolor(_CLR_HDR)
+            cell.set_text_props(color="white", fontweight="bold", fontsize=9)
+            cell.set_edgecolor(_CLR_EDGE)
+        for i in range(1, n_rows + 1):
+            bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
+            for j in range(n_cols):
+                tbl[i, j].set_facecolor(bg)
+                tbl[i, j].set_edgecolor(_CLR_EDGE)
+        if data_items:
+            for i, (_, v) in enumerate(data_items):
+                if isinstance(v, (float, np.floating)) and not np.isnan(v):
+                    c = _CLR_POS if v > 0 else (_CLR_NEG if v < 0 else "black")
+                    tbl[i + 1, 1].set_text_props(color=c)
+
     def dict_to_fig(d, fig_title, pct_keys=None):
         pct_keys = set(pct_keys or [])
         n = len(d)
         fig, ax = plt.subplots(figsize=(10, max(3, 0.38 * n + 1.5)))
         ax.axis("off")
-        ax.set_title(fig_title, fontsize=13, fontweight="bold", pad=12)
+        ax.set_title(fig_title, fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
         cell_text = []
         for k, v in d.items():
-            pct = k in pct_keys
-            cell_text.append([k, _fmt(v, pct=pct)])
+            cell_text.append([k, _fmt(v, pct=k in pct_keys)])
         tbl = ax.table(cellText=cell_text, colLabels=["Metric", "Value"], cellLoc="center", loc="center")
         tbl.auto_set_font_size(False)
         tbl.set_fontsize(9)
         tbl.scale(1.2, 1.4)
+        _style_tbl(tbl, n, 2, list(d.items()))
         fig.tight_layout()
         return fig
 
     def df_to_fig(df, fig_title, float_fmt=".4f"):
         n = len(df)
+        nc = len(df.columns)
         fig, ax = plt.subplots(figsize=(12, max(3, 0.38 * n + 1.5)))
         ax.axis("off")
-        ax.set_title(fig_title, fontsize=13, fontweight="bold", pad=12)
+        ax.set_title(fig_title, fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
         cell_text = []
         for _, row in df.iterrows():
             cells = []
@@ -1021,6 +1461,30 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, titl
         tbl.auto_set_font_size(False)
         tbl.set_fontsize(9)
         tbl.scale(1.1, 1.4)
+        for j in range(-1, nc):
+            try:
+                cell = tbl[0, j]
+                cell.set_facecolor(_CLR_HDR)
+                cell.set_text_props(color="white", fontweight="bold", fontsize=9)
+                cell.set_edgecolor(_CLR_EDGE)
+            except KeyError:
+                pass
+        for i in range(1, n + 1):
+            bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
+            for j in range(-1, nc):
+                try:
+                    tbl[i, j].set_facecolor(bg)
+                    tbl[i, j].set_edgecolor(_CLR_EDGE)
+                except KeyError:
+                    pass
+            for j in range(nc):
+                try:
+                    val = df.iloc[i - 1, j]
+                    if isinstance(val, (float, np.floating)) and not np.isnan(val):
+                        c = _CLR_POS if val > 0 else (_CLR_NEG if val < 0 else "black")
+                        tbl[i, j].set_text_props(color=c)
+                except (KeyError, IndexError):
+                    pass
         fig.tight_layout()
         return fig
 
@@ -1037,6 +1501,85 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, titl
         "Worst Day",
         "Avg Daily Turnover",
     }
+
+    # === P0: Cover Page ===
+    fig = plt.figure(figsize=(14, 10))
+    fig.text(0.5, 0.88, title, ha="center", fontsize=22, fontweight="bold", color=_CLR_HDR)
+    fig.text(
+        0.5, 0.82,
+        f'{s["date_range"][0]}  →  {s["date_range"][1]}  |  {s["n_days"]} 交易日',
+        ha="center", fontsize=11, color="#718096",
+    )
+    fig.text(0.08, 0.73, "总体评价", fontsize=13, fontweight="bold", color=_CLR_HDR)
+    fig.text(0.08, 0.62, s["summary_text"], fontsize=10, color="#2d3748",
+             wrap=True, transform=fig.transFigure, verticalalignment="top",
+             bbox=dict(boxstyle="round,pad=0.5", facecolor="#ebf8ff", edgecolor="#3182ce", alpha=0.3))
+    card_metrics = [
+        ("Annual Return", True), ("Sharpe Ratio", False), ("Max Drawdown", True),
+        ("Annual Volatility", True), ("Sortino Ratio", False), ("Calmar Ratio", False),
+        ("Omega Ratio", False), ("Stability", False),
+    ]
+    for ci, (mk, is_pct) in enumerate(card_metrics):
+        mv = s["perf_stats"].get(mk, np.nan)
+        col = ci % 4
+        row = ci // 4
+        x = 0.08 + col * 0.23
+        y = 0.42 - row * 0.18
+        rect = plt.Rectangle((x, y), 0.20, 0.14, transform=fig.transFigure, clip_on=False,
+                              facecolor="#f7fafc", edgecolor="#e2e8f0", linewidth=1)
+        fig.patches.append(rect)
+        vc = _CLR_POS if isinstance(mv, (float, np.floating)) and not np.isnan(mv) and mv > 0 else (
+            _CLR_NEG if isinstance(mv, (float, np.floating)) and not np.isnan(mv) and mv < 0 else "black")
+        fig.text(x + 0.10, y + 0.09, _fmt(mv, pct=is_pct), ha="center", fontsize=14, fontweight="bold", color=vc)
+        fig.text(x + 0.10, y + 0.03, mk, ha="center", fontsize=8, color="#718096")
+    save_page(fig)
+
+    # === P0b: Period Returns ===
+    pr = s["period_returns"]
+    pr_labels = list(pr.keys())
+    pr_vals = [v for v in pr.values()]
+    has_bpr = "benchmark_period_returns" in s
+    n_pr_rows = 2 + (2 if has_bpr else 0)
+    fig, ax = plt.subplots(figsize=(14, max(4, n_pr_rows * 0.6 + 3)))
+    ax.axis("off")
+    ax.set_title("区间收益 Period Returns", fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
+    cell_text = [["本产品"] + [_fmt(v, pct=True) for v in pr_vals]]
+    if has_bpr:
+        bpr = s["benchmark_period_returns"]
+        cell_text.append(["基准"] + [_fmt(bpr.get(k, np.nan), pct=True) for k in pr_labels])
+        cell_text.append(["超额收益"] + [
+            _fmt((pr[k] - bpr.get(k, np.nan)) if not (np.isnan(pr[k]) or np.isnan(bpr.get(k, np.nan))) else np.nan, pct=True)
+            for k in pr_labels
+        ])
+    wr = s["period_win_rates"]
+    cell_text.append(["日胜率"] + [_fmt(wr.get(k, np.nan), pct=True) for k in pr_labels])
+    tbl = ax.table(cellText=cell_text, colLabels=["统计项"] + pr_labels, cellLoc="center", loc="center")
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(9)
+    tbl.scale(1.0, 1.5)
+    n_r = len(cell_text)
+    n_c = len(pr_labels) + 1
+    for j in range(n_c):
+        tbl[0, j].set_facecolor(_CLR_HDR)
+        tbl[0, j].set_text_props(color="white", fontweight="bold", fontsize=9)
+        tbl[0, j].set_edgecolor(_CLR_EDGE)
+    for i in range(1, n_r + 1):
+        bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
+        for j in range(n_c):
+            tbl[i, j].set_facecolor(bg)
+            tbl[i, j].set_edgecolor(_CLR_EDGE)
+    for i in range(n_r):
+        for j in range(1, n_c):
+            txt = cell_text[i][j]
+            if txt not in ("N/A", ""):
+                try:
+                    val = float(txt.replace("%", "")) / 100
+                    c = _CLR_POS if val > 0 else (_CLR_NEG if val < 0 else "black")
+                    tbl[i + 1, j].set_text_props(color=c)
+                except (ValueError, AttributeError):
+                    pass
+    fig.tight_layout()
+    save_page(fig)
 
     # === P1: Performance Statistics ===
     save_page(dict_to_fig(s["perf_stats"], f"{title}\nPerformance Statistics", pct_keys=pct_perf))
@@ -1225,6 +1768,11 @@ def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, titl
     ax3.set_xlabel("Return (%)")
     ax3.grid(True, alpha=0.3)
     save_page(fig)
+
+    # === P11b: Monthly Returns Table ===
+    mt_pct = monthly_tbl * 100
+    mt_pct.columns = [f"{int(c):02d}" for c in monthly_tbl.columns]
+    save_page(df_to_fig(mt_pct, "Monthly Returns (%)", float_fmt=".2f"))
 
     # === P12: Position Analysis (if available) ===
     if "has_positions" in s:
