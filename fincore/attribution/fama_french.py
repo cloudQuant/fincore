@@ -233,36 +233,27 @@ class FamaFrenchModel:
 
         for t in range(len(returns)):
             if rolling_window is None:
-                start = max(0, t - len(returns) + 1)
-            end = t + 1
-            window_returns = returns.iloc[start:end]
-            window_factors = factor_data.iloc[start:end]
-
-                # Fit model on window
-                result = self.fit(
-                    window_returns.iloc[:, 0],  # Single asset or equal-weighted
-                    window_factors,
-                )
-                exposures.append([result["alpha"]] + list(result["betas"].values()))
-                exposures.append([result["alpha"]] + list(result["betas"].values()))
+                # Use full history up to time t
+                start = 0
+                end = t + 1
             else:
+                # Use rolling window
                 start = max(0, t - rolling_window + 1)
                 end = min(t + 1, len(returns))
 
-                if end > start:
-                    window_returns = returns.iloc[start:end]
-                    window_factors = factor_data.iloc[start:end]
+            window_returns = returns.iloc[start:end]
+            window_factors = factor_data.iloc[start:end]
 
-                    # Fit on window (first column as proxy)
-                    result = self.fit(
-                        window_returns.iloc[:, 0],
-                        window_factors,
-                    )
-
-                    exposures.append([result["alpha"]] + list(result["betas"].values()))
-                else:
-                    # Use last available values
-                    exposures.append(np.nan)
+            if end > start and len(window_returns) > len(self.factors):
+                # Fit model on window (first column as proxy)
+                result = self.fit(
+                    window_returns.iloc[:, 0],
+                    window_factors,
+                )
+                exposures.append([result["alpha"]] + list(result["betas"].values()))
+            else:
+                # Not enough data - use NaN
+                exposures.append([np.nan] * (len(self.factors) + 1))
 
         # Create column names
         column_names = ["alpha"] + self.factors

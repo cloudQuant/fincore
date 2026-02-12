@@ -10,6 +10,7 @@ Allows dynamic extension of fincore's capabilities through:
 
 from __future__ import annotations
 
+import functools
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
