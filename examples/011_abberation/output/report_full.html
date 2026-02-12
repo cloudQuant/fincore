@@ -55,6 +55,19 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
   .grid-2 { grid-template-columns: 1fr; }
   .cards { grid-template-columns: repeat(2, 1fr); }
 }
+@media print {
+  .sidebar { display: none !important; }
+  .content { margin-left: 0 !important; max-width: 100% !important; padding: 8px 14px !important; }
+  body { background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .sec-title { page-break-after: avoid; break-after: avoid; }
+  .chart-box, .chart-sm { page-break-inside: avoid; break-inside: avoid; }
+  .grid-2 { page-break-inside: avoid; break-inside: avoid; }
+  table { page-break-inside: avoid; break-inside: avoid; }
+  .cards { page-break-inside: avoid; break-inside: avoid; }
+  .summary-box { page-break-inside: avoid; break-inside: avoid; }
+  h1, .meta { page-break-after: avoid; break-after: avoid; }
+  h3.sub { page-break-after: avoid; break-after: avoid; }
+}
 .summary-box { background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
                border-left: 4px solid var(--accent); border-radius: 6px;
                padding: 14px 18px; margin-bottom: 16px; font-size: 0.92em;
