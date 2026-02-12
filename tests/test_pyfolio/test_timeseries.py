@@ -271,12 +271,8 @@ class TestBootstrap(TestCase):
 class TestGrossLev(TestCase):
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(os.path.dirname(__file__))))
 
-    test_pos = to_utc(
-        pd.read_csv(__location__ + "/test_data/test_pos.csv.gz", index_col=0, parse_dates=True)
-    )
-    test_gross_lev = pd.read_csv(
-        __location__ + "/test_data/test_gross_lev.csv.gz", index_col=0, parse_dates=True
-    )
+    test_pos = to_utc(pd.read_csv(__location__ + "/test_data/test_pos.csv.gz", index_col=0, parse_dates=True))
+    test_gross_lev = pd.read_csv(__location__ + "/test_data/test_gross_lev.csv.gz", index_col=0, parse_dates=True)
     test_gross_lev = to_series(to_utc(test_gross_lev))
 
     def test_gross_lev_calculation(self):
