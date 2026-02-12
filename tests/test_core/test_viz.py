@@ -41,8 +41,10 @@ class TestGetBackend:
         assert isinstance(backend, HtmlReportBuilder)
 
     def test_unknown(self):
+        """Test that unknown backend raises ValueError."""
+        # Note: plotly and bokeh are now valid backends
         with pytest.raises(ValueError, match="Unknown viz backend"):
-            get_backend("plotly")
+            get_backend("invalid_backend")
 
     def test_case_insensitive(self):
         backend = get_backend("Matplotlib")
