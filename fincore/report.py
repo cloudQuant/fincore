@@ -380,8 +380,13 @@ def _compute_sections(
     _tz = getattr(end_date, "tzinfo", None)
     _ytd_ts = pd.Timestamp(end_date.year, 1, 1, tz=_tz)
     period_defs = [
-        ("近一周", 5), ("近一月", 21), ("近三月", 63), ("近六月", 126),
-        ("近一年", 252), ("近三年", 756), ("近五年", 1260),
+        ("近一周", 5),
+        ("近一月", 21),
+        ("近三月", 63),
+        ("近六月", 126),
+        ("近一年", 252),
+        ("近三年", 756),
+        ("近五年", 1260),
     ]
     pr = OrderedDict()
     for label, days in period_defs:
@@ -441,7 +446,11 @@ def _compute_sections(
         if np.isnan(dd):
             return "N/A"
         a = abs(dd)
-        return "风险控制优秀" if a < 0.1 else ("风险控制良好" if a < 0.2 else ("风险控制一般" if a < 0.3 else "风险控制较差"))
+        return (
+            "风险控制优秀"
+            if a < 0.1
+            else ("风险控制良好" if a < 0.2 else ("风险控制一般" if a < 0.3 else "风险控制较差"))
+        )
 
     _txt = (
         f"报告区间内，产品年化收益率为{_ann * 100:.2f}%，表现{_perf_tag(_shp)}。"
@@ -516,6 +525,19 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
   .grid-2 { grid-template-columns: 1fr; }
   .cards { grid-template-columns: repeat(2, 1fr); }
 }
+@media print {
+  .sidebar { display: none !important; }
+  .content { margin-left: 0 !important; max-width: 100% !important; padding: 8px 14px !important; }
+  body { background: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .sec-title { page-break-after: avoid; break-after: avoid; }
+  .chart-box, .chart-sm { page-break-inside: avoid; break-inside: avoid; }
+  .grid-2 { page-break-inside: avoid; break-inside: avoid; }
+  table { page-break-inside: avoid; break-inside: avoid; }
+  .cards { page-break-inside: avoid; break-inside: avoid; }
+  .summary-box { page-break-inside: avoid; break-inside: avoid; }
+  h1, .meta { page-break-after: avoid; break-after: avoid; }
+  h3.sub { page-break-after: avoid; break-after: avoid; }
+}
 .summary-box { background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
                border-left: 4px solid var(--accent); border-radius: 6px;
                padding: 14px 18px; margin-bottom: 16px; font-size: 0.92em;
@@ -586,7 +608,7 @@ def _html_df(df, float_format=".4f", table_class="", left_align=False):
         for v in row:
             if isinstance(v, (float, np.floating)):
                 if np.isnan(v):
-                    cells += f'<td{_td_sty}></td>'
+                    cells += f"<td{_td_sty}></td>"
                 else:
                     cells += f'<td class="{_css_cls(v)}"{_td_sty}>{v:{float_format}}</td>'
             else:
@@ -734,10 +756,14 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     # Period returns data
     pr = s["period_returns"]
     cd["prLabels"] = list(pr.keys())
-    cd["prVals"] = [round(float(v) * 100, 2) if not (isinstance(v, float) and np.isnan(v)) else None for v in pr.values()]
+    cd["prVals"] = [
+        round(float(v) * 100, 2) if not (isinstance(v, float) and np.isnan(v)) else None for v in pr.values()
+    ]
     if "benchmark_period_returns" in s:
         bpr = s["benchmark_period_returns"]
-        cd["bprVals"] = [round(float(bpr.get(k, np.nan)) * 100, 2) if not np.isnan(bpr.get(k, np.nan)) else None for k in pr]
+        cd["bprVals"] = [
+            round(float(bpr.get(k, np.nan)) * 100, 2) if not np.isnan(bpr.get(k, np.nan)) else None for k in pr
+        ]
 
     # Position concentration data
     if "pos_max_concentration" in s:
@@ -770,16 +796,24 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
 
     # ---- body sections ----
     pct_perf = {
-        "Annual Return", "Cumulative Returns", "Annual Volatility", "Max Drawdown",
-        "Downside Risk", "Daily Value at Risk", "Daily Mean Return", "Daily Std Return",
-        "Best Day", "Worst Day", "Avg Daily Turnover",
+        "Annual Return",
+        "Cumulative Returns",
+        "Annual Volatility",
+        "Max Drawdown",
+        "Downside Risk",
+        "Daily Value at Risk",
+        "Daily Mean Return",
+        "Daily Std Return",
+        "Best Day",
+        "Worst Day",
+        "Avg Daily Turnover",
     }
     b = []  # body parts
 
     b.append(f"<h1>{title}</h1>")
     b.append(
         f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]}'
-        f' | {s["n_days"]} 交易日 | ~{s["n_months"]} 个月</div>'
+        f" | {s['n_days']} 交易日 | ~{s['n_months']} 个月</div>"
     )
 
     # -- Summary --
@@ -787,12 +821,22 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
 
     # -- Overview --
     b.append('<div class="sec" id="overview"><div class="sec-title">产品概览 Overview</div>')
-    b.append(_html_cards(
-        s["perf_stats"],
-        ["Sharpe Ratio", "Annual Return", "Max Drawdown", "Annual Volatility",
-         "Sortino Ratio", "Calmar Ratio", "Omega Ratio", "Stability"],
-        pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
-    ))
+    b.append(
+        _html_cards(
+            s["perf_stats"],
+            [
+                "Sharpe Ratio",
+                "Annual Return",
+                "Max Drawdown",
+                "Annual Volatility",
+                "Sortino Ratio",
+                "Calmar Ratio",
+                "Omega Ratio",
+                "Stability",
+            ],
+            pct_keys={"Annual Return", "Max Drawdown", "Annual Volatility"},
+        )
+    )
     b.append('<div class="chart-box" id="c-cum"></div>')
     b.append('<div class="chart-sm" id="c-cum-log"></div>')
     b.append('<div class="chart-sm" id="c-dd"></div>')
@@ -804,7 +848,7 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     _pr = s["period_returns"]
     _has_bpr = "benchmark_period_returns" in s
     _wr = s["period_win_rates"]
-    _phdr = '<tr><th>统计项</th>' + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
+    _phdr = "<tr><th>统计项</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
     _prow1 = '<tr><td style="text-align:left;font-weight:600">本产品</td>'
     for _k, _v in _pr.items():
         _prow1 += f'<td class="{_css_cls(_v)}">{_fmt(_v, pct=True)}</td>'
@@ -828,7 +872,7 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     _prow_wr = '<tr><td style="text-align:left;font-weight:600">日胜率</td>'
     for _k in _pr:
         _wv = _wr.get(_k, np.nan)
-        _prow_wr += f'<td>{_fmt(_wv, pct=True)}</td>'
+        _prow_wr += f"<td>{_fmt(_wv, pct=True)}</td>"
     _prow_wr += "</tr>"
     _prows += _prow_wr
     b.append(f'<table class="ptbl">{_prows}</table>')
@@ -839,7 +883,7 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     b.append('<div class="grid-2"><div>')
     b.append('<h3 class="sub">核心指标</h3>')
     b.append(_html_table(s["perf_stats"], pct_keys=pct_perf))
-    b.append('</div><div>')
+    b.append("</div><div>")
     b.append('<h3 class="sub">扩展风险指标</h3>')
     b.append(_html_table(s["extended_stats"]))
     b.append("</div></div></div>")
@@ -887,11 +931,21 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
     # -- Benchmark --
     if "benchmark_stats" in s:
         b.append('<div class="sec" id="benchmark"><div class="sec-title">基准对比 Benchmark</div>')
-        b.append(_html_cards(
-            s["benchmark_stats"],
-            ["Alpha", "Beta", "Information Ratio", "Tracking Error",
-             "Up Capture", "Down Capture", "Capture Ratio", "Correlation"],
-        ))
+        b.append(
+            _html_cards(
+                s["benchmark_stats"],
+                [
+                    "Alpha",
+                    "Beta",
+                    "Information Ratio",
+                    "Tracking Error",
+                    "Up Capture",
+                    "Down Capture",
+                    "Capture Ratio",
+                    "Correlation",
+                ],
+            )
+        )
         b.append(_html_table(s["benchmark_stats"]))
         if "rolling_beta" in s:
             b.append('<div class="chart-sm" id="c-rb"></div>')
@@ -906,7 +960,7 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         b.append('<div class="grid-2">')
         b.append('<div class="chart-sm" id="c-lev"></div>')
         b.append('<div class="chart-sm" id="c-conc"></div>')
-        b.append('</div>')
+        b.append("</div>")
         if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
             b.append('<div class="chart-box" id="c-alloc"></div>')
         b.append("</div>")
@@ -919,7 +973,7 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         b.append('<div class="grid-2">')
         b.append('<div class="chart-sm" id="c-txn"></div>')
         b.append('<div class="chart-sm" id="c-txn-cnt"></div>')
-        b.append('</div>')
+        b.append("</div>")
         if "turnover" in s:
             b.append('<div class="chart-sm" id="c-turnover"></div>')
         if "txn_hours" in s:
@@ -931,11 +985,13 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         ts = s["trade_stats"]
         pct_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
         b.append('<div class="sec" id="trades"><div class="sec-title">交易统计 Trades</div>')
-        b.append(_html_cards(
-            ts,
-            ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"],
-            pct_keys=pct_t,
-        ))
+        b.append(
+            _html_cards(
+                ts,
+                ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"],
+                pct_keys=pct_t,
+            )
+        )
         b.append(_html_table(ts, pct_keys=pct_t))
         if "trade_pnl" in s:
             b.append('<div class="chart-sm" id="c-pnl"></div>')
@@ -943,12 +999,12 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
                 b.append('<div class="grid-2">')
                 b.append('<div class="chart-sm" id="c-pnl-long"></div>')
                 b.append('<div class="chart-sm" id="c-pnl-short"></div>')
-                b.append('</div>')
+                b.append("</div>")
         if "trade_barlen" in s:
             b.append('<div class="chart-sm" id="c-barlen"></div>')
         b.append("</div>")
 
-    b.append('<footer>Generated by <strong>fincore</strong> | create_strategy_report()</footer>')
+    b.append("<footer>Generated by <strong>fincore</strong> | create_strategy_report()</footer>")
     body_html = "\n".join(b)
 
     # ---- ECharts JavaScript ----
@@ -974,8 +1030,8 @@ def _generate_html(returns, benchmark_rets, positions, transactions, trades, tit
         f"{_HTML_CSS}\n</head>\n<body>\n"
         f"{sidebar}\n<main class='content'>\n{body_html}\n</main>\n"
         f'<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>\n'
-        f'<script>window.echarts||document.write(\'<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"><\\/script>\')</script>\n'
-        f'<script>window.echarts||document.write(\'<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"><\\/script>\')</script>\n'
+        f"<script>window.echarts||document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js\"><\\/script>')</script>\n"
+        f"<script>window.echarts||document.write('<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js\"><\\/script>')</script>\n"
         f"<script>\nvar D={chart_json};\n{_alias_js}\n"
         f"var _charts=[];\n"
         f"function C(id,o){{\n"
@@ -1004,8 +1060,7 @@ def _build_echart_js(s, rw):
     # Period returns comparison
     bench_period = ""
     if "benchmark_period_returns" in s:
-        bench_period = (",{name:'基准',type:'bar',data:D.bprVals,barWidth:'30%',"
-                        "itemStyle:{color:GY}}")
+        bench_period = ",{name:'基准',type:'bar',data:D.bprVals,barWidth:'30%',itemStyle:{color:GY}}"
     js.append(
         f"C('c-period',{{"
         f"title:{{text:'区间收益对比 (%)',textStyle:{{fontSize:12}}}},"
@@ -1022,8 +1077,10 @@ def _build_echart_js(s, rw):
     # Cumulative returns
     bench_series = ""
     if "benchmark_cum" in s:
-        bench_series = (",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
-                        "lineStyle:{width:1,color:GY,type:'dashed'}}")
+        bench_series = (
+            ",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
+            "lineStyle:{width:1,color:GY,type:'dashed'}}"
+        )
     js.append(
         f"C('c-cum',{{"
         f"title:{{text:'累计收益 Cumulative Returns',textStyle:{{fontSize:13}}}},"
@@ -1043,8 +1100,10 @@ def _build_echart_js(s, rw):
     # Cumulative returns (log scale)
     bench_series_log = ""
     if "benchmark_cum" in s:
-        bench_series_log = (",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
-                            "lineStyle:{width:1,color:GY,type:'dashed'}}")
+        bench_series_log = (
+            ",{name:'Benchmark',type:'line',data:D.benchCum,showSymbol:false,"
+            "lineStyle:{width:1,color:GY,type:'dashed'}}"
+        )
     js.append(
         f"C('c-cum-log',{{"
         f"title:{{text:'累计收益 (对数坐标)',textStyle:{{fontSize:12}}}},"
@@ -1100,15 +1159,15 @@ def _build_echart_js(s, rw):
 
     # Return quantiles horizontal bar
     js.append(
-        f"C('c-quant',{{"
-        f"title:{{text:'收益分位数 (%)',textStyle:{{fontSize:12}}}},"
-        f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(4)+'%'}}}},"
-        f"grid:{{left:80,right:20,bottom:25,top:45}},"
-        f"yAxis:{{type:'category',data:D.quantLabels,axisLabel:{{fontSize:9}}}},"
-        f"xAxis:{{type:'value'}},"
-        f"series:[{{type:'bar',data:D.quantVals,barWidth:'60%',"
-        f"itemStyle:{{color:function(p){{return p.value>=0?G:R}}}}}}]"
-        f"}});"
+        "C('c-quant',{"
+        "title:{text:'收益分位数 (%)',textStyle:{fontSize:12}},"
+        "tooltip:{trigger:'axis',valueFormatter:function(v){return v.toFixed(4)+'%'}},"
+        "grid:{left:80,right:20,bottom:25,top:45},"
+        "yAxis:{type:'category',data:D.quantLabels,axisLabel:{fontSize:9}},"
+        "xAxis:{type:'value'},"
+        "series:[{type:'bar',data:D.quantVals,barWidth:'60%',"
+        "itemStyle:{color:function(p){return p.value>=0?G:R}}}]"
+        "});"
     )
 
     # Monthly returns distribution
@@ -1356,611 +1415,164 @@ def _build_echart_js(s, rw):
 
 
 # =========================================================================
-# PDF 报告生成
+# PDF 报告生成 — 通过渲染 HTML 实现与 HTML 报告完全一致
 # =========================================================================
 
 
 def _generate_pdf(returns, benchmark_rets, positions, transactions, trades, title, output, rolling_window):
-    """生成 PDF 报告（使用 matplotlib）。"""
-    import matplotlib
+    """生成 PDF 报告：先生成 HTML，再用 Playwright 渲染为 PDF，确保与 HTML 完全一致。
 
-    matplotlib.use("Agg")
-    import matplotlib.colors as mcolors
-    import matplotlib.gridspec as gridspec
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_pdf import PdfPages
+    步骤：
+    1. 调用 _generate_html 生成临时 HTML 文件
+    2. 用 Playwright (headless Chromium) 渲染 HTML → PDF
+    3. 用 PyPDF2 添加可点击的书签目录
+    """
+    import os
+    import tempfile
 
-    # Configure CJK font for Chinese text
+    # 1) 生成临时 HTML 文件
+    out_dir = os.path.dirname(os.path.abspath(output)) or "."
+    with tempfile.NamedTemporaryFile(suffix=".html", delete=False, dir=out_dir) as tmp:
+        tmp_html = tmp.name
+
+    _generate_html(
+        returns,
+        benchmark_rets=benchmark_rets,
+        positions=positions,
+        transactions=transactions,
+        trades=trades,
+        title=title,
+        output=tmp_html,
+        rolling_window=rolling_window,
+    )
+
+    # 2) 用 Playwright 将 HTML 渲染为 PDF
     try:
-        from matplotlib.font_manager import fontManager
-        _sys_fonts = {f.name for f in fontManager.ttflist}
-        for _cjk in ["PingFang SC", "Heiti SC", "Heiti TC", "STHeiti", "STSong",
-                      "Microsoft YaHei", "SimHei", "WenQuanYi Micro Hei", "Noto Sans CJK SC"]:
-            if _cjk in _sys_fonts:
-                plt.rcParams["font.sans-serif"] = [_cjk] + plt.rcParams.get("font.sans-serif", [])
-                plt.rcParams["axes.unicode_minus"] = False
-                break
-    except Exception:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        raise ImportError(
+            "生成 PDF 需要 playwright 库，请执行:\n  pip install playwright && python -m playwright install chromium"
+        )
+
+    # 临时 PDF 路径（后续添加书签后写入最终 output）
+    tmp_pdf = output + ".tmp.pdf"
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page(viewport={"width": 1200, "height": 900})
+        page.goto(f"file://{os.path.abspath(tmp_html)}", wait_until="networkidle", timeout=60000)
+
+        # 智能等待：检测所有 ECharts 实例渲染完毕
+        page.evaluate("""() => {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const check = () => {
+                    attempts++;
+                    const containers = document.querySelectorAll('[id^="c-"]');
+                    let allReady = true;
+                    containers.forEach(el => {
+                        const canvas = el.querySelector('canvas');
+                        if (!canvas) allReady = false;
+                    });
+                    if (allReady || attempts > 30) resolve();
+                    else setTimeout(check, 200);
+                };
+                setTimeout(check, 500);
+            });
+        }""")
+        # 额外等待确保图表动画完成
+        page.wait_for_timeout(1500)
+
+        # 收集各节的标题和页面位置（用于生成书签）
+        section_info = page.evaluate("""() => {
+            const sections = document.querySelectorAll('.sec');
+            const results = [];
+            sections.forEach(sec => {
+                const titleEl = sec.querySelector('.sec-title');
+                if (titleEl) {
+                    const rect = sec.getBoundingClientRect();
+                    results.push({
+                        id: sec.id,
+                        title: titleEl.textContent.trim(),
+                        top: rect.top + window.scrollY
+                    });
+                }
+            });
+            // 文档总高度
+            const totalHeight = document.documentElement.scrollHeight;
+            return { sections: results, totalHeight: totalHeight };
+        }""")
+
+        page.pdf(
+            path=tmp_pdf,
+            format="A4",
+            print_background=True,
+            margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+        )
+        browser.close()
+
+    # 3) 清理临时 HTML
+    try:
+        os.remove(tmp_html)
+    except OSError:
         pass
 
-    s = _compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
+    # 4) 添加 PDF 书签（可点击目录）
+    _add_pdf_bookmarks(tmp_pdf, output, section_info, title)
 
-    pdf = PdfPages(output)
-    page_count = 0
-
-    def save_page(fig):
-        nonlocal page_count
-        pdf.savefig(fig, bbox_inches="tight")
-        plt.close(fig)
-        page_count += 1
-
-    _CLR_HDR = "#1a365d"
-    _CLR_ROW0 = "#f0f4f8"
-    _CLR_ROW1 = "#ffffff"
-    _CLR_POS = "#38a169"
-    _CLR_NEG = "#e53e3e"
-    _CLR_EDGE = "#e2e8f0"
-
-    def _style_tbl(tbl, n_rows, n_cols, data_items=None):
-        """Apply professional styling to a matplotlib table."""
-        for j in range(n_cols):
-            cell = tbl[0, j]
-            cell.set_facecolor(_CLR_HDR)
-            cell.set_text_props(color="white", fontweight="bold", fontsize=9)
-            cell.set_edgecolor(_CLR_EDGE)
-        for i in range(1, n_rows + 1):
-            bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
-            for j in range(n_cols):
-                tbl[i, j].set_facecolor(bg)
-                tbl[i, j].set_edgecolor(_CLR_EDGE)
-        if data_items:
-            for i, (_, v) in enumerate(data_items):
-                if isinstance(v, (float, np.floating)) and not np.isnan(v):
-                    c = _CLR_POS if v > 0 else (_CLR_NEG if v < 0 else "black")
-                    tbl[i + 1, 1].set_text_props(color=c)
-
-    def dict_to_fig(d, fig_title, pct_keys=None):
-        pct_keys = set(pct_keys or [])
-        n = len(d)
-        fig, ax = plt.subplots(figsize=(10, max(3, 0.38 * n + 1.5)))
-        ax.axis("off")
-        ax.set_title(fig_title, fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
-        cell_text = []
-        for k, v in d.items():
-            cell_text.append([k, _fmt(v, pct=k in pct_keys)])
-        tbl = ax.table(cellText=cell_text, colLabels=["Metric", "Value"], cellLoc="center", loc="center")
-        tbl.auto_set_font_size(False)
-        tbl.set_fontsize(9)
-        tbl.scale(1.2, 1.4)
-        _style_tbl(tbl, n, 2, list(d.items()))
-        fig.tight_layout()
-        return fig
-
-    def df_to_fig(df, fig_title, float_fmt=".4f"):
-        n = len(df)
-        nc = len(df.columns)
-        fig, ax = plt.subplots(figsize=(12, max(3, 0.38 * n + 1.5)))
-        ax.axis("off")
-        ax.set_title(fig_title, fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
-        cell_text = []
-        for _, row in df.iterrows():
-            cells = []
-            for v in row:
-                if isinstance(v, (float, np.floating)):
-                    cells.append(f"{v:{float_fmt}}")
-                else:
-                    cells.append(str(v))
-            cell_text.append(cells)
-        tbl = ax.table(
-            cellText=cell_text,
-            rowLabels=[str(i) for i in df.index],
-            colLabels=[str(c) for c in df.columns],
-            cellLoc="center",
-            loc="center",
-        )
-        tbl.auto_set_font_size(False)
-        tbl.set_fontsize(9)
-        tbl.scale(1.1, 1.4)
-        for j in range(-1, nc):
-            try:
-                cell = tbl[0, j]
-                cell.set_facecolor(_CLR_HDR)
-                cell.set_text_props(color="white", fontweight="bold", fontsize=9)
-                cell.set_edgecolor(_CLR_EDGE)
-            except KeyError:
-                pass
-        for i in range(1, n + 1):
-            bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
-            for j in range(-1, nc):
-                try:
-                    tbl[i, j].set_facecolor(bg)
-                    tbl[i, j].set_edgecolor(_CLR_EDGE)
-                except KeyError:
-                    pass
-            for j in range(nc):
-                try:
-                    val = df.iloc[i - 1, j]
-                    if isinstance(val, (float, np.floating)) and not np.isnan(val):
-                        c = _CLR_POS if val > 0 else (_CLR_NEG if val < 0 else "black")
-                        tbl[i, j].set_text_props(color=c)
-                except (KeyError, IndexError):
-                    pass
-        fig.tight_layout()
-        return fig
-
-    pct_perf = {
-        "Annual Return",
-        "Cumulative Returns",
-        "Annual Volatility",
-        "Max Drawdown",
-        "Downside Risk",
-        "Daily Value at Risk",
-        "Daily Mean Return",
-        "Daily Std Return",
-        "Best Day",
-        "Worst Day",
-        "Avg Daily Turnover",
-    }
-
-    # === P0: Cover Page ===
-    fig = plt.figure(figsize=(14, 10))
-    fig.text(0.5, 0.88, title, ha="center", fontsize=22, fontweight="bold", color=_CLR_HDR)
-    fig.text(
-        0.5, 0.82,
-        f'{s["date_range"][0]}  →  {s["date_range"][1]}  |  {s["n_days"]} 交易日',
-        ha="center", fontsize=11, color="#718096",
-    )
-    fig.text(0.08, 0.73, "总体评价", fontsize=13, fontweight="bold", color=_CLR_HDR)
-    fig.text(0.08, 0.62, s["summary_text"], fontsize=10, color="#2d3748",
-             wrap=True, transform=fig.transFigure, verticalalignment="top",
-             bbox=dict(boxstyle="round,pad=0.5", facecolor="#ebf8ff", edgecolor="#3182ce", alpha=0.3))
-    card_metrics = [
-        ("Annual Return", True), ("Sharpe Ratio", False), ("Max Drawdown", True),
-        ("Annual Volatility", True), ("Sortino Ratio", False), ("Calmar Ratio", False),
-        ("Omega Ratio", False), ("Stability", False),
-    ]
-    for ci, (mk, is_pct) in enumerate(card_metrics):
-        mv = s["perf_stats"].get(mk, np.nan)
-        col = ci % 4
-        row = ci // 4
-        x = 0.08 + col * 0.23
-        y = 0.42 - row * 0.18
-        rect = plt.Rectangle((x, y), 0.20, 0.14, transform=fig.transFigure, clip_on=False,
-                              facecolor="#f7fafc", edgecolor="#e2e8f0", linewidth=1)
-        fig.patches.append(rect)
-        vc = _CLR_POS if isinstance(mv, (float, np.floating)) and not np.isnan(mv) and mv > 0 else (
-            _CLR_NEG if isinstance(mv, (float, np.floating)) and not np.isnan(mv) and mv < 0 else "black")
-        fig.text(x + 0.10, y + 0.09, _fmt(mv, pct=is_pct), ha="center", fontsize=14, fontweight="bold", color=vc)
-        fig.text(x + 0.10, y + 0.03, mk, ha="center", fontsize=8, color="#718096")
-    save_page(fig)
-
-    # === P0b: Period Returns ===
-    pr = s["period_returns"]
-    pr_labels = list(pr.keys())
-    pr_vals = [v for v in pr.values()]
-    has_bpr = "benchmark_period_returns" in s
-    n_pr_rows = 2 + (2 if has_bpr else 0)
-    fig, ax = plt.subplots(figsize=(14, max(4, n_pr_rows * 0.6 + 3)))
-    ax.axis("off")
-    ax.set_title("区间收益 Period Returns", fontsize=14, fontweight="bold", pad=16, color=_CLR_HDR)
-    cell_text = [["本产品"] + [_fmt(v, pct=True) for v in pr_vals]]
-    if has_bpr:
-        bpr = s["benchmark_period_returns"]
-        cell_text.append(["基准"] + [_fmt(bpr.get(k, np.nan), pct=True) for k in pr_labels])
-        cell_text.append(["超额收益"] + [
-            _fmt((pr[k] - bpr.get(k, np.nan)) if not (np.isnan(pr[k]) or np.isnan(bpr.get(k, np.nan))) else np.nan, pct=True)
-            for k in pr_labels
-        ])
-    wr = s["period_win_rates"]
-    cell_text.append(["日胜率"] + [_fmt(wr.get(k, np.nan), pct=True) for k in pr_labels])
-    tbl = ax.table(cellText=cell_text, colLabels=["统计项"] + pr_labels, cellLoc="center", loc="center")
-    tbl.auto_set_font_size(False)
-    tbl.set_fontsize(9)
-    tbl.scale(1.0, 1.5)
-    n_r = len(cell_text)
-    n_c = len(pr_labels) + 1
-    for j in range(n_c):
-        tbl[0, j].set_facecolor(_CLR_HDR)
-        tbl[0, j].set_text_props(color="white", fontweight="bold", fontsize=9)
-        tbl[0, j].set_edgecolor(_CLR_EDGE)
-    for i in range(1, n_r + 1):
-        bg = _CLR_ROW0 if i % 2 == 1 else _CLR_ROW1
-        for j in range(n_c):
-            tbl[i, j].set_facecolor(bg)
-            tbl[i, j].set_edgecolor(_CLR_EDGE)
-    for i in range(n_r):
-        for j in range(1, n_c):
-            txt = cell_text[i][j]
-            if txt not in ("N/A", ""):
-                try:
-                    val = float(txt.replace("%", "")) / 100
-                    c = _CLR_POS if val > 0 else (_CLR_NEG if val < 0 else "black")
-                    tbl[i + 1, j].set_text_props(color=c)
-                except (ValueError, AttributeError):
-                    pass
-    fig.tight_layout()
-    save_page(fig)
-
-    # === P1: Performance Statistics ===
-    save_page(dict_to_fig(s["perf_stats"], f"{title}\nPerformance Statistics", pct_keys=pct_perf))
-
-    # === P2: Extended Metrics ===
-    save_page(dict_to_fig(s["extended_stats"], "Extended Risk Metrics"))
-
-    # === P3: Benchmark (if available) ===
-    if "benchmark_stats" in s:
-        save_page(dict_to_fig(s["benchmark_stats"], "Benchmark Comparison"))
-
-    # === P4: Yearly Statistics ===
-    save_page(df_to_fig(s["yearly_stats"], "Yearly Statistics"))
-
-    # === P5: Worst Drawdown Periods ===
-    save_page(df_to_fig(s["dd_table"], "Worst Drawdown Periods", float_fmt=".2f"))
-
-    # === P6: Cumulative Returns + Drawdown ===
-    fig = plt.figure(figsize=(14, 10))
-    gs = gridspec.GridSpec(2, 1, hspace=0.35)
-
-    ax1 = fig.add_subplot(gs[0])
-    ax1.plot(s["cum_returns"].index, s["cum_returns"].values, color="steelblue", linewidth=1.2, label="Strategy")
-    if "benchmark_cum" in s:
-        ax1.plot(
-            s["benchmark_cum"].index,
-            s["benchmark_cum"].values,
-            color="gray",
-            linewidth=0.9,
-            alpha=0.7,
-            label="Benchmark",
-        )
-        ax1.legend()
-    ax1.axhline(y=1.0, color="gray", linestyle="--", linewidth=0.6)
-    ax1.set_title("Cumulative Returns", fontsize=12, fontweight="bold")
-    ax1.set_ylabel("Growth of $1")
-    ax1.fill_between(
-        s["cum_returns"].index,
-        1.0,
-        s["cum_returns"].values,
-        where=s["cum_returns"].values >= 1.0,
-        alpha=0.1,
-        color="green",
-    )
-    ax1.fill_between(
-        s["cum_returns"].index,
-        1.0,
-        s["cum_returns"].values,
-        where=s["cum_returns"].values < 1.0,
-        alpha=0.1,
-        color="red",
-    )
-    ax1.grid(True, alpha=0.3)
-
-    ax2 = fig.add_subplot(gs[1], sharex=ax1)
-    dd = s["drawdown"]
-    ax2.fill_between(dd.index, dd.values, 0, color="red", alpha=0.3)
-    ax2.plot(dd.index, dd.values, color="red", linewidth=0.8)
-    ax2.set_title("Drawdown", fontsize=12, fontweight="bold")
-    ax2.set_ylabel("Drawdown")
-    ax2.grid(True, alpha=0.3)
-    save_page(fig)
-
-    # === P7: Cumulative Returns (Log Scale) ===
-    fig, ax = plt.subplots(figsize=(14, 5))
-    ax.semilogy(s["cum_returns"].index, s["cum_returns"].values, color="steelblue", linewidth=1.2, label="Strategy")
-    if "benchmark_cum" in s:
-        ax.semilogy(
-            s["benchmark_cum"].index,
-            s["benchmark_cum"].values,
-            color="gray",
-            linewidth=0.9,
-            alpha=0.7,
-            label="Benchmark",
-        )
-        ax.legend()
-    ax.set_title("Cumulative Returns (Log Scale)", fontsize=12, fontweight="bold")
-    ax.set_ylabel("Growth of $1 (log)")
-    ax.grid(True, alpha=0.3)
-    save_page(fig)
-
-    # === P8: Daily Returns + Distribution ===
-    rets = s["returns"]
-    fig = plt.figure(figsize=(14, 10))
-    gs = gridspec.GridSpec(2, 2, hspace=0.35, wspace=0.3)
-
-    ax1 = fig.add_subplot(gs[0, :])
-    ax1.bar(rets.index, rets.values, color=["green" if v >= 0 else "red" for v in rets.values], alpha=0.5, width=1)
-    ax1.axhline(y=0, color="gray", linewidth=0.5)
-    ax1.set_title("Daily Returns", fontsize=12, fontweight="bold")
-    ax1.set_ylabel("Return")
-    ax1.grid(True, alpha=0.3)
-
-    ax2 = fig.add_subplot(gs[1, 0])
-    ax2.hist(rets.values, bins=min(80, len(rets) // 5 + 1), color="steelblue", alpha=0.7, edgecolor="white")
-    ax2.axvline(x=0, color="gray", linestyle="--", linewidth=1)
-    ax2.axvline(x=rets.mean(), color="blue", linestyle="-", linewidth=1, label=f"Mean: {rets.mean() * 100:.3f}%")
-    ax2.legend(fontsize=9)
-    ax2.set_title("Daily Returns Distribution", fontsize=11, fontweight="bold")
-    ax2.set_xlabel("Return")
-    ax2.grid(True, alpha=0.3)
-
-    ax3 = fig.add_subplot(gs[1, 1])
-    q = s["return_quantiles"]
-    ax3.barh(range(len(q)), q.values * 100, color=["green" if v >= 0 else "red" for v in q.values], alpha=0.7)
-    ax3.set_yticks(range(len(q)))
-    ax3.set_yticklabels([str(p) for p in q.index])
-    ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.6)
-    ax3.set_title("Return Quantiles (%)", fontsize=11, fontweight="bold")
-    ax3.set_xlabel("Return (%)")
-    ax3.grid(True, alpha=0.3, axis="x")
-    save_page(fig)
-
-    # === P9: Rolling Sharpe + Volatility ===
-    fig = plt.figure(figsize=(14, 10))
-    gs = gridspec.GridSpec(2, 1, hspace=0.35)
-
-    ax1 = fig.add_subplot(gs[0])
-    rs = s["rolling_sharpe"].dropna()
-    ax1.plot(rs.index, rs.values, color="steelblue", linewidth=0.9)
-    ax1.fill_between(rs.index, 0, rs.values, where=rs.values >= 0, alpha=0.1, color="green")
-    ax1.fill_between(rs.index, 0, rs.values, where=rs.values < 0, alpha=0.1, color="red")
-    ax1.axhline(y=0, color="gray", linestyle="--", linewidth=0.6)
-    ax1.set_title(f"Rolling Sharpe Ratio ({rolling_window}d)", fontsize=12, fontweight="bold")
-    ax1.grid(True, alpha=0.3)
-
-    ax2 = fig.add_subplot(gs[1], sharex=ax1)
-    rv = s["rolling_volatility"].dropna()
-    ax2.plot(rv.index, rv.values, color="orange", linewidth=0.9)
-    ax2.fill_between(rv.index, 0, rv.values, alpha=0.15, color="orange")
-    ax2.set_title(f"Rolling Volatility ({rolling_window}d)", fontsize=12, fontweight="bold")
-    ax2.grid(True, alpha=0.3)
-    save_page(fig)
-
-    # === P10: Rolling Beta (if benchmark) ===
-    if "rolling_beta" in s:
-        fig, ax = plt.subplots(figsize=(14, 5))
-        rb = s["rolling_beta"].dropna()
-        ax.plot(rb.index, rb.values, color="purple", linewidth=0.9)
-        ax.axhline(y=1.0, color="gray", linestyle="--", linewidth=0.6)
-        ax.axhline(y=0, color="lightgray", linestyle=":", linewidth=0.5)
-        ax.fill_between(rb.index, 1.0, rb.values, alpha=0.1, color="purple")
-        ax.set_title(f"Rolling Beta ({rolling_window}d)", fontsize=12, fontweight="bold")
-        ax.grid(True, alpha=0.3)
-        save_page(fig)
-
-    # === P11: Monthly Heatmap + Annual Returns + Monthly Distribution ===
-    monthly = s["monthly_returns"]
-    monthly_tbl = monthly.unstack().fillna(0)
-
-    fig = plt.figure(figsize=(16, 6))
-    gs = gridspec.GridSpec(1, 3, wspace=0.35)
-
-    ax1 = fig.add_subplot(gs[0])
-    vals = monthly_tbl.values * 100
+    # 清理临时 PDF
     try:
-        norm = mcolors.TwoSlopeNorm(vmin=vals.min(), vcenter=0, vmax=max(vals.max(), 0.01))
-    except ValueError:
-        norm = None
-    im = ax1.imshow(vals, cmap="RdYlGn", norm=norm, aspect="auto")
-    ax1.set_xticks(range(vals.shape[1]))
-    ax1.set_xticklabels([f"{int(c):02d}" for c in monthly_tbl.columns], fontsize=7)
-    ax1.set_yticks(range(vals.shape[0]))
-    ax1.set_yticklabels(monthly_tbl.index, fontsize=8)
-    ax1.set_title("Monthly Returns (%)", fontsize=11, fontweight="bold")
-    plt.colorbar(im, ax=ax1, shrink=0.8)
+        os.remove(tmp_pdf)
+    except OSError:
+        pass
 
-    ax2 = fig.add_subplot(gs[1])
-    ys = s["yearly_stats"]
-    colors = ["green" if v >= 0 else "red" for v in ys["Annual Return"]]
-    ax2.barh(range(len(ys)), ys["Annual Return"].values * 100, color=colors, alpha=0.7)
-    ax2.set_yticks(range(len(ys)))
-    ax2.set_yticklabels([str(y) for y in ys.index])
-    ax2.set_xlabel("Return (%)")
-    ax2.set_title("Annual Returns", fontsize=11, fontweight="bold")
-    ax2.axvline(x=0, color="gray", linestyle="--", linewidth=0.6)
-    ax2.grid(True, alpha=0.3, axis="x")
-
-    ax3 = fig.add_subplot(gs[2])
-    monthly_vals = monthly.values
-    ax3.hist(
-        monthly_vals * 100, bins=min(30, len(monthly_vals) // 2 + 1), color="steelblue", alpha=0.7, edgecolor="white"
-    )
-    ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.6)
-    ax3.set_title("Monthly Returns Dist (%)", fontsize=11, fontweight="bold")
-    ax3.set_xlabel("Return (%)")
-    ax3.grid(True, alpha=0.3)
-    save_page(fig)
-
-    # === P11b: Monthly Returns Table ===
-    mt_pct = monthly_tbl * 100
-    mt_pct.columns = [f"{int(c):02d}" for c in monthly_tbl.columns]
-    save_page(df_to_fig(mt_pct, "Monthly Returns (%)", float_fmt=".2f"))
-
-    # === P12: Position Analysis (if available) ===
-    if "has_positions" in s:
-        # Position summary table
-        save_page(dict_to_fig(s["position_summary"], "Position Summary"))
-
-        # Position charts: exposure + leverage + concentration
-        fig = plt.figure(figsize=(14, 15))
-        gs = gridspec.GridSpec(3, 1, hspace=0.35)
-
-        ax1 = fig.add_subplot(gs[0])
-        ax1.fill_between(s["pos_long"].index, s["pos_long"].values, 0, color="green", alpha=0.3, label="Long")
-        ax1.fill_between(s["pos_short"].index, s["pos_short"].values, 0, color="red", alpha=0.3, label="Short")
-        ax1.legend()
-        ax1.set_title("Long / Short Exposure", fontsize=12, fontweight="bold")
-        ax1.grid(True, alpha=0.3)
-
-        ax2 = fig.add_subplot(gs[1], sharex=ax1)
-        gl = s["gross_leverage"].dropna()
-        ax2.plot(gl.index, gl.values, color="navy", linewidth=0.9)
-        ax2.fill_between(gl.index, 0, gl.values, alpha=0.1, color="navy")
-        ax2.set_title("Gross Leverage", fontsize=12, fontweight="bold")
-        ax2.grid(True, alpha=0.3)
-
-        ax3 = fig.add_subplot(gs[2], sharex=ax1)
-        mc = s["pos_max_concentration"]
-        med_c = s["pos_median_concentration"]
-        ax3.plot(mc.index, mc.values, color="darkred", linewidth=0.9, label="Max")
-        ax3.plot(med_c.index, med_c.values, color="orange", linewidth=0.9, label="Median")
-        ax3.legend()
-        ax3.set_title("Position Concentration", fontsize=12, fontweight="bold")
-        ax3.set_ylabel("Fraction of Portfolio")
-        ax3.grid(True, alpha=0.3)
-        save_page(fig)
-
-        # Holdings over time (stacked area)
-        pos_alloc = s["pos_alloc"]
-        if len(pos_alloc.columns) <= 20:
-            fig, ax = plt.subplots(figsize=(14, 6))
-            ax.stackplot(
-                pos_alloc.index, *[pos_alloc[c].values for c in pos_alloc.columns], labels=pos_alloc.columns, alpha=0.7
-            )
-            ax.legend(loc="upper left", fontsize=8, ncol=min(5, len(pos_alloc.columns)))
-            ax.set_title("Holdings Allocation Over Time", fontsize=12, fontweight="bold")
-            ax.set_ylabel("Allocation")
-            ax.grid(True, alpha=0.3)
-            save_page(fig)
-
-    # === P13: Transaction Analysis (if available) ===
-    if "has_transactions" in s:
-        save_page(dict_to_fig(s["txn_summary"], "Transaction Summary"))
-
-        n_txn_plots = 2
-        if "turnover" in s:
-            n_txn_plots += 1
-        if "txn_hours" in s:
-            n_txn_plots += 1
-
-        fig = plt.figure(figsize=(14, 5 * n_txn_plots))
-        gs = gridspec.GridSpec(n_txn_plots, 1, hspace=0.4)
-        pi = 0
-
-        ax = fig.add_subplot(gs[pi])
-        dv = s["daily_txn_value"]
-        ax.bar(dv.index, dv.values, color="steelblue", alpha=0.7, width=1)
-        ax.set_title("Daily Transaction Volume", fontsize=12, fontweight="bold")
-        ax.grid(True, alpha=0.3)
-        pi += 1
-
-        ax = fig.add_subplot(gs[pi])
-        dc = s["daily_txn_count"]
-        ax.bar(dc.index, dc.values, color="orange", alpha=0.7, width=1)
-        ax.set_title("Daily Transaction Count", fontsize=12, fontweight="bold")
-        ax.grid(True, alpha=0.3)
-        pi += 1
-
-        if "turnover" in s:
-            ax = fig.add_subplot(gs[pi])
-            to = s["turnover"].dropna()
-            ax.plot(to.index, to.values, color="purple", linewidth=0.9)
-            ax.fill_between(to.index, 0, to.values, alpha=0.1, color="purple")
-            ax.set_title("Daily Turnover", fontsize=12, fontweight="bold")
-            ax.grid(True, alpha=0.3)
-            pi += 1
-
-        if "txn_hours" in s:
-            ax = fig.add_subplot(gs[pi])
-            hours = s["txn_hours"]
-            ax.hist(hours, bins=range(25), color="teal", alpha=0.7, edgecolor="white")
-            ax.set_title("Transaction Time Distribution (Hour)", fontsize=12, fontweight="bold")
-            ax.set_xlabel("Hour of Day")
-            ax.set_xticks(range(0, 24, 2))
-            ax.grid(True, alpha=0.3)
-            pi += 1
-
-        save_page(fig)
-
-    # === P14: Trade Statistics (if available) ===
-    if "trade_stats" in s:
-        ts = s["trade_stats"]
-        pct_keys_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
-        save_page(dict_to_fig(ts, "Trade Statistics", pct_keys=pct_keys_t))
-
-        # PnL Distribution (overall + long/short if available)
-        if "trade_pnl" in s:
-            pnl = s["trade_pnl"]
-            has_ls = "trade_pnl_long" in s
-
-            n_pnl_rows = 2 if has_ls else 1
-            fig = plt.figure(figsize=(14, 5 * n_pnl_rows))
-            gs = gridspec.GridSpec(n_pnl_rows, 2 if has_ls else 1, hspace=0.4, wspace=0.3)
-
-            # Overall PnL distribution
-            ax = fig.add_subplot(gs[0, :] if not has_ls else gs[0, :])
-            n_bins = max(10, min(50, len(pnl) // 3 + 1))
-            ax.hist(pnl, bins=n_bins, color="steelblue", alpha=0.7, edgecolor="white")
-            ax.axvline(x=0, color="gray", linestyle="--", linewidth=1)
-            ax.axvline(x=np.mean(pnl), color="blue", linestyle="-", linewidth=1, label=f"Mean: {np.mean(pnl):,.0f}")
-            ax.axvline(
-                x=np.median(pnl), color="orange", linestyle="-", linewidth=1, label=f"Median: {np.median(pnl):,.0f}"
-            )
-            ax.legend()
-            ax.set_title("Trade PnL Distribution (All Trades)", fontsize=12, fontweight="bold")
-            ax.set_xlabel("PnL (after commission)")
-            ax.grid(True, alpha=0.3)
-
-            if has_ls:
-                pnl_l = s["trade_pnl_long"]
-                pnl_s = s["trade_pnl_short"]
-
-                ax2 = fig.add_subplot(gs[1, 0])
-                if len(pnl_l) > 0:
-                    ax2.hist(
-                        pnl_l, bins=max(5, min(30, len(pnl_l) // 3 + 1)), color="green", alpha=0.7, edgecolor="white"
-                    )
-                    ax2.axvline(x=0, color="gray", linestyle="--", linewidth=0.8)
-                    ax2.axvline(
-                        x=np.mean(pnl_l),
-                        color="darkgreen",
-                        linestyle="-",
-                        linewidth=1,
-                        label=f"Mean: {np.mean(pnl_l):,.0f}",
-                    )
-                    ax2.legend(fontsize=9)
-                ax2.set_title("Long Trades PnL", fontsize=11, fontweight="bold")
-                ax2.set_xlabel("PnL")
-                ax2.grid(True, alpha=0.3)
-
-                ax3 = fig.add_subplot(gs[1, 1])
-                if len(pnl_s) > 0:
-                    ax3.hist(
-                        pnl_s, bins=max(5, min(30, len(pnl_s) // 3 + 1)), color="red", alpha=0.7, edgecolor="white"
-                    )
-                    ax3.axvline(x=0, color="gray", linestyle="--", linewidth=0.8)
-                    ax3.axvline(
-                        x=np.mean(pnl_s),
-                        color="darkred",
-                        linestyle="-",
-                        linewidth=1,
-                        label=f"Mean: {np.mean(pnl_s):,.0f}",
-                    )
-                    ax3.legend(fontsize=9)
-                ax3.set_title("Short Trades PnL", fontsize=11, fontweight="bold")
-                ax3.set_xlabel("PnL")
-                ax3.grid(True, alpha=0.3)
-
-            save_page(fig)
-
-        # Holding time distribution
-        if "trade_barlen" in s:
-            fig, ax = plt.subplots(figsize=(12, 5))
-            barlen = s["trade_barlen"]
-            ax.hist(barlen, bins=max(10, min(50, len(barlen) // 3 + 1)), color="teal", alpha=0.7, edgecolor="white")
-            ax.axvline(
-                x=np.mean(barlen), color="blue", linestyle="-", linewidth=1, label=f"Mean: {np.mean(barlen):.1f} bars"
-            )
-            ax.axvline(
-                x=np.median(barlen),
-                color="orange",
-                linestyle="-",
-                linewidth=1,
-                label=f"Median: {np.median(barlen):.0f} bars",
-            )
-            ax.legend()
-            ax.set_title("Trade Holding Time Distribution", fontsize=12, fontweight="bold")
-            ax.set_xlabel("Holding Time (bars)")
-            ax.grid(True, alpha=0.3)
-            save_page(fig)
-
-    pdf.close()
     return output
+
+
+def _add_pdf_bookmarks(input_pdf, output_pdf, section_info, report_title):
+    """给 PDF 添加可点击的书签/大纲目录。"""
+    try:
+        from PyPDF2 import PdfReader, PdfWriter
+    except ImportError:
+        # 无 PyPDF2 时直接复制文件
+        import shutil
+
+        shutil.copy2(input_pdf, output_pdf)
+        return
+
+    reader = PdfReader(input_pdf)
+    writer = PdfWriter()
+
+    # 复制所有页面
+    for page in reader.pages:
+        writer.add_page(page)
+
+    # 计算文档总高度到页面的映射
+    total_pages = len(reader.pages)
+    if total_pages == 0:
+        with open(output_pdf, "wb") as f:
+            writer.write(f)
+        return
+
+    total_height = section_info.get("totalHeight", 1)
+    sections = section_info.get("sections", [])
+
+    # 每个 A4 页面的 CSS 像素高度（约 1123px at 96dpi for A4 minus margins）
+    # Playwright uses 96dpi; A4 = 297mm ≈ 1123px, minus margins (12mm*2 = ~91px)
+    page_css_height = 1123 - 91  # ≈ 1032px per page content area
+
+    # 添加根书签
+    writer.add_outline_item(report_title, 0)
+
+    for sec in sections:
+        sec_top = sec["top"]
+        sec_title = sec["title"]
+
+        # 估算此节在第几页
+        est_page = int(sec_top / page_css_height) if page_css_height > 0 else 0
+        est_page = min(est_page, total_pages - 1)
+
+        writer.add_outline_item(sec_title, est_page)
+
+    with open(output_pdf, "wb") as f:
+        writer.write(f)
