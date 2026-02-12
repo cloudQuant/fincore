@@ -39,8 +39,11 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
     Parameters
     ----------
     name : str
-        Backend identifier.  Currently supported: ``'matplotlib'``,
-        ``'html'``.
+        Backend identifier.  Supported backends:
+        - ``'matplotlib'``: Static Matplotlib plots (requires matplotlib)
+        - ``'html'``: Self-contained HTML reports
+        - ``'plotly'``: Interactive Plotly plots (requires plotly)
+        - ``'bokeh'``: Interactive Bokeh plots (requires bokeh)
 
     Returns
     -------
@@ -51,14 +54,28 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
     ------
     ValueError
         If the requested backend is not recognized.
+    ImportError
+        If the backend's dependencies are not installed.
     """
     name = name.lower().strip()
+
     if name == "matplotlib":
         from fincore.viz.matplotlib_backend import MatplotlibBackend
-
         return MatplotlibBackend()
+
     if name == "html":
         from fincore.viz.html_backend import HtmlReportBuilder
-
         return HtmlReportBuilder()
-    raise ValueError(f"Unknown viz backend {name!r}. Available: 'matplotlib', 'html'")
+
+    if name == "plotly":
+        from fincore.viz.interactive.plotly_backend import PlotlyBackend
+        return PlotlyBackend()
+
+    if name == "bokeh":
+        from fincore.viz.interactive.bokeh_backend import BokehBackend
+        return BokehBackend()
+
+    raise ValueError(
+        f"Unknown viz backend {name!r}. "
+        f"Available: 'matplotlib', 'html', 'plotly', 'bokeh'"
+    )
