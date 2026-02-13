@@ -147,7 +147,6 @@ def _add_pdf_bookmarks(input_pdf, output_pdf, section_info, report_title):
             writer.write(f)
         return
 
-    total_height = section_info.get("totalHeight", 1)
     sections = section_info.get("sections", [])
 
     # 每个 A4 页面的 CSS 像素高度（约 1123px at 96dpi for A4 minus margins）

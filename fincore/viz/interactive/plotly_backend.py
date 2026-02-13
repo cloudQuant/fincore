@@ -232,9 +232,6 @@ class PlotlyBackend(VizBackend):
         """
         fig = self._create_figure()
 
-        # Color drawdown areas based on severity
-        colors = [self.colors["positive"] if x >= 0 else self.colors["negative"] for x in drawdown.values]
-
         fig.add_scatter(
             x=drawdown.index,
             y=drawdown.values,

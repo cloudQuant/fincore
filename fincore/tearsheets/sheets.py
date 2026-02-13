@@ -1,4 +1,3 @@
-
 # =============================================================================
 # Tear Sheet 创建函数 (Tear Sheet Creation Functions)
 # =============================================================================
@@ -56,7 +55,6 @@ except ImportError:
 
     def Markdown(text):
         return text
-
 
 
 # # 完整tear sheet
@@ -179,7 +177,6 @@ def create_full_tear_sheet(
         )
 
 
-
 # # 简单tear sheet
 # ==============
 def create_simple_tear_sheet(
@@ -294,7 +291,6 @@ def create_simple_tear_sheet(
 
     for ax in fig.axes:
         plt.setp(ax.get_xticklabels(), visible=True)
-
 
 
 # # 收益tear sheet
@@ -436,7 +432,6 @@ def create_returns_tear_sheet(
         return fig
 
 
-
 # # 仓位tear sheet
 # ==============
 def create_position_tear_sheet(
@@ -504,7 +499,6 @@ def create_position_tear_sheet(
         return fig
 
 
-
 # # 交易tear sheet
 # ==============
 def create_txn_tear_sheet(
@@ -554,7 +548,6 @@ def create_txn_tear_sheet(
 
     if run_flask_app:
         return fig
-
 
 
 # # 圆桌交易tear sheet
@@ -625,7 +618,6 @@ def create_round_trip_tear_sheet(
         return fig
 
 
-
 # # 利息收益times tear sheet
 def create_interesting_times_tear_sheet(
     pyfolio_instance, returns, benchmark_rets=None, legend_loc="best", run_flask_app=False
@@ -674,7 +666,6 @@ def create_interesting_times_tear_sheet(
 
     if run_flask_app:
         return fig
-
 
 
 # # 容量tear sheet
@@ -753,7 +744,6 @@ def create_capacity_tear_sheet(
     )
     if run_flask_app:
         return fig
-
 
 
 # # 贝叶斯tear sheet
@@ -893,7 +883,6 @@ def create_bayesian_tear_sheet(
 
     if run_flask_app:
         return fig
-
 
 
 # # 风险tear sheet

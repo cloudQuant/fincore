@@ -74,7 +74,7 @@ def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
 
         mu = alpha + beta * bmark_array
 
-        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)
+        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)  # noqa: F841
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -108,7 +108,7 @@ def model_returns_normal(data, samples=500, progressbar=True):
         mu = pm.Normal("mean_returns", mu=0, sigma=0.01)
         sigma = pm.HalfCauchy("volatility", beta=1)
 
-        returns = pm.Normal("returns", mu=mu, sigma=sigma, observed=data_array)
+        returns = pm.Normal("returns", mu=mu, sigma=sigma, observed=data_array)  # noqa: F841
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -143,7 +143,7 @@ def model_returns_t(data, samples=500, progressbar=True):
         sigma = pm.HalfCauchy("volatility", beta=1)
         nu = pm.Exponential("nu_minus_two", 1 / 29.0) + 2.0
 
-        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)
+        returns = pm.StudentT("returns", nu=nu, mu=mu, sigma=sigma, observed=data_array)  # noqa: F841
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -195,10 +195,10 @@ def model_best(y1, y2, samples=1000, progressbar=True):
         group2_std = pm.Uniform("group2_std", lower=sigma_low, upper=sigma_high)
         nu = pm.Exponential("nu_minus_two", 1 / 29.0) + 2.0
 
-        returns_1 = pm.StudentT("returns_1", nu=nu, mu=group1_mean, sigma=group1_std, observed=y1_array)
-        returns_2 = pm.StudentT("returns_2", nu=nu, mu=group2_mean, sigma=group2_std, observed=y2_array)
+        returns_1 = pm.StudentT("returns_1", nu=nu, mu=group1_mean, sigma=group1_std, observed=y1_array)  # noqa: F841
+        returns_2 = pm.StudentT("returns_2", nu=nu, mu=group2_mean, sigma=group2_std, observed=y2_array)  # noqa: F841
 
-        diff_of_means = pm.Deterministic("difference_of_means", group1_mean - group2_mean)
+        diff_of_means = pm.Deterministic("difference_of_means", group1_mean - group2_mean)  # noqa: F841
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 
@@ -236,7 +236,7 @@ def model_stoch_vol(data, samples=2000, progressbar=True):
         nu = pm.Exponential("nu", 0.1)
         s = pm.GaussianRandomWalk("s", sigma=sigma, shape=len(data_array))
 
-        r = pm.StudentT("r", nu=nu, sigma=pm.math.exp(-2 * s), observed=data_array)
+        r = pm.StudentT("r", nu=nu, sigma=pm.math.exp(-2 * s), observed=data_array)  # noqa: F841
 
         trace = pm.sample(samples, progressbar=progressbar, return_inferencedata=False)
 

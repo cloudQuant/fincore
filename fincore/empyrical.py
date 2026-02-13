@@ -190,8 +190,10 @@ class Empyrical:
                     factor_returns=factor_returns,
                     positions=positions,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).debug("AnalysisContext creation failed: %s", e)
 
     def __getattr__(self, name):
         """Safety-net for registry-backed attributes on instance access.

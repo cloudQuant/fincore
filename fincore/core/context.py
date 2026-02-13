@@ -37,7 +37,9 @@ from fincore.metrics.ratios import (
 )
 from fincore.metrics.returns import cum_returns, cum_returns_final
 from fincore.metrics.risk import (
-    annual_volatility,
+    annual_volatility as _annual_volatility,
+)
+from fincore.metrics.risk import (
     conditional_value_at_risk,
     downside_risk,
     tail_ratio,

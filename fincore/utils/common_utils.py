@@ -383,7 +383,9 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
             table.to_excel(excel_file_path, index=True)  # index=False 避免写入行索引
             # print(f"文件已成功保存到：{excel_file_path}")
         except Exception as e:
-            print(f"保存文件时出错：{e}")
+            import logging
+
+            logging.getLogger(__name__).warning("保存文件时出错：%s", e)
     display(HTML(html))
 
 

@@ -153,11 +153,13 @@ class TestOptimizationEdgeCases:
         n_periods = 100
         # Create highly correlated assets (near singular covariance)
         mu = np.array([0.10, 0.10, 0.10]) / 252
-        corr = np.array([
-            [1.0, 0.999, 0.999],
-            [0.999, 1.0, 0.999],
-            [0.999, 0.999, 1.0],
-        ])
+        corr = np.array(
+            [
+                [1.0, 0.999, 0.999],
+                [0.999, 1.0, 0.999],
+                [0.999, 0.999, 1.0],
+            ]
+        )
         vols = np.array([0.15, 0.15, 0.15]) / np.sqrt(252)
         cov = np.outer(vols, vols) * corr
         rets = np.random.multivariate_normal(mu, cov, size=n_periods)
@@ -169,11 +171,13 @@ class TestOptimizationEdgeCases:
         np.random.seed(42)
         n_periods = 100
         mu = np.array([0.10, 0.15, 0.08]) / 252
-        corr = np.array([
-            [1.0, 0.3, 0.2],
-            [0.3, 1.0, 0.3],
-            [0.2, 0.3, 1.0],
-        ])
+        corr = np.array(
+            [
+                [1.0, 0.3, 0.2],
+                [0.3, 1.0, 0.3],
+                [0.2, 0.3, 1.0],
+            ]
+        )
         vols = np.array([0.05, 1.5, 0.10]) / np.sqrt(252)  # Extreme vol difference
         cov = np.outer(vols, vols) * corr
         rets = np.random.multivariate_normal(mu, cov, size=n_periods)

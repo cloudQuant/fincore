@@ -51,10 +51,10 @@ class StyleResult:
                 summary[style] = float(self.returns_by_style[style])
         else:
             # DataFrame: either 'style' column or index contains styles
-            if 'style' in self.returns_by_style.columns:
+            if "style" in self.returns_by_style.columns:
                 # Style is a column
                 for _, row in self.returns_by_style.iterrows():
-                    summary[row['style']] = float(row['return'])
+                    summary[row["style"]] = float(row["return"])
             else:
                 # Index contains styles
                 for style in self.returns_by_style.index:
@@ -66,6 +66,23 @@ class StyleResult:
                         summary[style] = float(val)
 
         return summary
+
+    def __contains__(self, key: str) -> bool:
+        """Support ``key in result`` syntax."""
+        return key in self._as_dict()
+
+    def __getitem__(self, key: str):
+        """Support ``result[key]`` syntax."""
+        return self._as_dict()[key]
+
+    def _as_dict(self) -> dict:
+        """Internal dict representation."""
+        return {
+            "exposures": self.exposures,
+            "returns_by_style": self.returns_by_style,
+            "overall_returns": self.overall_returns,
+            "style_summary": self.style_summary,
+        }
 
     def to_dict(self) -> dict:
         """Convert results to dictionary."""
@@ -120,7 +137,7 @@ def style_analysis(
     # 1. Size Classification
     if market_caps is not None:
         size_exposure = _calculate_size_exposure(market_caps, size_quantiles)
-        exposures_data.update(size_exposure.to_dict(orient='index'))
+        exposures_data.update(size_exposure.to_dict(orient="index"))
     else:
         # Equal weight size exposure
         exposures_data["equal_weight"] = {col: 1.0 / n_assets for col in returns.columns}
@@ -131,18 +148,14 @@ def style_analysis(
     cumulative_returns = recent_returns.sum()
     mom_threshold = cumulative_returns.median()
     exposures_data["winner"] = {
-        col: 1.0 if cumulative_returns[col] >= mom_threshold else 0.0
-        for col in returns.columns
+        col: 1.0 if cumulative_returns[col] >= mom_threshold else 0.0 for col in returns.columns
     }
-    exposures_data["loser"] = {
-        col: 1.0 if cumulative_returns[col] < mom_threshold else 0.0
-        for col in returns.columns
-    }
+    exposures_data["loser"] = {col: 1.0 if cumulative_returns[col] < mom_threshold else 0.0 for col in returns.columns}
 
     # 3. Value Classification
     if value_scores is not None:
         value_exposure = _value_from_scores(value_scores)
-        exposures_data.update(value_exposure.to_dict(orient='index'))
+        exposures_data.update(value_exposure.to_dict(orient="index"))
     elif book_to_price is not None:
         # Use B/P as value proxy
         for col in returns.columns:
@@ -173,7 +186,7 @@ def style_analysis(
             exposures_data.setdefault("low", {})[col] = 1.0
 
     # Build exposures DataFrame
-    all_exposures = pd.DataFrame.from_dict(exposures_data, orient='index').T
+    all_exposures = pd.DataFrame.from_dict(exposures_data, orient="index").T
 
     # Calculate returns by style
     returns_by_style = {}
@@ -190,11 +203,8 @@ def style_analysis(
     overall_returns = returns.mul(equal_weights, axis=1).sum(axis=1)
 
     # Convert returns_by_style dict to DataFrame
-    returns_by_style_df = pd.DataFrame(
-        list(returns_by_style.items()),
-        columns=['style', 'return']
-    )
-    returns_by_style_df = returns_by_style_df.set_index('style')
+    returns_by_style_df = pd.DataFrame(list(returns_by_style.items()), columns=["style", "return"])
+    returns_by_style_df = returns_by_style_df.set_index("style")
 
     return StyleResult(
         exposures=all_exposures,
@@ -347,10 +357,15 @@ def calculate_style_tilts(
     """
     n_periods, n_assets = returns.shape
 
-    # Build result DataFrame
-    result_df = pd.DataFrame(index=returns.index[window:])
+    # Clamp window to available data (need at least 2 periods beyond window)
+    effective_window = min(window, n_periods - 1)
+    if effective_window < 2:
+        return pd.DataFrame()
 
-    for t in range(window, n_periods):
+    # Build result DataFrame
+    result_df = pd.DataFrame(index=returns.index[effective_window:])
+
+    for t in range(effective_window, n_periods):
         # Get historical returns
         hist_returns = returns.iloc[:t]
 
@@ -398,52 +413,80 @@ def _size_rank_to_exposure(ranks: pd.Series) -> pd.DataFrame:
 
 
 def calculate_regression_attribution(
-    portfolio_returns: pd.Series,
-    style_returns: pd.DataFrame,
-    style_exposures: pd.DataFrame,
+    portfolio_returns: pd.Series | pd.DataFrame,
+    style_returns: pd.DataFrame | None = None,
+    style_exposures: pd.DataFrame | None = None,
 ) -> dict[str, float]:
     """Attribute portfolio returns using style exposures.
 
-    Performs regression: R_p = a_s * S_s + sum(s_i * e_i)
+    If ``style_returns`` and ``style_exposures`` are not provided, they are
+    derived automatically by running :func:`style_analysis` on
+    ``portfolio_returns`` (which must be a DataFrame of asset returns in
+    that case).
 
     Parameters
     ----------
-    portfolio_returns : pd.Series
-        Portfolio returns.
-    style_returns : pd.DataFrame
-        Returns for each style factor.
-    style_exposures : pd.DataFrame
-        Current style exposures (T x S).
+    portfolio_returns : pd.Series or pd.DataFrame
+        Portfolio returns (Series) or asset returns (DataFrame).
+        If DataFrame and ``style_returns``/``style_exposures`` are None,
+        a style analysis is run automatically.
+    style_returns : pd.DataFrame, optional
+        Returns for each style factor (T x S).
+    style_exposures : pd.DataFrame, optional
+        Style exposures (N x S) or (T x S).
 
     Returns
     -------
     dict
-        Attribution by style factor.
+        Attribution by style factor, including 'residual'.
     """
-    portfolio_return = float(np.mean(portfolio_returns))
+    # Auto-derive from DataFrame if style data not provided
+    if style_returns is None or style_exposures is None:
+        if isinstance(portfolio_returns, pd.DataFrame):
+            result = style_analysis(portfolio_returns)
+            style_exposures = result.exposures
+            # Build style return series from the exposures + asset returns
+            _asset_returns = portfolio_returns
+            _style_ret_dict = {}
+            for style in style_exposures.columns:
+                weights = style_exposures[style].reindex(_asset_returns.columns, fill_value=0)
+                _style_ret_dict[style] = (_asset_returns * weights).sum(axis=1)
+            style_returns = pd.DataFrame(_style_ret_dict)
+            # Compute equal-weighted portfolio returns
+            port_ret = _asset_returns.mean(axis=1)
+        else:
+            raise TypeError(
+                "When style_returns/style_exposures are not provided, "
+                "portfolio_returns must be a DataFrame of asset returns."
+            )
+    else:
+        port_ret = portfolio_returns if isinstance(portfolio_returns, pd.Series) else portfolio_returns.mean(axis=1)
 
+    portfolio_return = float(np.mean(port_ret))
     attributions = {}
 
-    # Calculate contribution for each style
     for style in style_returns.columns:
-        if style not in style_exposures.columns:
+        if style_exposures is not None and style not in style_exposures.columns:
             continue
 
-        style_return = float(style_returns[style].iloc[0])
-        # np.corrcoef returns 2x2 matrix, extract [0,1] element
-        corr_matrix = np.corrcoef(
-            portfolio_returns.values,
-            style_returns[style].values,
-        )
+        # Align lengths
+        common_idx = port_ret.index.intersection(style_returns[style].index)
+        if len(common_idx) < 3:
+            attributions[style] = 0.0
+            continue
+
+        pr = port_ret.loc[common_idx].values
+        sr = style_returns[style].loc[common_idx].values
+
+        corr_matrix = np.corrcoef(pr, sr)
         style_beta = float(corr_matrix[0, 1]) if not np.isnan(corr_matrix[0, 1]) else 0.0
 
-        # Average exposure for this style
-        avg_exposure = float(style_exposures[style].mean())
-        style_contribution = style_beta * avg_exposure
+        # Average style return * beta as contribution
+        avg_style_ret = float(np.mean(sr))
+        style_contribution = style_beta * avg_style_ret
 
         attributions[style] = style_contribution
 
-    # Residual (specific to these styles)
     total_attributed = sum(attributions.values())
     attributions["residual"] = portfolio_return - total_attributed
 
@@ -452,53 +495,49 @@ def calculate_regression_attribution(
 
 def analyze_performance_by_style(
     returns: pd.DataFrame,
-    style_exposures: pd.DataFrame,
+    style_exposures: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Analyze performance metrics grouped by style.
+
+    If ``style_exposures`` is not provided, it is derived automatically
+    by running :func:`style_analysis`.
 
     Parameters
     ----------
     returns : pd.DataFrame
         Asset returns (T x N).
-    style_exposures : pd.DataFrame
-        Style exposures (T x S) for each period.
+    style_exposures : pd.DataFrame, optional
+        Style exposures (N x S).  If None, derived from ``style_analysis``.
 
     Returns
     -------
     pd.DataFrame
-        Performance metrics by style.
+        Performance metrics by style (columns: ``{style}_return``).
     """
+    if returns.empty:
+        return pd.DataFrame()
+
+    if style_exposures is None:
+        result = style_analysis(returns)
+        style_exposures = result.exposures
+
+    if style_exposures.empty:
+        return pd.DataFrame()
+
+    # style_exposures is (N assets x S styles) — static exposures
+    # We compute weighted return per style per period
     results = []
-
-    for t in range(1, len(style_exposures)):  # Skip initial period
-        exposures_t = style_exposures.iloc[t - 1]
-
-        # Calculate returns for each style at time t
+    for t in range(len(returns)):
         t_returns = returns.iloc[t]
-
-        # Metrics by style
         row_data: dict[str, int | float] = {"Period": int(t)}
 
-        # exposures_t is a Series if style_exposures is DataFrame
-        if isinstance(exposures_t, pd.Series):
-            # If it's a Series, treat it as single style exposure
-            style_assets = exposures_t[exposures_t == 1].index
-            if len(style_assets) > 0:
-                style_ret = t_returns[style_assets].mean()
-                row_data["style_return"] = style_ret
+        for style in style_exposures.columns:
+            weights = style_exposures[style].reindex(returns.columns, fill_value=0)
+            active = weights[weights > 0].index
+            if len(active) > 0:
+                row_data[f"{style}_return"] = float(t_returns[active].mean())
             else:
-                row_data["style_return"] = 0.0
-        else:
-            # It's a DataFrame, iterate over columns
-            for style in exposures_t.columns:
-                # Get assets with this style
-                style_assets = exposures_t.index[exposures_t[style] == 1]
-
-                if len(style_assets) > 0:
-                    style_returns = t_returns[style_assets].mean()
-                    row_data[f"{style}_return"] = style_returns
-                else:
-                    row_data[f"{style}_return"] = 0.0
+                row_data[f"{style}_return"] = 0.0
 
         results.append(row_data)
 
@@ -506,8 +545,7 @@ def analyze_performance_by_style(
         df = pd.DataFrame(results)
         df = df.set_index("Period")
         return df
-    else:
-        return pd.DataFrame()
+    return pd.DataFrame()
 
 
 def fetch_style_factors(

@@ -54,10 +54,7 @@ def validate_result(
         If optimization failed or returned invalid weights.
     """
     if not res.success:
-        msg = (
-            f"Optimization failed for {context}: "
-            f"status={res.status}, message={res.message!r}"
-        )
+        msg = f"Optimization failed for {context}: status={res.status}, message={res.message!r}"
         raise OptimizationError(
             msg,
             status=res.status,
@@ -69,10 +66,7 @@ def validate_result(
     # Check for NaN/inf
     if not allow_nan:
         if np.any(~np.isfinite(weights)):
-            msg = (
-                f"Optimization for {context} returned invalid weights "
-                f"(NaN/inf detected): {weights}"
-            )
+            msg = f"Optimization for {context} returned invalid weights (NaN/inf detected): {weights}"
             raise OptimizationError(
                 msg,
                 status=res.status,
@@ -107,11 +101,7 @@ def normalize_weights(
     """
     total = float(weights.sum())
     if abs(total) < epsilon:
-        raise OptimizationError(
-            f"Cannot normalize weights: sum ({total}) is too close to zero"
-        )
+        raise OptimizationError(f"Cannot normalize weights: sum ({total}) is too close to zero")
     if total < 0:
-        raise OptimizationError(
-            f"Cannot normalize weights: sum ({total}) is negative"
-        )
+        raise OptimizationError(f"Cannot normalize weights: sum ({total}) is negative")
     return weights / total

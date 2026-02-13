@@ -16,10 +16,13 @@
 
 """往返交易函数模块."""
 
+import logging
 from collections import deque
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "agg_all_long_short",
@@ -72,7 +75,8 @@ def agg_all_long_short(round_trips, col, stats_dict):
                     stat[name] = getattr(data, func)()
                 else:
                     stat[name] = np.nan
-            except Exception:
+            except Exception as e:
+                logger.debug("round_trip stat %s failed for %s: %s", name, label, e)
                 stat[name] = np.nan
 
         stat_series = pd.Series(stat, name=label)
@@ -89,7 +93,8 @@ def agg_all_long_short(round_trips, col, stats_dict):
                 all_stat[name] = getattr(all_data, func)()
             else:
                 all_stat[name] = np.nan
-        except Exception:
+        except Exception as e:
+            logger.debug("round_trip stat %s failed for All trades: %s", name, e)
             all_stat[name] = np.nan
 
     all_series = pd.Series(all_stat, name="All trades")

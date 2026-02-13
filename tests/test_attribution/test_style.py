@@ -73,18 +73,14 @@ class TestStyleAnalysis:
         assert isinstance(result.returns_by_style, pd.DataFrame)
         assert isinstance(result.overall_returns, pd.Series)
 
-    def test_style_analysis_with_market_caps(
-        self, sample_returns, sample_market_caps
-    ):
+    def test_style_analysis_with_market_caps(self, sample_returns, sample_market_caps):
         """Test style analysis with market cap data."""
         result = style_analysis(sample_returns, market_caps=sample_market_caps)
 
         # Should have size-based exposures
         assert "large" in result.exposures.index or "small" in result.exposures.index
 
-    def test_style_analysis_with_book_to_price(
-        self, sample_returns, sample_book_to_price
-    ):
+    def test_style_analysis_with_book_to_price(self, sample_returns, sample_book_to_price):
         """Test style analysis with book-to-price data."""
         result = style_analysis(sample_returns, book_to_price=sample_book_to_price)
 
@@ -192,9 +188,7 @@ class TestCalculateRegressionAttribution:
         )
         return exposures
 
-    def test_regression_attribution_basic(
-        self, sample_portfolio_returns, sample_style_returns, sample_style_exposures
-    ):
+    def test_regression_attribution_basic(self, sample_portfolio_returns, sample_style_returns, sample_style_exposures):
         """Test basic regression attribution."""
         result = calculate_regression_attribution(
             sample_portfolio_returns, sample_style_returns, sample_style_exposures
@@ -245,9 +239,7 @@ class TestAnalyzePerformanceByStyle:
         )
         return exposures
 
-    def test_analyze_performance_by_style_basic(
-        self, sample_returns, sample_style_exposures
-    ):
+    def test_analyze_performance_by_style_basic(self, sample_returns, sample_style_exposures):
         """Test basic performance analysis by style."""
         result = analyze_performance_by_style(sample_returns, sample_style_exposures)
 

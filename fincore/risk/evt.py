@@ -309,8 +309,6 @@ def evt_var(
     data = np.asarray(data).flatten()
     data = data[~np.isnan(data)]
 
-    n = len(data)
-
     var: float = np.nan  # Initialize var
 
     if model == "gpd":
@@ -408,17 +406,12 @@ def evt_cvar(
         beta = params["beta"]
         u = params["threshold"]
 
-        n_exceed = params["n_exceed"]
-        n_total = len(data)
-        exceed_prob = n_exceed / n_total
-
         # GPD-based CVaR
         if np.abs(xi) < 1e-10:
             # Exponential case
             cvar = var + beta
         elif xi < 1:
             # General case
-            m = ((1 - alpha) / exceed_prob) ** (-xi) - 1
             cvar = var + (beta + xi * (var - u)) / (1 - xi)
         else:
             raise ValueError("CVaR infinite for xi >= 1")
@@ -427,9 +420,8 @@ def evt_cvar(
         params = gev_fit(data, block_size=block_size)
         xi = params["xi"]
         sigma = params["sigma"]
-        mu = params["mu"]
 
-        # GEV-based CVaR
+        # GEV-based CVaR (mu already incorporated via var)
         t = -np.log(alpha)
 
         if np.abs(xi) < 1e-10:
