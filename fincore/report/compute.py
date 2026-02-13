@@ -6,10 +6,14 @@ HTML / PDF renderers.  This module has **no** rendering logic.
 
 from __future__ import annotations
 
+import logging
 from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
+
+# Module-level logger
+logger = logging.getLogger(__name__)
 
 
 def compute_sections(
@@ -67,8 +71,12 @@ def compute_sections(
         try:
             turnover = Empyrical.get_turnover(positions, transactions)
             perf["Avg Daily Turnover"] = float(turnover.mean())
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(
+                "Failed to calculate turnover: %s",
+                e,
+                extra={"context": "compute_sections", "metric": "turnover"},
+            )
 
     # Gross leverage 统计
     if positions is not None:
@@ -76,8 +84,12 @@ def compute_sections(
             gl = Empyrical.gross_lev(positions)
             perf["Avg Gross Leverage"] = float(gl.mean())
             perf["Max Gross Leverage"] = float(gl.max())
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(
+                "Failed to calculate gross leverage: %s",
+                e,
+                extra={"context": "compute_sections", "metric": "gross_leverage"},
+            )
 
     sections["perf_stats"] = perf
 
@@ -206,8 +218,12 @@ def compute_sections(
         if positions is not None:
             try:
                 sections["turnover"] = Empyrical.get_turnover(positions, transactions)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(
+                    "Failed to calculate turnover from transactions: %s",
+                    e,
+                    extra={"context": "compute_sections", "metric": "txn_turnover"},
+                )
 
         # 交易汇总
         txn_summary = OrderedDict()

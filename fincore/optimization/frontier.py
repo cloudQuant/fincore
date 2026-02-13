@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as sp_opt
 
+from fincore.optimization._utils import validate_result
+
 
 def efficient_frontier(
     returns: pd.DataFrame,
@@ -78,7 +80,7 @@ def efficient_frontier(
         constraints=constraints,
         options={"ftol": 1e-12, "maxiter": 1000},
     )
-    mv_w = res_mv.x
+    mv_w = validate_result(res_mv, context="min_variance")
     mv_ret = _port_ret(mv_w)
     mv_vol = _port_vol(mv_w)
 
@@ -97,7 +99,7 @@ def efficient_frontier(
         constraints=constraints,
         options={"ftol": 1e-12, "maxiter": 1000},
     )
-    ms_w = res_ms.x
+    ms_w = validate_result(res_ms, context="max_sharpe")
     ms_ret = _port_ret(ms_w)
     ms_vol = _port_vol(ms_w)
     ms_sharpe = (ms_ret - risk_free_rate) / ms_vol if ms_vol > 1e-12 else 0.0
@@ -122,9 +124,10 @@ def efficient_frontier(
             options={"ftol": 1e-12, "maxiter": 1000},
         )
         if res.success:
-            frontier_weights[i] = res.x
-            frontier_rets[i] = _port_ret(res.x)
-            frontier_vols[i] = _port_vol(res.x)
+            w_valid = validate_result(res, context=f"frontier_point_{i}", allow_nan=False)
+            frontier_weights[i] = w_valid
+            frontier_rets[i] = _port_ret(w_valid)
+            frontier_vols[i] = _port_vol(w_valid)
         else:
             frontier_weights[i] = np.nan
             frontier_rets[i] = np.nan

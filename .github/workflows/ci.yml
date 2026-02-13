@@ -65,7 +65,7 @@ jobs:
         run: pip install ruff
 
       - name: Ruff check
-        run: ruff check fincore/ --output-format=github
+        run: ruff check fincore/ tests/ --output-format=github
 
   typecheck:
     runs-on: ubuntu-latest
@@ -83,9 +83,9 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -e ".[dev]"
 
-      - name: mypy (core modules)
+      - name: mypy (core + optimization modules)
         run: |
-          python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data --ignore-missing-imports
+          python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data fincore/optimization --ignore-missing-imports
 
   build:
     runs-on: ubuntu-latest

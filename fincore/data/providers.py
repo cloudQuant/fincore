@@ -9,6 +9,7 @@ Provides a unified interface for fetching financial data from various sources:
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -18,6 +19,9 @@ import pandas as pd
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
+
+# Module-level logger
+logger = logging.getLogger(__name__)
 
 
 class DataProvider(ABC):
@@ -288,7 +292,12 @@ class YahooFinanceProvider(DataProvider):
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
             except Exception as e:
-                print(f"Warning: Failed to fetch {symbol}: {e}")
+                logger.warning(
+                    "Failed to fetch %s from Yahoo Finance: %s",
+                    symbol,
+                    e,
+                    extra={"provider": "YahooFinance", "symbol": symbol},
+                )
                 results[symbol] = pd.DataFrame()
         return results
 
@@ -426,7 +435,12 @@ class AlphaVantageProvider(DataProvider):
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
             except Exception as e:
-                print(f"Warning: Failed to fetch {symbol}: {e}")
+                logger.warning(
+                    "Failed to fetch %s from Alpha Vantage: %s",
+                    symbol,
+                    e,
+                    extra={"provider": "AlphaVantage", "symbol": symbol},
+                )
                 results[symbol] = pd.DataFrame()
         return results
 
@@ -572,7 +586,12 @@ class TushareProvider(DataProvider):
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
             except Exception as e:
-                print(f"Warning: Failed to fetch {symbol}: {e}")
+                logger.warning(
+                    "Failed to fetch %s from Tushare: %s",
+                    symbol,
+                    e,
+                    extra={"provider": "Tushare", "symbol": symbol},
+                )
                 results[symbol] = pd.DataFrame()
         return results
 
@@ -702,7 +721,12 @@ class AkShareProvider(DataProvider):
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
             except Exception as e:
-                print(f"Warning: Failed to fetch {symbol}: {e}")
+                logger.warning(
+                    "Failed to fetch %s from AkShare: %s",
+                    symbol,
+                    e,
+                    extra={"provider": "AkShare", "symbol": symbol},
+                )
                 results[symbol] = pd.DataFrame()
         return results
 
@@ -710,7 +734,13 @@ class AkShareProvider(DataProvider):
         """Get information about a symbol."""
         try:
             info = self._ak.stock_individual_info_em(symbol=symbol)
-        except Exception:
+        except Exception as e:
+            logger.warning(
+                "Failed to get info for %s from AkShare: %s",
+                symbol,
+                e,
+                extra={"provider": "AkShare", "symbol": symbol},
+            )
             return {
                 "symbol": symbol,
                 "name": "N/A",

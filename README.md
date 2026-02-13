@@ -3,7 +3,7 @@
 <p align="center">
     <img src="https://img.shields.io/badge/version-0.1.0-blueviolet.svg" alt="Version 0.1.0" style="margin-right: 10px;"/>
     <img src="https://github.com/cloudQuant/fincore/workflows/CI/badge.svg" alt="CI" style="margin-right: 10px;"/>
-    <img src="https://img.shields.io/badge/tests-1299%20passed-brightgreen.svg" alt="1299 Tests Passed" style="margin-right: 10px;"/>
+    <img src="https://img.shields.io/badge/tests-1613%20passed-brightgreen.svg" alt="1613 Tests Passed" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Supported Platforms: Mac, Linux, and Windows" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
@@ -247,6 +247,72 @@ strategies = pd.DataFrame({
 })
 
 # Calculate metrics for all strategies at once
+sharpe_ratios = empyrical.sharpe_ratio(strategies)
+print(sharpe_ratios)
+
+# Calculate max drawdown for all strategies
+max_dd = empyrical.max_drawdown(strategies)
+print(max_dd)
+```
+
+#### Portfolio Optimization
+
+```python
+import pandas as pd
+from fincore.optimization import efficient_frontier, risk_parity, optimize
+
+# Sample asset returns (historical daily returns for 3 stocks)
+returns = pd.DataFrame({
+    'AAPL': [0.01, 0.02, -0.01, 0.03, 0.01],
+    'MSFT': [0.015, 0.01, 0.005, 0.02, 0.015],
+    'GOOGL': [0.008, 0.025, -0.005, 0.01, 0.02]
+})
+
+# Risk parity portfolio (equal risk contribution)
+rp_weights = risk_parity(returns)
+print(f"Risk Parity Weights: {rp_weights['weights']}")
+
+# Maximum Sharpe ratio portfolio
+max_sharpe = optimize(returns, objective="max_sharpe")
+print(f"Max Sharpe Weights: {max_sharpe['weights']}")
+
+# Efficient frontier (returns, volatilities, weights for n points)
+ef = efficient_frontier(returns, n_points=50)
+print(f"Frontier points: {len(ef['frontier_returns'])}")
+print(f"Min volatility: {ef['min_variance']['volatility']:.4f}")
+print(f"Max Sharpe: {ef['max_sharpe']['sharpe']:.4f}")
+
+# Target return optimization (minimize variance for given return)
+target_ret = optimize(returns, objective="target_return", target_return=0.15)
+print(f"Target Return Weights: {target_ret['weights']}")
+
+# Target risk optimization (maximize return for given volatility)
+target_risk = optimize(returns, objective="target_risk", target_volatility=0.12)
+print(f"Target Risk Weights: {target_risk['weights']}")
+```
+
+The optimization module provides:
+- **efficient_frontier**: Compute mean-variance efficient frontier with n_points
+- **risk_parity**: Equal risk contribution (ERC) portfolio weights
+- **optimize**: Constrained optimization with objectives:
+  - `max_sharpe`: Maximize Sharpe ratio
+  - `min_variance`: Minimize portfolio variance
+  - `target_return`: Minimize variance for given return
+  - `target_risk`: Maximize return for given volatility
+
+#### Performance Attribution
+
+```python
+from fincore.empyrical import perf_attrib
+
+# Multiple strategy returns
+strategies = pd.DataFrame({
+    'Strategy_A': np.random.normal(0.001, 0.02, 252),
+    'Strategy_B': np.random.normal(0.0015, 0.025, 252),
+    'Strategy_C': np.random.normal(0.0008, 0.018, 252)
+})
+
+# Calculate metrics for all strategies at once
 annual_returns = empyrical.annual_return(strategies)
 annual_vols = empyrical.annual_volatility(strategies)
 calmar_ratios = empyrical.calmar_ratio(strategies)
@@ -304,7 +370,7 @@ fincore/
 ### Testing
 
 ```bash
-# Run all tests (1299 tests)
+# Run all tests (1613 tests)
 pytest tests/ -n 4
 
 # Run specific test suites
@@ -639,7 +705,7 @@ sharpe_monthly = empyrical.sharpe_ratio(returns, period=MONTHLY)
 ### 测试
 
 ```bash
-# 运行所有测试（1299 个测试）
+# 运行所有测试（1613 个测试）
 pytest tests/ -n 4
 
 # 运行特定测试套件

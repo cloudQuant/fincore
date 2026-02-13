@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as sp_opt
 
+from fincore.optimization._utils import validate_result
+
 
 def optimize(
     returns: pd.DataFrame,
@@ -149,7 +151,7 @@ def optimize(
             "Choose from: 'max_sharpe', 'min_variance', 'target_return', 'target_risk'."
         )
 
-    w = res.x
+    w = validate_result(res, context=f"optimize_{objective}")
     port_ret = _ret(w)
     port_vol = _vol(w)
     sharpe = (port_ret - risk_free_rate) / port_vol if port_vol > 1e-12 else 0.0
