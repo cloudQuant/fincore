@@ -23,8 +23,8 @@ def geometric_brownian_motion(
     T: float,
     dt: float,
     n_paths: int,
-    rng: Optional[np.random.Generator] = None,
-    seed: Optional[int] = None,
+    rng: np.random.Generator | None = None,
+    seed: int | None = None,
 ) -> np.ndarray:
     """Generate price paths using Geometric Brownian Motion.
 
@@ -84,12 +84,12 @@ def geometric_brownian_motion(
 
 
 def gbm_from_returns(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     horizon: int = 252,
     n_paths: int = 1000,
     frequency: int = 252,
-    rng: Optional[np.random.Generator] = None,
-    seed: Optional[int] = None,
+    rng: np.random.Generator | None = None,
+    seed: int | None = None,
 ) -> np.ndarray:
     """Generate GBM paths estimated from historical returns.
 
@@ -178,8 +178,8 @@ def antithetic_variates(
 def latin_hypercube_sampling(
     n_samples: int,
     n_dimensions: int,
-    rng: Optional[np.random.Generator] = None,
-    seed: Optional[int] = None,
+    rng: np.random.Generator | None = None,
+    seed: int | None = None,
 ) -> np.ndarray:
     """Generate Latin Hypercube samples for quasi-Monte Carlo.
 

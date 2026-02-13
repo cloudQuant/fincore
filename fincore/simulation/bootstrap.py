@@ -5,17 +5,18 @@ Provides non-parametric statistical inference using resampling techniques.
 
 from __future__ import annotations
 
-from typing import Callable, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 
 def bootstrap(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     n_samples: int = 10000,
-    statistic: Union[str, Callable] = "mean",
-    seed: Optional[int] = None,
+    statistic: str | Callable = "mean",
+    seed: int | None = None,
 ) -> np.ndarray:
     """Bootstrap resampling for statistical inference.
 
@@ -75,13 +76,13 @@ def bootstrap(
 
 
 def bootstrap_ci(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     n_samples: int = 10000,
     alpha: float = 0.05,
-    statistic: Union[str, Callable] = "mean",
+    statistic: str | Callable = "mean",
     method: str = "percentile",
-    seed: Optional[int] = None,
-) -> Tuple[float, float]:
+    seed: int | None = None,
+) -> tuple[float, float]:
     """Calculate bootstrap confidence interval.
 
     Parameters
@@ -145,9 +146,7 @@ def _get_statistic_fn(name: str) -> Callable[[np.ndarray], float]:
 
     if name not in statistics:
         available = ", ".join(statistics.keys())
-        raise ValueError(
-            f"Unknown statistic '{name}'. Available: {available}"
-        )
+        raise ValueError(f"Unknown statistic '{name}'. Available: {available}")
 
     return statistics[name]
 
@@ -180,10 +179,10 @@ def _sortino_statistic(returns: np.ndarray) -> float:
 
 
 def bootstrap_summary(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     n_samples: int = 10000,
     alpha: float = 0.05,
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> dict:
     """Compute comprehensive bootstrap statistics summary.
 

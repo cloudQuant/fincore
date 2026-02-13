@@ -11,27 +11,28 @@ Allows dynamic extension of fincore's capabilities through:
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 
 # =============================================================================
 # Registry Storage
 # =============================================================================
 
-_METRIC_REGISTRY: Dict[str, Callable] = {}
-_HOOK_REGISTRY: Dict[str, List[Callable]] = {}
-_VIZ_BACKEND_REGISTRY: Dict[str, type] = {}
+_METRIC_REGISTRY: dict[str, Callable] = {}
+_HOOK_REGISTRY: dict[str, list[tuple[int, Callable]]] = {}
+_VIZ_BACKEND_REGISTRY: dict[str, type] = {}
 
 
 # =============================================================================
 # Decorators
 # =============================================================================
 
+
 def register_metric(
-    name: Optional[str] = None,
+    name: str | None = None,
 ) -> Callable:
     """Decorator to register a custom metric function.
 
@@ -46,27 +47,16 @@ def register_metric(
             std = np.std(returns, ddof=1)
             return mean / std * np.sqrt(period)
     """
+
     def decorator(func: Callable) -> Callable:
         metric_name = name or func.__name__
+        _METRIC_REGISTRY[metric_name] = func
 
-        @ functools.wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # First argument must be returns
-            if len(args) == 0:
-                raise TypeError("Custom metric must take returns as first argument")
-
-            returns_arg = args[0]
-
-            # Calculate metric value
-            result = func(*args, **kwargs)
-
-            # Register the metric
-            _METRIC_REGISTRY[metric_name] = result
-            return result
+            return func(*args, **kwargs)
 
         wrapper.__name__ = metric_name
-        wrapper.__doc__ = func.__doc__
-        wrapper.__module__ = func.__module__
         return wrapper
 
     return decorator
@@ -74,7 +64,7 @@ def register_metric(
 
 def register_viz_backend(
     name: str,
-) -> Callable:
+) -> Callable[[type], type]:
     """Decorator to register a custom visualization backend.
 
     The decorated class should provide the following methods:
@@ -99,22 +89,11 @@ def register_viz_backend(
                 return fig
 
     """
+
     def decorator(cls: type) -> type:
         backend_name = name or cls.__name__
-
-        @classmethod
-        def create_instance(cls, theme: str = "light") -> "MyBackend":
-            return cls(theme=theme)
-
-        def wrapper(cls, *args, **kwargs):
-            instance = cls(*args, **kwargs)
-            _VIZ_BACKEND_REGISTRY[backend_name] = instance
-            return instance
-
-        wrapper.__name__ = backend_name
-        wrapper.__doc__ = cls.__doc__
-        wrapper.__module__ = cls.__module__
-        return wrapper
+        _VIZ_BACKEND_REGISTRY[backend_name] = cls
+        return cls
 
     return decorator
 
@@ -141,20 +120,20 @@ def register_hook(
             returns_clean = returns[returns < 3 * returns.std()]
             return returns_clean
     """
+
     def decorator(func: Callable) -> Callable:
         event_name = event or func.__name__
 
+        if event_name not in _HOOK_REGISTRY:
+            _HOOK_REGISTRY[event_name] = []
+        _HOOK_REGISTRY[event_name].append((priority, func))
+        _HOOK_REGISTRY[event_name].sort(key=lambda x: x[0])
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # Register the hook
-            _HOOK_REGISTRY[event_name] = _HOOK_REGISTRY.get(event_name, [])
-            _HOOK_REGISTRY[event_name].append(wrapper)
-
-            return func
+            return func(*args, **kwargs)
 
         wrapper.__name__ = event_name
-        wrapper.__doc__ = func.__doc__
-        wrapper.__module__ = func.__module__
         return wrapper
 
     return decorator
@@ -164,29 +143,34 @@ def register_hook(
 # Public API Functions
 # =============================================================================
 
-def list_metrics() -> Dict[str, Callable]:
+
+def list_metrics() -> dict[str, Callable]:
     """List all registered custom metrics."""
     return _METRIC_REGISTRY.copy()
 
 
-def list_viz_backends() -> Dict[str, type]:
+def list_viz_backends() -> dict[str, type]:
     """List all registered visualization backends."""
     return _VIZ_BACKEND_REGISTRY.copy()
 
 
-def list_hooks(event: Optional[str] = None) -> Dict[str, List[Callable]]:
-    """List all registered hooks for an event."""
+def list_hooks(event: str | None = None) -> dict[str, list[Callable]]:
+    """List all registered hooks for an event.
+
+    Returns hook functions in priority order (lowest priority number first).
+    """
     if event is None:
-        return {k: v for k, v in _HOOK_REGISTRY.items() for k in v}
-    return _HOOK_REGISTRY.copy()
+        return {k: [fn for _, fn in v] for k, v in _HOOK_REGISTRY.items()}
+    hooks = _HOOK_REGISTRY.get(event, [])
+    return {event: [fn for _, fn in hooks]}
 
 
-def get_metric(name: str) -> Optional[Callable]:
+def get_metric(name: str) -> Callable | None:
     """Get a registered metric by name."""
     return _METRIC_REGISTRY.get(name)
 
 
-def get_viz_backend(name: str) -> Optional[type]:
+def get_viz_backend(name: str) -> type | None:
     """Get a registered visualization backend by name."""
     return _VIZ_BACKEND_REGISTRY.get(name)
 
@@ -198,27 +182,23 @@ def execute_hooks(
 ) -> None:
     """Execute all hooks registered for an event.
 
-    Hooks are executed in registration order (priority value ascending).
+    Hooks are executed in priority order (lowest priority number first).
     """
-    for hook_fn in _HOOK_REGISTRY.get(event, []):
+    for _priority, hook_fn in _HOOK_REGISTRY.get(event, []):
         hook_fn(*args, **kwargs)
 
 
-# =============================================================================
-# Example Custom Metrics
-# =============================================================================
+def clear_registry(registry_type: str | None = None) -> None:
+    """Clear one or all registries.
 
-def _custom_sharpe(returns, period: int = 252) -> float:
-    """Example custom Sharpe ratio calculation.
-
-    Demonstrates the plugin system with a commonly-requested metric.
+    Parameters
+    ----------
+    registry_type : str, optional
+        'metrics', 'hooks', 'viz_backends', or None to clear all.
     """
-    mean = np.mean(returns)
-    std = np.std(returns, ddof=1)
-    excess_return = mean - 0.02  # Assume 2% risk-free rate
-
-    return excess_return / std * np.sqrt(period)
-
-
-# Register the custom metric
-register_metric = register_metric("custom_sharpe")(_custom_sharpe)
+    if registry_type is None or registry_type == "metrics":
+        _METRIC_REGISTRY.clear()
+    if registry_type is None or registry_type == "hooks":
+        _HOOK_REGISTRY.clear()
+    if registry_type is None or registry_type == "viz_backends":
+        _VIZ_BACKEND_REGISTRY.clear()

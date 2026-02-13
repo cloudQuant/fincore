@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 # Check if optional dependencies are available
 pytest.importorskip("plotly", reason="plotly not installed")
@@ -52,6 +52,7 @@ def drawdown(sample_returns):
 def rolling_sharpe(sample_returns):
     """Calculate rolling Sharpe ratio."""
     from fincore.metrics.rolling import roll_sharpe_ratio
+
     return roll_sharpe_ratio(sample_returns, window=63)
 
 

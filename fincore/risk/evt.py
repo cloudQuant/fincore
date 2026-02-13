@@ -29,9 +29,9 @@ if TYPE_CHECKING:
 
 def hill_estimator(
     data: ArrayLike,
-    threshold: Optional[float] = None,
+    threshold: float | None = None,
     tail: str = "upper",
-) -> Tuple[float, np.ndarray]:
+) -> tuple[float, np.ndarray]:
     """Estimate tail index using Hill estimator.
 
     The Hill estimator is a popular method for estimating the
@@ -97,9 +97,9 @@ def hill_estimator(
 
 def gpd_fit(
     data: ArrayLike,
-    threshold: Optional[float] = None,
+    threshold: float | None = None,
     method: str = "mle",
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Fit Generalized Pareto Distribution (GPD) to exceedances.
 
     GPD is used in Peaks-Over-Threshold (POT) method for modeling
@@ -165,7 +165,7 @@ def gpd_fit(
                 # Exponential case (xi -> 0)
                 ll = np.sum(np.log(beta) + excesses / beta)
             else:
-                ll = np.sum(np.log(beta) + (1 + 1/xi) * np.log(z))
+                ll = np.sum(np.log(beta) + (1 + 1 / xi) * np.log(z))
 
             return ll
 
@@ -206,8 +206,8 @@ def gpd_fit(
 
 def gev_fit(
     data: ArrayLike,
-    block_size: Optional[int] = None,
-) -> Dict[str, float]:
+    block_size: int | None = None,
+) -> dict[str, float]:
     """Fit Generalized Extreme Value (GEV) distribution to block maxima.
 
     GEV is used for modeling maximum values over fixed time blocks
@@ -245,7 +245,7 @@ def gev_fit(
 
     # Split into blocks and get maxima
     n_blocks = n // block_size
-    trimmed_data = data[:n_blocks * block_size]
+    trimmed_data = data[: n_blocks * block_size]
     block_maxima = trimmed_data.reshape(-1, block_size)
 
     # For risk analysis, we want minimum (most negative) returns
@@ -272,8 +272,8 @@ def evt_var(
     alpha: float = 0.05,
     model: str = "gpd",
     tail: str = "lower",
-    threshold: Optional[float] = None,
-    block_size: Optional[int] = None,
+    threshold: float | None = None,
+    block_size: int | None = None,
 ) -> float:
     """Calculate VaR using Extreme Value Theory.
 
@@ -310,6 +310,8 @@ def evt_var(
     data = data[~np.isnan(data)]
 
     n = len(data)
+
+    var: float = np.nan  # Initialize var
 
     if model == "gpd":
         # Fit GPD
@@ -362,8 +364,8 @@ def evt_cvar(
     alpha: float = 0.05,
     model: str = "gpd",
     tail: str = "lower",
-    threshold: Optional[float] = None,
-    block_size: Optional[int] = None,
+    threshold: float | None = None,
+    block_size: int | None = None,
 ) -> float:
     """Calculate CVaR (Expected Shortfall) using EVT.
 
@@ -435,7 +437,7 @@ def evt_cvar(
             cvar = var - sigma * (1 + np.euler_gamma)
         elif xi < 1:
             # General case
-            cvar = var + (sigma / xi) * (1 - 1/(1-xi) + t**(-xi) / (1-xi))
+            cvar = var + (sigma / xi) * (1 - 1 / (1 - xi) + t ** (-xi) / (1 - xi))
         else:
             raise ValueError("CVaR infinite for xi >= 1")
     else:
@@ -449,8 +451,8 @@ def extreme_risk(
     alpha: float = 0.05,
     tail: str = "lower",
     model: str = "gpd",
-    threshold: Optional[float] = None,
-    block_size: Optional[int] = None,
+    threshold: float | None = None,
+    block_size: int | None = None,
 ) -> pd.DataFrame:
     """Calculate comprehensive EVT-based risk measures.
 
@@ -490,25 +492,31 @@ def extreme_risk(
         var = evt_var(data, alpha, model, tail, threshold=params["threshold"])
         cvar = evt_cvar(data, alpha, model, tail, threshold=params["threshold"])
 
-        return pd.DataFrame({
-            "VaR": [var],
-            "CVaR": [cvar],
-            "tail_index": [params["xi"]],
-            "threshold": [params["threshold"]],
-            "n_exceedances": [params["n_exceed"]],
-        }, index=[alpha])
+        return pd.DataFrame(
+            {
+                "VaR": [var],
+                "CVaR": [cvar],
+                "tail_index": [params["xi"]],
+                "threshold": [params["threshold"]],
+                "n_exceedances": [params["n_exceed"]],
+            },
+            index=[alpha],
+        )
 
     elif model == "gev":
         params = gev_fit(data, block_size=block_size)
         var = evt_var(data, alpha, model, tail, block_size=block_size)
         cvar = evt_cvar(data, alpha, model, tail, block_size=block_size)
 
-        return pd.DataFrame({
-            "VaR": [var],
-            "CVaR": [cvar],
-            "tail_index": [params["xi"]],
-            "location": [params["mu"]],
-            "scale": [params["sigma"]],
-        }, index=[alpha])
+        return pd.DataFrame(
+            {
+                "VaR": [var],
+                "CVaR": [cvar],
+                "tail_index": [params["xi"]],
+                "location": [params["mu"]],
+                "scale": [params["sigma"]],
+            },
+            index=[alpha],
+        )
     else:
         raise ValueError(f"Unknown model: {model}")

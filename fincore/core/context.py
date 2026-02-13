@@ -260,7 +260,7 @@ class AnalysisContext:
         viz = get_backend(backend)
 
         cum_ret = cum_returns(self._returns, starting_value=0)
-        running_max = (1 + cum_ret).cummax()
+        running_max = (1 + cum_ret).cummax()  # type: ignore[union-attr]
         drawdown = (1 + cum_ret) / running_max - 1
 
         viz.plot_returns(cum_ret, **kwargs)

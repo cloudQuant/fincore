@@ -149,6 +149,7 @@ def cum_returns(
     if allocated_output:
         out = np.empty_like(returns)
 
+    assert out is not None  # for type checking
     np.add(returns, 1, out=out)
     out.cumprod(axis=0, out=out)
 

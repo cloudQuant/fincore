@@ -83,9 +83,7 @@ class TestMonteCarlo:
         """Test antithetic variates doubles paths."""
         mc = MonteCarlo(sample_returns)
         result_normal = mc.simulate(n_paths=100, horizon=60, seed=42)
-        result_antithetic = mc.simulate(
-            n_paths=100, horizon=60, seed=42, antithetic=True
-        )
+        result_antithetic = mc.simulate(n_paths=100, horizon=60, seed=42, antithetic=True)
 
         # Antithetic should have double the paths
         assert result_antithetic.n_paths == result_normal.n_paths * 2
@@ -113,9 +111,7 @@ class TestMonteCarlo:
     @staticmethod
     def test_from_parameters():
         """Test simulation from known parameters."""
-        result = MonteCarlo.from_parameters(
-            mu=0.10, sigma=0.20, S0=100.0, n_paths=100, horizon=60, seed=42
-        )
+        result = MonteCarlo.from_parameters(mu=0.10, sigma=0.20, S0=100.0, n_paths=100, horizon=60, seed=42)
 
         assert result.n_paths == 100
         np.testing.assert_array_almost_equal(result.paths[:, 0], 100.0)

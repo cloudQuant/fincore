@@ -15,11 +15,11 @@ import pandas as pd
 
 
 def brinson_attribution(
-    portfolio_returns: Union[pd.Series, np.ndarray],
-    benchmark_returns: Union[pd.Series, np.ndarray],
+    portfolio_returns: pd.Series | np.ndarray,
+    benchmark_returns: pd.Series | np.ndarray,
     portfolio_weights: pd.DataFrame,
     benchmark_weights: pd.DataFrame,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculate Brinson attribution for a single period.
 
     Parameters
@@ -126,11 +126,11 @@ def brinson_attribution(
 
 
 def brinson_results(
-    portfolio_returns: Union[pd.Series, np.ndarray],
-    benchmark_returns: Union[pd.Series, np.ndarray],
+    portfolio_returns: pd.Series | np.ndarray,
+    benchmark_returns: pd.Series | np.ndarray,
     portfolio_weights: pd.DataFrame,
     benchmark_weights: pd.DataFrame,
-    periods: Optional[List[str]] = None,
+    periods: list[str] | None = None,
 ) -> pd.DataFrame:
     """Calculate Brinson attribution over multiple periods.
 
@@ -166,8 +166,8 @@ def brinson_results(
 
     for t in range(n_periods):
         # Get weights for this period
-        wp_t = portfolio_weights.iloc[t].values if hasattr(portfolio_weights, 'iloc') else portfolio_weights
-        wb_t = benchmark_weights.iloc[t].values if hasattr(benchmark_weights, 'iloc') else benchmark_weights
+        wp_t = portfolio_weights.iloc[t].values if hasattr(portfolio_weights, "iloc") else portfolio_weights
+        wb_t = benchmark_weights.iloc[t].values if hasattr(benchmark_weights, "iloc") else benchmark_weights
 
         # Calculate attribution
         rp_t = rp[t] if rp.ndim > 1 else rp
@@ -175,15 +175,17 @@ def brinson_results(
 
         attr = brinson_attribution(rp_t, rb_t, wp_t, wb_t)
 
-        results.append({
-            "period": periods[t],
-            "allocation": attr["allocation"],
-            "selection": attr["selection"],
-            "interaction": attr["interaction"],
-            "total": attr["total"],
-            "portfolio_return": attr["portfolio_return"],
-            "benchmark_return": attr["benchmark_return"],
-        })
+        results.append(
+            {
+                "period": periods[t],
+                "allocation": attr["allocation"],
+                "selection": attr["selection"],
+                "interaction": attr["interaction"],
+                "total": attr["total"],
+                "portfolio_return": attr["portfolio_return"],
+                "benchmark_return": attr["benchmark_return"],
+            }
+        )
 
     df = pd.DataFrame(results)
 
@@ -195,11 +197,11 @@ def brinson_results(
 
 
 def brinson_cumulative(
-    portfolio_returns: Union[pd.Series, np.ndarray],
-    benchmark_returns: Union[pd.Series, np.ndarray],
+    portfolio_returns: pd.Series | np.ndarray,
+    benchmark_returns: pd.Series | np.ndarray,
     portfolio_weights: pd.DataFrame,
     benchmark_weights: pd.DataFrame,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Calculate cumulative Brinson attribution.
 
     Similar to brinson_attribution but uses cumulative returns
@@ -237,8 +239,8 @@ def brinson_cumulative(
     active_return = portfolio_cum - benchmark_cum
 
     # Decompose using final weights only
-    wp = portfolio_weights.iloc[-1].values if hasattr(portfolio_weights, 'iloc') else portfolio_weights
-    wb = benchmark_weights.iloc[-1].values if hasattr(benchmark_weights, 'iloc') else benchmark_weights
+    wp = portfolio_weights.iloc[-1].values if hasattr(portfolio_weights, "iloc") else portfolio_weights
+    wb = benchmark_weights.iloc[-1].values if hasattr(benchmark_weights, "iloc") else benchmark_weights
 
     n_sectors = wp.shape[0] if wp.ndim > 1 else len(wp)
 
@@ -289,7 +291,7 @@ class BrinsonAttribution:
 
     def __init__(
         self,
-        sector_mapping: Optional[Dict[str, List[str]]] = None,
+        sector_mapping: dict[str, list[str]] | None = None,
     ):
         """Initialize Brinson attribution calculator.
 
@@ -304,8 +306,8 @@ class BrinsonAttribution:
     def calculate(
         self,
         returns: pd.DataFrame,
-        benchmark_returns: Optional[pd.DataFrame] = None,
-        weights: Optional[pd.DataFrame] = None,
+        benchmark_returns: pd.DataFrame | None = None,
+        weights: pd.DataFrame | None = None,
         method: str = "brinson",
     ) -> pd.DataFrame:
         """Calculate Brinson attribution for returns DataFrame.
@@ -366,21 +368,25 @@ class BrinsonAttribution:
         results = []
 
         for t in range(returns.shape[0]):
-            wp_t = weights.iloc[t].values if hasattr(weights, 'iloc') else weights.values[t]
-            wb_t = benchmark_weights.iloc[t].values if hasattr(benchmark_weights, 'iloc') else benchmark_weights.values[t]
+            wp_t = weights.iloc[t].values if hasattr(weights, "iloc") else weights.values[t]
+            wb_t = (
+                benchmark_weights.iloc[t].values if hasattr(benchmark_weights, "iloc") else benchmark_weights.values[t]
+            )
 
             rp_t = returns.iloc[t].values
             rb_t = benchmark_returns.iloc[t].values
 
             attr = brinson_attribution(rp_t, rb_t, wp_t, wb_t)
 
-            results.append({
-                "period": t,
-                "allocation": attr["allocation"],
-                "selection": attr["selection"],
-                "interaction": attr["interaction"],
-                "total": attr["total"],
-            })
+            results.append(
+                {
+                    "period": t,
+                    "allocation": attr["allocation"],
+                    "selection": attr["selection"],
+                    "interaction": attr["interaction"],
+                    "total": attr["total"],
+                }
+            )
 
         return pd.DataFrame(results)
 

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-def validate_returns(returns: Union[pd.Series, np.ndarray]) -> np.ndarray:
+def validate_returns(returns: pd.Series | np.ndarray) -> np.ndarray:
     """Validate and convert returns to numpy array.
 
     Parameters
@@ -59,7 +59,7 @@ def annualize(
         "yearly": 1,
     }
     factor = factors.get(period.lower(), 252)
-    return daily_value * np.sqrt(factor)
+    return float(daily_value * np.sqrt(factor))
 
 
 def compute_statistics(
@@ -102,7 +102,7 @@ def compute_statistics(
 def estimate_parameters(
     returns: np.ndarray,
     frequency: int = 252,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Estimate drift and volatility from historical returns.
 
     Uses maximum likelihood estimation for GBM parameters.
@@ -151,7 +151,7 @@ class SimResult:
     def __init__(
         self,
         paths: np.ndarray,
-        statistics: Optional[dict] = None,
+        statistics: dict | None = None,
     ):
         self.paths = paths
         self.statistics = statistics or compute_statistics(paths)

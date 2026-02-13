@@ -22,8 +22,8 @@ Example::
 
 from __future__ import annotations
 
-from fincore.simulation.monte_carlo import MonteCarlo
 from fincore.simulation.bootstrap import bootstrap, bootstrap_ci
+from fincore.simulation.monte_carlo import MonteCarlo
 
 __all__ = [
     "MonteCarlo",

@@ -40,7 +40,7 @@ class GARCHResult:
         Maximized log-likelihood value.
     """
 
-    params: Dict[str, float]
+    params: dict[str, float]
     conditional_var: np.ndarray
     residuals: np.ndarray
     log_likelihood: float
@@ -60,9 +60,9 @@ class GARCHResult:
         """
         forecasts = np.zeros(horizon)
         omega = self.params["omega"]
-        alpha = self.params.get("alpha", 0)
-        beta = self.params.get("beta", 0)
-        gamma = self.params.get("gamma", 0)
+        alpha = self.params.get("alpha", 0.0)
+        beta = self.params.get("beta", 0.0)
+        gamma = self.params.get("gamma", 0.0)
 
         # Long-run variance
         if beta > 0:
@@ -78,7 +78,7 @@ class GARCHResult:
                 forecasts[h] = last_var
             else:
                 # Converge to long-run variance
-                forecasts[h] = omega + (alpha + beta) * forecasts[h-1]
+                forecasts[h] = omega + (alpha + beta) * forecasts[h - 1]
 
         return forecasts
 
@@ -118,7 +118,7 @@ class GARCH:
 
     def fit(
         self,
-        returns: Union[pd.Series, np.ndarray],
+        returns: pd.Series | np.ndarray,
         method: str = "MLE",
     ) -> GARCHResult:
         """Fit GARCH model to returns.
@@ -139,7 +139,7 @@ class GARCH:
         y = y[~np.isnan(y)]
         T = len(y)
 
-        if T < max(self.p, self.q) + 10:
+        if max(self.p, self.q) + 10 > T:
             raise ValueError("Insufficient data for GARCH estimation")
 
         # Initialize parameters
@@ -183,9 +183,7 @@ class GARCH:
             omega, alpha, beta = params_opt
 
         # Compute conditional variances
-        cond_var = self._compute_conditional_var(
-            y - mu, omega, alpha, beta
-        )
+        cond_var = self._compute_conditional_var(y - mu, omega, alpha, beta)
 
         # Standardized residuals
         residuals = (y - mu) / np.sqrt(cond_var)
@@ -222,12 +220,9 @@ class GARCH:
         eps_valid = eps[burn:]
 
         # Log-likelihood (assuming normal innovations)
-        loglik = -0.5 * np.sum(
-            np.log(2 * np.pi * sigma2_valid) +
-            eps_valid**2 / sigma2_valid
-        )
+        loglik = -0.5 * np.sum(np.log(2 * np.pi * sigma2_valid) + eps_valid**2 / sigma2_valid)
 
-        return -loglik
+        return float(-loglik)
 
     def _compute_conditional_var(
         self,
@@ -238,11 +233,11 @@ class GARCH:
     ) -> np.ndarray:
         """Compute conditional variances."""
         T = len(eps)
-        sigma2 = np.ones(T) * np.var(eps)
+        sigma2 = np.ones(T) * float(np.var(eps))
 
         for t in range(1, T):
             # GARCH(1,1): sigma2[t] = omega + alpha*eps[t-1]^2 + beta*sigma2[t-1]
-            sigma2[t] = omega + alpha * eps[t-1]**2 + beta * sigma2[t-1]
+            sigma2[t] = omega + alpha * eps[t - 1] ** 2 + beta * sigma2[t - 1]
 
         return sigma2
 
@@ -280,7 +275,7 @@ class EGARCH:
 
     def fit(
         self,
-        returns: Union[pd.Series, np.ndarray],
+        returns: pd.Series | np.ndarray,
     ) -> GARCHResult:
         """Fit EGARCH model to returns.
 
@@ -306,10 +301,10 @@ class EGARCH:
         init_params = [0.01, 0.1, -0.1, 0.95]
 
         bounds = [
-            (None, None),    # omega
-            (1e-6, None),    # alpha
-            (-1.0, 1.0),     # gamma (asymmetry)
-            (1e-6, 1.0),     # beta
+            (None, None),  # omega
+            (1e-6, None),  # alpha
+            (-1.0, 1.0),  # gamma (asymmetry)
+            (1e-6, 1.0),  # beta
         ]
 
         result = optimize.minimize(
@@ -327,13 +322,8 @@ class EGARCH:
         eps = y / np.std(y)  # Initial standardization
 
         for t in range(1, T):
-            z_prev = eps[t-1]
-            log_var[t] = (
-                omega +
-                alpha * np.abs(z_prev) +
-                gamma * z_prev +
-                beta * log_var[t-1]
-            )
+            z_prev = eps[t - 1]
+            log_var[t] = omega + alpha * np.abs(z_prev) + gamma * z_prev + beta * log_var[t - 1]
 
         cond_var = np.exp(log_var)
         residuals = y / np.sqrt(cond_var)
@@ -364,22 +354,17 @@ class EGARCH:
         eps = y / np.std(y)  # Standardize
 
         for t in range(1, T):
-            z_prev = eps[t-1]
-            log_var[t] = (
-                omega +
-                alpha * np.abs(z_prev) +
-                gamma * z_prev +
-                beta * log_var[t-1]
-            )
+            z_prev = eps[t - 1]
+            log_var[t] = omega + alpha * np.abs(z_prev) + gamma * z_prev + beta * log_var[t - 1]
 
         sigma2 = np.exp(log_var)
-        eps_valid = y[1:] / np.sqrt(sigma2[1:])
-        sigma2_valid = sigma2[1:]
 
-        loglik = -0.5 * np.sum(
-            np.log(2 * np.pi * sigma2_valid) +
-            eps_valid**2
-        )
+        # Suppress numerical warnings during optimization
+        # These warnings are expected during early iterations and don't affect final results
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            eps_valid = y[1:] / np.sqrt(sigma2[1:])
+            sigma2_valid = sigma2[1:]
+            loglik = -0.5 * np.sum(np.log(2 * np.pi * sigma2_valid) + eps_valid**2)
 
         return -loglik
 
@@ -416,7 +401,7 @@ class GJRGARCH:
 
     def fit(
         self,
-        returns: Union[pd.Series, np.ndarray],
+        returns: pd.Series | np.ndarray,
     ) -> GARCHResult:
         """Fit GJR-GARCH model to returns.
 
@@ -441,10 +426,10 @@ class GJRGARCH:
         init_params = [0.01, 0.05, 0.05, 0.9]
 
         bounds = [
-            (1e-6, None),    # omega
-            (1e-6, 1.0),     # alpha
-            (0.0, 1.0),       # gamma (leverage, >= 0)
-            (1e-6, 1.0),      # beta
+            (1e-6, None),  # omega
+            (1e-6, 1.0),  # alpha
+            (0.0, 1.0),  # gamma (leverage, >= 0)
+            (1e-6, 1.0),  # beta
         ]
 
         result = optimize.minimize(
@@ -458,9 +443,7 @@ class GJRGARCH:
         omega, alpha, gamma, beta = result.x
 
         # Compute conditional variances
-        cond_var = self._compute_conditional_var(
-            y, omega, alpha, gamma, beta
-        )
+        cond_var = self._compute_conditional_var(y, omega, alpha, gamma, beta)
 
         residuals = y / np.sqrt(cond_var)
 
@@ -491,12 +474,9 @@ class GJRGARCH:
         var_valid = cond_var[burn:]
         y_valid = y[burn:]
 
-        loglik = -0.5 * np.sum(
-            np.log(2 * np.pi * var_valid) +
-            y_valid**2 / var_valid
-        )
+        loglik = -0.5 * np.sum(np.log(2 * np.pi * var_valid) + y_valid**2 / var_valid)
 
-        return -loglik
+        return float(-loglik)
 
     def _compute_conditional_var(
         self,
@@ -508,29 +488,24 @@ class GJRGARCH:
     ) -> np.ndarray:
         """Compute conditional variances with leverage effect."""
         T = len(y)
-        sigma2 = np.ones(T) * np.var(y)
+        sigma2 = np.ones(T) * float(np.var(y))
 
         for t in range(1, T):
             # Indicator for negative shock
-            indicator = 1 if y[t-1] < 0 else 0
+            indicator = 1 if y[t - 1] < 0 else 0
 
             # GJR-GARCH(1,1)
-            sigma2[t] = (
-                omega +
-                alpha * y[t-1]**2 +
-                gamma * indicator * y[t-1]**2 +
-                beta * sigma2[t-1]
-            )
+            sigma2[t] = omega + alpha * y[t - 1] ** 2 + gamma * indicator * y[t - 1] ** 2 + beta * sigma2[t - 1]
 
         return sigma2
 
 
 def forecast_volatility(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     model: str = "GARCH",
     horizon: int = 1,
     **kwargs,
-) -> Tuple[np.ndarray, GARCHResult]:
+) -> tuple[np.ndarray, GARCHResult]:
     """Forecast future volatility using GARCH models.
 
     Convenience function for volatility forecasting.
@@ -566,10 +541,7 @@ def forecast_volatility(
     }
 
     if model not in models:
-        raise ValueError(
-            f"Unknown model: {model}. "
-            f"Available: {list(models.keys())}"
-        )
+        raise ValueError(f"Unknown model: {model}. Available: {list(models.keys())}")
 
     model_class = models[model]
     model_instance = model_class(**kwargs)
@@ -580,11 +552,11 @@ def forecast_volatility(
 
 
 def conditional_var(
-    returns: Union[pd.Series, np.ndarray],
+    returns: pd.Series | np.ndarray,
     model: str = "GARCH",
     alpha: float = 0.05,
     **kwargs,
-) -> Dict[str, Union[float, np.ndarray]]:
+) -> dict[str, float | np.ndarray | GARCHResult]:
     """Calculate conditional VaR using GARCH models.
 
     Parameters
@@ -617,6 +589,7 @@ def conditional_var(
 
     # VaR using normal quantile
     from scipy import stats
+
     z_alpha = stats.norm.ppf(alpha)
     var = z_alpha * np.sqrt(forecast_var)
 

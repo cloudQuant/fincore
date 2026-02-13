@@ -122,7 +122,7 @@ def adjust_returns(
 
 
 @lru_cache(maxsize=32)
-def annualization_factor(period: str, annualization: float | None) -> float:
+def annualization_factor(period: str, annualization: float | None = None) -> float:
     """Return the annualization factor for a given period.
 
     If a custom ``annualization`` value is provided, it is returned
@@ -151,13 +151,13 @@ def annualization_factor(period: str, annualization: float | None) -> float:
     """
     if annualization is None:
         try:
-            factor = ANNUALIZATION_FACTORS[period]
+            factor = float(ANNUALIZATION_FACTORS[period])
         except KeyError:
             raise ValueError(
                 "Period cannot be '{}'. Can be '{}'.".format(period, "', '".join(ANNUALIZATION_FACTORS.keys()))
             )
     else:
-        factor = annualization
+        factor = float(annualization)
     return factor
 
 

@@ -80,9 +80,10 @@ def max_drawdown(
     returns_1d = returns.ndim == 1
 
     if len(returns) < 1:
-        out[()] = np.nan
+        assert out is not None  # for type checking
+        out[()] = np.nan  # type: ignore[index]
         if returns_1d:
-            out = out.item()
+            out = out.item()  # type: ignore[attr-defined]
         return out
 
     returns_array = np.asanyarray(returns)
@@ -97,8 +98,9 @@ def max_drawdown(
     max_return = np.fmax.accumulate(cumulative, axis=0)
 
     nanmin((cumulative - max_return) / max_return, axis=0, out=out)
+    assert out is not None  # for type checking
     if returns_1d:
-        out = out.item()
+        out = out.item()  # type: ignore[attr-defined]
     elif allocated_output and isinstance(returns, pd.DataFrame):
         out = pd.Series(out)
 
@@ -135,7 +137,7 @@ def _identify_drawdown_periods(
         returns = pd.Series(returns)
 
     cum_ret = cum_returns(returns, starting_value=100)
-    rolling_max = cum_ret.expanding().max()
+    rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
     drawdown = (cum_ret - rolling_max) / rolling_max
 
     dd_vals = drawdown.values
@@ -315,10 +317,10 @@ def get_top_drawdowns(
 
         # Slice out draw-down period
         if not pd.isnull(recovery):
-            underwater = underwater.drop(underwater[peak:recovery].index[1:-1])
+            underwater = underwater.drop(underwater[peak:recovery].index[1:-1])  # type: ignore[index,union-attr]
         else:
             # the drawdown has not ended yet
-            underwater = underwater.loc[:peak]
+            underwater = underwater.loc[:peak]  # type: ignore[index,union-attr]
 
         drawdowns.append((peak, valley, recovery))
         if (len(returns) == 0) or (len(underwater) == 0):
@@ -369,7 +371,7 @@ def gen_drawdown_table(returns: pd.Series, top: int = 10) -> pd.DataFrame:
         else:
             df_drawdowns.loc[i, "Recovery date"] = pd.to_datetime(recovery).strftime("%Y-%m-%d")
 
-        df_drawdowns.loc[i, "Net drawdown in %"] = ((df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[peak]) * 100
+        df_drawdowns.loc[i, "Net drawdown in %"] = ((df_cum.loc[peak] - df_cum.loc[valley]) / df_cum.loc[peak]) * 100  # type: ignore[union-attr]
 
     df_drawdowns["Peak date"] = pd.to_datetime(df_drawdowns["Peak date"])
     df_drawdowns["Valley date"] = pd.to_datetime(df_drawdowns["Valley date"])
@@ -403,7 +405,7 @@ def get_max_drawdown_period(
         return None, None
 
     # Calculate rolling maximum
-    rolling_max = cum_ret.expanding().max()
+    rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
 
     # Calculate drawdown
     drawdown = cum_ret / rolling_max - 1
@@ -412,7 +414,7 @@ def get_max_drawdown_period(
     end_date = drawdown.idxmin()
 
     # Find the start date of maximum drawdown (previous peak)
-    start_date = cum_ret.loc[:end_date].idxmax()
+    start_date = cum_ret.loc[:end_date].idxmax()  # type: ignore[union-attr]
 
     return start_date, end_date
 
@@ -438,18 +440,18 @@ def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
         returns = pd.Series(returns)
 
     cum_ret = cum_returns(returns, starting_value=100)
-    rolling_max = cum_ret.expanding().max()
-    drawdown = (cum_ret - rolling_max) / rolling_max
+    rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
 
+    drawdown = cum_ret / rolling_max - 1
     end_idx = drawdown.idxmin()
-    start_idx = cum_ret.loc[:end_idx].idxmax()
+    start_idx = cum_ret.loc[:end_idx].idxmax()  # type: ignore[union-attr]
 
     if isinstance(returns.index, pd.DatetimeIndex):
-        return (end_idx - start_idx).days
+        return (end_idx - start_idx).days  # type: ignore[union-attr]
     else:
         start_pos = returns.index.get_loc(start_idx)
         end_pos = returns.index.get_loc(end_idx)
-        return end_pos - start_pos
+        return end_pos - start_pos  # type: ignore[return-value]
 
 
 def max_drawdown_weeks(returns: pd.Series | np.ndarray) -> float:

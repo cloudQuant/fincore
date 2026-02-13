@@ -2,26 +2,24 @@
 
 from __future__ import annotations
 
-from fincore.hooks.events import (
-    AnalysisContext,
-    OptimizationContext,
-    ComputeContext,
-    _EVENT_HOOKS,
-    create_analysis_context,
-    create_optimization_context,
-    create_compute_context,
-    execute_hooks,
-    get_event_hooks,
-    register_event_hook,
-)
+from fincore.hooks import events
 
-from fincore.hooks.registry import (
-    _METRIC_REGISTRY,
-    register_metric,
-    register_viz_backend,
-)
+# Re-export events module contents
+_EVENT_HOOKS = events._EVENT_HOOKS
+AnalysisContext = events.AnalysisContext
+ComputeContext = events.ComputeContext
+OptimizationContext = events.OptimizationContext
+create_analysis_context = events.create_analysis_context
+create_compute_context = events.create_compute_context
+create_optimization_context = events.create_optimization_context
+execute_hooks = events.execute_hooks
+get_event_hooks = events.get_event_hooks
+register_event_hook = events.register_event_hook
+list_events = events.list_events
+clear_hooks = events.clear_hooks
 
 __all__ = [
+    # Events
     "AnalysisContext",
     "OptimizationContext",
     "ComputeContext",
@@ -32,6 +30,6 @@ __all__ = [
     "execute_hooks",
     "register_event_hook",
     "get_event_hooks",
-    "register_metric",
-    "register_viz_backend",
+    "list_events",
+    "clear_hooks",
 ]

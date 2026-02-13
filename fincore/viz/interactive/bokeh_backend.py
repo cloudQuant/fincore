@@ -91,15 +91,12 @@ class BokehBackend(VizBackend):
             self.grid_color = "#E0E0E0"
             self.text_color = "#424242"
 
-    def _create_figure(self, **kwargs) -> "LayoutDOM":
+    def _create_figure(self, **kwargs) -> LayoutDOM:
         """Create a new Bokeh figure."""
         try:
             from bokeh.plotting import figure
         except ImportError:
-            raise ImportError(
-                "Bokeh is required for BokehBackend. "
-                "Install with: pip install bokeh"
-            )
+            raise ImportError("Bokeh is required for BokehBackend. Install with: pip install bokeh")
 
         fig = figure(
             height=self.height,
@@ -122,9 +119,9 @@ class BokehBackend(VizBackend):
     def plot_returns(
         self,
         cum_returns: pd.Series,
-        benchmark: Optional[pd.Series] = None,
+        benchmark: pd.Series | None = None,
         **kwargs,
-    ) -> "LayoutDOM":
+    ) -> LayoutDOM:
         """Plot cumulative returns with optional benchmark.
 
         Parameters
@@ -153,10 +150,12 @@ class BokehBackend(VizBackend):
         )
 
         # Create data source
-        source = ColumnDataSource(data={
-            "date": cum_returns.index,
-            "returns": cum_returns.values,
-        })
+        source = ColumnDataSource(
+            data={
+                "date": cum_returns.index,
+                "returns": cum_returns.values,
+            }
+        )
 
         # Add portfolio line
         p.line(
@@ -170,10 +169,12 @@ class BokehBackend(VizBackend):
 
         # Add benchmark if provided
         if benchmark is not None:
-            bench_source = ColumnDataSource(data={
-                "date": benchmark.index,
-                "returns": benchmark.values,
-            })
+            bench_source = ColumnDataSource(
+                data={
+                    "date": benchmark.index,
+                    "returns": benchmark.values,
+                }
+            )
             p.line(
                 "date",
                 "returns",
@@ -204,7 +205,7 @@ class BokehBackend(VizBackend):
         self,
         drawdown: pd.Series,
         **kwargs,
-    ) -> "LayoutDOM":
+    ) -> LayoutDOM:
         """Plot underwater drawdown chart.
 
         Parameters
@@ -220,7 +221,6 @@ class BokehBackend(VizBackend):
             Bokeh figure object.
         """
         from bokeh.models import ColumnDataSource, HoverTool
-        from bokeh.models import Area
 
         p = self._create_figure(
             x_axis_type="datetime",
@@ -230,10 +230,12 @@ class BokehBackend(VizBackend):
             **kwargs,
         )
 
-        source = ColumnDataSource(data={
-            "date": drawdown.index,
-            "drawdown": drawdown.values,
-        })
+        source = ColumnDataSource(
+            data={
+                "date": drawdown.index,
+                "drawdown": drawdown.values,
+            }
+        )
 
         # Create area patch for drawdown
         p.varea(
@@ -268,10 +270,10 @@ class BokehBackend(VizBackend):
     def plot_rolling_sharpe(
         self,
         sharpe: pd.Series,
-        benchmark_sharpe: Optional[pd.Series] = None,
+        benchmark_sharpe: pd.Series | None = None,
         window: int = 252,
         **kwargs,
-    ) -> "LayoutDOM":
+    ) -> LayoutDOM:
         """Plot rolling Sharpe ratio.
 
         Parameters
@@ -300,10 +302,12 @@ class BokehBackend(VizBackend):
             **kwargs,
         )
 
-        source = ColumnDataSource(data={
-            "date": sharpe.index,
-            "sharpe": sharpe.values,
-        })
+        source = ColumnDataSource(
+            data={
+                "date": sharpe.index,
+                "sharpe": sharpe.values,
+            }
+        )
 
         p.line(
             "date",
@@ -315,10 +319,12 @@ class BokehBackend(VizBackend):
         )
 
         if benchmark_sharpe is not None:
-            bench_source = ColumnDataSource(data={
-                "date": benchmark_sharpe.index,
-                "sharpe": benchmark_sharpe.values,
-            })
+            bench_source = ColumnDataSource(
+                data={
+                    "date": benchmark_sharpe.index,
+                    "sharpe": benchmark_sharpe.values,
+                }
+            )
             p.line(
                 "date",
                 "sharpe",
@@ -329,10 +335,10 @@ class BokehBackend(VizBackend):
                 legend_label="Benchmark Sharpe",
             )
 
-        # Add zero line (using Span for Bokeh)
+        # Add zero line
         from bokeh.models import Span
-        zero_line = Span(location=0, dimension='width',
-                       line_color=self.grid_color, line_width=1)
+
+        zero_line = Span(location=0, dimension="width", line_color=self.grid_color, line_alpha=0.5)
         p.add_layout(zero_line)
 
         hover = HoverTool(
@@ -353,7 +359,7 @@ class BokehBackend(VizBackend):
         self,
         returns: pd.Series,
         **kwargs,
-    ) -> "LayoutDOM":
+    ) -> LayoutDOM:
         """Plot monthly returns heatmap.
 
         Parameters
@@ -378,27 +384,22 @@ class BokehBackend(VizBackend):
         from bokeh.plotting import figure
 
         # Calculate monthly returns
-        monthly_returns = (
-            returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+        monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+
+        monthly_returns_df = pd.DataFrame(
+            {
+                "year": monthly_returns.index.year,
+                "month": monthly_returns.index.month,
+                "return": monthly_returns.values,
+            }
         )
 
-        monthly_returns_df = pd.DataFrame({
-            "year": monthly_returns.index.year,
-            "month": monthly_returns.index.month,
-            "return": monthly_returns.values,
-        })
-
-        pivot = monthly_returns_df.pivot(
-            index="year", columns="month", values="return"
-        )
+        pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
 
         years = pivot.index.tolist()
         months = list(range(1, 13))
 
-        month_names = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ]
+        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
         # Prepare data for Bokeh (flatten to dict format)
         data = {
@@ -479,12 +480,13 @@ class BokehBackend(VizBackend):
 
         return p
 
-    def show(self, fig: "LayoutDOM") -> None:
+    def show(self, fig: LayoutDOM) -> None:
         """Display the figure in a browser or notebook."""
         from bokeh.io import show as bokeh_show
+
         bokeh_show(fig)
 
-    def save_html(self, fig: "LayoutDOM", filename: str) -> None:
+    def save_html(self, fig: LayoutDOM, filename: str) -> None:
         """Save the figure as HTML.
 
         Parameters
@@ -495,6 +497,7 @@ class BokehBackend(VizBackend):
             Output HTML filename.
         """
         from bokeh.io import save as bokeh_save
+
         bokeh_save(fig, filename)
 
 

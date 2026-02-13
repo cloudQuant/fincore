@@ -61,21 +61,22 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
 
     if name == "matplotlib":
         from fincore.viz.matplotlib_backend import MatplotlibBackend
+
         return MatplotlibBackend()
 
     if name == "html":
         from fincore.viz.html_backend import HtmlReportBuilder
+
         return HtmlReportBuilder()
 
     if name == "plotly":
         from fincore.viz.interactive.plotly_backend import PlotlyBackend
+
         return PlotlyBackend()
 
     if name == "bokeh":
         from fincore.viz.interactive.bokeh_backend import BokehBackend
+
         return BokehBackend()
 
-    raise ValueError(
-        f"Unknown viz backend {name!r}. "
-        f"Available: 'matplotlib', 'html', 'plotly', 'bokeh'"
-    )
+    raise ValueError(f"Unknown viz backend {name!r}. Available: 'matplotlib', 'html', 'plotly', 'bokeh'")

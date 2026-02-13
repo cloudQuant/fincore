@@ -12,10 +12,10 @@ import pandas as pd
 
 
 def stress_test(
-    returns: Union[pd.Series, np.ndarray],
-    scenarios: Optional[List[str]] = None,
-    custom_scenarios: Optional[Dict[str, Dict]] = None,
-) -> Dict[str, Dict]:
+    returns: pd.Series | np.ndarray,
+    scenarios: list[str] | None = None,
+    custom_scenarios: dict[str, dict] | None = None,
+) -> dict[str, dict]:
     """Perform stress testing on returns under various scenarios.
 
     Parameters
@@ -79,7 +79,7 @@ def stress_test(
     return result
 
 
-def _apply_crash_scenario(returns: np.ndarray) -> Dict:
+def _apply_crash_scenario(returns: np.ndarray) -> dict:
     """Apply market crash scenario."""
     stressed = returns.copy()
     # Insert a single large loss day
@@ -89,7 +89,7 @@ def _apply_crash_scenario(returns: np.ndarray) -> Dict:
     return _scenario_summary(stressed, "crash")
 
 
-def _apply_spike_scenario(returns: np.ndarray) -> Dict:
+def _apply_spike_scenario(returns: np.ndarray) -> dict:
     """Apply market spike scenario."""
     stressed = returns.copy()
     # Insert a single large gain day
@@ -99,7 +99,7 @@ def _apply_spike_scenario(returns: np.ndarray) -> Dict:
     return _scenario_summary(stressed, "spike")
 
 
-def _apply_vol_crush_scenario(returns: np.ndarray) -> Dict:
+def _apply_vol_crush_scenario(returns: np.ndarray) -> dict:
     """Apply volatility crush scenario."""
     stressed = returns.copy()
     # Scale down returns (lower volatility)
@@ -108,7 +108,7 @@ def _apply_vol_crush_scenario(returns: np.ndarray) -> Dict:
     return _scenario_summary(stressed, "vol_crush")
 
 
-def _apply_vol_spike_scenario(returns: np.ndarray) -> Dict:
+def _apply_vol_spike_scenario(returns: np.ndarray) -> dict:
     """Apply volatility spike scenario."""
     stressed = returns.copy()
     # Scale up returns (higher volatility)
@@ -117,7 +117,7 @@ def _apply_vol_spike_scenario(returns: np.ndarray) -> Dict:
     return _scenario_summary(stressed, "vol_spike")
 
 
-def _apply_custom_scenario(returns: np.ndarray, params: Dict) -> Dict:
+def _apply_custom_scenario(returns: np.ndarray, params: dict) -> dict:
     """Apply custom stress scenario."""
     stressed = returns.copy()
 
@@ -132,7 +132,7 @@ def _apply_custom_scenario(returns: np.ndarray, params: Dict) -> Dict:
     return _scenario_summary(stressed, "custom")
 
 
-def _scenario_summary(stressed_returns: np.ndarray, scenario_name: str) -> Dict:
+def _scenario_summary(stressed_returns: np.ndarray, scenario_name: str) -> dict:
     """Generate summary statistics for a stressed scenario."""
     # Cumulative returns
     cum_returns = np.cumprod(1 + stressed_returns) - 1
@@ -183,7 +183,7 @@ def generate_correlation_breakdown(
 
 
 def scenario_table(
-    stress_results: Dict[str, Dict],
+    stress_results: dict[str, dict],
 ) -> pd.DataFrame:
     """Format stress test results as a table.
 
@@ -200,12 +200,14 @@ def scenario_table(
     rows = []
 
     for scenario, results in stress_results.items():
-        rows.append({
-            "Scenario": scenario,
-            "Cumulative Return": f"{results['cumulative_return']:.2%}",
-            "Max Drawdown": f"{results['max_drawdown']:.2%}",
-            "Volatility": f"{results['volatility']:.2%}",
-            "Final Value": f"{results['final_value']:.4f}",
-        })
+        rows.append(
+            {
+                "Scenario": scenario,
+                "Cumulative Return": f"{results['cumulative_return']:.2%}",
+                "Max Drawdown": f"{results['max_drawdown']:.2%}",
+                "Volatility": f"{results['volatility']:.2%}",
+                "Final Value": f"{results['final_value']:.4f}",
+            }
+        )
 
     return pd.DataFrame(rows)

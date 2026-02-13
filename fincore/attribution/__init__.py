@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fincore.attribution.brinson import brinson_attribution, brinson_results
 from fincore.attribution.fama_french import FamaFrenchModel
-from fincore.attribution.style import style_analysis, StyleResult
+from fincore.attribution.style import StyleResult, style_analysis
 
 __all__ = [
     "brinson_attribution",
