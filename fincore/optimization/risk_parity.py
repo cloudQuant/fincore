@@ -10,12 +10,14 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as sp_opt
 
+from fincore.optimization._utils import normalize_weights, validate_result
+
 
 def risk_parity(
     returns: pd.DataFrame,
     risk_budget: np.ndarray | None = None,
     max_iter: int = 1000,
-) -> dict[str, np.ndarray | float]:
+) -> dict[str, np.ndarray | float | list[str]]:
     """Compute risk-parity portfolio weights.
 
     Each asset's marginal risk contribution is equalised (or matched
@@ -51,9 +53,10 @@ def risk_parity(
     def _risk_contrib(w: np.ndarray) -> np.ndarray:
         port_var = w @ cov @ w
         if port_var < 1e-16:
-            return np.zeros(n)
-        marginal = cov @ w
-        rc = w * marginal / np.sqrt(port_var)
+            return np.zeros(n, dtype=float)
+        marginal: np.ndarray = cov @ w
+        port_vol = float(np.sqrt(port_var))
+        rc: np.ndarray = w * marginal / port_vol
         return rc
 
     def _objective(w: np.ndarray) -> float:
@@ -77,7 +80,7 @@ def risk_parity(
         options={"ftol": 1e-14, "maxiter": max_iter},
     )
 
-    weights = res.x / res.x.sum()
+    weights = normalize_weights(validate_result(res, context="risk_parity"))
     rc = _risk_contrib(weights)
     vol = float(np.sqrt(weights @ cov @ weights))
 

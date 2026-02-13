@@ -1,3 +1,22 @@
+
+# =============================================================================
+# Pyfolio 类方法 (Pyfolio Class Methods)
+# =============================================================================
+#
+# 本类继承自Empyrical，提供完整的tear sheet和绘图功能。
+# 包含约66个方法，按功能域组织：
+#
+# 1. Tear sheet 创建方法 (11个):
+#    - create_full_tear_sheet, create_simple_tear_sheet,
+#    - create_returns_tear_sheet, create_risk_tear_sheet, etc.
+# 2. 绘图方法 (约30个):
+#    - plot_returns, plot_drawdown, plot_rolling_sharpe, etc.
+# 3. 其他方法 (2个):
+#    - adjust_returns_for_slippage, get_leverage
+#
+# =============================================================================
+
+
 import datetime
 import os
 import time
@@ -414,6 +433,9 @@ class Pyfolio(Empyrical):
         return _plot_volume_exposures_gross(grossed_threshold, percentile, ax=ax)
 
     @customize
+
+# # tear sheet 创建方法
+# =================
     def create_full_tear_sheet(
         self,
         returns,
@@ -772,6 +794,9 @@ class Pyfolio(Empyrical):
         """
         return _plot_monthly_returns_dist(self, returns, ax=ax, **kwargs)
 
+
+# # 绘图方法
+# ======
     def plot_holdings(self, returns, positions, legend_loc="best", ax=None, **kwargs):
         """
         Plots total holdings.

@@ -1,3 +1,25 @@
+
+# =============================================================================
+# Tear Sheet 创建函数 (Tear Sheet Creation Functions)
+# =============================================================================
+#
+# 本模块包含11个create_*_tear_sheet函数，按功能域组织：
+#
+# 1. 完整tear sheet: create_full_tear_sheet (聚合所有子tear sheet)
+# 2. 收益tear sheet: create_returns_tear_sheet (收益率分析)
+# 3. 风险tear sheet: create_risk_tear_sheet (风险指标分析)
+# 4. 交易tear sheet: create_txn_tear_sheet (交易分析)
+# 5. 简单tear sheet: create_simple_tear_sheet (简化版完整tear sheet)
+# 6. 利息收益times tear sheet: create_interesting_times_tear_sheet (利息和收益times)
+# 7. 归因tear sheet: create_perf_attribution_tear_sheet (绩效归因)
+# 8. 圆桌交易tear sheet: create_round_trip_tear_sheet (圆桌交易分析)
+# 9. 贝叶斯tear sheet: create_bayesian_tear_sheet (贝叶斯分析)
+# 10. 容量tear sheet: create_capacity_tear_sheet (容量约束分析)
+# 11. 仓位tear sheet: create_position_tear_sheet (持仓分析)
+#
+# =============================================================================
+
+
 """
 Tear sheet creation functions.
 Contains functions for creating various analysis tear sheets.
@@ -36,6 +58,9 @@ except ImportError:
         return text
 
 
+
+# # 完整tear sheet
+# ==============
 def create_full_tear_sheet(
     pyfolio_instance,
     returns,
@@ -154,6 +179,9 @@ def create_full_tear_sheet(
         )
 
 
+
+# # 简单tear sheet
+# ==============
 def create_simple_tear_sheet(
     pyfolio_instance,
     returns,
@@ -268,6 +296,9 @@ def create_simple_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
 
+
+# # 收益tear sheet
+# ==============
 def create_returns_tear_sheet(
     pyfolio_instance,
     returns,
@@ -405,6 +436,9 @@ def create_returns_tear_sheet(
         return fig
 
 
+
+# # 仓位tear sheet
+# ==============
 def create_position_tear_sheet(
     pyfolio_instance,
     returns,
@@ -470,6 +504,9 @@ def create_position_tear_sheet(
         return fig
 
 
+
+# # 交易tear sheet
+# ==============
 def create_txn_tear_sheet(
     pyfolio_instance,
     returns,
@@ -519,6 +556,9 @@ def create_txn_tear_sheet(
         return fig
 
 
+
+# # 圆桌交易tear sheet
+# ================
 def create_round_trip_tear_sheet(
     pyfolio_instance,
     returns,
@@ -585,6 +625,8 @@ def create_round_trip_tear_sheet(
         return fig
 
 
+
+# # 利息收益times tear sheet
 def create_interesting_times_tear_sheet(
     pyfolio_instance, returns, benchmark_rets=None, legend_loc="best", run_flask_app=False
 ):
@@ -634,6 +676,9 @@ def create_interesting_times_tear_sheet(
         return fig
 
 
+
+# # 容量tear sheet
+# ==============
 def create_capacity_tear_sheet(
     pyfolio_instance,
     returns,
@@ -710,6 +755,9 @@ def create_capacity_tear_sheet(
         return fig
 
 
+
+# # 贝叶斯tear sheet
+# ===============
 def create_bayesian_tear_sheet(
     pyfolio_instance,
     returns,
@@ -847,6 +895,9 @@ def create_bayesian_tear_sheet(
         return fig
 
 
+
+# # 风险tear sheet
+# ==============
 def create_risk_tear_sheet(
     pyfolio_instance,
     positions,

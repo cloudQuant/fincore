@@ -25,6 +25,24 @@ from fincore.metrics.basic import adjust_returns, aligned_series, annualization_
 from fincore.metrics.risk import tail_ratio
 from fincore.utils import nanmean, nanstd
 
+# =============================================================================
+# 函数分组 (Function Groups)
+# =============================================================================
+#
+# 本模块的28个函数按功能域分为以下6组：
+#
+# 1. 基础比率: sharpe_ratio, sortino_ratio, excess_sharpe,
+#                 adjusted_sharpe_ratio, conditional_sharpe_ratio
+# 2. 回撤比率: calmar_ratio, mar_ratio
+# 3. 下行风险比率: omega_ratio, sterling_ratio, burke_ratio,
+#                  kappa_three_ratio
+# 4. 信息比率: information_ratio, treynor_ratio, cal_treynor_ratio,
+#                m_squared
+# 5. 风险偏好度量: common_sense_ratio, stability_of_timeseries
+# 6. 捕获比率: capture, up_capture, down_capture,
+#                up_down_capture, up_capture_return, down_capture_return
+#
+# =============================================================================
 __all__ = [
     "sharpe_ratio",
     "sortino_ratio",
@@ -33,6 +51,9 @@ __all__ = [
     "conditional_sharpe_ratio",
     "calmar_ratio",
     "omega_ratio",
+
+# # 基础风险调整收益比率
+# ============
     "information_ratio",
     "treynor_ratio",
     "cal_treynor_ratio",
@@ -87,6 +108,9 @@ def sharpe_ratio(returns, risk_free=0, period=DAILY, annualization=None, out=Non
     return_1d = returns.ndim == 1
 
     if len(returns) < 2:
+
+# # 基础比率
+# ======
         out[()] = np.nan
         if return_1d:
             out = out.item()
@@ -299,6 +323,9 @@ def conditional_sharpe_ratio(returns, cutoff=0.05, risk_free=0, period=DAILY, an
         annualized. Returns ``NaN`` if there are fewer than two observations.
     """
     if len(returns) < 2:
+
+# # 回撤比率
+# ======
         return np.nan
 
     ann_factor = annualization_factor(period, annualization)
@@ -387,6 +414,9 @@ def mar_ratio(returns, period=DAILY, annualization=None):
     if len(returns) < 2:
         return np.nan
 
+
+# # 下行风险比率
+# ========
     max_dd = max_drawdown(returns=returns)
     if max_dd >= 0:
         return np.nan
@@ -451,6 +481,9 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPRO
         return np.nan
 
     if annualization == 1:
+
+# # 信息比率
+# ======
         return_threshold = required_return
     elif required_return <= -1:
         return np.nan
@@ -669,6 +702,9 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
 
     ann_vol = annual_volatility(returns_aligned, period=period, annualization=annualization)
     ann_factor_vol = annual_volatility(factor_aligned, period=period, annualization=annualization)
+
+# # 下行风险比率
+# ========
 
     if ann_vol == 0 or ann_vol < 0 or np.isnan(ann_vol):
         return np.nan
@@ -970,6 +1006,9 @@ def _sample_skewness(x):
     m = np.mean(x)
     s = np.std(x, ddof=1)
     if s == 0:
+
+# # 风险偏好度量
+# ========
         return 0.0
     return (n / ((n - 1) * (n - 2))) * np.sum(((x - m) / s) ** 3)
 
@@ -1035,6 +1074,9 @@ def stability_of_timeseries(returns):
 
     Returns
     -------
+
+# # 捕获比率
+# ======
     float
         R-squared of the linear fit to cumulative log returns. Returns
         ``NaN`` if there are fewer than two valid observations.
