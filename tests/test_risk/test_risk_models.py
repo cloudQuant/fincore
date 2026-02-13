@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 
 class TestHillEstimator:
@@ -183,7 +183,7 @@ class TestEVTCVaR:
 
     def test_cvar_more_extreme_than_var(self):
         """Test that CVaR and VaR are both computed."""
-        from fincore.risk.evt import evt_var, evt_cvar
+        from fincore.risk.evt import evt_cvar, evt_var
 
         returns = pd.Series(np.random.standard_t(4, 2000) * 0.02)
 
@@ -318,7 +318,7 @@ class TestGJRGARCH:
 
     def test_gjr_garch_leverage_effect(self):
         """Test that GJR-GARCH captures leverage."""
-        from fincore.risk.garch import GJRGARCH, GARCH
+        from fincore.risk.garch import GARCH, GJRGARCH
 
         # Create asymmetric returns
         np.random.seed(42)
@@ -342,9 +342,7 @@ class TestForecastVolatility:
 
         returns = pd.Series(np.random.randn(1000) * 0.02)
 
-        forecasts, result = forecast_volatility(
-            returns, model="GARCH", horizon=5
-        )
+        forecasts, result = forecast_volatility(returns, model="GARCH", horizon=5)
 
         assert len(forecasts) == 5
         assert result is not None
@@ -355,9 +353,7 @@ class TestForecastVolatility:
 
         returns = pd.Series(np.random.randn(1000) * 0.02)
 
-        forecasts, result = forecast_volatility(
-            returns, model="EGARCH", horizon=3
-        )
+        forecasts, result = forecast_volatility(returns, model="EGARCH", horizon=3)
 
         assert len(forecasts) == 3
 

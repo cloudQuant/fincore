@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-
 # Standard Fama-French factor definitions
 FF3_FACTORS = ["MKT", "SMB", "HML"]
 FF5_FACTORS = ["MKT", "SMB", "HML", "RMW", "CMA"]
@@ -46,6 +45,7 @@ class FamaFrenchModel:
         """
         self.model_type = model_type
         self.risk_free_rate = risk_free_rate
+        self._betas: dict[str, float] | None = None
         self._set_factors()
 
     def _set_factors(self) -> None:
@@ -57,18 +57,15 @@ class FamaFrenchModel:
         elif self.model_type == "4factor_mom":
             self.factors = FF4MOM_FACTORS
         else:
-            raise ValueError(
-                f"Unknown model_type: {self.model_type}. "
-                f"Use: '3factor', '5factor', '4factor_mom'"
-            )
+            raise ValueError(f"Unknown model_type: {self.model_type}. Use: '3factor', '5factor', '4factor_mom'")
 
     def fit(
         self,
-        returns: Union[pd.Series, pd.DataFrame],
+        returns: pd.Series | pd.DataFrame,
         factor_data: pd.DataFrame,
         method: str = "ols",
         newey_west_lags: int = 1,
-    ) -> Dict[str, Union[float, np.ndarray]]:
+    ) -> dict[str, float | np.ndarray]:
         """Estimate factor model using OLS regression.
 
         Parameters
@@ -93,84 +90,76 @@ class FamaFrenchModel:
             - 'p_values': P-values for coefficients
             - 'residuals': Regression residuals
         """
-        # Prepare data
-        if isinstance(returns, pd.Series):
-            returns = returns.to_frame()
-
-        # Align data
-        y = returns.values.flatten()
+        # Prepare data — when a multi-column DataFrame is passed, use the
+        # first column as the dependent variable (single-asset regression).
+        if isinstance(returns, pd.DataFrame) and returns.shape[1] > 1:
+            y = returns.iloc[:, 0].values.ravel()
+        elif isinstance(returns, pd.DataFrame):
+            y = returns.values.ravel()
+        else:
+            y = np.asarray(returns).ravel()
         X = factor_data[self.factors].values
 
-        # Add constant for intercept
-        X_with_const = np.column_stack([np.ones(X.shape[0]), X.T]).T
+        # Add constant for intercept  — shape (N, K+1)
+        X_with_const = np.column_stack([np.ones(X.shape[0]), X])
 
-        # OLS regression
-        if method == "ols":
-            beta_coeffs, residuals, _, _ = np.linalg.lstsq(X_with_const, y)
+        # OLS / WLS regression
+        if method in ("ols", "wls"):
+            beta_coeffs, _ss_res, _, _ = np.linalg.lstsq(X_with_const, y, rcond=None)
+
+            # Compute residuals explicitly (lstsq only returns ss_res for overdetermined systems)
+            y_pred = X_with_const @ beta_coeffs
+            residuals = y - y_pred
 
             # Calculate R-squared
-            y_pred = X_with_const @ beta_coeffs
             ss_tot = np.sum((y - np.mean(y)) ** 2)
-            ss_res = np.sum(residuals ** 2)
-            r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0
-
-        elif method == "wls":
-            # Weighted least squares (if we had weights)
-            beta_coeffs, residuals, _, _ = np.linalg.lstsq(X_with_const, y)
-            y_pred = X_with_const @ beta_coeffs
-            ss_tot = np.sum((y - np.mean(y)) ** 2)
-            ss_res = np.sum(residuals ** 2)
-            r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0
-
+            ss_res = np.sum(residuals**2)
+            r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
         else:
             raise ValueError(f"Unknown method: {method}")
 
         # Extract alpha and betas
-        alpha = float(beta_coeffs[0])
-        betas = dict(zip(self.factors, beta_coeffs[1:].tolist()))
+        alpha: float = float(beta_coeffs[0])
+        betas: dict[str, float] = dict(zip(self.factors, beta_coeffs[1:].tolist()))
 
         # Calculate standard errors
         n = len(y)
         k = len(beta_coeffs)
+        resid_var = np.sum(residuals**2) / max(n - k, 1)
 
         # Newey-West standard errors
         if newey_west_lags > 0:
-            # Calculate autocorrelation of residuals
-            acorr = []
+            acorr_vals: list[float] = []
             for lag in range(1, newey_west_lags + 1):
                 if len(residuals) > lag:
-                    corr = np.corr(residuals[:-lag], residuals[lag:])
-                    acorr.append(corr)
+                    corr_matrix = np.corrcoef(residuals[:-lag], residuals[lag:])
+                    acorr_vals.append(float(corr_matrix[0, 1]))
                 else:
-                    acorr.append(0)
+                    acorr_vals.append(0.0)
 
-            # Newey-West adjustment
-            # Start with variance estimate
-            var_beta = np.var(residuals) / n
+            # Newey-West HAC adjustment factor
+            nw_factor = 1.0
+            for j, rho_j in enumerate(acorr_vals):
+                weight = 1 - (j + 1) / (newey_west_lags + 1)
+                nw_factor += 2 * weight * rho_j
 
-            # Newey-West HAC estimator
-            for j, rho_j in enumerate(acorr):
-                if j == 0:
-                    var_beta = var_beta * (1 + rho_j) / 2
-                else:
-                    var_beta = var_beta * (1 + rho_j)
-
-            std_errors = np.sqrt(var_beta)
+            std_errors = np.sqrt(resid_var * nw_factor / n) * np.ones(k)
         else:
             # Simple OLS standard errors
-            resid_var = np.var(residuals)
-            std_errors = np.sqrt(np.diag(resid_var / (n - k)) * np.ones(k))
+            std_errors = np.sqrt(np.diag(resid_var * np.linalg.inv(X_with_const.T @ X_with_const)))
 
         # Calculate t-statistics and p-values
-        std_err_total = np.sqrt(np.var(residuals) / n)
-        t_stats = beta_coeffs / std_err_total
-        from scipy import stats as stats
-        p_values = 2 * (1 - stats.t.cdf(np.abs(t_stats), n - k - 1))
+        t_stats = beta_coeffs / np.where(std_errors > 0, std_errors, 1e-10)
+        p_values = 2 * (1 - stats.t.cdf(np.abs(t_stats), max(n - k, 1)))
+
+        # Store alpha and betas for later use
+        self._alpha = alpha
+        self._betas = betas
 
         return {
-            "alpha": alpha,
+            "alpha": float(alpha),
             "betas": betas,
-            "r_squared": r_squared,
+            "r_squared": float(r_squared),
             "std_errors": std_errors,
             "p_values": p_values,
             "residuals": residuals,
@@ -195,13 +184,13 @@ class FamaFrenchModel:
         coeffs = self._get_regression_coeffs()
         X = factor_data[self.factors].values
 
-        # Add constant
-        X_with_const = np.column_stack([np.ones(X.shape[0]), X.T]).T
+        # Add constant — shape (N, K+1)
+        X_with_const = np.column_stack([np.ones(X.shape[0]), X])
         return X_with_const @ coeffs
 
     def _get_regression_coeffs(self) -> np.ndarray:
         """Get concatenated alpha and betas from last fit."""
-        if not hasattr(self, "_alpha"):
+        if self._betas is None:
             raise RuntimeError("Model must be fit before prediction")
 
         coeffs = np.concatenate([[self._alpha], list(self._betas.values())])
@@ -211,7 +200,7 @@ class FamaFrenchModel:
         self,
         returns: pd.DataFrame,
         factor_data: pd.DataFrame,
-        rolling_window: Optional[int] = None,
+        rolling_window: int | None = None,
     ) -> pd.DataFrame:
         """Calculate rolling factor exposures (betas).
 
@@ -250,7 +239,9 @@ class FamaFrenchModel:
                     window_returns.iloc[:, 0],
                     window_factors,
                 )
-                exposures.append([result["alpha"]] + list(result["betas"].values()))
+                result_alpha = result.get("alpha", np.nan)
+                result_betas = result.get("betas", {})
+                exposures.append([result_alpha] + [result_betas.get(f, np.nan) for f in self.factors])
             else:
                 # Not enough data - use NaN
                 exposures.append([np.nan] * (len(self.factors) + 1))
@@ -265,7 +256,7 @@ class FamaFrenchModel:
         self,
         returns: pd.Series,
         factor_data: pd.DataFrame,
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Decompose returns using factor model.
 
         Parameters
@@ -287,19 +278,25 @@ class FamaFrenchModel:
         avg_factor_returns = factor_data[self.factors].mean()
 
         # Factor contributions
-        factor_contribs = {}
-        for factor, beta in result["betas"].items():
-            factor_contribs[factor] = beta * avg_factor_returns[factor]
+        factor_contribs: dict[str, float] = {}
+        result_betas = result.get("betas", {})
+        if isinstance(result_betas, dict):
+            for factor, beta in result_betas.items():
+                factor_contribs[factor] = beta * avg_factor_returns[factor]
 
         # Calculate contributions
         total_return = float(np.mean(returns)) - self.risk_free_rate
-        alpha_contrib = result["alpha"]
+        result_alpha = result.get("alpha", 0.0)
+        if isinstance(result_alpha, (int, float)):
+            alpha_contrib = float(result_alpha)
+        else:
+            alpha_contrib = 0.0
         specific_contrib = sum(factor_contribs.values())
 
         return {
             "alpha": alpha_contrib,
             **{f"{factor}_attribution": contrib for factor, contrib in factor_contribs.items()},
-            "specific_return": specific_contrib,
+            "specific_return": float(specific_contrib),
             "common_return": total_return,
             "unexplained": total_return - alpha_contrib - specific_contrib,
         }
@@ -310,13 +307,15 @@ def fetch_ff_factors(
     end: str,
     library: str = "french",
 ) -> pd.DataFrame:
-    """Fetch Fama-French factors (placeholder).
+    """Fetch Fama-French factors.
 
-    This is a placeholder function for future implementation.
-    When implemented, will fetch data from:
-    - French library (Dartmouth)
-    - Ken French data library
-    - Chinese A-share market factors
+    .. note::
+
+       A concrete data provider must be configured before calling this
+       function.  Pass a ``provider`` that implements the
+       ``FamaFrenchProvider`` protocol, or set
+       ``fincore.attribution.fama_french._ff_provider`` to a callable
+       ``(start, end, library) -> pd.DataFrame``.
 
     Parameters
     ----------
@@ -331,27 +330,32 @@ def fetch_ff_factors(
     -------
     pd.DataFrame
         DataFrame with factor returns. Columns depend on library.
-    """
-    # TODO: Implement actual data fetching
-    # For now, return empty DataFrame with expected structure
-    if library == "5factor":
-        columns = ["MKT", "SMB", "HML", "RF"]
-    elif library == "3factor":
-        columns = ["MKT", "SMB", "HML", "RF"]
-    elif library == "4factor_mom":
-        columns = ["MKT", "SMB", "HML", "MOM", "RF"]
-    else:
-        columns = ["MKT", "SMB", "HML", "RF"]
 
-    # Return empty DataFrame with correct structure
-    date_index = pd.date_range(start, end, freq="B")[1:]
-    return pd.DataFrame(np.nan, index=date_index, columns=columns)
+    Raises
+    ------
+    NotImplementedError
+        Always raised until a data provider is configured.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.error(
+        "fetch_ff_factors called without a configured data provider. "
+        "Set fincore.attribution.fama_french._ff_provider or pass "
+        "pre-fetched factor_data directly to FamaFrenchModel.fit()."
+    )
+    raise NotImplementedError(
+        "No Fama-French data provider is configured. "
+        "Please pass pre-fetched factor_data to FamaFrenchModel.fit() "
+        "or configure a provider via "
+        "fincore.attribution.fama_french._ff_provider."
+    )
 
 
 def calculate_idiosyncratic_risk(
     returns: pd.DataFrame,
     factor_data: pd.DataFrame,
-    model: Optional[FamaFrenchModel] = None,
+    model: FamaFrenchModel | None = None,
 ) -> pd.Series:
     """Calculate idiosyncratic volatility (asset-specific risk).
 
@@ -387,7 +391,7 @@ def calculate_idiosyncratic_risk(
     for i in range(n_assets):
         asset_returns = returns.iloc[:, i].values
 
-        if hasattr(model, "_betas"):
+        if model._betas is not None:
             beta = model._betas.get("MKT", 1.0)  # Default to market beta
             specific_return = asset_returns - rf - beta * (market_returns - rf)
             specific_var = np.var(specific_return)
@@ -397,7 +401,7 @@ def calculate_idiosyncratic_risk(
             total_var = np.var(total_return)
 
             # Systematic variance
-            systematic_var = (beta ** 2) * np.var(market_returns - rf)
+            systematic_var = (beta**2) * np.var(market_returns - rf)
 
             # Idiosyncratic variance
             idio_var = total_var - systematic_var

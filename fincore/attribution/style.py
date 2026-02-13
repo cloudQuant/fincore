@@ -40,7 +40,7 @@ class StyleResult:
         self.overall_returns = overall_returns
 
     @property
-    def style_summary(self) -> Dict[str, float]:
+    def style_summary(self) -> dict[str, float]:
         """Get summary of style returns."""
         summary = {}
 
@@ -49,7 +49,7 @@ class StyleResult:
 
         return summary
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert results to dictionary."""
         return {
             "exposures": self.exposures.to_dict(),
@@ -60,11 +60,11 @@ class StyleResult:
 
 def style_analysis(
     returns: pd.DataFrame,
-    market_caps: Optional[pd.Series] = None,
-    book_to_price: Optional[pd.Series] = None,
+    market_caps: pd.Series | None = None,
+    book_to_price: pd.Series | None = None,
     momentum_window: int = 252,
-    size_quantiles: List[float] = [0.5, 0.5],
-    value_scores: Optional[pd.Series] = None,
+    size_quantiles: list[float] | None = None,
+    value_scores: pd.Series | None = None,
 ) -> StyleResult:
     """Perform comprehensive style analysis on portfolio returns.
 
@@ -91,6 +91,9 @@ def style_analysis(
     StyleResult
         Style analysis results with exposures and returns by style.
     """
+    if size_quantiles is None:
+        size_quantiles = [0.5, 0.5]
+
     n_assets, n_periods = returns.shape
 
     # 1. Size Classification
@@ -98,15 +101,16 @@ def style_analysis(
         size_exposure = _calculate_size_exposure(market_caps, size_quantiles)
     else:
         # Use market cap weights as size exposure
-        total_cap = market_caps.sum()
-        size_exposure = market_caps / total_cap
-        size_exposure = size_exposure.to_frame().T
+        if market_caps is not None:
+            total_cap = market_caps.sum()
+            size_exposure = market_caps / total_cap
+        else:
+            # Equal weight size exposure
+            size_exposure = pd.DataFrame(np.ones(n_assets) / n_assets, index=returns.columns).T
 
     # 2. Momentum Classification
     momentum_returns = _calculate_momentum(returns, momentum_window)
-    momentum_exposure = _exposure_from_lookback(
-            momentum_returns, periods=1, direction="positive"
-        )
+    momentum_exposure = _exposure_from_lookback(momentum_returns, periods=1, direction="positive")
 
     # 3. Value Classification
     if value_scores is not None:
@@ -118,10 +122,7 @@ def style_analysis(
         value_exposure = bp_scores.to_frame().T
     else:
         # Equal weight value exposure
-        value_exposure = pd.DataFrame(
-            np.ones(n_assets) / n_assets,
-            index=returns.columns
-        ).T
+        value_exposure = pd.DataFrame(np.ones(n_assets) / n_assets, index=returns.columns).T
 
     # 4. Volatility Classification
     # Use rolling standard deviation
@@ -131,12 +132,15 @@ def style_analysis(
     vol_exposure = (rolling_vol > vol_median).astype(int).to_frame().T
 
     # Combine exposures
-    all_exposures = pd.concat([
-        size_exposure,
-        momentum_exposure,
-        value_exposure,
-        vol_exposure,
-    ], axis=0)
+    all_exposures = pd.concat(
+        [
+            size_exposure,
+            momentum_exposure,
+            value_exposure,
+            vol_exposure,
+        ],
+        axis=0,
+    )
 
     # Calculate returns by style
     returns_by_style = {}
@@ -179,7 +183,7 @@ def style_analysis(
 
 def _calculate_size_exposure(
     market_caps: pd.Series,
-    quantiles: List[float],
+    quantiles: list[float],
 ) -> pd.DataFrame:
     """Calculate size factor exposures based on market cap quantiles.
 
@@ -298,7 +302,7 @@ def _value_from_scores(book_to_price: pd.Series) -> pd.DataFrame:
 
 def calculate_style_tilts(
     returns: pd.DataFrame,
-    factor_returns: Optional[pd.DataFrame] = None,
+    factor_returns: pd.DataFrame | None = None,
     window: int = 252,
 ) -> pd.DataFrame:
     """Calculate rolling style exposures (size, value, momentum).
@@ -346,7 +350,7 @@ def calculate_style_tilts(
         # This is simplified - full implementation would need B/P data
         value_exposure = pd.DataFrame(
             np.ones(n_assets),  # Placeholder - equal weight
-            index=returns.columns
+            index=returns.columns,
         ).T
 
         # Volatility: use rolling z-score
@@ -355,12 +359,15 @@ def calculate_style_tilts(
         vol_exposure = (vol_z_score > 0).astype(int).to_frame().T
 
         # Combine for this period
-        period_exposures = pd.concat([
-            size_exposure,
-            mom_exposure,
-            value_exposure,
-            vol_exposure,
-        ], axis=0)
+        period_exposures = pd.concat(
+            [
+                size_exposure,
+                mom_exposure,
+                value_exposure,
+                vol_exposure,
+            ],
+            axis=0,
+        )
 
         all_exposures.append(period_exposures)
 
@@ -402,7 +409,7 @@ def calculate_regression_attribution(
     portfolio_returns: pd.Series,
     style_returns: pd.DataFrame,
     style_exposures: pd.DataFrame,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Attribute portfolio returns using style exposures.
 
     Performs regression: R_p = a_s * S_s + sum(s_i * e_i)
@@ -427,17 +434,16 @@ def calculate_regression_attribution(
 
     for style in style_returns.columns:
         style_return = float(style_returns[style].iloc[0])
-        style_beta = float(np.corr(
-            portfolio_returns.values,
-            style_returns[style].values,
-        ))
+        style_beta = float(
+            np.corrcoef(
+                portfolio_returns.values,
+                style_returns[style].values,
+            )
+        )
         style_contribution = style_beta * style_exposures[style].mean()  # Average exposure
 
         # Alpha = return - sum(beta * exposure)
-        other_styles = sum(
-            float(v * style_exposures[s].mean())
-            for s, v in style_exposures.items() if s != style
-        )
+        other_styles = sum(float(v * style_exposures[s].mean()) for s, v in style_exposures.items() if s != style)
 
         alpha = portfolio_return - style_contribution - other_styles
 
@@ -476,7 +482,7 @@ def analyze_performance_by_style(
         t_returns = returns.iloc[t]
 
         # Metrics by style
-        row_data = {"Period": t}
+        row_data: dict[str, int | float] = {"Period": int(t)}
 
         for style in exposures_t.columns:
             # Get assets with this style
@@ -497,17 +503,17 @@ def analyze_performance_by_style(
 
 
 def fetch_style_factors(
-    tickers: List[str],
-    factors: List[str] = ["size", "value", "momentum"],
+    tickers: list[str],
+    factors: list[str] | None = None,
     library: str = "us",
 ) -> pd.DataFrame:
-    """Fetch style factor data (placeholder).
+    """Fetch style factor data.
 
-    This is a placeholder function for future implementation.
-    When implemented, will fetch data from:
-    - Compustat (for US stocks)
-    - CSI (for Chinese A-shares)
-    - Custom data source
+    .. note::
+
+       A concrete data provider must be configured before calling this
+       function.  Pass pre-fetched factor data directly to
+       :func:`style_analysis` or :func:`calculate_style_tilts`.
 
     Parameters
     ----------
@@ -522,20 +528,22 @@ def fetch_style_factors(
     -------
     pd.DataFrame
         Factor data with MultiIndex (date, factor).
+
+    Raises
+    ------
+    NotImplementedError
+        Always raised until a data provider is configured.
     """
-    # TODO: Implement actual data fetching
-    # For now, return empty DataFrame with expected structure
+    import logging
 
-    if library == "us":
-        index = pd.date_range("2020-01-01", periods=12, freq="M")
-    else:
-        index = pd.date_range("2020-01-01", periods=12, freq="M")
-
-    # Create placeholder data
-    data = {}
-    for factor in factors:
-        # Create random data for demonstration
-        n = len(tickers)
-        data[factor] = np.random.randn(len(index), n) * 0.10
-
-    return pd.DataFrame(data, index=index)
+    logger = logging.getLogger(__name__)
+    logger.error(
+        "fetch_style_factors called without a configured data provider. "
+        "Pass pre-fetched factor data directly to style_analysis() or "
+        "calculate_style_tilts()."
+    )
+    raise NotImplementedError(
+        "No style factor data provider is configured. "
+        "Please pass pre-fetched factor data directly to "
+        "style_analysis() or calculate_style_tilts()."
+    )

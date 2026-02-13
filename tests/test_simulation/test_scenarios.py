@@ -7,11 +7,11 @@ import pandas as pd
 import pytest
 
 from fincore.simulation.scenarios import (
-    stress_test,
     _apply_crash_scenario,
     _apply_spike_scenario,
     generate_correlation_breakdown,
     scenario_table,
+    stress_test,
 )
 
 

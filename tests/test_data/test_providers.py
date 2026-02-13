@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-import pandas as pd
 from datetime import datetime, timedelta
+
+import pandas as pd
+import pytest
 
 
 class TestDataProviderInterface:
@@ -143,6 +144,7 @@ class TestAlphaVantageProvider:
             pytest.skip("ALPHAVANTAGE_API_KEY not set")
 
         from fincore.data.providers import AlphaVantageProvider
+
         return AlphaVantageProvider(api_key=api_key)
 
     def test_provider_creation(self, provider):
@@ -170,6 +172,7 @@ class TestTushareProvider:
             pytest.skip("TUSHARE_TOKEN not set")
 
         from fincore.data.providers import TushareProvider
+
         return TushareProvider(token=token)
 
     def test_provider_creation(self, provider):
@@ -219,14 +222,14 @@ class TestConvenienceFunctions:
 
     def test_get_provider_yahoo(self):
         """Test getting Yahoo provider."""
-        from fincore.data.providers import get_provider, YahooFinanceProvider
+        from fincore.data.providers import YahooFinanceProvider, get_provider
 
         provider = get_provider("yahoo")
         assert isinstance(provider, YahooFinanceProvider)
 
     def test_get_provider_yfinance_alias(self):
         """Test yfinance alias works."""
-        from fincore.data.providers import get_provider, YahooFinanceProvider
+        from fincore.data.providers import YahooFinanceProvider, get_provider
 
         provider = get_provider("yfinance")
         assert isinstance(provider, YahooFinanceProvider)

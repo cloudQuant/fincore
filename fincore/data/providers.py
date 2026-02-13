@@ -37,8 +37,8 @@ class DataProvider(ABC):
     def fetch(
         self,
         symbol: str,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
     ) -> pd.DataFrame:
@@ -69,12 +69,12 @@ class DataProvider(ABC):
     @abstractmethod
     def fetch_multiple(
         self,
-        symbols: List[str],
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        symbols: list[str],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetch historical data for multiple symbols.
 
         Parameters
@@ -98,7 +98,7 @@ class DataProvider(ABC):
         pass
 
     @abstractmethod
-    def get_info(self, symbol: str) -> Dict:
+    def get_info(self, symbol: str) -> dict:
         """Get basic information about a symbol.
 
         Parameters
@@ -139,9 +139,9 @@ class DataProvider(ABC):
 
     def validate_dates(
         self,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
-    ) -> tuple[datetime, datetime]:
+        start: str | datetime,
+        end: str | datetime,
+    ) -> tuple[pd.Timestamp, pd.Timestamp]:
         """Validate and convert date inputs.
 
         Parameters
@@ -169,7 +169,11 @@ class DataProvider(ABC):
         if start_dt >= end_dt:
             raise ValueError("start date must be before end date")
 
-        return start_dt, end_dt
+        # Ensure we return Timestamp, not NaTType
+        if pd.isna(start_dt) or pd.isna(end_dt):
+            raise ValueError("Invalid date values")
+
+        return pd.Timestamp(start_dt), pd.Timestamp(end_dt)
 
 
 class YahooFinanceProvider(DataProvider):
@@ -197,16 +201,13 @@ class YahooFinanceProvider(DataProvider):
             self._yf = yf
             self._session = session
         except ImportError:
-            raise ImportError(
-                "yfinance is required for YahooFinanceProvider. "
-                "Install with: pip install yfinance"
-            )
+            raise ImportError("yfinance is required for YahooFinanceProvider. Install with: pip install yfinance")
 
     def fetch(
         self,
         symbol: str,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
     ) -> pd.DataFrame:
@@ -256,12 +257,12 @@ class YahooFinanceProvider(DataProvider):
 
     def fetch_multiple(
         self,
-        symbols: List[str],
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        symbols: list[str],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols.
 
         Parameters
@@ -291,7 +292,7 @@ class YahooFinanceProvider(DataProvider):
                 results[symbol] = pd.DataFrame()
         return results
 
-    def get_info(self, symbol: str) -> Dict:
+    def get_info(self, symbol: str) -> dict:
         """Get information about a symbol.
 
         Parameters
@@ -346,10 +347,7 @@ class AlphaVantageProvider(DataProvider):
 
             self._requests = requests
         except ImportError:
-            raise ImportError(
-                "requests is required for AlphaVantageProvider. "
-                "Install with: pip install requests"
-            )
+            raise ImportError("requests is required for AlphaVantageProvider. Install with: pip install requests")
 
         self.api_key = api_key
         self.outputsize = outputsize
@@ -358,8 +356,8 @@ class AlphaVantageProvider(DataProvider):
     def fetch(
         self,
         symbol: str,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
     ) -> pd.DataFrame:
@@ -416,12 +414,12 @@ class AlphaVantageProvider(DataProvider):
 
     def fetch_multiple(
         self,
-        symbols: List[str],
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        symbols: list[str],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
         for symbol in symbols:
@@ -432,7 +430,7 @@ class AlphaVantageProvider(DataProvider):
                 results[symbol] = pd.DataFrame()
         return results
 
-    def get_info(self, symbol: str) -> Dict:
+    def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""
         params = {
             "function": "OVERVIEW",
@@ -480,10 +478,7 @@ class TushareProvider(DataProvider):
             self._token = token
             self._pro = None
         except ImportError:
-            raise ImportError(
-                "tushare is required for TushareProvider. "
-                "Install with: pip install tushare"
-            )
+            raise ImportError("tushare is required for TushareProvider. Install with: pip install tushare")
 
     def _get_pro(self):
         """Lazy initialization of Pro API."""
@@ -494,8 +489,8 @@ class TushareProvider(DataProvider):
     def fetch(
         self,
         symbol: str,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
     ) -> pd.DataFrame:
@@ -565,12 +560,12 @@ class TushareProvider(DataProvider):
 
     def fetch_multiple(
         self,
-        symbols: List[str],
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        symbols: list[str],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
         for symbol in symbols:
@@ -581,7 +576,7 @@ class TushareProvider(DataProvider):
                 results[symbol] = pd.DataFrame()
         return results
 
-    def get_info(self, symbol: str) -> Dict:
+    def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""
         pro = self._get_pro()
 
@@ -624,16 +619,13 @@ class AkShareProvider(DataProvider):
 
             self._ak = ak
         except ImportError:
-            raise ImportError(
-                "akshare is required for AkShareProvider. "
-                "Install with: pip install akshare"
-            )
+            raise ImportError("akshare is required for AkShareProvider. Install with: pip install akshare")
 
-    def fetch(
+    def fetch(  # type: ignore[override]
         self,
         symbol: str,
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: str = "qfq",
     ) -> pd.DataFrame:
@@ -696,14 +688,14 @@ class AkShareProvider(DataProvider):
 
         return data[["Open", "High", "Low", "Close", "Adj Close", "Volume"]]
 
-    def fetch_multiple(
+    def fetch_multiple(  # type: ignore[override]
         self,
-        symbols: List[str],
-        start: Union[str, datetime],
-        end: Union[str, datetime],
+        symbols: list[str],
+        start: str | datetime,
+        end: str | datetime,
         interval: str = "1d",
         adjust: str = "qfq",
-    ) -> Dict[str, pd.DataFrame]:
+    ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
         for symbol in symbols:
@@ -714,7 +706,7 @@ class AkShareProvider(DataProvider):
                 results[symbol] = pd.DataFrame()
         return results
 
-    def get_info(self, symbol: str) -> Dict:
+    def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""
         try:
             info = self._ak.stock_individual_info_em(symbol=symbol)
@@ -737,6 +729,7 @@ class AkShareProvider(DataProvider):
 # =============================================================================
 # Convenience Functions
 # =============================================================================
+
 
 def get_provider(
     name: str,
@@ -776,19 +769,16 @@ def get_provider(
     }
 
     if name not in providers:
-        raise ValueError(
-            f"Unknown provider {name!r}. "
-            f"Available: {sorted(set(providers.keys()))}"
-        )
+        raise ValueError(f"Unknown provider {name!r}. Available: {sorted(set(providers.keys()))}")
 
-    return providers[name](**kwargs)
+    return providers[name](**kwargs)  # type: ignore[return-value]
 
 
 def fetch_price_data(
     symbol: str,
-    provider: Union[str, DataProvider] = "yahoo",
-    start: Optional[Union[str, datetime]] = None,
-    end: Optional[Union[str, datetime]] = None,
+    provider: str | DataProvider = "yahoo",
+    start: str | datetime | None = None,
+    end: str | datetime | None = None,
     years: int = 5,
     interval: str = "1d",
     **kwargs,
@@ -838,18 +828,19 @@ def fetch_price_data(
     elif isinstance(start, str):
         start = pd.to_datetime(start)
 
+    assert start is not None and end is not None  # guaranteed by logic above
     return provider.fetch(symbol, start, end, interval)
 
 
 def fetch_multiple_prices(
-    symbols: List[str],
-    provider: Union[str, DataProvider] = "yahoo",
-    start: Optional[Union[str, datetime]] = None,
-    end: Optional[Union[str, datetime]] = None,
+    symbols: list[str],
+    provider: str | DataProvider = "yahoo",
+    start: str | datetime | None = None,
+    end: str | datetime | None = None,
     years: int = 5,
     interval: str = "1d",
     **kwargs,
-) -> Dict[str, pd.DataFrame]:
+) -> dict[str, pd.DataFrame]:
     """Fetch price data for multiple symbols.
 
     Parameters
@@ -896,4 +887,5 @@ def fetch_multiple_prices(
     elif isinstance(start, str):
         start = pd.to_datetime(start)
 
+    assert start is not None and end is not None  # guaranteed by logic above
     return provider.fetch_multiple(symbols, start, end, interval)

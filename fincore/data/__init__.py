@@ -10,14 +10,14 @@ Provides unified access to financial data from multiple sources:
 from __future__ import annotations
 
 from fincore.data.providers import (
-    DataProvider,
-    YahooFinanceProvider,
-    AlphaVantageProvider,
-    TushareProvider,
     AkShareProvider,
-    get_provider,
-    fetch_price_data,
+    AlphaVantageProvider,
+    DataProvider,
+    TushareProvider,
+    YahooFinanceProvider,
     fetch_multiple_prices,
+    fetch_price_data,
+    get_provider,
 )
 
 __all__ = [

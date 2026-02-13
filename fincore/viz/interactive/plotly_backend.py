@@ -62,9 +62,9 @@ class PlotlyBackend(VizBackend):
     COLORS = {
         "positive": "#00C853",  # Green for gains
         "negative": "#D50000",  # Red for losses
-        "neutral": "#212121",    # Dark gray
+        "neutral": "#212121",  # Dark gray
         "highlight": "#2962FF",  # Blue for highlights
-        "warning": "#FF6D00",    # Orange for warnings
+        "warning": "#FF6D00",  # Orange for warnings
         "background_light": "#FFFFFF",
         "background_dark": "#1E1E1E",
         "grid_light": "#E0E0E0",
@@ -77,8 +77,8 @@ class PlotlyBackend(VizBackend):
         self,
         theme: str = "light",
         height: int = 500,
-        width: Optional[int] = None,
-        template: Optional[str] = None,
+        width: int | None = None,
+        template: str | None = None,
         show_legend: bool = True,
     ):
         self.theme = theme
@@ -86,7 +86,7 @@ class PlotlyBackend(VizBackend):
         self.width = width
         self.template = template
         self.show_legend = show_legend
-        self._fig: Optional["go.Figure"] = None
+        self._fig: go.Figure | None = None
 
         # Set up theme-specific colors
         self._setup_theme()
@@ -124,15 +124,12 @@ class PlotlyBackend(VizBackend):
             return self.template
         return self.default_template
 
-    def _create_figure(self) -> "go.Figure":
+    def _create_figure(self) -> go.Figure:
         """Create a new figure with configured template."""
         try:
             import plotly.graph_objects as go
         except ImportError:
-            raise ImportError(
-                "Plotly is required for PlotlyBackend. "
-                "Install with: pip install plotly"
-            )
+            raise ImportError("Plotly is required for PlotlyBackend. Install with: pip install plotly")
 
         fig = go.Figure(
             layout=dict(
@@ -147,23 +144,17 @@ class PlotlyBackend(VizBackend):
         )
 
         # Update grid colors
-        fig.update_xaxes(
-            gridcolor=self.colors["grid"],
-            zerolinecolor=self.colors["grid"]
-        )
-        fig.update_yaxes(
-            gridcolor=self.colors["grid"],
-            zerolinecolor=self.colors["grid"]
-        )
+        fig.update_xaxes(gridcolor=self.colors["grid"], zerolinecolor=self.colors["grid"])
+        fig.update_yaxes(gridcolor=self.colors["grid"], zerolinecolor=self.colors["grid"])
 
         return fig
 
     def plot_returns(
         self,
         cum_returns: pd.Series,
-        benchmark: Optional[pd.Series] = None,
+        benchmark: pd.Series | None = None,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot cumulative returns with optional benchmark.
 
         Parameters
@@ -224,7 +215,7 @@ class PlotlyBackend(VizBackend):
         self,
         drawdown: pd.Series,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot underwater drawdown chart.
 
         Parameters
@@ -242,10 +233,7 @@ class PlotlyBackend(VizBackend):
         fig = self._create_figure()
 
         # Color drawdown areas based on severity
-        colors = [
-            self.colors["positive"] if x >= 0 else self.colors["negative"]
-            for x in drawdown.values
-        ]
+        colors = [self.colors["positive"] if x >= 0 else self.colors["negative"] for x in drawdown.values]
 
         fig.add_scatter(
             x=drawdown.index,
@@ -254,7 +242,7 @@ class PlotlyBackend(VizBackend):
             name="Drawdown",
             line=dict(color=self.colors["negative"], width=1.5),
             fill="tozeroy",
-            fillcolor=f"rgba(213, 0, 0, 0.3)",
+            fillcolor="rgba(213, 0, 0, 0.3)",
             hovertemplate="%{x}<br>Drawdown: %{y:.2%}<extra></extra>",
         )
 
@@ -272,10 +260,10 @@ class PlotlyBackend(VizBackend):
     def plot_rolling_sharpe(
         self,
         sharpe: pd.Series,
-        benchmark_sharpe: Optional[pd.Series] = None,
+        benchmark_sharpe: pd.Series | None = None,
         window: int = 252,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot rolling Sharpe ratio.
 
         Parameters
@@ -336,7 +324,7 @@ class PlotlyBackend(VizBackend):
         self,
         returns: pd.Series,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot monthly returns heatmap.
 
         Parameters
@@ -352,33 +340,28 @@ class PlotlyBackend(VizBackend):
             Interactive Plotly figure.
         """
         # Calculate monthly returns
-        monthly_returns = (
-            returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
-        )
+        monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
 
         # Create pivot table (year x month)
-        monthly_returns_df = pd.DataFrame({
-            "year": monthly_returns.index.year,
-            "month": monthly_returns.index.month,
-            "return": monthly_returns.values,
-        })
-
-        pivot = monthly_returns_df.pivot(
-            index="year", columns="month", values="return"
+        monthly_returns_df = pd.DataFrame(
+            {
+                "year": monthly_returns.index.year,
+                "month": monthly_returns.index.month,
+                "return": monthly_returns.values,
+            }
         )
 
-        month_names = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ]
+        pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
+
+        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
         fig = self._create_figure()
 
         # Color scale from red (negative) to green (positive)
         colorscale = [
-            [0.0, "#D32F2F"],      # Dark red (worst)
-            [0.5, "#FFFFFF"],      # White (break-even)
-            [1.0, "#388E3C"],      # Dark green (best)
+            [0.0, "#D32F2F"],  # Dark red (worst)
+            [0.5, "#FFFFFF"],  # White (break-even)
+            [1.0, "#388E3C"],  # Dark green (best)
         ]
 
         fig.add_heatmap(
@@ -390,11 +373,7 @@ class PlotlyBackend(VizBackend):
                 title="Return (%)",
                 tickformat=".1f",
             ),
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Month: %{x}<br>"
-                "Return: %{z:.2f}%<extra></extra>"
-            ),
+            hovertemplate=("<b>%{y}</b><br>Month: %{x}<br>Return: %{z:.2f}%<extra></extra>"),
             **kwargs,
         )
 
@@ -417,7 +396,7 @@ class PlotlyBackend(VizBackend):
         returns: pd.DataFrame,
         n_points: int = 50,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot efficient frontier with random portfolios.
 
         Parameters
@@ -454,10 +433,7 @@ class PlotlyBackend(VizBackend):
                     color=self.colors["neutral"],
                     opacity=0.3,
                 ),
-                hovertemplate=(
-                    "Vol: %{x:.2%}<br>"
-                    "Return: %{y:.2%}<extra></extra>"
-                ),
+                hovertemplate=("Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
             )
 
         # Plot efficient frontier
@@ -468,14 +444,13 @@ class PlotlyBackend(VizBackend):
             name="Efficient Frontier",
             line=dict(color=self.colors["highlight"], width=3),
             marker=dict(size=6),
-            hovertemplate=(
-                "Vol: %{x:.2%}<br>"
-                "Return: %{y:.2%}<br>"
-                "Sharpe: %{customdata[0]:.2f}<extra></extra>"
+            hovertemplate=("Vol: %{x:.2%}<br>Return: %{y:.2%}<br>Sharpe: %{customdata[0]:.2f}<extra></extra>"),
+            customdata=np.stack(
+                [
+                    frontier["return"] / frontier["volatility"],
+                ],
+                axis=-1,
             ),
-            customdata=np.stack([
-                frontier["return"] / frontier["volatility"],
-            ], axis=-1),
         )
 
         # Highlight max Sharpe portfolio
@@ -491,11 +466,7 @@ class PlotlyBackend(VizBackend):
                     color=self.colors["positive"],
                     symbol="star",
                 ),
-                hovertemplate=(
-                    "Max Sharpe<br>"
-                    "Vol: %{x:.2%}<br>"
-                    "Return: %{y:.2%}<extra></extra>"
-                ),
+                hovertemplate=("Max Sharpe<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
             )
 
         # Highlight min volatility portfolio
@@ -511,11 +482,7 @@ class PlotlyBackend(VizBackend):
                     color=self.colors["warning"],
                     symbol="diamond",
                 ),
-                hovertemplate=(
-                    "Min Volatility<br>"
-                    "Vol: %{x:.2%}<br>"
-                    "Return: %{y:.2%}<extra></extra>"
-                ),
+                hovertemplate=("Min Volatility<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
             )
 
         fig.update_layout(
@@ -533,7 +500,7 @@ class PlotlyBackend(VizBackend):
         self,
         returns: pd.DataFrame,
         **kwargs,
-    ) -> "go.Figure":
+    ) -> go.Figure:
         """Plot correlation matrix heatmap.
 
         Parameters
@@ -559,11 +526,7 @@ class PlotlyBackend(VizBackend):
             colorscale="RdBu",
             zmid=0,
             colorbar=dict(title="Correlation"),
-            hovertemplate=(
-                "Asset 1: %{y}<br>"
-                "Asset 2: %{x}<br>"
-                "Correlation: %{z:.2f}<extra></extra>"
-            ),
+            hovertemplate=("Asset 1: %{y}<br>Asset 2: %{x}<br>Correlation: %{z:.2f}<extra></extra>"),
             **kwargs,
         )
 

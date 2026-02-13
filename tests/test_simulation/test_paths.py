@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 
 from fincore.simulation.paths import (
-    geometric_brownian_motion,
-    gbm_from_returns,
     antithetic_variates,
+    gbm_from_returns,
+    geometric_brownian_motion,
     latin_hypercube_sampling,
 )
 
@@ -18,37 +18,27 @@ class TestGeometricBrownianMotion:
 
     def test_gbm_shape(self):
         """Test that GBM produces correct shape."""
-        paths = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42
-        )
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42)
 
         assert paths.shape == (100, 253)  # n_paths x (n_steps + 1)
 
     def test_gbm_initial_value(self):
         """Test that all paths start at S0."""
         S0 = 100.0
-        paths = geometric_brownian_motion(
-            S0=S0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42
-        )
+        paths = geometric_brownian_motion(S0=S0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42)
 
         np.testing.assert_array_almost_equal(paths[:, 0], S0, decimal=10)
 
     def test_gbm_reproducible(self):
         """Test that seed produces reproducible results."""
-        paths1 = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=0.25, dt=1 / 252, n_paths=50, seed=123
-        )
-        paths2 = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=0.25, dt=1 / 252, n_paths=50, seed=123
-        )
+        paths1 = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=0.25, dt=1 / 252, n_paths=50, seed=123)
+        paths2 = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=0.25, dt=1 / 252, n_paths=50, seed=123)
 
         np.testing.assert_array_equal(paths1, paths2)
 
     def test_gbm_positive_paths(self):
         """Test that GBM paths remain positive."""
-        paths = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42
-        )
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=100, seed=42)
 
         # GBM should never produce negative values
         assert np.all(paths >= 0)
@@ -56,13 +46,9 @@ class TestGeometricBrownianMotion:
     def test_gbm_drift_effect(self):
         """Test that positive drift increases expected value."""
         # Positive drift
-        paths_up = geometric_brownian_motion(
-            S0=100.0, mu=0.20, sigma=0.10, T=1.0, dt=1 / 252, n_paths=1000, seed=42
-        )
+        paths_up = geometric_brownian_motion(S0=100.0, mu=0.20, sigma=0.10, T=1.0, dt=1 / 252, n_paths=1000, seed=42)
         # Negative drift
-        paths_down = geometric_brownian_motion(
-            S0=100.0, mu=-0.20, sigma=0.10, T=1.0, dt=1 / 252, n_paths=1000, seed=42
-        )
+        paths_down = geometric_brownian_motion(S0=100.0, mu=-0.20, sigma=0.10, T=1.0, dt=1 / 252, n_paths=1000, seed=42)
 
         # Positive drift should have higher terminal values
         assert np.mean(paths_up[:, -1]) > np.mean(paths_down[:, -1])

@@ -12,7 +12,7 @@ import pandas as pd
 
 from fincore.simulation.base import SimResult, compute_statistics
 from fincore.simulation.paths import gbm_from_returns, geometric_brownian_motion
-from fincore.simulation.scenarios import stress_test, scenario_table
+from fincore.simulation.scenarios import scenario_table, stress_test
 
 
 class MonteCarlo:
@@ -31,7 +31,7 @@ class MonteCarlo:
 
     def __init__(
         self,
-        returns: Union[pd.Series, np.ndarray],
+        returns: pd.Series | np.ndarray,
     ):
         self.returns = np.asarray(returns)
         self.returns = self.returns[~np.isnan(self.returns)]
@@ -44,10 +44,10 @@ class MonteCarlo:
         n_paths: int = 1000,
         horizon: int = 252,
         *,
-        drift: Optional[float] = None,
-        volatility: Optional[float] = None,
+        drift: float | None = None,
+        volatility: float | None = None,
         antithetic: bool = False,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> SimResult:
         """Simulate future return paths using Geometric Brownian Motion.
 
@@ -94,6 +94,7 @@ class MonteCarlo:
         # Apply antithetic variates if requested
         if antithetic:
             from fincore.simulation.paths import antithetic_variates
+
             paths = antithetic_variates(paths)
 
         stats = compute_statistics(paths)
@@ -104,7 +105,7 @@ class MonteCarlo:
         alpha: float = 0.05,
         n_paths: int = 10000,
         horizon: int = 252,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> float:
         """Calculate Value at Risk using Monte Carlo simulation.
 
@@ -130,7 +131,7 @@ class MonteCarlo:
         alpha: float = 0.05,
         n_paths: int = 10000,
         horizon: int = 252,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> float:
         """Calculate Conditional Value at Risk (Expected Shortfall).
 
@@ -156,9 +157,9 @@ class MonteCarlo:
         S0: float,
         n_paths: int = 1000,
         horizon: int = 252,
-        mu: Optional[float] = None,
-        sigma: Optional[float] = None,
-        seed: Optional[int] = None,
+        mu: float | None = None,
+        sigma: float | None = None,
+        seed: int | None = None,
     ) -> SimResult:
         """Simulate price paths starting from given initial price.
 
@@ -187,6 +188,7 @@ class MonteCarlo:
         # Estimate parameters if not provided
         if mu is None or sigma is None:
             from fincore.simulation.base import estimate_parameters
+
             est_mu, est_sigma = estimate_parameters(self.returns)
             mu = mu if mu is not None else est_mu / 252
             sigma = sigma if sigma is not None else est_sigma / np.sqrt(252)
@@ -207,7 +209,7 @@ class MonteCarlo:
 
     def stress(
         self,
-        scenarios: Optional[list] = None,
+        scenarios: list | None = None,
     ) -> dict:
         """Perform stress testing on historical returns.
 
@@ -242,7 +244,7 @@ class MonteCarlo:
         S0: float = 1.0,
         n_paths: int = 1000,
         horizon: int = 252,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> SimResult:
         """Create Monte Carlo simulation from known parameters.
 

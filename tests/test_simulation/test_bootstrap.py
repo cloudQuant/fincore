@@ -7,10 +7,10 @@ import pandas as pd
 import pytest
 
 from fincore.simulation.bootstrap import (
+    _get_statistic_fn,
     bootstrap,
     bootstrap_ci,
     bootstrap_summary,
-    _get_statistic_fn,
 )
 
 
@@ -67,9 +67,7 @@ class TestBootstrap:
 
     def test_bootstrap_ci(self, sample_returns):
         """Test confidence interval calculation."""
-        ci_lower, ci_upper = bootstrap_ci(
-            sample_returns, n_samples=10000, alpha=0.05, seed=42
-        )
+        ci_lower, ci_upper = bootstrap_ci(sample_returns, n_samples=10000, alpha=0.05, seed=42)
 
         # Lower should be less than upper
         assert ci_lower < ci_upper

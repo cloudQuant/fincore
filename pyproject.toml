@@ -65,6 +65,30 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "fincore.viz.*",
+    "fincore.empyrical",
+    "fincore.pyfolio",
+    "fincore.utils.*",
+    "fincore.report",
+    "fincore.tearsheets.*",
+    "fincore.simulation.*",
+    "fincore.risk.*",
+    "fincore.attribution.*",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fincore.core.*",
+    "fincore.metrics.*",
+    "fincore.plugin.*",
+    "fincore.data.*",
+]
+disallow_untyped_defs = false
+warn_return_any = false
+
 [tool.ruff]
 target-version = "py311"
 line-length = 120

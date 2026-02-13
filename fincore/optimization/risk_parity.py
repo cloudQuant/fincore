@@ -1,0 +1,89 @@
+"""Risk parity (equal risk contribution) portfolio optimization.
+
+Computes portfolio weights such that each asset contributes equally
+to the total portfolio risk (variance).
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+from scipy import optimize as sp_opt
+
+
+def risk_parity(
+    returns: pd.DataFrame,
+    risk_budget: np.ndarray | None = None,
+    max_iter: int = 1000,
+) -> dict[str, np.ndarray | float]:
+    """Compute risk-parity portfolio weights.
+
+    Each asset's marginal risk contribution is equalised (or matched
+    to a user-supplied risk budget).
+
+    Parameters
+    ----------
+    returns : pd.DataFrame
+        Asset returns (T x N).
+    risk_budget : np.ndarray, optional
+        Target risk budget per asset (sums to 1).
+        Defaults to equal budget ``1/N`` for each asset.
+    max_iter : int, default 1000
+        Maximum solver iterations.
+
+    Returns
+    -------
+    dict
+        - 'weights': optimal weight array (N,)
+        - 'risk_contributions': risk contribution per asset (N,)
+        - 'volatility': portfolio annualised volatility
+        - 'asset_names': list of asset names
+    """
+    cov = returns.cov().values * 252
+    n = cov.shape[0]
+    asset_names = list(returns.columns)
+
+    if risk_budget is None:
+        risk_budget = np.ones(n) / n
+    risk_budget = np.asarray(risk_budget, dtype=float)
+    risk_budget = risk_budget / risk_budget.sum()
+
+    def _risk_contrib(w: np.ndarray) -> np.ndarray:
+        port_var = w @ cov @ w
+        if port_var < 1e-16:
+            return np.zeros(n)
+        marginal = cov @ w
+        rc = w * marginal / np.sqrt(port_var)
+        return rc
+
+    def _objective(w: np.ndarray) -> float:
+        rc = _risk_contrib(w)
+        rc_total = rc.sum()
+        if rc_total < 1e-16:
+            return 1e6
+        rc_pct = rc / rc_total
+        return float(np.sum((rc_pct - risk_budget) ** 2))
+
+    w0 = np.ones(n) / n
+    bounds = [(1e-6, 1.0)] * n
+    constraints = [{"type": "eq", "fun": lambda w: np.sum(w) - 1.0}]
+
+    res = sp_opt.minimize(
+        _objective,
+        w0,
+        method="SLSQP",
+        bounds=bounds,
+        constraints=constraints,
+        options={"ftol": 1e-14, "maxiter": max_iter},
+    )
+
+    weights = res.x / res.x.sum()
+    rc = _risk_contrib(weights)
+    vol = float(np.sqrt(weights @ cov @ weights))
+
+    return {
+        "weights": weights,
+        "risk_contributions": rc,
+        "volatility": vol,
+        "asset_names": asset_names,
+    }
