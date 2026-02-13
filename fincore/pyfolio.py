@@ -1,4 +1,3 @@
-
 # =============================================================================
 # Pyfolio 类方法 (Pyfolio Class Methods)
 # =============================================================================
@@ -43,8 +42,10 @@ from fincore.utils.common_utils import customize
 if matplotlib.get_backend().lower() in ("", "agg") or not hasattr(matplotlib, "_called_from_pytest"):
     try:
         matplotlib.use("Agg")
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).debug("matplotlib.use('Agg') failed: %s", e)
 cmap = plt.get_cmap("gist_rainbow")
 
 
@@ -434,8 +435,8 @@ class Pyfolio(Empyrical):
 
     @customize
 
-# # tear sheet 创建方法
-# =================
+    # # tear sheet 创建方法
+    # =================
     def create_full_tear_sheet(
         self,
         returns,
@@ -794,9 +795,8 @@ class Pyfolio(Empyrical):
         """
         return _plot_monthly_returns_dist(self, returns, ax=ax, **kwargs)
 
-
-# # 绘图方法
-# ======
+    # # 绘图方法
+    # ======
     def plot_holdings(self, returns, positions, legend_loc="best", ax=None, **kwargs):
         """
         Plots total holdings.

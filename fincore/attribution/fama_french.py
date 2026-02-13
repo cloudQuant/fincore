@@ -393,8 +393,7 @@ def calculate_idiosyncratic_risk(
 
         if model._betas is not None:
             beta = model._betas.get("MKT", 1.0)  # Default to market beta
-            specific_return = asset_returns - rf - beta * (market_returns - rf)
-            specific_var = np.var(specific_return)
+            specific_return = asset_returns - rf - beta * (market_returns - rf)  # noqa: F841
 
             # Total return variance
             total_return = asset_returns - rf

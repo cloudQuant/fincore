@@ -62,11 +62,11 @@ class GARCHResult:
         omega = self.params["omega"]
         alpha = self.params.get("alpha", 0.0)
         beta = self.params.get("beta", 0.0)
-        gamma = self.params.get("gamma", 0.0)
 
-        # Long-run variance
-        if beta > 0:
-            long_run_var = omega / (1 - alpha - beta)
+        # Long-run (unconditional) variance
+        persistence = alpha + beta
+        if 0 < persistence < 1:
+            long_run_var = omega / (1 - persistence)
         else:
             long_run_var = omega
 
@@ -77,8 +77,8 @@ class GARCHResult:
             if h == 0:
                 forecasts[h] = last_var
             else:
-                # Converge to long-run variance
-                forecasts[h] = omega + (alpha + beta) * forecasts[h - 1]
+                # Mean-reverting forecast toward long-run variance
+                forecasts[h] = long_run_var + persistence * (forecasts[h - 1] - long_run_var)
 
         return forecasts
 
@@ -208,8 +208,6 @@ class GARCH:
             mu = 0
             omega, alpha, beta = params
             eps = y
-
-        T = len(eps)
 
         # Compute conditional variances
         sigma2 = self._compute_conditional_var(eps, omega, alpha, beta)

@@ -83,8 +83,11 @@ def consecutive_stats(returns):
     weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
     monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
 
-    up = lambda s: s > 0
-    down = lambda s: s < 0
+    def up(s):
+        return s > 0
+
+    def down(s):
+        return s < 0
 
     return {
         "max_consecutive_up_days": _max_consecutive_run(returns, up),

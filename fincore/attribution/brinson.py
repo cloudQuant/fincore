@@ -349,8 +349,8 @@ class BrinsonAttribution:
                 index=returns.index,
             )
 
-        # Calculate portfolio returns
-        portfolio_returns = returns.mul(weights.values, axis=1).sum(axis=1)
+        # Calculate portfolio returns (used for validation if needed)
+        _portfolio_returns = returns.mul(weights.values, axis=1).sum(axis=1)  # noqa: F841
 
         # Benchmark
         if benchmark_returns is None:

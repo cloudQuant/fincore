@@ -51,9 +51,8 @@ __all__ = [
     "conditional_sharpe_ratio",
     "calmar_ratio",
     "omega_ratio",
-
-# # 基础风险调整收益比率
-# ============
+    # # 基础风险调整收益比率
+    # ============
     "information_ratio",
     "treynor_ratio",
     "cal_treynor_ratio",
@@ -108,9 +107,8 @@ def sharpe_ratio(returns, risk_free=0, period=DAILY, annualization=None, out=Non
     return_1d = returns.ndim == 1
 
     if len(returns) < 2:
-
-# # 基础比率
-# ======
+        # # 基础比率
+        # ======
         out[()] = np.nan
         if return_1d:
             out = out.item()
@@ -323,9 +321,8 @@ def conditional_sharpe_ratio(returns, cutoff=0.05, risk_free=0, period=DAILY, an
         annualized. Returns ``NaN`` if there are fewer than two observations.
     """
     if len(returns) < 2:
-
-# # 回撤比率
-# ======
+        # # 回撤比率
+        # ======
         return np.nan
 
     ann_factor = annualization_factor(period, annualization)
@@ -414,9 +411,8 @@ def mar_ratio(returns, period=DAILY, annualization=None):
     if len(returns) < 2:
         return np.nan
 
-
-# # 下行风险比率
-# ========
+    # # 下行风险比率
+    # ========
     max_dd = max_drawdown(returns=returns)
     if max_dd >= 0:
         return np.nan
@@ -481,9 +477,8 @@ def omega_ratio(returns, risk_free=0.0, required_return=0.0, annualization=APPRO
         return np.nan
 
     if annualization == 1:
-
-# # 信息比率
-# ======
+        # # 信息比率
+        # ======
         return_threshold = required_return
     elif required_return <= -1:
         return np.nan
@@ -703,8 +698,8 @@ def m_squared(returns, factor_returns, risk_free=0.0, period=DAILY, annualizatio
     ann_vol = annual_volatility(returns_aligned, period=period, annualization=annualization)
     ann_factor_vol = annual_volatility(factor_aligned, period=period, annualization=annualization)
 
-# # 下行风险比率
-# ========
+    # # 下行风险比率
+    # ========
 
     if ann_vol == 0 or ann_vol < 0 or np.isnan(ann_vol):
         return np.nan
@@ -1006,9 +1001,8 @@ def _sample_skewness(x):
     m = np.mean(x)
     s = np.std(x, ddof=1)
     if s == 0:
-
-# # 风险偏好度量
-# ========
+        # # 风险偏好度量
+        # ========
         return 0.0
     return (n / ((n - 1) * (n - 2))) * np.sum(((x - m) / s) ** 3)
 
@@ -1045,13 +1039,13 @@ def common_sense_ratio(returns):
         Common sense ratio. Returns ``NaN`` if there are insufficient
         observations or if win rate is zero.
     """
-    from fincore.metrics.risk import tail_ratio
+    from fincore.metrics.risk import tail_ratio as _tail_ratio
     from fincore.metrics.stats import win_rate
 
     if len(returns) < 2:
         return np.nan
 
-    tr = tail_ratio(returns)
+    tr = _tail_ratio(returns)
     wr = win_rate(returns)
 
     if np.isnan(tr) or np.isnan(wr) or wr == 0:
@@ -1063,23 +1057,23 @@ def common_sense_ratio(returns):
 def stability_of_timeseries(returns):
     """Determine the R-squared of a linear fit to cumulative log returns.
 
-    This computes the coefficient of determination (R²) from a linear
-    regression of the cumulative log returns against time. Higher values
-    indicate a more stable (less noisy) growth profile.
+        This computes the coefficient of determination (R²) from a linear
+        regression of the cumulative log returns against time. Higher values
+        indicate a more stable (less noisy) growth profile.
 
-    Parameters
-    ----------
-    returns : array-like or pd.Series
-        Non-cumulative returns.
+        Parameters
+        ----------
+        returns : array-like or pd.Series
+            Non-cumulative returns.
 
-    Returns
-    -------
+        Returns
+        -------
 
-# # 捕获比率
-# ======
-    float
-        R-squared of the linear fit to cumulative log returns. Returns
-        ``NaN`` if there are fewer than two valid observations.
+    # # 捕获比率
+    # ======
+        float
+            R-squared of the linear fit to cumulative log returns. Returns
+            ``NaN`` if there are fewer than two valid observations.
     """
     if len(returns) < 2:
         return np.nan

@@ -16,8 +16,12 @@
 
 """统计指标函数模块."""
 
+import logging
+
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 from scipy import stats
 
 from fincore.constants import DAILY
@@ -185,7 +189,8 @@ def hurst_exponent(returns):
 
         return float(hurst)
 
-    except Exception:
+    except Exception as e:
+        logger.debug("hurst_exponent failed: %s", e)
         return np.nan
 
 
@@ -256,7 +261,8 @@ def stutzer_index(returns, target_return=0.0):
             return sign * np.sqrt(2 * ip)
         else:
             return np.nan
-    except Exception:
+    except Exception as e:
+        logger.debug("stutzer_index failed: %s", e)
         return np.nan
 
 
