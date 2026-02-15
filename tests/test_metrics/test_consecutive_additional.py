@@ -49,4 +49,3 @@ def test_gain_loss_and_week_month_guards_and_dates() -> None:
     assert np.isnan(cons_mod.max_consecutive_loss(r1))
     assert cons_mod.max_consecutive_down_start_date(r1) is None
     assert cons_mod.max_consecutive_down_end_date(r1) is None
-

@@ -51,7 +51,9 @@ def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> No
     assert pyf.plot_cap_exposures_longshort(pd.DataFrame(), pd.DataFrame())[0] == "plot_cap_exposures_longshort"
     assert pyf.plot_cap_exposures_gross(pd.DataFrame())[0] == "plot_cap_exposures_gross"
     assert pyf.plot_cap_exposures_net(pd.DataFrame())[0] == "plot_cap_exposures_net"
-    assert pyf.plot_volume_exposures_longshort(pd.DataFrame(), pd.DataFrame(), 0.1)[0] == "plot_volume_exposures_longshort"
+    assert (
+        pyf.plot_volume_exposures_longshort(pd.DataFrame(), pd.DataFrame(), 0.1)[0] == "plot_volume_exposures_longshort"
+    )
     assert pyf.plot_volume_exposures_gross(pd.DataFrame(), 0.1)[0] == "plot_volume_exposures_gross"
 
     # Tear sheet wrappers.
@@ -67,7 +69,9 @@ def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> No
     md = {"price": pd.DataFrame({"AAA": [1.0]}, index=[idx[0]]), "volume": pd.DataFrame({"AAA": [100]}, index=[idx[0]])}
 
     assert pyf.create_capacity_tear_sheet(r, pos, txns, md, set_context=False)[0] == "create_capacity_tear_sheet"
-    assert pyf.create_bayesian_tear_sheet(r, live_start_date=idx[1], set_context=False)[0] == "create_bayesian_tear_sheet"
+    assert (
+        pyf.create_bayesian_tear_sheet(r, live_start_date=idx[1], set_context=False)[0] == "create_bayesian_tear_sheet"
+    )
     assert pyf.create_risk_tear_sheet(pos, set_context=False)[0] == "create_risk_tear_sheet"
     assert (
         pyf.create_perf_attrib_tear_sheet(r, pos, pd.DataFrame(), pd.DataFrame(), set_context=False)[0]

@@ -385,9 +385,7 @@ class Pyfolio(Empyrical):
         See fincore.tearsheets.bayesian._plot_bayes_cone for full documentation.
         """
         # Avoid Python name-mangling for ``__name`` identifiers inside classes.
-        return _plot_bayes_cone_internal(
-            self, returns_train, returns_test, preds, plot_train_len=plot_train_len, ax=ax
-        )
+        return _plot_bayes_cone_internal(self, returns_train, returns_test, preds, plot_train_len=plot_train_len, ax=ax)
 
     def plot_bayes_cone(self, returns_train, returns_test, ppc, plot_train_len=50, ax=None):
         """

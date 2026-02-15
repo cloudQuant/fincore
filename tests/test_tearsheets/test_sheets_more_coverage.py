@@ -270,4 +270,3 @@ def test_create_risk_tear_sheet_handles_optional_panels(monkeypatch) -> None:
     )
     assert fig2 is not None
     plt.close("all")
-

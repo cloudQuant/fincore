@@ -50,4 +50,3 @@ def test_sim_result_properties_var_cvar_and_to_dataframe() -> None:
     sr1 = SimResult(np.array([1.0, 2.0, 3.0]))
     assert sr1.n_paths == 1
     assert sr1.horizon == 3
-
