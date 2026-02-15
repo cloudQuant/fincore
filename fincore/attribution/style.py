@@ -59,11 +59,28 @@ class StyleResult:
                 # Index contains styles
                 for style in self.returns_by_style.index:
                     val = self.returns_by_style.loc[style]
-                    # Handle both scalar and Series values
-                    if isinstance(val, pd.Series):
-                        summary[style] = float(val.iloc[0]) if len(val) > 0 else 0.0
+                    # Normalize common pandas selection outcomes:
+                    # - Series (unique index label): row of columns
+                    # - DataFrame (duplicate index label): multiple rows
+                    # - scalar (rare): already a value
+                    if isinstance(val, pd.DataFrame):
+                        if val.empty:
+                            scalar = 0.0
+                        elif "return" in val.columns:
+                            scalar = val["return"].iloc[0]
+                        else:
+                            scalar = val.iloc[0, 0]
+                    elif isinstance(val, pd.Series):
+                        if len(val) == 0:
+                            scalar = 0.0
+                        elif "return" in val.index:
+                            scalar = val["return"]
+                        else:
+                            scalar = val.iloc[0]
                     else:
-                        summary[style] = float(val)
+                        scalar = val
+
+                    summary[style] = float(scalar)
 
         return summary
 
@@ -566,11 +583,9 @@ def analyze_performance_by_style(
 
         results.append(row_data)
 
-    if results:
-        df = pd.DataFrame(results)
-        df = df.set_index("Period")
-        return df
-    return pd.DataFrame()
+    # returns is guaranteed non-empty above, so results is also non-empty here.
+    df = pd.DataFrame(results).set_index("Period")
+    return df
 
 
 def fetch_style_factors(

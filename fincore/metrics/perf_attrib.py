@@ -295,11 +295,9 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
 
         # Calculate average allocation for warning message
         if isinstance(positions, pd.Series):
-            sample_stocks = missing_stocks[:5].union(missing_stocks[[-1]]) if len(missing_stocks) > 0 else []
-            if len(sample_stocks) > 0:
-                avg_alloc = positions[positions.index.get_level_values(1).isin(sample_stocks)].mean()
-            else:
-                avg_alloc = 0.0
+            # missing_stocks is guaranteed non-empty here, so the sample set is also non-empty.
+            sample_stocks = missing_stocks[:5].union(missing_stocks[[-1]])
+            avg_alloc = positions[positions.index.get_level_values(1).isin(sample_stocks)].mean()
         else:
             avg_alloc = positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean()
 

@@ -31,6 +31,13 @@ def test_style_result_style_summary_series_and_dataframe_variants() -> None:
     assert summ2["value"] == 0.1
     assert summ2["growth"] == -0.2
 
+    # returns_by_style as DataFrame indexed by style (including duplicate labels)
+    # df.loc[style] returns a DataFrame when the index label is duplicated.
+    rbs_idx = pd.DataFrame({"return": [0.1, 0.2]}, index=pd.Index(["value", "value"], name="style"))
+    sr3 = StyleResult(exposures=exposures, returns_by_style=rbs_idx, overall_returns=overall)
+    summ3 = sr3.style_summary
+    assert summ3["value"] == 0.1
+
 
 def test_style_analysis_value_scores_branch() -> None:
     idx = pd.date_range("2024-01-01", periods=30, freq="B")
