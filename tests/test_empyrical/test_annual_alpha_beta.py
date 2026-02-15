@@ -140,6 +140,13 @@ class TestAnnualAlphaBeta(TestCase):
         overall_alpha = emp.alpha(self.multi_year_returns, self.multi_year_market)
         overall_beta = emp.beta(self.multi_year_returns, self.multi_year_market)
 
+        # Annual alphas should vary around the overall alpha
+        if len(annual_alphas) > 0 and not np.isnan(overall_alpha):
+            mean_annual_alpha = annual_alphas.mean()
+            assert abs(mean_annual_alpha - overall_alpha) < 1.0, (
+                f"Mean annual alpha ({mean_annual_alpha}) differs too much from overall ({overall_alpha})"
+            )
+
         # Annual betas should vary around the overall beta
         if len(annual_betas) > 0 and not np.isnan(overall_beta):
             mean_annual_beta = annual_betas.mean()

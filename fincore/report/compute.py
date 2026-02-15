@@ -24,12 +24,18 @@ def compute_sections(
     trades,
     rolling_window,
 ):
-    """计算所有需要的统计数据，返回 sections dict。"""
+    """Compute all statistics and time series needed by the report renderers.
+
+    Returns
+    -------
+    dict
+        A sections dictionary consumed by the HTML/PDF renderers.
+    """
     from fincore import Empyrical
 
     sections = {}
 
-    # ------ 基础信息 ------
+    # ------ Basics ------
     sections["date_range"] = (
         returns.index[0].strftime("%Y-%m-%d"),
         returns.index[-1].strftime("%Y-%m-%d"),
@@ -37,7 +43,7 @@ def compute_sections(
     sections["n_days"] = len(returns)
     sections["n_months"] = int(len(returns) / 21)
 
-    # ------ 核心绩效（与 perf_stats 一致） ------
+    # ------ Core performance (aligned with perf_stats) ------
     perf = OrderedDict()
     perf["Annual Return"] = Empyrical.annual_return(returns)
     perf["Cumulative Returns"] = Empyrical.cum_returns_final(returns)
@@ -54,19 +60,19 @@ def compute_sections(
     perf["Daily Value at Risk"] = Empyrical.value_at_risk(returns)
     perf["Downside Risk"] = Empyrical.downside_risk(returns)
 
-    # 日度统计
+    # Daily stats
     perf["Daily Mean Return"] = float(np.nanmean(returns))
     perf["Daily Std Return"] = float(np.nanstd(returns, ddof=1))
     perf["Best Day"] = float(returns.max())
     perf["Worst Day"] = float(returns.min())
 
-    # Benchmark 相关指标也放入核心绩效表
+    # Add benchmark metrics to the core table as well.
     if benchmark_rets is not None:
         a, b = Empyrical.alpha_beta(returns, benchmark_rets)
         perf["Alpha"] = a
         perf["Beta"] = b
 
-    # 如果有 positions + transactions，计算 turnover
+    # If we have positions + transactions, compute turnover.
     if positions is not None and transactions is not None:
         try:
             turnover = Empyrical.get_turnover(positions, transactions)
@@ -78,7 +84,7 @@ def compute_sections(
                 extra={"context": "compute_sections", "metric": "turnover"},
             )
 
-    # Gross leverage 统计
+    # Gross leverage
     if positions is not None:
         try:
             gl = Empyrical.gross_lev(positions)
@@ -93,7 +99,7 @@ def compute_sections(
 
     sections["perf_stats"] = perf
 
-    # ------ 扩展风险指标 ------
+    # ------ Extended stats ------
     ext = OrderedDict()
     emp = Empyrical(returns=returns)
     ext["Win Rate (daily)"] = emp.win_rate()
@@ -114,7 +120,7 @@ def compute_sections(
     ext["Hurst Exponent"] = Empyrical.hurst_exponent(returns)
     sections["extended_stats"] = ext
 
-    # ------ 时间序列数据 ------
+    # ------ Time series ------
     sections["returns"] = returns
     sections["cum_returns"] = Empyrical.cum_returns(returns, starting_value=1.0)
     cum_ret_0 = Empyrical.cum_returns(returns, starting_value=0)
@@ -124,7 +130,7 @@ def compute_sections(
     sections["rolling_volatility"] = Empyrical.rolling_volatility(returns, rolling_vol_window=rolling_window)
     sections["dd_table"] = Empyrical.gen_drawdown_table(returns, top=5)
 
-    # ------ 按年统计 ------
+    # ------ Yearly stats ------
     sections["yearly_stats"] = pd.DataFrame(
         {
             "Annual Return": Empyrical.annual_return_by_year(returns),
@@ -132,23 +138,23 @@ def compute_sections(
             "Max Drawdown": Empyrical.max_drawdown_by_year(returns),
         }
     )
-    # ------ 按月统计 ------
+    # ------ Monthly stats ------
     sections["monthly_returns"] = Empyrical.aggregate_returns(returns, "monthly")
-    # 按月收益统计
+    # Monthly return extremes
     monthly_rets = Empyrical.aggregate_returns(returns, "monthly")
     sections["best_month"] = float(monthly_rets.max())
     sections["worst_month"] = float(monthly_rets.min())
     sections["avg_month"] = float(monthly_rets.mean())
-    # 按年收益
+    # Yearly return extremes
     yearly_rets = Empyrical.aggregate_returns(returns, "yearly")
     sections["best_year"] = float(yearly_rets.max())
     sections["worst_year"] = float(yearly_rets.min())
 
-    # ------ 收益分位数 ------
+    # ------ Return quantiles ------
     q = returns.quantile([0.01, 0.05, 0.25, 0.50, 0.75, 0.95, 0.99])
     sections["return_quantiles"] = q
 
-    # ------ Benchmark 相关 ------
+    # ------ Benchmark ------
     if benchmark_rets is not None:
         bm = OrderedDict()
         bm["Alpha"] = perf["Alpha"]
@@ -168,7 +174,7 @@ def compute_sections(
             rolling_window=rolling_window,
         )
 
-    # ------ Positions 相关 ------
+    # ------ Positions ------
     if positions is not None:
         sections["has_positions"] = True
         pos_no_cash = positions.drop("cash", axis=1, errors="ignore")
@@ -180,18 +186,18 @@ def compute_sections(
         exposure = pos_no_cash.abs().sum(axis=1)
         sections["gross_leverage"] = (exposure / total).replace([np.inf, -np.inf], np.nan)
 
-        # 持仓集中度
+        # Concentration metrics
         pos_abs = pos_no_cash.abs()
         pos_total = pos_abs.sum(axis=1).replace(0, np.nan)
         pos_pct = pos_abs.div(pos_total, axis=0).fillna(0)
         sections["pos_max_concentration"] = pos_pct.max(axis=1)
         sections["pos_median_concentration"] = pos_pct.median(axis=1)
 
-        # 持仓占比
+        # Allocation (weights in portfolio value)
         pos_alloc = pos_no_cash.div(total, axis=0).fillna(0)
         sections["pos_alloc"] = pos_alloc
 
-        # 持仓汇总
+        # Summary
         pos_summary = OrderedDict()
         pos_summary["Avg Gross Leverage"] = sections["gross_leverage"].mean()
         pos_summary["Max Gross Leverage"] = sections["gross_leverage"].max()
@@ -201,7 +207,7 @@ def compute_sections(
         pos_summary["Number of Assets"] = len(pos_no_cash.columns)
         sections["position_summary"] = pos_summary
 
-    # ------ Transactions 相关 ------
+    # ------ Transactions ------
     if transactions is not None:
         sections["has_transactions"] = True
         txn = transactions.copy()
@@ -210,11 +216,11 @@ def compute_sections(
         sections["daily_txn_count"] = txn_norm.groupby(txn_norm.index).size()
         sections["daily_txn_value"] = (txn_norm["amount"].abs() * txn_norm["price"]).groupby(txn_norm.index).sum()
 
-        # 交易时间分布（小时）
+        # Transaction time distribution (hours)
         if hasattr(txn.index, "hour"):
             sections["txn_hours"] = txn.index.hour
 
-        # Turnover（如果有 positions）
+        # Turnover (if positions are available)
         if positions is not None:
             try:
                 sections["turnover"] = Empyrical.get_turnover(positions, transactions)
@@ -225,7 +231,7 @@ def compute_sections(
                     extra={"context": "compute_sections", "metric": "txn_turnover"},
                 )
 
-        # 交易汇总
+        # Summary
         txn_summary = OrderedDict()
         txn_summary["Total Transactions"] = len(transactions)
         txn_summary["Total Transaction Days"] = len(sections["daily_txn_count"])
@@ -237,7 +243,7 @@ def compute_sections(
             txn_summary["Unique Symbols Traded"] = int(transactions["symbol"].nunique())
         sections["txn_summary"] = txn_summary
 
-    # ------ Trades 相关 ------
+    # ------ Trades ------
     if trades is not None and len(trades) > 0:
         ts = OrderedDict()
         n_trades = len(trades)
@@ -297,18 +303,18 @@ def compute_sections(
         if "barlen" in trades.columns:
             sections["trade_barlen"] = trades["barlen"].values
 
-    # ------ 区间收益 Period Returns ------
+    # ------ Period returns ------
     end_date = returns.index[-1]
     _tz = getattr(end_date, "tzinfo", None)
     _ytd_ts = pd.Timestamp(end_date.year, 1, 1, tz=_tz)
     period_defs = [
-        ("近一周", 5),
-        ("近一月", 21),
-        ("近三月", 63),
-        ("近六月", 126),
-        ("近一年", 252),
-        ("近三年", 756),
-        ("近五年", 1260),
+        ("1W", 5),
+        ("1M", 21),
+        ("3M", 63),
+        ("6M", 126),
+        ("1Y", 252),
+        ("3Y", 756),
+        ("5Y", 1260),
     ]
     pr = OrderedDict()
     for label, days in period_defs:
@@ -318,8 +324,8 @@ def compute_sections(
             pr[label] = np.nan
     ytd_mask = returns.index >= _ytd_ts
     if ytd_mask.sum() > 0:
-        pr["年初至今"] = float(Empyrical.cum_returns_final(returns[ytd_mask]))
-    pr["成立以来"] = float(Empyrical.cum_returns_final(returns))
+        pr["YTD"] = float(Empyrical.cum_returns_final(returns[ytd_mask]))
+    pr["Since Inception"] = float(Empyrical.cum_returns_final(returns))
     sections["period_returns"] = pr
 
     if benchmark_rets is not None:
@@ -333,11 +339,11 @@ def compute_sections(
                 bpr[label] = np.nan
         bm_ytd = benchmark_rets[benchmark_rets.index >= _bm_ytd_ts]
         if len(bm_ytd) > 0:
-            bpr["年初至今"] = float(Empyrical.cum_returns_final(bm_ytd))
-        bpr["成立以来"] = float(Empyrical.cum_returns_final(benchmark_rets))
+            bpr["YTD"] = float(Empyrical.cum_returns_final(bm_ytd))
+        bpr["Since Inception"] = float(Empyrical.cum_returns_final(benchmark_rets))
         sections["benchmark_period_returns"] = bpr
 
-    # ------ 区间胜率 Period Win Rates ------
+    # ------ Period win rates ------
     wr = OrderedDict()
     for label, days in period_defs:
         if len(returns) >= days:
@@ -347,11 +353,11 @@ def compute_sections(
             wr[label] = np.nan
     ytd_r = returns[ytd_mask]
     if len(ytd_r) > 0:
-        wr["年初至今"] = float((ytd_r > 0).sum() / len(ytd_r))
-    wr["成立以来"] = float((returns > 0).sum() / len(returns))
+        wr["YTD"] = float((ytd_r > 0).sum() / len(ytd_r))
+    wr["Since Inception"] = float((returns > 0).sum() / len(returns))
     sections["period_win_rates"] = wr
 
-    # ------ 总结文本 Summary Text ------
+    # ------ Summary text ------
     _ann = perf.get("Annual Return", np.nan)
     _shp = perf.get("Sharpe Ratio", np.nan)
     _mdd = perf.get("Max Drawdown", np.nan)
@@ -362,27 +368,27 @@ def compute_sections(
     def _perf_tag(sh):
         if np.isnan(sh):
             return "N/A"
-        return "优秀" if sh > 1.5 else ("良好" if sh > 1.0 else ("一般" if sh > 0.5 else "较差"))
+        return "excellent" if sh > 1.5 else ("good" if sh > 1.0 else ("fair" if sh > 0.5 else "poor"))
 
     def _risk_tag(dd):
         if np.isnan(dd):
             return "N/A"
         a = abs(dd)
         return (
-            "风险控制优秀"
+            "risk control: excellent"
             if a < 0.1
-            else ("风险控制良好" if a < 0.2 else ("风险控制一般" if a < 0.3 else "风险控制较差"))
+            else ("risk control: good" if a < 0.2 else ("risk control: fair" if a < 0.3 else "risk control: poor"))
         )
 
     _txt = (
-        f"报告区间内，产品年化收益率为{_ann * 100:.2f}%，表现{_perf_tag(_shp)}。"
-        f"夏普比率为{_shp:.2f}，索提诺比率为{_sor:.2f}，卡尔玛比率为{_cal:.2f}。"
-        f"最大回撤为{abs(_mdd) * 100:.2f}%，年化波动率为{_vol * 100:.2f}%，{_risk_tag(_mdd)}。"
+        f"Over the report period, annual return is {_ann * 100:.2f}% ({_perf_tag(_shp)}). "
+        f"Sharpe={_shp:.2f}, Sortino={_sor:.2f}, Calmar={_cal:.2f}. "
+        f"Max drawdown={abs(_mdd) * 100:.2f}%, annual volatility={_vol * 100:.2f}%, {_risk_tag(_mdd)}."
     )
     if benchmark_rets is not None:
         _a = perf.get("Alpha", np.nan)
         _b = perf.get("Beta", np.nan)
-        _txt += f" Alpha为{_a:.4f}，Beta为{_b:.4f}。"
+        _txt += f" Alpha={_a:.4f}, Beta={_b:.4f}."
     sections["summary_text"] = _txt
 
     return sections

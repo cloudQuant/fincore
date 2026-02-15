@@ -1,7 +1,6 @@
-"""
-绩效归因相关的绘图和显示函数
+"""Performance attribution plotting and display functions.
 
-包含绩效归因收益、因子贡献、风险暴露等绘图函数。
+Includes attribution return series, factor contributions, and risk exposures.
 """
 
 import matplotlib.pyplot as plt
@@ -17,7 +16,7 @@ def plot_perf_attrib_returns(empyrical_instance, perf_attrib_data, cost=None, ax
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     perf_attrib_data : pd.DataFrame
         df with factors, common returns, and specific returns as columns,
         and datetimes as index. Assumes the `total_returns` column is NOT
@@ -98,7 +97,7 @@ def plot_factor_contribution_to_perf(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     perf_attrib_data : pd.DataFrame
         df with factors, common returns, and specific returns as columns,
         and datetimes as index
@@ -172,7 +171,7 @@ def show_perf_attrib_stats(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy.
     positions : pd.DataFrame
@@ -205,6 +204,9 @@ def show_perf_attrib_stats(
     summary_stats = perf_attrib_stats.loc[
         ["Annualized Specific Return", "Annualized Common Return", "Annualized Total Return", "Specific Sharpe Ratio"]
     ]
+    # Pandas (>= 2.0) may raise when assigning strings into a float Series.
+    # Convert to object so we can format a subset of rows as percentages.
+    summary_stats = summary_stats.astype(object)
 
     # Format return rows in summary stats table as percentages.
     for col_name in (

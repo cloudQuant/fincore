@@ -48,8 +48,23 @@ def efficient_frontier(
         - 'max_sharpe': dict with keys 'weights', 'return', 'volatility', 'sharpe'
         - 'asset_names': list of asset names
     """
+    if not isinstance(returns, pd.DataFrame) or returns.empty:
+        raise ValueError("returns must be a non-empty DataFrame.")
+
+    if returns.shape[0] < 2:
+        raise ValueError("At least 2 observations are required for frontier computation.")
+
     if returns.shape[1] < 2:
         raise ValueError("At least 2 assets required for frontier computation.")
+
+    if n_points < 2:
+        raise ValueError("n_points must be >= 2.")
+
+    if max_weight <= 0:
+        raise ValueError("max_weight must be > 0.")
+
+    if not np.isfinite(returns.to_numpy(dtype=float)).all():
+        raise ValueError("returns contains NaN or infinite values.")
 
     mu = returns.mean().values * 252  # annualised
     cov = returns.cov().values * 252

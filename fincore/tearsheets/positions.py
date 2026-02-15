@@ -1,7 +1,6 @@
-"""
-持仓相关的绘图和显示函数
+"""Position-related plotting and display functions.
 
-包含持仓暴露、杠杆、holdings 等绘图函数。
+Includes exposure, leverage, and holdings charts.
 """
 
 import matplotlib.patches as patches
@@ -20,7 +19,7 @@ def plot_holdings(empyrical_instance, returns, positions, legend_loc="best", ax=
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     positions : pd.DataFrame, optional
@@ -167,7 +166,7 @@ def plot_gross_leverage(empyrical_instance, _returns, positions, ax=None, **kwar
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     _returns : pd.Series
         Daily returns of the strategy, noncumulative.
     positions : pd.DataFrame
@@ -203,7 +202,7 @@ def plot_max_median_position_concentration(empyrical_instance, positions, ax=Non
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     positions : pd.DataFrame
         The positions that the strategy takes over time.
     ax : matplotlib.Axes, optional
@@ -284,7 +283,7 @@ def show_and_plot_top_positions(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     positions_alloc : pd.DataFrame

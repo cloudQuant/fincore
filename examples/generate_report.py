@@ -1,43 +1,44 @@
 """
-使用 fincore.create_strategy_report 生成策略分析报告。
+Generate strategy performance reports using fincore.create_strategy_report.
 
-演示 create_strategy_report 根据传入数据动态生成报告：
-  - 只传 returns → 基础绩效报告
-  - 加 positions → 增加持仓分析
-  - 加 transactions → 增加交易分析
-  - 加 trades → 增加交易统计（胜率、盈亏比等）
+Demonstrates how create_strategy_report builds different sections based on
+the inputs you provide:
+  - returns only -> basic performance report
+  - + positions -> adds holdings/positions analysis
+  - + transactions -> adds transaction analysis
+  - + trades -> adds trade statistics (win rate, profit factor, etc.)
 
-同时演示 HTML 和 PDF 两种输出格式。
+Also demonstrates both HTML and PDF outputs.
 
-使用方式:
+Usage:
     python generate_report.py
 """
+
+import json
 import os
 import sys
-import json
+
 import pandas as pd
 
-# 确保导入本地源码（而非 site-packages 中的旧版本）
+# Ensure we import local source (not an older site-packages install).
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import fincore
 
 # =========================================================================
-# 1. 读取数据
+# 1. Load data
 # =========================================================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, "011_abberation", "logs")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "011_abberation", "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-run_dirs = sorted(
-    [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))]
-)
+run_dirs = sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
 RUN_DIR = os.path.join(DATA_DIR, run_dirs[-1])
 
 with open(os.path.join(RUN_DIR, "run_info.json")) as f:
     run_info = json.load(f)
 
-print(f"策略: {run_info['strategy_name']}")
+print(f"Strategy: {run_info['strategy_name']}")
 
 # --- returns ---
 value_df = pd.read_csv(os.path.join(RUN_DIR, "value.log"), sep="\t", usecols=["dt", "value", "cash"])
@@ -67,25 +68,28 @@ order_df = pd.read_csv(os.path.join(RUN_DIR, "order.log"), sep="\t")
 completed = order_df[order_df["status"] == "Completed"].copy()
 completed["dt"] = pd.to_datetime(completed["dt"])
 txn_index = pd.DatetimeIndex(completed["dt"].values).tz_localize("UTC")
-transactions = pd.DataFrame({
-    "amount": completed["size"].values,
-    "price": completed["executed_price"].values,
-    "symbol": completed["data_name"].values,
-}, index=txn_index)
+transactions = pd.DataFrame(
+    {
+        "amount": completed["size"].values,
+        "price": completed["executed_price"].values,
+        "symbol": completed["data_name"].values,
+    },
+    index=txn_index,
+)
 
-# --- trades (已平仓交易记录) ---
+# --- trades (closed trades only) ---
 trade_df = pd.read_csv(os.path.join(RUN_DIR, "trade.log"), sep="\t")
 closed_trades = trade_df[trade_df["status"] == "Closed"].copy()
 
-print(f"日期: {daily_returns.index[0].strftime('%Y-%m-%d')} → {daily_returns.index[-1].strftime('%Y-%m-%d')}")
-print(f"交易日: {len(daily_returns)}, 成交: {len(transactions)}, 已平仓交易: {len(closed_trades)}")
+print(f"Dates: {daily_returns.index[0].strftime('%Y-%m-%d')} -> {daily_returns.index[-1].strftime('%Y-%m-%d')}")
+print(f"Trading days: {len(daily_returns)}, transactions: {len(transactions)}, closed trades: {len(closed_trades)}")
 
 # =========================================================================
-# 2. 生成报告 — 逐步增加数据，展示动态内容
+# 2. Generate reports - add inputs progressively to show dynamic sections
 # =========================================================================
 
-# --- 报告 1: 只有 returns（最简单） ---
-print("\n[报告 1] 只传 returns → HTML ...")
+# --- Report 1: returns only (minimal) ---
+print("\n[Report 1] returns only -> HTML ...")
 out1 = fincore.create_strategy_report(
     daily_returns,
     title=f"{run_info['strategy_name']} — Returns Only",
@@ -93,8 +97,8 @@ out1 = fincore.create_strategy_report(
 )
 print(f"  → {out1}")
 
-# --- 报告 2: returns + positions + transactions ---
-print("[报告 2] returns + positions + transactions → HTML ...")
+# --- Report 2: returns + positions + transactions ---
+print("[Report 2] returns + positions + transactions -> HTML ...")
 out2 = fincore.create_strategy_report(
     daily_returns,
     positions=positions,
@@ -104,8 +108,8 @@ out2 = fincore.create_strategy_report(
 )
 print(f"  → {out2}")
 
-# --- 报告 3: 完整数据 → HTML ---
-print("[报告 3] 完整数据 → HTML ...")
+# --- Report 3: full inputs -> HTML ---
+print("[Report 3] full inputs -> HTML ...")
 out3 = fincore.create_strategy_report(
     daily_returns,
     positions=positions,
@@ -116,8 +120,8 @@ out3 = fincore.create_strategy_report(
 )
 print(f"  → {out3}")
 
-# --- 报告 4: 完整数据 → PDF ---
-print("[报告 4] 完整数据 → PDF ...")
+# --- Report 4: full inputs -> PDF ---
+print("[Report 4] full inputs -> PDF ...")
 out4 = fincore.create_strategy_report(
     daily_returns,
     positions=positions,
@@ -129,12 +133,12 @@ out4 = fincore.create_strategy_report(
 print(f"  → {out4}")
 
 print(f"\n{'=' * 60}")
-print("所有报告已生成！")
+print("All reports generated.")
 print(f"{'=' * 60}")
-print(f"""
-报告对比:
-  报告 1 (returns only):         只有基础绩效 + 收益图表
-  报告 2 (+ pos + txn):          增加持仓分析 + 交易分析
-  报告 3 (+ trades, HTML):       增加交易统计（胜率、盈亏比、PnL分布）
-  报告 4 (+ trades, PDF):        同报告 3，PDF 格式
+print("""
+Report comparison:
+  Report 1 (returns only):       basic performance + return charts
+  Report 2 (+ pos + txn):        adds positions + transactions analysis
+  Report 3 (+ trades, HTML):     adds trade stats (win rate, profit factor, PnL distribution)
+  Report 4 (+ trades, PDF):      same as report 3, but PDF output
 """)

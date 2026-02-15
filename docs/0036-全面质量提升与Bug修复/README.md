@@ -4,9 +4,32 @@
 
 2026-02-14
 
+## 进展快照（更新于 2026-02-14）
+
+### 当前实时状态（本地实测）
+
+1. `pytest tests -q`：**1685 passed**, **14 skipped**, **0 failed**。
+2. `pytest --collect-only`：收集用例 **1699**。
+3. `ruff check fincore tests`：**0 issues**。
+4. `mypy`（`core/metrics/plugin/data/optimization/attribution/report/risk/simulation/utils/viz/empyrical/tearsheets/pyfolio`）通过（`ignore_errors` 已清零）。
+5. 已新增 `RuntimeWarning` 防回归修复与测试（`stats/style/fama_french/report.compute`）。
+6. 已完成优化模块输入鲁棒性加强（`frontier/objectives/risk_parity` 参数校验与异常路径测试）。
+7. 已统一 `pytest` 配置到 `pyproject.toml`，并移除 `pytest.ini`，消除双源漂移。
+8. 已实现 `fetch_ff_factors` provider 注入与进程内缓存（可测试、可替换、默认返回拷贝以防止外部误改缓存对象）。
+9. CI 增强：加入 `compileall` 语法检查、`ruff format --check` 格式一致性检查，并扩大 `mypy` 覆盖面。
+
+### 已完成（相对原计划）
+
+- Phase A：style 归因 API 端到端可调用与契约兼容（`StyleResult` 契约、独立调用路径）。
+- Phase B：关键 P1 缺陷修复（含归因/统计边界条件与优化模块异常路径）。
+- Phase D：补充归因、报表、优化、统计边界测试（覆盖退化输入和不合理参数）。
+- Phase E（部分）：ruff 从历史 230 告警收敛至当前 0 告警。
+
 ---
 
-## 一、当前基线状态（实测）
+## 一、历史基线状态（首次审计）
+
+> 以下数据为 2026-02-14 首次审计快照，已不代表最新状态；最新状态以上方“进展快照”为准。
 
 ### 已达成
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""风险指标函数模块."""
+"""Risk metrics."""
 
 from sys import float_info
 

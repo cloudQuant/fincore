@@ -1,30 +1,30 @@
 # ============================================================
-# 策略基本信息
+# Strategy metadata
 # ============================================================
 strategy:
-  name: "Abberation布林带突破策略"
-  description: "基于布林带上下轨突破的趋势跟踪策略。突破上轨做多，突破下轨做空，回归中轨时平仓。"
+  name: "Abberation Bollinger Band Breakout Strategy"
+  description: "A trend-following strategy: buy on upper-band breakouts, sell on lower-band breakouts, and exit on middle-band reversion."
   author: "yunjinqi"
 
 # ============================================================
-# 策略参数
+# Strategy parameters
 # ============================================================
 params:
-  boll_period: 200     # 布林带周期
-  boll_mult: 2         # 布林带倍数
+  boll_period: 200     # Bollinger lookback period
+  boll_mult: 2         # Std-dev multiplier
 
 # ============================================================
-# 数据配置
+# Data settings
 # ============================================================
 data:
-  symbol: "RB889"            # 螺纹钢期货代码
-  data_type: "future"       # 数据类型: future(期货)
+  symbol: "RB889"      # Rebar futures symbol
+  data_type: "future"  # Data type: future
 
 # ============================================================
-# 回测配置
+# Backtest settings
 # ============================================================
 backtest:
-  initial_cash: 1000000   # 初始资金（100万）
-  commission: 0.0001      # 手续费率 (0.01%)
-  margin: 0.10            # 保证金比例 (10%)
-  multiplier: 10          # 合约乘数
+  initial_cash: 1000000   # Starting cash
+  commission: 0.0001      # Commission rate (0.01%)
+  margin: 0.10            # Margin ratio (10%)
+  multiplier: 10          # Contract multiplier

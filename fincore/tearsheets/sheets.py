@@ -1,20 +1,20 @@
 # =============================================================================
-# Tear Sheet 创建函数 (Tear Sheet Creation Functions)
+# Tear sheet creation functions
 # =============================================================================
 #
-# 本模块包含11个create_*_tear_sheet函数，按功能域组织：
+# This module contains 11 ``create_*_tear_sheet`` functions organized by domain:
 #
-# 1. 完整tear sheet: create_full_tear_sheet (聚合所有子tear sheet)
-# 2. 收益tear sheet: create_returns_tear_sheet (收益率分析)
-# 3. 风险tear sheet: create_risk_tear_sheet (风险指标分析)
-# 4. 交易tear sheet: create_txn_tear_sheet (交易分析)
-# 5. 简单tear sheet: create_simple_tear_sheet (简化版完整tear sheet)
-# 6. 利息收益times tear sheet: create_interesting_times_tear_sheet (利息和收益times)
-# 7. 归因tear sheet: create_perf_attribution_tear_sheet (绩效归因)
-# 8. 圆桌交易tear sheet: create_round_trip_tear_sheet (圆桌交易分析)
-# 9. 贝叶斯tear sheet: create_bayesian_tear_sheet (贝叶斯分析)
-# 10. 容量tear sheet: create_capacity_tear_sheet (容量约束分析)
-# 11. 仓位tear sheet: create_position_tear_sheet (持仓分析)
+# 1. Full tear sheet: create_full_tear_sheet (aggregates multiple sub tear sheets)
+# 2. Returns tear sheet: create_returns_tear_sheet (returns analysis)
+# 3. Risk tear sheet: create_risk_tear_sheet (risk metrics analysis)
+# 4. Transactions tear sheet: create_txn_tear_sheet (transactions analysis)
+# 5. Simple tear sheet: create_simple_tear_sheet (simplified full tear sheet)
+# 6. Interesting times tear sheet: create_interesting_times_tear_sheet (stress/interesting periods)
+# 7. Performance attribution tear sheet: create_perf_attribution_tear_sheet (attribution)
+# 8. Round trip tear sheet: create_round_trip_tear_sheet (round-trip analysis)
+# 9. Bayesian tear sheet: create_bayesian_tear_sheet (Bayesian analysis)
+# 10. Capacity tear sheet: create_capacity_tear_sheet (capacity constraints)
+# 11. Positions tear sheet: create_position_tear_sheet (positions analysis)
 #
 # =============================================================================
 
@@ -24,8 +24,10 @@ Tear sheet creation functions.
 Contains functions for creating various analysis tear sheets.
 """
 
+import importlib
 import time
 import warnings
+from typing import Any, Callable
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -46,18 +48,31 @@ from fincore.utils import (
     timer,
 )
 
+DisplayFunc = Callable[..., Any]
+MarkdownFunc = Callable[[str], Any]
+
+
+def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+    print(*objs)
+
+
+def _fallback_markdown(text: str) -> str:
+    return text
+
+
+display: DisplayFunc = _fallback_display
+Markdown: MarkdownFunc = _fallback_markdown
+
 try:
-    from IPython.display import Markdown, display
-except ImportError:
-
-    def display(obj):
-        print(obj)
-
-    def Markdown(text):
-        return text
+    _ipy_display_mod = importlib.import_module("IPython.display")
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+else:
+    display = getattr(_ipy_display_mod, "display", _fallback_display)
+    Markdown = getattr(_ipy_display_mod, "Markdown", _fallback_markdown)
 
 
-# # 完整tear sheet
+# # Full tear sheet
 # ==============
 def create_full_tear_sheet(
     pyfolio_instance,
@@ -177,7 +192,7 @@ def create_full_tear_sheet(
         )
 
 
-# # 简单tear sheet
+# # Simple tear sheet
 # ==============
 def create_simple_tear_sheet(
     pyfolio_instance,
@@ -293,7 +308,7 @@ def create_simple_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
 
-# # 收益tear sheet
+# # Returns tear sheet
 # ==============
 def create_returns_tear_sheet(
     pyfolio_instance,
@@ -432,7 +447,7 @@ def create_returns_tear_sheet(
         return fig
 
 
-# # 仓位tear sheet
+# # Positions tear sheet
 # ==============
 def create_position_tear_sheet(
     pyfolio_instance,
@@ -499,7 +514,7 @@ def create_position_tear_sheet(
         return fig
 
 
-# # 交易tear sheet
+# # Transactions tear sheet
 # ==============
 def create_txn_tear_sheet(
     pyfolio_instance,
@@ -550,7 +565,7 @@ def create_txn_tear_sheet(
         return fig
 
 
-# # 圆桌交易tear sheet
+# # Round trip tear sheet
 # ================
 def create_round_trip_tear_sheet(
     pyfolio_instance,
@@ -618,7 +633,7 @@ def create_round_trip_tear_sheet(
         return fig
 
 
-# # 利息收益times tear sheet
+# # Interesting times tear sheet
 def create_interesting_times_tear_sheet(
     pyfolio_instance, returns, benchmark_rets=None, legend_loc="best", run_flask_app=False
 ):
@@ -668,7 +683,7 @@ def create_interesting_times_tear_sheet(
         return fig
 
 
-# # 容量tear sheet
+# # Capacity tear sheet
 # ==============
 def create_capacity_tear_sheet(
     pyfolio_instance,
@@ -746,7 +761,7 @@ def create_capacity_tear_sheet(
         return fig
 
 
-# # 贝叶斯tear sheet
+# # Bayesian tear sheet
 # ===============
 def create_bayesian_tear_sheet(
     pyfolio_instance,
@@ -868,6 +883,8 @@ def create_bayesian_tear_sheet(
         print(f"\nRunning stochastic volatility model on most recent {returns_cutoff} days of returns.")
         if df_train.size > returns_cutoff:
             df_train_truncated = df_train[-returns_cutoff:]
+        else:
+            df_train_truncated = df_train
         _, trace_stoch_vol = pyfolio_instance.model_stoch_vol(df_train_truncated)
         previous_time = timer("running stochastic volatility model", previous_time)
 
@@ -885,7 +902,7 @@ def create_bayesian_tear_sheet(
         return fig
 
 
-# # 风险tear sheet
+# # Risk tear sheet
 # ==============
 def create_risk_tear_sheet(
     pyfolio_instance,
@@ -906,80 +923,98 @@ def create_risk_tear_sheet(
     """
     positions = check_intraday(estimate_intraday, returns, positions, transactions)
 
-    # style_factor_panel is expected to be a dict of DataFrames
+    # Align inputs on the overlapping time index. Most upstream implementations
+    # expect these inputs to be time-indexed.
+    idx = positions.index
     if style_factor_panel is not None:
-        first_panel_df = next(iter(style_factor_panel.values()))
-        idx = positions.index & first_panel_df.index & sectors.index & caps.index & shares_held.index & volumes.index
-    else:
-        idx = positions.index & sectors.index & caps.index & shares_held.index & volumes.index
-    positions = positions.loc[idx]
+        for df in style_factor_panel.values():
+            idx = idx.intersection(df.index)
+    for maybe_panel in (sectors, caps, shares_held, volumes):
+        if maybe_panel is not None:
+            idx = idx.intersection(maybe_panel.index)
 
-    vertical_sections = 0
+    if len(idx) == 0:
+        warnings.warn("No overlapping index across risk tear sheet inputs; nothing to plot.", UserWarning)
+        return
+
+    positions = positions.loc[idx]
     if style_factor_panel is not None:
-        vertical_sections += len(style_factor_panel)
         style_factor_panel = {k: v.loc[idx] for k, v in style_factor_panel.items()}
     if sectors is not None:
-        vertical_sections += 4
         sectors = sectors.loc[idx]
     if caps is not None:
-        vertical_sections += 4
         caps = caps.loc[idx]
-    if (shares_held is not None) & (volumes is not None) & (percentile is not None):
-        vertical_sections += 3
+    if shares_held is not None:
         shares_held = shares_held.loc[idx]
+    if volumes is not None:
         volumes = volumes.loc[idx]
 
     if percentile is None:
         percentile = 0.1
 
+    vertical_sections = 0
+    if style_factor_panel is not None:
+        vertical_sections += len(style_factor_panel)
+    if sectors is not None:
+        vertical_sections += 4
+    if caps is not None:
+        vertical_sections += 4
+    if volumes is not None:
+        vertical_sections += 3
+
+    if vertical_sections == 0:
+        raise ValueError(
+            "create_risk_tear_sheet requires at least one of style_factor_panel, sectors, caps, or volumes."
+        )
+
     fig = plt.figure(figsize=[14, vertical_sections * 6])
     gs = gridspec.GridSpec(vertical_sections, 3, wspace=0.5, hspace=0.5)
 
+    row = 0
+    sharex_ax = None
+
     if style_factor_panel is not None:
         style_axes = []
-        style_axes.append(fig.add_subplot(gs[0, :]))
-        for i in range(1, len(style_factor_panel)):
-            style_axes.append(fig.add_subplot(gs[i, :], sharex=style_axes[0]))
+        for k in range(len(style_factor_panel)):
+            ax = fig.add_subplot(gs[row + k, :], sharex=style_axes[0] if k > 0 else None)
+            style_axes.append(ax)
 
-        j = 0
-        for name, df in style_factor_panel.items():
+        for j, (name, df) in enumerate(style_factor_panel.items()):
             sfe = pyfolio_instance.compute_style_factor_exposures(positions, df)
             pyfolio_instance.plot_style_factor_exposures(sfe, name, style_axes[j])
-            j += 1
+
+        sharex_ax = style_axes[0]
+        row += len(style_factor_panel)
 
     if sectors is not None:
-        i += 1
-        ax_sector_longshort = fig.add_subplot(gs[i : i + 2, :], sharex=style_axes[0])
-        i += 2
-        ax_sector_gross = fig.add_subplot(gs[i, :], sharex=style_axes[0])
-        i += 1
-        ax_sector_net = fig.add_subplot(gs[i, :], sharex=style_axes[0])
+        ax_sector_longshort = fig.add_subplot(gs[row : row + 2, :], sharex=sharex_ax)
+        ax_sector_gross = fig.add_subplot(gs[row + 2, :], sharex=sharex_ax or ax_sector_longshort)
+        ax_sector_net = fig.add_subplot(gs[row + 3, :], sharex=sharex_ax or ax_sector_longshort)
         long_exposures, short_exposures, gross_exposures, net_exposures = pyfolio_instance.compute_sector_exposures(
             positions, sectors
         )
         pyfolio_instance.plot_sector_exposures_longshort(long_exposures, short_exposures, ax=ax_sector_longshort)
         pyfolio_instance.plot_sector_exposures_gross(gross_exposures, ax=ax_sector_gross)
         pyfolio_instance.plot_sector_exposures_net(net_exposures, ax=ax_sector_net)
+        sharex_ax = sharex_ax or ax_sector_longshort
+        row += 4
 
     if caps is not None:
-        i += 1
-        ax_cap_longshort = fig.add_subplot(gs[i : i + 2, :], sharex=style_axes[0])
-        i += 2
-        ax_cap_gross = fig.add_subplot(gs[i, :], sharex=style_axes[0])
-        i += 1
-        ax_cap_net = fig.add_subplot(gs[i, :], sharex=style_axes[0])
+        ax_cap_longshort = fig.add_subplot(gs[row : row + 2, :], sharex=sharex_ax)
+        ax_cap_gross = fig.add_subplot(gs[row + 2, :], sharex=sharex_ax or ax_cap_longshort)
+        ax_cap_net = fig.add_subplot(gs[row + 3, :], sharex=sharex_ax or ax_cap_longshort)
         long_exposures, short_exposures, gross_exposures, net_exposures = pyfolio_instance.compute_cap_exposures(
             positions, caps
         )
         pyfolio_instance.plot_cap_exposures_longshort(long_exposures, short_exposures, ax_cap_longshort)
         pyfolio_instance.plot_cap_exposures_gross(gross_exposures, ax_cap_gross)
         pyfolio_instance.plot_cap_exposures_net(net_exposures, ax_cap_net)
+        sharex_ax = sharex_ax or ax_cap_longshort
+        row += 4
 
     if volumes is not None:
-        i += 1
-        ax_vol_longshort = fig.add_subplot(gs[i : i + 2, :], sharex=style_axes[0])
-        i += 2
-        ax_vol_gross = fig.add_subplot(gs[i, :], sharex=style_axes[0])
+        ax_vol_longshort = fig.add_subplot(gs[row : row + 2, :], sharex=sharex_ax)
+        ax_vol_gross = fig.add_subplot(gs[row + 2, :], sharex=sharex_ax or ax_vol_longshort)
         longed_threshold, shorted_threshold, grossed_threshold = pyfolio_instance.compute_volume_exposures(
             positions, volumes, percentile
         )
@@ -1019,7 +1054,8 @@ def create_perf_attrib_tear_sheet(
         returns, positions, factor_returns, factor_loadings, transactions, pos_in_dollars
     )
 
-    vertical_sections = 1 + 2 * max(len(factor_partitions), 1)
+    num_partitions = len(factor_partitions) if factor_partitions else 1
+    vertical_sections = 1 + 2 * max(num_partitions, 1)
     current_section = 0
 
     fig = plt.figure(figsize=[14, vertical_sections * 6])

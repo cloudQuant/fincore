@@ -8,6 +8,8 @@ import pytest
 
 from fincore.simulation.bootstrap import (
     _get_statistic_fn,
+    _sharpe_statistic,
+    _sortino_statistic,
     bootstrap,
     bootstrap_ci,
     bootstrap_summary,
@@ -50,7 +52,10 @@ class TestBootstrap:
 
     def test_bootstrap_custom_statistic(self, sample_returns):
         """Test bootstrap with custom statistic function."""
-        custom_stat = lambda x: np.percentile(x, 75)
+
+        def custom_stat(x):
+            return np.percentile(x, 75)
+
         boot_dist = bootstrap(sample_returns, n_samples=1000, statistic=custom_stat, seed=42)
 
         assert len(boot_dist) == 1000
@@ -75,6 +80,10 @@ class TestBootstrap:
         # Sample mean should be within CI
         sample_mean = np.mean(sample_returns)
         assert ci_lower <= sample_mean <= ci_upper
+
+    def test_bootstrap_ci_method_not_implemented(self, sample_returns):
+        with pytest.raises(ValueError, match="not implemented"):
+            bootstrap_ci(sample_returns, n_samples=100, method="bc", seed=42)
 
     def test_bootstrap_ci_different_alpha(self, sample_returns):
         """Test CI with different alpha levels."""
@@ -126,3 +135,15 @@ class TestStatisticFunctions:
         """Test that invalid statistic name raises error."""
         with pytest.raises(ValueError, match="Unknown statistic"):
             _get_statistic_fn("invalid")
+
+    def test_sharpe_and_sortino_edge_cases(self):
+        # Too few observations.
+        assert np.isnan(_sharpe_statistic(np.array([0.01])))
+        assert np.isnan(_sortino_statistic(np.array([0.01])))
+
+        # Zero std / zero downside std branches.
+        assert np.isnan(_sharpe_statistic(np.array([0.0, 0.0])))
+        assert np.isinf(_sharpe_statistic(np.array([0.01, 0.01])))
+
+        assert np.isnan(_sortino_statistic(np.array([0.0, 0.0])))
+        assert np.isinf(_sortino_statistic(np.array([0.01, 0.02])))

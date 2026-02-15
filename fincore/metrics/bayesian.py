@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""贝叶斯模型函数模块."""
+"""Bayesian models and helpers."""
 
 import numpy as np
 import pandas as pd

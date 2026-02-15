@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""滚动计算函数模块."""
+"""Rolling-window metrics."""
 
 import numpy as np
 import pandas as pd

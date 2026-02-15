@@ -75,6 +75,16 @@ class TestEfficientFrontier:
         with pytest.raises(ValueError, match="At least 2 assets"):
             efficient_frontier(df)
 
+    def test_invalid_n_points_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="n_points must be >= 2"):
+            efficient_frontier(sample_returns, n_points=1)
+
+    def test_returns_with_nan_raises(self, sample_returns):
+        bad = sample_returns.copy()
+        bad.iloc[0, 0] = np.nan
+        with pytest.raises(ValueError, match="contains NaN or infinite values"):
+            efficient_frontier(bad, n_points=10)
+
 
 class TestRiskParity:
     """Tests for risk_parity."""
@@ -100,6 +110,28 @@ class TestRiskParity:
     def test_weights_positive(self, sample_returns):
         rp = risk_parity(sample_returns)
         assert np.all(rp["weights"] > 0)
+
+    def test_invalid_risk_budget_length_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="risk_budget length"):
+            risk_parity(sample_returns, risk_budget=np.array([0.5, 0.5]))
+
+    def test_negative_risk_budget_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="must be non-negative"):
+            risk_parity(sample_returns, risk_budget=np.array([0.4, 0.3, -0.1, 0.4]))
+
+    def test_zero_sum_risk_budget_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="positive sum"):
+            risk_parity(sample_returns, risk_budget=np.array([0.0, 0.0, 0.0, 0.0]))
+
+    def test_invalid_max_iter_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="max_iter must be >= 1"):
+            risk_parity(sample_returns, max_iter=0)
+
+    def test_returns_with_nan_raises(self, sample_returns):
+        bad = sample_returns.copy()
+        bad.iloc[0, 0] = np.nan
+        with pytest.raises(ValueError, match="contains NaN or infinite values"):
+            risk_parity(bad)
 
 
 class TestOptimize:
@@ -141,6 +173,20 @@ class TestOptimize:
     def test_no_short_weights_positive(self, sample_returns):
         res = optimize(sample_returns, objective="max_sharpe", short_allowed=False)
         assert np.all(res["weights"] >= -1e-8)
+
+    def test_returns_with_nan_raises(self, sample_returns):
+        bad = sample_returns.copy()
+        bad.iloc[0, 0] = np.nan
+        with pytest.raises(ValueError, match="contains NaN or infinite values"):
+            optimize(bad, objective="max_sharpe")
+
+    def test_min_weight_greater_than_max_weight_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="min_weight must be <= max_weight"):
+            optimize(sample_returns, objective="max_sharpe", min_weight=0.6, max_weight=0.5)
+
+    def test_sector_constraints_without_map_raises(self, sample_returns):
+        with pytest.raises(ValueError, match="sector_map is required"):
+            optimize(sample_returns, objective="max_sharpe", sector_constraints={"Tech": (0.1, 0.9)})
 
 
 class TestOptimizationEdgeCases:

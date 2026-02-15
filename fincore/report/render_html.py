@@ -35,7 +35,7 @@ def generate_html(
     output,
     rolling_window,
 ):
-    """生成交互式 HTML 报告（使用 ECharts 图表 + 侧边栏导航）。"""
+    """Generate an interactive HTML report (ECharts + sidebar navigation)."""
     s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
 
     # ---- chart data ----
@@ -160,22 +160,22 @@ def generate_html(
 
     # ---- sidebar ----
     nav = [
-        ("overview", "产品概览"),
-        ("period", "区间收益"),
-        ("performance", "绩效分析"),
-        ("returns", "收益分析"),
-        ("rolling", "滚动指标"),
-        ("drawdown", "回撤分析"),
+        ("overview", "Overview"),
+        ("period", "Period Returns"),
+        ("performance", "Performance"),
+        ("returns", "Returns"),
+        ("rolling", "Rolling Metrics"),
+        ("drawdown", "Drawdown"),
     ]
     if "benchmark_stats" in s:
-        nav.append(("benchmark", "基准对比"))
+        nav.append(("benchmark", "Benchmark"))
     if "has_positions" in s:
-        nav.append(("positions", "持仓分析"))
+        nav.append(("positions", "Positions"))
     if "has_transactions" in s:
-        nav.append(("transactions", "交易分析"))
+        nav.append(("transactions", "Transactions"))
     if "trade_stats" in s:
-        nav.append(("trades", "交易统计"))
-    sidebar = '<nav class="sidebar"><h2>📊 Report</h2>'
+        nav.append(("trades", "Trades"))
+    sidebar = '<nav class="sidebar"><h2>Report</h2>'
     for aid, label in nav:
         sidebar += f'<a href="#{aid}">{label}</a>'
     sidebar += "</nav>"
@@ -252,14 +252,14 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     b.append(f"<h1>{title}</h1>")
     b.append(
         f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]}'
-        f" | {s['n_days']} 交易日 | ~{s['n_months']} 个月</div>"
+        f" | {s['n_days']} trading days | ~{s['n_months']} months</div>"
     )
 
     # -- Summary --
     b.append(f'<div class="summary-box">{s["summary_text"]}</div>')
 
     # -- Overview --
-    b.append('<div class="sec" id="overview"><div class="sec-title">产品概览 Overview</div>')
+    b.append('<div class="sec" id="overview"><div class="sec-title">Overview</div>')
     b.append(
         html_cards(
             s["perf_stats"],
@@ -282,25 +282,25 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     b.append("</div>")
 
     # -- Period Returns --
-    b.append('<div class="sec" id="period"><div class="sec-title">区间收益 Period Returns</div>')
+    b.append('<div class="sec" id="period"><div class="sec-title">Period Returns</div>')
     b.append('<div class="chart-sm" id="c-period"></div>')
     _pr = s["period_returns"]
     _has_bpr = "benchmark_period_returns" in s
     _wr = s["period_win_rates"]
-    _phdr = "<tr><th>统计项</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
-    _prow1 = '<tr><td style="text-align:left;font-weight:600">本产品</td>'
+    _phdr = "<tr><th>Metric</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
+    _prow1 = '<tr><td style="text-align:left;font-weight:600">Strategy</td>'
     for _k, _v in _pr.items():
         _prow1 += f'<td class="{css_cls(_v)}">{fmt(_v, pct=True)}</td>'
     _prow1 += "</tr>"
     _prows = _phdr + _prow1
     if _has_bpr:
         _bpr = s["benchmark_period_returns"]
-        _prow2 = '<tr><td style="text-align:left;font-weight:600">基准</td>'
+        _prow2 = '<tr><td style="text-align:left;font-weight:600">Benchmark</td>'
         for _k in _pr:
             _bv = _bpr.get(_k, np.nan)
             _prow2 += f'<td class="{css_cls(_bv)}">{fmt(_bv, pct=True)}</td>'
         _prow2 += "</tr>"
-        _prow3 = '<tr><td style="text-align:left;font-weight:600">超额收益</td>'
+        _prow3 = '<tr><td style="text-align:left;font-weight:600">Excess</td>'
         for _k in _pr:
             _sv = _pr.get(_k, np.nan)
             _bv2 = _bpr.get(_k, np.nan)
@@ -308,7 +308,7 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
             _prow3 += f'<td class="{css_cls(_exc)}">{fmt(_exc, pct=True)}</td>'
         _prow3 += "</tr>"
         _prows += _prow2 + _prow3
-    _prow_wr = '<tr><td style="text-align:left;font-weight:600">日胜率</td>'
+    _prow_wr = '<tr><td style="text-align:left;font-weight:600">Daily Win Rate</td>'
     for _k in _pr:
         _wv = _wr.get(_k, np.nan)
         _prow_wr += f"<td>{fmt(_wv, pct=True)}</td>"
@@ -318,17 +318,17 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     b.append("</div>")
 
     # -- Performance --
-    b.append('<div class="sec" id="performance"><div class="sec-title">绩效分析 Performance</div>')
+    b.append('<div class="sec" id="performance"><div class="sec-title">Performance</div>')
     b.append('<div class="grid-2"><div>')
-    b.append('<h3 class="sub">核心指标</h3>')
+    b.append('<h3 class="sub">Core Metrics</h3>')
     b.append(html_table(s["perf_stats"], pct_keys=pct_perf))
     b.append("</div><div>")
-    b.append('<h3 class="sub">扩展风险指标</h3>')
+    b.append('<h3 class="sub">Extended Risk Metrics</h3>')
     b.append(html_table(s["extended_stats"]))
     b.append("</div></div></div>")
 
     # -- Returns --
-    b.append('<div class="sec" id="returns"><div class="sec-title">收益分析 Returns</div>')
+    b.append('<div class="sec" id="returns"><div class="sec-title">Returns</div>')
     b.append('<div class="grid-2">')
     b.append('<div class="chart-sm" id="c-daily"></div>')
     b.append('<div class="chart-sm" id="c-dist"></div>')
@@ -338,12 +338,12 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     b.append('<div class="chart-sm" id="c-mdist"></div>')
     b.append("</div>")
     b.append('<div class="chart-box" id="c-hm" style="height:280px"></div>')
-    b.append('<h3 class="sub">月度收益 (%)</h3>')
+    b.append('<h3 class="sub">Monthly Returns (%)</h3>')
     mt = monthly_tbl.copy()
     mt.columns = hm_months
     b.append(html_df(mt * 100, float_format=".2f"))
     b.append('<div class="chart-sm" id="c-yr"></div>')
-    b.append('<h3 class="sub">年度统计</h3>')
+    b.append('<h3 class="sub">Yearly Statistics</h3>')
     b.append(html_df(s["yearly_stats"], left_align=True))
     extremes = OrderedDict()
     extremes["Best Month"] = s["best_month"]
@@ -351,25 +351,25 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     extremes["Avg Month"] = s["avg_month"]
     extremes["Best Year"] = s["best_year"]
     extremes["Worst Year"] = s["worst_year"]
-    b.append('<h3 class="sub">月/年极值</h3>')
+    b.append('<h3 class="sub">Monthly/Yearly Extremes</h3>')
     b.append(html_table(extremes, pct_keys=set(extremes.keys())))
     b.append("</div>")
 
     # -- Rolling --
-    b.append(f'<div class="sec" id="rolling"><div class="sec-title">滚动指标 Rolling ({rolling_window}d)</div>')
+    b.append(f'<div class="sec" id="rolling"><div class="sec-title">Rolling Metrics ({rolling_window}d)</div>')
     b.append('<div class="chart-box" id="c-rs"></div>')
     b.append('<div class="chart-sm" id="c-rv"></div>')
     b.append("</div>")
 
     # -- Drawdown --
-    b.append('<div class="sec" id="drawdown"><div class="sec-title">回撤分析 Drawdown</div>')
-    b.append('<h3 class="sub">最大回撤区间</h3>')
+    b.append('<div class="sec" id="drawdown"><div class="sec-title">Drawdown</div>')
+    b.append('<h3 class="sub">Top Drawdowns</h3>')
     b.append(html_df(s["dd_table"], float_format=".2f"))
     b.append("</div>")
 
     # -- Benchmark --
     if "benchmark_stats" in s:
-        b.append('<div class="sec" id="benchmark"><div class="sec-title">基准对比 Benchmark</div>')
+        b.append('<div class="sec" id="benchmark"><div class="sec-title">Benchmark</div>')
         b.append(
             html_cards(
                 s["benchmark_stats"],
@@ -392,7 +392,7 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
 
     # -- Positions --
     if "has_positions" in s:
-        b.append('<div class="sec" id="positions"><div class="sec-title">持仓分析 Positions</div>')
+        b.append('<div class="sec" id="positions"><div class="sec-title">Positions</div>')
         b.append(html_cards(s["position_summary"], list(s["position_summary"].keys())))
         b.append(html_table(s["position_summary"]))
         b.append('<div class="chart-box" id="c-expo"></div>')
@@ -406,7 +406,7 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
 
     # -- Transactions --
     if "has_transactions" in s:
-        b.append('<div class="sec" id="transactions"><div class="sec-title">交易分析 Transactions</div>')
+        b.append('<div class="sec" id="transactions"><div class="sec-title">Transactions</div>')
         b.append(html_cards(s["txn_summary"], list(s["txn_summary"].keys())))
         b.append(html_table(s["txn_summary"]))
         b.append('<div class="grid-2">')
@@ -423,7 +423,7 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     if "trade_stats" in s:
         ts = s["trade_stats"]
         pct_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
-        b.append('<div class="sec" id="trades"><div class="sec-title">交易统计 Trades</div>')
+        b.append('<div class="sec" id="trades"><div class="sec-title">Trades</div>')
         b.append(
             html_cards(
                 ts,
@@ -463,15 +463,15 @@ def _build_echart_js(s, rw):
     # Period returns comparison
     bench_period = ""
     if "benchmark_period_returns" in s:
-        bench_period = ",{name:'基准',type:'bar',data:D.bprVals,barWidth:'30%',itemStyle:{color:GY}}"
+        bench_period = ",{name:'Benchmark',type:'bar',data:D.bprVals,barWidth:'30%',itemStyle:{color:GY}}"
     js.append(
         f"C('c-period',{{"
-        f"title:{{text:'区间收益对比 (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Period Returns Comparison (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v==null?'N/A':v.toFixed(2)+'%'}}}},"
         f"legend:{{top:4,right:10}},{_grid_s},"
         f"xAxis:{{type:'category',data:D.prLabels,axisLabel:{{fontSize:10}}}},"
         f"yAxis:{{type:'value'}},"
-        f"series:[{{name:'本产品',type:'bar',data:D.prVals,barWidth:'30%',"
+        f"series:[{{name:'Strategy',type:'bar',data:D.prVals,barWidth:'30%',"
         f"itemStyle:{{color:B}}}}"
         f"{bench_period}]"
         f"}});"
@@ -486,7 +486,7 @@ def _build_echart_js(s, rw):
         )
     js.append(
         f"C('c-cum',{{"
-        f"title:{{text:'累计收益 Cumulative Returns',textStyle:{{fontSize:13}}}},"
+        f"title:{{text:'Cumulative Returns',textStyle:{{fontSize:13}}}},"
         f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
         f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
@@ -509,7 +509,7 @@ def _build_echart_js(s, rw):
         )
     js.append(
         f"C('c-cum-log',{{"
-        f"title:{{text:'累计收益 (对数坐标)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Cumulative Returns (Log Scale)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid_s},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
         f"yAxis:{{type:'log',axisLabel:{{fontSize:10}}}},"
@@ -523,7 +523,7 @@ def _build_echart_js(s, rw):
     # Drawdown
     js.append(
         f"C('c-dd',{{"
-        f"title:{{text:'回撤 Drawdown (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Drawdown (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
@@ -537,7 +537,7 @@ def _build_echart_js(s, rw):
     # Daily returns
     js.append(
         f"C('c-daily',{{"
-        f"title:{{text:'日收益率 (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Daily Returns (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(3)+'%'}}}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{show:false}}}},"
@@ -550,7 +550,7 @@ def _build_echart_js(s, rw):
     # Return distribution
     js.append(
         f"C('c-dist',{{"
-        f"title:{{text:'收益分布 (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Return Distribution (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis'}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.histBins,axisLabel:{{fontSize:9}}}},"
@@ -563,7 +563,7 @@ def _build_echart_js(s, rw):
     # Return quantiles horizontal bar
     js.append(
         "C('c-quant',{"
-        "title:{text:'收益分位数 (%)',textStyle:{fontSize:12}},"
+        "title:{text:'Return Quantiles (%)',textStyle:{fontSize:12}},"
         "tooltip:{trigger:'axis',valueFormatter:function(v){return v.toFixed(4)+'%'}},"
         "grid:{left:80,right:20,bottom:25,top:45},"
         "yAxis:{type:'category',data:D.quantLabels,axisLabel:{fontSize:9}},"
@@ -578,7 +578,7 @@ def _build_echart_js(s, rw):
     if len(monthly_vals) > 2:
         js.append(
             f"C('c-mdist',{{"
-            f"title:{{text:'月度收益分布 (%)',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Monthly Return Distribution (%)',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},"
             f"{_grid_s},"
             f"xAxis:{{type:'category',data:D.mDistBins,axisLabel:{{fontSize:9}}}},"
@@ -591,7 +591,7 @@ def _build_echart_js(s, rw):
     # Monthly heatmap
     js.append(
         "C('c-hm',{"
-        "title:{text:'月度收益热力图 (%)',textStyle:{fontSize:12}},"
+        "title:{text:'Monthly Returns Heatmap (%)',textStyle:{fontSize:12}},"
         "tooltip:{formatter:function(p){return D.hmYears[p.value[1]]+'-'+D.hmMonths[p.value[0]]+': '+p.value[2]+'%'}},"
         "grid:{left:60,right:80,bottom:20,top:35},"
         "xAxis:{type:'category',data:D.hmMonths,splitArea:{show:true}},"
@@ -607,7 +607,7 @@ def _build_echart_js(s, rw):
     # Yearly returns
     js.append(
         f"C('c-yr',{{"
-        f"title:{{text:'年度收益 (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Annual Returns (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.yrLabels}},"
@@ -620,7 +620,7 @@ def _build_echart_js(s, rw):
     # Rolling Sharpe
     js.append(
         f"C('c-rs',{{"
-        f"title:{{text:'滚动夏普比率 ({rw}d)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Rolling Sharpe ({rw}d)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis'}},{_grid},{_zoom_s},"
         f"xAxis:{{type:'category',data:D.rsDates,axisLabel:{{fontSize:10}}}},"
         f"yAxis:{{type:'value'}},"
@@ -636,7 +636,7 @@ def _build_echart_js(s, rw):
     # Rolling Volatility
     js.append(
         f"C('c-rv',{{"
-        f"title:{{text:'滚动波动率 ({rw}d, %)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Rolling Volatility ({rw}d, %)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
         f"{_grid_s},{_zoom_s},"
         f"xAxis:{{type:'category',data:D.rvDates,axisLabel:{{fontSize:10}}}},"
@@ -650,7 +650,7 @@ def _build_echart_js(s, rw):
     if "rolling_beta" in s:
         js.append(
             f"C('c-rb',{{"
-            f"title:{{text:'滚动 Beta ({rw}d)',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Rolling Beta ({rw}d)',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
             f"xAxis:{{type:'category',data:D.rbDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"
@@ -664,7 +664,7 @@ def _build_echart_js(s, rw):
     if "has_positions" in s:
         js.append(
             f"C('c-expo',{{"
-            f"title:{{text:'多空暴露 Long/Short Exposure',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Long/Short Exposure',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},{_zoom_s},"
             f"xAxis:{{type:'category',data:D.posDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"
@@ -677,7 +677,7 @@ def _build_echart_js(s, rw):
         )
         js.append(
             f"C('c-lev',{{"
-            f"title:{{text:'总杠杆率 Gross Leverage',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Gross Leverage',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
             f"xAxis:{{type:'category',data:D.glDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"
@@ -690,7 +690,7 @@ def _build_echart_js(s, rw):
         if "pos_max_concentration" in s:
             js.append(
                 f"C('c-conc',{{"
-                f"title:{{text:'持仓集中度 (%)',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Position Concentration (%)',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
                 f"legend:{{top:4,right:10}},{_grid_s},{_zoom_s},"
                 f"xAxis:{{type:'category',data:D.mcDates,axisLabel:{{fontSize:10}}}},"
@@ -712,7 +712,7 @@ def _build_echart_js(s, rw):
             )
             js.append(
                 f"C('c-alloc',{{"
-                f"title:{{text:'持仓配置 Holdings Allocation',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Holdings Allocation',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10,textStyle:{{fontSize:9}}}},"
                 f"color:{_pa_colors},"
                 f"{_grid},{_zoom_s},"
@@ -726,7 +726,7 @@ def _build_echart_js(s, rw):
     if "has_transactions" in s:
         js.append(
             f"C('c-txn',{{"
-            f"title:{{text:'日成交额 Daily Volume',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Daily Trading Value',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},"
             f"xAxis:{{type:'category',data:D.txnDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"
@@ -735,7 +735,7 @@ def _build_echart_js(s, rw):
         )
         js.append(
             f"C('c-txn-cnt',{{"
-            f"title:{{text:'日成交笔数 Daily Count',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Daily Trade Count',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},"
             f"xAxis:{{type:'category',data:D.txnCntDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"
@@ -745,7 +745,7 @@ def _build_echart_js(s, rw):
         if "turnover" in s:
             js.append(
                 f"C('c-turnover',{{"
-                f"title:{{text:'日换手率 Daily Turnover',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Daily Turnover',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
                 f"xAxis:{{type:'category',data:D.toDates,axisLabel:{{fontSize:10}}}},"
                 f"yAxis:{{type:'value'}},"
@@ -756,7 +756,7 @@ def _build_echart_js(s, rw):
         if "txn_hours" in s:
             js.append(
                 f"C('c-txn-hours',{{"
-                f"title:{{text:'交易时间分布 (小时)',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Trading Hour Distribution',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},{_grid_s},"
                 f"xAxis:{{type:'category',data:D.txnHrLabels}},"
                 f"yAxis:{{type:'value'}},"
@@ -769,7 +769,7 @@ def _build_echart_js(s, rw):
     if "trade_pnl" in s:
         js.append(
             f"C('c-pnl',{{"
-            f"title:{{text:'交易盈亏分布 PnL Distribution',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'PnL Distribution',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},"
             f"xAxis:{{type:'category',data:D.pnlBins,axisLabel:{{fontSize:9}}}},"
             f"yAxis:{{type:'value'}},"
@@ -781,7 +781,7 @@ def _build_echart_js(s, rw):
         if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
             js.append(
                 f"C('c-pnl-long',{{"
-                f"title:{{text:'多头交易盈亏 Long PnL',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Long PnL',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},{_grid_s},"
                 f"xAxis:{{type:'category',data:D.pnlLBins,axisLabel:{{fontSize:9}}}},"
                 f"yAxis:{{type:'value'}},"
@@ -793,7 +793,7 @@ def _build_echart_js(s, rw):
         if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
             js.append(
                 f"C('c-pnl-short',{{"
-                f"title:{{text:'空头交易盈亏 Short PnL',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Short PnL',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},{_grid_s},"
                 f"xAxis:{{type:'category',data:D.pnlSBins,axisLabel:{{fontSize:9}}}},"
                 f"yAxis:{{type:'value'}},"
@@ -805,7 +805,7 @@ def _build_echart_js(s, rw):
         if "trade_barlen" in s:
             js.append(
                 f"C('c-barlen',{{"
-                f"title:{{text:'持仓时间分布 Holding Time',textStyle:{{fontSize:12}}}},"
+                f"title:{{text:'Holding Time Distribution',textStyle:{{fontSize:12}}}},"
                 f"tooltip:{{trigger:'axis'}},{_grid_s},"
                 f"xAxis:{{type:'category',data:D.blBins,axisLabel:{{fontSize:9}}}},"
                 f"yAxis:{{type:'value'}},"

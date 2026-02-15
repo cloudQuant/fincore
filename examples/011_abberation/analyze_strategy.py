@@ -1,49 +1,52 @@
 """
-AbberationStrategy 策略分析脚本
+AbberationStrategy analysis script.
 
-读取 logs 目录下的策略运行结果，使用 fincore 进行全面的绩效分析。
+Reads a strategy run from the local logs directory and performs a performance
+analysis using fincore.
 
-使用方式:
+Usage:
     python analyze_strategy.py
 """
-import os
+
 import json
-import pandas as pd
+import os
+
 import numpy as np
+import pandas as pd
 
 import fincore
 from fincore import Empyrical
 
-# =========================================================================
-# 1. 定位日志目录
-# =========================================================================
+# ============================================================================
+# 1. Locate log directory
+# ============================================================================
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGS_DIR = os.path.join(SCRIPT_DIR, "logs")
 
-# 自动查找最新的运行目录
+# Auto-select the latest run directory.
 run_dirs = sorted(
     [d for d in os.listdir(LOGS_DIR) if os.path.isdir(os.path.join(LOGS_DIR, d))],
 )
 if not run_dirs:
     raise FileNotFoundError(f"No run directories found in {LOGS_DIR}")
 RUN_DIR = os.path.join(LOGS_DIR, run_dirs[-1])
-print(f"分析运行目录: {RUN_DIR}\n")
+print(f"Analyzing run directory: {RUN_DIR}\n")
 
-# =========================================================================
-# 2. 读取运行信息
-# =========================================================================
-with open(os.path.join(RUN_DIR, "run_info.json"), "r") as f:
+# ============================================================================
+# 2. Load run info
+# ============================================================================
+with open(os.path.join(RUN_DIR, "run_info.json")) as f:
     run_info = json.load(f)
 
 print("=" * 70)
-print(f"策略名称:   {run_info['strategy_name']}")
-print(f"运行时间:   {run_info['run_datetime']}")
-print(f"运行ID:     {run_info['run_id']}")
+print(f"Strategy:   {run_info['strategy_name']}")
+print(f"Run time:   {run_info['run_datetime']}")
+print(f"Run ID:     {run_info['run_id']}")
 print("=" * 70)
 
-# =========================================================================
-# 3. 读取 value.log → 计算日收益率
-# =========================================================================
+# ============================================================================
+# 3. Load value.log -> compute daily returns
+# ============================================================================
 value_df = pd.read_csv(
     os.path.join(RUN_DIR, "value.log"),
     sep="\t",
@@ -51,31 +54,33 @@ value_df = pd.read_csv(
 )
 value_df["dt"] = pd.to_datetime(value_df["dt"])
 
-# 取每日最后一个bar的value作为日终净值
+# Use the last bar of each day as end-of-day NAV.
 daily_value = value_df.groupby(value_df["dt"].dt.date)["value"].last()
 daily_value.index = pd.to_datetime(daily_value.index)
 daily_value.name = "portfolio_value"
 
-# 计算日收益率
+# Daily returns.
 daily_returns = daily_value.pct_change().dropna()
 daily_returns.name = "strategy"
 
 initial_capital = value_df["value"].iloc[0]
 final_value = value_df["value"].iloc[-1]
 
-print(f"\n初始资金:   {initial_capital:>15,.2f}")
-print(f"最终净值:   {final_value:>15,.2f}")
-print(f"总收益:     {final_value - initial_capital:>15,.2f}")
-print(f"总收益率:   {(final_value / initial_capital - 1) * 100:>14.2f}%")
-print(f"交易日数:   {len(daily_returns):>15d}")
-print(f"日期范围:   {daily_returns.index[0].strftime('%Y-%m-%d')} → {daily_returns.index[-1].strftime('%Y-%m-%d')}")
+print(f"\nInitial capital: {initial_capital:>15,.2f}")
+print(f"Final NAV:       {final_value:>15,.2f}")
+print(f"Total P&L:       {final_value - initial_capital:>15,.2f}")
+print(f"Total return:    {(final_value / initial_capital - 1) * 100:>14.2f}%")
+print(f"Trading days:    {len(daily_returns):>15d}")
+print(
+    f"Date range:      {daily_returns.index[0].strftime('%Y-%m-%d')} -> {daily_returns.index[-1].strftime('%Y-%m-%d')}"
+)
 
-# =========================================================================
-# 4. 读取 trade.log → 交易统计
-# =========================================================================
+# ============================================================================
+# 4. Load trade.log -> trade statistics
+# ============================================================================
 trade_df = pd.read_csv(os.path.join(RUN_DIR, "trade.log"), sep="\t")
 
-# 只看已关闭的交易
+# Only closed trades.
 closed_trades = trade_df[trade_df["status"] == "Closed"].copy()
 closed_trades["dtopen"] = pd.to_datetime(closed_trades["dtopen"])
 closed_trades["dtclose"] = pd.to_datetime(closed_trades["dtclose"])
@@ -91,16 +96,16 @@ total_pnl = closed_trades["pnl"].sum()
 total_pnl_after_comm = closed_trades["pnlcomm"].sum()
 
 print(f"\n{'=' * 70}")
-print("交易统计")
+print("Trade statistics")
 print(f"{'=' * 70}")
-print(f"总交易数:       {total_trades}")
-print(f"  多头交易:     {len(long_trades)}")
-print(f"  空头交易:     {len(short_trades)}")
-print(f"盈利交易:       {len(winning_trades)}  ({len(winning_trades)/total_trades*100:.1f}%)")
-print(f"亏损交易:       {len(losing_trades)}  ({len(losing_trades)/total_trades*100:.1f}%)")
-print(f"总盈亏:         {total_pnl:>15,.2f}")
-print(f"总手续费:       {total_commission:>15,.2f}")
-print(f"净盈亏:         {total_pnl_after_comm:>15,.2f}")
+print(f"Total trades:    {total_trades}")
+print(f"  Long trades:   {len(long_trades)}")
+print(f"  Short trades:  {len(short_trades)}")
+print(f"Wins:            {len(winning_trades)}  ({len(winning_trades) / total_trades * 100:.1f}%)")
+print(f"Losses:          {len(losing_trades)}  ({len(losing_trades) / total_trades * 100:.1f}%)")
+print(f"Gross P&L:       {total_pnl:>15,.2f}")
+print(f"Commission:      {total_commission:>15,.2f}")
+print(f"Net P&L:         {total_pnl_after_comm:>15,.2f}")
 
 if len(winning_trades) > 0:
     avg_win = winning_trades["pnlcomm"].mean()
@@ -114,110 +119,112 @@ if len(losing_trades) > 0:
 else:
     avg_loss = max_loss = 0
 
-print(f"\n平均盈利:       {avg_win:>15,.2f}")
-print(f"平均亏损:       {avg_loss:>15,.2f}")
-print(f"最大单笔盈利:   {max_win:>15,.2f}")
-print(f"最大单笔亏损:   {max_loss:>15,.2f}")
+print(f"\nAvg win:         {avg_win:>15,.2f}")
+print(f"Avg loss:        {avg_loss:>15,.2f}")
+print(f"Max win:         {max_win:>15,.2f}")
+print(f"Max loss:        {max_loss:>15,.2f}")
 if avg_loss != 0:
-    print(f"盈亏比:         {abs(avg_win / avg_loss):>15.2f}")
+    print(f"Win/Loss ratio:  {abs(avg_win / avg_loss):>15.2f}")
 
-# 持仓时长统计
+# Holding duration.
 closed_trades["holding_bars"] = closed_trades["barlen"]
-print(f"\n平均持仓K线数:  {closed_trades['holding_bars'].mean():>15.1f}")
-print(f"最长持仓K线数:  {closed_trades['holding_bars'].max():>15d}")
-print(f"最短持仓K线数:  {closed_trades['holding_bars'].min():>15d}")
+print(f"\nAvg holding bars: {closed_trades['holding_bars'].mean():>14.1f}")
+print(f"Max holding bars: {closed_trades['holding_bars'].max():>14d}")
+print(f"Min holding bars: {closed_trades['holding_bars'].min():>14d}")
 
-# =========================================================================
-# 5. 使用 fincore 进行绩效分析
-# =========================================================================
+# ============================================================================
+# 5. Performance analysis with fincore
+# ============================================================================
 print(f"\n{'=' * 70}")
-print("fincore 绩效分析")
+print("fincore performance analysis")
 print(f"{'=' * 70}")
 
-# --- 方式一: Flat API ---
-print("\n--- 核心指标 (Flat API) ---")
-print(f"年化收益率:     {fincore.annual_return(daily_returns):.4f}")
-print(f"年化波动率:     {fincore.annual_volatility(daily_returns):.4f}")
-print(f"夏普比率:       {fincore.sharpe_ratio(daily_returns):.4f}")
-print(f"最大回撤:       {fincore.max_drawdown(daily_returns):.4f}")
-print(f"索提诺比率:     {fincore.sortino_ratio(daily_returns):.4f}")
-print(f"卡尔玛比率:     {fincore.calmar_ratio(daily_returns):.4f}")
-print(f"累计收益:       {fincore.cum_returns_final(daily_returns):.4f}")
-print(f"在险价值(5%):   {fincore.value_at_risk(daily_returns):.4f}")
-print(f"下行风险:       {fincore.downside_risk(daily_returns):.4f}")
-print(f"尾部比率:       {fincore.tail_ratio(daily_returns):.4f}")
+# --- Option 1: Flat API ---
+print("\n--- Core metrics (Flat API) ---")
+print(f"Annual return:           {fincore.annual_return(daily_returns):.4f}")
+print(f"Annual volatility:       {fincore.annual_volatility(daily_returns):.4f}")
+print(f"Sharpe ratio:            {fincore.sharpe_ratio(daily_returns):.4f}")
+print(f"Max drawdown:            {fincore.max_drawdown(daily_returns):.4f}")
+print(f"Sortino ratio:           {fincore.sortino_ratio(daily_returns):.4f}")
+print(f"Calmar ratio:            {fincore.calmar_ratio(daily_returns):.4f}")
+print(f"Cumulative return:       {fincore.cum_returns_final(daily_returns):.4f}")
+print(f"Value at risk (5%):      {fincore.value_at_risk(daily_returns):.4f}")
+print(f"Downside risk:           {fincore.downside_risk(daily_returns):.4f}")
+print(f"Tail ratio:              {fincore.tail_ratio(daily_returns):.4f}")
 
-# --- 方式二: Empyrical 类级别调用 ---
-print("\n--- 扩展指标 (Empyrical 类调用) ---")
-print(f"偏度:           {Empyrical.skewness(daily_returns):.4f}")
-print(f"峰度:           {Empyrical.kurtosis(daily_returns):.4f}")
-print(f"Omega比率:      {Empyrical.omega_ratio(daily_returns):.4f}")
-print(f"Hurst指数:      {Empyrical.hurst_exponent(daily_returns):.4f}")
-print(f"时序稳定性:     {Empyrical.stability_of_timeseries(daily_returns):.4f}")
+# --- Option 2: Empyrical class methods ---
+print("\n--- Extended metrics (Empyrical class methods) ---")
+print(f"Skewness:                {Empyrical.skewness(daily_returns):.4f}")
+print(f"Kurtosis:                {Empyrical.kurtosis(daily_returns):.4f}")
+print(f"Omega ratio:             {Empyrical.omega_ratio(daily_returns):.4f}")
+print(f"Hurst exponent:          {Empyrical.hurst_exponent(daily_returns):.4f}")
+print(f"Stability of time series:{Empyrical.stability_of_timeseries(daily_returns):.4f}")
 
-# 连续涨跌
-print(f"\n最大连续上涨天: {Empyrical.max_consecutive_up_days(daily_returns)}")
-print(f"最大连续下跌天: {Empyrical.max_consecutive_down_days(daily_returns)}")
-print(f"单日最大收益:   {Empyrical.max_single_day_gain(daily_returns):.4f}")
-print(f"单日最大亏损:   {Empyrical.max_single_day_loss(daily_returns):.4f}")
+# Consecutive moves.
+print(f"\nMax consecutive up days:  {Empyrical.max_consecutive_up_days(daily_returns)}")
+print(f"Max consecutive down days:{Empyrical.max_consecutive_down_days(daily_returns)}")
+print(f"Max single-day gain:      {Empyrical.max_single_day_gain(daily_returns):.4f}")
+print(f"Max single-day loss:      {Empyrical.max_single_day_loss(daily_returns):.4f}")
 
-# --- 方式三: Empyrical 实例调用 (自动填充 returns) ---
-print("\n--- 实例方法 (自动填充 returns) ---")
+# --- Option 3: Empyrical instance methods (returns pre-filled) ---
+print("\n--- Instance methods (returns pre-filled) ---")
 emp = Empyrical(returns=daily_returns)
 
-print(f"胜率:           {emp.win_rate():.4f}")
-print(f"亏损率:         {emp.loss_rate():.4f}")
-print(f"序列相关:       {emp.serial_correlation():.4f}")
-print(f"常识比率:       {emp.common_sense_ratio():.4f}")
-print(f"最大回撤天数:   {emp.max_drawdown_days()}")
-print(f"最大回撤恢复天: {emp.max_drawdown_recovery_days()}")
-print(f"第二大回撤:     {emp.second_max_drawdown():.4f}")
-print(f"第三大回撤:     {emp.third_max_drawdown():.4f}")
+print(f"Win rate:                {emp.win_rate():.4f}")
+print(f"Loss rate:               {emp.loss_rate():.4f}")
+print(f"Serial correlation:       {emp.serial_correlation():.4f}")
+print(f"Common sense ratio:       {emp.common_sense_ratio():.4f}")
+print(f"Max drawdown days:        {emp.max_drawdown_days()}")
+print(f"Drawdown recovery days:   {emp.max_drawdown_recovery_days()}")
+print(f"2nd max drawdown:         {emp.second_max_drawdown():.4f}")
+print(f"3rd max drawdown:         {emp.third_max_drawdown():.4f}")
 
-# 斯特林比率 / 伯克比率
-print(f"斯特林比率:     {emp.sterling_ratio():.4f}")
-print(f"伯克比率:       {emp.burke_ratio():.4f}")
-print(f"Kappa3比率:     {emp.kappa_three_ratio():.4f}")
+# Sterling / Burke ratios.
+print(f"Sterling ratio:           {emp.sterling_ratio():.4f}")
+print(f"Burke ratio:              {emp.burke_ratio():.4f}")
+print(f"Kappa 3 ratio:            {emp.kappa_three_ratio():.4f}")
 
-# 按年分析
-print(f"\n--- 按年统计 ---")
+# Year-by-year analysis.
+print("\n--- Year-by-year stats ---")
 annual_by_year = Empyrical.annual_return_by_year(daily_returns)
 sharpe_by_year = Empyrical.sharpe_ratio_by_year(daily_returns)
 dd_by_year = Empyrical.max_drawdown_by_year(daily_returns)
 
-yearly_stats = pd.DataFrame({
-    "年化收益": annual_by_year,
-    "夏普比率": sharpe_by_year,
-    "最大回撤": dd_by_year,
-})
+yearly_stats = pd.DataFrame(
+    {
+        "Annual return": annual_by_year,
+        "Sharpe ratio": sharpe_by_year,
+        "Max drawdown": dd_by_year,
+    }
+)
 print(yearly_stats.to_string(float_format=lambda x: f"{x:.4f}"))
 
-# 综合统计表
-print(f"\n--- 综合统计表 (perf_stats) ---")
+# Summary stats.
+print("\n--- Summary stats (perf_stats) ---")
 stats = Empyrical.perf_stats(daily_returns)
 print(stats.to_string(float_format=lambda x: f"{x:.4f}"))
 
-# 回撤分析
-print(f"\n--- Top 5 回撤 ---")
+# Drawdown analysis.
+print("\n--- Top 5 drawdowns ---")
 dd_table = Empyrical.gen_drawdown_table(daily_returns, top=5)
 print(dd_table.to_string())
 
-# 月度收益聚合
-print(f"\n--- 月度收益 ---")
+# Monthly returns.
+print("\n--- Monthly returns ---")
 monthly_returns = Empyrical.aggregate_returns(daily_returns, "monthly")
 print(monthly_returns.tail(12).to_string(float_format=lambda x: f"{x:.4f}"))
 
-# =========================================================================
-# 6. 汇总
-# =========================================================================
+# ============================================================================
+# 6. Summary
+# ============================================================================
 print(f"\n{'=' * 70}")
-print("分析完成")
+print("Analysis complete")
 print(f"{'=' * 70}")
-print(f"策略: {run_info['strategy_name']}")
-print(f"品种: RB (螺纹钢)")
-print(f"区间: {daily_returns.index[0].strftime('%Y-%m-%d')} → {daily_returns.index[-1].strftime('%Y-%m-%d')}")
-print(f"年化收益: {fincore.annual_return(daily_returns):.2%}")
-print(f"夏普比率: {fincore.sharpe_ratio(daily_returns):.4f}")
-print(f"最大回撤: {fincore.max_drawdown(daily_returns):.2%}")
-print(f"交易次数: {total_trades}")
-print(f"胜率:     {len(winning_trades)/total_trades:.2%}")
+print(f"Strategy:    {run_info['strategy_name']}")
+print("Instrument:  RB (Rebar futures)")
+print(f"Date range:  {daily_returns.index[0].strftime('%Y-%m-%d')} -> {daily_returns.index[-1].strftime('%Y-%m-%d')}")
+print(f"Annual return: {fincore.annual_return(daily_returns):.2%}")
+print(f"Sharpe ratio:  {fincore.sharpe_ratio(daily_returns):.4f}")
+print(f"Max drawdown:  {fincore.max_drawdown(daily_returns):.2%}")
+print(f"Trades:        {total_trades}")
+print(f"Win rate:      {len(winning_trades) / total_trades:.2%}")

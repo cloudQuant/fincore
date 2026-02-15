@@ -120,13 +120,31 @@ tr:nth-child(even) { background: #f9fafb; }
         self.add_html(self._series_to_html_table(drawdown, "Date", "Drawdown"))
         return self
 
-    def plot_rolling_sharpe(self, rolling_sharpe: pd.Series, **kwargs: Any) -> HtmlReportBuilder:
-        self.add_heading("Rolling Sharpe Ratio")
-        self.add_html(self._series_to_html_table(rolling_sharpe, "Date", "Sharpe"))
+    def plot_rolling_sharpe(
+        self,
+        sharpe: pd.Series,
+        benchmark_sharpe: pd.Series | None = None,
+        window: int = 252,
+        **kwargs: Any,
+    ) -> HtmlReportBuilder:
+        self.add_heading(f"Rolling Sharpe Ratio ({window}-day window)")
+        self.add_html(self._series_to_html_table(sharpe, "Date", "Sharpe"))
+        if benchmark_sharpe is not None:
+            self.add_heading("Benchmark Rolling Sharpe Ratio", level=3)
+            self.add_html(self._series_to_html_table(benchmark_sharpe, "Date", "Sharpe"))
         return self
 
-    def plot_monthly_heatmap(self, monthly_returns: pd.DataFrame, **kwargs: Any) -> HtmlReportBuilder:
+    def plot_monthly_heatmap(self, returns: pd.Series | pd.DataFrame, **kwargs: Any) -> HtmlReportBuilder:
         self.add_heading("Monthly Returns")
+        monthly_returns: pd.DataFrame
+        if isinstance(returns, pd.Series):
+            monthly = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+            monthly_df = pd.DataFrame(
+                {"year": monthly.index.year, "month": monthly.index.month, "return": monthly.values}
+            )
+            monthly_returns = monthly_df.pivot(index="year", columns="month", values="return")
+        else:
+            monthly_returns = returns
         self.add_html(monthly_returns.to_html(classes="monthly", float_format="%.2f%%"))
         return self
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""市场时机函数模块."""
+"""Market timing metrics."""
 
 import logging
 from collections import OrderedDict
@@ -60,11 +60,17 @@ def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    if len(returns_aligned) < 10:
+    ret_arr = np.asanyarray(returns_aligned, dtype=float)
+    fac_arr = np.asanyarray(factor_aligned, dtype=float)
+    valid_mask = ~(np.isnan(ret_arr) | np.isnan(fac_arr))
+    ret_clean = ret_arr[valid_mask]
+    fac_clean = fac_arr[valid_mask]
+
+    if len(ret_clean) < 10:
         return np.nan
 
-    excess_returns = returns_aligned - risk_free
-    excess_factor = factor_aligned - risk_free
+    excess_returns = ret_clean - risk_free
+    excess_factor = fac_clean - risk_free
 
     factor_squared = excess_factor**2
 
@@ -101,11 +107,17 @@ def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    if len(returns_aligned) < 10:
+    ret_arr = np.asanyarray(returns_aligned, dtype=float)
+    fac_arr = np.asanyarray(factor_aligned, dtype=float)
+    valid_mask = ~(np.isnan(ret_arr) | np.isnan(fac_arr))
+    ret_clean = ret_arr[valid_mask]
+    fac_clean = fac_arr[valid_mask]
+
+    if len(ret_clean) < 10:
         return np.nan
 
-    excess_returns = returns_aligned - risk_free
-    excess_factor = factor_aligned - risk_free
+    excess_returns = ret_clean - risk_free
+    excess_factor = fac_clean - risk_free
 
     down_market = (excess_factor < 0).astype(float)
 
@@ -178,9 +190,6 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
         return np.nan
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-
-    if len(returns_aligned) < 10:
-        return np.nan
 
     returns_array = np.asanyarray(returns_aligned)
     factor_array = np.asanyarray(factor_aligned)

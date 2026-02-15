@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""基础工具函数模块."""
+"""Basic metric utilities (alignment, annualization, helpers)."""
 
 from __future__ import annotations
 
@@ -227,6 +227,24 @@ def aligned_series(
             return many_series
         combined = pd.concat([head, tail[0]], axis=1, sort=False)
         return tuple(combined.iloc[:, i] for i in range(2))
+
+    if len(many_series) == 2 and isinstance(head, pd.DataFrame) and isinstance(tail[0], pd.DataFrame):
+        if head.index.equals(tail[0].index):
+            return many_series
+        left, right = head.align(tail[0], join="inner", axis=0)
+        return left, right
+
+    if len(many_series) == 2 and isinstance(head, pd.DataFrame) and isinstance(tail[0], pd.Series):
+        if head.index.equals(tail[0].index):
+            return many_series
+        idx = head.index.intersection(tail[0].index)
+        return head.loc[idx], tail[0].loc[idx]
+
+    if len(many_series) == 2 and isinstance(head, pd.Series) and isinstance(tail[0], pd.DataFrame):
+        if head.index.equals(tail[0].index):
+            return many_series
+        idx = head.index.intersection(tail[0].index)
+        return head.loc[idx], tail[0].loc[idx]
 
     # dataframe has no ``itervalues``
     return tuple(v for _, v in pd.concat(map(to_pandas, many_series), axis=1, sort=False).items())

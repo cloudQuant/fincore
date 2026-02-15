@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-数学计算工具函数
+"""Math helper functions.
 
-提供优化的数学计算函数，优先使用bottleneck库以提高性能。
+Provides optimized NumPy-style functions and prefers the optional ``bottleneck``
+package when available for performance.
 """
 
 from functools import wraps
@@ -25,7 +25,7 @@ from functools import wraps
 import numpy as np
 
 try:
-    # 尝试使用bottleneck库提供的快速版本
+    # Prefer bottleneck's fast implementations when available.
     import bottleneck as bn
 
     def _wrap_function(f):
@@ -51,7 +51,7 @@ try:
     nanargmin = _wrap_function(bn.nanargmin)
 
 except ImportError:
-    # 回退到numpy版本
+    # Fall back to NumPy.
     nanmean = np.nanmean
     nanstd = np.nanstd
     nansum = np.nansum

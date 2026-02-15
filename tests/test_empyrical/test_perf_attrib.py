@@ -63,13 +63,6 @@ class PerfAttribTestCase(unittest.TestCase):
             data={"risk_factor1": [0.25, 0.25], "risk_factor2": [0.25, 0.25]},
         )
 
-        emp = Empyrical(
-            returns=returns,
-            positions=positions,
-            factor_returns=factor_returns,
-            factor_loadings=factor_loadings,
-        )
-
         exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
             returns=returns,
             positions=positions,
@@ -81,13 +74,6 @@ class PerfAttribTestCase(unittest.TestCase):
         self.assertTrue(expected_exposures_portfolio.equals(exposures_portfolio))
         # test long and short positions
         positions = pd.Series([0.5, -0.5, 0.5, -0.5], index=index)
-
-        emp = Empyrical(
-            returns=returns,
-            positions=positions,
-            factor_returns=factor_returns,
-            factor_loadings=factor_loadings,
-        )
 
         exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
             returns=returns,
@@ -128,13 +114,6 @@ class PerfAttribTestCase(unittest.TestCase):
         self.assertTrue(expected_exposures_portfolio.equals(exposures_portfolio))
         # test long and short positions with tilt exposure
         positions = pd.Series([1.0, -0.5, 1.0, -0.5], index=index)
-
-        emp = Empyrical(
-            returns=returns,
-            positions=positions,
-            factor_returns=factor_returns,
-            factor_loadings=factor_loadings,
-        )
 
         exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
             returns=returns,
@@ -213,13 +192,6 @@ class PerfAttribTestCase(unittest.TestCase):
         intercepts = pd.read_csv(os.path.join(current_dir, "test_data", "intercepts.csv"), index_col=0, header=None)
         if intercepts.shape[1] == 1:
             intercepts = intercepts.iloc[:, 0]
-
-        emp = Empyrical(
-            returns=returns,
-            positions=positions,
-            factor_returns=factor_returns,
-            factor_loadings=factor_loadings,
-        )
 
         risk_exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
             returns=returns,

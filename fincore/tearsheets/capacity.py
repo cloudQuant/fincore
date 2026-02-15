@@ -1,7 +1,6 @@
-"""
-容量分析相关的绘图函数
+"""Capacity-analysis plotting functions.
 
-包含容量扫描、锥形图等绘图函数。
+Includes capacity sweep and cone plots.
 """
 
 import matplotlib.pyplot as plt
@@ -28,7 +27,7 @@ def plot_capacity_sweep(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy.
     transactions : pd.DataFrame
@@ -55,7 +54,8 @@ def plot_capacity_sweep(
 
     txn_daily_w_bar = empyrical_instance.daily_txns_with_bar_data(transactions, market_data)
 
-    captial_base_sweep = pd.Series()
+    # Avoid dtype FutureWarning for empty Series construction.
+    captial_base_sweep = pd.Series(dtype=float)
     for start_pv in range(min_pv, max_pv, step_size):
         adj_ret = empyrical_instance.apply_slippage_penalty(returns, txn_daily_w_bar, start_pv, bt_starting_capital)
         sharpe = empyrical_instance.sharpe_ratio(adj_ret)
@@ -94,7 +94,7 @@ def plot_cones(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     name : str
         Account name to be used as figure title.
     bounds : pandas.core.frame.DataFrame

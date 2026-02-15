@@ -58,27 +58,26 @@ class GARCHResult:
         ndarray
             Forecasted variances.
         """
+        if horizon < 1:
+            raise ValueError("horizon must be >= 1")
+
         forecasts = np.zeros(horizon)
         omega = self.params["omega"]
         alpha = self.params.get("alpha", 0.0)
         beta = self.params.get("beta", 0.0)
-
-        # Long-run (unconditional) variance
         persistence = alpha + beta
-        if 0 < persistence < 1:
-            long_run_var = omega / (1 - persistence)
-        else:
-            long_run_var = omega
 
-        # Last conditional variance
+        # Last conditional variance and shock (epsilon_t)
         last_var = self.conditional_var[-1]
+        last_eps = self.residuals[-1] * np.sqrt(last_var)
 
         for h in range(horizon):
             if h == 0:
-                forecasts[h] = last_var
+                # One-step ahead GARCH(1,1): E_t[sigma_{t+1}^2]
+                forecasts[h] = omega + alpha * (last_eps**2) + beta * last_var
             else:
-                # Mean-reverting forecast toward long-run variance
-                forecasts[h] = long_run_var + persistence * (forecasts[h - 1] - long_run_var)
+                # Multi-step recursion: E_t[sigma_{t+h+1}^2] = omega + (alpha+beta) * E_t[sigma_{t+h}^2]
+                forecasts[h] = omega + persistence * forecasts[h - 1]
 
         return forecasts
 

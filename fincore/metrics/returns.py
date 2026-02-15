@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""收益计算函数模块.
+"""Return calculation utilities.
 
-本模块包含用于计算收益率相关指标的核心函数，包括：
-- 简单收益率计算
-- 累积收益率计算
-- 收益率聚合
-- 收益率标准化
+This module provides core functions for return analytics, including:
+- simple returns from prices
+- cumulative return series and final cumulative return
+- return aggregation (e.g. weekly/monthly/yearly)
+- normalization of a value series to a starting value
 """
 
 from __future__ import annotations
@@ -43,12 +43,12 @@ __all__ = [
 
 
 def _get_annual_return():
-    """延迟导入以避免循环依赖.
+    """Lazily import ``annual_return`` to avoid circular dependencies.
 
     Returns
     -------
     function
-        annual_return 函数.
+        The ``annual_return`` function.
     """
     from fincore.metrics.yearly import annual_return
 
@@ -57,25 +57,25 @@ def _get_annual_return():
 
 # Re-export annual_return for backwards compatibility
 def annual_return(*args, **kwargs):
-    """计算年化收益率(CAGR)的包装函数.
+    """Backwards-compatible wrapper for computing annual return (CAGR).
 
-    此函数为向后兼容而保留，实际实现委托给 yearly 模块.
+    The implementation lives in :func:`fincore.metrics.yearly.annual_return`.
 
     Parameters
     ----------
     *args : tuple
-        传递给 yearly.annual_return 的位置参数.
+        Positional arguments forwarded to ``yearly.annual_return``.
     **kwargs : dict
-        传递给 yearly.annual_return 的关键字参数.
+        Keyword arguments forwarded to ``yearly.annual_return``.
 
     Returns
     -------
     float
-        年化收益率.
+        Annual return.
 
     See Also
     --------
-    fincore.metrics.yearly.annual_return : 实际实现函数.
+    fincore.metrics.yearly.annual_return : Implementation.
     """
     return _get_annual_return()(*args, **kwargs)
 
@@ -265,23 +265,23 @@ def normalize(
     returns: pd.Series,
     starting_value: float = 1,
 ) -> pd.Series:
-    """将收益时间序列标准化为从指定值开始.
+    """Normalize a value series to start at ``starting_value``.
 
-    此函数将收益序列按其第一个值进行缩放，使序列从
-    ``starting_value`` 开始。常用于将不同策略的收益
-    曲线对齐到同一起点进行比较。
+    This scales the input series by its first value so that the resulting series
+    starts at ``starting_value``. This is commonly used to align equity curves
+    from different strategies for comparison.
 
     Parameters
     ----------
     returns : pd.Series
-        收益时间序列（通常为累积收益或价格序列）.
+        Value series (typically cumulative returns or prices).
     starting_value : float, optional
-        标准化后的起始值，默认为 1.
+        Starting value after normalization. Default is 1.
 
     Returns
     -------
     pd.Series
-        标准化后的收益序列，第一个值等于 ``starting_value``.
+        Normalized series whose first value equals ``starting_value``.
 
     Examples
     --------

@@ -1,11 +1,10 @@
-"""
-Tearsheets 模块
+"""Tearsheets module.
 
-将 pyfolio.py 中的绘图和显示函数拆分到各个子模块中。
-Pyfolio 类通过导入这些函数作为接口层。
+This package splits Pyfolio's plotting/display helpers into submodules.
+The :class:`fincore.pyfolio.Pyfolio` class re-exports these functions as its API.
 
-所有子模块通过 ``__getattr__`` 懒加载，避免在 ``import fincore.tearsheets``
-时立即加载 matplotlib / seaborn 等重量级依赖。
+All submodules are lazily imported via ``__getattr__`` to avoid importing heavy
+dependencies (matplotlib/seaborn) at ``import fincore.tearsheets`` time.
 """
 
 import importlib as _importlib

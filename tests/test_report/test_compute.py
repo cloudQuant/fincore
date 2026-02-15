@@ -5,6 +5,8 @@ Validates compute_sections with various input combinations.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -56,8 +58,14 @@ class TestComputeSections:
             np.zeros(100),
             index=pd.date_range("2020-01-01", periods=100, freq="B"),
         )
-        sections = compute_sections(zeros, None, None, None, None, 126)
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            sections = compute_sections(zeros, None, None, None, None, 126)
+
         assert isinstance(sections, dict)
+        runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+        assert len(runtime_warnings) == 0
 
     def test_sections_keys(self, daily_returns):
         sections = compute_sections(daily_returns, None, None, None, None, 126)

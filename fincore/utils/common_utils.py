@@ -1,7 +1,9 @@
+import importlib
 import warnings
 from functools import wraps
 from itertools import cycle
 from pathlib import Path
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
@@ -12,19 +14,31 @@ from pandas.tseries.offsets import BDay
 
 from fincore.constants.color import COLORS
 
+DisplayFunc = Callable[..., Any]
+HTMLFunc = Callable[[str], Any]
+
 try:
-    from IPython.display import HTML, display
+    _ipy_display_mod = importlib.import_module("IPython.display")
+except ModuleNotFoundError:  # pragma: no cover
+    _IPY_HTML = None
+    _IPY_display = None
+else:
+    _IPY_HTML = getattr(_ipy_display_mod, "HTML", None)
+    _IPY_display = getattr(_ipy_display_mod, "display", None)
 
-    HAS_IPYTHON = True
-except ImportError:
-    HAS_IPYTHON = False
 
-    # Define dummy functions for non-IPython environments
-    def display(obj):
-        print(obj)
+def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+    # Minimal fallback for non-IPython environments.
+    print(*objs)
 
-    def HTML(string):
-        return string
+
+def _fallback_html(string: str) -> str:
+    return string
+
+
+HAS_IPYTHON = _IPY_display is not None
+display: DisplayFunc = _IPY_display if _IPY_display is not None else _fallback_display
+HTML: HTMLFunc = _IPY_HTML if _IPY_HTML is not None else _fallback_html
 
 
 def customize(func):
@@ -184,8 +198,10 @@ def analyze_series_differences(series1, series2):
     if not series1.equals(series2):
         print("Values are different:")
         print("Differences in series1 vs series2:")
-        differences = (
-            pd.concat([series1, series2], axis=1, keys=["series1", "series2"]).swaplevel(axis=1).sort_index(axis=1)
+        # Use explicit column names to avoid relying on MultiIndex columns.
+        differences = pd.concat(
+            [series1.rename("series1"), series2.rename("series2")],
+            axis=1,
         )
         print(differences[differences["series1"] != differences["series2"]])
     else:
@@ -368,24 +384,19 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
         # Inject the new HTML
         html = html.replace("<thead>", "<thead>" + rows)
     if run_flask_app:
-        # 检查pyfolio中是否存在static文件夹,如果存在,就保存数据到static中
-        # 获取 pyfolio 的根目录
+        # If running via the Flask app, persist the table under a local static/ directory.
         data_root = Path(__file__).parent
-        # 目标静态文件路径
         target_static_path = data_root / "static"
-        # 检查目标路径是否存在，如果不存在则创建
         target_static_path.mkdir(parents=True, exist_ok=True)
-        # 生成 Excel 文件路径
         excel_file_path = target_static_path / f"strategy_performance_{name}.xlsx"
-        # 将表格数据写入 Excel 文件
         try:
             # print(name, table)
-            table.to_excel(excel_file_path, index=True)  # index=False 避免写入行索引
-            # print(f"文件已成功保存到：{excel_file_path}")
+            table.to_excel(excel_file_path, index=True)
+            # print(f"Saved export to: {excel_file_path}")
         except Exception as e:
             import logging
 
-            logging.getLogger(__name__).warning("保存文件时出错：%s", e)
+            logging.getLogger(__name__).warning("Failed to save table export: %s", e)
     display(HTML(html))
 
 
@@ -719,13 +730,31 @@ def configure_legend(ax, autofmt_xdate=True, change_colors=False, rotation=30, h
 
     # make legend order match graph lines
     handles, labels = ax.get_legend_handles_labels()
-    handles_and_labels_sorted = sorted(zip(handles, labels), key=lambda x: x[0].get_ydata()[-1], reverse=True)
+    if len(labels) == 0:
+        return
+
+    def _legend_sort_key(item):
+        handle = item[0]
+        ydata_fn = getattr(handle, "get_ydata", None)
+        if callable(ydata_fn):
+            try:
+                y = ydata_fn()
+                return float(y[-1])
+            except Exception:
+                return 0.0
+        return 0.0
+
+    handles_and_labels_sorted = sorted(
+        zip(handles, labels, strict=False),
+        key=_legend_sort_key,
+        reverse=True,
+    )
 
     handles_sorted = [h[0] for h in handles_and_labels_sorted]
     labels_sorted = [h[1] for h in handles_and_labels_sorted]
 
     if change_colors:
-        for handle, color in zip(handles_sorted, cycle(COLORS)):
+        for handle, color in zip(handles_sorted, cycle(COLORS), strict=False):
             handle.set_color(color)
 
     ax.legend(
@@ -758,18 +787,24 @@ def sample_colormap(cmap_name, n_samples):
 
         colormap = plt.colormaps[cmap_name]
     except (AttributeError, KeyError):
-        from matplotlib.pyplot import cm as _cm
-
         try:
-            # Try intermediate API (matplotlib 3.5.0 - 3.7.x)
-            colormap = _cm.get_cmap(cmap_name)
-        except (AttributeError, ValueError):
+            # Prefer the non-deprecated registry API when available.
+            import matplotlib as mpl
+
+            colormap = mpl.colormaps.get_cmap(cmap_name)
+        except Exception:
+            from matplotlib.pyplot import cm as _cm
+
             try:
-                # Try older API (matplotlib < 3.5.0)
-                colormap = _cm.cmap_d[cmap_name]
-            except AttributeError:
-                # Fallback to registry access
-                colormap = _cm._colormaps[cmap_name]
+                # Try intermediate API (matplotlib 3.5.0 - 3.7.x)
+                colormap = _cm.get_cmap(cmap_name)
+            except (AttributeError, ValueError):
+                try:
+                    # Try older API (matplotlib < 3.5.0)
+                    colormap = _cm.cmap_d[cmap_name]
+                except AttributeError:
+                    # Fallback to registry access
+                    colormap = _cm._colormaps[cmap_name]
 
     for i in np.linspace(0, 1, n_samples):
         colors.append(colormap(i))
@@ -881,8 +916,19 @@ def rolling_window(array, length, mutable=False):
 
     new_strides = (array.strides[0],) + array.strides
 
-    out = as_strided(array, new_shape, new_strides)
-    out.setflags(write=mutable)
+    # Prefer the `writeable` kwarg when available; some NumPy versions disallow
+    # flipping the WRITEABLE flag on as_strided views after creation.
+    try:
+        out = as_strided(array, new_shape, new_strides, writeable=mutable)
+    except TypeError:
+        out = as_strided(array, new_shape, new_strides)
+        if mutable:
+            try:
+                out.setflags(write=True)
+            except ValueError as e:
+                raise ValueError(
+                    "Cannot create a writable rolling window view on this NumPy build; use mutable=False instead."
+                ) from e
     return out
 
 

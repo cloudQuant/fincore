@@ -70,6 +70,16 @@ class TestStyleAnalysisContract:
         assert result.exposures.shape[0] == n_assets
         assert result.exposures.shape[1] > 0
 
+    def test_exposures_shape_with_market_caps(self, asset_returns):
+        market_caps = pd.Series(
+            [1e12, 8e11, 5e11, 3e11, 1e11],
+            index=asset_returns.columns,
+        )
+        result = style_analysis(asset_returns, market_caps=market_caps)
+        assert result.exposures.shape[0] == asset_returns.shape[1]
+        for key in {"large", "mid", "small"}:
+            assert key in result.exposures.columns
+
     def test_exposures_non_negative(self, asset_returns):
         result = style_analysis(asset_returns)
         assert (result.exposures.values >= 0).all()

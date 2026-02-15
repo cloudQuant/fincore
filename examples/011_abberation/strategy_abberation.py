@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Abberation (Bollinger Band breakout) futures strategy.
 
 Go long when breaking through the upper Bollinger Band, go short when breaking
@@ -15,8 +14,6 @@ Strategy Logic:
 Position Sizing:
     Uses 1x leverage based on total account value
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
 import backtrader as bt
 
@@ -25,13 +22,13 @@ class RbPandasFeed(bt.feeds.PandasData):
     """Pandas data feed for rebar futures data."""
 
     params = (
-        ('datetime', None),
-        ('open', 0),
-        ('high', 1),
-        ('low', 2),
-        ('close', 3),
-        ('volume', 4),
-        ('openinterest', 5),
+        ("datetime", None),
+        ("open", 0),
+        ("high", 1),
+        ("low", 2),
+        ("close", 3),
+        ("volume", 4),
+        ("openinterest", 5),
     )
 
 
@@ -47,7 +44,7 @@ class AbberationStrategy(bt.Strategy):
         boll_mult (float): Standard deviation multiplier for bands (default: 2)
     """
 
-    author = 'yunjinqi'
+    author = "yunjinqi"
     params = (
         ("boll_period", 200),
         ("boll_mult", 2),
@@ -56,7 +53,7 @@ class AbberationStrategy(bt.Strategy):
     def log(self, txt, dt=None):
         """Log information function."""
         dt = dt or bt.num2date(self.datas[0].datetime[0])
-        print('{}, {}'.format(dt.isoformat(), txt))
+        print(f"{dt.isoformat()}, {txt}")
 
     def __init__(self):
         """Initialize the strategy with indicators and state variables."""

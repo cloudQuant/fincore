@@ -9,6 +9,8 @@ Tests for style attribution functions:
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -78,7 +80,8 @@ class TestStyleAnalysis:
         result = style_analysis(sample_returns, market_caps=sample_market_caps)
 
         # Should have size-based exposures
-        assert "large" in result.exposures.index or "small" in result.exposures.index
+        assert "large" in result.exposures.columns
+        assert "small" in result.exposures.columns
 
     def test_style_analysis_with_book_to_price(self, sample_returns, sample_book_to_price):
         """Test style analysis with book-to-price data."""
@@ -206,6 +209,21 @@ class TestCalculateRegressionAttribution:
         )
 
         assert "residual" in result
+
+    def test_regression_attribution_constant_series_no_runtime_warning(self):
+        """Constant inputs should not raise runtime warnings."""
+        idx = pd.date_range("2020-01-01", periods=20)
+        portfolio_returns = pd.Series(np.zeros(20), index=idx)
+        style_returns = pd.DataFrame({"value": np.zeros(20), "growth": np.zeros(20)}, index=idx)
+        style_exposures = pd.DataFrame({"value": [1.0], "growth": [0.0]})
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = calculate_regression_attribution(portfolio_returns, style_returns, style_exposures)
+
+        assert "residual" in result
+        runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+        assert len(runtime_warnings) == 0
 
 
 class TestAnalyzePerformanceByStyle:

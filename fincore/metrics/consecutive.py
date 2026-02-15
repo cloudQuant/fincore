@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""连续涨跌相关函数模块."""
+"""Consecutive up/down metrics."""
 
 import numpy as np
 import pandas as pd

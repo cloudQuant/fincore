@@ -29,7 +29,7 @@ class StyleResult:
         Parameters
         ----------
         exposures : pd.DataFrame
-            Factor exposures by style (T x styles).
+            Style exposures (N assets x S styles).
         returns_by_style : pd.DataFrame
             Returns for each style (styles x 1).
         overall_returns : pd.Series
@@ -131,72 +131,74 @@ def style_analysis(
 
     n_periods, n_assets = returns.shape
 
-    # Initialize exposures dict
-    exposures_data = {}
+    # exposures_data: {style_name: {asset: weight}}
+    exposures_data: dict[str, dict[str, float]] = {}
+    assets = list(returns.columns)
+
+    def _add_style(style: str, raw: pd.Series) -> None:
+        # Normalize weights for this style (sum to 1 when possible).
+        w = raw.reindex(assets).fillna(0.0).astype(float).clip(lower=0.0)
+        total = float(w.sum())
+        if total > 0:
+            w = w / total
+        exposures_data[style] = w.to_dict()
 
     # 1. Size Classification
     if market_caps is not None:
-        size_exposure = _calculate_size_exposure(market_caps, size_quantiles)
-        exposures_data.update(size_exposure.to_dict(orient="index"))
+        size_exposure = _calculate_size_exposure(market_caps.reindex(assets).dropna(), size_quantiles)
+        for style in size_exposure.columns:
+            _add_style(style, size_exposure[style])
     else:
         # Equal weight size exposure
-        exposures_data["equal_weight"] = {col: 1.0 / n_assets for col in returns.columns}
+        _add_style("equal_weight", pd.Series(1.0, index=assets))
 
     # 2. Momentum Classification - simplified
     # Use recent returns to classify momentum
     recent_returns = returns.tail(min(momentum_window, len(returns)))
-    cumulative_returns = recent_returns.sum()
+    cumulative_returns = (1.0 + recent_returns).prod() - 1.0
     mom_threshold = cumulative_returns.median()
-    exposures_data["winner"] = {
-        col: 1.0 if cumulative_returns[col] >= mom_threshold else 0.0 for col in returns.columns
-    }
-    exposures_data["loser"] = {col: 1.0 if cumulative_returns[col] < mom_threshold else 0.0 for col in returns.columns}
+    _add_style("winner", (cumulative_returns >= mom_threshold).astype(float))
+    _add_style("loser", (cumulative_returns < mom_threshold).astype(float))
 
     # 3. Value Classification
     if value_scores is not None:
-        value_exposure = _value_from_scores(value_scores)
-        exposures_data.update(value_exposure.to_dict(orient="index"))
+        value_exposure = _value_from_scores(value_scores.reindex(assets).dropna())
+        for style in value_exposure.columns:
+            _add_style(style, value_exposure[style])
     elif book_to_price is not None:
-        # Use B/P as value proxy
-        for col in returns.columns:
-            if col in book_to_price.index:
-                bp = book_to_price[col]
-                if bp < 1:
-                    exposures_data.setdefault("value", {})[col] = 1.0
-                    exposures_data.setdefault("growth", {})[col] = 0.0
-                else:
-                    exposures_data.setdefault("value", {})[col] = 0.0
-                    exposures_data.setdefault("growth", {})[col] = 1.0
+        # Use B/P as value proxy: higher B/P tends to indicate "value".
+        bp = book_to_price.reindex(assets).astype(float)
+        threshold = bp.median()
+        _add_style("value", (bp >= threshold).astype(float))
+        _add_style("growth", (bp < threshold).astype(float))
     else:
         # Equal weight value exposure
-        for col in returns.columns:
-            exposures_data.setdefault("value", {})[col] = 1.0 / n_assets
-            exposures_data.setdefault("growth", {})[col] = 1.0 / n_assets
+        _add_style("value", pd.Series(1.0, index=assets))
+        _add_style("growth", pd.Series(1.0, index=assets))
 
     # 4. Volatility Classification
     rolling_vol = returns.rolling(window=60, min_periods=20).std(ddof=0)
     vol_median = rolling_vol.median()
     vol_at_end = rolling_vol.iloc[-1]
-    for col in returns.columns:
-        if vol_at_end[col] >= vol_median[col]:
-            exposures_data.setdefault("high", {})[col] = 1.0
-            exposures_data.setdefault("low", {})[col] = 0.0
-        else:
-            exposures_data.setdefault("high", {})[col] = 0.0
-            exposures_data.setdefault("low", {})[col] = 1.0
+    high_mask = (vol_at_end >= vol_median).astype(float)
+    low_mask = (vol_at_end < vol_median).astype(float)
+    _add_style("high", high_mask)
+    _add_style("low", low_mask)
 
     # Build exposures DataFrame
-    all_exposures = pd.DataFrame.from_dict(exposures_data, orient="index").T
+    all_exposures = pd.DataFrame.from_dict(exposures_data, orient="columns").reindex(index=assets).fillna(0.0)
 
     # Calculate returns by style
     returns_by_style = {}
 
     for style in all_exposures.columns:
-        # Calculate weighted return for each time period, then average
-        style_exposure = all_exposures[style].reindex(returns.columns, fill_value=0)
-        weighted_returns = (returns.T * style_exposure).T
-        style_returns = weighted_returns.sum(axis=1).mean()
-        returns_by_style[style] = style_returns
+        weights = all_exposures[style].reindex(assets).fillna(0.0).astype(float)
+        total = float(weights.sum())
+        if total <= 0:
+            returns_by_style[style] = np.nan
+            continue
+        weights = weights / total
+        returns_by_style[style] = float((returns.mul(weights, axis=1)).sum(axis=1).mean())
 
     # Overall portfolio returns (equal-weighted)
     equal_weights = pd.Series(np.ones(n_assets) / n_assets, index=returns.columns)
@@ -313,23 +315,24 @@ def _exposure_from_lookback(
 
 
 def _value_from_scores(book_to_price: pd.Series) -> pd.DataFrame:
-    """Calculate value exposure from B/P scores.
+    """Calculate value exposure from generic value scores.
 
     Parameters
     ----------
     book_to_price : pd.Series
-        Book-to-price ratios for each asset.
+        Value scores for each asset (higher -> more "value"-like).
 
     Returns
     -------
     pd.DataFrame
         Binary exposure matrix (N x 2): value, growth.
     """
-    # Value: B/P < 1, Growth: B/P > 1
-    value = (book_to_price < 1).astype(int).to_frame().T
-    growth = (book_to_price > 1).astype(int).to_frame().T
-
-    return pd.concat([value, growth], axis=1)
+    scores = book_to_price.astype(float)
+    threshold = scores.median()
+    exposures = pd.DataFrame(index=scores.index)
+    exposures["value"] = (scores >= threshold).astype(int)
+    exposures["growth"] = (scores < threshold).astype(int)
+    return exposures
 
 
 def calculate_style_tilts(
@@ -449,8 +452,11 @@ def calculate_regression_attribution(
             _asset_returns = portfolio_returns
             _style_ret_dict = {}
             for style in style_exposures.columns:
-                weights = style_exposures[style].reindex(_asset_returns.columns, fill_value=0)
-                _style_ret_dict[style] = (_asset_returns * weights).sum(axis=1)
+                weights = style_exposures[style].reindex(_asset_returns.columns, fill_value=0).astype(float)
+                total = float(weights.sum())
+                if total > 0:
+                    weights = weights / total
+                _style_ret_dict[style] = (_asset_returns.mul(weights, axis=1)).sum(axis=1)
             style_returns = pd.DataFrame(_style_ret_dict)
             # Compute equal-weighted portfolio returns
             port_ret = _asset_returns.mean(axis=1)
@@ -477,12 +483,23 @@ def calculate_regression_attribution(
 
         pr = port_ret.loc[common_idx].values
         sr = style_returns[style].loc[common_idx].values
+        valid_mask = ~(np.isnan(pr) | np.isnan(sr))
+        if valid_mask.sum() < 3:
+            attributions[style] = 0.0
+            continue
 
-        corr_matrix = np.corrcoef(pr, sr)
-        style_beta = float(corr_matrix[0, 1]) if not np.isnan(corr_matrix[0, 1]) else 0.0
+        pr_valid = pr[valid_mask]
+        sr_valid = sr[valid_mask]
+
+        if np.std(pr_valid) < 1e-15 or np.std(sr_valid) < 1e-15:
+            style_beta = 0.0
+        else:
+            with np.errstate(invalid="ignore", divide="ignore"):
+                corr = np.corrcoef(pr_valid, sr_valid)[0, 1]
+            style_beta = float(corr) if np.isfinite(corr) else 0.0
 
         # Average style return * beta as contribution
-        avg_style_ret = float(np.mean(sr))
+        avg_style_ret = float(np.mean(sr_valid))
         style_contribution = style_beta * avg_style_ret
 
         attributions[style] = style_contribution
@@ -526,18 +543,26 @@ def analyze_performance_by_style(
 
     # style_exposures is (N assets x S styles) — static exposures
     # We compute weighted return per style per period
+    style_weights: dict[str, pd.Series] = {}
+    for style in style_exposures.columns:
+        w = style_exposures[style].reindex(returns.columns, fill_value=0.0).astype(float)
+        total = float(w.sum())
+        if total > 0:
+            w = w / total
+        style_weights[style] = w
+
     results = []
     for t in range(len(returns)):
         t_returns = returns.iloc[t]
         row_data: dict[str, int | float] = {"Period": int(t)}
 
         for style in style_exposures.columns:
-            weights = style_exposures[style].reindex(returns.columns, fill_value=0)
-            active = weights[weights > 0].index
-            if len(active) > 0:
-                row_data[f"{style}_return"] = float(t_returns[active].mean())
-            else:
+            w = style_weights[style]
+            total = float(w.sum())
+            if total <= 0:
                 row_data[f"{style}_return"] = 0.0
+            else:
+                row_data[f"{style}_return"] = float((t_returns * w).sum())
 
         results.append(row_data)
 

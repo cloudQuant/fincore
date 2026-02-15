@@ -82,11 +82,12 @@ def get_event_hooks(event: str | None = None) -> dict[str, list[Callable]] | lis
         If event is None, returns all hooks as a dict.
     """
     if event is None:
-        return _EVENT_HOOKS.copy()
+        # Return copies so callers cannot mutate the internal registry.
+        return {k: v.copy() for k, v in _EVENT_HOOKS.items()}
     return _EVENT_HOOKS.get(event, []).copy()
 
 
-def execute_hooks(event: str, *args: Any, **kwargs: Any) -> None:
+def execute_hooks(event: str, *args: Any, **kwargs: Any) -> Any | None:
     """Execute all registered hooks for an event.
 
     Parameters
@@ -102,13 +103,25 @@ def execute_hooks(event: str, *args: Any, **kwargs: Any) -> None:
     --------
     >>> from fincore.hooks import execute_hooks
     >>> execute_hooks("pre_analysis", returns)
+
+    Returns
+    -------
+    Any or None
+        If at least one positional argument is provided, returns the (possibly
+        transformed) first argument after all hooks have executed. If no
+        positional arguments are provided, returns None.
     """
     hooks = _EVENT_HOOKS.get(event, [])
+    hook_args = args
     for hook_func in hooks:
-        result = hook_func(*args, **kwargs)
+        result = hook_func(*hook_args, **kwargs)
         # Allow hooks to modify data by returning new values
-        if result is not None and len(args) > 0:
-            args = (result,) + args[1:]
+        if result is not None and len(hook_args) > 0:
+            hook_args = (result,) + hook_args[1:]
+
+    if len(hook_args) == 0:
+        return None
+    return hook_args[0]
 
 
 def clear_hooks(event: str | None = None) -> None:
@@ -154,11 +167,11 @@ class AnalysisContext:
         self.returns = returns
 
     def __enter__(self):
-        execute_hooks("pre_analysis", self.returns)
+        self.returns = execute_hooks("pre_analysis", self.returns)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        execute_hooks("post_analysis", self.returns)
+        self.returns = execute_hooks("post_analysis", self.returns)
         return False
 
 
@@ -177,11 +190,11 @@ class ComputeContext:
         self.data = data
 
     def __enter__(self):
-        execute_hooks("pre_compute", self.data)
+        self.data = execute_hooks("pre_compute", self.data)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        execute_hooks("post_compute", self.data)
+        self.data = execute_hooks("post_compute", self.data)
         return False
 
 
@@ -200,7 +213,7 @@ class OptimizationContext:
         self.returns = returns
 
     def __enter__(self):
-        execute_hooks("optimization", self.returns)
+        self.returns = execute_hooks("optimization", self.returns)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

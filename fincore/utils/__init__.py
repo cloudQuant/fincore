@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-工具函数模块
+"""Utility module.
 
-从原有empyrical/utils.py重构而来的工具函数集合。
+This package contains helper functions refactored from the original
+``empyrical/utils.py``.
 """
 
 from .common_utils import (
