@@ -24,12 +24,35 @@ class VizBackend(Protocol):
         """Plot drawdown underwater chart."""
         ...
 
-    def plot_rolling_sharpe(self, rolling_sharpe: pd.Series, **kwargs: Any) -> Any:
-        """Plot rolling Sharpe ratio."""
+    def plot_rolling_sharpe(
+        self,
+        sharpe: pd.Series,
+        benchmark_sharpe: pd.Series | None = None,
+        window: int = 252,
+        **kwargs: Any,
+    ) -> Any:
+        """Plot rolling Sharpe ratio.
+
+        Parameters
+        ----------
+        sharpe : pd.Series
+            Rolling Sharpe ratio series.
+        benchmark_sharpe : pd.Series, optional
+            Optional benchmark rolling Sharpe series.
+        window : int, default 252
+            Window size (used for title/annotation).
+        """
         ...
 
-    def plot_monthly_heatmap(self, monthly_returns: pd.DataFrame, **kwargs: Any) -> Any:
-        """Plot monthly returns heatmap."""
+    def plot_monthly_heatmap(self, returns: pd.Series | pd.DataFrame, **kwargs: Any) -> Any:
+        """Plot monthly returns heatmap.
+
+        Parameters
+        ----------
+        returns : pd.Series or pd.DataFrame
+            Either a daily returns series (will be aggregated internally) or a
+            year x month table of monthly returns.
+        """
         ...
 
 

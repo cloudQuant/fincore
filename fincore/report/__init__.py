@@ -1,22 +1,22 @@
 """
-策略报告生成器 — 根据传入数据动态生成 HTML 或 PDF 策略分析报告。
+Strategy report generator: build an HTML or PDF strategy report from the data you provide.
 
-传入的数据越多，生成的报告越详细：
+The more inputs you pass, the more sections the report will include:
 
-- **returns** (必需): 基础绩效指标 + 收益图表
-- **+ benchmark_rets**: Alpha/Beta、信息比率、跟踪误差、滚动Beta
-- **+ positions**: 持仓分析、多空暴露、杠杆率、持仓集中度
-- **+ transactions**: 换手率、交易量分析、交易时间分布
-- **+ trades**: 交易统计（胜率、盈亏比、多空分解、持仓时长分布）
+- **returns** (required): core performance metrics + return charts
+- **+ benchmark_rets**: alpha/beta, information ratio, tracking error, rolling beta
+- **+ positions**: holdings analysis, long/short exposure, leverage, concentration
+- **+ transactions**: turnover, volume analysis, trading time distribution
+- **+ trades**: trade statistics (win rate, payoff ratio, long/short breakdown, holding time distribution)
 
-用法::
+Usage::
 
     from fincore.report import create_strategy_report
 
-    # 最简单：只传 returns
+    # Minimal: returns only
     create_strategy_report(returns, output="report.html")
 
-    # 完整：传入所有数据
+    # Full: pass everything you have
     create_strategy_report(
         returns,
         benchmark_rets=benchmark,
@@ -37,6 +37,8 @@ Modular structure
 
 from __future__ import annotations
 
+from typing import cast
+
 import pandas as pd
 
 
@@ -51,58 +53,64 @@ def create_strategy_report(
     output: str = "report.html",
     rolling_window: int = 63,
 ) -> str:
-    """根据传入数据动态生成策略分析报告。
+    """Generate a strategy report (HTML or PDF) based on the inputs you provide.
 
     Parameters
     ----------
     returns : pd.Series
-        日收益率序列（必需），DatetimeIndex。
+        Daily return series (required). Must be indexed by a DatetimeIndex.
     benchmark_rets : pd.Series, optional
-        基准收益率。传入后增加 Alpha/Beta、跟踪误差、滚动 Beta 等分析。
+        Benchmark return series. Enables alpha/beta, tracking error, rolling beta, etc.
     positions : pd.DataFrame, optional
-        每日持仓 DataFrame（列 = 资产名 + 'cash'）。传入后增加持仓分析。
+        Daily positions DataFrame (columns = asset symbols plus a ``cash`` column). Enables positions analysis.
     transactions : pd.DataFrame, optional
-        交易记录 DataFrame（需含 amount, price, symbol 列）。传入后增加交易分析。
+        Transactions DataFrame (must include ``amount``, ``price``, ``symbol``). Enables transaction analysis.
     trades : pd.DataFrame, optional
-        已平仓交易记录（需含 pnlcomm 列，可选 long, barlen, commission 列）。
-        传入后增加交易统计（胜率、盈亏比等）。
+        Closed trades DataFrame (must include ``pnlcomm``; optional ``long``, ``barlen``, ``commission``).
+        Enables trade statistics (win rate, payoff ratio, etc.).
     title : str
-        报告标题。
+        Report title.
     output : str
-        输出文件路径。以 ``.html`` 结尾生成 HTML，以 ``.pdf`` 结尾生成 PDF。
+        Output path. Use ``.html`` for HTML and ``.pdf`` for PDF.
     rolling_window : int
-        滚动指标的窗口大小（交易日），默认 63（约 3 个月）。
+        Rolling window size (trading days). Default is 63 (about 3 months).
 
     Returns
     -------
     str
-        输出文件的路径。
+        The path to the generated report.
     """
     if output.lower().endswith(".pdf"):
         from fincore.report.render_pdf import generate_pdf
 
-        return generate_pdf(
-            returns,
-            benchmark_rets=benchmark_rets,
-            positions=positions,
-            transactions=transactions,
-            trades=trades,
-            title=title,
-            output=output,
-            rolling_window=rolling_window,
+        return cast(
+            str,
+            generate_pdf(
+                returns,
+                benchmark_rets=benchmark_rets,
+                positions=positions,
+                transactions=transactions,
+                trades=trades,
+                title=title,
+                output=output,
+                rolling_window=rolling_window,
+            ),
         )
     else:
         from fincore.report.render_html import generate_html
 
-        return generate_html(
-            returns,
-            benchmark_rets=benchmark_rets,
-            positions=positions,
-            transactions=transactions,
-            trades=trades,
-            title=title,
-            output=output,
-            rolling_window=rolling_window,
+        return cast(
+            str,
+            generate_html(
+                returns,
+                benchmark_rets=benchmark_rets,
+                positions=positions,
+                transactions=transactions,
+                trades=trades,
+                title=title,
+                output=output,
+                rolling_window=rolling_window,
+            ),
         )
 
 

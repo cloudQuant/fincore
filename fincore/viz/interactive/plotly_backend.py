@@ -319,7 +319,7 @@ class PlotlyBackend(VizBackend):
 
     def plot_monthly_heatmap(
         self,
-        returns: pd.Series,
+        returns: pd.Series | pd.DataFrame,
         **kwargs,
     ) -> go.Figure:
         """Plot monthly returns heatmap.
@@ -336,19 +336,22 @@ class PlotlyBackend(VizBackend):
         go.Figure
             Interactive Plotly figure.
         """
-        # Calculate monthly returns
-        monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+        pivot: pd.DataFrame
+        if isinstance(returns, pd.Series):
+            # Calculate monthly returns
+            monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
 
-        # Create pivot table (year x month)
-        monthly_returns_df = pd.DataFrame(
-            {
-                "year": monthly_returns.index.year,
-                "month": monthly_returns.index.month,
-                "return": monthly_returns.values,
-            }
-        )
-
-        pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
+            # Create pivot table (year x month)
+            monthly_returns_df = pd.DataFrame(
+                {
+                    "year": monthly_returns.index.year,
+                    "month": monthly_returns.index.month,
+                    "return": monthly_returns.values,
+                }
+            )
+            pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
+        else:
+            pivot = returns.copy()
 
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -363,7 +366,7 @@ class PlotlyBackend(VizBackend):
 
         fig.add_heatmap(
             z=pivot.values,
-            x=list(range(1, 13)),
+            x=list(range(1, 13)) if list(pivot.columns) == list(range(1, 13)) else list(pivot.columns),
             y=pivot.index,
             colorscale=colorscale,
             colorbar=dict(
@@ -410,33 +413,16 @@ class PlotlyBackend(VizBackend):
         go.Figure
             Interactive Plotly figure.
         """
-        from fincore.optimization import EfficientFrontier
+        from fincore.optimization import efficient_frontier
 
-        ef = EfficientFrontier(returns)
-        frontier = ef.efficient_frontier(n_points=n_points)
+        frontier = efficient_frontier(returns, n_points=n_points)
 
         fig = self._create_figure()
 
-        # Plot random portfolios
-        if hasattr(frontier, "random_portfolios"):
-            random_portfolios = frontier.random_portfolios
-            fig.add_scatter(
-                x=random_portfolios["volatility"],
-                y=random_portfolios["return"],
-                mode="markers",
-                name="Random Portfolios",
-                marker=dict(
-                    size=5,
-                    color=self.colors["neutral"],
-                    opacity=0.3,
-                ),
-                hovertemplate=("Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
-            )
-
         # Plot efficient frontier
         fig.add_scatter(
-            x=frontier["volatility"],
-            y=frontier["return"],
+            x=frontier["frontier_volatilities"],
+            y=frontier["frontier_returns"],
             mode="lines+markers",
             name="Efficient Frontier",
             line=dict(color=self.colors["highlight"], width=3),
@@ -444,7 +430,7 @@ class PlotlyBackend(VizBackend):
             hovertemplate=("Vol: %{x:.2%}<br>Return: %{y:.2%}<br>Sharpe: %{customdata[0]:.2f}<extra></extra>"),
             customdata=np.stack(
                 [
-                    frontier["return"] / frontier["volatility"],
+                    frontier["frontier_sharpe"],
                 ],
                 axis=-1,
             ),
@@ -466,20 +452,20 @@ class PlotlyBackend(VizBackend):
                 hovertemplate=("Max Sharpe<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
             )
 
-        # Highlight min volatility portfolio
-        if "min_vol" in frontier:
-            min_vol = frontier["min_vol"]
+        # Highlight minimum-variance portfolio
+        if "min_variance" in frontier:
+            min_vol = frontier["min_variance"]
             fig.add_scatter(
                 x=[min_vol["volatility"]],
                 y=[min_vol["return"]],
                 mode="markers",
-                name="Min Volatility",
+                name="Min Variance",
                 marker=dict(
                     size=15,
                     color=self.colors["warning"],
                     symbol="diamond",
                 ),
-                hovertemplate=("Min Volatility<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
+                hovertemplate=("Min Variance<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>"),
             )
 
         fig.update_layout(

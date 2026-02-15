@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""往返交易函数模块."""
+"""Round-trip trade metrics."""
 
 import logging
 from collections import deque
@@ -32,6 +32,8 @@ __all__ = [
     "apply_sector_mappings_to_round_trips",
     "gen_round_trip_stats",
 ]
+
+_DEFAULT_MAX_DELTA = pd.Timedelta("8h")
 
 
 def agg_all_long_short(round_trips, col, stats_dict):
@@ -111,7 +113,7 @@ def agg_all_long_short(round_trips, col, stats_dict):
     return pd.concat([df_all, df_long_short], axis=0)
 
 
-def groupby_consecutive(txn, max_delta=pd.Timedelta("8h")):
+def groupby_consecutive(txn, max_delta=_DEFAULT_MAX_DELTA):
     """Merge transactions of the same direction separated by less than max_delta time duration.
 
     Parameters

@@ -3,7 +3,7 @@
 <p align="center">
     <img src="https://img.shields.io/badge/version-0.1.0-blueviolet.svg" alt="Version 0.1.0" style="margin-right: 10px;"/>
     <img src="https://github.com/cloudQuant/fincore/workflows/CI/badge.svg" alt="CI" style="margin-right: 10px;"/>
-    <img src="https://img.shields.io/badge/tests-1613%20passed-brightgreen.svg" alt="1613 Tests Passed" style="margin-right: 10px;"/>
+    <img src="https://img.shields.io/badge/tests-passing-brightgreen.svg" alt="Tests Passing" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Supported Platforms: Mac, Linux, and Windows" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions" style="margin-right: 10px;"/>
     <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
@@ -370,7 +370,7 @@ fincore/
 ### Testing
 
 ```bash
-# Run all tests (1613 tests)
+# Run all tests
 pytest tests/ -n 4
 
 # Run specific test suites
@@ -705,7 +705,7 @@ sharpe_monthly = empyrical.sharpe_ratio(returns, period=MONTHLY)
 ### 测试
 
 ```bash
-# 运行所有测试（1613 个测试）
+# 运行所有测试
 pytest tests/ -n 4
 
 # 运行特定测试套件

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""回撤相关函数模块."""
+"""Drawdown-related metrics."""
 
 from __future__ import annotations
 
@@ -178,7 +178,7 @@ def get_all_drawdowns(returns: pd.Series | np.ndarray) -> list[float]:
         return []
 
     dd_vals, starts, ends, _ends_in_dd = result
-    return [float(dd_vals[s:e].min()) for s, e in zip(starts, ends)]
+    return [float(dd_vals[s:e].min()) for s, e in zip(starts, ends, strict=False)]
 
 
 def get_all_drawdowns_detailed(returns: pd.Series | np.ndarray) -> list[dict]:
@@ -202,7 +202,7 @@ def get_all_drawdowns_detailed(returns: pd.Series | np.ndarray) -> list[dict]:
     dd_vals, starts, ends, ends_in_dd = result
 
     drawdown_periods = []
-    for k, (s, e) in enumerate(zip(starts, ends)):
+    for k, (s, e) in enumerate(zip(starts, ends, strict=False)):
         segment = dd_vals[s:e]
         trough_offset = int(np.argmin(segment))
         trough_idx = s + trough_offset

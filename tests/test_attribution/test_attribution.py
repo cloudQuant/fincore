@@ -5,6 +5,8 @@ Moved from __init__.py so pytest can discover them properly.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -120,6 +122,31 @@ class TestFamaFrench:
         assert len(idio_risk) == 3
         # Idiosyncratic risk should be positive
         assert np.all(idio_risk > 0)
+
+    def test_fit_constant_returns_no_runtime_warning(self):
+        """Constant returns should not trigger runtime warnings in Newey-West path."""
+        periods = 60
+        idx = pd.date_range("2020-01-01", periods=periods)
+        returns = pd.Series(np.zeros(periods), index=idx)
+        factor_data = pd.DataFrame(
+            {
+                "MKT": np.random.normal(0, 0.01, periods),
+                "SMB": np.random.normal(0, 0.01, periods),
+                "HML": np.random.normal(0, 0.01, periods),
+                "RMW": np.random.normal(0, 0.01, periods),
+                "CMA": np.random.normal(0, 0.01, periods),
+            },
+            index=idx,
+        )
+
+        model = FamaFrenchModel(model_type="5factor")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = model.fit(returns, factor_data, newey_west_lags=2)
+
+        assert "alpha" in result
+        runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+        assert len(runtime_warnings) == 0
 
 
 class TestFetchPlaceholders:

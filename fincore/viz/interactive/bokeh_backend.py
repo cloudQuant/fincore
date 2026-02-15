@@ -5,13 +5,11 @@ Provides server-compatible interactive visualizations using Bokeh.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional, Union
+import importlib
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-
-if TYPE_CHECKING:
-    from bokeh.models import LayoutDOM
 
 from fincore.viz.base import VizBackend
 
@@ -91,7 +89,7 @@ class BokehBackend(VizBackend):
             self.grid_color = "#E0E0E0"
             self.text_color = "#424242"
 
-    def _create_figure(self, **kwargs) -> LayoutDOM:
+    def _create_figure(self, **kwargs) -> Any:
         """Create a new Bokeh figure."""
         try:
             from bokeh.plotting import figure
@@ -121,7 +119,7 @@ class BokehBackend(VizBackend):
         cum_returns: pd.Series,
         benchmark: pd.Series | None = None,
         **kwargs,
-    ) -> LayoutDOM:
+    ) -> Any:
         """Plot cumulative returns with optional benchmark.
 
         Parameters
@@ -205,7 +203,7 @@ class BokehBackend(VizBackend):
         self,
         drawdown: pd.Series,
         **kwargs,
-    ) -> LayoutDOM:
+    ) -> Any:
         """Plot underwater drawdown chart.
 
         Parameters
@@ -273,7 +271,7 @@ class BokehBackend(VizBackend):
         benchmark_sharpe: pd.Series | None = None,
         window: int = 252,
         **kwargs,
-    ) -> LayoutDOM:
+    ) -> Any:
         """Plot rolling Sharpe ratio.
 
         Parameters
@@ -335,11 +333,16 @@ class BokehBackend(VizBackend):
                 legend_label="Benchmark Sharpe",
             )
 
-        # Add zero line
-        from bokeh.models import Span
-
-        zero_line = Span(location=0, dimension="width", line_color=self.grid_color, line_alpha=0.5)
-        p.add_layout(zero_line)
+        # Add zero line (Span may be absent in some bokeh stubs/versions).
+        models = importlib.import_module("bokeh.models")
+        Span = getattr(models, "Span", None)
+        if Span is not None:
+            zero_line = Span(location=0, dimension="width", line_color=self.grid_color, line_alpha=0.5)
+            p.add_layout(zero_line)
+        else:
+            HSpan = getattr(models, "HSpan", None)
+            if HSpan is not None:
+                p.add_layout(HSpan(location=0, line_color=self.grid_color, line_alpha=0.5))
 
         hover = HoverTool(
             tooltips=[
@@ -357,9 +360,9 @@ class BokehBackend(VizBackend):
 
     def plot_monthly_heatmap(
         self,
-        returns: pd.Series,
+        returns: pd.Series | pd.DataFrame,
         **kwargs,
-    ) -> LayoutDOM:
+    ) -> Any:
         """Plot monthly returns heatmap.
 
         Parameters
@@ -374,27 +377,22 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import (
-            BasicTicker,
-            ColorBar,
-            ColumnDataSource,
-            HoverTool,
-            LinearColorMapper,
-        )
+        from bokeh.models import BasicTicker, ColumnDataSource, HoverTool, LinearColorMapper
         from bokeh.plotting import figure
 
-        # Calculate monthly returns
-        monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
-
-        monthly_returns_df = pd.DataFrame(
-            {
-                "year": monthly_returns.index.year,
-                "month": monthly_returns.index.month,
-                "return": monthly_returns.values,
-            }
-        )
-
-        pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
+        pivot: pd.DataFrame
+        if isinstance(returns, pd.Series):
+            monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+            monthly_returns_df = pd.DataFrame(
+                {
+                    "year": monthly_returns.index.year,
+                    "month": monthly_returns.index.month,
+                    "return": monthly_returns.values,
+                }
+            )
+            pivot = monthly_returns_df.pivot(index="year", columns="month", values="return")
+        else:
+            pivot = returns.copy()
 
         years = pivot.index.tolist()
         months = list(range(1, 13))
@@ -402,7 +400,7 @@ class BokehBackend(VizBackend):
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
         # Prepare data for Bokeh (flatten to dict format)
-        data = {
+        data: dict[str, list[object]] = {
             "year": [],
             "month": [],
             "value": [],
@@ -411,18 +409,18 @@ class BokehBackend(VizBackend):
             for m in months:
                 val = pivot.loc[y, m] if m in pivot.columns else np.nan
                 data["year"].append(str(y))
-                data["month"].append(m)
+                data["month"].append(month_names[m - 1])
                 data["value"].append(float(val) if not np.isnan(val) else np.nan)
 
         source = ColumnDataSource(data)
 
         # Create color mapper
-        values = [v for v in data["value"] if not np.isnan(v)]
+        values: list[float] = [float(v) for v in data["value"] if isinstance(v, (int, float)) and np.isfinite(float(v))]
         if not values:
-            min_val, max_val = -10, 10  # Default range
+            min_val, max_val = -10.0, 10.0  # Default range
         else:
-            min_val = min(values)
-            max_val = max(values)
+            min_val = float(min(values))
+            max_val = float(max(values))
 
         mapper = LinearColorMapper(
             palette="RdYlGn11",
@@ -467,31 +465,33 @@ class BokehBackend(VizBackend):
         )
         p.add_tools(hover)
 
-        color_bar = ColorBar(
-            color_mapper=mapper,
-            major_label_text_font_size="10px",
-            ticker=BasicTicker(desired_num_ticks=10),
-            label_standoff=12,
-            border_line_color=None,
-            location=(0, 0),
-        )
-
-        p.add_layout(color_bar, "right")
+        models = importlib.import_module("bokeh.models")
+        ColorBar = getattr(models, "ColorBar", None)
+        if ColorBar is not None:
+            color_bar = ColorBar(
+                color_mapper=mapper,
+                major_label_text_font_size="10px",
+                ticker=BasicTicker(desired_num_ticks=10),
+                label_standoff=12,
+                border_line_color=None,
+                location=(0, 0),
+            )
+            p.add_layout(color_bar, "right")
 
         return p
 
-    def show(self, fig: LayoutDOM) -> None:
+    def show(self, fig: Any) -> None:
         """Display the figure in a browser or notebook."""
         from bokeh.io import show as bokeh_show
 
         bokeh_show(fig)
 
-    def save_html(self, fig: LayoutDOM, filename: str) -> None:
+    def save_html(self, fig: Any, filename: str) -> None:
         """Save the figure as HTML.
 
         Parameters
         ----------
-        fig : LayoutDOM
+        fig : Any
             Bokeh figure to save.
         filename : str
             Output HTML filename.

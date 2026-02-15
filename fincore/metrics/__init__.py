@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Metrics - 拆分后的金融性能分析函数模块.
+"""Metrics package.
 
-这个包包含从 Empyrical 类中拆分出来的各个功能模块。
+This package contains modules extracted from :class:`fincore.empyrical.Empyrical`.
+It is lazily imported to keep `import fincore` fast.
 """
 
 # ---------------------------------------------------------------------------

@@ -1,7 +1,6 @@
-"""
-往返交易相关的绘图和显示函数
+"""Round-trip trade plotting and display functions.
 
-包含往返交易生命周期、盈利概率等绘图函数。
+Includes round-trip lifetimes and probability-of-profit plots.
 """
 
 import matplotlib.patches as patches
@@ -116,7 +115,7 @@ def print_round_trip_stats(empyrical_instance, round_trips, hide_pos=False, run_
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     round_trips : pd.DataFrame
         DataFrame with one row per-round-trip trade.
     hide_pos : bool, optional, default: False

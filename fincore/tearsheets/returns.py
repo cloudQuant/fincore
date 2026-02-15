@@ -1,7 +1,7 @@
-"""
-收益相关的绘图和显示函数
+"""Return-related plotting and display functions.
 
-包含月度收益热力图、年度收益、滚动收益、回撤等绘图函数。
+Includes charts such as monthly return heatmaps, annual returns, rolling metrics,
+and drawdown visualizations.
 """
 
 from collections import OrderedDict
@@ -32,7 +32,7 @@ def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs)
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     ax : matplotlib.Axes, optional
@@ -75,7 +75,7 @@ def plot_annual_returns(empyrical_instance, returns, ax=None, **kwargs):
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     ax : matplotlib.Axes, optional
@@ -115,7 +115,7 @@ def plot_monthly_returns_dist(empyrical_instance, returns, ax=None, **kwargs):
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     ax : matplotlib.Axes, optional
@@ -213,7 +213,7 @@ def plot_rolling_returns(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series, optional
@@ -309,7 +309,7 @@ def plot_rolling_beta(empyrical_instance, returns, factor_returns, legend_loc="b
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series
@@ -356,7 +356,7 @@ def plot_rolling_volatility(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series, optional
@@ -414,7 +414,7 @@ def plot_rolling_sharpe(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series, optional
@@ -470,7 +470,7 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     top : int, optional
@@ -518,7 +518,7 @@ def plot_drawdown_underwater(empyrical_instance, returns, ax=None, **kwargs):
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     ax : matplotlib.Axes, optional
@@ -554,7 +554,7 @@ def plot_return_quantiles(empyrical_instance, returns, live_start_date=None, ax=
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     live_start_date : datetime, optional
@@ -614,7 +614,7 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     ax : matplotlib.Axes, optional
@@ -629,12 +629,17 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
     """
 
     def cumulate_returns(x):
-        return empyrical_instance.cum_returns(x)[-1]
+        # ``Series[-1]`` is label-based for most indexes; use positional access.
+        return empyrical_instance.cum_returns(x).iloc[-1]
 
     if ax is None:
         ax = plt.gca()
 
-    monthly_rets = returns.resample("M").apply(lambda x: cumulate_returns(x))
+    monthly_rets = returns.resample(get_month_end_freq()).apply(lambda x: cumulate_returns(x))
+    # ``to_period`` drops timezone information; avoid emitting a warning in
+    # tz-aware series by stripping tz explicitly first (labels only).
+    if getattr(monthly_rets.index, "tz", None) is not None:
+        monthly_rets.index = monthly_rets.index.tz_localize(None)
     monthly_rets = monthly_rets.to_period()
 
     sns.barplot(x=monthly_rets.index, y=monthly_rets.values, color="steelblue")
@@ -669,7 +674,7 @@ def plot_perf_stats(empyrical_instance, returns, factor_returns, ax=None):
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series
@@ -711,7 +716,7 @@ def show_perf_stats(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     factor_returns : pd.Series, optional
@@ -834,7 +839,7 @@ def show_worst_drawdown_periods(empyrical_instance, returns, top=5, run_flask_ap
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     top : int, optional

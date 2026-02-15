@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""按年统计函数模块."""
+"""Yearly aggregation metrics."""
 
 import numpy as np
 import pandas as pd
@@ -277,7 +277,7 @@ def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualiz
     if not annual_active_returns:
         return pd.Series([], dtype=float)
 
-    years, active_returns = zip(*annual_active_returns)
+    years, active_returns = zip(*annual_active_returns, strict=False)
     return pd.Series(active_returns, index=years)
 
 

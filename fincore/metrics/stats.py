@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""统计指标函数模块."""
+"""Statistical metrics."""
 
 import logging
 
@@ -48,6 +48,30 @@ __all__ = [
     "var_cov_var_normal",
     "normalize",
 ]
+
+
+def _safe_correlation(x, y):
+    """Compute Pearson correlation safely without emitting runtime warnings.
+
+    Returns ``NaN`` for insufficient data or constant series.
+    """
+    x_arr = np.asarray(x, dtype=float)
+    y_arr = np.asarray(y, dtype=float)
+
+    valid_mask = ~(np.isnan(x_arr) | np.isnan(y_arr))
+    if valid_mask.sum() < 2:
+        return np.nan
+
+    x_clean = x_arr[valid_mask]
+    y_clean = y_arr[valid_mask]
+
+    if np.std(x_clean) < 1e-15 or np.std(y_clean) < 1e-15:
+        return np.nan
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        corr = np.corrcoef(x_clean, y_clean)[0, 1]
+
+    return float(corr) if np.isfinite(corr) else np.nan
 
 
 def skewness(returns):
@@ -287,7 +311,10 @@ def serial_correlation(returns, lag=1):
     if returns is None:
         return np.nan
 
-    arr = np.asarray(returns)
+    if lag is None or lag < 1:
+        return np.nan
+
+    arr = np.asarray(returns, dtype=float)
     if arr.size == 0:
         return np.nan
 
@@ -303,8 +330,7 @@ def serial_correlation(returns, lag=1):
     if arr_lagged.size < 2:
         return np.nan
 
-    corr = np.corrcoef(arr_lagged, arr_early)[0, 1]
-    return float(corr) if not np.isnan(corr) else np.nan
+    return _safe_correlation(arr_lagged, arr_early)
 
 
 def _market_correlation(returns, benchmark_returns):
@@ -334,18 +360,7 @@ def _market_correlation(returns, benchmark_returns):
     if len(returns) < 2 or len(benchmark_returns) < 2:
         return np.nan
 
-    returns_array = np.asanyarray(returns)
-    benchmark_array = np.asanyarray(benchmark_returns)
-
-    valid_mask = ~(np.isnan(returns_array) | np.isnan(benchmark_array))
-    returns_clean = returns_array[valid_mask]
-    benchmark_clean = benchmark_array[valid_mask]
-
-    if len(returns_clean) < 2:
-        return np.nan
-
-    corr = np.corrcoef(returns_clean, benchmark_clean)[0, 1]
-    return float(corr) if not np.isnan(corr) else np.nan
+    return _safe_correlation(returns, benchmark_returns)
 
 
 def stock_market_correlation(returns, market_returns):
@@ -534,8 +549,8 @@ def r_cubed(returns, factor_returns):
     if mask.sum() < 2:
         return np.nan
 
-    correlation = np.corrcoef(ret_arr[mask], fac_arr[mask])[0, 1]
-    return correlation**3
+    correlation = _safe_correlation(ret_arr[mask], fac_arr[mask])
+    return correlation**3 if not np.isnan(correlation) else np.nan
 
 
 def r_cubed_turtle(returns, period=DAILY, annualization=None):

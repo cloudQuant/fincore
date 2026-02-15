@@ -24,6 +24,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class BatchFetchError(Exception):
+    """Raised when strict batch fetch fails for one or more symbols."""
+
+    def __init__(
+        self,
+        provider: str,
+        errors: dict[str, Exception],
+        partial_results: dict[str, pd.DataFrame],
+    ) -> None:
+        self.provider = provider
+        self.errors = errors
+        self.partial_results = partial_results
+        symbols = ", ".join(sorted(errors.keys()))
+        super().__init__(f"Failed to fetch {len(errors)} symbol(s) from {provider}: {symbols}")
+
+
 class DataProvider(ABC):
     """Abstract base class for financial data providers.
 
@@ -78,6 +94,7 @@ class DataProvider(ABC):
         end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
+        strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch historical data for multiple symbols.
 
@@ -93,6 +110,9 @@ class DataProvider(ABC):
             Data frequency.
         adjust : bool, default True
             Whether to adjust prices.
+        strict : bool, default False
+            If True, raise :class:`BatchFetchError` when any symbol fails.
+            If False, failed symbols are returned as empty DataFrames.
 
         Returns
         -------
@@ -266,6 +286,7 @@ class YahooFinanceProvider(DataProvider):
         end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
+        strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols.
 
@@ -281,6 +302,9 @@ class YahooFinanceProvider(DataProvider):
             Data frequency.
         adjust : bool, default True
             Whether to use adjusted prices.
+        strict : bool, default False
+            If True, raise :class:`BatchFetchError` when any symbol fails.
+            If False, failed symbols are returned as empty DataFrames.
 
         Returns
         -------
@@ -288,6 +312,7 @@ class YahooFinanceProvider(DataProvider):
             Dictionary mapping symbols to DataFrames.
         """
         results = {}
+        errors: dict[str, Exception] = {}
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
@@ -298,7 +323,12 @@ class YahooFinanceProvider(DataProvider):
                     e,
                     extra={"provider": "YahooFinance", "symbol": symbol},
                 )
-                results[symbol] = pd.DataFrame()
+                if strict:
+                    errors[symbol] = e
+                else:
+                    results[symbol] = pd.DataFrame()
+        if strict and errors:
+            raise BatchFetchError("YahooFinance", errors=errors, partial_results=results)
         return results
 
     def get_info(self, symbol: str) -> dict:
@@ -428,9 +458,11 @@ class AlphaVantageProvider(DataProvider):
         end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
+        strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
+        errors: dict[str, Exception] = {}
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
@@ -441,7 +473,12 @@ class AlphaVantageProvider(DataProvider):
                     e,
                     extra={"provider": "AlphaVantage", "symbol": symbol},
                 )
-                results[symbol] = pd.DataFrame()
+                if strict:
+                    errors[symbol] = e
+                else:
+                    results[symbol] = pd.DataFrame()
+        if strict and errors:
+            raise BatchFetchError("AlphaVantage", errors=errors, partial_results=results)
         return results
 
     def get_info(self, symbol: str) -> dict:
@@ -579,9 +616,11 @@ class TushareProvider(DataProvider):
         end: str | datetime,
         interval: str = "1d",
         adjust: bool = True,
+        strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
+        errors: dict[str, Exception] = {}
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
@@ -592,7 +631,12 @@ class TushareProvider(DataProvider):
                     e,
                     extra={"provider": "Tushare", "symbol": symbol},
                 )
-                results[symbol] = pd.DataFrame()
+                if strict:
+                    errors[symbol] = e
+                else:
+                    results[symbol] = pd.DataFrame()
+        if strict and errors:
+            raise BatchFetchError("Tushare", errors=errors, partial_results=results)
         return results
 
     def get_info(self, symbol: str) -> dict:
@@ -714,9 +758,11 @@ class AkShareProvider(DataProvider):
         end: str | datetime,
         interval: str = "1d",
         adjust: str = "qfq",
+        strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch data for multiple symbols."""
         results = {}
+        errors: dict[str, Exception] = {}
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
@@ -727,7 +773,12 @@ class AkShareProvider(DataProvider):
                     e,
                     extra={"provider": "AkShare", "symbol": symbol},
                 )
-                results[symbol] = pd.DataFrame()
+                if strict:
+                    errors[symbol] = e
+                else:
+                    results[symbol] = pd.DataFrame()
+        if strict and errors:
+            raise BatchFetchError("AkShare", errors=errors, partial_results=results)
         return results
 
     def get_info(self, symbol: str) -> dict:
@@ -869,6 +920,7 @@ def fetch_multiple_prices(
     end: str | datetime | None = None,
     years: int = 5,
     interval: str = "1d",
+    strict: bool = False,
     **kwargs,
 ) -> dict[str, pd.DataFrame]:
     """Fetch price data for multiple symbols.
@@ -887,6 +939,9 @@ def fetch_multiple_prices(
         Number of years if start not specified.
     interval : str, default '1d'
         Data frequency.
+    strict : bool, default False
+        If True, raise :class:`BatchFetchError` when any symbol fails.
+        If False, failed symbols are returned as empty DataFrames.
     **kwargs
         Additional arguments for provider.
 
@@ -918,4 +973,4 @@ def fetch_multiple_prices(
         start = pd.to_datetime(start)
 
     assert start is not None and end is not None  # guaranteed by logic above
-    return provider.fetch_multiple(symbols, start, end, interval)
+    return provider.fetch_multiple(symbols, start, end, interval, strict=strict)

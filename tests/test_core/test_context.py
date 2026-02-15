@@ -94,6 +94,11 @@ class TestAnalysisContextBasic:
         ctx = AnalysisContext(returns)
         assert ctx.daily_value_at_risk < 0
 
+    def test_sharpe_ratio_nan_for_too_short_series(self):
+        returns = pd.Series([0.01], index=pd.date_range("2020-01-01", periods=1))
+        ctx = AnalysisContext(returns)
+        assert np.isnan(ctx.sharpe_ratio)
+
 
 class TestAnalysisContextPerfStats:
     def test_perf_stats_keys(self, returns):

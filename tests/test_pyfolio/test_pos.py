@@ -100,7 +100,7 @@ class PositionsTestCase(TestCase):
         Tests sector exposure mapping and rollup.
 
         """
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as _warnings:
             print("positions:", positions)
             print("mapping:", mapping)
             result_sector_exposure = Empyrical.get_sector_exposures(

@@ -111,7 +111,7 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
 
 
 def fmt(v, pct=False):
-    """格式化数值。"""
+    """Format a scalar for display in HTML tables/cards."""
     if isinstance(v, (int, np.integer)):
         return f"{v:,}" if abs(v) >= 10000 else str(v)
     if isinstance(v, (float, np.floating)):

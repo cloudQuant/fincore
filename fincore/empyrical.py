@@ -15,22 +15,22 @@
 # limitations under the License.
 
 """
-Empyrical - 金融性能分析库.
+Empyrical: a financial performance analytics library.
 
-包含原有的所有empyrical函数，以及新的面向对象Empyrical类。
+This module includes the original empyrical-style functions plus an object-oriented ``Empyrical`` class.
 
-代码已重构：
+The codebase has been refactored:
 
-* 具体实现拆分到 ``fincore.metrics`` 子模块。
-* ``@classmethod`` 门面方法通过 ``_LazyMethod`` 非数据描述符 +
-  ``@_populate_from_registry`` 类装饰器从 ``fincore._registry``
-  自动生成，避免手写 100+ 行委托代码。
-* ``@_dual_method`` 门面方法（需要从实例自动填充 ``returns`` /
-  ``factor_returns``）保留显式定义，以保持精确的函数签名。
+* Implementations live in ``fincore.metrics`` submodules.
+* ``@classmethod`` facade methods are auto-generated from ``fincore._registry`` via the ``_LazyMethod`` descriptor
+  plus the ``@_populate_from_registry`` class decorator, avoiding 100+ lines of manual delegation.
+* ``@_dual_method`` facade methods (which auto-fill ``returns`` / ``factor_returns`` from an instance) remain
+  explicitly defined to preserve precise call signatures.
 """
 
 import functools
 import importlib
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -140,23 +140,34 @@ def _populate_from_registry(cls):
 # ---------------------------------------------------------------------------
 # Zipline compatibility stubs
 # ---------------------------------------------------------------------------
+ZIPLINE = False
+
+
+class _ZiplineAssetStub:
+    price_multiplier = 1
+
+
+class _EquityStub(_ZiplineAssetStub):
+    pass
+
+
+class _FutureStub(_ZiplineAssetStub):
+    pass
+
+
+_ZIPLINE_WARNING = 'Module "zipline.assets" not found; multipliers will not be applied to position notionals.'
+
+Equity: type[Any] = _EquityStub
+Future: type[Any] = _FutureStub
+
 try:
-    from zipline.assets import Equity, Future
-
+    _zip_assets = importlib.import_module("zipline.assets")
+except ModuleNotFoundError:
+    pass
+else:
     ZIPLINE = True
-except ImportError:
-    ZIPLINE = False
-
-    class _ZiplineAssetStub:
-        price_multiplier = 1
-
-    class Equity(_ZiplineAssetStub):
-        pass
-
-    class Future(_ZiplineAssetStub):
-        pass
-
-    _ZIPLINE_WARNING = 'Module "zipline.assets" not found; multipliers will not be applied to position notionals.'
+    Equity = getattr(_zip_assets, "Equity", _EquityStub)
+    Future = getattr(_zip_assets, "Future", _FutureStub)
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +175,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 @_populate_from_registry
 class Empyrical:
-    """面向对象的性能指标计算类.
+    """Object-oriented performance metric interface.
 
     **Class-level access** (e.g. ``Empyrical.sharpe_ratio(returns)``)
     is auto-generated from the function registry in ``fincore._registry``
@@ -175,7 +186,7 @@ class Empyrical:
     """
 
     def __init__(self, returns=None, positions=None, factor_returns=None, factor_loadings=None, **kwargs):
-        """初始化Empyrical实例，存储收益、持仓、因子收益和因子载荷数据."""
+        """Initialize an Empyrical instance and store analysis inputs."""
         self.returns = returns
         self.positions = positions
         self.factor_returns = factor_returns
@@ -226,7 +237,7 @@ class Empyrical:
 
     @_dual_method
     def _get_returns(self, returns):
-        """获取收益数据. 当returns为None时，尝试使用实例的returns属性."""
+        """Get returns, falling back to ``self.returns`` when ``returns`` is None."""
         if returns is not None:
             return returns
         if not isinstance(self, type) and hasattr(self, "returns") and self.returns is not None:
@@ -235,7 +246,7 @@ class Empyrical:
 
     @_dual_method
     def _get_factor_returns(self, factor_return):
-        """获取因子收益数据. 当factor_return为None时，尝试使用实例的factor_returns属性."""
+        """Get factor returns, falling back to ``self.factor_returns`` when ``factor_return`` is None."""
         if factor_return is not None:
             return factor_return
         if not isinstance(self, type) and hasattr(self, "factor_returns") and self.factor_returns is not None:
@@ -248,7 +259,7 @@ class Empyrical:
 
     @classmethod
     def cagr(cls, returns, period=DAILY, annualization=None):
-        """计算复合年增长率(annual_return的别名)."""
+        """Compute CAGR (alias of ``annual_return``)."""
         return _resolve_module("_yearly").annual_return(returns, period, annualization)
 
     # ==================================================================
@@ -259,170 +270,170 @@ class Empyrical:
 
     @_dual_method
     def get_max_drawdown_period(self, returns=None):
-        """获取最大回撤期间的开始和结束日期."""
+        """Return the start/end timestamps for the maximum drawdown period."""
         return _resolve_module("_drawdown").get_max_drawdown_period(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_days(self, returns=None):
-        """计算最大回撤持续的天数."""
+        """Return the duration (days) of the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_days(self._get_returns(returns))
 
     @_dual_method
     def second_max_drawdown(self, returns=None):
-        """确定策略的第二大回撤."""
+        """Return the second-largest drawdown."""
         return _resolve_module("_drawdown").second_max_drawdown(self._get_returns(returns))
 
     @_dual_method
     def third_max_drawdown(self, returns=None):
-        """确定策略的第三大回撤."""
+        """Return the third-largest drawdown."""
         return _resolve_module("_drawdown").third_max_drawdown(self._get_returns(returns))
 
     @_dual_method
     def second_max_drawdown_days(self, returns=None):
-        """获取第二大回撤的天数."""
+        """Return the duration (days) of the second-largest drawdown."""
         return _resolve_module("_drawdown").second_max_drawdown_days(self._get_returns(returns))
 
     @_dual_method
     def second_max_drawdown_recovery_days(self, returns=None):
-        """获取第二大回撤的恢复天数."""
+        """Return the recovery duration (days) of the second-largest drawdown."""
         return _resolve_module("_drawdown").second_max_drawdown_recovery_days(self._get_returns(returns))
 
     @_dual_method
     def third_max_drawdown_days(self, returns=None):
-        """获取第三大回撤的天数."""
+        """Return the duration (days) of the third-largest drawdown."""
         return _resolve_module("_drawdown").third_max_drawdown_days(self._get_returns(returns))
 
     @_dual_method
     def third_max_drawdown_recovery_days(self, returns=None):
-        """获取第三大回撤的恢复天数."""
+        """Return the recovery duration (days) of the third-largest drawdown."""
         return _resolve_module("_drawdown").third_max_drawdown_recovery_days(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_weeks(self, returns=None):
-        """计算最大回撤周数."""
+        """Return the duration (weeks) of the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_weeks(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_months(self, returns=None):
-        """计算最大回撤月数."""
+        """Return the duration (months) of the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_months(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_recovery_days(self, returns=None):
-        """计算最大回撤恢复天数."""
+        """Return the recovery duration (days) for the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_recovery_days(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_recovery_weeks(self, returns=None):
-        """计算最大回撤恢复周数."""
+        """Return the recovery duration (weeks) for the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_recovery_weeks(self._get_returns(returns))
 
     @_dual_method
     def max_drawdown_recovery_months(self, returns=None):
-        """计算最大回撤恢复月数."""
+        """Return the recovery duration (months) for the maximum drawdown."""
         return _resolve_module("_drawdown").max_drawdown_recovery_months(self._get_returns(returns))
 
     # ---- stats (returns only) ----
 
     @_dual_method
     def futures_market_correlation(self, returns=None, futures_returns=None):
-        """计算与期货市场的相关性."""
+        """Compute correlation between strategy returns and a futures market series."""
         return _resolve_module("_stats").futures_market_correlation(self._get_returns(returns), futures_returns)
 
     @_dual_method
     def serial_correlation(self, returns=None, lag=1):
-        """计算序列自相关."""
+        """Compute serial correlation for the given lag."""
         return _resolve_module("_stats").serial_correlation(self._get_returns(returns), lag)
 
     @_dual_method
     def win_rate(self, returns=None):
-        """计算胜率."""
+        """Compute win rate (fraction of positive returns)."""
         return _resolve_module("_stats").win_rate(self._get_returns(returns))
 
     @_dual_method
     def loss_rate(self, returns=None):
-        """计算亏损率."""
+        """Compute loss rate (fraction of negative returns)."""
         return _resolve_module("_stats").loss_rate(self._get_returns(returns))
 
     # ---- consecutive (returns only) ----
 
     @_dual_method
     def max_consecutive_up_weeks(self, returns=None):
-        """计算最大连续上涨周数."""
+        """Compute the maximum number of consecutive up weeks."""
         return _resolve_module("_consecutive").max_consecutive_up_weeks(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_down_weeks(self, returns=None):
-        """计算最大连续下跌周数."""
+        """Compute the maximum number of consecutive down weeks."""
         return _resolve_module("_consecutive").max_consecutive_down_weeks(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_up_months(self, returns=None):
-        """计算最大连续上涨月数."""
+        """Compute the maximum number of consecutive up months."""
         return _resolve_module("_consecutive").max_consecutive_up_months(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_down_months(self, returns=None):
-        """计算最大连续下跌月数."""
+        """Compute the maximum number of consecutive down months."""
         return _resolve_module("_consecutive").max_consecutive_down_months(self._get_returns(returns))
 
     @_dual_method
     def max_single_day_gain_date(self, returns=None):
-        """获取单日最大收益的日期."""
+        """Return the date of the maximum single-day gain."""
         return _resolve_module("_consecutive").max_single_day_gain_date(self._get_returns(returns))
 
     @_dual_method
     def max_single_day_loss_date(self, returns=None):
-        """获取单日最大亏损的日期."""
+        """Return the date of the maximum single-day loss."""
         return _resolve_module("_consecutive").max_single_day_loss_date(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_up_start_date(self, returns=None):
-        """获取最大连续上涨期的开始日期."""
+        """Return the start date of the maximum consecutive-up period."""
         return _resolve_module("_consecutive").max_consecutive_up_start_date(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_up_end_date(self, returns=None):
-        """获取最大连续上涨期的结束日期."""
+        """Return the end date of the maximum consecutive-up period."""
         return _resolve_module("_consecutive").max_consecutive_up_end_date(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_down_start_date(self, returns=None):
-        """获取最大连续下跌期的开始日期."""
+        """Return the start date of the maximum consecutive-down period."""
         return _resolve_module("_consecutive").max_consecutive_down_start_date(self._get_returns(returns))
 
     @_dual_method
     def max_consecutive_down_end_date(self, returns=None):
-        """获取最大连续下跌期的结束日期."""
+        """Return the end date of the maximum consecutive-down period."""
         return _resolve_module("_consecutive").max_consecutive_down_end_date(self._get_returns(returns))
 
     # ---- ratios (returns only) ----
 
     @_dual_method
     def common_sense_ratio(self, returns=None):
-        """计算常识比率."""
+        """Compute the common sense ratio."""
         return _resolve_module("_ratios").common_sense_ratio(self._get_returns(returns))
 
     @_dual_method
     def sterling_ratio(self, returns=None, risk_free=0.0, period=DAILY, annualization=None):
-        """计算斯特林比率."""
+        """Compute the Sterling ratio."""
         return _resolve_module("_ratios").sterling_ratio(self._get_returns(returns), risk_free, period, annualization)
 
     @_dual_method
     def burke_ratio(self, returns=None, risk_free=0.0, period=DAILY, annualization=None):
-        """计算伯克比率."""
+        """Compute the Burke ratio."""
         return _resolve_module("_ratios").burke_ratio(self._get_returns(returns), risk_free, period, annualization)
 
     @_dual_method
     def kappa_three_ratio(self, returns=None, risk_free=0.0, period=DAILY, annualization=None, mar=0.0):
-        """计算Kappa3比率."""
+        """Compute the Kappa-3 ratio."""
         return _resolve_module("_ratios").kappa_three_ratio(
             self._get_returns(returns), risk_free, period, annualization, mar
         )
 
     @_dual_method
     def deflated_sharpe_ratio(self, returns=None, risk_free=0, num_trials=1, period=DAILY, annualization=None):
-        """计算Deflated Sharpe Ratio (DSR)."""
+        """Compute the Deflated Sharpe Ratio (DSR)."""
         return _resolve_module("_ratios").deflated_sharpe_ratio(
             self._get_returns(returns), risk_free, num_trials, period, annualization
         )
@@ -431,62 +442,62 @@ class Empyrical:
 
     @_dual_method
     def gpd_risk_estimates(self, returns=None, var_p=0.01):
-        """使用GPD估计VaR和ES."""
+        """Estimate VaR and ES using a generalized Pareto distribution (GPD)."""
         return _resolve_module("_risk").gpd_risk_estimates(self._get_returns(returns), var_p)
 
     @_dual_method
     def gpd_risk_estimates_aligned(self, returns=None, var_p=0.01):
-        """使用GPD估计VaR和ES（对齐版本）."""
+        """Estimate VaR and ES using GPD (aligned output)."""
         return _resolve_module("_risk").gpd_risk_estimates_aligned(self._get_returns(returns), var_p)
 
     @_dual_method
     def var_excess_return(self, returns=None, cutoff=0.05, risk_free=0.0, period=DAILY, annualization=None):
-        """计算VaR超额收益."""
+        """Compute the VaR excess return."""
         return _resolve_module("_risk").var_excess_return(
             self._get_returns(returns), cutoff, risk_free, period, annualization
         )
 
     @_dual_method
     def mar_ratio(self, returns=None, period=DAILY, annualization=None):
-        """计算MAR比率."""
+        """Compute the MAR ratio."""
         return _resolve_module("_ratios").mar_ratio(self._get_returns(returns), period, annualization)
 
     @_dual_method
     def r_cubed_turtle(self, returns=None, period=DAILY, annualization=None):
-        """计算R³海龟指标."""
+        """Compute the R^3 Turtle metric."""
         return _resolve_module("_stats").r_cubed_turtle(self._get_returns(returns), period, annualization)
 
     # ---- yearly (returns only) ----
 
     @_dual_method
     def annualized_cumulative_return(self, returns=None, period=DAILY, annualization=None):
-        """计算年化累计收益."""
+        """Compute annualized cumulative return."""
         return _resolve_module("_yearly").annual_return(self._get_returns(returns), period, annualization)
 
     @_dual_method
     def annual_volatility_by_year(self, returns=None, period=DAILY, annualization=None):
-        """计算每年的波动率."""
+        """Compute annual volatility by year."""
         return _resolve_module("_yearly").annual_volatility_by_year(self._get_returns(returns), period, annualization)
 
     # ---- rolling (returns only) ----
 
     @_dual_method
     def roll_sharpe_ratio(self, returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None):
-        """计算滚动夏普比率."""
+        """Compute rolling Sharpe ratio."""
         return _resolve_module("_rolling").roll_sharpe_ratio(
             self._get_returns(returns), window, risk_free, period, annualization
         )
 
     @_dual_method
     def roll_max_drawdown(self, returns=None, window=252):
-        """计算滚动最大回撤."""
+        """Compute rolling maximum drawdown."""
         return _resolve_module("_rolling").roll_max_drawdown(self._get_returns(returns), window)
 
     # ---- timing (returns only) ----
 
     @_dual_method
     def extract_interesting_date_ranges(self, returns=None):
-        """提取有趣的日期范围."""
+        """Extract interesting date ranges."""
         return _resolve_module("_timing").extract_interesting_date_ranges(self._get_returns(returns))
 
     # ==================================================================
@@ -495,75 +506,75 @@ class Empyrical:
 
     @_dual_method
     def r_cubed(self, returns=None, factor_returns=None):
-        """计算R³指标."""
+        """Compute the R^3 metric."""
         return _resolve_module("_stats").r_cubed(self._get_returns(returns), self._get_factor_returns(factor_returns))
 
     @_dual_method
     def relative_win_rate(self, returns=None, factor_returns=None):
-        """计算相对胜率."""
+        """Compute relative win rate."""
         return _resolve_module("_stats").relative_win_rate(
             self._get_returns(returns), self._get_factor_returns(factor_returns)
         )
 
     @_dual_method
     def capm_r_squared(self, returns=None, factor_returns=None):
-        """计算CAPM R²."""
+        """Compute CAPM R^2."""
         return _resolve_module("_stats").capm_r_squared(
             self._get_returns(returns), self._get_factor_returns(factor_returns)
         )
 
     @_dual_method
     def up_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算上行捕获收益."""
+        """Compute up-capture return."""
         return _resolve_module("_ratios").up_capture_return(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
 
     @_dual_method
     def down_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算下行捕获收益."""
+        """Compute down-capture return."""
         return _resolve_module("_ratios").down_capture_return(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
 
     @_dual_method
     def tracking_difference(self, returns=None, factor_returns=None):
-        """计算跟踪差异."""
+        """Compute tracking difference."""
         return _resolve_module("_stats").tracking_difference(
             self._get_returns(returns), self._get_factor_returns(factor_returns)
         )
 
     @_dual_method
     def beta_fragility_heuristic(self, returns=None, factor_returns=None):
-        """估计Beta脆弱性."""
+        """Estimate beta fragility (heuristic)."""
         return _resolve_module("_risk").beta_fragility_heuristic(
             self._get_returns(returns), self._get_factor_returns(factor_returns)
         )
 
     @_dual_method
     def beta_fragility_heuristic_aligned(self, returns=None, factor_returns=None):
-        """估计Beta脆弱性（对齐版本）."""
+        """Estimate beta fragility (heuristic, aligned output)."""
         return _resolve_module("_risk").beta_fragility_heuristic_aligned(
             self._get_returns(returns), self._get_factor_returns(factor_returns)
         )
 
     @_dual_method
     def treynor_ratio(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
-        """计算特雷诺比率."""
+        """Compute the Treynor ratio."""
         return _resolve_module("_ratios").treynor_ratio(
             self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
         )
 
     @_dual_method
     def m_squared(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
-        """计算M²测度."""
+        """Compute the M^2 measure."""
         return _resolve_module("_ratios").m_squared(
             self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
         )
 
     @_dual_method
     def residual_risk(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
-        """计算残差风险."""
+        """Compute residual risk."""
         return _resolve_module("_risk").residual_risk(
             self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
         )
@@ -574,7 +585,7 @@ class Empyrical:
     def roll_alpha(
         self, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """计算滚动Alpha."""
+        """Compute rolling alpha."""
         return _resolve_module("_rolling").roll_alpha(
             self._get_returns(returns),
             self._get_factor_returns(factor_returns),
@@ -586,7 +597,7 @@ class Empyrical:
 
     @_dual_method
     def roll_beta(self, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None):
-        """计算滚动Beta."""
+        """Compute rolling beta."""
         return _resolve_module("_rolling").roll_beta(
             self._get_returns(returns),
             self._get_factor_returns(factor_returns),
@@ -600,7 +611,7 @@ class Empyrical:
     def roll_alpha_beta(
         self, returns=None, factor_returns=None, window=252, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """计算滚动Alpha和Beta."""
+        """Compute rolling alpha and beta."""
         return _resolve_module("_rolling").roll_alpha_beta(
             self._get_returns(returns),
             self._get_factor_returns(factor_returns),
@@ -612,21 +623,21 @@ class Empyrical:
 
     @_dual_method
     def roll_up_capture(self, returns=None, factor_returns=None, window=252):
-        """计算滚动上行捕获率."""
+        """Compute rolling up-capture ratio."""
         return _resolve_module("_rolling").roll_up_capture(
             self._get_returns(returns), self._get_factor_returns(factor_returns), window
         )
 
     @_dual_method
     def roll_down_capture(self, returns=None, factor_returns=None, window=252):
-        """计算滚动下行捕获率."""
+        """Compute rolling down-capture ratio."""
         return _resolve_module("_rolling").roll_down_capture(
             self._get_returns(returns), self._get_factor_returns(factor_returns), window
         )
 
     @_dual_method
     def roll_up_down_capture(self, returns=None, factor_returns=None, window=252):
-        """计算滚动上下行捕获比率."""
+        """Compute rolling up/down capture ratio."""
         return _resolve_module("_rolling").roll_up_down_capture(
             self._get_returns(returns), self._get_factor_returns(factor_returns), window
         )
@@ -635,28 +646,28 @@ class Empyrical:
 
     @_dual_method
     def annual_active_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算年度主动收益."""
+        """Compute annual active return."""
         return _resolve_module("_yearly").annual_active_return(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
 
     @_dual_method
     def annual_active_risk(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算年度主动风险（跟踪误差）."""
+        """Compute annual active risk (tracking error)."""
         return _resolve_module("_risk").tracking_error(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
 
     @_dual_method
     def annual_active_return_by_year(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算每年的主动收益."""
+        """Compute annual active return by year."""
         return _resolve_module("_yearly").annual_active_return_by_year(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
 
     @_dual_method
     def information_ratio_by_year(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
-        """计算每年的信息比率."""
+        """Compute information ratio by year."""
         return _resolve_module("_yearly").information_ratio_by_year(
             self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
         )
@@ -676,7 +687,7 @@ class Empyrical:
         pos_in_dollars=True,
         regression_style="OLS",
     ):
-        """计算绩效归因."""
+        """Compute performance attribution."""
         returns = self._get_returns(returns)
         if not isinstance(self, type):
             if positions is None and hasattr(self, "positions") and self.positions is not None:
@@ -693,7 +704,7 @@ class Empyrical:
     def regression_annual_return(
         self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None
     ):
-        """计算回归年化收益."""
+        """Compute regression-based annual return."""
         returns = self._get_returns(returns)
         factor_returns = self._get_factor_returns(factor_returns)
         _ab = _resolve_module("_alpha_beta")
@@ -709,7 +720,7 @@ class Empyrical:
 
     @classmethod
     def _groupby_consecutive(cls, txn, max_delta=None):
-        """按连续交易分组."""
+        """Group transactions by consecutive timestamps."""
         if max_delta is None:
             max_delta = pd.Timedelta("8h")
         return _resolve_module("_round_trips").groupby_consecutive(txn, max_delta)

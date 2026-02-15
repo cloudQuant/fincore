@@ -110,6 +110,56 @@ class TestYahooFinanceProviderUnit:
         assert isinstance(returns, pd.Series)
         assert len(returns) == len(prices) - 1
 
+    def test_fetch_multiple_default_non_strict_returns_empty_on_failure(self, monkeypatch):
+        """Default mode should keep compatibility and return empty DataFrame on failures."""
+        from fincore.data.providers import YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+
+        sample = pd.DataFrame(
+            {"Close": [100.0, 101.0]},
+            index=pd.date_range("2023-01-01", periods=2, freq="D"),
+        )
+
+        def fake_fetch(symbol, start, end, interval="1d", adjust=True):  # noqa: ARG001
+            if symbol == "BAD":
+                raise ValueError("fetch failed")
+            return sample
+
+        monkeypatch.setattr(provider, "fetch", fake_fetch)
+
+        results = provider.fetch_multiple(["OK", "BAD"], "2023-01-01", "2023-01-10")
+        assert "OK" in results
+        assert "BAD" in results
+        assert not results["OK"].empty
+        assert results["BAD"].empty
+
+    def test_fetch_multiple_strict_raises_batch_error(self, monkeypatch):
+        """Strict mode should aggregate failures and raise BatchFetchError."""
+        from fincore.data.providers import BatchFetchError, YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+
+        sample = pd.DataFrame(
+            {"Close": [100.0, 101.0]},
+            index=pd.date_range("2023-01-01", periods=2, freq="D"),
+        )
+
+        def fake_fetch(symbol, start, end, interval="1d", adjust=True):  # noqa: ARG001
+            if symbol in {"BAD1", "BAD2"}:
+                raise ValueError(f"failed: {symbol}")
+            return sample
+
+        monkeypatch.setattr(provider, "fetch", fake_fetch)
+
+        with pytest.raises(BatchFetchError) as exc_info:
+            provider.fetch_multiple(["OK", "BAD1", "BAD2"], "2023-01-01", "2023-01-10", strict=True)
+
+        err = exc_info.value
+        assert set(err.errors.keys()) == {"BAD1", "BAD2"}
+        assert "OK" in err.partial_results
+        assert not err.partial_results["OK"].empty
+
 
 class TestAlphaVantageProviderUnit:
     """Unit tests for Alpha Vantage provider (no network)."""
@@ -211,3 +261,16 @@ class TestConvenienceFunctionsUnit:
             assert isinstance(provider, TushareProvider)
         except ImportError:
             pytest.skip("tushare not installed")
+
+    def test_fetch_multiple_prices_strict_passes_through(self, monkeypatch):
+        """fetch_multiple_prices should pass strict=True to provider.fetch_multiple."""
+        from fincore.data.providers import BatchFetchError, fetch_multiple_prices
+
+        class DummyProvider:
+            def fetch_multiple(self, symbols, start, end, interval="1d", adjust=True, strict=False):  # noqa: ARG002
+                if strict:
+                    raise BatchFetchError("Dummy", errors={"BAD": ValueError("x")}, partial_results={})
+                return {s: pd.DataFrame() for s in symbols}
+
+        with pytest.raises(BatchFetchError):
+            fetch_multiple_prices(["OK", "BAD"], provider=DummyProvider(), years=1, strict=True)

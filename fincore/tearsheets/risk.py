@@ -1,7 +1,7 @@
-"""
-风险相关的绘图函数
+"""Risk-related plotting functions.
 
-包含风格因子暴露、行业暴露、市值暴露、成交量暴露等绘图函数。
+Includes style factor exposures, sector exposures, cap exposures, and volume
+exposures.
 """
 
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ import numpy as np
 
 from fincore.constants import CAP_BUCKETS, SECTORS
 
-# 获取彩虹色图
+# Get a categorical colormap.
 cmap = plt.get_cmap("gist_rainbow")
 
 
@@ -73,9 +73,9 @@ def plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict
         ax = plt.gca()
 
     if sector_dict is None:
-        sector_names = SECTORS.values()
+        sector_names = list(SECTORS.values())
     else:
-        sector_names = sector_dict.values()
+        sector_names = list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -112,9 +112,9 @@ def plot_sector_exposures_gross(gross_exposures, sector_dict=None, ax=None):
         ax = plt.gca()
 
     if sector_dict is None:
-        sector_names = SECTORS.values()
+        sector_names = list(SECTORS.values())
     else:
-        sector_names = sector_dict.values()
+        sector_names = list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -149,9 +149,9 @@ def plot_sector_exposures_net(net_exposures, sector_dict=None, ax=None):
         ax = plt.gca()
 
     if sector_dict is None:
-        sector_names = SECTORS.values()
+        sector_names = list(SECTORS.values())
     else:
-        sector_names = sector_dict.values()
+        sector_names = list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -259,7 +259,7 @@ def plot_cap_exposures_net(net_exposures, ax=None):
 
     color_list = cmap(np.linspace(0, 1, 5))
 
-    cap_names = CAP_BUCKETS.keys()
+    cap_names = list(CAP_BUCKETS.keys())
     for i in range(len(net_exposures)):
         ax.plot(net_exposures[i], color=color_list[i], alpha=0.8, label=cap_names[i])
     ax.axhline(0, color="k", linestyle="-")

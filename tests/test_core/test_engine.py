@@ -134,3 +134,10 @@ class TestRollingEngine:
         engine = RollingEngine(returns, window=60)
         results = engine.compute(["sortino"])
         assert "sortino" in results
+
+    def test_compute_all(self, returns, factor_returns):
+        engine = RollingEngine(returns, factor_returns=factor_returns, window=60)
+        results = engine.compute("all")
+        assert isinstance(results, dict)
+        assert "sharpe" in results
+        assert "volatility" in results

@@ -36,12 +36,12 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -x -q --tb=short -n auto
+          pytest tests/ -x -q --tb=short -W error::RuntimeWarning -n auto
 
       - name: Run tests with coverage (Ubuntu + Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         run: |
-          pytest tests/ -x -q --tb=short --cov=fincore --cov-report=xml --cov-report=term-missing
+          pytest tests/ -x -q --tb=short -W error::RuntimeWarning --cov=fincore --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -67,6 +67,9 @@ jobs:
       - name: Ruff check
         run: ruff check fincore/ tests/ --output-format=github
 
+      - name: Ruff format (check)
+        run: ruff format --check fincore/ tests/
+
   typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -83,9 +86,13 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -e ".[dev]"
 
-      - name: mypy (core + optimization modules)
+      - name: mypy (selected modules)
         run: |
-          python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data fincore/optimization --ignore-missing-imports
+          python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data fincore/optimization fincore/attribution fincore/report fincore/risk fincore/simulation fincore/utils fincore/viz fincore/empyrical.py fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
+
+      - name: compileall (syntax check)
+        run: |
+          python -m compileall -q fincore
 
   build:
     runs-on: ubuntu-latest

@@ -1,30 +1,30 @@
 #!/bin/bash
 
-# 定义变量
+# Define variables
 BUILD_DIR="build"
 EGG_INFO_DIR="empyrical.egg-info"
 BENCHMARKS_DIR=".benchmarks"
 
 
 
-# 切换到上一级目录
+# Switch to the parent directory
 cd ..
 
-# 安装 requirements.txt 中的依赖
+# Install dependencies from requirements.txt
 pip install -U -r ./empyrical/requirements.txt
 
-# 安装 empyrical 包
+# Install empyrical
 pip install -U --no-build-isolation ./empyrical
 
-# 运行 empyrical 的测试用例，使用 4 个进程并行测试
+# Run empyrical tests with 4 parallel workers
 pytest ./empyrical/tests -n 4
 
-# 切换到 empyrical 目录
+# Switch back to the empyrical directory
 cd ./empyrical
 
 
 
-# 删除中间构建和 egg-info 目录
+# Remove intermediate build artifacts and egg-info
 echo "Deleting intermediate files..."
 if [ -d "$BUILD_DIR" ]; then
     rm -rf "$BUILD_DIR"
@@ -36,16 +36,15 @@ if [ -d "$EGG_INFO_DIR" ]; then
     echo "Deleted $EGG_INFO_DIR directory."
 fi
 
-# 删除 .benchmarks 目录
+# Remove the .benchmarks directory
 if [ -d "$BENCHMARKS_DIR" ]; then
     rm -rf "$BENCHMARKS_DIR"
     echo "Deleted $BENCHMARKS_DIR directory."
 fi
 
-# 删除所有 .log 文件
+# Remove all .log files
 echo "Deleting all .log files..."
 find . -type f -name "*.log" -exec rm -f {} \;
 echo "All .log files deleted."
-
 
 

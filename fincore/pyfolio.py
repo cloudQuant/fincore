@@ -1,26 +1,28 @@
 # =============================================================================
-# Pyfolio 类方法 (Pyfolio Class Methods)
+# Pyfolio class methods
 # =============================================================================
 #
-# 本类继承自Empyrical，提供完整的tear sheet和绘图功能。
-# 包含约66个方法，按功能域组织：
+# This class extends ``Empyrical`` and provides tear sheet generation and plotting utilities.
+# It contains ~66 methods organized into:
 #
-# 1. Tear sheet 创建方法 (11个):
+# 1. Tear sheet creation methods (~11):
 #    - create_full_tear_sheet, create_simple_tear_sheet,
 #    - create_returns_tear_sheet, create_risk_tear_sheet, etc.
-# 2. 绘图方法 (约30个):
+# 2. Plotting methods (~30):
 #    - plot_returns, plot_drawdown, plot_rolling_sharpe, etc.
-# 3. 其他方法 (2个):
+# 3. Other helpers (~2):
 #    - adjust_returns_for_slippage, get_leverage
 #
 # =============================================================================
 
 
 import datetime
+import importlib
 import os
 import time
 import warnings
 from functools import wraps
+from typing import Any, Callable
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -28,9 +30,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pytz
 import seaborn as sns
-from IPython.display import Markdown, display
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import FuncFormatter
@@ -38,6 +38,29 @@ from scipy import stats
 
 from fincore.constants import APPROX_BDAYS_PER_MONTH, FACTOR_PARTITIONS
 from fincore.utils.common_utils import customize
+
+DisplayFunc = Callable[..., Any]
+MarkdownFunc = Callable[[str], Any]
+
+
+def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+    print(*objs)
+
+
+def _fallback_markdown(text: str) -> str:
+    return text
+
+
+display: DisplayFunc = _fallback_display
+Markdown: MarkdownFunc = _fallback_markdown
+
+try:
+    _ipy_display_mod = importlib.import_module("IPython.display")
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+else:
+    display = getattr(_ipy_display_mod, "display", _fallback_display)
+    Markdown = getattr(_ipy_display_mod, "Markdown", _fallback_markdown)
 
 if matplotlib.get_backend().lower() in ("", "agg") or not hasattr(matplotlib, "_called_from_pytest"):
     try:
@@ -51,7 +74,7 @@ cmap = plt.get_cmap("gist_rainbow")
 
 from fincore.empyrical import Empyrical
 from fincore.tearsheets import (
-    _plot_bayes_cone as __plot_bayes_cone,
+    _plot_bayes_cone as _plot_bayes_cone_internal,
 )
 from fincore.tearsheets import (
     axes_style as _axes_style,
@@ -234,7 +257,7 @@ from fincore.tearsheets import (
     plot_volume_exposures_longshort as _plot_volume_exposures_longshort,
 )
 
-# 从 tearsheets 模块导入绘图和显示函数
+# Import plotting and display helpers from tearsheets.
 from fincore.tearsheets import (
     # utils
     plotting_context as _plotting_context,
@@ -292,7 +315,7 @@ class Pyfolio(Empyrical):
         factor_partitions=None,
     ):
         """
-        初始化Pyfolio类实例
+        Initialize a Pyfolio instance.
 
         Parameters
         ----------
@@ -310,7 +333,7 @@ class Pyfolio(Empyrical):
             Returns by factor, with date as index and factors as columns.
         factor_loadings : pd.DataFrame, optional
             Factor loadings for all days in the date range.
-        ... (其他参数与create_full_tear_sheet保持一致)
+        ... (other parameters are consistent with ``create_full_tear_sheet``)
         """
         super().__init__(
             returns=returns, positions=positions, factor_returns=factor_returns, factor_loadings=factor_loadings
@@ -361,7 +384,10 @@ class Pyfolio(Empyrical):
         Internal Bayesian cone plot.
         See fincore.tearsheets.bayesian._plot_bayes_cone for full documentation.
         """
-        return __plot_bayes_cone(self, returns_train, returns_test, preds, plot_train_len=plot_train_len, ax=ax)
+        # Avoid Python name-mangling for ``__name`` identifiers inside classes.
+        return _plot_bayes_cone_internal(
+            self, returns_train, returns_test, preds, plot_train_len=plot_train_len, ax=ax
+        )
 
     def plot_bayes_cone(self, returns_train, returns_test, ppc, plot_train_len=50, ax=None):
         """
@@ -435,7 +461,7 @@ class Pyfolio(Empyrical):
 
     @customize
 
-    # # tear sheet 创建方法
+    # # Tear sheet creation methods
     # =================
     def create_full_tear_sheet(
         self,
@@ -795,7 +821,7 @@ class Pyfolio(Empyrical):
         """
         return _plot_monthly_returns_dist(self, returns, ax=ax, **kwargs)
 
-    # # 绘图方法
+    # # Plotting methods
     # ======
     def plot_holdings(self, returns, positions, legend_loc="best", ax=None, **kwargs):
         """

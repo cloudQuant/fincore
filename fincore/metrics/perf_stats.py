@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""绩效统计函数模块."""
+"""Performance statistics (summary tables, bootstrap stats, etc.)."""
 
 from collections import OrderedDict
 

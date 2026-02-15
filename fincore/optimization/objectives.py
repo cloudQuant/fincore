@@ -65,6 +65,24 @@ def optimize(
         - 'asset_names': list
         - 'objective': objective used
     """
+    if not isinstance(returns, pd.DataFrame) or returns.empty:
+        raise ValueError("returns must be a non-empty DataFrame.")
+
+    if returns.shape[0] < 2:
+        raise ValueError("At least 2 observations are required for optimization.")
+
+    if not np.isfinite(returns.to_numpy(dtype=float)).all():
+        raise ValueError("returns contains NaN or infinite values.")
+
+    if max_weight <= 0:
+        raise ValueError("max_weight must be > 0.")
+
+    if min_weight is not None and min_weight > max_weight:
+        raise ValueError("min_weight must be <= max_weight.")
+
+    if sector_constraints is not None and sector_map is None:
+        raise ValueError("sector_map is required when sector_constraints is provided.")
+
     mu = returns.mean().values * 252
     cov = returns.cov().values * 252
     n = len(mu)

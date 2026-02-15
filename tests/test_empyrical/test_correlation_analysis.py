@@ -2,6 +2,7 @@
 Tests for correlation analysis functions.
 """
 
+import warnings
 from unittest import TestCase
 
 import numpy as np
@@ -112,3 +113,30 @@ class TestCorrelationAnalysis(TestCase):
         emp = Empyrical()
         result = emp.serial_correlation(short_returns, lag=1)
         assert np.isnan(result)
+
+    def test_serial_correlation_constant_returns_no_warning(self):
+        """Constant returns should yield NaN without runtime warnings."""
+        const = pd.Series(np.zeros(20), index=pd.date_range("2000-1-1", periods=20, freq="D"))
+        emp = Empyrical()
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = emp.serial_correlation(const, lag=1)
+
+        assert np.isnan(result)
+        runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+        assert len(runtime_warnings) == 0
+
+    def test_market_correlation_constant_returns_no_warning(self):
+        """Correlation with a constant series should yield NaN without runtime warnings."""
+        const = pd.Series(np.zeros(20), index=pd.date_range("2000-1-1", periods=20, freq="D"))
+        market = pd.Series(np.linspace(-0.01, 0.01, 20), index=pd.date_range("2000-1-1", periods=20, freq="D"))
+        emp = Empyrical()
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = emp.stock_market_correlation(const, market)
+
+        assert np.isnan(result)
+        runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+        assert len(runtime_warnings) == 0

@@ -1,7 +1,6 @@
-"""
-Tearsheets 工具函数
+"""Tearsheets utility helpers.
 
-包含绘图上下文和样式相关的通用工具函数。
+Contains shared utilities for plotting context and axes styles.
 """
 
 import seaborn as sns

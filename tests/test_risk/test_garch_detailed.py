@@ -51,6 +51,27 @@ class TestGARCHForecastMeanReversion:
         fc = fitted_garch.forecast(horizon=50)
         assert (fc > 0).all(), "Variance forecast should be positive"
 
+    def test_forecast_horizon_must_be_positive(self, fitted_garch):
+        with pytest.raises(ValueError, match="horizon must be >= 1"):
+            fitted_garch.forecast(horizon=0)
+
+    def test_forecast_first_step_uses_latest_shock(self):
+        """One-step forecast should use last shock and last variance."""
+        result = GARCHResult(
+            params={"omega": 0.1, "alpha": 0.2, "beta": 0.7},
+            conditional_var=np.array([0.04, 0.09]),
+            residuals=np.array([0.0, 2.0]),  # standardized residuals
+            log_likelihood=0.0,
+        )
+
+        fc = result.forecast(horizon=2)
+
+        expected_1 = 0.1 + 0.2 * (2.0 * np.sqrt(0.09)) ** 2 + 0.7 * 0.09
+        expected_2 = 0.1 + (0.2 + 0.7) * expected_1
+
+        assert np.isclose(fc[0], expected_1)
+        assert np.isclose(fc[1], expected_2)
+
 
 class TestGARCHFit:
     def test_fit_returns_result(self):

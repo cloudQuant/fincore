@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""绩效归因函数模块."""
+"""Performance attribution functions."""
 
 from collections import OrderedDict
 

@@ -41,6 +41,18 @@ def risk_parity(
         - 'volatility': portfolio annualised volatility
         - 'asset_names': list of asset names
     """
+    if not isinstance(returns, pd.DataFrame) or returns.empty:
+        raise ValueError("returns must be a non-empty DataFrame.")
+
+    if returns.shape[0] < 2:
+        raise ValueError("At least 2 observations are required for risk parity.")
+
+    if max_iter < 1:
+        raise ValueError("max_iter must be >= 1.")
+
+    if not np.isfinite(returns.to_numpy(dtype=float)).all():
+        raise ValueError("returns contains NaN or infinite values.")
+
     cov = returns.cov().values * 252
     n = cov.shape[0]
     asset_names = list(returns.columns)
@@ -48,6 +60,16 @@ def risk_parity(
     if risk_budget is None:
         risk_budget = np.ones(n) / n
     risk_budget = np.asarray(risk_budget, dtype=float)
+    if risk_budget.ndim != 1:
+        raise ValueError("risk_budget must be a 1D array.")
+    if len(risk_budget) != n:
+        raise ValueError(f"risk_budget length ({len(risk_budget)}) must match number of assets ({n}).")
+    if not np.isfinite(risk_budget).all():
+        raise ValueError("risk_budget contains NaN or infinite values.")
+    if np.any(risk_budget < 0):
+        raise ValueError("risk_budget must be non-negative.")
+    if np.sum(risk_budget) <= 0:
+        raise ValueError("risk_budget must have a positive sum.")
     risk_budget = risk_budget / risk_budget.sum()
 
     def _risk_contrib(w: np.ndarray) -> np.ndarray:

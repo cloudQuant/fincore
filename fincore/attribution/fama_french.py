@@ -9,7 +9,8 @@ multi-factor framework:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
+from functools import lru_cache
+from typing import Protocol, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -19,6 +20,15 @@ from scipy import stats
 FF3_FACTORS = ["MKT", "SMB", "HML"]
 FF5_FACTORS = ["MKT", "SMB", "HML", "RMW", "CMA"]
 FF4MOM_FACTORS = ["MKT", "SMB", "HML", "MOM"]
+
+
+class FamaFrenchFitResult(TypedDict):
+    alpha: float
+    betas: dict[str, float]
+    r_squared: float
+    std_errors: np.ndarray
+    p_values: np.ndarray
+    residuals: np.ndarray
 
 
 class FamaFrenchModel:
@@ -45,6 +55,7 @@ class FamaFrenchModel:
         """
         self.model_type = model_type
         self.risk_free_rate = risk_free_rate
+        self._alpha: float | None = None
         self._betas: dict[str, float] | None = None
         self._set_factors()
 
@@ -65,7 +76,7 @@ class FamaFrenchModel:
         factor_data: pd.DataFrame,
         method: str = "ols",
         newey_west_lags: int = 1,
-    ) -> dict[str, float | np.ndarray]:
+    ) -> FamaFrenchFitResult:
         """Estimate factor model using OLS regression.
 
         Parameters
@@ -120,7 +131,7 @@ class FamaFrenchModel:
 
         # Extract alpha and betas
         alpha: float = float(beta_coeffs[0])
-        betas: dict[str, float] = dict(zip(self.factors, beta_coeffs[1:].tolist()))
+        betas: dict[str, float] = dict(zip(self.factors, beta_coeffs[1:].tolist(), strict=False))
 
         # Calculate standard errors
         n = len(y)
@@ -132,8 +143,14 @@ class FamaFrenchModel:
             acorr_vals: list[float] = []
             for lag in range(1, newey_west_lags + 1):
                 if len(residuals) > lag:
-                    corr_matrix = np.corrcoef(residuals[:-lag], residuals[lag:])
-                    acorr_vals.append(float(corr_matrix[0, 1]))
+                    resid_prev = residuals[:-lag]
+                    resid_next = residuals[lag:]
+                    if np.std(resid_prev) < 1e-15 or np.std(resid_next) < 1e-15:
+                        acorr_vals.append(0.0)
+                    else:
+                        with np.errstate(invalid="ignore", divide="ignore"):
+                            corr = np.corrcoef(resid_prev, resid_next)[0, 1]
+                        acorr_vals.append(float(corr) if np.isfinite(corr) else 0.0)
                 else:
                     acorr_vals.append(0.0)
 
@@ -186,15 +203,16 @@ class FamaFrenchModel:
 
         # Add constant — shape (N, K+1)
         X_with_const = np.column_stack([np.ones(X.shape[0]), X])
-        return X_with_const @ coeffs
+        # numpy typing for matmul can degrade to Any; force ndarray
+        return np.asarray(X_with_const @ coeffs, dtype=float)
 
     def _get_regression_coeffs(self) -> np.ndarray:
         """Get concatenated alpha and betas from last fit."""
-        if self._betas is None:
+        if self._betas is None or self._alpha is None:
             raise RuntimeError("Model must be fit before prediction")
 
-        coeffs = np.concatenate([[self._alpha], list(self._betas.values())])
-        return coeffs
+        coeffs_list = [self._alpha] + [self._betas[f] for f in self.factors]
+        return np.asarray(coeffs_list, dtype=float)
 
     def get_factor_exposures(
         self,
@@ -239,8 +257,8 @@ class FamaFrenchModel:
                     window_returns.iloc[:, 0],
                     window_factors,
                 )
-                result_alpha = result.get("alpha", np.nan)
-                result_betas = result.get("betas", {})
+                result_alpha = result["alpha"]
+                result_betas = result["betas"]
                 exposures.append([result_alpha] + [result_betas.get(f, np.nan) for f in self.factors])
             else:
                 # Not enough data - use NaN
@@ -279,18 +297,13 @@ class FamaFrenchModel:
 
         # Factor contributions
         factor_contribs: dict[str, float] = {}
-        result_betas = result.get("betas", {})
-        if isinstance(result_betas, dict):
-            for factor, beta in result_betas.items():
-                factor_contribs[factor] = beta * avg_factor_returns[factor]
+        result_betas = result["betas"]
+        for factor, beta in result_betas.items():
+            factor_contribs[factor] = beta * avg_factor_returns[factor]
 
         # Calculate contributions
         total_return = float(np.mean(returns)) - self.risk_free_rate
-        result_alpha = result.get("alpha", 0.0)
-        if isinstance(result_alpha, (int, float)):
-            alpha_contrib = float(result_alpha)
-        else:
-            alpha_contrib = 0.0
+        alpha_contrib = float(result["alpha"])
         specific_contrib = sum(factor_contribs.values())
 
         return {
@@ -306,6 +319,9 @@ def fetch_ff_factors(
     start: str,
     end: str,
     library: str = "french",
+    *,
+    provider: FamaFrenchProvider | None = None,
+    copy: bool = True,
 ) -> pd.DataFrame:
     """Fetch Fama-French factors.
 
@@ -313,9 +329,8 @@ def fetch_ff_factors(
 
        A concrete data provider must be configured before calling this
        function.  Pass a ``provider`` that implements the
-       ``FamaFrenchProvider`` protocol, or set
-       ``fincore.attribution.fama_french._ff_provider`` to a callable
-       ``(start, end, library) -> pd.DataFrame``.
+       ``FamaFrenchProvider`` protocol, or set a module-level provider
+       via :func:`set_ff_provider`.
 
     Parameters
     ----------
@@ -334,22 +349,50 @@ def fetch_ff_factors(
     Raises
     ------
     NotImplementedError
-        Always raised until a data provider is configured.
+        Raised when no provider is configured.
     """
-    import logging
+    if provider is not None:
+        df = provider(start, end, library)
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("Fama-French provider must return a pandas DataFrame")
+        return df.copy(deep=True) if copy else df
 
-    logger = logging.getLogger(__name__)
-    logger.error(
-        "fetch_ff_factors called without a configured data provider. "
-        "Set fincore.attribution.fama_french._ff_provider or pass "
-        "pre-fetched factor_data directly to FamaFrenchModel.fit()."
-    )
-    raise NotImplementedError(
-        "No Fama-French data provider is configured. "
-        "Please pass pre-fetched factor_data to FamaFrenchModel.fit() "
-        "or configure a provider via "
-        "fincore.attribution.fama_french._ff_provider."
-    )
+    df_cached = _fetch_ff_factors_cached(start, end, library)
+    return df_cached.copy(deep=True) if copy else df_cached
+
+
+class FamaFrenchProvider(Protocol):
+    def __call__(self, start: str, end: str, library: str) -> pd.DataFrame: ...
+
+
+_ff_provider: FamaFrenchProvider | None = None
+
+
+def set_ff_provider(provider: FamaFrenchProvider | None) -> None:
+    """Set the module-level Fama-French factor provider and clear cache."""
+    global _ff_provider
+    _ff_provider = provider
+    _fetch_ff_factors_cached.cache_clear()
+
+
+def clear_ff_factor_cache() -> None:
+    """Clear the in-process factor cache used by :func:`fetch_ff_factors`."""
+    _fetch_ff_factors_cached.cache_clear()
+
+
+@lru_cache(maxsize=128)
+def _fetch_ff_factors_cached(start: str, end: str, library: str) -> pd.DataFrame:
+    provider = _ff_provider
+    if provider is None:
+        raise NotImplementedError(
+            "No Fama-French data provider is configured. "
+            "Pass `provider=` to fetch_ff_factors(), or set a module provider via set_ff_provider()."
+        )
+    df = provider(start, end, library)
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Fama-French provider must return a pandas DataFrame")
+    # Freeze the cached value against accidental mutation; callers get copies by default.
+    return df.copy(deep=True)
 
 
 def calculate_idiosyncratic_risk(

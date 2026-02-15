@@ -920,7 +920,7 @@ class TestStats(BaseTestCase):
     )
     def test_gpd_risk_estimates(self, returns, expected):
         result = self.empyrical.gpd_risk_estimates_aligned(returns)
-        for result_item, expected_item in zip(result, expected):
+        for result_item, expected_item in zip(result, expected, strict=False):
             assert_almost_equal(result_item, expected_item, DECIMAL_PLACES)
 
     @parameterized.expand([(empty_returns, 6, []), (negative_returns, 6, [-0.2282, -0.2745, -0.2899, -0.2747])])

@@ -1,89 +1,95 @@
-# Abberation布林带突破策略
+# Abberation (Bollinger Band Breakout) Strategy
 
-## 策略简介
+## Overview
 
-Abberation策略是基于布林带突破的经典趋势跟踪策略。当价格突破布林带上轨时做多，突破下轨时做空，价格回归中轨时平仓。策略使用1倍杠杆进行交易。
+Abberation is a classic trend-following strategy based on Bollinger Band breakouts:
 
-## 策略原理
+- Go long when price breaks above the upper band.
+- Go short when price breaks below the lower band.
+- Exit when price reverts through the middle band.
 
-### 布林带指标
+This example uses 1x leverage sizing based on total account value.
 
-布林带由三条线组成：
-1. **中轨**：N日移动平均线（默认200日）
-2. **上轨**：中轨 + K × 标准差（默认K=2）
-3. **下轨**：中轨 - K × 标准差（默认K=2）
+## Strategy Mechanics
 
-### 交易规则
+### Bollinger Bands
 
-**开多仓**：
-- 前一日收盘价 < 上轨
-- 当日收盘价 > 上轨（向上突破）
-- 使用1倍杠杆计算仓位
+Bollinger Bands consist of three lines:
 
-**开空仓**：
-- 前一日收盘价 > 下轨
-- 当日收盘价 < 下轨（向下突破）
-- 使用1倍杠杆计算仓位
+1. Middle band: N-period moving average (default: 200)
+2. Upper band: middle band + K * standard deviation (default: K=2)
+3. Lower band: middle band - K * standard deviation (default: K=2)
 
-**平仓规则**：
-- 多头持仓：价格跌破中轨时平仓
-- 空头持仓：价格突破中轨时平仓
+### Trading Rules
 
-**仓位计算**：
-- 仓位 = 总资产 / (合约乘数 × 价格)
+Long entry:
 
-### 策略参数
+- Previous close < upper band
+- Current close > upper band (upward breakout)
+- Size the position with ~1x leverage
 
-| 参数名 | 类型 | 默认值 | 说明 |
-|-------|-----|--------|------|
-| boll_period | int | 200 | 布林带周期（日） |
-| boll_mult | float | 2 | 标准差倍数 |
+Short entry:
 
-## 适用场景
+- Previous close > lower band
+- Current close < lower band (downward breakout)
+- Size the position with ~1x leverage
 
-1. **市场环境**：适合大趋势行情
-2. **品种选择**：螺纹钢等波动性适中的期货
-3. **时间周期**：日线级别交易
-4. **市场状态**：突破性行情表现最佳
+Exits:
 
-## 风险提示
+- Long: close when price falls below the middle band
+- Short: close when price rises above the middle band
 
-1. **震荡亏损**：横盘震荡时容易连续亏损
-2. **假突破**：价格可能短暂突破后快速回归
-3. **杠杆风险**：使用杠杆会放大收益和亏损
-4. **中轨滞后**：回归中轨出场可能错过最佳出场点
-5. **滑点影响**：大额交易可能产生较大滑点
+Position sizing:
 
-## 回测示例
+- lots = total_value / (contract_multiplier * price)
+
+### Parameters
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| boll_period | int | 200 | Bollinger lookback period |
+| boll_mult | float | 2 | Std-dev multiplier |
+
+## When It Works
+
+1. Market regime: strong directional trends
+2. Instruments: medium-vol futures such as rebar
+3. Timeframe: daily bars
+4. Best behavior: clean breakouts rather than mean-reverting ranges
+
+## Risks / Caveats
+
+1. Range markets: repeated whipsaws can cause consecutive losses
+2. False breakouts: price can briefly break and quickly revert
+3. Leverage risk: leverage amplifies both gains and losses
+4. Lag: the middle band can lag, potentially delaying exits
+5. Slippage: large orders may incur meaningful slippage
+
+## Backtest Example (Backtrader)
 
 ```python
 import backtrader as bt
 from backtrader.comminfo import ComminfoFuturesPercent
 
-# 加载策略
-from strategies.abberation.strategy import AbberationStrategy, RbPandasFeed
+from run import load_rb889_data
+from strategy_abberation import AbberationStrategy, RbPandasFeed
 
 cerebro = bt.Cerebro()
 
-# 加载数据
 df = load_rb889_data("RB889.csv")
 feed = RbPandasFeed(dataname=df)
 cerebro.adddata(feed, name="RB")
 
-# 设置期货交易参数
 comm = ComminfoFuturesPercent(commission=0.0001, margin=0.10, mult=10)
 cerebro.broker.addcommissioninfo(comm, name="RB")
-cerebro.broker.setcash(1000000)
+cerebro.broker.setcash(1_000_000)
 
-# 添加策略
 cerebro.addstrategy(AbberationStrategy, boll_period=200, boll_mult=2)
-
-# 运行回测
 results = cerebro.run()
 ```
 
-## 参考资料
+## References
 
-1. 布林带指标原理
-2. 统计学标准差应用
-3. 趋势跟踪交易策略
+1. Bollinger Bands basics
+2. Standard deviation in time-series analysis
+3. Trend-following strategies

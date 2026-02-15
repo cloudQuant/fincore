@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""交易分析函数模块."""
+"""Transaction analysis functions."""
 
 import numpy as np
 import pandas as pd
@@ -396,7 +396,7 @@ def get_turnover(positions, transactions, denominator="AGB"):
 
     denom.index = denom.index.normalize()
     turnover = traded_value.div(denom, axis="index")
-    # 处理 inf 的值，避免画图的时候出错
+    # Sanitize inf values to avoid downstream plotting/rendering errors.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         turnover = turnover.replace([np.inf, -np.inf], np.nan).infer_objects()

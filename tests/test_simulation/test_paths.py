@@ -53,6 +53,10 @@ class TestGeometricBrownianMotion:
         # Positive drift should have higher terminal values
         assert np.mean(paths_up[:, -1]) > np.mean(paths_down[:, -1])
 
+    def test_gbm_uses_default_rng_when_none_provided(self):
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=0.1, dt=1 / 252, n_paths=10)
+        assert paths.shape[0] == 10
+
 
 class TestGBMFromReturns:
     """Tests for GBM simulation from returns."""
@@ -76,6 +80,10 @@ class TestGBMFromReturns:
         # Paths should start near 0 (returns from price starting at 1)
         # First values won't be exactly 0 due to GBM's first step
         assert np.all(np.abs(paths[:, 0]) < 0.1)  # Should be close to 0
+
+    def test_gbm_from_returns_errors_when_all_returns_nan(self):
+        with pytest.raises(ValueError, match="No valid returns"):
+            gbm_from_returns(np.array([np.nan, np.nan]), horizon=10, n_paths=2, seed=42)
 
 
 class TestAntitheticVariates:
@@ -129,3 +137,7 @@ class TestLatinHypercube:
             # Each interval should have approximately one sample
             count = np.sum((sorted_samples >= lower) & (sorted_samples < upper))
             assert count >= 0  # At least some coverage
+
+    def test_lhs_uses_default_rng_when_none_provided(self):
+        samples = latin_hypercube_sampling(n_samples=10, n_dimensions=2)
+        assert samples.shape == (10, 2)

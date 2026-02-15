@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-数据处理工具函数
+"""Data processing utilities.
 
-提供数据处理和滚动计算相关的工具函数。
+Includes helpers for rolling-window computations and small array utilities.
 """
 
 import numpy as np

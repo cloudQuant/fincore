@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""阿尔法贝塔相关函数模块."""
+"""Alpha/beta related metrics."""
 
 import warnings
 
@@ -547,7 +547,7 @@ def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualiza
     if not annual_alphas:
         return pd.Series([], dtype=float)
 
-    years, alphas = zip(*annual_alphas)
+    years, alphas = zip(*annual_alphas, strict=False)
     return pd.Series(alphas, index=years)
 
 
@@ -600,7 +600,7 @@ def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizat
     if not annual_betas:
         return pd.Series([], dtype=float)
 
-    years, betas = zip(*annual_betas)
+    years, betas = zip(*annual_betas, strict=False)
     return pd.Series(betas, index=years)
 
 

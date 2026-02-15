@@ -139,7 +139,7 @@ class TestDrawdown(TestCase):
         spy_drawdowns = Empyrical.gen_drawdown_table(spy_returns, top=20).sort_values(by="Peak date")
         # Compare the recovery date of each drawdown with the peak of the next
         # Last pair might contain a NaT if drawdown didn't finish, so ignore it
-        pairs = list(zip(spy_drawdowns["Recovery date"], spy_drawdowns["Peak date"].shift(-1)))[:-1]
+        pairs = list(zip(spy_drawdowns["Recovery date"], spy_drawdowns["Peak date"].shift(-1), strict=False))[:-1]
         self.assertGreater(len(pairs), 0)
         for recovery, peak in pairs:
             if not pd.isnull(recovery):

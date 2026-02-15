@@ -1,7 +1,7 @@
 """
-交易相关的绘图和显示函数
+Transaction-related plotting and display functions.
 
-包含换手率、成交量、滑点等绘图函数。
+Includes turnover, trading volume, slippage, and related charts.
 """
 
 import datetime
@@ -9,7 +9,6 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pytz
 import seaborn as sns
 from matplotlib.ticker import FuncFormatter
 
@@ -29,7 +28,7 @@ def plot_turnover(empyrical_instance, returns, transactions, positions, legend_l
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     transactions : pd.DataFrame
@@ -82,7 +81,7 @@ def plot_daily_volume(empyrical_instance, returns, transactions, ax=None, **kwar
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
     transactions : pd.DataFrame
@@ -116,7 +115,7 @@ def plot_daily_turnover_hist(empyrical_instance, transactions, positions, ax=Non
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     transactions : pd.DataFrame
         Prices and amounts of executed trades.
     positions : pd.DataFrame
@@ -168,7 +167,8 @@ def plot_txn_time_hist(transactions, bin_minutes=5, tz="America/New_York", ax=No
 
     txn_time = transactions.copy()
 
-    txn_time.index = txn_time.index.tz_convert(pytz.timezone(tz))
+    # tz_convert accepts a timezone string (e.g. "America/New_York") in pandas.
+    txn_time.index = txn_time.index.tz_convert(tz)
     txn_time.index = txn_time.index.map(lambda x: x.hour * 60 + x.minute)
     txn_time["trade_value"] = (txn_time.amount * txn_time.price).abs()
     txn_time = txn_time.groupby(level=0).sum().reindex(index=range(570, 961))
@@ -200,7 +200,7 @@ def plot_slippage_sweep(
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Timeseries of portfolio returns to be adjusted for various
         degrees of slippage.
@@ -247,7 +247,7 @@ def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactio
     Parameters
     ----------
     empyrical_instance : Empyrical
-        Empyrical 实例，用于调用计算方法
+        Empyrical instance used to compute metrics.
     returns : pd.Series
         Timeseries of portfolio returns to be adjusted for various
         degrees of slippage.

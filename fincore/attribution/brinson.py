@@ -8,8 +8,6 @@ Decomposes portfolio excess returns into:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
-
 import numpy as np
 import pandas as pd
 
@@ -17,8 +15,8 @@ import pandas as pd
 def brinson_attribution(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,
-    portfolio_weights: pd.DataFrame,
-    benchmark_weights: pd.DataFrame,
+    portfolio_weights: pd.Series | np.ndarray | pd.DataFrame,
+    benchmark_weights: pd.Series | np.ndarray | pd.DataFrame,
 ) -> dict[str, float]:
     """Calculate Brinson attribution for a single period.
 
@@ -64,58 +62,31 @@ def brinson_attribution(
     ... )
     >>> print(f"Allocation: {result['allocation']:.2%}")
     """
-    # Convert to numpy arrays
-    rp = np.asarray(portfolio_returns)
-    rb = np.asarray(benchmark_returns)
-    wp = portfolio_weights.values
-    wb = benchmark_weights.values
+    rp = np.asarray(portfolio_returns, dtype=float).reshape(-1)
+    rb = np.asarray(benchmark_returns, dtype=float).reshape(-1)
+    wp = np.asarray(portfolio_weights, dtype=float).reshape(-1)
+    wb = np.asarray(benchmark_weights, dtype=float).reshape(-1)
 
-    # Calculate portfolio and benchmark returns
-    portfolio_return = float(np.mean(rp))
-    benchmark_return = float(np.mean(rb))
+    if not (rp.shape == rb.shape == wp.shape == wb.shape):
+        raise ValueError(
+            "portfolio_returns, benchmark_returns, portfolio_weights, and benchmark_weights must have the same shape."
+        )
+
+    # Portfolio / benchmark returns for the period.
+    portfolio_return = float(np.sum(wp * rp))
+    benchmark_return = float(np.sum(wb * rb))
     active_return = portfolio_return - benchmark_return
 
-    # Brinson decomposition
-    # Allocation effect: sum of (wp - wb) * benchmark sector returns
-    # Selection effect: sum of wp * (portfolio sector returns - benchmark sector returns)
-    # Interaction: sum of (wp - wb) * (portfolio sector returns - benchmark sector returns)
-
-    n_sectors = wp.shape[1]
-
-    allocation_effect = 0.0
-    selection_effect = 0.0
-    interaction_effect = 0.0
-
-    for i in range(n_sectors):
-        # Weight difference
-        w_diff = wp[:, i] - wb[:, i]
-
-        # Sector returns
-        rp_sector = float(np.mean(rp))
-        rb_sector = float(np.mean(rb))
-
-        # Components
-        allocation_effect += float(np.sum(w_diff * rb_sector))
-        selection_effect += float(np.sum(wp[:, i] * (rp_sector - rb_sector)))
-        interaction_effect += float(np.sum(w_diff * (rp_sector - rb_sector)))
-
-    # Verify total matches active return
+    # Brinson-Hood-Beebower (BHB) attribution:
+    # allocation   = (wp - wb) * rb
+    # selection    = wb * (rp - rb)
+    # interaction  = (wp - wb) * (rp - rb)
+    allocation_effect = float(np.sum((wp - wb) * rb))
+    selection_effect = float(np.sum(wb * (rp - rb)))
+    interaction_effect = float(np.sum((wp - wb) * (rp - rb)))
     total = allocation_effect + selection_effect + interaction_effect
-    if not np.isclose(total, active_return, rtol=1e-4, atol=1e-4):
-        # Add residual to ensure exact match
-        residual = active_return - total
 
-        return {
-            "allocation": allocation_effect,
-            "selection": selection_effect,
-            "interaction": interaction_effect,
-            "residual": residual,
-            "total": total,
-            "portfolio_return": portfolio_return,
-            "benchmark_return": benchmark_return,
-        }
-
-    return {
+    result: dict[str, float] = {
         "allocation": allocation_effect,
         "selection": selection_effect,
         "interaction": interaction_effect,
@@ -124,12 +95,17 @@ def brinson_attribution(
         "benchmark_return": benchmark_return,
     }
 
+    if not np.isclose(total, active_return, rtol=1e-10, atol=1e-12):
+        result["residual"] = float(active_return - total)
+
+    return result
+
 
 def brinson_results(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,
-    portfolio_weights: pd.DataFrame,
-    benchmark_weights: pd.DataFrame,
+    portfolio_weights: pd.DataFrame | np.ndarray,
+    benchmark_weights: pd.DataFrame | np.ndarray,
     periods: list[str] | None = None,
 ) -> pd.DataFrame:
     """Calculate Brinson attribution over multiple periods.
@@ -154,10 +130,22 @@ def brinson_results(
         Columns: period, allocation, selection, interaction, total, portfolio_return, benchmark_return
     """
     # Convert to arrays
-    rp = np.asarray(portfolio_returns)
-    rb = np.asarray(benchmark_returns)
+    rp = np.asarray(portfolio_returns, dtype=float)
+    rb = np.asarray(benchmark_returns, dtype=float)
+    wp = np.asarray(portfolio_weights, dtype=float)
+    wb = np.asarray(benchmark_weights, dtype=float)
 
-    n_periods = rp.shape[0] if rp.ndim > 1 else 1
+    # Single period: (n_sectors,) arrays.
+    if rp.ndim == 1:
+        rp = rp[None, :]
+        rb = rb[None, :]
+
+    if wp.ndim == 1:
+        wp = np.tile(wp, (rp.shape[0], 1))
+    if wb.ndim == 1:
+        wb = np.tile(wb, (rp.shape[0], 1))
+
+    n_periods = rp.shape[0]
 
     if periods is None:
         periods = [str(i) for i in range(n_periods)]
@@ -165,15 +153,7 @@ def brinson_results(
     results = []
 
     for t in range(n_periods):
-        # Get weights for this period
-        wp_t = portfolio_weights.iloc[t].values if hasattr(portfolio_weights, "iloc") else portfolio_weights
-        wb_t = benchmark_weights.iloc[t].values if hasattr(benchmark_weights, "iloc") else benchmark_weights
-
-        # Calculate attribution
-        rp_t = rp[t] if rp.ndim > 1 else rp
-        rb_t = rb[t] if rb.ndim > 1 else rb
-
-        attr = brinson_attribution(rp_t, rb_t, wp_t, wb_t)
+        attr = brinson_attribution(rp[t], rb[t], wp[t], wb[t])
 
         results.append(
             {
@@ -189,23 +169,20 @@ def brinson_results(
 
     df = pd.DataFrame(results)
 
-    # Add summary rows
-    summary = df[["allocation", "selection", "interaction", "total"]].sum()
-    summary.loc["Total"] = df["total"].sum()
-
     return df
 
 
 def brinson_cumulative(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,
-    portfolio_weights: pd.DataFrame,
-    benchmark_weights: pd.DataFrame,
+    portfolio_weights: pd.DataFrame | np.ndarray,
+    benchmark_weights: pd.DataFrame | np.ndarray,
 ) -> dict[str, float]:
     """Calculate cumulative Brinson attribution.
 
-    Similar to brinson_attribution but uses cumulative returns
-    for performance measurement since inception.
+    This aggregates per-period Brinson effects (arithmetic sum across periods).
+    It also reports geometric cumulative portfolio/benchmark returns computed
+    from per-period weighted returns.
 
     Parameters
     ----------
@@ -223,54 +200,39 @@ def brinson_cumulative(
     dict
         Cumulative attribution breakdown.
     """
-    # Convert to numpy arrays
-    rp = np.asarray(portfolio_returns)
-    rb = np.asarray(benchmark_returns)
+    rp = np.asarray(portfolio_returns, dtype=float)
+    rb = np.asarray(benchmark_returns, dtype=float)
+    wp = np.asarray(portfolio_weights, dtype=float)
+    wb = np.asarray(benchmark_weights, dtype=float)
 
-    # Calculate cumulative returns
-    # Use geometric cumulative return: prod(1 + r) - 1
-    if rp.ndim > 1:
-        portfolio_cum = np.prod(1 + rp, axis=0) - 1
-        benchmark_cum = np.prod(1 + rb, axis=0) - 1
-    else:
-        portfolio_cum = float(np.sum(rp))  # Simple sum for single period
-        benchmark_cum = float(np.sum(rb))
+    if rp.ndim == 1:
+        rp = rp[None, :]
+        rb = rb[None, :]
+    if wp.ndim == 1:
+        wp = np.tile(wp, (rp.shape[0], 1))
+    if wb.ndim == 1:
+        wb = np.tile(wb, (rp.shape[0], 1))
 
-    active_return = portfolio_cum - benchmark_cum
-
-    # Decompose using final weights only
-    wp = portfolio_weights.iloc[-1].values if hasattr(portfolio_weights, "iloc") else portfolio_weights
-    wb = benchmark_weights.iloc[-1].values if hasattr(benchmark_weights, "iloc") else benchmark_weights
-
-    n_sectors = wp.shape[0] if wp.ndim > 1 else len(wp)
+    if not (rp.shape == rb.shape == wp.shape == wb.shape):
+        raise ValueError("portfolio_returns, benchmark_returns, and weights must have consistent shapes.")
 
     allocation = 0.0
     selection = 0.0
     interaction = 0.0
+    total = 0.0
 
-    for i in range(n_sectors):
-        w_diff = wp[i] - wb[i] if wp.ndim > 1 else wp[0] - wb[0]
+    portfolio_period = np.sum(wp * rp, axis=1)
+    benchmark_period = np.sum(wb * rb, axis=1)
 
-        # Use cumulative returns for sector performance
-        # For single period, this reduces to standard Brinson
+    for t in range(rp.shape[0]):
+        attr = brinson_attribution(rp[t], rb[t], wp[t], wb[t])
+        allocation += float(attr["allocation"])
+        selection += float(attr["selection"])
+        interaction += float(attr["interaction"])
+        total += float(attr["total"])
 
-        if rp.ndim > 1:
-            rp_sector = float(np.mean(rp[:, i] if rp.ndim > 1 else rp))
-            rb_sector = float(np.mean(rb[:, i] if rb.ndim > 1 else rb))
-        else:
-            rp_sector = float(rp)
-            rb_sector = float(rb)
-
-        allocation += float(w_diff * rb_sector)
-        selection += float((wp[i] if wp.ndim > 1 else wp[0]) * (rp_sector - rb_sector))
-        interaction += float(w_diff * (rp_sector - rb_sector))
-
-    total = allocation + selection + interaction
-
-    # Handle single period case
-    if not np.isclose(total, active_return, rtol=1e-4, atol=1e-4):
-        residual = active_return - total
-        total += residual
+    portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
+    benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
 
     return {
         "allocation": allocation,
@@ -298,8 +260,8 @@ class BrinsonAttribution:
         Parameters
         ----------
         sector_mapping : dict, optional
-            Mapping from asset name to sector name.
-            Example: {'AAPL': 'Technology', 'MSFT': 'Technology', 'JPM': 'Financial'}
+            Mapping from sector name to a list of asset column names.
+            Example: {'Technology': ['AAPL', 'MSFT'], 'Financial': ['JPM']}
         """
         self.sector_mapping = sector_mapping or {}
 
@@ -329,15 +291,20 @@ class BrinsonAttribution:
         pd.DataFrame
             Attribution results by period.
         """
+        if method == "brinson_hood":
+            raise NotImplementedError("brinson_hood method is not implemented yet.")
+        if method != "brinson":
+            raise ValueError("Unknown attribution method. Use: 'brinson' or 'brinson_hood'.")
+
         # Apply sector mapping if provided
         if self.sector_mapping:
-            returns = self._apply_sector_mapping(returns)
+            returns = self._apply_sector_mapping(returns, agg="mean")
 
             if benchmark_returns is not None:
-                benchmark_returns = self._apply_sector_mapping(benchmark_returns)
+                benchmark_returns = self._apply_sector_mapping(benchmark_returns, agg="mean")
 
             if weights is not None:
-                weights = self._apply_sector_mapping(weights)
+                weights = self._apply_sector_mapping(weights, agg="sum")
 
         # Use equal weights if not provided
         if weights is None:
@@ -349,34 +316,28 @@ class BrinsonAttribution:
                 index=returns.index,
             )
 
-        # Calculate portfolio returns (used for validation if needed)
-        _portfolio_returns = returns.mul(weights.values, axis=1).sum(axis=1)  # noqa: F841
-
-        # Benchmark
         if benchmark_returns is None:
-            # Equal-weighted benchmark
-            n_bench = returns.shape[1]
-            bench_weights = np.ones(n_bench) / n_bench
-            benchmark_returns = returns.mul(bench_weights, axis=1).sum(axis=1)
-            benchmark_weights = pd.DataFrame(
-                np.tile(bench_weights, (returns.shape[0], 1)),
-                columns=returns.columns,
-                index=returns.index,
-            )
+            benchmark_returns = returns
+
+        # Equal-weight benchmark weights unless explicitly supported in the future.
+        n_bench = returns.shape[1]
+        bench_weights = np.ones(n_bench) / n_bench
+        benchmark_weights = pd.DataFrame(
+            np.tile(bench_weights, (returns.shape[0], 1)),
+            columns=returns.columns,
+            index=returns.index,
+        )
 
         # Calculate attribution for each period
         results = []
 
         for t in range(returns.shape[0]):
-            wp_t = weights.iloc[t].values if hasattr(weights, "iloc") else weights.values[t]
-            wb_t = (
-                benchmark_weights.iloc[t].values if hasattr(benchmark_weights, "iloc") else benchmark_weights.values[t]
+            attr = brinson_attribution(
+                returns.iloc[t].values,
+                benchmark_returns.iloc[t].values,
+                weights.iloc[t].values,
+                benchmark_weights.iloc[t].values,
             )
-
-            rp_t = returns.iloc[t].values
-            rb_t = benchmark_returns.iloc[t].values
-
-            attr = brinson_attribution(rp_t, rb_t, wp_t, wb_t)
 
             results.append(
                 {
@@ -393,18 +354,28 @@ class BrinsonAttribution:
     def _apply_sector_mapping(
         self,
         df: pd.DataFrame,
+        *,
+        agg: str,
     ) -> pd.DataFrame:
         """Apply sector mapping to aggregate by sector."""
-        # Create sector columns
-        sector_columns = []
+        if agg not in {"sum", "mean"}:
+            raise ValueError("agg must be 'sum' or 'mean'.")
+
+        sector_series: list[pd.Series] = []
+        sector_names: list[str] = []
 
         for sector, assets in self.sector_mapping.items():
             sector_df = df[assets]
-            sector_df_sum = sector_df.sum(axis=1)
-            sector_columns.append(sector_df_sum)
+            if agg == "sum":
+                sector_s = sector_df.sum(axis=1)
+            else:
+                sector_s = sector_df.mean(axis=1)
+            sector_series.append(sector_s)
+            sector_names.append(sector)
 
-        # Combine into sector-level DataFrame
-        return pd.concat(sector_columns, axis=1)
+        out = pd.concat(sector_series, axis=1)
+        out.columns = sector_names
+        return out
 
     def __repr__(self) -> str:
         sectors = list(self.sector_mapping.keys()) if self.sector_mapping else []
