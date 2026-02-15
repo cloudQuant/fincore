@@ -151,4 +151,3 @@ def test_cached_fetch_type_error_and_cache_clear() -> None:
     # Clearing cache should be a safe no-op even after an exception path.
     fama_french.clear_ff_factor_cache()
     assert calls["n"] == 1
-

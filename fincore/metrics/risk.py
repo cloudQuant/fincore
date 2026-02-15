@@ -317,11 +317,23 @@ def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     """
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    if len(returns_aligned) < 2:
-        return np.nan
-
-    excess_returns = returns_aligned - risk_free
-    excess_factor = factor_aligned - risk_free
+    # `aligned_series` may return a union index for Series inputs; ensure we only
+    # compute the regression on paired, finite observations.
+    if isinstance(returns_aligned, (pd.Series, pd.DataFrame)) or isinstance(factor_aligned, (pd.Series, pd.DataFrame)):
+        df = pd.concat([pd.Series(returns_aligned), pd.Series(factor_aligned)], axis=1, sort=False)
+        df = df.dropna()
+        if len(df) < 2:
+            return np.nan
+        excess_returns = df.iloc[:, 0] - risk_free
+        excess_factor = df.iloc[:, 1] - risk_free
+    else:
+        ret_arr = np.asanyarray(returns_aligned, dtype=float)
+        fac_arr = np.asanyarray(factor_aligned, dtype=float)
+        mask = np.isfinite(ret_arr) & np.isfinite(fac_arr)
+        if mask.sum() < 2:
+            return np.nan
+        excess_returns = ret_arr[mask] - risk_free
+        excess_factor = fac_arr[mask] - risk_free
 
     from fincore.metrics.alpha_beta import beta_aligned
 
