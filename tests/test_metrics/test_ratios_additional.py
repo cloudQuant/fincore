@@ -56,6 +56,12 @@ def test_mar_ratio_nan_when_all_nan_and_when_infinite(monkeypatch) -> None:
         assert np.isnan(ratios_mod.mar_ratio(r))
 
 
+def test_mar_ratio_nan_when_no_clean_returns() -> None:
+    """Test mar_ratio returns NaN when returns_clean has < 1 element (line 417)."""
+    # mar_ratio filters NaNs, so if all are NaN, returns_clean is empty
+    assert np.isnan(ratios_mod.mar_ratio(np.array([np.nan, np.nan, np.nan, np.nan, np.nan])))
+
+
 def test_omega_ratio_annualization_one_and_required_return_invalid() -> None:
     r = np.array([0.02, -0.01, 0.03, -0.02])
     out = ratios_mod.omega_ratio(r, risk_free=0.0, required_return=0.01, annualization=1)
@@ -79,6 +85,43 @@ def test_cal_treynor_ratio_dataframe_beta_mask_and_series_output(monkeypatch) ->
     assert isinstance(out, pd.Series)
     assert np.isnan(out["A"])
     assert np.isfinite(out["B"])
+
+
+def test_cal_treynor_ratio_2d_array_beta_else_branch(monkeypatch) -> None:
+    """Test cal_treynor_ratio when b is array but ann_excess_return is not Series/DataFrame (line 603)."""
+    import fincore.metrics.alpha_beta as ab_mod
+    import fincore.metrics.yearly as yearly_mod
+
+    returns = np.array([[0.01, 0.02], [0.0, 0.01], [0.01, 0.0], [0.0, 0.01], [0.01, 0.0]])
+    factor = np.array([0.005, 0.0, 0.005, 0.0, 0.005])
+
+    # Mock beta_aligned to return an array
+    monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: np.array([1.5, 2.0]))
+    # Mock annual_return to return scalar (not Series/DataFrame)
+    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+
+    out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
+    # Should return an array
+    assert isinstance(out, np.ndarray)
+    assert len(out) == 2
+
+
+def test_cal_treynor_ratio_1d_scalar_beta_else_branch(monkeypatch) -> None:
+    """Test cal_treynor_ratio when b is scalar in else branch (lines 606-607)."""
+    import fincore.metrics.alpha_beta as ab_mod
+    import fincore.metrics.yearly as yearly_mod
+
+    returns = np.array([0.01, 0.0, 0.01, 0.0, 0.01])
+    factor = np.array([0.005, 0.0, 0.005, 0.0, 0.005])
+
+    # Mock beta_aligned to return a positive scalar (not Series/ndarray)
+    # This is unusual but the code handles it
+    monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: 1.5)
+    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+
+    out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
+    # Should return a scalar
+    assert isinstance(out, (float, np.floating))
 
 
 def test_m_squared_returns_nan_when_volatility_zero() -> None:
