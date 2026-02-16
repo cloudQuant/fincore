@@ -1,4 +1,12 @@
+"""Color constants for visualization.
+
+This module provides color palette constants used throughout fincore
+for consistent visualization styling.
+"""
+
 COLORMAP = "Paired"
+"""Default colormap name for plot styling."""
+
 COLORS = [
     "#e6194b",
     "#3cb44b",
@@ -20,3 +28,4 @@ COLORS = [
     "#000080",
     "#808080",
 ]
+"""Default color palette for multi-series plots."""

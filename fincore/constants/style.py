@@ -1,3 +1,9 @@
+"""Style constants for tearsheet generation and reporting.
+
+This module provides constants for performance attribution formatting,
+sector classifications, capitalization buckets, and statistic display.
+"""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -5,6 +11,7 @@ from collections import OrderedDict
 import numpy as np
 
 PERF_ATTRIB_TURNOVER_THRESHOLD = 0.25
+"""Minimum turnover threshold for performance attribution."""
 
 SECTORS = OrderedDict(
     [
