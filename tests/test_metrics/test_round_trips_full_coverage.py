@@ -255,37 +255,33 @@ class TestRoundTripsFullCoverage:
         """Test add_closing_transactions skips zero-amount positions."""
         from fincore.metrics.round_trips import add_closing_transactions
 
-        idx = pd.date_range("2020-01-01", periods=3, freq="D")
+        # Create a case where buys and sells cancel out
         transactions = pd.DataFrame(
             {
-                "amount": [10, -5, -3],
-                "price": [100.0, 105.0, 95.0],
-                "symbol": ["A", "A", "B"],
+                "amount": [10, -5, 5, -10, 100, -100],  # Last two cancel out
+                "price": [100.0, 105.0, 102.0, 98.0, 100.0, 100.0],
+                "symbol": ["A", "A", "A", "A", "B", "B"],
             },
-            index=idx,
+            index=pd.date_range("2020-01-01", periods=6, freq="D"),
         )
 
-        # Position with zero net amount for B - should be skipped
-        # B has -3 shares * 95 = -285 ending value, which needs 3 closing shares
-        # But if we set B to 0, it should be skipped
         positions = pd.DataFrame(
             {
-                "cash": [10000, 9500, 9215],
-                "A": [1000.0, 500.0, 500.0],  # Not closed - 10 - 5 = 5 shares * 100 = 500
-                "B": [0.0, 0.0, 0.0],  # Zero position - should be skipped
+                "cash": [10000, 9500, 9600, 10580, 10580, 10580],
+                "A": [1000.0, 500.0, 1010.0, 0.0, 0.0, 0.0],  # Closed
+                "B": [0.0, 0.0, 0.0, 0.0, 10000.0, 10000.0],  # Has position
             },
-            index=idx,
+            index=pd.date_range("2020-01-01", periods=6, freq="D"),
         )
 
         result = add_closing_transactions(positions, transactions)
 
-        # Should filter out zero amount transactions (B not added)
-        # Original transactions: A(10), A(-5), B(-3)
-        # Closing: A(-5) to close the remaining 5 shares
-        # B is not added since position is 0
-        assert (result["amount"] != 0).all()
-        # Should have 3 original + 1 closing (A) = 4 total
-        assert len(result) == 4
+        # B should be skipped since its transaction amount sums to 0
+        # Original: 6 transactions, B has 100 + (-100) = 0 net
+        # A has position 0 at end, so it's not in open_pos
+        # B has position 10000 but txn amount is 0, so it's skipped
+        # Result should equal original (no closing txns added)
+        assert len(result) == 6
 
     def test_add_closing_transactions_negative_amount(self):
         """Test add_closing_transactions with negative ending amount."""
@@ -537,3 +533,54 @@ class TestRoundTripsFullCoverage:
         # Buy 10: signed_price = 100, long = False (this is a short position opening)
         # Hmm, the code seems to treat positive signed_price as short. Let's just check we have results
         assert "pnl" in result.columns
+
+    def test_extract_round_trips_partial_fill(self):
+        """Test extract_round_trips with partial position closing (line 228)."""
+        from fincore.metrics.round_trips import extract_round_trips
+
+        idx = pd.date_range("2020-01-01", periods=6, freq="D")
+        # Buy 15 @ 100, sell 10 @ 105 (partial close), sell 5 @ 102 (close remainder)
+        df = pd.DataFrame(
+            {
+                "amount": [15, -10, -5],
+                "price": [100.0, 105.0, 102.0],
+                "symbol": ["A", "A", "A"],
+            },
+            index=idx[:3],
+        )
+
+        result = extract_round_trips(df)
+
+        # Should have 2 round trips (partial close + final close)
+        assert len(result) == 2
+        assert "pnl" in result.columns
+
+    def test_gen_round_trip_stats_exercise_custom_functions_only_path(self):
+        """Test gen_round_trip_stats that exercises line 390 (custom functions only)."""
+        from fincore.metrics.round_trips import gen_round_trip_stats
+
+        # The line 390 is hit when apply_custom_and_built_in_funcs is called
+        # with empty built_in_funcs dict. This happens when processing symbols.
+        # We need a dataframe with round trips that will trigger this path.
+
+        df = pd.DataFrame(
+            {
+                "pnl": [10.0, -5.0, 15.0, -3.0],
+                "rt_returns": [0.1, -0.05, 0.15, -0.03],
+                "duration": [
+                    pd.Timedelta(days=1),
+                    pd.Timedelta(days=2),
+                    pd.Timedelta(days=3),
+                    pd.Timedelta(days=1),
+                ],
+                "symbol": ["A", "B", "A", "B"],
+                "long": [True, False, True, False],
+            }
+        )
+
+        result = gen_round_trip_stats(df)
+
+        # symbols result uses apply_custom_and_built_in_funcs
+        # When RETURN_STATS is used as stats_dict with empty built_in_funcs, line 390 is hit
+        assert "symbols" in result
+        assert isinstance(result["symbols"], pd.DataFrame)

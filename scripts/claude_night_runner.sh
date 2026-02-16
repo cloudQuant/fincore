@@ -183,7 +183,7 @@ collect_health() {
 # -p = non-interactive print mode (process prompt, use tools, exit)
 # --dangerously-skip-permissions = auto-approve all tool/command usage
 # --max-turns = allow enough agentic turns to match interactive behaviour
-CLAUDE_BASE_ARGS=(-p --dangerously-skip-permissions --output-format stream-json)
+CLAUDE_BASE_ARGS=(-p --dangerously-skip-permissions --verbose --output-format stream-json)
 [[ "$MAX_TURNS" -gt 0 ]] && CLAUDE_BASE_ARGS+=(--max-turns "$MAX_TURNS")
 [[ -n "$MODEL" ]] && CLAUDE_BASE_ARGS+=(--model "$MODEL")
 # shellcheck disable=SC2206

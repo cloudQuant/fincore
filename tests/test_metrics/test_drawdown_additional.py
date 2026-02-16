@@ -110,3 +110,17 @@ def test_second_max_drawdown_recovery_days_returns_nan_when_no_recovery_for_seco
         index=idx,
     )
     assert np.isnan(dd.second_max_drawdown_recovery_days(returns))
+
+
+def test_get_top_drawdowns_handles_empty_underwater_during_iteration() -> None:
+    """Test get_top_drawdowns when underwater becomes empty (line 327)."""
+    # Create returns with only positive values - no drawdowns
+    # After processing, underwater becomes empty triggering the break condition
+    idx = pd.date_range("2024-01-01", periods=5, freq="B")
+    returns = pd.Series([0.01, 0.02, 0.015, 0.03, 0.01], index=idx)
+
+    result = dd.get_top_drawdowns(returns, top=5)
+    # Should handle empty underwater gracefully
+    assert isinstance(result, list)
+    # With all positive returns, should return empty list
+    assert len(result) == 0
