@@ -23,6 +23,24 @@ FF4MOM_FACTORS = ["MKT", "SMB", "HML", "MOM"]
 
 
 class FamaFrenchFitResult(TypedDict):
+    """Result of Fama-French factor model regression.
+
+    Attributes
+    ----------
+    alpha : float
+        Intercept (alpha) of the regression.
+    betas : dict[str, float]
+        Factor loadings for each factor.
+    r_squared : float
+        R-squared of the regression.
+    std_errors : np.ndarray
+        Standard errors of coefficients.
+    p_values : np.ndarray
+        P-values for coefficient significance tests.
+    residuals : np.ndarray
+        Residuals from the regression.
+    """
+
     alpha: float
     betas: dict[str, float]
     r_squared: float
@@ -362,7 +380,29 @@ def fetch_ff_factors(
 
 
 class FamaFrenchProvider(Protocol):
-    def __call__(self, start: str, end: str, library: str) -> pd.DataFrame: ...
+    """Protocol for Fama-French factor data providers.
+
+    A provider function that takes date range and library name,
+    and returns a DataFrame of factor returns.
+    """
+
+    def __call__(self, start: str, end: str, library: str) -> pd.DataFrame:
+        """Fetch Fama-French factor data.
+
+        Parameters
+        ----------
+        start : str
+            Start date (YYYY-MM-DD format).
+        end : str
+            End date (YYYY-MM-DD format).
+        library : str
+            Data library identifier.
+
+        Returns
+        -------
+        pd.DataFrame
+            Factor returns with columns for each factor.
+        """
 
 
 _ff_provider: FamaFrenchProvider | None = None
