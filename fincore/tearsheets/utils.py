@@ -80,10 +80,4 @@ def axes_style(style="darkgrid", rc=None):
     if rc is None:
         rc = {}
 
-    rc_default = {}
-
-    # Add defaults if they do not exist
-    for name, val in rc_default.items():
-        rc.setdefault(name, val)
-
     return sns.axes_style(style=style, rc=rc)
