@@ -65,6 +65,7 @@ class AnalysisContext:
         Executed trades.
     period : str, optional
         Data frequency.  Default ``DAILY``.
+
     """
 
     def __init__(
