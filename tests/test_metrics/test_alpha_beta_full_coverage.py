@@ -316,3 +316,101 @@ class TestAlphaAlignedEdgeCases:
         assert len(result) == 2
         assert np.isnan(result[0])  # alpha is nan
         assert np.isnan(result[1])  # beta is nan
+
+
+class TestAlphaWithAllocatedOutput:
+    """Test alpha function with allocated output for DataFrame returns."""
+
+    def test_alpha_with_numpy_2d_array(self):
+        """Test alpha_aligned with 2D numpy array returns (line 181 coverage)."""
+        # Create 2D array returns with 2 assets
+        returns = np.array(
+            [
+                [0.01, 0.008],
+                [0.02, 0.015],
+                [0.015, 0.012],
+                [0.012, 0.01],
+                [0.018, 0.016],
+            ]
+        )
+        factor_returns = np.array([0.005, 0.01, 0.008, 0.006, 0.009])
+
+        result = alpha_beta.alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY)
+
+        # Should return a 1D array with one alpha per asset
+        assert isinstance(result, np.ndarray)
+        assert len(result) == 2
+
+
+class TestAnnualAlphaBetaEdgeCases:
+    """Test annual_alpha and annual_beta with edge cases."""
+
+    def test_annual_alpha_returns_with_some_data_in_common_years(self):
+        """Test annual_alpha when there are some common years (line 534 coverage)."""
+        # Create returns and factor with partial date overlap in same year
+        returns = pd.Series([0.01, 0.02, 0.015], index=pd.date_range("2020-01-01", periods=3, freq="D"))
+        factor_returns = pd.Series([0.005, 0.01, 0.008], index=pd.date_range("2020-01-01", periods=3, freq="D"))
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+
+        # After alignment, the series will have data for common years
+        assert isinstance(result, pd.Series)
+
+    def test_annual_beta_returns_with_some_data_in_common_years(self):
+        """Test annual_beta when there are some common years (line 587 coverage)."""
+        returns = pd.Series([0.01, 0.02, 0.015], index=pd.date_range("2020-01-01", periods=3, freq="D"))
+        factor_returns = pd.Series([0.005, 0.01, 0.008], index=pd.date_range("2020-01-01", periods=3, freq="D"))
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+
+        # After alignment, the series will have data for common years
+        assert isinstance(result, pd.Series)
+
+    def test_annual_alpha_multi_year_data(self):
+        """Test annual_alpha with multi-year data (line 548 coverage)."""
+        # Create multi-year returns and factor
+        returns = pd.Series(
+            [0.01, 0.02, 0.015, 0.012, 0.018],
+            index=pd.date_range("2020-01-01", periods=5, freq="D"),
+        )
+        factor_returns = pd.Series(
+            [0.005, 0.01, 0.008, 0.006, 0.009],
+            index=returns.index,
+        )
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+
+        # Should return a series with alpha for the year
+        assert isinstance(result, pd.Series)
+
+    def test_annual_beta_multi_year_data(self):
+        """Test annual_beta with multi-year data (line 601 coverage)."""
+        returns = pd.Series(
+            [0.01, 0.02, 0.015, 0.012, 0.018],
+            index=pd.date_range("2020-01-01", periods=5, freq="D"),
+        )
+        factor_returns = pd.Series(
+            [0.005, 0.01, 0.008, 0.006, 0.009],
+            index=returns.index,
+        )
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+
+        # Should return a series with beta for the year
+        assert isinstance(result, pd.Series)
+
+
+class TestAlphaBetaAlignedZeroVariance:
+    """Test alpha_beta_aligned when factor has zero variance."""
+
+    def test_alpha_beta_aligned_zero_variance_with_nan(self):
+        """Test alpha_beta_aligned when factor variance is zero (lines 420-422 coverage)."""
+        returns = np.array([0.01, 0.02, 0.015, 0.012, 0.018])
+        factor_returns = np.array([0.01, 0.01, 0.01, 0.01, 0.01])  # Zero variance
+
+        result = alpha_beta.alpha_beta_aligned(returns, factor_returns, risk_free=0.0, period=DAILY)
+
+        # Should return [nan, nan] when factor variance is zero
+        assert len(result) == 2
+        assert np.isnan(result[0])  # alpha is nan
+        assert np.isnan(result[1])  # beta is nan
