@@ -335,3 +335,101 @@ class TestEVTEdgeCases:
         params = gpd_fit(data, method="mle")
         assert "xi" in params
         assert params["beta"] > 0
+
+
+class TestEVTEdgeCasesForFullCoverage:
+    """Additional tests to reach 100% coverage."""
+
+    def test_gpd_mle_exponential_case_line_166(self):
+        """Test GPD MLE exponential case (xi ~ 0) - covers line 166."""
+        np.random.seed(42)
+        # Data that produces xi close to 0 (exponential-like)
+        data = np.random.exponential(0.01, 5000)
+        returns = -np.abs(data)
+        params = gpd_fit(returns, method="mle")
+        # xi should be close to 0 for exponential-like data
+        assert "xi" in params
+        assert abs(params["xi"]) < 0.3  # Exponential has xi ~ 0
+
+    def test_gpd_mle_invalid_beta_returns_large_value(self, monkeypatch):
+        """Test that GPD MLE handles invalid beta (line 155-156)."""
+        import numpy as np
+
+        np.random.seed(42)
+        data = np.random.exponential(0.01, 5000)
+        returns = -np.abs(data)
+
+        # This test verifies the optimizer handles the constraint
+        # Use lower threshold to ensure enough exceedances
+        params = gpd_fit(returns, method="mle", threshold=0.001)
+        assert params["beta"] > 0
+
+    def test_evt_var_gpd_exponential_case_line_335(self):
+        """Test EVT VaR GPD exponential case (line 335)."""
+        np.random.seed(42)
+        # Exponential-like data produces xi ~ 0
+        data = np.random.exponential(0.01, 5000)
+        returns = -np.abs(data)
+        var = evt_var(returns, alpha=0.05, model="gpd", tail="lower")
+        assert isinstance(var, float)
+        assert var < 0  # VaR should be negative
+
+    def test_evt_var_gev_gumbel_case_line_354(self):
+        """Test EVT VaR GEV Gumbel case (line 354)."""
+        np.random.seed(42)
+        # Gumbel data produces xi ~ 0
+        data = np.random.gumbel(0, 0.01, 5000)
+        var = evt_var(data, alpha=0.05, model="gev", tail="lower")
+        assert isinstance(var, float)
+
+    def test_evt_cvar_gpd_exponential_case_line_420(self):
+        """Test EVT CVaR GPD exponential case (line 420)."""
+        np.random.seed(42)
+        data = np.random.exponential(0.01, 5000)
+        returns = -np.abs(data)
+        cvar = evt_cvar(returns, alpha=0.05, model="gpd", tail="lower")
+        assert isinstance(cvar, float)
+        assert cvar < 0
+
+    def test_evt_cvar_gev_gumbel_case_line_440(self):
+        """Test EVT CVaR GEV Gumbel case (line 440)."""
+        np.random.seed(42)
+        data = np.random.gumbel(0, 0.01, 5000)
+        cvar = evt_cvar(data, alpha=0.05, model="gev", tail="lower")
+        assert isinstance(cvar, float)
+
+    def test_evt_cvar_gpd_xi_ge_1_raises_line_425(self):
+        """Test GPD CVaR raises error when xi >= 1 (line 425)."""
+        from unittest.mock import patch
+
+        # Mock gpd_fit to return xi >= 1
+        mock_params = {"xi": 1.5, "beta": 0.1, "threshold": 0.05, "n_exceed": 100}
+        with patch("fincore.risk.evt.gpd_fit", return_value=mock_params):
+            with pytest.raises(ValueError, match="CVaR infinite for xi >= 1"):
+                evt_cvar(
+                    np.random.exponential(0.01, 1000),
+                    alpha=0.05,
+                    model="gpd",
+                    tail="lower",
+                )
+
+    def test_evt_cvar_gev_xi_ge_1_raises_line_445(self):
+        """Test GEV CVaR raises error when xi >= 1 (line 445)."""
+        from unittest.mock import patch
+
+        # Mock gev_fit to return xi >= 1
+        mock_params = {"xi": 1.2, "sigma": 0.1, "mu": 0, "n_blocks": 10}
+        with patch("fincore.risk.evt.gev_fit", return_value=mock_params):
+            with pytest.raises(ValueError, match="CVaR infinite for xi >= 1"):
+                evt_cvar(
+                    np.random.exponential(0.01, 1000),
+                    alpha=0.05,
+                    model="gev",
+                    tail="lower",
+                )
+
+    def test_evt_cvar_unknown_model_line_447(self):
+        """Test CVaR raises error for unknown model (line 447)."""
+        data = np.random.exponential(0.01, 1000)
+        with pytest.raises(ValueError, match="Unknown model"):
+            evt_cvar(data, alpha=0.05, model="unknown")

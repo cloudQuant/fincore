@@ -274,3 +274,109 @@ class TestConvenienceFunctionsUnit:
 
         with pytest.raises(BatchFetchError):
             fetch_multiple_prices(["OK", "BAD"], provider=DummyProvider(), years=1, strict=True)
+
+
+class TestYahooFinanceProviderWithSession:
+    """Tests for Yahoo Finance provider with custom session."""
+
+    def test_provider_with_session(self):
+        """Test provider creation with custom session (line 269)."""
+        from unittest.mock import MagicMock
+
+        from fincore.data.providers import YahooFinanceProvider
+
+        # Create a provider and verify it can be initialized with session
+        # The actual session usage is covered in integration tests
+        session = MagicMock()
+        provider = YahooFinanceProvider(session)
+        # Verify session is stored
+        assert provider._session is session
+
+
+class TestDataProviderDateValidationEdgeCases:
+    """Tests for edge cases in date validation."""
+
+    def test_validate_dates_with_nat_values(self):
+        """Test date validation with NaT values (line 197)."""
+        from fincore.data.providers import YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+
+        # Test with NaT
+        with pytest.raises(ValueError, match="Invalid date values"):
+            provider.validate_dates(pd.NaT, "2020-12-31")
+
+        with pytest.raises(ValueError, match="Invalid date values"):
+            provider.validate_dates("2020-01-01", pd.NaT)
+
+
+class TestProviderImportErrors:
+    """Tests for ImportError handling in providers (lines 226-227, 387-388, 530-531)."""
+
+    def test_yahoo_finance_import_error(self, monkeypatch):
+        """Test YahooFinanceProvider handles import error gracefully (lines 226-227)."""
+        import sys
+
+        # Temporarily remove yfinance from sys.modules if it exists
+        yf_backup = sys.modules.pop("yfinance", None)
+        yf_base_backup = sys.modules.pop("yfinance", None)
+
+        try:
+            # Mock the import to fail
+            import builtins
+
+            real_import = builtins.__import__
+
+            def mock_import(name, *args, **kwargs):
+                if name == "yfinance":
+                    raise ImportError("No module named 'yfinance'")
+                return real_import(name, *args, **kwargs)
+
+            monkeypatch.setattr(builtins, "__import__", mock_import)
+
+            with pytest.raises(ImportError, match="yfinance"):
+                from fincore.data.providers import YahooFinanceProvider
+
+                YahooFinanceProvider()
+        finally:
+            # Restore yfinance if it was there
+            if yf_backup is not None:
+                sys.modules["yfinance"] = yf_backup
+            if yf_base_backup is not None:
+                sys.modules["yfinance"] = yf_base_backup
+
+    def test_alpha_vantage_import_error(self, monkeypatch):
+        """Test AlphaVantageProvider handles requests import error (lines 387-388)."""
+        import builtins
+
+        real_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "requests":
+                raise ImportError("No module named 'requests'")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mock_import)
+
+        with pytest.raises(ImportError, match="requests is required"):
+            from fincore.data.providers import AlphaVantageProvider
+
+            AlphaVantageProvider(api_key="test_key")
+
+    def test_tushare_import_error(self, monkeypatch):
+        """Test TushareProvider handles tushare import error (lines 530-531)."""
+        import builtins
+
+        real_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "tushare":
+                raise ImportError("No module named 'tushare'")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mock_import)
+
+        with pytest.raises(ImportError, match="tushare is required"):
+            from fincore.data.providers import TushareProvider
+
+            TushareProvider(token="test_token")
