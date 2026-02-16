@@ -133,6 +133,32 @@ class TestRiskParity:
         with pytest.raises(ValueError, match="contains NaN or infinite values"):
             risk_parity(bad)
 
+    def test_insufficient_observations_raises(self):
+        """Test that insufficient observations raises ValueError."""
+        np.random.seed(42)
+        # Only 1 observation
+        df = pd.DataFrame({"A": [0.01], "B": [0.02], "C": [0.03]})
+        with pytest.raises(ValueError, match="At least 2 observations"):
+            risk_parity(df)
+
+    def test_2d_risk_budget_raises(self, sample_returns):
+        """Test that 2D risk_budget raises ValueError."""
+        budget_2d = np.array([[0.25, 0.25], [0.25, 0.25]])
+        with pytest.raises(ValueError, match="risk_budget must be a 1D array"):
+            risk_parity(sample_returns, risk_budget=budget_2d)
+
+    def test_nan_risk_budget_raises(self, sample_returns):
+        """Test that NaN in risk_budget raises ValueError."""
+        budget_with_nan = np.array([0.25, np.nan, 0.25, 0.25])
+        with pytest.raises(ValueError, match="risk_budget contains NaN or infinite values"):
+            risk_parity(sample_returns, risk_budget=budget_with_nan)
+
+    def test_inf_risk_budget_raises(self, sample_returns):
+        """Test that inf in risk_budget raises ValueError."""
+        budget_with_inf = np.array([0.25, np.inf, 0.25, 0.25])
+        with pytest.raises(ValueError, match="risk_budget contains NaN or infinite values"):
+            risk_parity(sample_returns, risk_budget=budget_with_inf)
+
 
 class TestOptimize:
     """Tests for the optimize function."""

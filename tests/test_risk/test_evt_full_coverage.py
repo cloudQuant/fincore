@@ -1,0 +1,265 @@
+"""Tests for EVT module - 100% coverage."""
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from fincore.risk.evt import (
+    evt_cvar,
+    evt_var,
+    extreme_risk,
+    gev_fit,
+    gpd_fit,
+    hill_estimator,
+)
+
+
+@pytest.fixture
+def heavy_tailed_data():
+    """Create heavy-tailed data for EVT testing."""
+    np.random.seed(42)
+    # Use t-distribution with low degrees of freedom for heavy tails
+    return np.random.standard_t(3, 5000)
+
+
+@pytest.fixture
+def light_tailed_data():
+    """Create light-tailed data for EVT testing."""
+    np.random.seed(42)
+    return np.random.normal(0, 0.01, 5000)
+
+
+class TestHillEstimator:
+    """Test Hill estimator functionality."""
+
+    def test_upper_tail(self, heavy_tailed_data):
+        """Test Hill estimator for upper tail."""
+        xi, excesses = hill_estimator(heavy_tailed_data, tail="upper")
+
+        assert isinstance(xi, float)
+        assert xi > 0  # Heavy-tailed
+        assert len(excesses) > 0
+
+    def test_lower_tail(self, heavy_tailed_data):
+        """Test Hill estimator for lower tail."""
+        xi, excesses = hill_estimator(heavy_tailed_data, tail="lower")
+
+        assert isinstance(xi, float)
+        assert xi > 0  # Heavy-tailed
+        assert len(excesses) > 0
+
+    def test_custom_threshold(self, heavy_tailed_data):
+        """Test Hill estimator with custom threshold."""
+        xi, excesses = hill_estimator(heavy_tailed_data, threshold=0.1, tail="upper")
+
+        assert isinstance(xi, float)
+        assert len(excesses) > 0
+
+    def test_invalid_tail(self, heavy_tailed_data):
+        """Test that invalid tail raises ValueError."""
+        with pytest.raises(ValueError, match="tail must be"):
+            hill_estimator(heavy_tailed_data, tail="middle")
+
+    def test_insufficient_exceedances(self):
+        """Test that insufficient exceedances raises ValueError."""
+        data = np.array([1, 2, 3, 4, 5])  # Too few data points
+        with pytest.raises(ValueError, match="Not enough exceedances"):
+            hill_estimator(data, threshold=10, tail="upper")
+
+
+class TestGPDFit:
+    """Test GPD fitting functionality."""
+
+    def test_mle_method(self, heavy_tailed_data):
+        """Test GPD fit with MLE method."""
+        params = gpd_fit(heavy_tailed_data, method="mle")
+
+        assert "xi" in params
+        assert "beta" in params
+        assert "threshold" in params
+        assert "n_exceed" in params
+        assert params["n_exceed"] > 0
+
+    def test_pwm_method(self, heavy_tailed_data):
+        """Test GPD fit with PWM method."""
+        params = gpd_fit(heavy_tailed_data, method="pwm")
+
+        assert "xi" in params
+        assert "beta" in params
+        assert params["n_exceed"] > 0
+
+    def test_custom_threshold(self, heavy_tailed_data):
+        """Test GPD fit with custom threshold."""
+        params = gpd_fit(heavy_tailed_data, threshold=0.05)
+
+        assert params["threshold"] == 0.05
+
+    def test_insufficient_exceedances(self):
+        """Test that insufficient exceedances raises ValueError."""
+        data = np.array([1, 2, 3, 4, 5])
+        with pytest.raises(ValueError, match="Not enough exceedances"):
+            gpd_fit(data, threshold=10)
+
+    def test_unknown_method(self, heavy_tailed_data):
+        """Test that unknown method raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown method"):
+            gpd_fit(heavy_tailed_data, method="unknown")
+
+
+class TestGEVFit:
+    """Test GEV fitting functionality."""
+
+    def test_default_block_size(self, heavy_tailed_data):
+        """Test GEV fit with default block size."""
+        params = gev_fit(heavy_tailed_data)
+
+        assert "xi" in params
+        assert "mu" in params
+        assert "sigma" in params
+        assert "n_blocks" in params
+
+    def test_custom_block_size(self, heavy_tailed_data):
+        """Test GEV fit with custom block size."""
+        params = gev_fit(heavy_tailed_data, block_size=100)
+
+        assert params["n_blocks"] == len(heavy_tailed_data) // 100
+
+
+class TestEVTVar:
+    """Test EVT-based VaR calculation."""
+
+    def test_gpd_model_lower_tail(self, heavy_tailed_data):
+        """Test GPD-based VaR for lower tail."""
+        var = evt_var(heavy_tailed_data, alpha=0.05, model="gpd", tail="lower")
+
+        assert isinstance(var, float)
+        assert var < 0  # VaR should be negative for losses
+
+    def test_gpd_model_upper_tail(self, heavy_tailed_data):
+        """Test GPD-based VaR for upper tail."""
+        var = evt_var(heavy_tailed_data, alpha=0.05, model="gpd", tail="upper")
+
+        assert isinstance(var, float)
+
+    def test_gev_model_lower_tail(self, heavy_tailed_data):
+        """Test GEV-based VaR for lower tail."""
+        var = evt_var(heavy_tailed_data, alpha=0.05, model="gev", tail="lower")
+
+        assert isinstance(var, float)
+
+    def test_custom_threshold(self, heavy_tailed_data):
+        """Test VaR with custom threshold."""
+        var = evt_var(heavy_tailed_data, alpha=0.05, model="gpd", threshold=0.05)
+
+        assert isinstance(var, float)
+
+    def test_unknown_model(self, heavy_tailed_data):
+        """Test that unknown model raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown model"):
+            evt_var(heavy_tailed_data, alpha=0.05, model="unknown")
+
+
+class TestEVTCVar:
+    """Test EVT-based CVaR calculation."""
+
+    def test_gpd_model_lower_tail(self, heavy_tailed_data):
+        """Test GPD-based CVaR for lower tail."""
+        cvar = evt_cvar(heavy_tailed_data, alpha=0.05, model="gpd", tail="lower")
+
+        assert isinstance(cvar, float)
+        assert cvar < 0  # CVaR should be negative for losses
+
+    def test_gev_model_lower_tail(self, heavy_tailed_data):
+        """Test GEV-based CVaR for lower tail."""
+        cvar = evt_cvar(heavy_tailed_data, alpha=0.05, model="gev", tail="lower")
+
+        assert isinstance(cvar, float)
+
+    def test_cvar_less_than_var(self, heavy_tailed_data):
+        """Test that CVaR is more negative than VaR."""
+        var = evt_var(heavy_tailed_data, alpha=0.05, model="gpd", tail="lower")
+        cvar = evt_cvar(heavy_tailed_data, alpha=0.05, model="gpd", tail="lower")
+
+        assert cvar <= var  # CVaR should be worse (more negative) than VaR
+
+    def test_unknown_model(self, heavy_tailed_data):
+        """Test that unknown model raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown model"):
+            evt_cvar(heavy_tailed_data, alpha=0.05, model="unknown")
+
+
+class TestExtremeRisk:
+    """Test comprehensive extreme risk function."""
+
+    def test_gpd_model(self, heavy_tailed_data):
+        """Test extreme_risk with GPD model."""
+        returns = pd.Series(heavy_tailed_data)
+        risk = extreme_risk(returns, alpha=0.05, model="gpd")
+
+        assert isinstance(risk, pd.DataFrame)
+        assert "VaR" in risk.columns
+        assert "CVaR" in risk.columns
+        assert "tail_index" in risk.columns
+        assert "threshold" in risk.columns
+        assert "n_exceedances" in risk.columns
+
+    def test_gev_model(self, heavy_tailed_data):
+        """Test extreme_risk with GEV model."""
+        returns = pd.Series(heavy_tailed_data)
+        risk = extreme_risk(returns, alpha=0.05, model="gev")
+
+        assert isinstance(risk, pd.DataFrame)
+        assert "VaR" in risk.columns
+        assert "CVaR" in risk.columns
+        assert "tail_index" in risk.columns
+        assert "location" in risk.columns
+        assert "scale" in risk.columns
+
+    def test_unknown_model(self, heavy_tailed_data):
+        """Test that unknown model raises ValueError."""
+        returns = pd.Series(heavy_tailed_data)
+        with pytest.raises(ValueError, match="Unknown model"):
+            extreme_risk(returns, alpha=0.05, model="unknown")
+
+
+class TestEVTWithNanData:
+    """Test EVT functions with NaN data."""
+
+    def test_hill_estimator_with_nans(self):
+        """Test Hill estimator handles NaN values."""
+        np.random.seed(42)
+        data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
+        xi, excesses = hill_estimator(data)
+
+        assert isinstance(xi, float)
+
+    def test_gpd_fit_with_nans(self):
+        """Test GPD fit handles NaN values."""
+        data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
+        params = gpd_fit(data)
+
+        assert "xi" in params
+        assert "beta" in params
+
+    def test_gev_fit_with_nans(self):
+        """Test GEV fit handles NaN values."""
+        data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
+        params = gev_fit(data)
+
+        assert "xi" in params
+        assert "mu" in params
+        assert "sigma" in params
+
+    def test_evt_var_with_nans(self):
+        """Test EVT VaR handles NaN values."""
+        data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
+        var = evt_var(data, alpha=0.05, model="gpd")
+
+        assert isinstance(var, float)
+
+    def test_evt_cvar_with_nans(self):
+        """Test EVT CVaR handles NaN values."""
+        data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
+        cvar = evt_cvar(data, alpha=0.05, model="gpd")
+
+        assert isinstance(cvar, float)

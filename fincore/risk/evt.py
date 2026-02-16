@@ -312,7 +312,8 @@ def evt_var(
     var: float = np.nan  # Initialize var
 
     if model == "gpd":
-        # Fit GPD
+        # For GPD, we fit to losses (negative returns converted to positive)
+        # The result needs to be negated to return to return-space
         params = gpd_fit(data, threshold=threshold)
 
         xi = params["xi"]
@@ -322,19 +323,22 @@ def evt_var(
         # Number of exceedances
         n_exceed = params["n_exceed"]
         n_total = len(data)
+        exceed_prob = n_exceed / n_total
 
-        if tail == "lower":
-            exceed_prob = n_exceed / n_total
-        else:
-            exceed_prob = n_exceed / n_total
-
-        # GPD-based VaR
+        # GPD-based VaR (in loss space, positive)
+        # Formula: VaR = u + (β/ξ) * [((α/F_u))^(-ξ) - 1)]
+        # where F_u = n_exceed/n is the empirical exceedance probability
+        # Reference: McNeil, Frey, Embrechts - Quantitative Risk Management
+        ratio = alpha / exceed_prob
         if np.abs(xi) < 1e-10:
             # Exponential case
-            var = u + beta * np.log((1 - alpha) / exceed_prob)
+            var = u - beta * np.log(ratio)
         else:
             # General case
-            var = u + (beta / xi) * (((1 - alpha) / exceed_prob) ** (-xi) - 1)
+            var = u + (beta / xi) * (ratio ** (-xi) - 1)
+
+        # Convert to return-space (negative for losses)
+        var = -var
 
     elif model == "gev":
         # Fit GEV
@@ -344,7 +348,7 @@ def evt_var(
         mu = params["mu"]
         sigma = params["sigma"]
 
-        # GEV quantile function
+        # GEV quantile function (already in return-space)
         if np.abs(xi) < 1e-10:
             # Gumbel case
             var = mu - sigma * np.log(-np.log(alpha))
@@ -406,15 +410,22 @@ def evt_cvar(
         beta = params["beta"]
         u = params["threshold"]
 
-        # GPD-based CVaR
+        # For GPD CVaR, we work in loss space (positive values)
+        # then convert back to return-space (negative)
+        var_loss = -var  # Convert back to loss space
+
+        # GPD-based CVaR (in loss space)
         if np.abs(xi) < 1e-10:
             # Exponential case
-            cvar = var + beta
+            cvar_loss = var_loss + beta
         elif xi < 1:
             # General case
-            cvar = var + (beta + xi * (var - u)) / (1 - xi)
+            cvar_loss = var_loss + (beta + xi * (var_loss - u)) / (1 - xi)
         else:
             raise ValueError("CVaR infinite for xi >= 1")
+
+        # Convert to return-space (negative for losses)
+        cvar = -cvar_loss
 
     elif model == "gev":
         params = gev_fit(data, block_size=block_size)

@@ -132,6 +132,7 @@ class MatplotlibBackend:
 
         # TwoSlopeNorm requires vmin < vcenter < vmax; fall back to a linear
         # normalization when the data does not cross zero.
+        norm: mcolors.Normalize | mcolors.TwoSlopeNorm
         if vmin < 0 < vmax:
             norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
         else:
