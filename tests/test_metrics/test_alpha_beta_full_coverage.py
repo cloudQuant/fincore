@@ -289,3 +289,30 @@ class TestAlphaPercentileRank:
         # Should still work with one valid peer
         assert isinstance(result, float)
         assert 0 <= result <= 1
+
+
+class TestAlphaAlignedEdgeCases:
+    """Test alpha_aligned edge cases for 100% coverage."""
+
+    def test_alpha_aligned_with_1d_returns(self):
+        """Test alpha_aligned with 1D returns array."""
+        returns = np.array([0.01, 0.02, 0.015, 0.012, 0.018])
+        factor_returns = np.array([0.005, 0.01, 0.008, 0.006, 0.009])
+
+        result = alpha_beta.alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY)
+
+        # Should return a scalar
+        assert isinstance(result, (float, np.floating))
+
+    def test_alpha_beta_aligned_less_than_two_valid_points(self):
+        """Test alpha_beta_aligned with less than 2 valid data points after NaN removal."""
+        # Create arrays with only 1 valid non-NaN pair
+        returns = np.array([0.01, np.nan, np.nan])
+        factor_returns = np.array([0.02, np.nan, np.nan])
+
+        result = alpha_beta.alpha_beta_aligned(returns, factor_returns, risk_free=0.0, period=DAILY)
+
+        # Should return [nan, nan] when less than 2 valid points
+        assert len(result) == 2
+        assert np.isnan(result[0])  # alpha is nan
+        assert np.isnan(result[1])  # beta is nan

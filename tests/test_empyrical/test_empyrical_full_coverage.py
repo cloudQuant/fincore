@@ -53,6 +53,19 @@ class TestEmpyricalInit:
 
         assert hasattr(emp, "_ctx")
 
+    def test_init_with_invalid_returns_handles_gracefully(self):
+        """Test initializing with invalid returns handles exception gracefully."""
+        # Create a Series without a proper DatetimeIndex
+        # This will cause AnalysisContext creation to fail
+        returns = pd.Series([0.01, 0.02, 0.015])  # No DatetimeIndex
+
+        # Should not raise, just log and set _ctx to None
+        emp = Empyrical(returns=returns)
+
+        # Should still have the returns attribute
+        assert emp.returns is not None
+        # _ctx may be None if AnalysisContext creation failed
+
 
 class TestEmpyricalGetattrFallback:
     """Test __getattr__ fallback for registry-backed attributes."""
