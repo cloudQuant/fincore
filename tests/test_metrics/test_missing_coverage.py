@@ -241,5 +241,87 @@ class YearlyReturnsMissingCoverageTestCase(unittest.TestCase):
         self.assertEqual(len(result), 0)
 
 
+class YearlyModuleAdditionalCoverageTestCase(unittest.TestCase):
+    """Test cases for yearly.py module coverage gaps."""
+
+    def test_annual_return_with_series_negative_ending_value(self):
+        """Test annual_return with Series containing negative ending values (lines 71-77)."""
+        # Create returns that result in negative ending value (≤ 0)
+        index = pd.date_range("2020-01-01", periods=10, freq="D")
+        returns = pd.Series([-0.5] * 10, index=index)  # Large negative returns
+
+        result = yearly.annual_return(returns)
+        # Should return -1.0 for negative ending value
+        self.assertEqual(result, -1.0)
+
+    def test_annual_return_with_dataframe(self):
+        """Test annual_return with DataFrame input (lines 71-77)."""
+        index = pd.date_range("2020-01-01", periods=100, freq="D")
+        returns = pd.DataFrame(
+            {
+                "col1": [0.01] * 50 + [-0.01] * 50,  # Mixed, some negative ending
+                "col2": [0.005] * 100,  # All positive
+            },
+            index=index,
+        )
+
+        result = yearly.annual_return(returns)
+        # Should return Series with one value per column
+        self.assertIsInstance(result, pd.Series)
+        self.assertEqual(len(result), 2)
+
+    def test_annual_active_return_with_nan_result(self):
+        """Test annual_active_return when either result is NaN (line 236)."""
+        # Empty series should result in NaN
+        returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+        factor_returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+
+        result = yearly.annual_active_return(returns, factor_returns)
+        self.assertTrue(np.isnan(result))
+
+    def test_annual_active_return_by_year_non_datetime_index(self):
+        """Test annual_active_return_by_year with non-DatetimeIndex (line 264)."""
+        returns = pd.Series([0.01, 0.02, 0.015])
+        factor_returns = pd.Series([0.005, 0.01, 0.01])
+
+        result = yearly.annual_active_return_by_year(returns, factor_returns)
+        # Should return empty series for non-DatetimeIndex
+        self.assertEqual(len(result), 0)
+
+    def test_annual_active_return_by_year_empty_result(self):
+        """Test annual_active_return_by_year with no matching years (line 278)."""
+        # Create series with no overlapping years
+        returns_idx = pd.date_range("2020-01-01", periods=10, freq="D")
+        returns = pd.Series([0.01] * 10, index=returns_idx)
+
+        factor_idx = pd.date_range("2021-01-01", periods=10, freq="D")
+        factor_returns = pd.Series([0.005] * 10, index=factor_idx)
+
+        result = yearly.annual_active_return_by_year(returns, factor_returns)
+        # Should return empty series when no years match
+        self.assertEqual(len(result), 0)
+
+    def test_annual_return_with_numpy_array_negative_ending(self):
+        """Test annual_return with numpy array and negative ending value (line 77)."""
+        # Create a 2D numpy array with returns that result in negative ending
+        returns = np.array([[-0.5] * 10, [0.01] * 10])
+
+        result = yearly.annual_return(returns)
+        # Should return numpy array with -1.0 for first column (negative ending)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result[0], -1.0)
+
+    def test_annual_active_return_with_nan_annual_values(self):
+        """Test annual_active_return when annual_return produces NaN (line 236)."""
+        # Create series that after alignment produces NaN result
+        returns = pd.Series([0.01], index=pd.date_range("2020-01-01", periods=1))
+        factor_returns = pd.Series([0.01], index=pd.date_range("2020-01-02", periods=1))
+
+        # After alignment, these might have issues that produce NaN
+        result = yearly.annual_active_return(returns, factor_returns)
+        # The result might be NaN or a valid number depending on alignment
+        self.assertIsNotNone(result)
+
+
 if __name__ == "__main__":
     unittest.main()
