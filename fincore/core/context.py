@@ -76,6 +76,21 @@ class AnalysisContext:
         transactions: pd.DataFrame | None = None,
         period: str = DAILY,
     ) -> None:
+        """Initialize the analysis context.
+
+        Parameters
+        ----------
+        returns : pd.Series
+            Portfolio returns.
+        factor_returns : pd.Series, optional
+            Benchmark or factor returns.
+        positions : pd.DataFrame, optional
+            Portfolio positions.
+        transactions : pd.DataFrame, optional
+            Executed trades.
+        period : str, default DAILY
+            Data frequency.
+        """
         self._returns = returns
         self._factor_returns = factor_returns
         self._positions = positions
@@ -88,22 +103,27 @@ class AnalysisContext:
 
     @cached_property
     def _ann_factor(self) -> float:
+        """Annualization factor for the configured period."""
         return _ann_factor(self._period, None)
 
     @cached_property
     def _sqrt_ann(self) -> float:
+        """Square root of annualization factor."""
         return float(np.sqrt(self._ann_factor))
 
     @cached_property
     def _returns_array(self) -> np.ndarray:
+        """Returns as numpy array."""
         return np.asanyarray(self._returns)
 
     @cached_property
     def _mean_return(self) -> float:
+        """Mean of returns."""
         return float(nanmean(self._returns_array, axis=0))
 
     @cached_property
     def _std_return(self) -> float:
+        """Standard deviation of returns."""
         return float(nanstd(self._returns_array, ddof=1, axis=0))
 
     # ------------------------------------------------------------------
@@ -112,18 +132,22 @@ class AnalysisContext:
 
     @cached_property
     def annual_return(self) -> float:
+        """Annualized return."""
         return float(_annual_return(self._returns, period=self._period))
 
     @cached_property
     def cumulative_returns(self) -> float:
+        """Total cumulative return."""
         return float(cum_returns_final(self._returns, starting_value=0))
 
     @cached_property
     def annual_volatility(self) -> float:
+        """Annualized volatility."""
         return float(self._std_return * self._sqrt_ann)
 
     @cached_property
     def sharpe_ratio(self) -> float:
+        """Sharpe ratio (annualized)."""
         if len(self._returns) < 2:
             return np.nan
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -131,38 +155,47 @@ class AnalysisContext:
 
     @cached_property
     def calmar_ratio(self) -> float:
+        """Calmar ratio (annual return / max drawdown)."""
         return float(_calmar_ratio(self._returns, period=self._period))
 
     @cached_property
     def stability(self) -> float:
+        """R-squared of linear fit to cumulative returns."""
         return float(stability_of_timeseries(self._returns))
 
     @cached_property
     def max_drawdown(self) -> float:
+        """Maximum drawdown."""
         return float(max_drawdown(self._returns))
 
     @cached_property
     def omega_ratio(self) -> float:
+        """Omega ratio."""
         return float(_omega_ratio(self._returns))
 
     @cached_property
     def sortino_ratio(self) -> float:
+        """Sortino ratio (annualized)."""
         return float(_sortino_ratio(self._returns, period=self._period))
 
     @cached_property
     def skew(self) -> float:
+        """Return skewness."""
         return float(skewness(self._returns))
 
     @cached_property
     def kurtosis(self) -> float:
+        """Return kurtosis."""
         return float(kurtosis(self._returns))
 
     @cached_property
     def tail_ratio(self) -> float:
+        """Tail ratio (95th percentile / 5th percentile)."""
         return float(tail_ratio(self._returns))
 
     @cached_property
     def daily_value_at_risk(self) -> float:
+        """Daily Value at Risk."""
         return float(value_at_risk(self._returns))
 
     # ------------------------------------------------------------------
@@ -171,6 +204,7 @@ class AnalysisContext:
 
     @cached_property
     def alpha(self) -> float:
+        """Alpha (excess return over factor returns)."""
         if self._factor_returns is None:
             return np.nan
         from fincore.metrics.alpha_beta import alpha_beta
@@ -179,6 +213,7 @@ class AnalysisContext:
 
     @cached_property
     def beta(self) -> float:
+        """Beta (sensitivity to factor returns)."""
         if self._factor_returns is None:
             return np.nan
         from fincore.metrics.alpha_beta import alpha_beta

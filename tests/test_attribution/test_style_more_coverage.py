@@ -113,3 +113,43 @@ def test_analyze_performance_by_style_returns_empty_when_exposures_empty() -> No
     returns = pd.DataFrame({"A": [0.01, 0.0, 0.01, 0.0, 0.01]}, index=idx)
     out = style_mod.analyze_performance_by_style(returns, style_exposures=pd.DataFrame())
     assert out.empty
+
+
+def test_style_result_empty_dataframe_in_summary() -> None:
+    """Test style_summary when .loc returns an empty DataFrame."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Create a DataFrame with unique index where loc would return empty DataFrame
+    # This happens when accessing a non-existent key
+    rbs_idx = pd.DataFrame({"return": [0.1, 0.2]}, index=["value", "growth"])
+    sr = StyleResult(exposures=exposures, returns_by_style=rbs_idx, overall_returns=overall)
+    # Accessing a non-existent style returns empty DataFrame, handled by line 65-66
+    summ = sr.style_summary
+    assert "value" in summ
+    assert "growth" in summ
+
+
+def test_style_result_empty_series_in_summary() -> None:
+    """Test style_summary when .loc returns an empty Series."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Create a Series where accessing returns empty
+    rbs_series = pd.Series({"value": 0.1, "growth": 0.2})
+    sr = StyleResult(exposures=exposures, returns_by_style=rbs_series, overall_returns=overall)
+    summ = sr.style_summary
+    assert summ["value"] == 0.1
+
+
+def test_style_result_return_column_in_index() -> None:
+    """Test style_summary when 'return' is in the Series index."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Series with 'return' as an index value
+    rbs_series = pd.Series([0.1, 0.2], index=["return", "value"])
+    sr = StyleResult(exposures=exposures, returns_by_style=rbs_series, overall_returns=overall)
+    summ = sr.style_summary
+    # Should handle 'return' in index properly (line 74-75)
+    assert summ["return"] == 0.1
