@@ -40,7 +40,7 @@ from fincore._registry import (
     MODULE_PATHS,
     STATIC_METHODS,
 )
-from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY, FACTOR_PARTITIONS
+from fincore.constants import DAILY
 
 
 class _dual_method:

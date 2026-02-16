@@ -7,7 +7,7 @@ All NamedTuple types are backward-compatible with plain tuple unpacking.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Union
 
 import numpy as np
 import pandas as pd

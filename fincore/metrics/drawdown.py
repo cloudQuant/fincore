@@ -18,12 +18,10 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, Union
-
 import numpy as np
 import pandas as pd
 
-from fincore.metrics.returns import cum_returns, cum_returns_final
+from fincore.metrics.returns import cum_returns
 from fincore.utils import nanmin
 
 __all__ = [

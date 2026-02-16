@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
+from fincore.constants import DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.utils import nanmean, nanstd
 

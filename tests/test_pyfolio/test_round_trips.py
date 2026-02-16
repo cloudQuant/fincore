@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 
 from pandas import DataFrame, DatetimeIndex, Series, Timedelta, date_range, read_csv
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 from pandas.tseries.offsets import BusinessHour
 from parameterized import parameterized
 

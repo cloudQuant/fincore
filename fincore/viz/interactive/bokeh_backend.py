@@ -6,7 +6,7 @@ Provides server-compatible interactive visualizations using Bokeh.
 from __future__ import annotations
 
 import importlib
-from typing import Any, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -137,7 +137,6 @@ class BokehBackend(VizBackend):
             Bokeh figure object.
         """
         from bokeh.models import ColumnDataSource, HoverTool
-        from bokeh.palettes import Category10
 
         p = self._create_figure(
             x_axis_type="datetime",

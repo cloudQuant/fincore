@@ -22,7 +22,6 @@ from scipy import stats
 
 from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
-from fincore.metrics.risk import tail_ratio
 from fincore.utils import nanmean, nanstd
 
 # =============================================================================
@@ -565,7 +564,6 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
         negative, or ``NaN``.
     """
     from fincore.metrics.alpha_beta import beta_aligned
-    from fincore.metrics.returns import cum_returns_final
 
     allocated_output = True
     out = np.empty(returns.shape[1:])

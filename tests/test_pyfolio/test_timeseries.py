@@ -4,7 +4,7 @@ from unittest import TestCase
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_almost_equal
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_series_equal
 from parameterized import parameterized
 
 from fincore.empyrical import Empyrical

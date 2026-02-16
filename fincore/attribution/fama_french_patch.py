@@ -21,11 +21,6 @@ The five-factor model extends the three-factor model by adding:
 
 from __future__ import annotations
 
-from typing import Any
-
-import numpy as np
-import pandas as pd
-
 
 class FamaFrenchModelPatch:
     """Fama-French multi-factor model estimator.

@@ -24,10 +24,10 @@ import pandas as pd
 from fincore.constants import DAILY
 from fincore.metrics.basic import annualization_factor
 from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.ratios import calmar_ratio, omega_ratio, sharpe_ratio, sortino_ratio
+from fincore.metrics.ratios import calmar_ratio, omega_ratio, sharpe_ratio, sortino_ratio, stability_of_timeseries
 from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility, tail_ratio, value_at_risk
-from fincore.metrics.stats import kurtosis, skewness, stability_of_timeseries
+from fincore.metrics.stats import kurtosis, skewness
 from fincore.metrics.yearly import annual_return
 from fincore.utils import nanmean, nanstd
 
@@ -128,9 +128,8 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
 
     from fincore.constants.style import FACTOR_STAT_FUNCS, SIMPLE_STAT_FUNCS, STAT_FUNC_NAMES
     from fincore.metrics.alpha_beta import alpha, beta
-    from fincore.metrics.ratios import omega_ratio, tail_ratio
-    from fincore.metrics.risk import value_at_risk
-    from fincore.metrics.stats import stability_of_timeseries
+    from fincore.metrics.ratios import omega_ratio, stability_of_timeseries
+    from fincore.metrics.risk import tail_ratio, value_at_risk
 
     bootstrap_values = OrderedDict()
 

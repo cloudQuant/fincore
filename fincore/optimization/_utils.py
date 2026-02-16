@@ -6,8 +6,6 @@ results across the optimization module.
 
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 from numpy.typing import NDArray
 from scipy import optimize
