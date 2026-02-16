@@ -205,3 +205,134 @@ class TestPlotlyBackendSaveAndShow:
             assert output_file.exists()
         except ImportError:
             pytest.skip("Plotly not installed")
+
+    def test_show_without_figure_raises_error(self):
+        """Test show raises error when no figure exists."""
+        backend = PlotlyBackend()
+
+        try:
+            with pytest.raises(ValueError, match="No figure to display"):
+                backend.show()
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+    def test_save_html_without_figure_raises_error(self, tmp_path):
+        """Test save_html raises error when no figure exists."""
+        backend = PlotlyBackend()
+
+        try:
+            output_file = tmp_path / "test_plot.html"
+
+            with pytest.raises(ValueError, match="No figure to save"):
+                backend.save_html(str(output_file))
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+    def test_save_image_without_figure_raises_error(self, tmp_path):
+        """Test save_image raises error when no figure exists."""
+        backend = PlotlyBackend()
+
+        try:
+            output_file = tmp_path / "test_plot.png"
+
+            with pytest.raises(ValueError, match="No figure to save"):
+                backend.save_image(str(output_file))
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+    def test_save_image_method(self, sample_cum_returns, tmp_path):
+        """Test save_image method."""
+        backend = PlotlyBackend()
+
+        try:
+            backend.plot_returns(sample_cum_returns)
+            output_file = tmp_path / "test_plot.png"
+
+            try:
+                backend.save_image(str(output_file))
+                # If kaleido is installed, file should exist
+                assert output_file.exists()
+            except (ImportError, AttributeError):
+                # Kaleido not installed, that's okay
+                pytest.skip("Kaleido not installed for image export")
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+
+class TestPlotlyBackendAdvancedMethods:
+    """Test advanced plotting methods."""
+
+    def test_plot_efficient_frontier(self, sample_returns):
+        """Test plot_efficient_frontier method."""
+        backend = PlotlyBackend()
+
+        try:
+            # Create a DataFrame with multiple asset returns
+            returns_df = pd.DataFrame(
+                {
+                    "asset1": sample_returns,
+                    "asset2": sample_returns * 0.8,
+                    "asset3": sample_returns * 1.2,
+                }
+            )
+
+            fig = backend.plot_efficient_frontier(returns_df, n_points=20)
+            assert fig is not None
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+    def test_plot_correlation_matrix(self, sample_returns):
+        """Test plot_correlation_matrix method."""
+        backend = PlotlyBackend()
+
+        try:
+            # Create a DataFrame with multiple asset returns
+            returns_df = pd.DataFrame(
+                {
+                    "asset1": sample_returns,
+                    "asset2": sample_returns * 0.8,
+                    "asset3": sample_returns * 1.2,
+                }
+            )
+
+            fig = backend.plot_correlation_matrix(returns_df)
+            assert fig is not None
+        except ImportError:
+            pytest.skip("Plotly not installed")
+
+
+class TestPlotlyBackendTheme:
+    """Test theme configuration."""
+
+    def test_dark_theme_setup(self):
+        """Test dark theme configuration."""
+        backend = PlotlyBackend(theme="dark")
+
+        assert backend.colors["background"] == backend.COLORS["background_dark"]
+        assert backend.colors["grid"] == backend.COLORS["grid_dark"]
+        assert backend.colors["text"] == backend.COLORS["text_dark"]
+
+    def test_light_theme_setup(self):
+        """Test light theme configuration."""
+        backend = PlotlyBackend(theme="light")
+
+        assert backend.colors["background"] == backend.COLORS["background_light"]
+        assert backend.colors["grid"] == backend.COLORS["grid_light"]
+        assert backend.colors["text"] == backend.COLORS["text_light"]
+
+    def test_custom_template(self):
+        """Test custom template overrides theme."""
+        backend = PlotlyBackend(theme="light", template="plotly")
+
+        assert backend.template == "plotly"
+        assert backend._get_template() == "plotly"
+
+    def test_show_legend_false(self, sample_cum_returns):
+        """Test show_legend parameter."""
+        backend = PlotlyBackend(show_legend=False)
+
+        try:
+            fig = backend.plot_returns(sample_cum_returns)
+            assert fig.layout.showlegend is False
+        except ImportError:
+            pytest.skip("Plotly not installed")

@@ -79,3 +79,133 @@ def test_plot_stoch_vol_accepts_stub_trace():
     _, ax = plt.subplots()
     ax = tb.plot_stoch_vol(emp, data, trace=Trace(), ax=ax)
     assert ax is not None
+
+
+class TestPlotBestErrors:
+    """Test error conditions in plot_best."""
+
+    def test_plot_best_raises_error_when_no_trace_or_data(self):
+        """Test that plot_best raises error when neither trace nor data are provided."""
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+
+        with pytest.raises(ValueError, match="Either pass trace, or pass both data_train and data_test"):
+            tb.plot_best(emp)
+
+    def test_plot_best_raises_error_when_only_train_data(self):
+        """Test that plot_best raises error when only data_train is provided."""
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+        data_train = pd.Series([0.01] * 50, index=pd.date_range("2020-01-01", periods=50))
+
+        with pytest.raises(ValueError, match="Either pass trace, or pass both data_train and data_test"):
+            tb.plot_best(emp, data_train=data_train)
+
+    def test_plot_best_raises_error_when_only_test_data(self):
+        """Test that plot_best raises error when only data_test is provided."""
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+        data_test = pd.Series([0.01] * 50, index=pd.date_range("2020-02-01", periods=50))
+
+        with pytest.raises(ValueError, match="Either pass trace, or pass both data_train and data_test"):
+            tb.plot_best(emp, data_test=data_test)
+
+    def test_plot_best_creates_axes_when_none(self):
+        """Test that plot_best creates axes when none are provided."""
+        import matplotlib.pyplot as plt
+
+        rng = np.random.RandomState(1)
+        n = 300
+        trace = pd.DataFrame(
+            {
+                "group1_mean": rng.normal(0.0, 0.001, n),
+                "group2_mean": rng.normal(0.0002, 0.001, n),
+                "group1_std": rng.uniform(0.005, 0.02, n),
+                "group2_std": rng.uniform(0.005, 0.02, n),
+                "difference_of_means": rng.normal(0.0002, 0.001, n),
+            }
+        )
+
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+        tb.plot_best(emp, trace=trace, burn=10, axs=None)
+        plt.close("all")
+
+    def test_plot_best_creates_derived_difference_column(self):
+        """Test that plot_best creates difference of means column when missing."""
+        import matplotlib.pyplot as plt
+
+        rng = np.random.RandomState(2)
+        n = 300
+        trace = pd.DataFrame(
+            {
+                "group1_mean": rng.normal(0.0, 0.001, n),
+                "group2_mean": rng.normal(0.0002, 0.001, n),
+                "group1_std": rng.uniform(0.005, 0.02, n),
+                "group2_std": rng.uniform(0.005, 0.02, n),
+                # No difference_of_means or difference of means column
+            }
+        )
+
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+        _, axs = plt.subplots(ncols=2, nrows=4)
+        tb.plot_best(emp, trace=trace, axs=axs)
+
+    def test_plot_best_raises_error_on_insufficient_axes(self):
+        """Test that plot_best raises error when insufficient axes provided."""
+        import matplotlib.pyplot as plt
+
+        rng = np.random.RandomState(1)
+        n = 300
+        trace = pd.DataFrame(
+            {
+                "group1_mean": rng.normal(0.0, 0.001, n),
+                "group2_mean": rng.normal(0.0002, 0.001, n),
+                "group1_std": rng.uniform(0.005, 0.02, n),
+                "group2_std": rng.uniform(0.005, 0.02, n),
+                "difference_of_means": rng.normal(0.0002, 0.001, n),
+            }
+        )
+
+        emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+        _, axs = plt.subplots(ncols=2, nrows=2)  # Only 4 axes, need at least 7
+
+        with pytest.raises(ValueError, match="axs must contain at least 7"):
+            tb.plot_best(emp, trace=trace, axs=axs)
+
+
+class TestPlotStochVolErrors:
+    """Test plot_stoch_vol behavior."""
+
+    def test_plot_stoch_vol_creates_ax_when_none(self):
+        """Test that plot_stoch_vol creates axis when none is provided."""
+        idx = pd.date_range("2020-01-01", periods=30, freq="D")
+        data = pd.Series(np.linspace(-0.02, 0.02, len(idx)), index=idx)
+
+        s = np.abs(np.random.RandomState(0).normal(0.0, 0.01, size=(120, len(idx))))
+
+        class Trace:
+            def __getitem__(self, key):
+                name, step = key
+                return s[step, :]
+
+        emp = Empyrical(data)
+        ax = tb.plot_stoch_vol(emp, data, trace=Trace(), ax=None)
+        assert ax is not None
+
+
+class TestPlotBayesCone:
+    """Test plot_bayes_cone behavior."""
+
+    def test_plot_bayes_cone_creates_ax_when_none(self):
+        """Test that plot_bayes_cone creates axis when none is provided."""
+        import matplotlib.pyplot as plt
+
+        idx_train = pd.date_range("2020-01-01", periods=60, freq="D")
+        idx_test = pd.date_range("2020-03-01", periods=20, freq="D")
+
+        rng = np.random.RandomState(3)
+        returns_train = pd.Series(rng.normal(0, 0.01, len(idx_train)), index=idx_train)
+        returns_test = pd.Series(rng.normal(0, 0.01, len(idx_test)), index=idx_test)
+        ppc = rng.normal(0, 0.01, size=(200, len(idx_test)))
+
+        emp = Empyrical(returns_train)
+        score = tb.plot_bayes_cone(emp, returns_train, returns_test, ppc, ax=None)
+        assert isinstance(score, float)
+        plt.close("all")
