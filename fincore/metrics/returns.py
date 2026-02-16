@@ -26,12 +26,11 @@ This module provides core functions for return analytics, including:
 from __future__ import annotations
 
 import math
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
+from fincore.constants import MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 __all__ = [
     "simple_returns",

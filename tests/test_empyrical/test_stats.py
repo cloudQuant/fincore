@@ -20,6 +20,7 @@ from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
 from fincore.empyrical import Empyrical
 from fincore.utils import common_utils as emutils
+from fincore.utils.data_utils import down, roll, up
 
 DECIMAL_PLACES = 8
 
@@ -1651,8 +1652,6 @@ class TestStatsArrays(TestStats):
 
     # Override tests where arrays produce different results due to datetime index reconstruction
     def test_annual_active_return_5(self):
-        from fincore import empyrical
-
         assert_almost_equal(
             self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=WEEKLY),
             -0.011645391602789212,
@@ -1660,8 +1659,6 @@ class TestStatsArrays(TestStats):
         )
 
     def test_annual_active_return_6(self):
-        from fincore import empyrical
-
         assert_almost_equal(
             self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=MONTHLY),
             -0.0022597421059689093,
@@ -1669,8 +1666,6 @@ class TestStatsArrays(TestStats):
         )
 
     def test_treynor_ratio_6(self):
-        from fincore import empyrical
-
         result = self.empyrical.treynor_ratio(self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=WEEKLY)
         assert np.isnan(result), f"Expected NaN but got {result}"
 
@@ -1758,8 +1753,6 @@ class TestStatsIntIndex(TestStats):
 
     # Override tests where int-indexed Series produce different results due to datetime index reconstruction
     def test_annual_active_return_5(self):
-        from fincore import empyrical
-
         assert_almost_equal(
             self.empyrical.annual_active_return(self.weekly_returns, self.simple_benchmark, period=WEEKLY),
             -0.011645391602789212,
@@ -1767,8 +1760,6 @@ class TestStatsIntIndex(TestStats):
         )
 
     def test_annual_active_return_6(self):
-        from fincore import empyrical
-
         assert_almost_equal(
             self.empyrical.annual_active_return(self.monthly_returns, self.simple_benchmark, period=MONTHLY),
             -0.0022597421059689093,
@@ -1776,8 +1767,6 @@ class TestStatsIntIndex(TestStats):
         )
 
     def test_treynor_ratio_6(self):
-        from fincore import empyrical
-
         result = self.empyrical.treynor_ratio(self.weekly_returns, self.simple_benchmark, risk_free=0.0, period=WEEKLY)
         assert np.isnan(result), f"Expected NaN but got {result}"
 
@@ -1831,28 +1820,28 @@ class TestHelpers(BaseTestCase):
 
     def test_roll_pandas(self):
         emp = Empyrical()
-        res = emutils.roll(self.returns, self.factor_returns, window=12, function=emp.alpha_aligned)
+        res = roll(self.returns, self.factor_returns, window=12, function=emp.alpha_aligned)
 
         self.assertEqual(res.size, self.ser_length - self.window + 1)
 
     def test_roll_ndarray(self):
         emp = Empyrical()
-        res = emutils.roll(self.returns.values, self.factor_returns.values, window=12, function=emp.alpha_aligned)
+        res = roll(self.returns.values, self.factor_returns.values, window=12, function=emp.alpha_aligned)
 
         self.assertEqual(len(res), self.ser_length - self.window + 1)
 
     def test_down(self):
         emp = Empyrical()
-        pd_res = emutils.down(self.returns, self.factor_returns, function=emp.capture)
-        np_res = emutils.down(self.returns.values, self.factor_returns.values, function=emp.capture)
+        pd_res = down(self.returns, self.factor_returns, function=emp.capture)
+        np_res = down(self.returns.values, self.factor_returns.values, function=emp.capture)
 
         self.assertTrue(isinstance(pd_res, float))
         assert_almost_equal(pd_res, np_res, DECIMAL_PLACES)
 
     def test_up(self):
         emp = Empyrical()
-        pd_res = emutils.up(self.returns, self.factor_returns, function=emp.capture)
-        np_res = emutils.up(self.returns.values, self.factor_returns.values, function=emp.capture)
+        pd_res = up(self.returns, self.factor_returns, function=emp.capture)
+        np_res = up(self.returns.values, self.factor_returns.values, function=emp.capture)
 
         self.assertTrue(isinstance(pd_res, float))
         assert_almost_equal(pd_res, np_res, DECIMAL_PLACES)
@@ -1860,11 +1849,11 @@ class TestHelpers(BaseTestCase):
     def test_roll_bad_types(self):
         with self.assertRaises(ValueError):
             emp = Empyrical()
-            emutils.roll(self.returns.values, self.factor_returns, window=12, function=emp.max_drawdown)
+            roll(self.returns.values, self.factor_returns, window=12, function=emp.max_drawdown)
 
     def test_roll_max_window(self):
         emp = Empyrical()
-        res = emutils.roll(self.returns, self.factor_returns, window=self.ser_length + 100, function=emp.max_drawdown)
+        res = roll(self.returns, self.factor_returns, window=self.ser_length + 100, function=emp.max_drawdown)
         self.assertTrue(res.size == 0)
 
 

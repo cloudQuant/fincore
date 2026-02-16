@@ -5,11 +5,10 @@ from pandas import (
     Series,
     date_range,
 )
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_series_equal
 
 from fincore.empyrical import Empyrical
 from fincore.utils.common_utils import (
-    analyze_dataframe_differences,
     analyze_series_differences,
 )
 

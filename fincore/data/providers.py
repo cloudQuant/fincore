@@ -11,14 +11,13 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from typing_extensions import Protocol
+    pass
 
 # Module-level logger
 logger = logging.getLogger(__name__)

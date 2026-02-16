@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from fincore.report.format import css_cls, fmt, safe_list
 

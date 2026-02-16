@@ -1,9 +1,5 @@
 __version__ = "0.1.0"
 
-# NumPy 2.0+ removed the np.unicode_ alias.
-# Modern Python (3.11+) and NumPy (2.0+) don't need this compatibility shim.
-import numpy as np
-
 __all__ = [
     # Core classes
     "Empyrical",

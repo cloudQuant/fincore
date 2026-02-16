@@ -9,7 +9,7 @@ from numpy import (
     zeros_like,
 )
 from pandas import DataFrame, Series, Timestamp, date_range, read_csv
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 from parameterized import parameterized
 
 from fincore.empyrical import Empyrical

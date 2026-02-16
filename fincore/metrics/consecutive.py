@@ -17,7 +17,6 @@
 """Consecutive up/down metrics."""
 
 import numpy as np
-import pandas as pd
 
 from fincore.constants import MONTHLY, WEEKLY
 from fincore.constants.periods import PERIOD_TO_FREQ

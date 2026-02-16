@@ -26,7 +26,6 @@ from scipy import stats
 
 from fincore.constants import DAILY
 from fincore.metrics.basic import aligned_series
-from fincore.metrics.ratios import stability_of_timeseries
 
 __all__ = [
     "skewness",

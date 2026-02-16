@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from functools import cached_property
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -30,25 +30,17 @@ from fincore.metrics.ratios import (
     omega_ratio as _omega_ratio,
 )
 from fincore.metrics.ratios import (
-    sharpe_ratio as _sharpe_ratio,
-)
-from fincore.metrics.ratios import (
     sortino_ratio as _sortino_ratio,
 )
+from fincore.metrics.ratios import stability_of_timeseries
 from fincore.metrics.returns import cum_returns, cum_returns_final
 from fincore.metrics.risk import (
-    annual_volatility as _annual_volatility,
-)
-from fincore.metrics.risk import (
-    conditional_value_at_risk,
-    downside_risk,
     tail_ratio,
     value_at_risk,
 )
 from fincore.metrics.stats import (
     kurtosis,
     skewness,
-    stability_of_timeseries,
 )
 from fincore.metrics.yearly import annual_return as _annual_return
 from fincore.utils import nanmean, nanstd

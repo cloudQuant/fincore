@@ -8,7 +8,7 @@ matplotlib or any other visualization library.
 from __future__ import annotations
 
 import html as _html
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd

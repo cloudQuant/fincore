@@ -19,11 +19,10 @@
 import numpy as np
 import pandas as pd
 
-from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
-from fincore.metrics.alpha_beta import alpha, alpha_aligned, alpha_beta_aligned, beta
+from fincore.constants import DAILY
+from fincore.metrics.alpha_beta import alpha_aligned, alpha_beta_aligned
 from fincore.metrics.basic import aligned_series, annualization_factor
-from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.ratios import down_capture, sharpe_ratio, up_capture
+from fincore.metrics.ratios import down_capture, up_capture
 
 __all__ = [
     "roll_alpha",

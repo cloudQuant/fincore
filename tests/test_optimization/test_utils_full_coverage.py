@@ -4,7 +4,6 @@ This file tests error handling paths in the optimization utilities.
 """
 
 import numpy as np
-import pandas as pd
 import pytest
 from scipy import optimize
 

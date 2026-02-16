@@ -812,10 +812,6 @@ def sample_colormap(cmap_name, n_samples):
     return colors
 
 
-from fincore.utils.data_utils import _roll_ndarray, _roll_pandas, down, roll, up
-from fincore.utils.math_utils import nanargmax, nanargmin, nanmax, nanmean, nanmin, nanstd, nansum
-
-
 def get_utc_timestamp(dt):
     """
     Returns the Timestamp/DatetimeIndex

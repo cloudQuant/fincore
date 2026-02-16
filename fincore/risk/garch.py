@@ -17,7 +17,6 @@ Between the Expected Value and the Volatility of the Nominal Excess Return on St
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd

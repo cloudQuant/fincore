@@ -318,7 +318,7 @@ class TestGJRGARCH:
 
     def test_gjr_garch_leverage_effect(self):
         """Test that GJR-GARCH captures leverage."""
-        from fincore.risk.garch import GARCH, GJRGARCH
+        from fincore.risk.garch import GJRGARCH
 
         # Create asymmetric returns
         np.random.seed(42)

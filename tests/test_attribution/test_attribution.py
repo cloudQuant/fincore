@@ -17,7 +17,6 @@ from fincore.attribution.fama_french import (
     fetch_ff_factors,
 )
 from fincore.attribution.style import (
-    StyleResult,
     fetch_style_factors,
 )
 
