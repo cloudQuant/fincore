@@ -169,6 +169,9 @@ def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
 
     adj_returns = adjust_returns(returns, risk_free)
     adj_factor_returns = adjust_returns(factor_returns, risk_free)
+    # Ensure adj_factor_returns broadcasts correctly with _beta
+    if adj_factor_returns.ndim == 1 and hasattr(_beta, "ndim") and _beta.ndim > 0:
+        adj_factor_returns = adj_factor_returns[:, np.newaxis]
     alpha_series = adj_returns - (_beta * adj_factor_returns)
 
     out = np.subtract(
