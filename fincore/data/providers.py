@@ -727,21 +727,23 @@ class AkShareProvider(DataProvider):
             raise ValueError(f"No data found for symbol {symbol}")
 
         # Format columns - map Chinese column names to English
+        # AkShare returns data with Chinese column names, so we translate them
         column_map = {
-            "开盘": "Open",
-            "最高": "High",
-            "最低": "Low",
-            "收盘": "Close",
-            "成交量": "Volume",
-            "成交额": "Amount",
-            "振幅": "Amplitude",
-            "涨跌幅": "ChangePct",
-            "涨跌额": "Change",
-            "换手率": "Turnover",
+            "开盘": "Open",  # Opening price
+            "最高": "High",  # Highest price
+            "最低": "Low",  # Lowest price
+            "收盘": "Close",  # Closing price
+            "成交量": "Volume",  # Trading volume
+            "成交额": "Amount",  # Trading amount
+            "振幅": "Amplitude",  # Price amplitude
+            "涨跌幅": "ChangePct",  # Percentage change
+            "涨跌额": "Change",  # Absolute change
+            "换手率": "Turnover",  # Turnover rate
         }
 
         data = data.rename(columns=column_map)
-        data = data.set_index("日期")  # Set Chinese 'Date' column as index
+        # Set the Chinese 'Date' column as index
+        data = data.set_index("日期")
         data.index = pd.to_datetime(data.index)
         data = data.sort_index()
 
@@ -800,9 +802,10 @@ class AkShareProvider(DataProvider):
 
         return {
             "symbol": symbol,
-            "name": info.get("item", {}).get("股票简称", "N/A"),
-            "exchange": info.get("item", {}).get("交易所", "N/A"),
-            "industry": info.get("item", {}).get("行业", "N/A"),
+            # AkShare returns Chinese keys - map them to English field names
+            "name": info.get("item", {}).get("股票简称", "N/A"),  # Stock short name
+            "exchange": info.get("item", {}).get("交易所", "N/A"),  # Exchange name
+            "industry": info.get("item", {}).get("行业", "N/A"),  # Industry classification
         }
 
 
