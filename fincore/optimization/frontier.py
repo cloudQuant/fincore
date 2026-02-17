@@ -63,7 +63,7 @@ def efficient_frontier(
     if max_weight <= 0:
         raise ValueError("max_weight must be > 0.")
 
-    if not np.isfinite(returns.to_numpy(dtype=float)).all():
+    if not np.isfinite(returns.values).all():
         raise ValueError("returns contains NaN or infinite values.")
 
     mu = returns.mean().values * 252  # annualised

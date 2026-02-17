@@ -546,7 +546,7 @@ def estimate_intraday(returns, positions, transactions, eod_hour=23):
     positions_shifted = positions.copy().shift(1).fillna(0)
     # starting_capital = positions.iloc[0].sum() / (1 + returns[0])
     divisor = 1 + returns.iloc[0]
-    if divisor == 0:
+    if divisor == 0 or not np.isfinite(divisor):
         divisor = 1.0
     starting_capital = positions.iloc[0].sum() / divisor
     # positions_shifted.cash[0] = starting_capital
