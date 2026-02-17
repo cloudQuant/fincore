@@ -216,3 +216,25 @@ def test_cal_treynor_ratio_scalar_beta_2d_returns() -> None:
         assert np.isfinite(out[1])
     finally:
         monkeypatch.undo()
+
+
+def test_calmar_ratio_with_all_nan_returns() -> None:
+    """Test calmar_ratio returns NaN when all returns are NaN (line 417)."""
+    returns = np.array([np.nan, np.nan, np.nan])
+    factor_returns = np.array([0.01, 0.02, 0.015])
+
+    result = ratios_mod.calmar_ratio(returns, factor_returns)
+
+    # Should return NaN when max_drawdown is positive (no drawdown) or returns are all NaN
+    assert np.isnan(result)
+
+
+def test_calmar_ratio_with_empty_returns_after_nan_removal() -> None:
+    """Test calmar_ratio when returns_clean is empty (line 417)."""
+    # Create returns that become empty after NaN removal
+    returns = pd.Series([np.nan, np.nan, np.nan])
+
+    result = ratios_mod.calmar_ratio(returns)
+
+    # Should return NaN when len(returns_clean) < 1
+    assert np.isnan(result)
