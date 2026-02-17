@@ -152,6 +152,12 @@ def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
         input a scalar is returned; for higher-dimensional input one value
         is returned per series.
     """
+    # Preserve DataFrame status before conversion
+    was_dataframe = isinstance(returns, pd.DataFrame)
+
+    returns = np.asanyarray(returns)
+    factor_returns = np.asanyarray(factor_returns)
+
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:], dtype="float64")
@@ -180,7 +186,7 @@ def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
         out=out,
     )
 
-    if allocated_output and isinstance(returns, pd.DataFrame):
+    if allocated_output and was_dataframe:
         out = pd.Series(out)
 
     if returns.ndim == 1:
