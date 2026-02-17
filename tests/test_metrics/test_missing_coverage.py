@@ -74,6 +74,76 @@ class AlphaBetaMissingCoverageTestCase(unittest.TestCase):
         result = alpha_beta.down_alpha_beta(returns, factor_returns)
         self.assertTrue(np.isnan(result).all())
 
+    def test_up_alpha_beta_insufficient_clean_data(self):
+        """Test up_alpha_beta when filtered data has < 2 points after NaN removal (line 418-420)."""
+        # Create data where after filtering for up periods and removing NaNs, we have < 2 points
+        returns = pd.Series([0.01, np.nan, np.nan, np.nan])
+        factor_returns = pd.Series([0.01, np.nan, np.nan, np.nan])  # First is up, rest are NaN
+
+        result = alpha_beta.up_alpha_beta(returns, factor_returns)
+        # Should return NaN because after filtering up periods (first is up) and removing NaNs, only 1 point remains
+        self.assertEqual(len(result), 2)
+        self.assertTrue(np.isnan(result).all())
+
+    def test_up_alpha_beta_zero_variance(self):
+        """Test up_alpha_beta when factor variance is zero (line 429-431)."""
+        # Create data where up periods have zero variance
+        returns = pd.Series([0.01, 0.02, 0.015])
+        factor_returns = pd.Series([0.01, 0.01, 0.01])  # All up but zero variance
+
+        result = alpha_beta.up_alpha_beta(returns, factor_returns)
+        # Should return NaN because factor variance is zero
+        self.assertEqual(len(result), 2)
+        self.assertTrue(np.isnan(result).all())
+
+    def test_down_alpha_beta_insufficient_clean_data(self):
+        """Test down_alpha_beta when filtered data has < 2 points after NaN removal (line 418-420)."""
+        # Create data where after filtering for down periods and removing NaNs, we have < 2 points
+        returns = pd.Series([-0.01, np.nan, np.nan, np.nan])
+        factor_returns = pd.Series([-0.01, np.nan, np.nan, np.nan])  # First is down, rest are NaN
+
+        result = alpha_beta.down_alpha_beta(returns, factor_returns)
+        # Should return NaN because after filtering down periods and removing NaNs, only 1 point remains
+        self.assertEqual(len(result), 2)
+        self.assertTrue(np.isnan(result).all())
+
+    def test_down_alpha_beta_zero_variance(self):
+        """Test down_alpha_beta when factor variance is zero (line 429-431)."""
+        # Create data where down periods have zero variance
+        returns = pd.Series([-0.01, -0.02, -0.015])
+        factor_returns = pd.Series([-0.01, -0.01, -0.01])  # All down but zero variance
+
+        result = alpha_beta.down_alpha_beta(returns, factor_returns)
+        # Should return NaN because factor variance is zero
+        self.assertEqual(len(result), 2)
+        self.assertTrue(np.isnan(result).all())
+
+    def test_annual_alpha_with_no_overlap_years(self):
+        """Test annual_alpha when returns and factor have no overlapping years."""
+        # Create returns and factor with DatetimeIndex but no overlap
+        # After alignment, factor will have NaN for all return dates
+        returns = pd.Series([0.01, 0.02], index=pd.date_range("2020-01-01", periods=2))
+        factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2))
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+        # After alignment with no common dates, the alpha calculation will produce NaN
+        # The function returns a Series with NaN values for the years
+        self.assertEqual(len(result), 2)
+        self.assertTrue(result.isna().all())
+
+    def test_annual_beta_with_no_overlap_years(self):
+        """Test annual_beta when returns and factor have no overlapping years."""
+        # Create returns and factor with DatetimeIndex but no overlap
+        # After alignment, factor will have NaN for all return dates
+        returns = pd.Series([0.01, 0.02], index=pd.date_range("2020-01-01", periods=2))
+        factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2))
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+        # After alignment with no common dates, the beta calculation will produce NaN
+        # The function returns a Series with NaN values for the years
+        self.assertEqual(len(result), 2)
+        self.assertTrue(result.isna().all())
+
 
 class TransactionsMissingCoverageTestCase(unittest.TestCase):
     """Test cases for previously uncovered code paths in transactions.py."""
