@@ -190,3 +190,29 @@ def test_up_down_capture_returns_nan_when_down_cap_zero(monkeypatch) -> None:
 
     monkeypatch.setattr(ratios_mod, "_capture_aligned", lambda *_args, **_kwargs: 0.0)
     assert np.isnan(ratios_mod.up_down_capture(r, f))
+
+
+def test_cal_treynor_ratio_scalar_beta_2d_returns() -> None:
+    """Test cal_treynor_ratio when returns is 2D but beta is scalar (lines 606-607)."""
+    import fincore.metrics.alpha_beta as ab_mod
+    import fincore.metrics.yearly as yearly_mod
+
+    # 2D returns (multi-column)
+    returns = np.array([[0.01, 0.02], [0.0, 0.01], [0.01, 0.0], [0.0, 0.01], [0.01, 0.0]])
+    factor = np.array([0.005, 0.0, 0.005, 0.0, 0.005])
+
+    # Mock beta_aligned to return a scalar (not Series/ndarray)
+    monkeypatch = pytest.MonkeyPatch()
+    try:
+        monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: 1.5)
+        monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+
+        out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
+        # Should return an array with both elements set
+        assert isinstance(out, np.ndarray)
+        assert len(out) == 2
+        # Both elements should be finite since annual_return is 0.1 and beta is 1.5
+        assert np.isfinite(out[0])
+        assert np.isfinite(out[1])
+    finally:
+        monkeypatch.undo()

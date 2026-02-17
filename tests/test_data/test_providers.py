@@ -23,6 +23,44 @@ class TestDataProviderInterface:
         with pytest.raises(TypeError):
             DataProvider()
 
+    def test_abstract_methods_must_be_implemented(self):
+        """Test that abstract methods raise TypeError when called on base class."""
+        from fincore.data.providers import DataProvider
+
+        # Create a minimal concrete subclass that doesn't implement abstract methods
+        class IncompleteProvider(DataProvider):
+            pass
+
+        with pytest.raises(TypeError):
+            IncompleteProvider()
+
+    def test_concrete_provider_implements_fetch(self):
+        """Test that concrete providers implement the fetch method."""
+        from fincore.data.providers import YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+        # Verify fetch method exists and is callable
+        assert hasattr(provider, "fetch")
+        assert callable(provider.fetch)
+
+    def test_concrete_provider_implements_fetch_multiple(self):
+        """Test that concrete providers implement the fetch_multiple method."""
+        from fincore.data.providers import YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+        # Verify fetch_multiple method exists and is callable
+        assert hasattr(provider, "fetch_multiple")
+        assert callable(provider.fetch_multiple)
+
+    def test_concrete_provider_implements_get_info(self):
+        """Test that concrete providers implement the get_info method."""
+        from fincore.data.providers import YahooFinanceProvider
+
+        provider = YahooFinanceProvider()
+        # Verify get_info method exists and is callable
+        assert hasattr(provider, "get_info")
+        assert callable(provider.get_info)
+
     def test_validate_dates(self):
         """Test date validation."""
         from fincore.data.providers import YahooFinanceProvider

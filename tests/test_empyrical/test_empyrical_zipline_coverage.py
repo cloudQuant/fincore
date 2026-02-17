@@ -1,12 +1,41 @@
 """Tests for zipline-related code in Empyrical."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from fincore.empyrical import Empyrical
+
+
+class TestEmpyricalZiplineImport:
+    """Test zipline import behavior (lines 163-170)."""
+
+    def test_zipline_import_sets_global(self):
+        """Test that importing zipline sets ZIPLINE global and Equity/Future (lines 168-170)."""
+        # Mock the zipline.assets module
+        mock_zip_assets = MagicMock()
+        mock_equity = MagicMock()
+        mock_future = MagicMock()
+
+        mock_zip_assets.Equity = mock_equity
+        mock_zip_assets.Future = mock_future
+
+        with patch("importlib.import_module", return_value=mock_zip_assets):
+            # Force re-import by modifying the module's import logic
+            import importlib
+
+            import fincore.empyrical
+
+            # Reload the module to trigger the import block
+            importlib.reload(fincore.empyrical)
+
+            # Verify ZIPLINE is set to True
+            assert fincore.empyrical.ZIPLINE is True
+            # Verify Equity and Future are set from zipline
+            assert fincore.empyrical.Equity is mock_equity
+            assert fincore.empyrical.Future is mock_future
 
 
 class TestEmpyricalInitContextError:
