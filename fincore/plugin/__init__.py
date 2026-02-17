@@ -14,7 +14,7 @@ single source of truth.
 from __future__ import annotations
 
 # Re-export everything from registry (single source of truth)
-from fincore.plugin.registry import (  # noqa: F401
+from fincore.plugin.registry import (
     _HOOK_REGISTRY,
     _METRIC_REGISTRY,
     _VIZ_BACKEND_REGISTRY,

@@ -114,7 +114,7 @@ class _LazyMethod:
     ``staticmethod`` directly — zero overhead.
     """
 
-    __slots__ = ("mod_alias", "func_name", "attr_name", "_owner")
+    __slots__ = ("_owner", "attr_name", "func_name", "mod_alias")
 
     def __init__(self, mod_alias, func_name, attr_name, owner):
         self.mod_alias = mod_alias
