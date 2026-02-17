@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -215,3 +217,112 @@ def test_style_summary_empty_series_from_loc() -> None:
     summ = sr.style_summary
     # Empty index means no iterations, summary is empty
     assert summ == {}
+
+
+def test_style_summary_duplicate_index_empty_dataframe() -> None:
+    """Test line 66: DataFrame returned by .loc is empty (line 66)."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Use a custom class that properly implements __getitem__ for .loc
+    class CustomDF:
+        def __init__(self, df):
+            self._df = df
+            self._index = pd.Index(["value"], name="style")
+
+        @property
+        def columns(self):
+            # Return empty Index so "style" not in columns, goes to else branch
+            return pd.Index([])
+
+        @property
+        def index(self):
+            return self._index
+
+        @property
+        def loc(self):
+            # Return an object that supports __getitem__
+            class _LocIndexer:
+                def __init__(self, parent):
+                    self.parent = parent
+
+                def __getitem__(self, label):
+                    # Return empty DataFrame to trigger line 66
+                    return pd.DataFrame()
+
+            return _LocIndexer(self)
+
+    sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore
+    summ = sr.style_summary
+    assert summ["value"] == 0.0  # Line 66 triggers this
+
+
+def test_style_summary_duplicate_index_empty_series() -> None:
+    """Test line 73: Series returned by .loc is empty (line 73)."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Use a custom class to mock the loc behavior
+    class CustomDF:
+        def __init__(self, df):
+            self._df = df
+            self._index = pd.Index(["value"], name="style")
+
+        @property
+        def columns(self):
+            return pd.Index([])
+
+        @property
+        def index(self):
+            return self._index
+
+        @property
+        def loc(self):
+            class _LocIndexer:
+                def __init__(self, parent):
+                    self.parent = parent
+
+                def __getitem__(self, label):
+                    # Return empty Series to trigger line 73
+                    return pd.Series(dtype=float)
+
+            return _LocIndexer(self)
+
+    sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore
+    summ = sr.style_summary
+    assert summ["value"] == 0.0  # Line 73 triggers this
+
+
+def test_style_summary_scalar_value() -> None:
+    """Test line 79: val is already a scalar (line 79)."""
+    exposures = pd.DataFrame({"value": [1.0]}, index=["A"])
+    overall = pd.Series([0.0], index=[pd.Timestamp("2024-01-01")])
+
+    # Use a custom class to mock the loc behavior returning scalar
+    class CustomDF:
+        def __init__(self):
+            self._index = pd.Index(["value"], name="style")
+
+        @property
+        def columns(self):
+            return pd.Index([])
+
+        @property
+        def index(self):
+            return self._index
+
+        @property
+        def loc(self):
+            class _LocIndexer:
+                def __init__(self, parent):
+                    self.parent = parent
+
+                def __getitem__(self, label):
+                    # Return a scalar directly to trigger line 79
+                    return 0.5
+
+            return _LocIndexer(self)
+
+    sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(), overall_returns=overall)  # type: ignore
+    summ = sr.style_summary
+    assert summ["value"] == 0.5  # Line 79 triggers this

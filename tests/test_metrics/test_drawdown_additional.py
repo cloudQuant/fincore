@@ -124,3 +124,15 @@ def test_get_top_drawdowns_handles_empty_underwater_during_iteration() -> None:
     assert isinstance(result, list)
     # With all positive returns, should return empty list
     assert len(result) == 0
+
+
+def test_get_top_drawdowns_single_value_returns() -> None:
+    """Test get_top_drawdowns with single value returns (edge case for line 325)."""
+    # With a single return value, after finding the peak, there might be
+    # no more data to process
+    returns = pd.Series([0.01])
+
+    result = dd.get_top_drawdowns(returns, top=5)
+    assert isinstance(result, list)
+    # Single positive value has no drawdown
+    assert len(result) == 0
