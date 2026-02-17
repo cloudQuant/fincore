@@ -404,14 +404,16 @@ class TestEVTEdgeCasesForFullCoverage:
 
         # Mock gpd_fit to return xi >= 1
         mock_params = {"xi": 1.5, "beta": 0.1, "threshold": 0.05, "n_exceed": 100}
-        with patch("fincore.risk.evt.gpd_fit", return_value=mock_params):
-            with pytest.raises(ValueError, match="CVaR infinite for xi >= 1"):
-                evt_cvar(
-                    np.random.exponential(0.01, 1000),
-                    alpha=0.05,
-                    model="gpd",
-                    tail="lower",
-                )
+        with (
+            patch("fincore.risk.evt.gpd_fit", return_value=mock_params),
+            pytest.raises(ValueError, match="CVaR infinite for xi >= 1"),
+        ):
+            evt_cvar(
+                np.random.exponential(0.01, 1000),
+                alpha=0.05,
+                model="gpd",
+                tail="lower",
+            )
 
     def test_evt_cvar_gev_xi_ge_1_raises_line_445(self):
         """Test GEV CVaR raises error when xi >= 1 (line 445)."""
@@ -419,14 +421,16 @@ class TestEVTEdgeCasesForFullCoverage:
 
         # Mock gev_fit to return xi >= 1
         mock_params = {"xi": 1.2, "sigma": 0.1, "mu": 0, "n_blocks": 10}
-        with patch("fincore.risk.evt.gev_fit", return_value=mock_params):
-            with pytest.raises(ValueError, match="CVaR infinite for xi >= 1"):
-                evt_cvar(
-                    np.random.exponential(0.01, 1000),
-                    alpha=0.05,
-                    model="gev",
-                    tail="lower",
-                )
+        with (
+            patch("fincore.risk.evt.gev_fit", return_value=mock_params),
+            pytest.raises(ValueError, match="CVaR infinite for xi >= 1"),
+        ):
+            evt_cvar(
+                np.random.exponential(0.01, 1000),
+                alpha=0.05,
+                model="gev",
+                tail="lower",
+            )
 
     def test_evt_cvar_unknown_model_line_447(self):
         """Test CVaR raises error for unknown model (line 447)."""
