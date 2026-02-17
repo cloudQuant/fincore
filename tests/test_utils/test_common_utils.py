@@ -581,7 +581,6 @@ def test_configure_legend_exception_in_legend_sort_key(monkeypatch, tmp_path):
             raise RuntimeError("Cannot get ydata")
 
     # Manually add a broken handle to the legend
-    from matplotlib.lines import Line2D
 
     ax.plot([0, 1], [0, 1], label="a")
     ax.legend()

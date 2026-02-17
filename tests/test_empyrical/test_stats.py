@@ -19,7 +19,6 @@ except ImportError:
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
 from fincore.empyrical import Empyrical
-from fincore.utils import common_utils as emutils
 from fincore.utils.data_utils import down, roll, up
 
 DECIMAL_PLACES = 8

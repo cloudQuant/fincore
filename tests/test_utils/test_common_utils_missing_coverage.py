@@ -5,14 +5,10 @@ This module covers edge cases and branches that were previously uncovered:
 - Line 803-809: sample_colormap fallback paths
 """
 
-import numpy as np
-import pandas as pd
 import pytest
 
 try:
     import matplotlib.pyplot as plt
-    from matplotlib.collections import PatchCollection
-    from matplotlib.patches import Rectangle
 
     from fincore.utils import common_utils as cu
 
@@ -38,7 +34,6 @@ class TestCommonUtilsMissingCoverage:
         (line,) = ax.plot([0, 1], [0, 1], label="normal")
 
         # Manually add broken handle to legend
-        from matplotlib.lines import Line2D
 
         broken = BrokenHandle()
         ax.legend([line, broken], ["normal", "broken"])
@@ -86,7 +81,6 @@ class TestCommonUtilsMissingCoverage:
 
     def test_sample_colormap_fallback_older_api(self, monkeypatch):
         """Test sample_colormap older API fallback (line 806)."""
-        from matplotlib.pyplot import cm as _cm
 
         # Mock all modern APIs to fail
         class MockColormaps:
@@ -124,7 +118,6 @@ class TestCommonUtilsMissingCoverage:
 
     def test_sample_colormap_fallback_registry(self, monkeypatch):
         """Test sample_colormap _colormaps fallback (line 809)."""
-        from matplotlib.pyplot import cm as _cm
 
         # Mock all modern APIs to fail
         class MockColormaps:

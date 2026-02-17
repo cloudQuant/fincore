@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from fincore.metrics import drawdown, ratios, round_trips, yearly
 
