@@ -66,6 +66,19 @@ class TestEmpyricalInit:
         assert emp.returns is not None
         # _ctx may be None if AnalysisContext creation failed
 
+    def test_init_with_invalid_positions_handles_gracefully(self):
+        """Test initializing with invalid positions handles exception gracefully (lines 204-207)."""
+        # Create returns with proper index but positions without matching index
+        # This might cause AnalysisContext creation to fail
+        returns = pd.Series([0.01, 0.02, 0.015])
+        positions = pd.DataFrame({"invalid": [1, 2]})  # Mismatched shape
+
+        # Should not raise, just log debug message
+        emp = Empyrical(returns=returns, positions=positions)
+
+        # Should still have the returns attribute
+        assert emp.returns is not None
+
 
 class TestEmpyricalGetattrFallback:
     """Test __getattr__ fallback for registry-backed attributes."""
@@ -264,3 +277,41 @@ class TestDualMethodBehavior:
         result = emp._get_factor_returns(None)
 
         pd.testing.assert_series_equal(result, factor_returns)
+
+
+class TestEmpyricalGetattrStaticMethods:
+    """Test __getattr__ fallback for static methods registry."""
+
+    def test_getattr_for_static_methods_registry(self):
+        """Test __getattr__ for static methods registry (lines 227-230)."""
+        emp = Empyrical()
+
+        # Access a static method like '_flatten' from STATIC_METHODS
+        # This should trigger __getattr__ and cache it on the class
+        result = emp._flatten
+        assert callable(result)
+
+    def test_getattr_unknown_attribute_raises(self):
+        """Test __getattr__ raises for unknown attributes (line 232)."""
+        emp = Empyrical()
+
+        with pytest.raises(AttributeError, match="has no attribute"):
+            _ = emp.completely_nonexistent_method_xyz
+
+
+class TestEmpyricalGetattrClassmethods:
+    """Test __getattr__ fallback for classmethod registry."""
+
+    def test_getattr_for_classmethod_via_instance(self):
+        """Test __getattr__ for classmethod registry methods (lines 220-223)."""
+        returns = pd.Series([0.01, 0.02, 0.015])
+        emp = Empyrical(returns=returns)
+
+        # Access a method via __getattr__ that's in CLASSMETHOD_REGISTRY
+        # First access goes through __getattr__, subsequent accesses use cached value
+        result = emp.cum_returns
+        assert callable(result)
+
+        # Second access should use cached value
+        result2 = emp.cum_returns
+        assert result is result2
