@@ -378,6 +378,42 @@ class TestEmpyricalGetattrStaticMethods:
 
             emp.__class__.cum_returns = staticmethod(cum_returns)
 
+    def test_getattr_direct_call_with_deleted_descriptor(self):
+        """Test __getattr__ by directly calling it after deleting descriptor."""
+        emp = Empyrical()
+
+        # Delete a CLASSMETHOD_REGISTRY method from the class
+        if "cum_returns" in emp.__class__.__dict__:
+            delattr(emp.__class__, "cum_returns")
+
+        try:
+            # Directly call __getattr__ to trigger the fallback path
+            result = emp.__getattr__("cum_returns")
+            assert callable(result)
+        finally:
+            # Restore for other tests
+            from fincore.metrics.returns import cum_returns
+
+            emp.__class__.cum_returns = staticmethod(cum_returns)
+
+    def test_getattr_static_method_direct_call(self):
+        """Test __getattr__ for STATIC_METHODS by directly calling it."""
+        emp = Empyrical()
+
+        # Delete a STATIC_METHODS method from the class
+        if "_flatten" in emp.__class__.__dict__:
+            delattr(emp.__class__, "_flatten")
+
+        try:
+            # Directly call __getattr__ to trigger the fallback path
+            result = emp.__getattr__("_flatten")
+            assert callable(result)
+        finally:
+            # Restore for other tests
+            from fincore.metrics.basic import flatten
+
+            emp.__class__._flatten = staticmethod(flatten)
+
 
 class TestEmpyricalGetattrClassmethods:
     """Test __getattr__ fallback for classmethod registry."""
