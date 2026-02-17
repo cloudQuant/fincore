@@ -209,3 +209,78 @@ class TestPlotBayesCone:
         score = tb.plot_bayes_cone(emp, returns_train, returns_test, ppc, ax=None)
         assert isinstance(score, float)
         plt.close("all")
+
+
+def test_plot_best_creates_trace_from_data_line_49(monkeypatch):
+    """Test plot_best creates trace via model_best when data provided (line 49)."""
+    import matplotlib.pyplot as plt
+
+    rng = np.random.RandomState(1)
+    n = 300
+    mock_trace = pd.DataFrame(
+        {
+            "group1_mean": rng.normal(0.0, 0.001, n),
+            "group2_mean": rng.normal(0.0002, 0.001, n),
+            "group1_std": rng.uniform(0.005, 0.02, n),
+            "group2_std": rng.uniform(0.005, 0.02, n),
+            "difference_of_means": rng.normal(0.0002, 0.001, n),
+        }
+    )
+
+    class MockEmp:
+        def model_best(self, data_train, data_test, samples):
+            return mock_trace
+
+    idx_train = pd.date_range("2020-01-01", periods=60, freq="D")
+    idx_test = pd.date_range("2020-03-01", periods=20, freq="D")
+    data_train = pd.Series(rng.normal(0, 0.01, len(idx_train)), index=idx_train)
+    data_test = pd.Series(rng.normal(0, 0.01, len(idx_test)), index=idx_test)
+
+    _, axs = plt.subplots(ncols=2, nrows=4)
+    tb.plot_best(MockEmp(), data_train=data_train, data_test=data_test, axs=axs)
+    plt.close("all")
+
+
+def test_plot_best_with_dict_trace_line_57():
+    """Test plot_best with dict trace (line 57-58)."""
+    import matplotlib.pyplot as plt
+
+    rng = np.random.RandomState(1)
+    n = 300
+    # Use a dict-like object instead of DataFrame
+    dict_trace = {
+        "group1_mean": rng.normal(0.0, 0.001, n),
+        "group2_mean": rng.normal(0.0002, 0.001, n),
+        "group1_std": rng.uniform(0.005, 0.02, n),
+        "group2_std": rng.uniform(0.005, 0.02, n),
+        "difference_of_means": rng.normal(0.0002, 0.001, n),
+    }
+
+    emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+    _, axs = plt.subplots(ncols=2, nrows=4)
+    tb.plot_best(emp, trace=dict_trace, burn=10, axs=axs)
+    plt.close("all")
+
+
+def test_plot_stoch_vol_creates_trace_from_data_line_153(monkeypatch):
+    """Test plot_stoch_vol creates trace via model_stoch_vol when trace is None (line 153)."""
+    import matplotlib.pyplot as plt
+
+    idx = pd.date_range("2020-01-01", periods=30, freq="D")
+    data = pd.Series(np.linspace(-0.02, 0.02, len(idx)), index=idx)
+
+    # Mock trace with expected format
+    s = np.abs(np.random.RandomState(0).normal(0.0, 0.01, size=(120, len(idx))))
+
+    class MockEmp:
+        def model_stoch_vol(self, data):
+            class Trace:
+                def __getitem__(self, key):
+                    name, step = key
+                    return s[step, :]
+
+            return Trace()
+
+    ax = tb.plot_stoch_vol(MockEmp(), data, trace=None, ax=None)
+    assert ax is not None
+    plt.close("all")

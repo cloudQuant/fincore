@@ -87,3 +87,69 @@ def test_plot_cones_runs_and_returns_axes_when_ax_provided() -> None:
     out_ax = plot_cones(emp, name=None, bounds=bounds, oos_returns=oos_returns, ax=ax, num_strikes=0)
     assert out_ax is ax
     plt.close("all")
+
+
+def test_plot_capacity_sweep_breaks_on_negative_sharpe_line_63() -> None:
+    """Test plot_capacity_sweep breaks early when sharpe < -1 (line 63)."""
+
+    class _FakeEmpyricalNegativeSharpe:
+        def daily_txns_with_bar_data(self, transactions, market_data):
+            return pd.DataFrame({"dummy": [1]})
+
+        def apply_slippage_penalty(self, returns, txn_daily_w_bar, start_pv, bt_starting_capital):
+            # Returns more negative as capital base increases
+            return returns * (1 - start_pv / 100000)
+
+        def sharpe_ratio(self, _returns):
+            # Return very negative sharpe after certain capital base
+            return -2.0
+
+    emp = _FakeEmpyricalNegativeSharpe()
+    idx = pd.date_range("2024-01-01", periods=10, freq="B", tz="UTC")
+    returns = pd.Series([0.001] * len(idx), index=idx)
+    transactions = pd.DataFrame({"amount": [1], "price": [10.0], "symbol": ["AAA"]}, index=[idx[0]])
+    market_data = {
+        "price": pd.DataFrame({"AAA": [10.0]}, index=[idx[0]]),
+        "volume": pd.DataFrame({"AAA": [100]}, index=[idx[0]]),
+    }
+
+    ax = plot_capacity_sweep(
+        emp,
+        returns,
+        transactions,
+        market_data,
+        bt_starting_capital=1000.0,
+        min_pv=100000,
+        max_pv=500000,
+        step_size=100000,
+    )
+    assert ax is not None
+
+
+def test_plot_cones_breaks_when_no_crossing_line_143() -> None:
+    """Test plot_cones breaks when crossing.sum() <= 0 (line 143)."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    class _FakeEmpyricalConesNoCrossing:
+        def cum_returns(self, returns, starting_value=1.0):
+            if isinstance(returns, pd.DataFrame):
+                series = returns.iloc[:, 0]
+            else:
+                series = returns
+            # Always above bounds, so no crossing
+            return (1 + series).cumprod() * starting_value * 1.5
+
+    emp = _FakeEmpyricalConesNoCrossing()
+    idx = pd.date_range("2024-01-01", periods=8, freq="B", tz="UTC")
+    oos_returns = pd.Series([0.001] * len(idx), index=idx, name="oos")
+
+    # Bounds that are below returns (no crossing)
+    bounds = pd.DataFrame(
+        {1.0: 0.95, 1.5: 0.925, 2.0: 0.9, -1.0: 0.85, -1.5: 0.825, -2.0: 0.8},
+        index=idx,
+    )
+
+    fig = plot_cones(emp, name="cone", bounds=bounds, oos_returns=oos_returns, num_strikes=2)
+    assert fig is not None
