@@ -414,3 +414,86 @@ class TestAlphaBetaAlignedZeroVariance:
         assert len(result) == 2
         assert np.isnan(result[0])  # alpha is nan
         assert np.isnan(result[1])  # beta is nan
+
+
+class TestBetaAlignedWithRiskFree:
+    """Test beta_aligned with non-zero risk_free rate (lines 97-98 coverage)."""
+
+    def test_beta_aligned_with_risk_free_adjustment(self):
+        """Test beta_aligned adjusts returns by risk_free when non-zero."""
+        returns = np.array([0.01, 0.02, 0.015, 0.012, 0.018])
+        factor_returns = np.array([0.005, 0.01, 0.008, 0.006, 0.009])
+
+        # Use non-zero risk_free - beta_aligned signature is different
+        result = alpha_beta.beta_aligned(returns, factor_returns, risk_free=0.02)
+
+        # Should return a valid beta value
+        assert isinstance(result, (float, np.floating))
+        assert not np.isnan(result)
+
+
+class TestAlphaBetaWithSeriesInput:
+    """Test alpha_beta with Series inputs (lines 353-354 coverage)."""
+
+    def test_alpha_beta_with_series_inputs(self):
+        """Test alpha_beta with pandas Series inputs."""
+        returns = pd.Series([0.01, 0.02, 0.015, 0.012, 0.018])
+        factor_returns = pd.Series([0.005, 0.01, 0.008, 0.006, 0.009])
+
+        result = alpha_beta.alpha_beta(returns, factor_returns)
+
+        # Should return array with [alpha, beta]
+        assert len(result) == 2
+        assert not np.isnan(result[0])  # alpha
+        assert not np.isnan(result[1])  # beta
+
+
+class TestAnnualAlphaBetaEmptyResults:
+    """Test annual_alpha and annual_beta when no valid results."""
+
+    def test_annual_alpha_empty_after_alignment(self):
+        """Test annual_alpha when returns become empty after alignment (line 537 coverage)."""
+        # Create returns and factor with no overlapping dates
+        returns = pd.Series([0.01, 0.02], index=pd.date_range("2020-01-01", periods=2, freq="D"))
+        factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2, freq="D"))
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+
+        # After alignment with no common dates, returns would be empty
+        # But the implementation returns NaN for years present in either series
+        assert isinstance(result, pd.Series)
+
+    def test_annual_alpha_no_valid_years(self):
+        """Test annual_alpha when no valid alpha values computed (line 551 coverage)."""
+        # Create empty inputs
+        returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+        factor_returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+
+        # Should return empty series
+        assert isinstance(result, pd.Series)
+        assert len(result) == 0
+
+    def test_annual_beta_empty_after_alignment(self):
+        """Test annual_beta when returns become empty after alignment (line 590 coverage)."""
+        # Create returns and factor with no overlapping dates
+        returns = pd.Series([0.01, 0.02], index=pd.date_range("2020-01-01", periods=2, freq="D"))
+        factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2, freq="D"))
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+
+        # After alignment with no common dates
+        assert isinstance(result, pd.Series)
+
+    def test_annual_beta_no_valid_years(self):
+        """Test annual_beta when no valid beta values computed (line 604 coverage)."""
+        # Create empty inputs
+        returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+        factor_returns = pd.Series([], dtype=float, index=pd.DatetimeIndex([]))
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+
+        # Should return empty series
+        assert isinstance(result, pd.Series)
+        assert len(result) == 0
