@@ -125,3 +125,88 @@ def test_fetch_price_data_and_multiple_prices_provider_as_string_and_date_string
     out = providers_mod.fetch_multiple_prices(["AAPL", "MSFT"], provider="yahoo", start="2024-01-01", end="2024-01-31")
     assert set(out.keys()) == {"AAPL", "MSFT"}
     assert len(calls) >= 3
+
+
+def test_yahoo_finance_provider_with_session(monkeypatch) -> None:
+    """Test YahooFinanceProvider with a custom session (line 269)."""
+    from unittest.mock import MagicMock
+
+    from fincore.data.providers import YahooFinanceProvider
+
+    # Create a mock session
+    mock_session = MagicMock()
+
+    # Create a mock yfinance module
+    mock_ticker_class = MagicMock()
+    mock_history_df = pd.DataFrame(
+        {"Close": [100.0, 101.0], "Volume": [1000, 1100]},
+        index=pd.date_range("2024-01-01", periods=2),
+    )
+    mock_ticker_instance = MagicMock()
+    mock_ticker_instance.history.return_value = mock_history_df
+    mock_ticker_class.return_value = mock_ticker_instance
+
+    mock_yf = MagicMock()
+    mock_yf.Ticker = mock_ticker_class
+    monkeypatch.setitem(sys.modules, "yfinance", mock_yf)
+
+    provider = YahooFinanceProvider(session=mock_session)
+    data = provider.fetch("AAPL", start="2024-01-01", end="2024-01-31")
+
+    # Verify the session was passed to history
+    mock_ticker_instance.history.assert_called_once()
+    call_kwargs = mock_ticker_instance.history.call_args.kwargs
+    assert "session" in call_kwargs
+    assert call_kwargs["session"] is mock_session
+    assert not data.empty
+
+
+def test_tushare_provider_empty_data_raises(monkeypatch) -> None:
+    """Test TushareProvider raises ValueError when data is empty (line 587)."""
+    from fincore.data import providers as providers_mod
+
+    class _EmptyPro:
+        def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):  # noqa: ARG002
+            return pd.DataFrame()  # Empty DataFrame
+
+    dummy_ts = SimpleNamespace(pro_api=lambda _token: _EmptyPro())
+    monkeypatch.setitem(sys.modules, "tushare", dummy_ts)
+
+    provider = providers_mod.TushareProvider(token="t")
+
+    with pytest.raises(ValueError, match="No data found for symbol"):
+        provider.fetch("000001.SZ", start="2024-01-01", end="2024-01-31")
+
+
+def test_akshare_provider_import_error(monkeypatch) -> None:
+    """Test AkShareProvider raises ImportError when akshare is not available (lines 683-684)."""
+    from fincore.data import providers as providers_mod
+
+    # Remove akshare from modules if it exists
+    monkeypatch.delitem(sys.modules, "akshare", raising=False)
+
+    # Mock the import to raise ImportError
+    def mock_import(name, *args, **kwargs):
+        if name == "akshare":
+            raise ImportError("No module named 'akshare'")
+        return __import__(name, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.__import__", mock_import)
+
+    with pytest.raises(ImportError, match="akshare is required"):
+        providers_mod.AkShareProvider()
+
+
+def test_akshare_provider_empty_data_raises(monkeypatch) -> None:
+    """Test AkShareProvider raises ValueError when data is empty (line 727)."""
+    from fincore.data import providers as providers_mod
+
+    dummy_ak = SimpleNamespace(
+        stock_zh_a_hist=lambda **_kwargs: pd.DataFrame()  # Empty DataFrame
+    )
+    monkeypatch.setitem(sys.modules, "akshare", dummy_ak)
+
+    provider = providers_mod.AkShareProvider()
+
+    with pytest.raises(ValueError, match="No data found for symbol"):
+        provider.fetch("000001", start="2024-01-01", end="2024-01-31")
