@@ -133,6 +133,18 @@ def groupby_consecutive(txn, max_delta=_DEFAULT_MAX_DELTA):
     import numpy as np
 
     def vwap(transaction):
+        """Calculate volume-weighted average price for a transaction.
+
+        Parameters
+        ----------
+        transaction : pd.DataFrame
+            Transaction data with 'amount' and 'price' columns.
+
+        Returns
+        -------
+        float
+            Volume-weighted average price.
+        """
         if transaction.amount.sum() == 0:
             warnings.warn("Zero transacted shares, setting vwap to nan.", stacklevel=3)
             return np.nan
@@ -372,6 +384,21 @@ def gen_round_trip_stats(round_trips):
 
     # Helper function to apply custom and built-in functions
     def apply_custom_and_built_in_funcs(grouped, stats_dict):
+        """Apply custom and built-in aggregation functions to grouped data.
+
+        Parameters
+        ----------
+        grouped : pd.core.groupby.GroupBy
+            Grouped data to aggregate.
+        stats_dict : dict
+            Dictionary mapping stat names to either callables (custom functions)
+            or strings (built-in aggregation functions).
+
+        Returns
+        -------
+        pd.DataFrame
+            Aggregated results.
+        """
         # Separate custom functions from built-in functions
         custom_funcs = {k: v for k, v in stats_dict.items() if callable(v)}
         built_in_funcs = [v for k, v in stats_dict.items() if not callable(v)]

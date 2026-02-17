@@ -83,9 +83,33 @@ def consecutive_stats(returns):
     monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
 
     def up(s):
+        """Check if a value is positive.
+
+        Parameters
+        ----------
+        s : float
+            Value to check.
+
+        Returns
+        -------
+        bool
+            True if value is positive.
+        """
         return s > 0
 
     def down(s):
+        """Check if a value is negative.
+
+        Parameters
+        ----------
+        s : float
+            Value to check.
+
+        Returns
+        -------
+        bool
+            True if value is negative.
+        """
         return s < 0
 
     return {

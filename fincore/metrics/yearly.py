@@ -314,6 +314,18 @@ def information_ratio_by_year(returns, factor_returns, period=DAILY, annualizati
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     def calc_ir_for_year(returns_group):
+        """Calculate Information Ratio for a specific year.
+
+        Parameters
+        ----------
+        returns_group : pd.Series
+            Returns for a specific year.
+
+        Returns
+        -------
+        float
+            Information Ratio for the year.
+        """
         factor_group = factor_aligned.loc[returns_group.index]
         return calc_ir(returns_group, factor_group, period, annualization)
 

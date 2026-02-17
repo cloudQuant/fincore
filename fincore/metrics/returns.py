@@ -239,6 +239,18 @@ def aggregate_returns(
     """
 
     def cumulate_returns(ret):
+        """Compute cumulative returns for a period.
+
+        Parameters
+        ----------
+        ret : pd.Series
+            Non-cumulative returns.
+
+        Returns
+        -------
+        float
+            The last value of the cumulative returns series.
+        """
         return cum_returns(ret).iloc[-1]
 
     if not isinstance(returns.index, pd.DatetimeIndex):
