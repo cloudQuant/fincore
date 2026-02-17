@@ -300,6 +300,9 @@ def normalize(
     if first_value == 0:
         import warnings
 
-        warnings.warn("First value of returns is 0, normalization will produce inf/nan values.")
+        warnings.warn(
+            "First value of returns is 0, normalization will produce inf/nan values.",
+            stacklevel=2,
+        )
         return returns * np.nan
     return starting_value * (returns / first_value)

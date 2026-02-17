@@ -178,7 +178,7 @@ def get_sector_exposures(positions, symbol_sector_map):
         warn_message = (
             "Warning: Symbols {} have no sector mapping. They will not be included in sector allocations"
         ).format(", ".join(map(str, unmapped_pos)))
-        warnings.warn(warn_message, UserWarning)
+        warnings.warn(warn_message, UserWarning, stacklevel=2)
 
     sector_exp = positions.T.groupby(by=symbol_sector_map).sum().T
 
