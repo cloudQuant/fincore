@@ -603,8 +603,10 @@ def cal_treynor_ratio(returns, factor_returns, risk_free=0.0, period=DAILY, annu
                     out = ann_excess_return / b
             out[mask] = np.nan
         else:
+            # When beta is a scalar but returns is multi-dimensional,
+            # divide each element of ann_excess_return by the scalar beta
             with np.errstate(divide="ignore", invalid="ignore"):
-                out[()] = ann_excess_return / b
+                out[:] = ann_excess_return / b
 
         if allocated_output and isinstance(returns, pd.DataFrame):
             out = pd.Series(out, index=returns.columns)

@@ -274,3 +274,63 @@ class TestAnalyzePerformanceByStyle:
 
         # Should return empty DataFrame
         assert isinstance(result, pd.DataFrame)
+
+
+class TestStyleResultEdgeCases:
+    """Tests for StyleResult edge cases in style_summary property."""
+
+    @pytest.fixture
+    def sample_returns(self):
+        """Create sample returns data for testing."""
+        np.random.seed(42)
+        periods = 100
+        n_assets = 5
+        assets = [f"ASSET_{i}" for i in range(n_assets)]
+
+        returns = pd.DataFrame(
+            np.random.normal(0.0005, 0.01, (periods, n_assets)),
+            index=pd.date_range("2020-01-01", periods=periods),
+            columns=assets,
+        )
+        return returns
+
+    def test_style_summary_with_duplicate_index_labels(self, sample_returns):
+        """Test style_summary when DataFrame has duplicate index labels."""
+        result = style_analysis(sample_returns)
+
+        # Create a returns_by_style DataFrame with duplicate index labels
+        # This simulates the case where .loc returns a DataFrame (line 64-70)
+        result._returns_by_style = pd.DataFrame(
+            {"return": [0.01, 0.02]},
+            index=["growth", "growth"],  # Duplicate label
+        )
+        result._returns_by_style.loc["growth", "return"] = 0.015
+
+        summary = result.style_summary
+        assert isinstance(summary, dict)
+
+    def test_style_summary_with_empty_series(self, sample_returns):
+        """Test style_summary when .loc returns empty Series (line 72-73)."""
+        result = style_analysis(sample_returns)
+
+        # Create a scenario where .loc returns an empty Series
+        result._returns_by_style = pd.DataFrame(
+            {"return": [0.01]},
+            index=["value"],
+        )
+
+        # Try to access a non-existent style, which could return empty Series
+        summary = result.style_summary
+        assert isinstance(summary, dict)
+
+    def test_style_summary_with_scalar_value(self, sample_returns):
+        """Test style_summary when value is already a scalar (line 79)."""
+        result = style_analysis(sample_returns)
+
+        # Create a scenario where overall_returns contains a scalar value
+        result._overall_returns = pd.Series([0.01, 0.02], index=["growth", "value"])
+        result._overall_returns.loc["growth"] = 0.015  # This returns a scalar
+
+        summary = result.style_summary
+        assert isinstance(summary, dict)
+        assert "growth" in summary

@@ -455,19 +455,31 @@ def test_create_round_trip_tear_sheet_warns_and_returns_when_too_few_trades(monk
 
 
 def test_create_round_trip_tear_sheet_smoke_with_sector_mappings(monkeypatch) -> None:
+    # Import Empyrical after check_intraday setup to avoid early import issues
     monkeypatch.setattr(sheets, "check_intraday", lambda *_args, **_kwargs: _args[2])
-    from fincore.empyrical import Empyrical
 
-    monkeypatch.setattr(Empyrical, "add_closing_transactions", staticmethod(lambda _p, t: t))
-    trades = pd.DataFrame(
-        {
-            "duration": pd.to_timedelta([1, 2, 3, 4, 5], unit="D"),
-            "pnl": [1.0, -1.0, 2.0, -2.0, 0.5],
-            "returns": pd.Series([0.01, -0.01, 0.02, -0.02, 0.005]),
-        }
-    )
-    monkeypatch.setattr(Empyrical, "extract_round_trips", staticmethod(lambda *_a, **_k: trades))
-    monkeypatch.setattr(Empyrical, "apply_sector_mappings_to_round_trips", staticmethod(lambda t, _m: t))
+    # Create a mock Empyrical class with the required methods
+    class MockEmpyrical:
+        @staticmethod
+        def add_closing_transactions(positions, transactions):
+            return transactions
+
+        @staticmethod
+        def extract_round_trips(transactions, portfolio_value=None):
+            return pd.DataFrame(
+                {
+                    "duration": pd.to_timedelta([1, 2, 3, 4, 5], unit="D"),
+                    "pnl": [1.0, -1.0, 2.0, -2.0, 0.5],
+                    "returns": pd.Series([0.01, -0.01, 0.02, -0.02, 0.005]),
+                }
+            )
+
+        @staticmethod
+        def apply_sector_mappings_to_round_trips(trades, sector_mappings):
+            return trades
+
+    # Replace sheets.Empyrical with our mock
+    monkeypatch.setattr(sheets, "Empyrical", MockEmpyrical)
 
     idx = pd.date_range("2024-01-01", periods=6, freq="B", tz="UTC")
     returns = pd.Series([0.001] * len(idx), index=idx, name="r")
