@@ -15,9 +15,6 @@ from __future__ import annotations
 
 # Re-export everything from registry (single source of truth)
 from fincore.plugin.registry import (
-    _HOOK_REGISTRY,
-    _METRIC_REGISTRY,
-    _VIZ_BACKEND_REGISTRY,
     clear_registry,
     execute_hooks,
     get_metric,

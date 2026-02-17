@@ -3,9 +3,6 @@
 import matplotlib
 
 matplotlib.use("Agg", force=True)
-import matplotlib.pyplot as plt
-import pandas as pd
-import pytest
 
 from fincore.utils import common_utils
 
