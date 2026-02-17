@@ -728,20 +728,20 @@ class AkShareProvider(DataProvider):
 
         # Format columns - map Chinese column names to English
         column_map = {
-            "开盘": "Open",  # Open price
-            "最高": "High",  # High price
-            "最低": "Low",  # Low price
-            "收盘": "Close",  # Close price
-            "成交量": "Volume",  # Trading volume
-            "成交额": "Amount",  # Trading amount
-            "振幅": "Amplitude",  # Price amplitude
-            "涨跌幅": "ChangePct",  # Percentage change
-            "涨跌额": "Change",  # Absolute change
-            "换手率": "Turnover",  # Turnover rate
+            "开盘": "Open",
+            "最高": "High",
+            "最低": "Low",
+            "收盘": "Close",
+            "成交量": "Volume",
+            "成交额": "Amount",
+            "振幅": "Amplitude",
+            "涨跌幅": "ChangePct",
+            "涨跌额": "Change",
+            "换手率": "Turnover",
         }
 
         data = data.rename(columns=column_map)
-        data = data.set_index("日期")  # Set 'Date' column as index
+        data = data.set_index("日期")  # Set Chinese 'Date' column as index
         data.index = pd.to_datetime(data.index)
         data = data.sort_index()
 
@@ -800,9 +800,9 @@ class AkShareProvider(DataProvider):
 
         return {
             "symbol": symbol,
-            "name": info.get("item", {}).get("股票简称", "N/A"),  # Stock short name
-            "exchange": info.get("item", {}).get("交易所", "N/A"),  # Exchange
-            "industry": info.get("item", {}).get("行业", "N/A"),  # Industry
+            "name": info.get("item", {}).get("股票简称", "N/A"),
+            "exchange": info.get("item", {}).get("交易所", "N/A"),
+            "industry": info.get("item", {}).get("行业", "N/A"),
         }
 
 
