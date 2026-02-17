@@ -270,3 +270,143 @@ def test_create_risk_tear_sheet_handles_optional_panels(monkeypatch) -> None:
     )
     assert fig2 is not None
     plt.close("all")
+
+
+def test_fallback_display_and_markdown_functions() -> None:
+    """Test fallback display and markdown functions (lines 57, 61)."""
+    # Test _fallback_display - should print the objects
+    import io
+    from contextlib import redirect_stdout
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        sheets._fallback_display("test", 123)
+    assert "test" in f.getvalue()
+
+    # Test _fallback_markdown - should return the text as-is
+    result = sheets._fallback_markdown("# Test Markdown")
+    assert result == "# Test Markdown"
+
+
+def test_interesting_times_tear_sheet_without_benchmark_line_678() -> None:
+    """Test interesting_times_tear_sheet without benchmark (line 678)."""
+    pyf = _FakePyfolioInterestingTimesHappy()
+
+    idx = pd.date_range("2024-01-01", periods=8, freq="B", tz="UTC")
+    returns = pd.Series(np.linspace(0.001, -0.001, len(idx)), index=idx, name="r")
+
+    fig = sheets.create_interesting_times_tear_sheet(pyf, returns, benchmark_rets=None, run_flask_app=True)
+    assert fig is not None
+    plt.close("all")
+
+
+def test_risk_tear_sheet_empty_index_warns_and_returns_line_939() -> None:
+    """Test risk tear sheet with non-overlapping indices (lines 939-940)."""
+    import warnings
+
+    pyf = _FakePyfolioRisk()
+
+    # Create positions and sectors with non-overlapping indices
+    idx_pos = pd.date_range("2024-01-01", periods=10, freq="B", tz="UTC")
+    idx_sec = pd.date_range("2023-01-01", periods=10, freq="B", tz="UTC")
+
+    positions = pd.DataFrame({"AAA": 1.0, "cash": 0.0}, index=idx_pos)
+    sectors = pd.DataFrame({"AAA": ["Tech"] * len(idx_sec)}, index=idx_sec)
+
+    # Should warn and return early
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = sheets.create_risk_tear_sheet(
+            pyf,
+            positions=positions,
+            style_factor_panel=None,
+            sectors=sectors,
+            caps=None,
+            volumes=None,
+            returns=None,
+            transactions=None,
+            run_flask_app=True,
+        )
+        # Should return None due to warning
+        assert result is None
+        assert any("No overlapping index" in str(warning.message) for warning in w)
+
+
+def test_risk_tear_sheet_no_panels_raises_line_968() -> None:
+    """Test risk tear sheet with no panels raises ValueError (line 968)."""
+    pyf = _FakePyfolioRisk()
+
+    idx = pd.date_range("2024-01-01", periods=10, freq="B", tz="UTC")
+    positions = pd.DataFrame({"AAA": 1.0, "cash": 0.0}, index=idx)
+
+    # No style_factor_panel, sectors, caps, or volumes
+    with pytest.raises(ValueError, match="requires at least one of"):
+        sheets.create_risk_tear_sheet(
+            pyf,
+            positions=positions,
+            style_factor_panel=None,
+            sectors=None,
+            caps=None,
+            volumes=None,
+            returns=None,
+            transactions=None,
+        )
+
+
+def test_bayesian_tear_sheet_with_small_dataset_line_889() -> None:
+    """Test bayesian tear sheet when df_train.size <= returns_cutoff (line 889)."""
+    # Use a small dataset to hit the else branch at line 888-889
+    import warnings
+
+    # Suppress seaborn warnings
+    warnings.filterwarnings("ignore", category=FutureWarning)
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(sheets, "timer", lambda *_args, **_kwargs: _args[1])
+    monkeypatch.setattr(sheets.sns, "histplot", lambda *args, **kwargs: None)
+
+    # Create small dataset (< 400 returns for stoch_vol)
+    idx = pd.date_range("2022-01-03", periods=100, freq="B", tz="UTC")
+    returns = pd.Series(0.0001, index=idx, name="r")
+    benchmark = returns * 0.5
+    live_start_date = idx[50]
+
+    pyf = _FakePyfolioBayes()
+    fig = sheets.create_bayesian_tear_sheet(
+        pyf,
+        returns,
+        benchmark_rets=benchmark,
+        live_start_date=live_start_date,
+        samples=10,
+        run_flask_app=True,
+        stoch_vol=True,
+        progressbar=False,
+    )
+    assert fig is not None
+    plt.close("all")
+    monkeypatch.undo()
+
+
+def test_bayesian_tear_sheet_run_flask_app_false_line_903() -> None:
+    """Test bayesian tear sheet with run_flask_app=False (line 903)."""
+    import warnings
+
+    warnings.filterwarnings("ignore", category=FutureWarning)
+
+    idx = pd.date_range("2022-01-03", periods=500, freq="B", tz="UTC")
+    returns = pd.Series(0.0001, index=idx, name="r")
+    live_start_date = idx[400]
+
+    pyf = _FakePyfolioBayes()
+    # run_flask_app=False means function returns None
+    result = sheets.create_bayesian_tear_sheet(
+        pyf,
+        returns,
+        live_start_date=live_start_date,
+        samples=10,
+        run_flask_app=False,
+        stoch_vol=False,
+        progressbar=False,
+    )
+    # Should return None when run_flask_app=False
+    assert result is None

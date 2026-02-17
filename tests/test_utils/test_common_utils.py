@@ -760,3 +760,50 @@ def test_sample_colormap_all_fallbacks(monkeypatch):
     monkeypatch.undo()
     colors = cu.sample_colormap("viridis", 2)
     assert len(colors) == 2
+
+
+def test_sample_colormap_very_old_api_fallback(monkeypatch):
+    """Test sample_colormap uses _colormaps fallback (line 809)."""
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import cm as _cm
+
+    # Save original _colormaps
+    original_colormaps = getattr(_cm, "_colormaps", None)
+
+    try:
+        # Mock modern API to fail
+        class MockColormaps:
+            def __getitem__(self, key):
+                raise KeyError(f"{key} not found")
+
+        monkeypatch.setattr(plt, "colormaps", MockColormaps(), raising=False)
+
+        # Mock mpl.colormaps to fail
+        import matplotlib as mpl
+
+        class MockColormapsModule:
+            @staticmethod
+            def get_cmap(name):
+                raise AttributeError("get_cmap not available")
+
+        monkeypatch.setattr(mpl, "colormaps", MockColormapsModule(), raising=False)
+
+        # Mock cm.get_cmap to fail
+        class MockCM:
+            @staticmethod
+            def get_cmap(name):
+                raise AttributeError("get_cmap not available")
+
+            @property
+            def cmap_d(self):
+                raise AttributeError("cmap_d not available")
+
+        monkeypatch.setattr(cu, "_cm", MockCM(), raising=False)
+
+        # Should hit the _colormaps fallback (line 809)
+        colors = cu.sample_colormap("viridis", 2)
+        assert len(colors) == 2
+    finally:
+        # Restore original
+        if original_colormaps is not None:
+            monkeypatch.setattr(_cm, "_colormaps", original_colormaps, raising=False)
