@@ -112,3 +112,52 @@ def test_show_perf_attrib_stats_calls_print_table(monkeypatch):
 
     tp.show_perf_attrib_stats(emp, returns, positions, factor_returns, factor_loadings)
     assert [c[0] for c in calls] == ["Summary Statistics", "Exposures Summary"]
+
+
+def test_plot_functions_with_default_ax(monkeypatch):
+    """Test plotting functions when ax=None (uses plt.gca())."""
+    import matplotlib.pyplot as plt
+
+    idx = pd.date_range("2020-01-01", periods=10, freq="D")
+    total = pd.Series(np.random.RandomState(0).normal(0, 0.01, len(idx)), index=idx)
+    common = pd.Series(np.random.RandomState(1).normal(0, 0.005, len(idx)), index=idx)
+    specific = total - common
+    cost = pd.Series(0.0001, index=idx)
+
+    df = pd.DataFrame(
+        {
+            "total_returns": total,
+            "common_returns": common,
+            "specific_returns": specific,
+            "FactorA": np.random.RandomState(2).normal(0, 0.001, len(idx)),
+            "FactorB": np.random.RandomState(3).normal(0, 0.001, len(idx)),
+        },
+        index=idx,
+    )
+
+    emp = Empyrical(total)
+
+    # Test plot_perf_attrib_returns with ax=None (line 35)
+    plt.figure()
+    ax1 = tp.plot_perf_attrib_returns(emp, df, cost=cost, ax=None)
+    assert ax1 is not None
+    plt.close()
+
+    # Test plot_alpha_returns with ax=None (line 78)
+    plt.figure()
+    ax2 = tp.plot_alpha_returns(specific, ax=None)
+    assert ax2 is not None
+    plt.close()
+
+    # Test plot_factor_contribution_to_perf with ax=None (line 114)
+    plt.figure()
+    ax3 = tp.plot_factor_contribution_to_perf(emp, df, ax=None)
+    assert ax3 is not None
+    plt.close()
+
+    # Test plot_risk_exposures with ax=None (line 152)
+    exposures = pd.DataFrame({"A": np.linspace(-1, 1, len(idx)), "B": np.linspace(0, 1, len(idx))}, index=idx)
+    plt.figure()
+    ax4 = tp.plot_risk_exposures(exposures, ax=None)
+    assert ax4 is not None
+    plt.close()
