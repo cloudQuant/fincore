@@ -1,9 +1,10 @@
 import importlib
 import warnings
+from collections.abc import Callable
 from functools import wraps
 from itertools import cycle
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -477,7 +478,8 @@ def check_intraday(estimate, returns, positions, transactions):
             if detect_intraday(positions, transactions):
                 warnings.warn(
                     "Detected intraday strategy; inferring positions from transactions. Set estimate_intraday"
-                    + "=False to disable."
+                    + "=False to disable.",
+                    stacklevel=2,
                 )
                 return estimate_intraday(returns, positions, transactions)
             else:

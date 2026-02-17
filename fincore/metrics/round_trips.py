@@ -134,7 +134,7 @@ def groupby_consecutive(txn, max_delta=_DEFAULT_MAX_DELTA):
 
     def vwap(transaction):
         if transaction.amount.sum() == 0:
-            warnings.warn("Zero transacted shares, setting vwap to nan.")
+            warnings.warn("Zero transacted shares, setting vwap to nan.", stacklevel=3)
             return np.nan
         return (transaction.amount * transaction.price).sum() / transaction.amount.sum()
 
@@ -197,7 +197,7 @@ def extract_round_trips(transactions, portfolio_value=None):
         for row in trans_sym.itertuples():
             dt = row.Index
             if row.price < 0:
-                warnings.warn("Negative price detected, ignoring for round-trip.")
+                warnings.warn("Negative price detected, ignoring for round-trip.", stacklevel=2)
                 continue
 
             signed_price = row.price * np.sign(row.amount)

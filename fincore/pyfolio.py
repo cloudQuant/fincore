@@ -17,7 +17,8 @@
 
 
 import importlib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib
 import matplotlib.pyplot as plt

@@ -27,7 +27,8 @@ Contains functions for creating various analysis tear sheets.
 import importlib
 import time
 import warnings
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -546,7 +547,7 @@ def create_txn_tear_sheet(
     try:
         pyfolio_instance.plot_daily_turnover_hist(transactions, positions, ax=ax_turnover_hist)
     except ValueError:
-        warnings.warn("Unable to generate turnover plot.", UserWarning)
+        warnings.warn("Unable to generate turnover plot.", UserWarning, stacklevel=2)
 
     pyfolio_instance.plot_txn_time_hist(transactions, ax=ax_txn_timings)
 
@@ -592,6 +593,7 @@ def create_round_trip_tear_sheet(
             """Fewer than 5 round-trip trades made.
                Skipping round trip tearsheet.""",
             UserWarning,
+            stacklevel=2,
         )
         return
 
@@ -643,7 +645,7 @@ def create_interesting_times_tear_sheet(
     rets_interesting = pyfolio_instance.extract_interesting_date_ranges(returns)
 
     if not rets_interesting:
-        warnings.warn("Passed returns do not overlap with any interesting times.", UserWarning)
+        warnings.warn("Passed returns do not overlap with any interesting times.", UserWarning, stacklevel=2)
         return
 
     print_table(
@@ -934,7 +936,7 @@ def create_risk_tear_sheet(
             idx = idx.intersection(maybe_panel.index)
 
     if len(idx) == 0:
-        warnings.warn("No overlapping index across risk tear sheet inputs; nothing to plot.", UserWarning)
+        warnings.warn("No overlapping index across risk tear sheet inputs; nothing to plot.", UserWarning, stacklevel=2)
         return
 
     positions = positions.loc[idx]

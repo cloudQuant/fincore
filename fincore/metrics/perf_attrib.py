@@ -313,7 +313,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
             f"{avg_alloc}.\n"
         )
 
-        warnings.warn(missing_stocks_warning_msg)
+        warnings.warn(missing_stocks_warning_msg, stacklevel=2)
 
         # Drop missing stocks from positions
         if isinstance(positions, pd.Series):
@@ -337,7 +337,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
 
         warning_msg = f"Could not find factor loadings for {len(missing_factor_loadings_index)} dates: {missing_dates_displayed}. Truncating date range for performance attribution. "
 
-        warnings.warn(warning_msg)
+        warnings.warn(warning_msg, stacklevel=2)
 
         # Drop dates from positions
         if isinstance(positions, pd.Series):
@@ -364,7 +364,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
                 "returns from buying and selling within the same day may "
                 "receive inaccurate performance attribution.\n"
             )
-            warnings.warn(warning_msg)
+            warnings.warn(warning_msg, stacklevel=2)
 
     return returns, positions, factor_returns, factor_loadings
 
