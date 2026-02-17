@@ -15,12 +15,12 @@ class TestBokehBackendCoverage:
 
         from fincore.viz.interactive.bokeh_backend import BokehBackend
 
-        original_modules = sys.modules.copy()
+        original_import = __import__
 
         def mock_import(name, *args, **kwargs):
             if name == "bokeh" or name.startswith("bokeh."):
                 raise ImportError("No module named 'bokeh'")
-            return original_import.get(name)
+            return original_import(name, *args, **kwargs)
 
         # Temporarily remove bokeh from sys.modules
         bokeh_keys = [k for k in sys.modules if k.startswith("bokeh")]
@@ -77,12 +77,12 @@ class TestPlotlyBackendCoverage:
 
         from fincore.viz.interactive.plotly_backend import PlotlyBackend
 
-        original_modules = sys.modules.copy()
+        original_import = __import__
 
         def mock_import(name, *args, **kwargs):
             if name == "plotly" or name.startswith("plotly."):
                 raise ImportError("No module named 'plotly'")
-            return original_import.get(name)
+            return original_import(name, *args, **kwargs)
 
         # Temporarily remove plotly from sys.modules
         plotly_keys = [k for k in sys.modules if k.startswith("plotly")]
