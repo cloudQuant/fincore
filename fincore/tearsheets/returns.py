@@ -650,14 +650,12 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
     # only show x-labels on year boundary
     xticks_coord = []
     xticks_label = []
-    count = 0
-    for i in monthly_rets.index:
+    for count, i in enumerate(monthly_rets.index):
         if i.month == 1:
             xticks_label.append(i)
             xticks_coord.append(count)
             # plot yearly boundary line
             ax.axvline(count, color="gray", ls="--", alpha=0.3)
-        count += 1
 
     ax.axhline(0.0, color="darkgray", ls="-")
     ax.set_xticks(xticks_coord)

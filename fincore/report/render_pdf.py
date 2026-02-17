@@ -6,6 +6,7 @@ then optionally adds bookmarks via PyPDF2.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 
@@ -105,19 +106,15 @@ def generate_pdf(
         browser.close()
 
     # 3) Cleanup temporary HTML.
-    try:
+    with contextlib.suppress(OSError):
         os.remove(tmp_html)
-    except OSError:
-        pass
 
     # 4) Add PDF bookmarks (clickable outline).
     _add_pdf_bookmarks(tmp_pdf, output, section_info, title)
 
     # Cleanup temporary PDF.
-    try:
+    with contextlib.suppress(OSError):
         os.remove(tmp_pdf)
-    except OSError:
-        pass
 
     return output
 
