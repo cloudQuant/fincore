@@ -14,6 +14,16 @@ from matplotlib.ticker import FuncFormatter
 
 from fincore.utils import get_month_end_freq, two_dec_places
 
+__all__ = [
+    "plot_turnover",
+    "plot_daily_volume",
+    "plot_daily_turnover_hist",
+    "plot_txn_time_hist",
+    "plot_slippage_sweep",
+    "plot_slippage_sensitivity",
+]
+
+
 
 def plot_turnover(empyrical_instance, returns, transactions, positions, legend_loc="best", ax=None, **kwargs):
     """
@@ -55,6 +65,8 @@ def plot_turnover(empyrical_instance, returns, transactions, positions, legend_l
 
     df_turnover = empyrical_instance.get_turnover(positions, transactions)
     df_turnover_by_month = df_turnover.resample(get_month_end_freq()).mean()
+    if hasattr(df_turnover_by_month.index, "to_timestamp"):
+        df_turnover_by_month.index = df_turnover_by_month.index.to_timestamp()
     df_turnover.plot(color="steelblue", alpha=1.0, lw=0.5, ax=ax, **kwargs)
     df_turnover_by_month.plot(color="orangered", alpha=0.5, lw=2, ax=ax, **kwargs)
     ax.axhline(df_turnover.mean(), color="steelblue", linestyle="--", lw=3, alpha=1.0)

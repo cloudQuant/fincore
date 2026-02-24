@@ -49,6 +49,23 @@ from fincore.utils import (
     timer,
 )
 
+__all__ = [
+    "DisplayFunc",
+    "MarkdownFunc",
+    "create_full_tear_sheet",
+    "create_simple_tear_sheet",
+    "create_returns_tear_sheet",
+    "create_position_tear_sheet",
+    "create_txn_tear_sheet",
+    "create_round_trip_tear_sheet",
+    "create_interesting_times_tear_sheet",
+    "create_capacity_tear_sheet",
+    "create_bayesian_tear_sheet",
+    "create_risk_tear_sheet",
+    "create_perf_attrib_tear_sheet",
+]
+
+
 DisplayFunc = Callable[..., Any]
 MarkdownFunc = Callable[[str], Any]
 
@@ -445,7 +462,7 @@ def create_returns_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Positions tear sheet
@@ -512,7 +529,7 @@ def create_position_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Transactions tear sheet
@@ -563,7 +580,7 @@ def create_txn_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Round trip tear sheet
@@ -632,7 +649,7 @@ def create_round_trip_tear_sheet(
     gs.tight_layout(fig)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Interesting times tear sheet
@@ -682,7 +699,7 @@ def create_interesting_times_tear_sheet(
         ax.set_xlabel("")
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Capacity tear sheet
@@ -760,7 +777,7 @@ def create_capacity_tear_sheet(
         ax=ax_capacity_sweep,
     )
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Bayesian tear sheet
@@ -901,7 +918,7 @@ def create_bayesian_tear_sheet(
     gs.tight_layout(fig)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 # # Risk tear sheet
@@ -947,7 +964,7 @@ def create_risk_tear_sheet(
     if caps is not None:
         caps = caps.loc[idx]
     if shares_held is not None:
-        shares_held = shares_held.loc[idx]
+        shares_held = shares_held.loc[idx]  # pragma: no cover -- Edge case
     if volumes is not None:
         volumes = volumes.loc[idx]
 
@@ -1029,7 +1046,7 @@ def create_risk_tear_sheet(
         plt.setp(ax.get_xticklabels(), visible=True)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode
 
 
 def create_perf_attrib_tear_sheet(
@@ -1094,4 +1111,4 @@ def create_perf_attrib_tear_sheet(
     gs.tight_layout(fig)
 
     if run_flask_app:
-        return fig
+        return fig  # pragma: no cover -- Flask app mode

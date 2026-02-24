@@ -8,6 +8,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+__all__ = ["stress_test", "generate_correlation_breakdown", "scenario_table"]
+
+
 
 def stress_test(
     returns: pd.Series | np.ndarray,

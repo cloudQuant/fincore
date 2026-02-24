@@ -45,6 +45,9 @@ from fincore.metrics.stats import (
 from fincore.metrics.yearly import annual_return as _annual_return
 from fincore.utils import nanmean, nanstd
 
+__all__ = ["AnalysisContext", "analyze"]
+
+
 
 class AnalysisContext:
     """Lazy, cached container for performance analytics.

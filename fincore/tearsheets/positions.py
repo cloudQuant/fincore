@@ -9,6 +9,17 @@ import numpy as np
 
 from fincore.utils import format_asset, get_month_end_freq, print_table
 
+__all__ = [
+    "plot_holdings",
+    "plot_long_short_holdings",
+    "plot_exposures",
+    "plot_gross_leverage",
+    "plot_max_median_position_concentration",
+    "plot_sector_allocations",
+    "show_and_plot_top_positions",
+]
+
+
 
 def plot_holdings(empyrical_instance, returns, positions, legend_loc="best", ax=None, **kwargs):
     """
@@ -42,6 +53,8 @@ def plot_holdings(empyrical_instance, returns, positions, legend_loc="best", ax=
     positions = positions.copy().drop("cash", axis="columns")
     df_holdings = positions.replace(0, np.nan).count(axis=1)
     df_holdings_by_month = df_holdings.resample(get_month_end_freq()).mean()
+    if hasattr(df_holdings_by_month.index, "to_timestamp"):
+        df_holdings_by_month.index = df_holdings_by_month.index.to_timestamp()
     df_holdings.plot(color="steelblue", alpha=0.6, lw=0.5, ax=ax, **kwargs)
     df_holdings_by_month.plot(color="orangered", lw=2, ax=ax, **kwargs)
     ax.axhline(df_holdings.values.mean(), color="steelblue", ls="--", lw=3)

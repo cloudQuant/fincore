@@ -5,6 +5,15 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+__all__ = [
+    "validate_returns",
+    "annualize",
+    "compute_statistics",
+    "estimate_parameters",
+    "SimResult",
+]
+
+
 
 def validate_returns(returns: pd.Series | np.ndarray) -> np.ndarray:
     """Validate and convert returns to numpy array.

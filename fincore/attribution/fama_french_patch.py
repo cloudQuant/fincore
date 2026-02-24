@@ -21,6 +21,9 @@ The five-factor model extends the three-factor model by adding:
 
 from __future__ import annotations
 
+__all__ = ["FamaFrenchModelPatch"]
+
+
 
 class FamaFrenchModelPatch:
     """Fama-French multi-factor model estimator.

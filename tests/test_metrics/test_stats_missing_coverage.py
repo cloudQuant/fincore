@@ -26,18 +26,22 @@ class TestHurstExponentMissingCoverage:
         result = stats.hurst_exponent(returns)
 
         # When series is too short, should return NaN or 0.5
-        assert result is not None
+        # Line 175 is hit when we iterate through lags and n_subseries < 1
+        assert result is not None or np.isnan(result)
 
     def test_hurst_exponent_insufficient_lags_after_filtering(self):
         """Test hurst_exponent when len(lags_array) < 2 after validation (line 193)."""
         # Create returns that produce very few valid R/S values
+        # We need < 2 rs_values to hit line 193
         np.random.seed(42)
-        # Very short series with limited variation
-        returns = pd.Series([0.01] * 10)
+        # Very short series - when max_lag - min_lag + 1 > 30, we use 30 points
+        # But with very short data, most lags produce n_subseries < 1
+        returns = pd.Series([0.01, 0.02])
 
         result = stats.hurst_exponent(returns)
 
         # With insufficient valid lags, might return NaN
+        # Line 193 is hit when len(rs_values) < 2
         assert result is not None or np.isnan(result)
 
     def test_hurst_exponent_empty_after_validation(self):

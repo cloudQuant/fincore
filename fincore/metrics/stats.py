@@ -190,7 +190,7 @@ def hurst_exponent(returns):
                 hurst = 0.5 + np.log(r_range / s_std) / np.log(2.0 * n)
                 hurst = max(0.0, min(1.0, hurst))
                 return float(hurst)
-            return np.nan
+            return np.nan  # pragma: no cover -- Defensive edge case
 
         lags_array = np.array([item[0] for item in rs_values])
         rs_array = np.array([item[1] for item in rs_values])

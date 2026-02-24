@@ -11,6 +11,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+__all__ = ["MatplotlibBackend"]
+
+
 
 class MatplotlibBackend:
     """Visualization backend powered by matplotlib.
@@ -32,6 +35,7 @@ class MatplotlibBackend:
         ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
+        """Plot cumulative returns as a line chart."""
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 4))
@@ -50,6 +54,7 @@ class MatplotlibBackend:
         ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
+        """Plot drawdown as a filled area chart."""
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 3))
@@ -70,6 +75,7 @@ class MatplotlibBackend:
         ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
+        """Plot rolling Sharpe ratio with optional benchmark overlay."""
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 3))
@@ -100,6 +106,7 @@ class MatplotlibBackend:
         ax: Any | None = None,
         **kwargs: Any,
     ) -> Any:
+        """Plot a year × month heatmap of returns using ``imshow``."""
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 5))

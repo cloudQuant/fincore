@@ -56,7 +56,7 @@ var_99 = evt_var(returns, alpha=0.01)
 cvar_95 = evt_cvar(returns, alpha=0.05)
 cvar_99 = evt_cvar(returns, alpha=0.01)
 
-print(f"\nEVT Value at Risk:")
+print("\nEVT Value at Risk:")
 print(f"  VaR(95%):  {var_95:.4f}")
 print(f"  VaR(99%):  {var_99:.4f}")
 print(f"  CVaR(95%): {cvar_95:.4f}")
@@ -78,7 +78,7 @@ print("=" * 60)
 # Standard GARCH(1,1)
 garch = GARCH(returns)
 print(f"\nGARCH(1,1) params: {garch.params}")
-print(f"  Conditional volatility (last 5):")
+print("  Conditional volatility (last 5):")
 cond_vol = garch.conditional_volatility
 for d, v in list(cond_vol.tail().items()):
     print(f"    {d.strftime('%Y-%m-%d')}: {v:.6f}")

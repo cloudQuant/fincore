@@ -44,7 +44,7 @@ print("=" * 60)
 
 mc = MonteCarlo.simulate(returns, n_paths=1000, horizon=252)
 print(f"\nSimulated {mc.n_paths} paths over {mc.horizon} days")
-print(f"Terminal wealth statistics (starting at 1.0):")
+print("Terminal wealth statistics (starting at 1.0):")
 terminal = mc.terminal_values
 print(f"  Mean:   {terminal.mean():.4f}")
 print(f"  Median: {np.median(terminal):.4f}")
@@ -59,7 +59,7 @@ for p in [5, 25, 50, 75, 95]:
 # Simulated VaR and CVaR
 sim_var = mc.var(alpha=0.05)
 sim_cvar = mc.cvar(alpha=0.05)
-print(f"\nSimulation-based risk measures:")
+print("\nSimulation-based risk measures:")
 print(f"  VaR(95%):  {sim_var:.4f}")
 print(f"  CVaR(95%): {sim_cvar:.4f}")
 
@@ -75,11 +75,12 @@ print("=" * 60)
 # Bootstrap the Sharpe ratio
 from fincore import Empyrical
 
+
 def sharpe_func(r):
     return Empyrical.sharpe_ratio(r)
 
 ci = bootstrap_ci(returns, func=sharpe_func, n_samples=5000, alpha=0.05)
-print(f"\nSharpe ratio bootstrap (5000 samples):")
+print("\nSharpe ratio bootstrap (5000 samples):")
 print(f"  Point estimate: {sharpe_func(returns):.4f}")
 print(f"  95% CI: [{ci[0]:.4f}, {ci[1]:.4f}]")
 
@@ -88,13 +89,13 @@ def max_dd_func(r):
     return Empyrical.max_drawdown(r)
 
 ci_dd = bootstrap_ci(returns, func=max_dd_func, n_samples=5000, alpha=0.05)
-print(f"\nMax drawdown bootstrap (5000 samples):")
+print("\nMax drawdown bootstrap (5000 samples):")
 print(f"  Point estimate: {max_dd_func(returns):.4f}")
 print(f"  95% CI: [{ci_dd[0]:.4f}, {ci_dd[1]:.4f}]")
 
 # Generic bootstrap distribution
 boot_dist = bootstrap(returns, func=sharpe_func, n_samples=5000)
-print(f"\nBootstrap distribution of Sharpe ratio:")
+print("\nBootstrap distribution of Sharpe ratio:")
 print(f"  Mean:   {boot_dist.mean():.4f}")
 print(f"  Std:    {boot_dist.std():.4f}")
 print(f"  Skew:   {pd.Series(boot_dist).skew():.4f}")
@@ -105,7 +106,7 @@ print(f"  Skew:   {pd.Series(boot_dist).skew():.4f}")
 print("\n" + "=" * 60)
 print("Summary")
 print("=" * 60)
-print(f"""
+print("""
 Monte Carlo simulation and bootstrap provide complementary tools:
 
   Monte Carlo:

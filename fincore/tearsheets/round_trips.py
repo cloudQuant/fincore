@@ -10,6 +10,14 @@ from scipy import stats
 
 from fincore.utils import format_asset, print_table
 
+__all__ = [
+    "plot_round_trip_lifetimes",
+    "plot_prob_profit_trade",
+    "print_round_trip_stats",
+    "show_profit_attribution",
+]
+
+
 
 def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
     """

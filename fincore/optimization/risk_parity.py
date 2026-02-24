@@ -12,6 +12,9 @@ from scipy import optimize as sp_opt
 
 from fincore.optimization._utils import normalize_weights, validate_result
 
+__all__ = ["risk_parity"]
+
+
 
 def risk_parity(
     returns: pd.DataFrame,

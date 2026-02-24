@@ -366,6 +366,17 @@ def calmar_ratio(returns, risk_free=0, period=DAILY, annualization=None):
     from fincore.metrics.yearly import annual_return
 
     max_dd = max_drawdown(returns=returns)
+
+    # Handle DataFrame / Series input (element-wise comparison)
+    if isinstance(max_dd, (pd.Series, pd.DataFrame)):
+        ann_return = annual_return(returns, period=period, annualization=annualization)
+        # Align by position: max_drawdown may return integer-indexed Series
+        md_arr = np.asarray(max_dd, dtype=np.float64)
+        ar_arr = np.asarray(ann_return, dtype=np.float64)
+        result_arr = np.where(md_arr < 0, (ar_arr - risk_free) / np.abs(md_arr), np.nan)
+        result_arr[np.isinf(result_arr)] = np.nan
+        return pd.Series(result_arr, index=ann_return.index)
+
     if max_dd < 0:
         ann_return = annual_return(returns, period=period, annualization=annualization)
         temp = (ann_return - risk_free) / abs(max_dd)

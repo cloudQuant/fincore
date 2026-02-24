@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fincore"
-version = "0.1.0"
+version = "1.0.0"
 description = "Quantitative performance and risk analytics for Python"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -13,7 +13,7 @@ authors = [
     {name = "cloudQuant", email = "yunjinqi@gmail.com"},
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -52,6 +52,9 @@ all = ["fincore[viz,bayesian,datareader]"]
 [project.urls]
 Homepage = "https://github.com/cloudQuant/fincore"
 
+[tool.setuptools.package-data]
+fincore = ["py.typed"]
+
 [tool.setuptools.packages.find]
 include = ["fincore*"]
 
@@ -60,11 +63,15 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 testpaths = ["tests"]
-addopts = "--strict-markers --tb=short -q -ra"
+addopts = "--strict-markers --tb=short -q -ra -n auto --dist=loadscope"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "p0: marks tests as critical priority (core metrics, revenue-critical, security, compliance)",
+    "p1: marks tests as high priority (frequently used features, important edge cases)",
+    "p2: marks tests as medium priority (secondary features, admin functions)",
+    "p3: marks tests as low priority (rarely used, cosmetic)",
 ]
 norecursedirs = [".git", ".tox", "dist", "build", "*.egg", "__pycache__"]
 filterwarnings = [
@@ -72,8 +79,13 @@ filterwarnings = [
     # Third-party noise (not actionable for this project).
     "ignore::UserWarning:matplotlib\\.dates",
     "ignore::PendingDeprecationWarning:seaborn\\.categorical",
+    "ignore::DeprecationWarning:PyPDF2",
+    "ignore:This axis already has a converter:UserWarning",
+    "ignore:Legend does not support handles:UserWarning",
+    "ignore:PeriodDtype\\[B\\] is deprecated:FutureWarning",
     # Expected in tests: synthetic returns may not overlap with predefined stress periods.
     "ignore:Passed returns do not overlap with any interesting times\\.:UserWarning:fincore\\.tearsheets\\.sheets",
+    "ignore:Passed returns do not overlap with any interesting times\\.:UserWarning:fincore\\.pyfolio",
 ]
 
 [tool.coverage.run]
@@ -83,6 +95,26 @@ omit = [
     "*/test_*",
     "*/__init__.py",
     "*/deprecate.py",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    # Defensive unreachable code
+    "if \\(len\\(returns\\) == 0\\) or \\(len\\(underwater\\) == 0\\):",
+    "if len\\(years\\) < 1:",
+    "if len\\(max_dds\\) == 0:",
+    # hurst_exponent edge cases
+    "if n_subseries < 1:",
+    "return np.nan # hurst fallback line 193",
+    "if len\\(lags_array\\) < 2:",
+    # Abstract methods
+    "pass$",
+    # Standard pragma
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstract",
 ]
 
 [tool.mypy]

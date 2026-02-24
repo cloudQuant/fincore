@@ -26,6 +26,21 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+__all__ = [
+    "register_event_hook",
+    "get_event_hooks",
+    "execute_hooks",
+    "clear_hooks",
+    "list_events",
+    "AnalysisContext",
+    "ComputeContext",
+    "OptimizationContext",
+    "create_analysis_context",
+    "create_compute_context",
+    "create_optimization_context",
+]
+
+
 # Event hook registry
 # Maps event names to lists of registered hook functions
 _EVENT_HOOKS: dict[str, list[Callable]] = {

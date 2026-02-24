@@ -8,6 +8,15 @@ import pandas as pd
 
 from fincore.utils import configure_legend, print_table
 
+__all__ = [
+    "plot_perf_attrib_returns",
+    "plot_alpha_returns",
+    "plot_factor_contribution_to_perf",
+    "plot_risk_exposures",
+    "show_perf_attrib_stats",
+]
+
+
 
 def plot_perf_attrib_returns(empyrical_instance, perf_attrib_data, cost=None, ax=None):
     """

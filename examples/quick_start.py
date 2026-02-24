@@ -71,18 +71,18 @@ print(f"Hurst exponent:    {Empyrical.hurst_exponent(returns):.4f}")
 
 # Yearly breakdown
 yearly_ret = Empyrical.annual_return_by_year(returns)
-print(f"\nAnnual returns by year:")
+print("\nAnnual returns by year:")
 for year, ret in yearly_ret.items():
     print(f"  {year}: {ret:.4f}")
 
 # Drawdown table
 dd = Empyrical.gen_drawdown_table(returns, top=3)
-print(f"\nTop 3 drawdowns:")
+print("\nTop 3 drawdowns:")
 print(dd.to_string())
 
 # Performance summary
 stats = Empyrical.perf_stats(returns, factor_returns=benchmark)
-print(f"\nPerformance stats:")
+print("\nPerformance stats:")
 print(stats.to_string())
 
 # =========================================================================
@@ -123,7 +123,7 @@ d = ctx.to_dict()
 print(f"\nJSON export: {len(ctx.to_json())} chars")
 
 # Perf stats summary
-print(f"\nPerf stats:")
+print("\nPerf stats:")
 print(ctx.perf_stats().to_string())
 
 # =========================================================================

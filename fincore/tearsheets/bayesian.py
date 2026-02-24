@@ -13,6 +13,9 @@ from scipy import stats
 
 from fincore.empyrical import Empyrical
 
+__all__ = ["plot_best", "plot_stoch_vol", "plot_bayes_cone"]
+
+
 
 def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None, samples=1000, burn=200, axs=None):
     """

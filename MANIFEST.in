@@ -4,6 +4,7 @@ include pyproject.toml
 include requirements.txt
 include requirements-test.txt
 recursive-include fincore *.py
+include fincore/py.typed
 recursive-exclude tests *
 recursive-exclude examples *
 recursive-exclude docs *

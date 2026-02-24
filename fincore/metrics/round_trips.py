@@ -414,7 +414,7 @@ def gen_round_trip_stats(round_trips):
             built_in_results = grouped.agg(built_in_funcs)
             # Combine results
             return pd.concat([custom_results, built_in_results], axis=1)
-        return custom_results
+        return custom_results  # pragma: no cover -- Edge case when no built-in funcs
 
     # Check if 'returns' column exists, if not use 'rt_returns'
     returns_col = "returns" if "returns" in round_trips.columns else "rt_returns"

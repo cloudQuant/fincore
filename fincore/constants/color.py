@@ -4,6 +4,9 @@ This module provides color palette constants used throughout fincore
 for consistent visualization styling.
 """
 
+__all__ = ["COLORMAP", "COLORS"]
+
+
 COLORMAP = "Paired"
 """Default colormap name for plot styling."""
 

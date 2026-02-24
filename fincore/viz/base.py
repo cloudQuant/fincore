@@ -11,6 +11,9 @@ from typing import Any, Protocol, runtime_checkable
 
 import pandas as pd
 
+__all__ = ["VizBackend", "get_backend"]
+
+
 
 @runtime_checkable
 class VizBackend(Protocol):
@@ -18,11 +21,11 @@ class VizBackend(Protocol):
 
     def plot_returns(self, cum_returns: pd.Series, **kwargs: Any) -> Any:
         """Plot cumulative returns."""
-        ...
+        ...  # pragma: no cover -- Protocol method
 
     def plot_drawdown(self, drawdown: pd.Series, **kwargs: Any) -> Any:
         """Plot drawdown underwater chart."""
-        ...
+        ...  # pragma: no cover -- Protocol method
 
     def plot_rolling_sharpe(
         self,
@@ -42,7 +45,7 @@ class VizBackend(Protocol):
         window : int, default 252
             Window size (used for title/annotation).
         """
-        ...
+        ...  # pragma: no cover -- Protocol method
 
     def plot_monthly_heatmap(self, returns: pd.Series | pd.DataFrame, **kwargs: Any) -> Any:
         """Plot monthly returns heatmap.
@@ -53,7 +56,7 @@ class VizBackend(Protocol):
             Either a daily returns series (will be aggregated internally) or a
             year x month table of monthly returns.
         """
-        ...
+        ...  # pragma: no cover -- Protocol method
 
 
 def get_backend(name: str = "matplotlib") -> VizBackend:

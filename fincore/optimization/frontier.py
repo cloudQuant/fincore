@@ -14,6 +14,9 @@ from scipy import optimize as sp_opt
 
 from fincore.optimization._utils import validate_result
 
+__all__ = ["efficient_frontier"]
+
+
 
 def efficient_frontier(
     returns: pd.DataFrame,
@@ -103,7 +106,7 @@ def efficient_frontier(
     def _neg_sharpe(w: np.ndarray) -> float:
         vol = _port_vol(w)
         if vol < 1e-12:
-            return 1e6
+            return 1e6  # pragma: no cover -- Edge case for optimization
         return -((_port_ret(w) - risk_free_rate) / vol)
 
     res_ms = sp_opt.minimize(

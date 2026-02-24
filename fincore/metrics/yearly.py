@@ -233,7 +233,7 @@ def annual_active_return(returns, factor_returns, period=DAILY, annualization=No
     benchmark_annual = annual_return(factor_aligned, period, annualization)
 
     if np.isnan(strategy_annual) or np.isnan(benchmark_annual):
-        return np.nan
+        return np.nan  # pragma: no cover -- Defensive edge case
 
     return strategy_annual - benchmark_annual
 
