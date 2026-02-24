@@ -13,7 +13,7 @@ def test_compute_sections_handles_turnover_and_leverage_exceptions(monkeypatch) 
     transactions = pd.DataFrame({"amount": [10, -5], "price": [10.0, 11.0], "symbol": ["AAA", "AAA"]}, index=tx_idx)
 
     def _boom(*_args, **_kwargs):
-        raise RuntimeError("boom")
+        raise ValueError("boom")
 
     monkeypatch.setattr(fincore.Empyrical, "get_turnover", staticmethod(_boom))
     monkeypatch.setattr(fincore.Empyrical, "gross_lev", staticmethod(_boom))

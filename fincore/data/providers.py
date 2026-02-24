@@ -328,7 +328,7 @@ class YahooFinanceProvider(DataProvider):
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
                 logger.warning(
                     "Failed to fetch %s from Yahoo Finance: %s",
                     symbol,
@@ -478,7 +478,7 @@ class AlphaVantageProvider(DataProvider):
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
                 logger.warning(
                     "Failed to fetch %s from Alpha Vantage: %s",
                     symbol,
@@ -636,7 +636,7 @@ class TushareProvider(DataProvider):
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
                 logger.warning(
                     "Failed to fetch %s from Tushare: %s",
                     symbol,
@@ -780,7 +780,7 @@ class AkShareProvider(DataProvider):
         for symbol in symbols:
             try:
                 results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except Exception as e:
+            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
                 logger.warning(
                     "Failed to fetch %s from AkShare: %s",
                     symbol,
@@ -799,7 +799,7 @@ class AkShareProvider(DataProvider):
         """Get information about a symbol."""
         try:
             info = self._ak.stock_individual_info_em(symbol=symbol)
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
             logger.warning(
                 "Failed to get info for %s from AkShare: %s",
                 symbol,

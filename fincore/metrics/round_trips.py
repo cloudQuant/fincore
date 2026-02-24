@@ -77,7 +77,7 @@ def agg_all_long_short(round_trips, col, stats_dict):
                     stat[name] = getattr(data, func)()
                 else:
                     stat[name] = np.nan
-            except Exception as e:
+            except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
                 logger.debug("round_trip stat %s failed for %s: %s", name, label, e)
                 stat[name] = np.nan
 
@@ -95,7 +95,7 @@ def agg_all_long_short(round_trips, col, stats_dict):
                 all_stat[name] = getattr(all_data, func)()
             else:
                 all_stat[name] = np.nan
-        except Exception as e:
+        except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
             logger.debug("round_trip stat %s failed for All trades: %s", name, e)
             all_stat[name] = np.nan
 

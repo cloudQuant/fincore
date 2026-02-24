@@ -16,13 +16,14 @@
 
 """Statistical metrics."""
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
-from scipy import stats
 
 from fincore.constants import DAILY
 from fincore.metrics.basic import aligned_series
@@ -73,7 +74,7 @@ def _safe_correlation(x, y):
     return float(corr) if np.isfinite(corr) else np.nan
 
 
-def skewness(returns):
+def skewness(returns: pd.Series | np.ndarray) -> float:
     """Calculate the skewness of a return series.
 
     This is a thin wrapper around :func:`scipy.stats.skew` with
@@ -90,12 +91,14 @@ def skewness(returns):
         Sample skewness of the return distribution, or ``NaN`` if there
         are fewer than three observations.
     """
+    from scipy import stats as _stats
+
     if len(returns) < 3:
         return np.nan
-    return stats.skew(returns, nan_policy="omit")
+    return _stats.skew(returns, nan_policy="omit")
 
 
-def kurtosis(returns):
+def kurtosis(returns: pd.Series | np.ndarray) -> float:
     """Calculate the kurtosis of a return series.
 
     This is a thin wrapper around :func:`scipy.stats.kurtosis` with
@@ -112,12 +115,14 @@ def kurtosis(returns):
         Sample excess kurtosis of the return distribution, or ``NaN`` if
         there are fewer than four observations.
     """
+    from scipy import stats as _stats
+
     if len(returns) < 4:
         return np.nan
-    return stats.kurtosis(returns, nan_policy="omit")
+    return _stats.kurtosis(returns, nan_policy="omit")
 
 
-def hurst_exponent(returns):
+def hurst_exponent(returns: pd.Series | np.ndarray) -> float:
     """Estimate the Hurst exponent of a return series.
 
     The Hurst exponent is estimated via a rescaled range (R/S) analysis
@@ -166,7 +171,7 @@ def hurst_exponent(returns):
         if max_lag - min_lag + 1 > max_points:
             lags = np.unique(np.geomspace(min_lag, max_lag, num=max_points).astype(int))
         else:
-            lags = range(min_lag, max_lag + 1)
+            lags = range(min_lag, max_lag + 1)  # type: ignore[assignment]
         rs_values = []
 
         for lag in lags:
@@ -212,12 +217,12 @@ def hurst_exponent(returns):
 
         return float(hurst)
 
-    except Exception as e:
+    except (ValueError, FloatingPointError, ZeroDivisionError, RuntimeError) as e:
         logger.debug("hurst_exponent failed: %s", e)
         return np.nan
 
 
-def stutzer_index(returns, target_return=0.0):
+def stutzer_index(returns: pd.Series | np.ndarray, target_return: float = 0.0) -> float:
     """Calculate the Stutzer index.
 
     The Stutzer index is a downside-risk-adjusted performance measure
@@ -284,12 +289,12 @@ def stutzer_index(returns, target_return=0.0):
             return sign * np.sqrt(2 * ip)
         else:
             return np.nan
-    except Exception as e:
+    except (ValueError, FloatingPointError, ZeroDivisionError, RuntimeError) as e:
         logger.debug("stutzer_index failed: %s", e)
         return np.nan
 
 
-def serial_correlation(returns, lag=1):
+def serial_correlation(returns: pd.Series | np.ndarray, lag: int = 1) -> float:
     """Determine the serial correlation of returns.
 
     This computes the correlation between ``r[t]`` and ``r[t-lag]``.
@@ -362,7 +367,7 @@ def _market_correlation(returns, benchmark_returns):
     return _safe_correlation(returns, benchmark_returns)
 
 
-def stock_market_correlation(returns, market_returns):
+def stock_market_correlation(returns: pd.Series | np.ndarray, market_returns: pd.Series | np.ndarray) -> float:
     """Determine the correlation between strategy and stock market returns.
 
     Parameters
@@ -382,7 +387,7 @@ def stock_market_correlation(returns, market_returns):
     return _market_correlation(returns, market_returns)
 
 
-def bond_market_correlation(returns, bond_returns):
+def bond_market_correlation(returns: pd.Series | np.ndarray, bond_returns: pd.Series | np.ndarray) -> float:
     """Determine the correlation between strategy and bond market returns.
 
     Parameters
@@ -402,7 +407,7 @@ def bond_market_correlation(returns, bond_returns):
     return _market_correlation(returns, bond_returns)
 
 
-def futures_market_correlation(returns, futures_returns):
+def futures_market_correlation(returns: pd.Series | np.ndarray, futures_returns: pd.Series | np.ndarray) -> float:
     """Determine the correlation between strategy and futures market returns.
 
     Parameters
@@ -422,7 +427,7 @@ def futures_market_correlation(returns, futures_returns):
     return _market_correlation(returns, futures_returns)
 
 
-def win_rate(returns):
+def win_rate(returns: pd.Series | np.ndarray) -> float:
     """Calculate the percentage of positive return observations.
 
     Parameters
@@ -455,7 +460,7 @@ def win_rate(returns):
         return win_rate_value
 
 
-def loss_rate(returns):
+def loss_rate(returns: pd.Series | np.ndarray) -> float:
     """Calculate the percentage of negative return observations.
 
     Parameters
@@ -488,7 +493,7 @@ def loss_rate(returns):
         return loss_rate_value
 
 
-def relative_win_rate(returns, factor_returns):
+def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
     """Calculate the win rate of strategy returns relative to a benchmark.
 
     The relative win rate is the fraction of periods where the strategy
@@ -521,7 +526,7 @@ def relative_win_rate(returns, factor_returns):
     return float(win_count / total)
 
 
-def r_cubed(returns, factor_returns):
+def r_cubed(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
     """Calculate the R-cubed (R³) measure.
 
     R³ is defined as the cube of the correlation between strategy returns
@@ -552,7 +557,7 @@ def r_cubed(returns, factor_returns):
     return correlation**3 if not np.isnan(correlation) else np.nan
 
 
-def r_cubed_turtle(returns, period=DAILY, annualization=None):
+def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annualization: float | None = None) -> float:
     """Calculate the R-cubed measure from the Turtle Trading system.
 
     R³ (turtle) is defined as the Regression Annual Return (RAR) divided
@@ -590,7 +595,9 @@ def r_cubed_turtle(returns, period=DAILY, annualization=None):
     if mask.sum() < 2:
         return np.nan
 
-    slope, _, _, _, _ = stats.linregress(t[mask], nav_arr[mask])
+    from scipy import stats as _stats
+
+    slope, _, _, _, _ = _stats.linregress(t[mask], nav_arr[mask])
     rar = slope * ann_factor
 
     if isinstance(returns, pd.Series) and hasattr(returns.index, "year"):
@@ -631,7 +638,7 @@ def r_cubed_turtle(returns, period=DAILY, annualization=None):
     return rar / avg_max_dd
 
 
-def capm_r_squared(returns, factor_returns):
+def capm_r_squared(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
     """Calculate the CAPM R-squared.
 
     R² = (β × σ_B / σ_P)², measuring the proportion of strategy return
@@ -676,7 +683,7 @@ def capm_r_squared(returns, factor_returns):
     return float(np.clip(r_sq, 0.0, 1.0))
 
 
-def tracking_difference(returns, factor_returns):
+def tracking_difference(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
     """Calculate tracking difference in cumulative returns.
 
     Tracking difference is defined as the cumulative strategy return minus
@@ -707,10 +714,10 @@ def tracking_difference(returns, factor_returns):
     result = cum_strategy - cum_benchmark
     if not isinstance(result, (float, np.floating)):
         result = result.item()
-    return result
+    return result  # type: ignore[return-value]
 
 
-def common_sense_ratio(returns):
+def common_sense_ratio(returns: pd.Series | np.ndarray) -> float:
     """Calculate the common sense ratio.
 
     Delegates to :func:`fincore.metrics.ratios.common_sense_ratio`.
@@ -730,7 +737,7 @@ def common_sense_ratio(returns):
     return _csr(returns)
 
 
-def var_cov_var_normal(p, c, mu=0, sigma=1):
+def var_cov_var_normal(p: float, c: float, mu: float = 0, sigma: float = 1) -> float:
     """Calculate variance-covariance of daily Value-at-Risk in a portfolio.
 
     Delegates to :func:`fincore.metrics.risk.var_cov_var_normal`.
@@ -756,7 +763,7 @@ def var_cov_var_normal(p, c, mu=0, sigma=1):
     return _vcv(p, c, mu, sigma)
 
 
-def normalize(returns, starting_value=1):
+def normalize(returns: pd.Series | np.ndarray, starting_value: float = 1) -> pd.Series | np.ndarray:
     """Normalize a returns series to start at a given value.
 
     Delegates to :func:`fincore.metrics.returns.normalize`.

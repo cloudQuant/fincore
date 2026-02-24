@@ -80,7 +80,7 @@ def compute_sections(
         try:
             turnover = Empyrical.get_turnover(positions, transactions)
             perf["Avg Daily Turnover"] = float(turnover.mean())
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
             logger.warning(
                 "Failed to calculate turnover: %s",
                 e,
@@ -93,7 +93,7 @@ def compute_sections(
             gl = Empyrical.gross_lev(positions)
             perf["Avg Gross Leverage"] = float(gl.mean())
             perf["Max Gross Leverage"] = float(gl.max())
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
             logger.warning(
                 "Failed to calculate gross leverage: %s",
                 e,
@@ -227,7 +227,7 @@ def compute_sections(
         if positions is not None:
             try:
                 sections["turnover"] = Empyrical.get_turnover(positions, transactions)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
                 logger.warning(
                     "Failed to calculate turnover from transactions: %s",
                     e,

@@ -1,0 +1,4788 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Quantitative Performance & Risk Analytics for Python">
+      
+      
+      
+        <link rel="canonical" href="https://cloudquant.github.io/fincore/api/attribution/">
+      
+      
+        <link rel="prev" href="../simulation/">
+      
+      
+        <link rel="next" href="../risk/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>fincore.attribution - fincore</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#fincoreattribution" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="fincore" class="md-header__button md-logo" aria-label="fincore" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fincore
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              fincore.attribution
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/cloudQuant/fincore" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cloudQuant/fincore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guide/concepts/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../development/contributing/" class="md-tabs__link">
+          
+  
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fincore" class="md-nav__button md-logo" aria-label="fincore" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    fincore
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/cloudQuant/fincore" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cloudQuant/fincore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration from empyrical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/analysis-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AnalysisContext
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/rolling-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RollingEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Portfolio Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fincore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore (top-level)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.attribution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.attribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#brinson-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brinson Attribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="brinson">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.BrinsonAttribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BrinsonAttribution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BrinsonAttribution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.BrinsonAttribution.calculate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_results
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_cumulative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_cumulative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fama-french" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fama-French
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fama_french
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fama_french">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchFitResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchFitResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FamaFrenchModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        predict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.get_factor_exposures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_factor_exposures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.attribution_decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        attribution_decomposition
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchProvider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchProvider
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FamaFrenchProvider">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchProvider.__call__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __call__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.fetch_ff_factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_ff_factors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.set_ff_provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_ff_provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.clear_ff_factor_cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_ff_factor_cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.calculate_idiosyncratic_risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_idiosyncratic_risk
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style Analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StyleResult
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="StyleResult">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.style_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style_summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.__contains__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __contains__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.style_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.calculate_style_tilts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_style_tilts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.calculate_regression_attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_regression_attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.analyze_performance_by_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze_performance_by_style
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.fetch_style_factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_style_factors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../risk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.risk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/api-stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#brinson-attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brinson Attribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="brinson">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.BrinsonAttribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BrinsonAttribution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BrinsonAttribution">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.BrinsonAttribution.calculate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_results
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.brinson.brinson_cumulative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        brinson_cumulative
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fama-french" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fama-French
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fama_french
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fama_french">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchFitResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchFitResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FamaFrenchModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        predict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.get_factor_exposures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_factor_exposures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchModel.attribution_decomposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        attribution_decomposition
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchProvider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FamaFrenchProvider
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FamaFrenchProvider">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.FamaFrenchProvider.__call__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __call__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.fetch_ff_factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_ff_factors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.set_ff_provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        set_ff_provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.clear_ff_factor_cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clear_ff_factor_cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.fama_french.calculate_idiosyncratic_risk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_idiosyncratic_risk
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style Analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.attribution.style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StyleResult
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="StyleResult">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.style_summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style_summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.__contains__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __contains__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.__getitem__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __getitem__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.StyleResult.to_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_dict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.style_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        style_analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.calculate_style_tilts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_style_tilts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.calculate_regression_attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        calculate_regression_attribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.analyze_performance_by_style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze_performance_by_style
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.attribution.style.fetch_style_factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fetch_style_factors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="fincoreattribution">fincore.attribution<a class="headerlink" href="#fincoreattribution" title="Permanent link">&para;</a></h1>
+<h2 id="brinson-attribution">Brinson Attribution<a class="headerlink" href="#brinson-attribution" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.attribution.brinson" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.attribution.brinson</code>
+
+
+<a href="#fincore.attribution.brinson" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Brinson attribution analysis for portfolio performance.</p>
+<p>Decomposes portfolio excess returns into:
+- Allocation effect: returns from overweighting/underweighting sectors
+- Selection effect: returns from stock selection within sectors
+- Interaction effect: returns from interaction of allocation and selection</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.attribution.brinson.BrinsonAttribution" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">BrinsonAttribution</span><span class="p">(</span><span class="n">sector_mapping</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.brinson.BrinsonAttribution" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Brinson attribution calculator with sector mapping support.</p>
+<p>Provides convenient interface for multi-period Brinson attribution
+with sector/asset classification.</p>
+
+        <p>Initialize Brinson attribution calculator.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>sector_mapping</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Mapping from sector name to a list of asset column names.
+Example: {'Technology': ['AAPL', 'MSFT'], 'Financial': ['JPM']}</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.brinson.BrinsonAttribution.calculate" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">calculate</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">benchmark_returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;brinson&#39;</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.brinson.BrinsonAttribution.calculate" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate Brinson attribution for returns DataFrame.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (T x N assets).
+Columns should be asset names.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark returns. If None, uses equal-weighted benchmark.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio weights. If None, uses equal weights.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attribution method. Options: 'brinson', 'brinson_hood'.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#34;brinson&#34;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attribution results by period.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.brinson.brinson_attribution" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">brinson_attribution</span><span class="p">(</span><span class="n">portfolio_returns</span><span class="p">,</span> <span class="n">benchmark_returns</span><span class="p">,</span> <span class="n">portfolio_weights</span><span class="p">,</span> <span class="n">benchmark_weights</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.brinson.brinson_attribution" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate Brinson attribution for a single period.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio returns for the period.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark returns for the period.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio weights by sector/asset for the period.
+benchmark_weights : pd.DataFrame
+Benchmark weights by sector/asset for the period.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary with attribution breakdown:
+- 'allocation': Allocation effect
+- 'selection': Selection effect
+- 'interaction': Interaction effect
+- 'total': Total active return
+- 'portfolio_return': Portfolio return
+- 'benchmark_return': Benchmark return</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">示例：</span></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">portfolio_returns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">])</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">benchmark_returns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.03</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">])</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">portfolio_weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">... </span>    <span class="s1">&#39;Sector_A&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">... </span>    <span class="s1">&#39;Sector_B&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">... </span><span class="p">})</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">benchmark_weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">... </span>    <span class="s1">&#39;Sector_A&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gp">... </span>    <span class="s1">&#39;Sector_B&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gp">... </span><span class="p">})</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">brinson_attribution</span><span class="p">(</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gp">... </span>    <span class="n">portfolio_returns</span><span class="p">,</span> <span class="n">benchmark_returns</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gp">... </span>    <span class="n">portfolio_weights</span><span class="p">,</span> <span class="n">benchmark_weights</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gp">... </span><span class="p">)</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Allocation: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;allocation&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.brinson.brinson_results" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">brinson_results</span><span class="p">(</span><span class="n">portfolio_returns</span><span class="p">,</span> <span class="n">benchmark_returns</span><span class="p">,</span> <span class="n">portfolio_weights</span><span class="p">,</span> <span class="n">benchmark_weights</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.brinson.brinson_results" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate Brinson attribution over multiple periods.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio returns (T periods).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark returns (T periods).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio weights for each period (T x sectors).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark weights for each period (T x sectors).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>periods</code>
+            </td>
+            <td>
+                  <code>list of str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Period labels. If None, uses integer indices.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>DataFrame with attribution results for each period.
+Columns: period, allocation, selection, interaction, total, portfolio_return, benchmark_return</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.brinson.brinson_cumulative" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">brinson_cumulative</span><span class="p">(</span><span class="n">portfolio_returns</span><span class="p">,</span> <span class="n">benchmark_returns</span><span class="p">,</span> <span class="n">portfolio_weights</span><span class="p">,</span> <span class="n">benchmark_weights</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.brinson.brinson_cumulative" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate cumulative Brinson attribution.</p>
+<p>This aggregates per-period Brinson effects (arithmetic sum across periods).
+It also reports geometric cumulative portfolio/benchmark returns computed
+from per-period weighted returns.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio returns.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark returns.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio weights (final weights for cumulative).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>benchmark_weights</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Benchmark weights (final weights for cumulative).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Cumulative attribution breakdown.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="fama-french">Fama-French<a class="headerlink" href="#fama-french" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.attribution.fama_french" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.attribution.fama_french</code>
+
+
+<a href="#fincore.attribution.fama_french" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Fama-French multi-factor model implementation.</p>
+<p>Provides factor model estimation and attribution using the Fama-French
+multi-factor framework:
+- 3-Factor model: Market (MKT), Size (SMB), Value (HML)
+- 5-Factor model: MKT, SMB, HML, Profitability (RMW), Investment (CMA)
+- Momentum: Fama-French-Carhart 4-factor model</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.attribution.fama_french.FamaFrenchFitResult" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>FamaFrenchFitResult</code>
+
+
+<a href="#fincore.attribution.fama_french.FamaFrenchFitResult" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Result of Fama-French factor model regression.</p>
+
+
+<p><span class="doc-section-title">属性：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.alpha">alpha</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Intercept (alpha) of the regression.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.betas">betas</span></code></td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="float">float</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor loadings for each factor.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.r_squared">r_squared</span></code></td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>R-squared of the regression.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.std_errors">std_errors</span></code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Standard errors of coefficients.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.p_values">p_values</span></code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>P-values for coefficient significance tests.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="fincore.attribution.fama_french.FamaFrenchFitResult.residuals">residuals</span></code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Residuals from the regression.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.attribution.fama_french.FamaFrenchModel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FamaFrenchModel</span><span class="p">(</span><span class="n">model_type</span><span class="o">=</span><span class="s1">&#39;5factor&#39;</span><span class="p">,</span> <span class="n">risk_free_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchModel" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Fama-French multi-factor model estimator.</p>
+<p>Supports OLS regression with Newey-West standard errors
+and various factor model specifications.</p>
+
+        <p>Initialize Fama-French model.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_type</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor model specification.
+Options: '3factor', '5factor', '4factor_mom'</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#34;5factor&#34;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>risk_free_rate</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Risk-free rate for excess returns calculation.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.0</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.fama_french.FamaFrenchModel.fit" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">fit</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">factor_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ols&#39;</span><span class="p">,</span> <span class="n">newey_west_lags</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchModel.fit" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Estimate factor model using OLS regression.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset or portfolio returns to explain.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns with columns matching factor definitions.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>method</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Estimation method. Options: 'ols', 'wls', 'gls'.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#34;ols&#34;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>newey_west_lags</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of lags for Newey-West standard errors.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dictionary containing:
+- 'alpha': Intercept (alpha)
+- 'betas': Factor loadings
+- 'r_squared': R-squared of regression
+- 'std_errors': Standard errors (Newey-West if lags &gt; 0)
+- 'p_values': P-values for coefficients
+- 'residuals': Regression residuals</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.fama_french.FamaFrenchModel.predict" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="n">factor_data</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchModel.predict" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Predict returns using estimated model.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns with columns matching factor definitions.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Predicted returns.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.fama_french.FamaFrenchModel.get_factor_exposures" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">get_factor_exposures</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">factor_data</span><span class="p">,</span> <span class="n">rolling_window</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchModel.get_factor_exposures" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate rolling factor exposures (betas).</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (T x N).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns (T x K factors).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rolling_window</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rolling window size. If None, full sample.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rolling factor exposures (T x K).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.fama_french.FamaFrenchModel.attribution_decomposition" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">attribution_decomposition</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">factor_data</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchModel.attribution_decomposition" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Decompose returns using factor model.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio returns to attribute.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor attribution breakdown.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.attribution.fama_french.FamaFrenchProvider" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>FamaFrenchProvider</code>
+
+
+<a href="#fincore.attribution.fama_french.FamaFrenchProvider" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.Protocol">Protocol</span></code></p>
+
+
+
+        <p>Protocol for Fama-French factor data providers.</p>
+<p>A provider function that takes date range and library name,
+and returns a DataFrame of factor returns.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.fama_french.FamaFrenchProvider.__call__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__call__</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">library</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.FamaFrenchProvider.__call__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fetch Fama-French factor data.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>start</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Start date (YYYY-MM-DD format).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>end</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>End date (YYYY-MM-DD format).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>library</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Data library identifier.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns with columns for each factor.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.fama_french.fetch_ff_factors" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">fetch_ff_factors</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="s1">&#39;french&#39;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.fetch_ff_factors" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fetch Fama-French factors.</p>
+<p>.. note::</p>
+<p>A concrete data provider must be configured before calling this
+   function.  Pass a <code>provider</code> that implements the
+   <code>FamaFrenchProvider</code> protocol, or set a module-level provider
+   via :func:<code>set_ff_provider</code>.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>start</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Start date (YYYY-MM-DD).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>end</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>End date (YYYY-MM-DD).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>library</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Data source. Options: 'french', 'chinese'.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#34;french&#34;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>DataFrame with factor returns. Columns depend on library.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">引发：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="NotImplementedError">NotImplementedError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Raised when no provider is configured.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.fama_french.set_ff_provider" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">set_ff_provider</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.set_ff_provider" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Set the module-level Fama-French factor provider and clear cache.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.fama_french.clear_ff_factor_cache" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">clear_ff_factor_cache</span><span class="p">()</span></code>
+
+<a href="#fincore.attribution.fama_french.clear_ff_factor_cache" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Clear the in-process factor cache used by :func:<code>fetch_ff_factors</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.fama_french.calculate_idiosyncratic_risk" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">calculate_idiosyncratic_risk</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">factor_data</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.fama_french.calculate_idiosyncratic_risk" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate idiosyncratic volatility (asset-specific risk).</p>
+<p>Measures risk that cannot be diversified away:
+VAR(asset) - cov(asset, market) * var(market) / cov(market, market)</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (N assets x T).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_data</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Market factor returns (T x K).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="              FamaFrenchModel(model_type='5factor', risk_free_rate=0.0) (fincore.attribution.fama_french.FamaFrenchModel)" href="#fincore.attribution.fama_french.FamaFrenchModel">FamaFrenchModel</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Pre-fitted model. If None, fits new model.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Idiosyncratic volatility for each asset.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="style-analysis">Style Analysis<a class="headerlink" href="#style-analysis" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.attribution.style" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.attribution.style</code>
+
+
+<a href="#fincore.attribution.style" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Style analysis for portfolio returns.</p>
+<p>Analyzes portfolio returns by style characteristics:
+- Size (large-cap, mid-cap, small-cap)
+- Value (value, growth)
+    Momentum (winner, loser)
+    Volatility (high, low)</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.attribution.style.StyleResult" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">StyleResult</span><span class="p">(</span><span class="n">exposures</span><span class="p">,</span> <span class="n">returns_by_style</span><span class="p">,</span> <span class="n">overall_returns</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.StyleResult" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Container for style analysis results.</p>
+
+        <p>Initialize style result.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>exposures</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Style exposures (N assets x S styles).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns_by_style</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Returns for each style (styles x 1).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>overall_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Overall portfolio returns.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="fincore.attribution.style.StyleResult.style_summary" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">style_summary</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#fincore.attribution.style.StyleResult.style_summary" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get summary of style returns.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.style.StyleResult.__contains__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.StyleResult.__contains__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Support <code>key in result</code> syntax.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.style.StyleResult.__getitem__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.StyleResult.__getitem__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Support <code>result[key]</code> syntax.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.attribution.style.StyleResult.to_dict" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">to_dict</span><span class="p">()</span></code>
+
+<a href="#fincore.attribution.style.StyleResult.to_dict" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert results to dictionary.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.style.style_analysis" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">style_analysis</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">market_caps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">book_to_price</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momentum_window</span><span class="o">=</span><span class="mi">252</span><span class="p">,</span> <span class="n">size_quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_scores</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.style_analysis" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Perform comprehensive style analysis on portfolio returns.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (T x N). Columns should be asset names.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>market_caps</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Market capitalizations for size classification.
+If None, market_cap weighted returns used.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>book_to_price</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Book-to-price ratios for value classification.
+If None, assumes all equity.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>momentum_window</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Lookback period for momentum calculation.</p>
+              </div>
+            </td>
+            <td>
+                  <code>252</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>size_quantiles</code>
+            </td>
+            <td>
+                  <code>list of float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Quantiles for size classification.</p>
+              </div>
+            </td>
+            <td>
+                  <code>[0.5, 0.5]</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>value_scores</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Fundamental value scores for value classification.
+If provided, used instead of book_to_price.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="              StyleResult(exposures, returns_by_style, overall_returns) (fincore.attribution.style.StyleResult)" href="#fincore.attribution.style.StyleResult">StyleResult</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Style analysis results with exposures and returns by style.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.style.calculate_style_tilts" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">calculate_style_tilts</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">factor_returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">252</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.calculate_style_tilts" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate rolling style exposures (size, value, momentum).</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (T x N).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factor_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor returns for calculating style relative to factor.
+If None, uses cross-sectional ranking.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>window</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rolling window size.</p>
+              </div>
+            </td>
+            <td>
+                  <code>252</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Time series of style exposures for each asset.
+Index: dates, Columns: {asset}_{style} format.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.style.calculate_regression_attribution" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">calculate_regression_attribution</span><span class="p">(</span><span class="n">portfolio_returns</span><span class="p">,</span> <span class="n">style_returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style_exposures</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.calculate_regression_attribution" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Attribute portfolio returns using style exposures.</p>
+<p>If <code>style_returns</code> and <code>style_exposures</code> are not provided, they are
+derived automatically by running :func:<code>style_analysis</code> on
+<code>portfolio_returns</code> (which must be a DataFrame of asset returns in
+that case).</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>portfolio_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.Series">Series</span> or <span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Portfolio returns (Series) or asset returns (DataFrame).
+If DataFrame and <code>style_returns</code>/<code>style_exposures</code> are None,
+a style analysis is run automatically.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>style_returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Returns for each style factor (T x S).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>style_exposures</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Style exposures (N x S) or (T x S).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Attribution by style factor, including 'residual'.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.style.analyze_performance_by_style" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">analyze_performance_by_style</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">style_exposures</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.analyze_performance_by_style" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Analyze performance metrics grouped by style.</p>
+<p>If <code>style_exposures</code> is not provided, it is derived automatically
+by running :func:<code>style_analysis</code>.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>returns</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset returns (T x N).</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>style_exposures</code>
+            </td>
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Style exposures (N x S).  If None, derived from <code>style_analysis</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Performance metrics by style (columns: <code>{style}_return</code>).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.attribution.style.fetch_style_factors" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">fetch_style_factors</span><span class="p">(</span><span class="n">tickers</span><span class="p">,</span> <span class="n">factors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="s1">&#39;us&#39;</span><span class="p">)</span></code>
+
+<a href="#fincore.attribution.style.fetch_style_factors" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Fetch style factor data.</p>
+<p>.. note::</p>
+<p>A concrete data provider must be configured before calling this
+   function.  Pass pre-fetched factor data directly to
+   :func:<code>style_analysis</code> or :func:<code>calculate_style_tilts</code>.</p>
+
+
+<p><span class="doc-section-title">参数：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>名称</th>
+          <th>类型</th>
+          <th>描述</th>
+          <th>默认</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>tickers</code>
+            </td>
+            <td>
+                  <code>list of str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Asset tickers.</p>
+              </div>
+            </td>
+            <td>
+                <em>必需</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>factors</code>
+            </td>
+            <td>
+                  <code>list of str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Style factors to fetch.</p>
+              </div>
+            </td>
+            <td>
+                  <code>[&#34;size&#34;, &#34;value&#34;, &#34;momentum&#34;]</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>library</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Data source library. Options: 'us', 'chinese'.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#34;us&#34;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">返回：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Factor data with MultiIndex (date, factor).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">引发：</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>描述</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="NotImplementedError">NotImplementedError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Always raised until a data provider is configured.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

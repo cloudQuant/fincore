@@ -17,7 +17,7 @@ def test_treynor_mazuy_and_henriksson_exception_branch(monkeypatch) -> None:
     f = pd.Series([0.02] * 12)
 
     def boom(*_args, **_kwargs):
-        raise RuntimeError("boom")
+        raise ValueError("boom")
 
     monkeypatch.setattr(np.linalg, "lstsq", boom)
     assert np.isnan(timing_mod.treynor_mazuy_timing(r, f))
@@ -45,7 +45,7 @@ def test_cornell_timing_guard_rails_and_exception(monkeypatch) -> None:
     f2 = pd.Series([0.02] * 12)
 
     def boom(*_args, **_kwargs):
-        raise RuntimeError("boom")
+        raise ValueError("boom")
 
     monkeypatch.setattr(np.linalg, "lstsq", boom)
     assert np.isnan(timing_mod.cornell_timing(r2, f2))

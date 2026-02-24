@@ -201,7 +201,7 @@ class Empyrical:
                     factor_returns=factor_returns,
                     positions=positions,
                 )
-            except Exception as e:
+            except (TypeError, ValueError, KeyError) as e:
                 import logging
 
                 logging.getLogger(__name__).debug("AnalysisContext creation failed: %s", e)

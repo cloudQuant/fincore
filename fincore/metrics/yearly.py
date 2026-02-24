@@ -16,6 +16,8 @@
 
 """Yearly aggregation metrics."""
 
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 
@@ -38,7 +40,11 @@ __all__ = [
 ]
 
 
-def annual_return(returns, period=DAILY, annualization=None):
+def annual_return(
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> float | np.ndarray | pd.Series:
     """Determine the mean annual growth rate of returns (CAGR).
 
     This is effectively the compound annual growth rate assuming
@@ -80,7 +86,11 @@ def annual_return(returns, period=DAILY, annualization=None):
     return ending_value ** (1 / num_years) - 1
 
 
-def annual_return_by_year(returns, period=DAILY, annualization=None):
+def annual_return_by_year(
+    returns: pd.Series | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series | np.ndarray:
     """Determine the annual return for each calendar year.
 
     Parameters
@@ -114,7 +124,12 @@ def annual_return_by_year(returns, period=DAILY, annualization=None):
     return annual_returns.values if return_as_array else annual_returns
 
 
-def sharpe_ratio_by_year(returns, risk_free=0, period=DAILY, annualization=None):
+def sharpe_ratio_by_year(
+    returns: pd.Series | np.ndarray,
+    risk_free: float = 0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series | np.ndarray:
     """Determine the Sharpe ratio for each calendar year.
 
     Parameters
@@ -148,7 +163,7 @@ def sharpe_ratio_by_year(returns, risk_free=0, period=DAILY, annualization=None)
     return sharpe_by_year.values if return_as_array else sharpe_by_year
 
 
-def max_drawdown_by_year(returns):
+def max_drawdown_by_year(returns: pd.Series | np.ndarray) -> pd.Series | np.ndarray:
     """Determine the maximum drawdown for each calendar year.
 
     Parameters
@@ -173,7 +188,11 @@ def max_drawdown_by_year(returns):
     return max_dd_by_year.values if return_as_array else max_dd_by_year
 
 
-def annual_volatility_by_year(returns, period=DAILY, annualization=None):
+def annual_volatility_by_year(
+    returns: pd.Series | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series | np.ndarray:
     """Determine the annual volatility for each calendar year.
 
     Parameters
@@ -205,7 +224,12 @@ def annual_volatility_by_year(returns, period=DAILY, annualization=None):
     return annual_vol_by_year.values if return_as_array else annual_vol_by_year
 
 
-def annual_active_return(returns, factor_returns, period=DAILY, annualization=None):
+def annual_active_return(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> float:
     """Calculate annual active return (strategy minus benchmark).
 
     Parameters
@@ -235,10 +259,15 @@ def annual_active_return(returns, factor_returns, period=DAILY, annualization=No
     if np.isnan(strategy_annual) or np.isnan(benchmark_annual):
         return np.nan  # pragma: no cover -- Defensive edge case
 
-    return strategy_annual - benchmark_annual
+    return strategy_annual - benchmark_annual  # type: ignore[return-value]
 
 
-def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualization=None):
+def annual_active_return_by_year(
+    returns: pd.Series,
+    factor_returns: pd.Series,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series:
     """Determine the annual active return for each calendar year.
 
     Parameters
@@ -281,7 +310,12 @@ def annual_active_return_by_year(returns, factor_returns, period=DAILY, annualiz
     return pd.Series(active_returns, index=years)
 
 
-def information_ratio_by_year(returns, factor_returns, period=DAILY, annualization=None):
+def information_ratio_by_year(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series | np.ndarray:
     """Determine the information ratio for each calendar year.
 
     Parameters
@@ -313,7 +347,7 @@ def information_ratio_by_year(returns, factor_returns, period=DAILY, annualizati
 
     returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
-    def calc_ir_for_year(returns_group):
+    def calc_ir_for_year(returns_group: pd.Series) -> float:
         """Calculate Information Ratio for a specific year.
 
         Parameters
@@ -326,10 +360,10 @@ def information_ratio_by_year(returns, factor_returns, period=DAILY, annualizati
         float
             Information Ratio for the year.
         """
-        factor_group = factor_aligned.loc[returns_group.index]
+        factor_group = factor_aligned.loc[returns_group.index]  # type: ignore[union-attr]
         return calc_ir(returns_group, factor_group, period, annualization)
 
-    information_ratios = returns_aligned.groupby(returns_aligned.index.year).apply(calc_ir_for_year)
+    information_ratios = returns_aligned.groupby(returns_aligned.index.year).apply(calc_ir_for_year)  # type: ignore[union-attr]
 
     if hasattr(information_ratios, "name"):
         information_ratios.name = None
