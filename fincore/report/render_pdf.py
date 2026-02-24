@@ -10,6 +10,9 @@ import contextlib
 import os
 import tempfile
 
+__all__ = ["generate_pdf"]
+
+
 
 def generate_pdf(
     returns,

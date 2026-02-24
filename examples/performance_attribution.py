@@ -86,13 +86,13 @@ details = brinson_results(
     portfolio_returns=port_returns_sector,
     benchmark_returns=bench_returns_sector,
 )
-print(f"\nDetailed results:")
+print("\nDetailed results:")
 print(details.to_string())
 
 # =========================================================================
 # 3. Style Analysis
 # =========================================================================
-from fincore.attribution import style_analysis, calculate_style_tilts
+from fincore.attribution import calculate_style_tilts, style_analysis
 
 print("\n" + "=" * 60)
 print("Style Analysis")
@@ -101,7 +101,7 @@ print("=" * 60)
 # Returns-based style analysis
 style_result = style_analysis(returns, factors)
 print(f"\nStyle analysis result type: {type(style_result).__name__}")
-print(f"Style exposures:")
+print("Style exposures:")
 if hasattr(style_result, 'exposures'):
     for factor_name, exposure in style_result.exposures.items():
         print(f"  {factor_name:<12} {exposure:.4f}")
@@ -111,7 +111,7 @@ elif hasattr(style_result, 'weights'):
 
 # Style tilts
 tilts = calculate_style_tilts(returns, factors)
-print(f"\nStyle tilts:")
+print("\nStyle tilts:")
 print(tilts)
 
 # =========================================================================
@@ -124,10 +124,10 @@ print("Regression Attribution")
 print("=" * 60)
 
 reg_result = calculate_regression_attribution(returns, factors)
-print(f"\nRegression attribution:")
+print("\nRegression attribution:")
 print(f"  Alpha:     {reg_result['alpha']:.6f}")
 print(f"  R-squared: {reg_result['r_squared']:.4f}")
-print(f"\n  Factor betas:")
+print("\n  Factor betas:")
 for factor_name, beta_val in reg_result['betas'].items():
     print(f"    {factor_name:<12} {beta_val:.4f}")
 

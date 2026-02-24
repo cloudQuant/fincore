@@ -42,7 +42,7 @@ print("Multi-asset return data:")
 print(f"  Assets: {asset_names}")
 print(f"  Period: {dates[0].strftime('%Y-%m-%d')} -> {dates[-1].strftime('%Y-%m-%d')}")
 print(f"  Days:   {n_days}")
-print(f"\nAnnualized returns:")
+print("\nAnnualized returns:")
 for col in returns.columns:
     ann_ret = (1 + returns[col].mean()) ** 252 - 1
     ann_vol = returns[col].std() * np.sqrt(252)
@@ -61,7 +61,7 @@ print("=" * 60)
 ef = efficient_frontier(returns, n_points=20)
 print(f"\nComputed {len(ef)} points on the efficient frontier.")
 print(f"Frontier columns: {list(ef.columns)}")
-print(f"\nFirst 5 points (return vs risk):")
+print("\nFirst 5 points (return vs risk):")
 for i, (_, row) in enumerate(ef.head().iterrows()):
     print(f"  Point {i+1}: return={row['return']:.4f}, risk={row['risk']:.4f}")
 
@@ -75,7 +75,7 @@ print("Risk Parity Portfolio")
 print("=" * 60)
 
 rp_weights = risk_parity(returns)
-print(f"\nRisk parity weights:")
+print("\nRisk parity weights:")
 for asset, w in zip(asset_names, rp_weights):
     print(f"  {asset:<15} {w:.4f} ({w:.1%})")
 print(f"  Sum: {sum(rp_weights):.4f}")
@@ -85,7 +85,7 @@ cov = returns.cov().values * 252
 port_vol = np.sqrt(rp_weights @ cov @ rp_weights)
 marginal_contrib = cov @ rp_weights
 risk_contrib = rp_weights * marginal_contrib / port_vol
-print(f"\nRisk contributions (should be roughly equal):")
+print("\nRisk contributions (should be roughly equal):")
 for asset, rc in zip(asset_names, risk_contrib):
     print(f"  {asset:<15} {rc:.4f}")
 
@@ -100,7 +100,7 @@ print("=" * 60)
 
 # Max Sharpe portfolio
 max_sharpe = optimize(returns, objective="max_sharpe")
-print(f"\nMax Sharpe portfolio:")
+print("\nMax Sharpe portfolio:")
 print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in max_sharpe['weights']]))}")
 print(f"  Expected return: {max_sharpe['return']:.4f}")
 print(f"  Risk:            {max_sharpe['risk']:.4f}")
@@ -108,14 +108,14 @@ print(f"  Sharpe ratio:    {max_sharpe['sharpe']:.4f}")
 
 # Min Variance portfolio
 min_var = optimize(returns, objective="min_variance")
-print(f"\nMin Variance portfolio:")
+print("\nMin Variance portfolio:")
 print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in min_var['weights']]))}")
 print(f"  Expected return: {min_var['return']:.4f}")
 print(f"  Risk:            {min_var['risk']:.4f}")
 
 # Target return portfolio
 target_ret = optimize(returns, objective="target_return", target=0.10)
-print(f"\nTarget Return (10%) portfolio:")
+print("\nTarget Return (10%) portfolio:")
 print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in target_ret['weights']]))}")
 print(f"  Expected return: {target_ret['return']:.4f}")
 print(f"  Risk:            {target_ret['risk']:.4f}")

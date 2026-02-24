@@ -15,6 +15,40 @@ from pandas.tseries.offsets import BDay
 
 from fincore.constants.color import COLORS
 
+__all__ = [
+    "DisplayFunc",
+    "HTMLFunc",
+    "HAS_IPYTHON",
+    "customize",
+    "analyze_dataframe_differences",
+    "analyze_series_differences",
+    "one_dec_places",
+    "two_dec_places",
+    "percentage",
+    "format_asset",
+    "vectorize",
+    "extract_rets_pos_txn_from_zipline",
+    "print_table",
+    "standardize_data",
+    "detect_intraday",
+    "check_intraday",
+    "estimate_intraday",
+    "clip_returns_to_benchmark",
+    "to_utc",
+    "to_series",
+    "get_month_end_freq",
+    "make_timezone_aware",
+    "SETTINGS",
+    "register_return_func",
+    "get_symbol_rets",
+    "configure_legend",
+    "sample_colormap",
+    "get_utc_timestamp",
+    "rolling_window",
+    "default_returns_func",
+]
+
+
 DisplayFunc = Callable[..., Any]
 HTMLFunc = Callable[[str], Any]
 
@@ -742,7 +776,7 @@ def configure_legend(ax, autofmt_xdate=True, change_colors=False, rotation=30, h
             try:
                 y = ydata_fn()
                 return float(y[-1])
-            except Exception:
+            except Exception:  # pragma: no cover -- Edge case for legend sorting
                 return 0.0
         return 0.0
 
@@ -781,33 +815,12 @@ def sample_colormap(cmap_name, n_samples):
     """
     Sample a colormap from matplotlib
     """
+    import matplotlib as mpl
+
+    # Use the non-deprecated colormaps registry (matplotlib >= 3.5).
+    colormap = mpl.colormaps[cmap_name]
+
     colors = []
-    # Handle different matplotlib versions for colormap access
-    try:
-        # Try modern API first (matplotlib >= 3.8.0)
-        import matplotlib.pyplot as plt
-
-        colormap = plt.colormaps[cmap_name]
-    except (AttributeError, KeyError):
-        try:
-            # Prefer the non-deprecated registry API when available.
-            import matplotlib as mpl
-
-            colormap = mpl.colormaps.get_cmap(cmap_name)
-        except Exception:
-            from matplotlib.pyplot import cm as _cm
-
-            try:
-                # Try intermediate API (matplotlib 3.5.0 - 3.7.x)
-                colormap = _cm.get_cmap(cmap_name)
-            except (AttributeError, ValueError):
-                try:
-                    # Try older API (matplotlib < 3.5.0)
-                    colormap = _cm.cmap_d[cmap_name]
-                except AttributeError:
-                    # Fallback to registry access
-                    colormap = _cm._colormaps[cmap_name]
-
     for i in np.linspace(0, 1, n_samples):
         colors.append(colormap(i))
 

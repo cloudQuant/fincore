@@ -19,6 +19,9 @@ from collections import OrderedDict
 
 import pandas as pd
 
+__all__ = ["PERIODS"]
+
+
 PERIODS = OrderedDict()
 # Dotcom bubble
 PERIODS["Dotcom"] = (pd.Timestamp("20000310"), pd.Timestamp("20000910"))

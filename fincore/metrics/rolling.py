@@ -279,23 +279,23 @@ def roll_max_drawdown(returns, window=252):
     # --- vectorised path using sliding_window_view ---
     from numpy.lib.stride_tricks import sliding_window_view
 
-    windows = sliding_window_view(ret_arr, window)  # (n, window)
+    windows = sliding_window_view(ret_arr, window)  # (n, window) — view, no copy
 
-    # cumulative product along each window row
-    cum = np.cumprod(1.0 + windows, axis=1) * 100.0  # (n, window)
-    # prepend the starting value 100 as column-0
-    start_col = np.full((n, 1), 100.0)
-    cum = np.concatenate([start_col, cum], axis=1)  # (n, window+1)
+    # Build cumulative product with starting value 1.0 in a single allocation
+    cum = np.empty((n, window + 1), dtype=np.float64)
+    cum[:, 0] = 1.0
+    np.cumprod(1.0 + windows, axis=1, out=cum[:, 1:])
 
     # running maximum along each window row
     run_max = np.maximum.accumulate(cum, axis=1)
 
-    # drawdown at every point inside every window
+    # drawdown at every point inside every window (in-place to reduce allocation)
     with np.errstate(divide="ignore", invalid="ignore"):
-        dd = (cum - run_max) / run_max  # (n, window+1)
+        cum -= run_max
+        cum /= run_max
 
     # max drawdown per window (most negative value)
-    out = np.nanmin(dd, axis=1)  # (n,)
+    out = np.nanmin(cum, axis=1)  # (n,)
 
     if is_series:
         return pd.Series(out, index=returns.index[window - 1 :])

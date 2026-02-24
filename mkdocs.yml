@@ -1,0 +1,89 @@
+site_name: fincore
+site_description: Quantitative Performance & Risk Analytics for Python
+site_url: https://cloudquant.github.io/fincore
+repo_url: https://github.com/cloudQuant/fincore
+repo_name: cloudQuant/fincore
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_symbol_type_heading: true
+            members_order: source
+            merge_init_into_class: true
+            show_if_no_docstring: false
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - tables
+
+docs_dir: mkdocs_docs
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Migration from empyrical: getting-started/migration.md
+  - User Guide:
+    - Core Concepts: guide/concepts.md
+    - AnalysisContext: guide/analysis-context.md
+    - RollingEngine: guide/rolling-engine.md
+    - Visualization: guide/visualization.md
+    - Portfolio Optimization: guide/optimization.md
+  - API Reference:
+    - Overview: api/index.md
+    - fincore (top-level): api/fincore.md
+    - fincore.metrics: api/metrics.md
+    - fincore.core: api/core.md
+    - fincore.viz: api/viz.md
+    - fincore.optimization: api/optimization.md
+    - fincore.simulation: api/simulation.md
+    - fincore.attribution: api/attribution.md
+    - fincore.risk: api/risk.md
+    - fincore.report: api/report.md
+  - Development:
+    - Contributing: development/contributing.md
+    - Development Guide: development/guide.md
+    - API Stability: development/api-stability.md
+    - Changelog: development/changelog.md

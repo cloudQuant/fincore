@@ -17,6 +17,9 @@ from scipy import optimize as sp_opt
 
 from fincore.optimization._utils import validate_result
 
+__all__ = ["optimize"]
+
+
 
 def optimize(
     returns: pd.DataFrame,

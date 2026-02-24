@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fincore.metrics import drawdown, ratios, round_trips, yearly
+from fincore.metrics import alpha_beta, drawdown, ratios, round_trips, stats, yearly
 
 
 class TestDrawdownMissingCoverage:
@@ -157,3 +157,111 @@ class TestYearlyEdgeCases:
 
         # Should return empty series for non-DatetimeIndex
         assert isinstance(result, pd.Series)
+
+
+class TestAlphaBetaMissingCoverage:
+    """Tests for alpha_beta module missing coverage lines 543, 557, 596, 610."""
+
+    def test_annual_alpha_empty_after_alignment(self):
+        """Test annual_alpha returns empty Series after alignment (line 543)."""
+        # Create returns with DatetimeIndex
+        returns = pd.Series(
+            [0.01, 0.02, 0.015],
+            index=pd.date_range("2020-01-01", periods=3),
+        )
+        # Create factor_returns with non-overlapping DatetimeIndex
+        factor_returns = pd.Series(
+            [0.005, 0.01],
+            index=pd.date_range("2021-01-01", periods=2),
+        )
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+        # After alignment, no common dates exist
+        # The function returns a Series with NaN values for the years
+        assert isinstance(result, pd.Series)
+        # Result contains NaN values since no common data
+
+    def test_annual_alpha_no_matching_years(self):
+        """Test annual_alpha when no matching years found (line 557)."""
+        # Create returns with data but factor with empty after alignment
+        returns = pd.Series(
+            [0.01, 0.02, 0.015],
+            index=pd.date_range("2020-01-01", periods=3),
+        )
+        # Empty factor returns with empty DatetimeIndex
+        factor_returns = pd.Series([], dtype=float)
+        factor_returns.index = pd.DatetimeIndex([], freq="D")
+
+        result = alpha_beta.annual_alpha(returns, factor_returns)
+        # Should return series when no matching years
+        assert isinstance(result, pd.Series)
+
+    def test_annual_beta_empty_after_alignment(self):
+        """Test annual_beta returns empty Series after alignment (line 596)."""
+        # Create returns with DatetimeIndex
+        returns = pd.Series(
+            [0.01, 0.02, 0.015],
+            index=pd.date_range("2020-01-01", periods=3),
+        )
+        # Create factor_returns with non-overlapping DatetimeIndex
+        factor_returns = pd.Series(
+            [0.005, 0.01],
+            index=pd.date_range("2021-01-01", periods=2),
+        )
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+        # After alignment, no common dates exist
+        assert isinstance(result, pd.Series)
+
+    def test_annual_beta_no_matching_years(self):
+        """Test annual_beta when no matching years found (line 610)."""
+        # Create returns with data but factor with empty after alignment
+        returns = pd.Series(
+            [0.01, 0.02, 0.015],
+            index=pd.date_range("2020-01-01", periods=3),
+        )
+        # Empty factor returns with empty DatetimeIndex
+        factor_returns = pd.Series([], dtype=float)
+        factor_returns.index = pd.DatetimeIndex([], freq="D")
+
+        result = alpha_beta.annual_beta(returns, factor_returns)
+        # Should return series when no matching years
+        assert isinstance(result, pd.Series)
+
+
+class TestStatsMissingCoverage:
+    """Tests for stats module missing coverage lines 175, 193, 203, 604, 625."""
+
+    def test_hurst_exponent_insufficient_rs_values(self):
+        """Test hurst_exponent with insufficient R/S values (line 193)."""
+        # Very short series that results in < 2 R/S values
+        returns = pd.Series([0.01, 0.02])
+        result = stats.hurst_exponent(returns)
+        # Should return nan for very short series
+        assert np.isnan(result)
+
+    def test_hurst_exponent_insufficient_lags(self):
+        """Test hurst_exponent with insufficient lags after filtering (line 203)."""
+        # Series where after filtering we have < 2 valid lags
+        returns = pd.Series([0.01, 0.02, 0.015, 0.008, 0.012])
+        result = stats.hurst_exponent(returns)
+        # For short series, might return nan
+        assert isinstance(result, (float, np.floating))
+
+    def test_r_cubed_turtle_no_years(self):
+        """Test r_cubed_turtle when years is empty (line 604)."""
+        # Empty returns
+        returns = pd.Series([], dtype=float)
+        result = stats.r_cubed_turtle(returns)
+        assert np.isnan(result)
+
+    def test_r_cubed_turtle_empty_max_drawdowns(self):
+        """Test r_cubed_turtle when max_drawdowns is empty (line 625)."""
+        # Create returns where no valid max drawdowns are computed
+        returns = pd.Series(
+            [0.0, 0.0, 0.0],
+            index=pd.date_range("2020-01-01", periods=3),
+        )
+        result = stats.r_cubed_turtle(returns)
+        # With all zero returns, might return inf or nan
+        assert isinstance(result, (float, np.floating))

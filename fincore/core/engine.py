@@ -19,6 +19,9 @@ import pandas as pd
 from fincore.constants import DAILY
 from fincore.metrics.basic import annualization_factor as _ann_factor
 
+__all__ = ["RollingEngine"]
+
+
 # Registry of available rolling metric names
 _AVAILABLE_METRICS = frozenset(
     {
@@ -64,6 +67,7 @@ class RollingEngine:
 
     @property
     def available_metrics(self) -> frozenset:
+        """Return the set of metric names supported by this engine."""
         return _AVAILABLE_METRICS
 
     # ------------------------------------------------------------------

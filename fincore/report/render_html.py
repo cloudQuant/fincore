@@ -24,6 +24,9 @@ from fincore.report.format import (
     safe_list,
 )
 
+__all__ = ["generate_html"]
+
+
 
 def generate_html(
     returns,

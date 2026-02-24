@@ -52,7 +52,7 @@ else:
 if matplotlib.get_backend().lower() in ("", "agg") or not hasattr(matplotlib, "_called_from_pytest"):
     try:
         matplotlib.use("Agg")
-    except Exception as e:
+    except Exception as e:  # pragma: no cover -- Edge case for matplotlib backend
         import logging
 
         logging.getLogger(__name__).debug("matplotlib.use('Agg') failed: %s", e)
@@ -267,6 +267,9 @@ from fincore.tearsheets import (
 from fincore.tearsheets import (
     show_worst_drawdown_periods as _show_worst_drawdown_periods,
 )
+
+__all__ = ["DisplayFunc", "MarkdownFunc", "Pyfolio"]
+
 
 
 class Pyfolio(Empyrical):

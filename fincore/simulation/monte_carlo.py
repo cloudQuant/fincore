@@ -12,6 +12,9 @@ from fincore.simulation.base import SimResult, compute_statistics
 from fincore.simulation.paths import gbm_from_returns, geometric_brownian_motion
 from fincore.simulation.scenarios import scenario_table, stress_test
 
+__all__ = ["MonteCarlo"]
+
+
 
 class MonteCarlo:
     """Monte Carlo simulation engine for financial risk analysis.

@@ -13,6 +13,20 @@ from __future__ import annotations
 import functools
 from collections.abc import Callable
 
+__all__ = [
+    "register_metric",
+    "register_viz_backend",
+    "register_hook",
+    "list_metrics",
+    "list_viz_backends",
+    "list_hooks",
+    "get_metric",
+    "get_viz_backend",
+    "execute_hooks",
+    "clear_registry",
+]
+
+
 # =============================================================================
 # Registry Storage
 # =============================================================================

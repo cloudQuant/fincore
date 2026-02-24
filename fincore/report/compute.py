@@ -12,6 +12,9 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
+__all__ = ["compute_sections"]
+
+
 # Module-level logger
 logger = logging.getLogger(__name__)
 

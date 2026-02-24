@@ -1,6 +1,9 @@
 import warnings
 from functools import wraps
 
+__all__ = ["deprecated"]
+
+
 
 def deprecated(msg=None, stacklevel=2):
     """

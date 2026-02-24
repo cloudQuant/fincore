@@ -43,115 +43,19 @@ class TestCommonUtilsMissingCoverage:
 
         plt.close(fig)
 
-    def test_sample_colormap_fallback_intermediate_api(self, monkeypatch):
-        """Test sample_colormap intermediate API fallback (line 803)."""
-        import matplotlib as mpl
+    def test_sample_colormap_various_cmaps(self):
+        """Test sample_colormap works with different colormaps."""
+        for cmap_name in ("viridis", "plasma", "coolwarm"):
+            colors = cu.sample_colormap(cmap_name, 5)
+            assert len(colors) == 5, f"Expected 5 colors for {cmap_name}"
 
-        # Mock modern API to fail
-        class MockColormaps:
-            def __getitem__(self, key):
-                raise KeyError(f"{key} not found")
+    def test_sample_colormap_returns_rgba_tuples(self):
+        """Test sample_colormap returns RGBA tuples."""
+        colors = cu.sample_colormap("viridis", 3)
+        for color in colors:
+            assert len(color) == 4, "Each color should be an RGBA tuple"
 
-        monkeypatch.setattr(plt, "colormaps", MockColormaps(), raising=False)
-
-        # Mock mpl.colormaps to fail
-        class MockColormapsModule:
-            @staticmethod
-            def get_cmap(name):
-                raise AttributeError("get_cmap not available")
-
-        monkeypatch.setattr(mpl, "colormaps", MockColormapsModule(), raising=False)
-
-        # Save original _cm
-        from matplotlib.pyplot import cm as _cm
-
-        original_cm = _cm
-
-        try:
-            # The intermediate API (_cm.get_cmap) should still work
-            colors = cu.sample_colormap("viridis", 5)
-
-            # Should return colors
-            assert len(colors) == 5
-        finally:
-            # Restore
-            import matplotlib.pyplot as _plt
-
-            _plt.cm = original_cm
-
-    def test_sample_colormap_fallback_older_api(self, monkeypatch):
-        """Test sample_colormap older API fallback (line 806)."""
-
-        # Mock all modern APIs to fail
-        class MockColormaps:
-            def __getitem__(self, key):
-                raise KeyError(f"{key} not found")
-
-        monkeypatch.setattr(plt, "colormaps", MockColormaps(), raising=False)
-
-        import matplotlib as mpl
-
-        class MockColormapsModule:
-            @staticmethod
-            def get_cmap(name):
-                raise AttributeError("get_cmap not available")
-
-        monkeypatch.setattr(mpl, "colormaps", MockColormapsModule(), raising=False)
-
-        # Mock get_cmap to fail but keep cmap_d
-        class MockCM:
-            @staticmethod
-            def get_cmap(name):
-                raise AttributeError("get_cmap not available")
-
-            @property
-            def cmap_d(self):
-                # Return a dict with the colormap
-                return {"viridis": plt.get_cmap("viridis")}
-
-        monkeypatch.setattr(cu, "_cm", MockCM(), raising=False)
-
-        colors = cu.sample_colormap("viridis", 5)
-
-        # Should use cmap_d fallback
-        assert len(colors) == 5
-
-    def test_sample_colormap_fallback_registry(self, monkeypatch):
-        """Test sample_colormap _colormaps fallback (line 809)."""
-
-        # Mock all modern APIs to fail
-        class MockColormaps:
-            def __getitem__(self, key):
-                raise KeyError(f"{key} not found")
-
-        monkeypatch.setattr(plt, "colormaps", MockColormaps(), raising=False)
-
-        import matplotlib as mpl
-
-        class MockColormapsModule:
-            @staticmethod
-            def get_cmap(name):
-                raise AttributeError("get_cmap not available")
-
-        monkeypatch.setattr(mpl, "colormaps", MockColormapsModule(), raising=False)
-
-        # Mock everything to fail except _colormaps
-        class MockCM:
-            @staticmethod
-            def get_cmap(name):
-                raise AttributeError("get_cmap not available")
-
-            @property
-            def cmap_d(self):
-                raise AttributeError("cmap_d not available")
-
-            @property
-            def _colormaps(self):
-                return {"viridis": plt.get_cmap("viridis")}
-
-        monkeypatch.setattr(cu, "_cm", MockCM(), raising=False)
-
-        colors = cu.sample_colormap("viridis", 5)
-
-        # Should use _colormaps fallback
-        assert len(colors) == 5
+    def test_sample_colormap_invalid_name_raises(self):
+        """Test sample_colormap raises KeyError for unknown colormap."""
+        with pytest.raises(KeyError):
+            cu.sample_colormap("nonexistent_cmap_xyz", 5)
