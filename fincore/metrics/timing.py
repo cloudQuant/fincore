@@ -78,7 +78,7 @@ def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
         design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, factor_squared])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
         return coeffs[2]  # gamma coefficient
-    except Exception as e:
+    except (np.linalg.LinAlgError, ValueError, FloatingPointError) as e:
         logger.debug("treynor_mazuy_timing failed: %s", e)
         return np.nan
 
@@ -125,7 +125,7 @@ def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
         design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, down_market])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
         return coeffs[2]  # gamma coefficient
-    except Exception as e:
+    except (np.linalg.LinAlgError, ValueError, FloatingPointError) as e:
         logger.debug("henriksson_merton_timing failed: %s", e)
         return np.nan
 
@@ -225,7 +225,7 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
 
         return float(timing_coef)
 
-    except Exception as e:
+    except (np.linalg.LinAlgError, ValueError, FloatingPointError) as e:
         logger.debug("cornell_timing failed: %s", e)
         return np.nan
 
@@ -252,7 +252,7 @@ def extract_interesting_date_ranges(returns):
             if len(period) == 0:
                 continue
             ranges[name] = period
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.debug("extract_interesting_date_ranges skipped %s: %s", name, e)
             continue
 

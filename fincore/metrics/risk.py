@@ -16,11 +16,12 @@
 
 """Risk metrics."""
 
+from __future__ import annotations
+
 from sys import float_info
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from fincore.constants import DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
@@ -44,7 +45,13 @@ __all__ = [
 ]
 
 
-def annual_volatility(returns, period=DAILY, alpha_=2.0, annualization=None, out=None):
+def annual_volatility(
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    period: str = DAILY,
+    alpha_: float = 2.0,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray:
     """Determine the annualized volatility of a return series.
 
     Volatility is computed as the standard deviation of returns scaled by
@@ -77,6 +84,7 @@ def annual_volatility(returns, period=DAILY, alpha_=2.0, annualization=None, out
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
+    assert out is not None
 
     returns_1d = returns.ndim == 1
 
@@ -84,17 +92,23 @@ def annual_volatility(returns, period=DAILY, alpha_=2.0, annualization=None, out
         out[()] = np.nan
         if returns_1d:
             out = out.item()
-        return out
+        return out  # type: ignore[return-value]
 
     ann_factor = annualization_factor(period, annualization)
     nanstd(returns, ddof=1, axis=0, out=out)
     out = np.multiply(out, ann_factor ** (1.0 / alpha_), out=out)
     if returns_1d:
-        out = out.item()
-    return out
+        out = out.item()  # type: ignore[union-attr]
+    return out  # type: ignore[return-value]
 
 
-def downside_risk(returns, required_return=0, period=DAILY, annualization=None, out=None):
+def downside_risk(
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    required_return: float = 0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray | pd.Series:
     """Determine the annualized downside deviation below a threshold.
 
     Downside risk is computed as the annualized standard deviation of
@@ -126,6 +140,7 @@ def downside_risk(returns, required_return=0, period=DAILY, annualization=None, 
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
+    assert out is not None
 
     returns_1d = returns.ndim == 1
 
@@ -133,7 +148,7 @@ def downside_risk(returns, required_return=0, period=DAILY, annualization=None, 
         out[()] = np.nan
         if returns_1d:
             out = out.item()
-        return out
+        return out  # type: ignore[return-value]
 
     ann_factor = annualization_factor(period, annualization)
 
@@ -155,7 +170,7 @@ def downside_risk(returns, required_return=0, period=DAILY, annualization=None, 
     return out
 
 
-def value_at_risk(returns, cutoff=0.05):
+def value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0.05) -> float:
     """Calculate the (historical) value at risk (VaR) of returns.
 
     VaR is estimated as the ``cutoff``-percentile of the return
@@ -180,7 +195,7 @@ def value_at_risk(returns, cutoff=0.05):
     return np.percentile(returns, cutoff * 100)
 
 
-def conditional_value_at_risk(returns, cutoff=0.05):
+def conditional_value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0.05) -> float:
     """Calculate the conditional value at risk (CVaR) of returns.
 
     CVaR (also known as Expected Shortfall) is the expected return
@@ -205,7 +220,7 @@ def conditional_value_at_risk(returns, cutoff=0.05):
     return np.mean(returns[returns <= cutoff_index])
 
 
-def tail_ratio(returns):
+def tail_ratio(returns: pd.Series | np.ndarray) -> float:
     """Determine the ratio of right- to left-tail percentiles of returns.
 
     The tail ratio is defined as the absolute value of the 95th
@@ -235,7 +250,13 @@ def tail_ratio(returns):
     return np.abs(np.percentile(returns, 95)) / left_tail
 
 
-def tracking_error(returns, factor_returns, period=DAILY, annualization=None, out=None):
+def tracking_error(
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    factor_returns: pd.Series | pd.DataFrame | np.ndarray,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray:
     """Determine the annualized tracking error versus a benchmark.
 
     Tracking error is defined as the annualized standard deviation of
@@ -266,6 +287,7 @@ def tracking_error(returns, factor_returns, period=DAILY, annualization=None, ou
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
+    assert out is not None
 
     returns_1d = returns.ndim == 1
 
@@ -273,7 +295,7 @@ def tracking_error(returns, factor_returns, period=DAILY, annualization=None, ou
         out[()] = np.nan
         if returns_1d:
             out = out.item()
-        return out
+        return out  # type: ignore[return-value]
 
     returns, factor_returns = aligned_series(returns, factor_returns)
     active_return = adjust_returns(returns, factor_returns)
@@ -285,10 +307,16 @@ def tracking_error(returns, factor_returns, period=DAILY, annualization=None, ou
     if returns_1d:
         out = out.item()
 
-    return out
+    return out  # type: ignore[return-value]
 
 
-def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
+def residual_risk(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> float:
     """Calculate annualized residual risk (idiosyncratic risk).
 
     Residual risk is the standard deviation of regression residuals
@@ -345,7 +373,13 @@ def residual_risk(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     return np.std(residuals, ddof=1) * np.sqrt(ann_factor)
 
 
-def var_excess_return(returns, cutoff=0.05, risk_free=0.0, period=DAILY, annualization=None):
+def var_excess_return(
+    returns: pd.Series | np.ndarray,
+    cutoff: float = 0.05,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> float:
     """Calculate the excess-return-on-VaR ratio.
 
     Defined as ``(annualized_return - risk_free) / abs(VaR)``, where VaR
@@ -383,10 +417,10 @@ def var_excess_return(returns, cutoff=0.05, risk_free=0.0, period=DAILY, annuali
     if var_value == 0 or np.isnan(var_value) or np.isnan(ann_ret):
         return np.nan
 
-    return (ann_ret - risk_free) / abs(var_value)
+    return (ann_ret - risk_free) / abs(var_value)  # type: ignore[return-value]
 
 
-def var_cov_var_normal(p, c, mu=0, sigma=1):
+def var_cov_var_normal(p: float, c: float, mu: float = 0, sigma: float = 1) -> float:
     """Calculate parametric Value at Risk using the normal distribution.
 
     Parameters
@@ -405,11 +439,17 @@ def var_cov_var_normal(p, c, mu=0, sigma=1):
     float
         Parametric VaR at the given confidence level.
     """
-    alpha = stats.norm.ppf(1 - c, mu, sigma)
-    return p - p * (alpha + 1)
+    from scipy import stats as _stats
+
+    alpha = _stats.norm.ppf(1 - c, mu, sigma)
+    return float(p - p * (alpha + 1))
 
 
-def trading_value_at_risk(returns, period=None, sigma=2.0):
+def trading_value_at_risk(
+    returns: pd.Series | np.ndarray,
+    period: str | None = None,
+    sigma: float = 2.0,
+) -> float:
     """Calculate trading Value at Risk.
 
     This computes a simplified VaR as ``mean - sigma * std``.
@@ -438,7 +478,10 @@ def trading_value_at_risk(returns, period=None, sigma=2.0):
     return mean_ret - sigma * std_ret
 
 
-def gpd_risk_estimates(returns, var_p=0.01):
+def gpd_risk_estimates(
+    returns: pd.Series | np.ndarray,
+    var_p: float = 0.01,
+) -> np.ndarray | pd.Series:
     """Estimate VaR and ES using the Generalized Pareto Distribution (GPD).
 
     This fits a GPD to the tail of the loss distribution and estimates
@@ -555,7 +598,10 @@ def gpd_risk_estimates(returns, var_p=0.01):
     return result
 
 
-def gpd_risk_estimates_aligned(returns, var_p=0.01):
+def gpd_risk_estimates_aligned(
+    returns: pd.Series | np.ndarray,
+    var_p: float = 0.01,
+) -> np.ndarray | pd.Series:
     """Calculate GPD risk estimates (aligned version for compatibility).
 
     This is a wrapper around :func:`gpd_risk_estimates` for API
@@ -576,7 +622,10 @@ def gpd_risk_estimates_aligned(returns, var_p=0.01):
     return gpd_risk_estimates(returns, var_p)
 
 
-def beta_fragility_heuristic(returns, factor_returns):
+def beta_fragility_heuristic(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+) -> float:
     """Estimate fragility to a drop in beta.
 
     This heuristic measures how fragile a strategy's returns are to changes
@@ -631,7 +680,10 @@ def beta_fragility_heuristic(returns, factor_returns):
     return heuristic
 
 
-def beta_fragility_heuristic_aligned(returns, factor_returns):
+def beta_fragility_heuristic_aligned(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+) -> float:
     """Calculate the beta fragility heuristic with aligned series.
 
     This is a wrapper around :func:`beta_fragility_heuristic` for API

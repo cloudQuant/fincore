@@ -59,7 +59,7 @@ def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None, s
     else:
         try:
             trace_df = pd.DataFrame(trace)
-        except Exception as e:  # pragma: no cover
+        except (TypeError, ValueError) as e:  # pragma: no cover
             raise TypeError("trace must be a pandas.DataFrame or dict-like object.") from e
 
     if burn:

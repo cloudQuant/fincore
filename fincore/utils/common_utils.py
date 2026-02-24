@@ -428,7 +428,7 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
             # print(name, table)
             table.to_excel(excel_file_path, index=True)
             # print(f"Saved export to: {excel_file_path}")
-        except Exception as e:
+        except (OSError, IOError, PermissionError, ValueError) as e:
             import logging
 
             logging.getLogger(__name__).warning("Failed to save table export: %s", e)
@@ -776,7 +776,7 @@ def configure_legend(ax, autofmt_xdate=True, change_colors=False, rotation=30, h
             try:
                 y = ydata_fn()
                 return float(y[-1])
-            except Exception:  # pragma: no cover -- Edge case for legend sorting
+            except (TypeError, ValueError, IndexError):  # pragma: no cover -- Edge case for legend sorting
                 return 0.0
         return 0.0
 

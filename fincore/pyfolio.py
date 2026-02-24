@@ -52,7 +52,7 @@ else:
 if matplotlib.get_backend().lower() in ("", "agg") or not hasattr(matplotlib, "_called_from_pytest"):
     try:
         matplotlib.use("Agg")
-    except Exception as e:  # pragma: no cover -- Edge case for matplotlib backend
+    except (ImportError, RuntimeError) as e:  # pragma: no cover -- Edge case for matplotlib backend
         import logging
 
         logging.getLogger(__name__).debug("matplotlib.use('Agg') failed: %s", e)

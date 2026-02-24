@@ -55,7 +55,7 @@ def _get_annual_return():
 
 
 # Re-export annual_return for backwards compatibility
-def annual_return(*args, **kwargs):
+def annual_return(*args: object, **kwargs: object) -> float:
     """Backwards-compatible wrapper for computing annual return (CAGR).
 
     The implementation lives in :func:`fincore.metrics.yearly.annual_return`.
@@ -238,7 +238,7 @@ def aggregate_returns(
         year depending on ``convert_to``.
     """
 
-    def cumulate_returns(ret):
+    def cumulate_returns(ret: pd.Series) -> float:
         """Compute cumulative returns for a period.
 
         Parameters
@@ -251,7 +251,7 @@ def aggregate_returns(
         float
             The last value of the cumulative returns series.
         """
-        return cum_returns(ret).iloc[-1]
+        return cum_returns(ret).iloc[-1]  # type: ignore[union-attr]
 
     if not isinstance(returns.index, pd.DatetimeIndex):
         raise ValueError(

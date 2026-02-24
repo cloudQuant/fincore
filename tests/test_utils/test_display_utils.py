@@ -88,7 +88,7 @@ class TestPrintTable:
     ):
         """Test print_table logs warning when to_excel fails."""
         def fake_to_excel(self, path, index=True):  # noqa: ARG001
-            raise RuntimeError("boom")
+            raise OSError("boom")
 
         monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel, raising=True)
         monkeypatch.setattr(cu, "__file__", str(tmp_path / "common_utils.py"), raising=False)
