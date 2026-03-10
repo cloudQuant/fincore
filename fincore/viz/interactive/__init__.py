@@ -13,9 +13,9 @@ __all__ = ["PlotlyBackend"]
 
 # Try to import BokehBackend if bokeh is available
 try:
-    import importlib
+    from importlib.util import find_spec
 
-    if importlib.util.find_spec("bokeh") is not None:
+    if find_spec("bokeh") is not None:
         from fincore.viz.interactive.bokeh_backend import BokehBackend  # noqa: F401
 
         __all__.append("BokehBackend")

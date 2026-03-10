@@ -53,6 +53,7 @@ dev = [
     "parameterized",
     "ruff>=0.4.0",
     "mypy>=1.5",
+    "types-requests>=2.25",
     "yfinance>=0.2",
     "requests>=2.25",
 ]

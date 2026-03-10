@@ -364,7 +364,7 @@ class EGARCH:
             sigma2_valid = sigma2[1:]
             loglik = -0.5 * np.sum(np.log(2 * np.pi * sigma2_valid) + eps_valid**2)
 
-        return -loglik
+        return float(-loglik)
 
 
 class GJRGARCH:

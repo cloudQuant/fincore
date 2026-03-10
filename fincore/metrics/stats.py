@@ -455,9 +455,10 @@ def win_rate(returns: pd.Series | np.ndarray) -> float:
     win_rate_value = positive_count / total_count
 
     if returns_array.ndim == 1:
-        return win_rate_value.item() if isinstance(win_rate_value, np.ndarray) else win_rate_value
+        val = win_rate_value.item() if isinstance(win_rate_value, np.ndarray) else win_rate_value
+        return float(val)
     else:
-        return win_rate_value
+        return float(win_rate_value)
 
 
 def loss_rate(returns: pd.Series | np.ndarray) -> float:
@@ -488,9 +489,10 @@ def loss_rate(returns: pd.Series | np.ndarray) -> float:
     loss_rate_value = negative_count / total_count
 
     if returns_array.ndim == 1:
-        return loss_rate_value.item() if isinstance(loss_rate_value, np.ndarray) else loss_rate_value
+        val = loss_rate_value.item() if isinstance(loss_rate_value, np.ndarray) else loss_rate_value
+        return float(val)
     else:
-        return loss_rate_value
+        return float(loss_rate_value)
 
 
 def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:

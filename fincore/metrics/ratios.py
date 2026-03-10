@@ -639,7 +639,7 @@ def cal_treynor_ratio(
     if len(returns) < 2:
         out[()] = np.nan
         if returns_1d:
-            out = out.item()
+            return float(out.item())
         return out
 
     returns, factor_returns = aligned_series(returns, factor_returns)
@@ -657,7 +657,7 @@ def cal_treynor_ratio(
         else:
             with np.errstate(divide="ignore", invalid="ignore"):
                 out[()] = ann_excess_return / b
-            out = out.item()
+            return float(out.item())
     else:
         if isinstance(b, (pd.Series, np.ndarray)):
             mask = (b == 0) | (b < 0) | np.isnan(b)
