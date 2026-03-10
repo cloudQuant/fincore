@@ -116,7 +116,10 @@ def plot_annual_returns(empyrical_instance, returns, ax=None, **kwargs):
     ann_ret_df = pd.DataFrame(empyrical_instance.aggregate_returns(returns, "yearly"))
 
     ax.axvline(100 * ann_ret_df.values.mean(), color="steelblue", linestyle="--", lw=4, alpha=0.7)
-    (100 * ann_ret_df.sort_index(ascending=False)).plot(ax=ax, kind="barh", alpha=0.70, **kwargs)
+    plot_df = 100 * ann_ret_df.sort_index(ascending=False)
+    # Avoid pandas barh bug: Index.freq not on non-DatetimeIndex (yearly → Int64Index)
+    plot_df.index = plot_df.index.astype(str)
+    plot_df.plot(ax=ax, kind="barh", alpha=0.70, **kwargs)
     ax.axvline(0.0, color="black", linestyle="-", lw=3)
 
     ax.set_ylabel("Year")

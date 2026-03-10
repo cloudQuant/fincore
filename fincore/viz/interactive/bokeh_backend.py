@@ -378,7 +378,7 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import BasicTicker, ColumnDataSource, HoverTool, LinearColorMapper
+        from bokeh.models import BasicTicker, ColumnDataSource, FactorRange, HoverTool, LinearColorMapper
         from bokeh.plotting import figure
 
         pivot: pd.DataFrame
@@ -429,10 +429,10 @@ class BokehBackend(VizBackend):
             high=max_val,
         )
 
-        p = figure(  # type: ignore[call-arg]
+        p = figure(
             title="Monthly Returns Heatmap",
-            x_range=month_names,
-            y_range=[str(y) for y in reversed(years)],
+            x_range=FactorRange(factors=month_names),
+            y_range=FactorRange(factors=[str(y) for y in reversed(years)]),
             width=self.width,
             height=self.height,
             x_axis_location="above",
