@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 from PyPDF2 import PdfReader, PdfWriter
 
 from fincore.report.render_pdf import generate_pdf
@@ -65,6 +66,7 @@ class _FakePlaywrightCM:
 
 
 def test_generate_pdf_with_mocked_playwright(tmp_path, monkeypatch) -> None:
+    pytest.importorskip("playwright")
     import playwright.sync_api as ps
 
     monkeypatch.setattr(ps, "sync_playwright", lambda: _FakePlaywrightCM())
@@ -94,6 +96,7 @@ def test_generate_pdf_with_mocked_playwright(tmp_path, monkeypatch) -> None:
 def test_generate_pdf_ignores_cleanup_oserrors(tmp_path, monkeypatch) -> None:
     import os
 
+    pytest.importorskip("playwright")
     import playwright.sync_api as ps
 
     monkeypatch.setattr(ps, "sync_playwright", lambda: _FakePlaywrightCM())

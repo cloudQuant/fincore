@@ -90,13 +90,13 @@ class TestEVTVarEdgeCases:
 
         np.random.seed(42)
         data = np.random.exponential(0.01, 5000)
-        _returns = -np.abs(data)  # Not used, just for setup
+        returns = -np.abs(data)  # Need negative returns for lower tail
 
         # Mock gpd_fit to return xi very close to 0
         mock_params = {"xi": 1e-12, "beta": 0.02, "threshold": 0.05, "n_exceed": 100}
 
         with patch("fincore.risk.evt.gpd_fit", return_value=mock_params):
-            var = evt_var(data, alpha=0.05, model="gpd", tail="lower")
+            var = evt_var(returns, alpha=0.05, model="gpd", tail="lower")
             assert isinstance(var, float)
 
     def test_evt_var_gev_near_zero_xi_branch(self):

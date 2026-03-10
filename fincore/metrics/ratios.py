@@ -18,6 +18,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -122,7 +124,14 @@ def sharpe_ratio(
     returns_risk_adj = np.asanyarray(adjust_returns(returns, risk_free))
     ann_factor = annualization_factor(period, annualization)
 
-    std_returns = nanstd(returns_risk_adj, ddof=1, axis=0)
+    n_valid = np.sum(~np.isnan(returns_risk_adj), axis=0)
+    if return_1d and n_valid < 2:
+        out[()] = np.nan
+        return float(out.item())
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", "Degrees of freedom <= 0 for slice", RuntimeWarning)
+        std_returns = nanstd(returns_risk_adj, ddof=1, axis=0)
     mean_returns = nanmean(returns_risk_adj, axis=0)
 
     with np.errstate(divide="ignore", invalid="ignore"):

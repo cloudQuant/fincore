@@ -41,9 +41,11 @@ class TestGPDFit:
 
     def test_insufficient_exceedances(self):
         """Test that insufficient exceedances raises ValueError."""
-        data = np.array([1, 2, 3, 4, 5])
+        # Need negative returns so tail_data is non-empty; use high threshold
+        # so exceedances (losses > threshold) are < 10
+        data = np.array([-0.01, -0.02, -0.03, -0.04, -0.05])
         with pytest.raises(ValueError, match="Not enough exceedances"):
-            gpd_fit(data, threshold=10)
+            gpd_fit(data, threshold=0.5)
 
     def test_unknown_method(self, heavy_tailed_data):
         """Test that unknown method raises ValueError."""

@@ -138,6 +138,9 @@ def gpd_fit(
     # Use losses (positive tail of negative returns)
     tail_data = -data[data < 0]
 
+    if len(tail_data) == 0:
+        raise ValueError("No negative returns in data; need at least some losses for GPD fitting")
+
     # Set threshold
     if threshold is None:
         threshold = np.percentile(tail_data, 90)
