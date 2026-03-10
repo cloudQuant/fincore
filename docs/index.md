@@ -52,6 +52,18 @@
 
 ---
 
+## 项目内部文档 (Internal)
+
+| 文档 | 说明 |
+|------|------|
+| [Benchmarks](BENCHMARKS.md) | 性能基准测试说明 |
+| [已实现函数索引](已实现函数索引.md) | Empyrical 已实现函数完整索引 |
+| [Code Quality Review](CODE_QUALITY_REVIEW.md) | 代码质量审查报告 |
+| [Improvements](IMPROVEMENTS.md) | 改进记录 |
+| [CI/CD 分析](CI_CD_ANALYSIS.md) | CI/CD、GitHub Pages、Read the Docs 分析 |
+
+---
+
 ## Project Stats
 
 - **Source**: 85 Python files, ~26,700 lines

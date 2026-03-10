@@ -17,6 +17,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore import Empyrical
 from fincore.viz import get_backend
 
@@ -387,8 +388,11 @@ try:
     ax.grid(True, alpha=0.3, axis='y')
 
     plt.tight_layout()
-    plt.savefig('viz_comprehensive.png', dpi=100, bbox_inches='tight')
-    print("\n综合图表已保存: viz_comprehensive.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "viz_comprehensive.png"
+    plt.savefig(out_path, dpi=100, bbox_inches='tight')
+    print(f"\n综合图表已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过批量保存")

@@ -68,3 +68,43 @@ target/
 # JetBrains
 .idea/
 .DS_Store
+
+# Type / lint caches
+.mypy_cache/
+.ruff_cache/
+
+# Benchmark cache
+.benchmarks/
+
+# AI / editor config (keep _bmad-output)
+.agents/
+.claude/
+.cursor/
+.opencode/
+.windsurf/
+_bmad/
+
+# Build / generated artifacts
+site/
+logs/
+coverage.json
+report.html
+viz_returns.html
+
+# Example script outputs (root level, from examples/)
+/backtesting_metrics.png
+/bootstrap_analysis.png
+/market_timing_analysis.png
+/monte_carlo_simulation.png
+/performance_attribution.png
+/portfolio_optimization.png
+/rolling_metrics.png
+/stress_testing.png
+/risk_models.png
+/workflow_analysis.png
+/positions_analysis.png
+/viz_comprehensive.png
+/custom_optimization.png
+
+# Examples output directory
+examples/output/

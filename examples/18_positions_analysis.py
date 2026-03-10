@@ -17,6 +17,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore.metrics.positions import (
     get_percent_alloc,
     get_top_long_short_abs,
@@ -344,8 +345,11 @@ try:
     ax.grid(True, alpha=0.3, axis='x')
 
     plt.tight_layout()
-    plt.savefig('positions_analysis.png', dpi=100)
-    print("\n持仓分析可视化已保存: positions_analysis.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "positions_analysis.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n持仓分析可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

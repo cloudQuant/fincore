@@ -12,6 +12,7 @@ RollingEngine 是 fincore 提供的高性能批量滚动指标计算工具，
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore.core.engine import RollingEngine
 from fincore.metrics.rolling import roll_sharpe_ratio, roll_max_drawdown
 
@@ -99,8 +100,11 @@ try:
     axes[2].fill_between(results_df.index, results_df['max_drawdown'], 0, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig('rolling_metrics.png', dpi=100)
-    print("\n图表已保存至: rolling_metrics.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "rolling_metrics.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n图表已保存至: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

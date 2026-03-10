@@ -16,6 +16,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore.simulation import MonteCarlo
 from fincore import sharpe_ratio, max_drawdown
 
@@ -259,8 +260,11 @@ try:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig('monte_carlo_simulation.png', dpi=100)
-    print("\n蒙特卡洛模拟可视化已保存: monte_carlo_simulation.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "monte_carlo_simulation.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n蒙特卡洛模拟可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

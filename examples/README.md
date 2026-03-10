@@ -2,6 +2,8 @@
 
 This directory contains practical examples demonstrating how to use fincore for quantitative finance analysis.
 
+Output files (e.g. PNG charts) from running the examples are saved to `examples/output/`.
+
 ## Core Examples
 
 ### 1. Single Strategy Analysis

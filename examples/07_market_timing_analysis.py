@@ -16,6 +16,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore import Empyrical
 
 print("=" * 70)
@@ -268,8 +269,11 @@ try:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig('risk_models.png', dpi=100)
-    print("\n风险模型可视化图表已保存: risk_models.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "risk_models.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n风险模型可视化图表已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 scipy/matplotlib，跳过可视化")

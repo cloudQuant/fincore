@@ -16,6 +16,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore import Empyrical
 from fincore.simulation import MonteCarlo
 from fincore.constants.interesting_periods import PERIODS
@@ -370,8 +371,11 @@ try:
     ax.grid(True, alpha=0.3, axis='y')
 
     plt.tight_layout()
-    plt.savefig('stress_testing.png', dpi=100)
-    print("\n压力测试可视化已保存: stress_testing.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "stress_testing.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n压力测试可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

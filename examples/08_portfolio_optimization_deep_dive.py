@@ -15,6 +15,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore.optimization import efficient_frontier, risk_parity
 from fincore import sharpe_ratio, max_drawdown, annual_volatility
 
@@ -220,8 +221,11 @@ try:
     ax.grid(False)
 
     plt.tight_layout()
-    plt.savefig('portfolio_optimization.png', dpi=100)
-    print("\n组合优化可视化已保存: portfolio_optimization.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "portfolio_optimization.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n组合优化可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

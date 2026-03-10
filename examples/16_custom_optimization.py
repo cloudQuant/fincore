@@ -17,6 +17,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore.optimization import optimize
 from fincore import sharpe_ratio, annual_volatility
 
@@ -389,8 +390,11 @@ try:
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig('custom_optimization.png', dpi=100)
-    print("\n优化可视化已保存: custom_optimization.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "custom_optimization.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n优化可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")

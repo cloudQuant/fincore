@@ -18,6 +18,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from fincore import analyze, sharpe_ratio, max_drawdown
 from fincore.core.engine import RollingEngine
 from fincore.report import create_strategy_report
@@ -346,8 +347,11 @@ try:
     ax.set_title('策略评分雷达图')
 
     plt.tight_layout()
-    plt.savefig('workflow_analysis.png', dpi=100)
-    print("\n可视化已保存: workflow_analysis.png")
+    out_dir = Path(__file__).resolve().parent / "output"
+    out_dir.mkdir(exist_ok=True)
+    out_path = out_dir / "workflow_analysis.png"
+    plt.savefig(out_path, dpi=100)
+    print(f"\n可视化已保存: {out_path}")
 
 except ImportError:
     print("\n未安装 matplotlib，跳过可视化")
