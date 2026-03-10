@@ -81,10 +81,10 @@ open htmlcov/index.html
 
 ```bash
 # Unix/Linux/macOS
-./test_python_versions_simple.sh
+./scripts/test_python_versions_simple.sh
 
 # Windows
-test_python_versions_simple.bat
+scripts\test_python_versions_simple.bat
 ```
 
 ## Key Architecture Decisions

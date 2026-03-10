@@ -61,6 +61,7 @@
 | [Code Quality Review](CODE_QUALITY_REVIEW.md) | 代码质量审查报告 |
 | [Improvements](IMPROVEMENTS.md) | 改进记录 |
 | [CI/CD 分析](CI_CD_ANALYSIS.md) | CI/CD、GitHub Pages、Read the Docs 分析 |
+| [文档配置分析](DOC_CONFIG_ANALYSIS.md) | mkdocs/readthedocs 为何保留在根目录 |
 
 ---
 

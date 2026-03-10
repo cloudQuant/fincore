@@ -5,8 +5,8 @@
 echo "Setting up dual push configuration..."
 
 # Configure origin to push to both Gitee and GitHub
-git remote set-url --add --push origin https://gitee.com/yunjinqi/empyrical.git
-git remote set-url --add --push origin https://github.com/cloudQuant/empyrical.git
+git remote set-url --add --push origin https://gitee.com/yunjinqi/fincore.git
+git remote set-url --add --push origin https://github.com/cloudQuant/fincore.git
 
 echo "Configuration complete!"
 echo ""

@@ -1,8 +1,11 @@
 #!/bin/bash
-# Simple test script for empyrical across Python versions
+# Simple test script for fincore across Python versions
+# Run from any dir: ./scripts/test_python_versions_simple.sh
+
+cd "$(dirname "$0")/.."
 
 echo "========================================"
-echo "Empyrical Python Compatibility Test"
+echo "fincore Python Compatibility Test"
 echo "========================================"
 echo
 
@@ -11,7 +14,7 @@ mkdir -p test_results
 
 # Create summary file
 summary="test_results/summary.txt"
-echo "Empyrical Test Summary" > "$summary"
+echo "fincore Test Summary" > "$summary"
 echo "Tested on: $(date)" >> "$summary"
 echo >> "$summary"
 
@@ -46,7 +49,7 @@ for v in py38 py39 py310 py311 py312 py313; do
     echo "Installing dependencies..."
     pip install -U -r requirements.txt > "test_results/${v}_install.log" 2>&1
     
-    echo "Installing empyrical..."
+    echo "Installing fincore..."
     pip install -U . >> "test_results/${v}_install.log" 2>&1
     
     echo "Running tests..."

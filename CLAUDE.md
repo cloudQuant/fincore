@@ -39,7 +39,7 @@ pytest tests/test_pyfolio/            # Pyfolio tearsheet tests
 pytest tests/test_core/test_context.py::TestCaching
 
 # Run tests across Python versions (requires conda environments)
-./test_python_versions_simple.sh
+./scripts/test_python_versions_simple.sh
 ```
 
 ### Linting and Type Checking

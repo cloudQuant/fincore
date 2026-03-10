@@ -1,8 +1,11 @@
 @echo off
-REM Simple test script for empyrical across Python versions
+REM Simple test script for fincore across Python versions
+REM Run from any dir: scripts\test_python_versions_simple.bat
+
+cd /d "%~dp0.."
 
 echo ======================================== 
-echo Empyrical Python Compatibility Test
+echo fincore Python Compatibility Test
 echo ======================================== 
 echo.
 
@@ -11,7 +14,7 @@ if not exist test_results mkdir test_results
 
 REM Create summary file
 set summary=test_results\summary.txt
-echo Empyrical Test Summary > %summary%
+echo fincore Test Summary > %summary%
 echo Tested on: %date% %time% >> %summary%
 echo. >> %summary%
 
@@ -35,7 +38,7 @@ for %%v in (py37 py38 py39 py310 py311 py312 py313) do (
         echo Installing dependencies...
         pip install -U -r requirements.txt >test_results\%%v_install.log 2>&1
         
-        echo Installing empyrical...
+        echo Installing fincore...
         pip install -U . >>test_results\%%v_install.log 2>&1
         
         echo Running tests...
