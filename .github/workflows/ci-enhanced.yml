@@ -1,0 +1,420 @@
+# Enhanced CI/CD Pipeline for fincore
+#
+# This workflow uses all test markers for optimized CI execution:
+# - unit: Fast unit tests (~12s)
+# - p0+p1: Critical/high priority tests (~15s)
+# - not slow: Skip computationally expensive tests
+# - integration: External dependency tests (separate run)
+#
+# Matrix Jobs:
+# - fast-check: Quick PR validation (unit + p0+p1, no slow)
+# - full-suite: Complete test coverage
+# - integration: External dependency tests
+# - benchmarks: Performance regression detection (future)
+
+name: CI Enhanced
+
+# Supplemental workflow - run manually for full suite
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-enhanced-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Cache version - bump to invalidate cache
+  CACHE_VERSION: v1
+
+jobs:
+  # Fast PR validation - unit + critical tests, no slow tests
+  fast-check:
+    name: Fast Check (Unit + P0+P1, no slow)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            pyproject.toml
+            setup.cfg
+            requirements-test.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      - name: Run fast unit tests
+        run: |
+          echo "Running unit tests (265 tests, ~12s)..."
+          pytest tests/ -m "unit and not slow" -v --tb=short -n auto
+
+      - name: Run P0+P1 critical tests
+        run: |
+          echo "Running P0+P1 tests (66 tests, ~8s)..."
+          pytest tests/ -m "(p0 or p1) and not slow" -v --tb=short -n auto
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-check-results
+          path: |
+            .pytest_cache/
+            test-results/
+
+  # Full test suite - runs on main branch push
+  full-suite:
+    name: Full Suite (All Tests)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,viz]"
+
+      - name: Run all tests with coverage
+        run: |
+          pytest tests/ -v --tb=short -n auto \
+            --cov=fincore \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --cov-report=html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-py${{ matrix.python-version }}
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: |
+            .coverage
+            htmlcov/
+            coverage.xml
+
+  # Integration tests - separate run for external dependencies
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,datareader]"
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests (requires network)..."
+          pytest tests/ -m integration -v --tb=short
+        continue-on-error: true  # Don't block on network failures
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            .pytest_cache/
+            test-results/
+
+  # Slow tests - computationally expensive tests
+  slow:
+    name: Slow Tests (Monte Carlo, GARCH, etc.)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,bayesian]"
+
+      - name: Run slow tests
+        run: |
+          echo "Running slow tests (8 tests, ~2-3min)..."
+          pytest tests/ -m slow -v --tb=short
+
+      - name: Upload slow test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slow-test-results
+          path: |
+            .pytest_cache/
+            test-results/
+
+  # Performance benchmarks - detect regressions
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      - name: Download previous benchmark results
+        uses: actions/cache@v4
+        with:
+          path: .benchmarks/
+          key: benchmarks-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}
+          restore-keys: |
+            benchmarks-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Run benchmarks
+        run: |
+          pytest tests/benchmarks/ tests/test_import_time.py \
+            --benchmark-only \
+            --benchmark-sort=name \
+            --benchmark-json=benchmark-results.json \
+            --benchmark-autosave \
+            --benchmark-save-data
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark-results.json
+          alert-threshold: '125%'
+          comment-on-alert: true
+          fail-on-alert: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: false
+        continue-on-error: true
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            benchmark-results.json
+            .benchmarks/
+
+      - name: Benchmark summary
+        run: |
+          echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check individual benchmark results in the artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Performance regression threshold: 125%" >> $GITHUB_STEP_SUMMARY
+
+  # Lint and format check
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff check
+        run: ruff check fincore/ tests/ --output-format=github
+
+      - name: Ruff format check
+        run: ruff format --check fincore/ tests/
+
+  # Type checking
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      - name: mypy (selected modules)
+        run: |
+          python -m mypy fincore/core fincore/metrics fincore/plugin \
+            fincore/data fincore/optimization fincore/attribution \
+            fincore/report fincore/risk fincore/simulation \
+            fincore/utils fincore/viz \
+            fincore/empyrical.py fincore/tearsheets \
+            fincore/pyfolio.py --ignore-missing-imports
+
+      - name: compileall (syntax check)
+        run: python -m compileall -q fincore
+
+  # Build verification
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [fast-check, lint]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Check dist
+        run: twine check dist/*
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # Test summary report
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [fast-check, benchmark, lint, typecheck]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Fast Check (Unit + P0+P1) | ${{ needs.fast-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance Benchmarks | ${{ needs.benchmark.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.typecheck.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Markers Used" >> $GITHUB_STEP_SUMMARY
+          echo "- **unit**: 265 fast unit tests (~12s)" >> $GITHUB_STEP_SUMMARY
+          echo "- **p0**: 11 critical tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **p1**: 55 high priority tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **p2**: 144 medium priority tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **p3**: 45 low priority tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **slow**: 8 computationally expensive tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **integration**: 2 external dependency tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **benchmark**: 15 performance tests" >> $GITHUB_STEP_SUMMARY
+
+  # Test quality report generation (optional)
+  test-quality-report:
+    name: Generate Quality Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Count test markers
+        run: |
+          echo "## Test Marker Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          UNIT=$(grep -rh "@pytest.mark.unit" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+          P0=$(grep -rh "@pytest.mark.p0" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+          P1=$(grep -rh "@pytest.mark.p1" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+          P2=$(grep -rh "@pytest.mark.p2" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+          P3=$(grep -rh "@pytest.mark.p3" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+          SLOW=$(grep -rh "@pytest.mark.slow" tests/ --include="*.py" 2>/dev/null | wc -l || echo 0)
+
+          echo "| Marker | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| unit | $UNIT |" >> $GITHUB_STEP_SUMMARY
+          echo "| p0 | $P0 |" >> $GITHUB_STEP_SUMMARY
+          echo "| p1 | $P1 |" >> $GITHUB_STEP_SUMMARY
+          echo "| p2 | $P2 |" >> $GITHUB_STEP_SUMMARY
+          echo "| p3 | $P3 |" >> $GITHUB_STEP_SUMMARY
+          echo "| slow | $SLOW |" >> $GITHUB_STEP_SUMMARY
