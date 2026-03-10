@@ -2,6 +2,7 @@
 
 Part of test_exact_line_coverage.py split - EVT and optimization tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -47,13 +48,16 @@ class TestEVTAndOptimizationLineCoverage:
         # Create returns with very low variance for one asset
         # This can trigger the vol < 1e-12 condition during optimization
         np.random.seed(42)
-        returns = pd.DataFrame({
-            "A": np.random.normal(0.01, 0.0001, 50),
-            "B": np.random.normal(0.01, 0.0001, 50),
-            "C": np.random.normal(0.01, 0.01, 50),
-        })
+        returns = pd.DataFrame(
+            {
+                "A": np.random.normal(0.01, 0.0001, 50),
+                "B": np.random.normal(0.01, 0.0001, 50),
+                "C": np.random.normal(0.01, 0.01, 50),
+            }
+        )
 
         import warnings
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             try:

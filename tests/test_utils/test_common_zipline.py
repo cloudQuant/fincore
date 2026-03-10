@@ -54,6 +54,7 @@ def test_extract_rets_pos_txn_from_zipline_smoke(monkeypatch):
 
 def test_extract_rets_pos_txn_from_zipline_raises_when_no_positions():
     """Test extract_rets_pos_txn_from_zipline raises when no positions."""
+
     class Backtest:
         def __init__(self) -> None:
             self.index = pd.date_range("2024-01-01", periods=2, freq="B")

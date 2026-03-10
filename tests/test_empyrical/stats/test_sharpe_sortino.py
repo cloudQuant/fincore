@@ -9,14 +9,16 @@ Priority Markers:
 - P1: Translation and noise behavior tests
 - P2: Edge case validation tests
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY
@@ -163,9 +165,7 @@ class TestSharpeSortino(BaseTestCase):
     def test_sharpe_translation_diff(self, returns, required_return, translation_returns, translation_required):
         """Test Sharpe ratio changes under unequal translation."""
         sr = ratios_module.sharpe_ratio(returns, required_return)
-        sr_depressed = ratios_module.sharpe_ratio(
-            returns - translation_returns, required_return - translation_required
-        )
+        sr_depressed = ratios_module.sharpe_ratio(returns - translation_returns, required_return - translation_required)
         sr_raised = ratios_module.sharpe_ratio(returns + translation_returns, required_return + translation_required)
         assert sr != sr_depressed
         assert sr != sr_raised

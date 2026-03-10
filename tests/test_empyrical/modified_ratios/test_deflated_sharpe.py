@@ -2,15 +2,16 @@
 
 Part of test_modified_ratios.py split.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_almost_equal
 
 from fincore.empyrical import Empyrical
 from fincore.metrics.ratios import deflated_sharpe_ratio
-from numpy.testing import assert_almost_equal
 
 
 def _make_series(values, start="2000-01-03", freq="D"):
@@ -107,9 +108,26 @@ class TestEmpyricalIntegration:
     def test_conditional_sharpe_via_empyrical(self, _setup_emp):
         r = _make_series(
             [
-                0.01, -0.02, 0.005, -0.03, 0.02, -0.01, 0.015, -0.025,
-                0.01, -0.015, 0.008, -0.012, 0.003, -0.018, 0.007, -0.022,
-                0.011, -0.009, 0.004, -0.014,
+                0.01,
+                -0.02,
+                0.005,
+                -0.03,
+                0.02,
+                -0.01,
+                0.015,
+                -0.025,
+                0.01,
+                -0.015,
+                0.008,
+                -0.012,
+                0.003,
+                -0.018,
+                0.007,
+                -0.022,
+                0.011,
+                -0.009,
+                0.004,
+                -0.014,
             ]
         )
         result = self.emp.conditional_sharpe_ratio(r, risk_free=0.001)

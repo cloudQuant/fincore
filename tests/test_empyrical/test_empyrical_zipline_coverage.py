@@ -46,9 +46,7 @@ class TestEmpyricalInitContextError:
         returns = pd.Series([0.01, 0.02, -0.01])
 
         # Mock AnalysisContext.__init__ to raise an exception
-        with patch(
-            "fincore.core.context.AnalysisContext.__init__", side_effect=TypeError("Context creation failed")
-        ):
+        with patch("fincore.core.context.AnalysisContext.__init__", side_effect=TypeError("Context creation failed")):
             # Should not raise, but log debug message and continue
             emp = Empyrical(returns=returns)
 

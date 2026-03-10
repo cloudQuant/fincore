@@ -5,7 +5,6 @@ import time
 __all__ = ["timer"]
 
 
-
 def timer(msg_body, previous_time):
     """Print elapsed time since *previous_time* and return current timestamp."""
     current_time = time.time()

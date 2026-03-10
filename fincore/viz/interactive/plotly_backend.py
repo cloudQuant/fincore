@@ -19,7 +19,6 @@ from fincore.viz.base import VizBackend
 __all__ = ["PlotlyBackend"]
 
 
-
 class PlotlyBackend(VizBackend):
     """Interactive visualization backend using Plotly.
 

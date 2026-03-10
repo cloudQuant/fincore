@@ -2,21 +2,23 @@
 
 Part of test_tracking_risk.py split - Tracking error, information ratio, treynor, etc. with P1 markers.
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY
 from fincore.empyrical import Empyrical
 from fincore.metrics import alpha_beta as alpha_beta_module
-from fincore.metrics import risk as risk_module
 from fincore.metrics import ratios as ratios_module
+from fincore.metrics import risk as risk_module
 from fincore.metrics import stats as stats_module
 from fincore.metrics import yearly as yearly_module
 

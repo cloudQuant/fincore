@@ -3,6 +3,7 @@
 Targets:
 - utils/common_utils.py: 745-746, 803-809 - matplotlib utilities
 """
+
 import pytest
 
 pytest.importorskip("matplotlib")

@@ -24,7 +24,6 @@ __all__ = [
 ]
 
 
-
 def plot_turnover(empyrical_instance, returns, transactions, positions, legend_loc="best", ax=None, **kwargs):
     """
     Plots turnover vs. date.

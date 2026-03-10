@@ -2,6 +2,7 @@
 
 Part of test_final_coverage_edges.py split - Stats tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

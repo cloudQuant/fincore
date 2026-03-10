@@ -2,6 +2,7 @@
 
 Part of test_optimization.py split - Risk parity tests with P1 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

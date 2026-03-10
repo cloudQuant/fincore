@@ -17,7 +17,6 @@ from fincore.optimization._utils import validate_result
 __all__ = ["efficient_frontier"]
 
 
-
 def efficient_frontier(
     returns: pd.DataFrame,
     n_points: int = 50,

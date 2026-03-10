@@ -18,6 +18,7 @@ import pytest
 # metrics/stats.py — hurst_exponent edge cases (lines 175, 193, 203)
 # ---------------------------------------------------------------------------
 
+
 class TestHurstExponentEdgeCases:
     """Cover edge cases where lag produces n_subseries < 1 or rs_values < 2."""
 
@@ -53,6 +54,7 @@ class TestHurstExponentEdgeCases:
 # metrics/stats.py — r_cubed_turtle edge cases (lines 604, 625)
 # ---------------------------------------------------------------------------
 
+
 class TestRCubedTurtleEdgeCases:
     """Cover edge cases in r_cubed_turtle (non-DatetimeIndex path)."""
 
@@ -87,6 +89,7 @@ class TestRCubedTurtleEdgeCases:
 # metrics/alpha_beta.py — annual_alpha/annual_beta empty after alignment
 # (lines 543, 557, 596, 610)
 # ---------------------------------------------------------------------------
+
 
 class TestAnnualAlphaBetaEdgeCases:
     """Cover edge cases where aligned series become empty."""
@@ -159,6 +162,7 @@ class TestAnnualAlphaBetaEdgeCases:
 # metrics/ratios.py — calmar_ratio with all-NaN after cleaning (line 417)
 # ---------------------------------------------------------------------------
 
+
 class TestCalmarRatioEdgeCases:
     def test_calmar_ratio_all_nan_returns(self):
         """All NaN returns after cleaning -> NaN."""
@@ -172,6 +176,7 @@ class TestCalmarRatioEdgeCases:
 # ---------------------------------------------------------------------------
 # metrics/yearly.py — annual_active_return with NaN (line 236)
 # ---------------------------------------------------------------------------
+
 
 class TestAnnualActiveReturnEdgeCases:
     def test_annual_active_return_empty(self):
@@ -187,6 +192,7 @@ class TestAnnualActiveReturnEdgeCases:
 # ---------------------------------------------------------------------------
 # empyrical.py — expected_return with NaN benchmark (line 718)
 # ---------------------------------------------------------------------------
+
 
 class TestRegressionAnnualReturnEdgeCases:
     def test_regression_annual_return_nan_alpha_beta(self):
@@ -219,6 +225,7 @@ class TestRegressionAnnualReturnEdgeCases:
 # risk/evt.py — evt_cvar unknown model (line 447)
 # ---------------------------------------------------------------------------
 
+
 class TestEvtEdgeCases:
     def test_evt_cvar_unknown_model(self):
         """Unknown model should raise ValueError."""
@@ -245,19 +252,22 @@ class TestEvtEdgeCases:
 # metrics/round_trips.py — custom_results without built_in_funcs (line 417)
 # ---------------------------------------------------------------------------
 
+
 class TestRoundTripsEdgeCases:
     def test_gen_round_trip_stats_with_symbol(self):
         """Test round trip stats generation path with symbol column."""
         from fincore.metrics.round_trips import gen_round_trip_stats
 
         # Create round trips DataFrame with all required columns
-        round_trips = pd.DataFrame({
-            "pnl": [100.0, -50.0, 75.0, -25.0],
-            "returns": [0.05, -0.02, 0.03, -0.01],
-            "duration": pd.to_timedelta(["1D", "2D", "3D", "1D"]),
-            "long": [True, True, False, False],
-            "symbol": ["AAPL", "AAPL", "MSFT", "MSFT"],
-        })
+        round_trips = pd.DataFrame(
+            {
+                "pnl": [100.0, -50.0, 75.0, -25.0],
+                "returns": [0.05, -0.02, 0.03, -0.01],
+                "duration": pd.to_timedelta(["1D", "2D", "3D", "1D"]),
+                "long": [True, True, False, False],
+                "symbol": ["AAPL", "AAPL", "MSFT", "MSFT"],
+            }
+        )
 
         result = gen_round_trip_stats(round_trips)
         assert isinstance(result, dict)

@@ -5,10 +5,11 @@ after filtering, but max_drawdown returned a negative value (which shouldn't
 happen with normal input, but could happen with edge cases or modified behavior).
 """
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
-from unittest.mock import patch
 
 from fincore.metrics import ratios
 
@@ -28,7 +29,7 @@ class TestMarRatioLine417:
 
         # Mock max_drawdown to return a negative value
         # This forces execution past line 410 to reach line 417
-        with patch('fincore.metrics.drawdown.max_drawdown', return_value=-0.05):
+        with patch("fincore.metrics.drawdown.max_drawdown", return_value=-0.05):
             result = ratios.mar_ratio(returns)
 
             # Should return NaN at line 417 when returns_clean is empty

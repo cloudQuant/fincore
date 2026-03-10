@@ -742,16 +742,16 @@ class AkShareProvider(DataProvider):
         # Format columns - map Chinese column names to English
         # AkShare returns data with Chinese column names, so we translate them
         column_map = {
-            "开盘": "Open",   # Opening price
-            "最高": "High",   # Highest price
-            "最低": "Low",    # Lowest price
+            "开盘": "Open",  # Opening price
+            "最高": "High",  # Highest price
+            "最低": "Low",  # Lowest price
             "收盘": "Close",  # Closing price
-            "成交量": "Volume",       # Trading volume
-            "成交额": "Amount",       # Trading amount
-            "振幅": "Amplitude",      # Price amplitude
-            "涨跌幅": "ChangePct",    # Percentage change
-            "涨跌额": "Change",       # Absolute change
-            "换手率": "Turnover",      # Turnover rate
+            "成交量": "Volume",  # Trading volume
+            "成交额": "Amount",  # Trading amount
+            "振幅": "Amplitude",  # Price amplitude
+            "涨跌幅": "ChangePct",  # Percentage change
+            "涨跌额": "Change",  # Absolute change
+            "换手率": "Turnover",  # Turnover rate
         }
 
         data = data.rename(columns=column_map)
@@ -816,9 +816,9 @@ class AkShareProvider(DataProvider):
         return {
             "symbol": symbol,
             # AkShare returns Chinese keys - map them to English field names
-            "name": info.get("item", {}).get("股票简称", "N/A"),      # Stock short name
-            "exchange": info.get("item", {}).get("交易所", "N/A"),   # Exchange name
-            "industry": info.get("item", {}).get("行业", "N/A"),    # Industry classification
+            "name": info.get("item", {}).get("股票简称", "N/A"),  # Stock short name
+            "exchange": info.get("item", {}).get("交易所", "N/A"),  # Exchange name
+            "industry": info.get("item", {}).get("行业", "N/A"),  # Industry classification
         }
 
 

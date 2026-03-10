@@ -271,7 +271,6 @@ from fincore.tearsheets import (
 __all__ = ["DisplayFunc", "MarkdownFunc", "Pyfolio"]
 
 
-
 class Pyfolio(Empyrical):
     def __init__(
         self,

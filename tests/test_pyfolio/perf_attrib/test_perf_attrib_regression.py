@@ -7,10 +7,10 @@ Split from test_perf_attrib.py for maintainability.
 from __future__ import annotations
 
 import os
-import numpy as np
 import unittest
 import warnings
 
+import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
@@ -27,14 +27,18 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
 
         positions.columns = [int(col) if col != "cash" else col for col in positions.columns]
 
-        returns = pd.read_csv(os.path.join(self.__location__, "returns.csv"), index_col=0, parse_dates=True, header=None)
+        returns = pd.read_csv(
+            os.path.join(self.__location__, "returns.csv"), index_col=0, parse_dates=True, header=None
+        )
         returns = returns.squeeze()  # Manually squeeze if needed
         factor_loadings = pd.read_csv(os.path.join(self.__location__, "factor_loadings.csv"), index_col=[0, 1])
         factor_loadings.index = factor_loadings.index.set_levels(
             pd.to_datetime(factor_loadings.index.levels[0]), level=0
         )
 
-        factor_returns = pd.read_csv(os.path.join(self.__location__, "factor_returns.csv"), index_col=0, parse_dates=True)
+        factor_returns = pd.read_csv(
+            os.path.join(self.__location__, "factor_returns.csv"), index_col=0, parse_dates=True
+        )
 
         residuals = pd.read_csv(os.path.join(self.__location__, "residuals.csv"), index_col=0, parse_dates=True)
 

@@ -2,6 +2,7 @@
 
 Part of test_optimization.py split - Edge case tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

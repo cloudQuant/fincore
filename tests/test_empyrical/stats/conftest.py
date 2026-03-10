@@ -3,6 +3,7 @@
 This conftest.py contains common test data used across multiple stats test modules.
 Fixtures defined here are automatically available to all tests in this directory.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -27,6 +28,7 @@ except ValueError:
 # ========================================================================
 # Common Return Series Fixtures
 # ========================================================================
+
 
 @pytest.fixture
 def simple_benchmark():
@@ -116,21 +118,18 @@ def one_return():
 # Extended Data Series Fixtures
 # ========================================================================
 
+
 @pytest.fixture
 def noise():
     """Random noise series (1000 observations)."""
-    return pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    return pd.Series(rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
 
 @pytest.fixture
 def noise_uniform():
     """Uniform random noise series."""
     return pd.Series(
-        rand.uniform(-0.01, 0.01, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        rand.uniform(-0.01, 0.01, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
 
@@ -143,37 +142,27 @@ def inv_noise(noise):
 @pytest.fixture
 def flat_line_0():
     """Flat line at zero."""
-    return pd.Series(
-        np.linspace(0, 0, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    return pd.Series(np.linspace(0, 0, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
 
 @pytest.fixture
 def flat_line_1_tz():
     """Flat line at 1% with timezone."""
     return pd.Series(
-        np.linspace(0.01, 0.01, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0.01, 0.01, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
 
 @pytest.fixture
 def pos_line():
     """Positive sloping line from 0 to 1."""
-    return pd.Series(
-        np.linspace(0, 1, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    return pd.Series(np.linspace(0, 1, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
 
 @pytest.fixture
 def neg_line():
     """Negative sloping line from 0 to -1."""
-    return pd.Series(
-        np.linspace(0, -1, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    return pd.Series(np.linspace(0, -1, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
 
 @pytest.fixture
@@ -193,6 +182,7 @@ def sparse_flat_line_1_tz(flat_line_1_tz):
 # ========================================================================
 # DataFrame Fixtures
 # ========================================================================
+
 
 @pytest.fixture
 def df_index_simple():
@@ -217,9 +207,7 @@ def df_simple(df_index_simple):
     """Simple DataFrame with two columns."""
     one = [-0.00171614, 0.01322056, 0.03063862, -0.01422057, -0.00489779, 0.01268925, -0.03357711, 0.01797036]
     two = [0.01846232, 0.00793951, -0.01448395, 0.00422537, -0.00339611, 0.03756813, 0.0151531, 0.03549769]
-    return pd.DataFrame(
-        {"one": pd.Series(one, index=df_index_simple), "two": pd.Series(two, index=df_index_simple)}
-    )
+    return pd.DataFrame({"one": pd.Series(one, index=df_index_simple), "two": pd.Series(two, index=df_index_simple)})
 
 
 @pytest.fixture

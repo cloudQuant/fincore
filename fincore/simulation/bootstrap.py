@@ -13,7 +13,6 @@ import pandas as pd
 __all__ = ["bootstrap", "bootstrap_ci", "bootstrap_summary"]
 
 
-
 def bootstrap(
     returns: pd.Series | np.ndarray,
     n_samples: int = 10000,

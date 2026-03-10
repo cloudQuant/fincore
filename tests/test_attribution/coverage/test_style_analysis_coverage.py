@@ -2,6 +2,7 @@
 
 Split from test_style_more_coverage.py for maintainability.
 """
+
 from __future__ import annotations
 
 import numpy as np

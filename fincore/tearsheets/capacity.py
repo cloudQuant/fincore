@@ -12,7 +12,6 @@ from fincore.constants import MM_DISPLAY_UNIT
 __all__ = ["plot_capacity_sweep", "plot_cones"]
 
 
-
 def plot_capacity_sweep(
     empyrical_instance,
     returns,

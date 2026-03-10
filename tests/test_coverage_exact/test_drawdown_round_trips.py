@@ -2,6 +2,7 @@
 
 Part of test_exact_line_coverage.py split - Drawdown and round trips tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -28,13 +29,16 @@ class TestDrawdownRoundTripsLineCoverage:
     def test_round_trips_line_417(self):
         """round_trips.py line 417: return without built_in_funcs."""
         idx = pd.date_range("2024-01-01", periods=5, freq="B")
-        round_trips = pd.DataFrame({
-            "symbol": ["AAPL", "MSFT", "AAPL", "MSFT", "GOOG"],
-            "pnl": [100, -50, 75, 25, -30],
-            "returns": [0.01, -0.005, 0.008, 0.002, -0.003],
-            "duration": [5, 3, 4, 2, 6],
-            "long": [True, False, True, False, True],
-        }, index=idx)
+        round_trips = pd.DataFrame(
+            {
+                "symbol": ["AAPL", "MSFT", "AAPL", "MSFT", "GOOG"],
+                "pnl": [100, -50, 75, 25, -30],
+                "returns": [0.01, -0.005, 0.008, 0.002, -0.003],
+                "duration": [5, 3, 4, 2, 6],
+                "long": [True, False, True, False, True],
+            },
+            index=idx,
+        )
 
         result = gen_round_trip_stats(round_trips)
         assert isinstance(result, dict)

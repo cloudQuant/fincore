@@ -5,14 +5,16 @@ Split from test_other_ratios.py for maintainability.
 Priority Markers:
 - P1: Excess Sharpe tests (important relative performance metric)
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.metrics import ratios as ratios_module
@@ -42,15 +44,9 @@ class TestExcessSharpe(BaseTestCase):
     """Tests for excess Sharpe ratio calculation."""
 
     # Test data
-    empty_returns = pd.Series(
-        np.array([]) / 100,
-        index=pd.date_range("2000-1-30", periods=0, freq="D")
-    )
+    empty_returns = pd.Series(np.array([]) / 100, index=pd.date_range("2000-1-30", periods=0, freq="D"))
 
-    one_return = pd.Series(
-        np.array([1.0]) / 100,
-        index=pd.date_range("2000-1-30", periods=1, freq="D")
-    )
+    one_return = pd.Series(np.array([1.0]) / 100, index=pd.date_range("2000-1-30", periods=1, freq="D"))
 
     mixed_returns = pd.Series(
         np.array([np.nan, 1.0, 10.0, -4.0, 2.0, 3.0, 2.0, 1.0, -10.0]) / 100,
@@ -63,29 +59,22 @@ class TestExcessSharpe(BaseTestCase):
     )
 
     flat_line_0 = pd.Series(
-        np.linspace(0, 0, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0, 0, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
     flat_line_1_tz = pd.Series(
-        np.linspace(0.01, 0.01, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0.01, 0.01, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
     pos_line = pd.Series(
-        np.linspace(0, 1, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0, 1, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
     neg_line = pd.Series(
-        np.linspace(0, -1, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0, -1, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
-    noise = pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    noise = pd.Series(rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
     inv_noise = noise.multiply(-1)
 
@@ -94,13 +83,15 @@ class TestExcessSharpe(BaseTestCase):
         """Get empyrical module instance."""
         return empyrical
 
-    @parameterized.expand([
-        (empty_returns, 0.0, np.nan),
-        (one_return, 0.0, np.nan),
-        (pos_line, pos_line, np.nan),
-        (mixed_returns, 0.0, 0.10859306069076737),
-        (mixed_returns, flat_line_1, -0.06515583641446039),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, 0.0, np.nan),
+            (one_return, 0.0, np.nan),
+            (pos_line, pos_line, np.nan),
+            (mixed_returns, 0.0, 0.10859306069076737),
+            (mixed_returns, flat_line_1, -0.06515583641446039),
+        ]
+    )
     def test_excess_sharpe(self, returns, factor_returns, expected):
         """Test excess Sharpe ratio calculation."""
         assert_almost_equal(
@@ -121,12 +112,14 @@ class TestExcessSharpe(BaseTestCase):
         assert abs(ir_1) < abs(ir_2)
         assert abs(ir_2) < abs(ir_3)
 
-    @parameterized.expand([
-        (pos_line, noise, flat_line_1_tz),
-        (pos_line, inv_noise, flat_line_1_tz),
-        (neg_line, noise, flat_line_1_tz),
-        (neg_line, inv_noise, flat_line_1_tz),
-    ])
+    @parameterized.expand(
+        [
+            (pos_line, noise, flat_line_1_tz),
+            (pos_line, inv_noise, flat_line_1_tz),
+            (neg_line, noise, flat_line_1_tz),
+            (neg_line, inv_noise, flat_line_1_tz),
+        ]
+    )
     def test_excess_sharpe_trans(self, returns, add_noise, translation):
         """Test excess Sharpe changes with vertical translation."""
         ir = ratios_module.excess_sharpe(returns + add_noise, returns)

@@ -2,6 +2,7 @@
 
 Part of test_risk_parity_full_coverage.py split - Output structure tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

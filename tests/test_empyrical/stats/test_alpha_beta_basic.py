@@ -7,7 +7,10 @@ Priority Markers:
 - P0: Core alpha, beta calculations
 - P1: Important property tests
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
@@ -15,7 +18,6 @@ import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
 from scipy import stats
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.empyrical import Empyrical
@@ -81,27 +83,23 @@ class TestAlphaBetaBasic(BaseTestCase):
         index=pd.date_range("2000-1-30", periods=9, freq="D"),
     )
 
-    empty_returns = pd.Series(
-        np.array([]) / 100,
-        index=pd.date_range("2000-1-30", periods=0, freq="D")
-    )
+    empty_returns = pd.Series(np.array([]) / 100, index=pd.date_range("2000-1-30", periods=0, freq="D"))
 
-    one_return = pd.Series(
-        np.array([1.0]) / 100,
-        index=pd.date_range("2000-1-30", periods=1, freq="D")
-    )
+    one_return = pd.Series(np.array([1.0]) / 100, index=pd.date_range("2000-1-30", periods=1, freq="D"))
 
     # ========================================================================
     # Alpha and Beta Tests
     # ========================================================================
 
-    @parameterized.expand([
-        (empty_returns, empty_returns, (np.nan, np.nan)),
-        (one_return, one_return, (np.nan, np.nan)),
-        (mixed_returns[1:], negative_returns[1:], (-0.9997853834885004, -0.71296296296296313)),
-        (mixed_returns, mixed_returns, (0.0, 1.0)),
-        (mixed_returns, -mixed_returns, (0.0, -1.0)),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, empty_returns, (np.nan, np.nan)),
+            (one_return, one_return, (np.nan, np.nan)),
+            (mixed_returns[1:], negative_returns[1:], (-0.9997853834885004, -0.71296296296296313)),
+            (mixed_returns, mixed_returns, (0.0, 1.0)),
+            (mixed_returns, -mixed_returns, (0.0, -1.0)),
+        ]
+    )
     @pytest.mark.p0  # Critical: core financial metric
     def test_alpha_beta(self, returns, benchmark, expected):
         """Test combined alpha and beta calculation."""
@@ -113,13 +111,15 @@ class TestAlphaBetaBasic(BaseTestCase):
     # Alpha Only Tests
     # ========================================================================
 
-    @parameterized.expand([
-        (empty_returns, simple_benchmark, np.nan),
-        (one_return, one_return, np.nan),
-        (mixed_returns, flat_line_1, np.nan),
-        (mixed_returns, mixed_returns, 0.0),
-        (mixed_returns, -mixed_returns, 0.0),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, simple_benchmark, np.nan),
+            (one_return, one_return, np.nan),
+            (mixed_returns, flat_line_1, np.nan),
+            (mixed_returns, mixed_returns, 0.0),
+            (mixed_returns, -mixed_returns, 0.0),
+        ]
+    )
     @pytest.mark.p0  # Critical: core financial metric
     def test_alpha(self, returns, benchmark, expected):
         """Test alpha calculation."""
@@ -142,25 +142,29 @@ class TestAlphaBetaBasic(BaseTestCase):
     # Beta Only Tests
     # ========================================================================
 
-    @parameterized.expand([
-        (empty_returns, simple_benchmark, np.nan),
-        (one_return, one_return, np.nan),
-        (mixed_returns, flat_line_1, np.nan),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, simple_benchmark, np.nan),
+            (one_return, one_return, np.nan),
+            (mixed_returns, flat_line_1, np.nan),
+        ]
+    )
     @pytest.mark.p0  # Critical: core financial metric
     def test_beta(self, returns, benchmark, expected, decimal_places=DECIMAL_PLACES):
         """Test beta calculation with edge cases."""
         observed = Empyrical.beta(returns, benchmark)
         assert_almost_equal(observed, expected, decimal_places)
 
-    @parameterized.expand([
-        (empty_returns, empty_returns),
-        (one_return, one_return),
-        (mixed_returns[1:], simple_benchmark[1:]),
-        (mixed_returns[1:], negative_returns[1:]),
-        (mixed_returns, mixed_returns),
-        (mixed_returns, -mixed_returns),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, empty_returns),
+            (one_return, one_return),
+            (mixed_returns[1:], simple_benchmark[1:]),
+            (mixed_returns[1:], negative_returns[1:]),
+            (mixed_returns, mixed_returns),
+            (mixed_returns, -mixed_returns),
+        ]
+    )
     def test_alpha_beta_equality(self, returns, benchmark):
         """Test alpha_beta returns same as individual alpha/beta calls."""
         alpha, beta = Empyrical(return_types=np.ndarray).alpha_beta(returns, benchmark)

@@ -22,9 +22,7 @@ class TestAttributionExtremeConditions:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate extended data for bull market scenario
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=100, num_styles=2
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=100, num_styles=2)
 
         # Modify returns to simulate bull market
         returns = returns.abs() * 0.5  # All positive returns, strong trend
@@ -48,9 +46,7 @@ class TestAttributionExtremeConditions:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate test data
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=100, num_styles=2
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=100, num_styles=2)
 
         # Modify returns to simulate bear market
         returns = -returns.abs() * 0.5  # All negative returns
@@ -74,9 +70,7 @@ class TestAttributionExtremeConditions:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate test data
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=100, num_styles=2
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=100, num_styles=2)
 
         # Increase volatility dramatically
         returns = returns * 5  # 5x the returns
@@ -104,9 +98,7 @@ class TestAttributionMultiAsset:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate data with multiple tickers (default is 3 tickers)
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=50, num_styles=2
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=50, num_styles=2)
 
         # Should compute attribution for all assets
         emp = Empyrical()
@@ -131,9 +123,7 @@ class TestAttributionMissingData:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate minimal data (5 days)
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=5, num_styles=1
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=5, num_styles=1)
 
         # Should handle short series
         emp = Empyrical()
@@ -152,9 +142,7 @@ class TestAttributionMissingData:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate test data
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=50, num_styles=2
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=50, num_styles=2)
 
         # Set some returns to zero
         returns.iloc[10:15] = 0
@@ -182,9 +170,7 @@ class TestAttributionEdgeCases:
         from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
         # Generate data with 1 style
-        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-            periods=50, num_styles=1
-        )
+        returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=50, num_styles=1)
 
         # Should work with single factor
         emp = Empyrical()

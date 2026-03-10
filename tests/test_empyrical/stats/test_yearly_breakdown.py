@@ -8,14 +8,16 @@ Split from test_stats.py to improve maintainability.
 Priority Markers:
 - P1: All yearly breakdown tests (important reporting features)
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.empyrical import Empyrical

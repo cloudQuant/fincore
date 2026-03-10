@@ -2,6 +2,7 @@
 
 Part of test_exact_line_coverage.py split - Utils and tearsheets tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -24,6 +25,7 @@ class TestUtilsAndTearsheetsLineCoverage:
         """pyfolio.py lines 55-58: matplotlib.use('Agg') exception."""
         # This is tested implicitly by importing the module
         import fincore.pyfolio
+
         assert hasattr(fincore.pyfolio, "Pyfolio")
 
     def test_sheets_line_763(self):

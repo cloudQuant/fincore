@@ -7,6 +7,7 @@ Target: import fincore in <0.1 seconds
 from __future__ import annotations
 
 import time
+
 import pytest
 
 
@@ -27,6 +28,7 @@ def test_import_fincore_benchmark(benchmark):
                 del sys.modules[k]
 
         import fincore
+
         return fincore
 
     result = benchmark(import_fincore)
@@ -53,6 +55,7 @@ def test_import_fincore_direct():
     # Measure import time
     start = time.perf_counter()
     import fincore
+
     elapsed = time.perf_counter() - start
 
     # Assert import is fast (<0.1s)
@@ -79,6 +82,7 @@ def test_import_empyrical_fast():
     # Measure import time
     start = time.perf_counter()
     from fincore import Empyrical
+
     elapsed = time.perf_counter() - start
 
     # Empyrical import should also be fast
@@ -102,17 +106,15 @@ def test_import_lazy_module_deferred():
     import fincore
 
     # Check that fincore import didn't load new heavy modules
-    assert ("matplotlib" in sys.modules) == matplotlib_before, \
-        "fincore import should not load matplotlib"
-    assert ("pymc" in sys.modules) == pymc_before, \
-        "fincore import should not load pymc"
-    assert ("pandas_datareader" in sys.modules) == pandas_datareader_before, \
+    assert ("matplotlib" in sys.modules) == matplotlib_before, "fincore import should not load matplotlib"
+    assert ("pymc" in sys.modules) == pymc_before, "fincore import should not load pymc"
+    assert ("pandas_datareader" in sys.modules) == pandas_datareader_before, (
         "fincore import should not load pandas_datareader"
+    )
 
     # Now use Empyrical (should still NOT load viz)
-    emp = fincore.Empyrical
-    assert ("matplotlib" in sys.modules) == matplotlib_before, \
-        "Empyrical access should not load matplotlib"
+    _ = fincore.Empyrical
+    assert ("matplotlib" in sys.modules) == matplotlib_before, "Empyrical access should not load matplotlib"
 
     # Metrics should be loaded
     assert "fincore.metrics" in sys.modules
@@ -134,8 +136,8 @@ def test_flat_api_import():
 @pytest.mark.p3
 def test_import_all_metrics_individually():
     """Test that individual metric modules can be imported efficiently."""
-    import time
     import sys
+    import time
 
     metrics = [
         "fincore.metrics.returns",

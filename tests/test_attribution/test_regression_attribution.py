@@ -2,6 +2,7 @@
 
 Split from test_style.py for maintainability.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -61,9 +62,7 @@ class TestCalculateRegressionAttribution:
         )
         return exposures
 
-    def test_regression_attribution_basic(
-        self, sample_portfolio_returns, sample_style_returns, sample_style_exposures
-    ):
+    def test_regression_attribution_basic(self, sample_portfolio_returns, sample_style_returns, sample_style_exposures):
         """Test basic regression attribution."""
         result = calculate_regression_attribution(
             sample_portfolio_returns, sample_style_returns, sample_style_exposures

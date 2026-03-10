@@ -37,9 +37,7 @@ class TestDrawdownLine325Unreachable:
         """
         # Test with multiple drawdowns
         idx = pd.date_range("2024-01-01", periods=10, freq="D")
-        returns = pd.Series([
-            0.01, -0.05, 0.03, 0.02, -0.08, 0.04, 0.01, -0.03, 0.02, 0.01
-        ], index=idx)
+        returns = pd.Series([0.01, -0.05, 0.03, 0.02, -0.08, 0.04, 0.01, -0.03, 0.02, 0.01], index=idx)
 
         result = drawdown.get_top_drawdowns(returns, top=5)
 
@@ -51,9 +49,7 @@ class TestDrawdownLine325Unreachable:
         """Test when drawdowns have recovery (line 318 path)."""
         idx = pd.date_range("2024-01-01", periods=10, freq="D")
         # Pattern: peak, drop, recovery, peak, drop, recovery
-        returns = pd.Series([
-            0.05, -0.03, 0.04, 0.02, -0.05, 0.03, 0.01, -0.02, 0.01, 0.02
-        ], index=idx)
+        returns = pd.Series([0.05, -0.03, 0.04, 0.02, -0.05, 0.03, 0.01, -0.02, 0.01, 0.02], index=idx)
 
         result = drawdown.get_top_drawdowns(returns, top=5)
 
@@ -63,9 +59,7 @@ class TestDrawdownLine325Unreachable:
         """Test when drawdowns don't recover (line 321 path)."""
         idx = pd.date_range("2024-01-01", periods=10, freq="D")
         # Continuous decline at the end
-        returns = pd.Series([
-            0.01, 0.02, 0.03, -0.05, -0.03, -0.02, -0.01, -0.01, -0.01, -0.01
-        ], index=idx)
+        returns = pd.Series([0.01, 0.02, 0.03, -0.05, -0.03, -0.02, -0.01, -0.01, -0.01, -0.01], index=idx)
 
         result = drawdown.get_top_drawdowns(returns, top=5)
 

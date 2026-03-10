@@ -18,7 +18,6 @@ __all__ = [
 ]
 
 
-
 def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
     """
     Plots timespans and directions of a sample of round trip trades.

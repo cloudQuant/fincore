@@ -21,7 +21,6 @@ __all__ = [
 ]
 
 
-
 def geometric_brownian_motion(
     S0: float,
     mu: float,

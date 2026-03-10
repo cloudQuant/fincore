@@ -2,6 +2,7 @@
 
 Split from test_risk_plots_full_coverage.py for maintainability.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -65,11 +66,7 @@ class TestStyleFactorPlots:
         from fincore.tearsheets import risk as tr
 
         idx = pd.date_range("2020-01-01", periods=10, freq="D")
-        extreme_style = pd.Series(
-            np.concatenate(([10] * 5, [-10] * 5)),
-            index=idx,
-            name="Extreme"
-        )
+        extreme_style = pd.Series(np.concatenate(([10] * 5, [-10] * 5)), index=idx, name="Extreme")
 
         ax = tr.plot_style_factor_exposures(extreme_style)
 

@@ -18,6 +18,7 @@ def test_import_time(benchmark):
         # Use subprocess to measure fresh import
         import subprocess
         import sys
+
         result = subprocess.run(
             [sys.executable, "-c", "import fincore"],
             capture_output=True,
@@ -35,7 +36,7 @@ def test_analyze_context_creation(benchmark):
     import fincore
 
     # Create sample data
-    dates = pd.bdate_range('2020-01-01', periods=2520)
+    dates = pd.bdate_range("2020-01-01", periods=2520)
     returns = pd.Series(np.random.normal(0.001, 0.02, 2520), index=dates)
     factor_returns = pd.Series(np.random.normal(0.0005, 0.015, 2520), index=dates)
 
@@ -44,7 +45,7 @@ def test_analyze_context_creation(benchmark):
 
     result = benchmark(create_context)
     # Verify it worked
-    assert hasattr(result, 'sharpe_ratio')
+    assert hasattr(result, "sharpe_ratio")
 
 
 @pytest.mark.parametrize("size", [252, 2520, 25200])
@@ -80,8 +81,7 @@ def test_multi_asset_metrics(benchmark, n_assets):
 
     # Create multi-asset returns
     returns = pd.DataFrame(
-        np.random.normal(0.001, 0.02, (2520, n_assets)),
-        columns=[f"Asset_{i}" for i in range(n_assets)]
+        np.random.normal(0.001, 0.02, (2520, n_assets)), columns=[f"Asset_{i}" for i in range(n_assets)]
     )
 
     def calc_metrics():
@@ -94,7 +94,7 @@ def test_multi_asset_metrics(benchmark, n_assets):
 
 def test_rolling_metrics(benchmark):
     """Benchmark rolling metrics calculation."""
-    from fincore.metrics.rolling import roll_sharpe_ratio, roll_max_drawdown
+    from fincore.metrics.rolling import roll_max_drawdown, roll_sharpe_ratio
 
     returns = pd.Series(np.random.normal(0.001, 0.02, 2520))
     window = 252
@@ -111,25 +111,25 @@ def test_batch_rolling_engine(benchmark):
     """Benchmark RollingEngine for batch rolling metrics."""
     from fincore.core.engine import RollingEngine
 
-    dates = pd.bdate_range('2020-01-01', periods=2520)
+    dates = pd.bdate_range("2020-01-01", periods=2520)
     returns = pd.Series(np.random.normal(0.001, 0.02, 2520), index=dates)
     factor_returns = pd.Series(np.random.normal(0.0005, 0.015, 2520), index=dates)
 
     engine = RollingEngine(returns, factor_returns=factor_returns, window=252)
 
     def batch_compute():
-        return engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
+        return engine.compute(["sharpe", "volatility", "max_drawdown", "beta"])
 
     result = benchmark(batch_compute)
     # Verify it worked
-    assert 'sharpe' in result
+    assert "sharpe" in result
 
 
 def test_performance_stats_generation(benchmark):
     """Benchmark generating full performance statistics."""
     import fincore
 
-    dates = pd.bdate_range('2020-01-01', periods=2520)
+    dates = pd.bdate_range("2020-01-01", periods=2520)
     returns = pd.Series(np.random.normal(0.001, 0.02, 2520), index=dates)
     factor_returns = pd.Series(np.random.normal(0.0005, 0.015, 2520), index=dates)
 
@@ -140,7 +140,7 @@ def test_performance_stats_generation(benchmark):
 
     result = benchmark(get_stats)
     # Verify it worked
-    assert 'Annual return' in result
+    assert "Annual return" in result
 
 
 @pytest.mark.benchmark(group="memory")
@@ -154,7 +154,7 @@ def test_memory_usage_large_dataset(benchmark):
 
     returns = pd.DataFrame(
         np.random.normal(0.0001, 0.01, (n_points, n_assets)),
-        index=pd.date_range('2000-01-01', periods=n_points, freq='h')
+        index=pd.date_range("2000-01-01", periods=n_points, freq="h"),
     )
 
     def process_large_data():
@@ -163,7 +163,7 @@ def test_memory_usage_large_dataset(benchmark):
         return stats
 
     result = benchmark(process_large_data)
-    assert 'Annual return' in result
+    assert "Annual return" in result
 
 
 class TestComparison:
@@ -186,8 +186,7 @@ class TestComparison:
         # Full import (all submodules)
         def eager_import():
             result = subprocess.run(
-                [sys.executable, "-c",
-                 "import fincore; _ = fincore.Empyrical; _ = fincore.Pyfolio; print('OK')"],
+                [sys.executable, "-c", "import fincore; _ = fincore.Empyrical; _ = fincore.Pyfolio; print('OK')"],
                 capture_output=True,
                 text=True,
             )

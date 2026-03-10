@@ -11,6 +11,7 @@ Priority Levels:
 - P2: Medium - secondary features, admin functions, edge cases
 - P3: Low - rarely used, cosmetic, deprecation tests
 """
+
 from __future__ import annotations
 
 import pytest
@@ -79,6 +80,7 @@ P0_FEATURES = [
 # ==============================================================================
 # Test collection hooks for automatic priority assignment
 # ==============================================================================
+
 
 def pytest_collection_modifyitems(items):
     """Automatically assign P0 markers to critical metric tests.

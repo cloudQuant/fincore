@@ -2,6 +2,7 @@
 
 Part of test_modified_ratios.py split.
 """
+
 from __future__ import annotations
 
 import numpy as np

@@ -8,6 +8,7 @@ Priority Markers:
 - P0: Core max_drawdown tests
 - P1: Translation and behavior tests
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -19,11 +20,12 @@ try:
     from pandas.testing import assert_index_equal
 except ImportError:
     from pandas.util.testing import assert_index_equal
-from parameterized import parameterized
 from unittest import TestCase
 
+from parameterized import parameterized
+
 from fincore import empyrical
-from fincore.constants import DAILY, WEEKLY, MONTHLY
+from fincore.constants import DAILY, MONTHLY, WEEKLY
 from fincore.empyrical import Empyrical
 from fincore.metrics import drawdown as drawdown_module
 

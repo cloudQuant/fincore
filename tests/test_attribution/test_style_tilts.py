@@ -2,6 +2,7 @@
 
 Split from test_style.py for maintainability.
 """
+
 from __future__ import annotations
 
 import numpy as np

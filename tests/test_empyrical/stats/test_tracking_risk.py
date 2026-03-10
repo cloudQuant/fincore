@@ -11,14 +11,16 @@ Priority Markers:
 - P1: treynor_ratio, up/down alpha-beta tests
 - P2: Other metrics
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY

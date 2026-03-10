@@ -5,14 +5,16 @@ Split from test_other_ratios.py for maintainability.
 Priority Markers:
 - P1: Calmar, Omega tests (important risk-adjusted return metrics)
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY
@@ -51,15 +53,9 @@ class TestCalmarRatio(BaseTestCase):
     """Tests for Calmar ratio calculation."""
 
     # Test data
-    empty_returns = pd.Series(
-        np.array([]) / 100,
-        index=pd.date_range("2000-1-30", periods=0, freq="D")
-    )
+    empty_returns = pd.Series(np.array([]) / 100, index=pd.date_range("2000-1-30", periods=0, freq="D"))
 
-    one_return = pd.Series(
-        np.array([1.0]) / 100,
-        index=pd.date_range("2000-1-30", periods=1, freq="D")
-    )
+    one_return = pd.Series(np.array([1.0]) / 100, index=pd.date_range("2000-1-30", periods=1, freq="D"))
 
     mixed_returns = pd.Series(
         np.array([np.nan, 1.0, 10.0, -4.0, 2.0, 3.0, 2.0, 1.0, -10.0]) / 100,
@@ -81,13 +77,15 @@ class TestCalmarRatio(BaseTestCase):
         """Get empyrical module instance."""
         return empyrical
 
-    @parameterized.expand([
-        (empty_returns, DAILY, np.nan),
-        (one_return, DAILY, np.nan),
-        (mixed_returns, DAILY, 19.135925373194233),
-        (weekly_returns, WEEKLY, 2.4690830513998208),
-        (monthly_returns, MONTHLY, 0.52242061386048144),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, DAILY, np.nan),
+            (one_return, DAILY, np.nan),
+            (mixed_returns, DAILY, 19.135925373194233),
+            (weekly_returns, WEEKLY, 2.4690830513998208),
+            (monthly_returns, MONTHLY, 0.52242061386048144),
+        ]
+    )
     @pytest.mark.p1  # High: important risk-adjusted return metric
     def test_calmar(self, returns, period, expected):
         """Test Calmar ratio calculation."""
@@ -103,15 +101,9 @@ class TestOmegaRatio(BaseTestCase):
     """Tests for Omega ratio calculation."""
 
     # Test data
-    empty_returns = pd.Series(
-        np.array([]) / 100,
-        index=pd.date_range("2000-1-30", periods=0, freq="D")
-    )
+    empty_returns = pd.Series(np.array([]) / 100, index=pd.date_range("2000-1-30", periods=0, freq="D"))
 
-    one_return = pd.Series(
-        np.array([1.0]) / 100,
-        index=pd.date_range("2000-1-30", periods=1, freq="D")
-    )
+    one_return = pd.Series(np.array([1.0]) / 100, index=pd.date_range("2000-1-30", periods=1, freq="D"))
 
     mixed_returns = pd.Series(
         np.array([np.nan, 1.0, 10.0, -4.0, 2.0, 3.0, 2.0, 1.0, -10.0]) / 100,
@@ -134,43 +126,39 @@ class TestOmegaRatio(BaseTestCase):
     )
 
     noise_uniform = pd.Series(
-        rand.uniform(-0.01, 0.01, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        rand.uniform(-0.01, 0.01, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
-    noise = pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    noise = pd.Series(rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
-    @parameterized.expand([
-        (empty_returns, 0.0, 0.0, np.nan),
-        (one_return, 0.0, 0.0, np.nan),
-        (mixed_returns, 0.0, 10.0, 0.83354263497557934),
-        (mixed_returns, 0.0, -10.0, np.nan),
-        (mixed_returns, flat_line_1, 0.0, 0.8125),
-        (positive_returns, 0.01, 0.0, np.nan),
-        (positive_returns, 0.011, 0.0, 1.125),
-        (positive_returns, 0.02, 0.0, 0.0),
-        (negative_returns, 0.01, 0.0, 0.0),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, 0.0, 0.0, np.nan),
+            (one_return, 0.0, 0.0, np.nan),
+            (mixed_returns, 0.0, 10.0, 0.83354263497557934),
+            (mixed_returns, 0.0, -10.0, np.nan),
+            (mixed_returns, flat_line_1, 0.0, 0.8125),
+            (positive_returns, 0.01, 0.0, np.nan),
+            (positive_returns, 0.011, 0.0, 1.125),
+            (positive_returns, 0.02, 0.0, 0.0),
+            (negative_returns, 0.01, 0.0, 0.0),
+        ]
+    )
     @pytest.mark.p1  # High: important risk-adjusted return metric
     def test_omega(self, returns, risk_free, required_return, expected):
         """Test Omega ratio calculation."""
         assert_almost_equal(
-            ratios_module.omega_ratio(
-                returns,
-                risk_free=risk_free,
-                required_return=required_return
-            ),
+            ratios_module.omega_ratio(returns, risk_free=risk_free, required_return=required_return),
             expected,
             DECIMAL_PLACES,
         )
 
-    @parameterized.expand([
-        (noise_uniform, 0.0, 0.001),
-        (noise, 0.001, 0.002),
-    ])
+    @parameterized.expand(
+        [
+            (noise_uniform, 0.0, 0.001),
+            (noise, 0.001, 0.002),
+        ]
+    )
     def test_omega_returns(self, returns, required_return_less, required_return_more):
         """Test Omega ratio decreases with higher required return."""
         assert ratios_module.omega_ratio(returns, required_return_less) > ratios_module.omega_ratio(

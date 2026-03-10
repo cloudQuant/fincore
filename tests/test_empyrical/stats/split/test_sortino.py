@@ -2,14 +2,16 @@
 
 Part of test_sharpe_sortino.py split - Sortino ratio tests with P1 markers.
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore.constants import DAILY, MONTHLY, WEEKLY
 from fincore.metrics import ratios as ratios_module

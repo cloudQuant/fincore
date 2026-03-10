@@ -14,7 +14,6 @@ import pandas as pd
 __all__ = ["MatplotlibBackend"]
 
 
-
 class MatplotlibBackend:
     """Visualization backend powered by matplotlib.
 

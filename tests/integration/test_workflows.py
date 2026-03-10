@@ -7,24 +7,24 @@ ensuring all components work together correctly.
 from __future__ import annotations
 
 import json
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from fincore import (
     Empyrical,
+    alpha,
     analyze,
-    create_strategy_report,
-    sharpe_ratio,
-    max_drawdown,
     annual_return,
     annual_volatility,
-    alpha,
     beta,
+    create_strategy_report,
+    max_drawdown,
+    sharpe_ratio,
 )
-from fincore.core.context import AnalysisContext
 from fincore.constants import DAILY
-
+from fincore.core.context import AnalysisContext
 
 # ==============================================================================
 # Test Fixtures
@@ -182,7 +182,7 @@ class TestReportGenerationWorkflow:
     def test_report_with_benchmark(self, strategy_returns, benchmark_returns, tmp_path):
         """Test report includes benchmark comparison."""
         output_file = tmp_path / "test_report_benchmark.html"
-        report_path = create_strategy_report(
+        create_strategy_report(
             strategy_returns,
             benchmark_rets=benchmark_returns,
             output=str(output_file),

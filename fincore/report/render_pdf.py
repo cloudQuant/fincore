@@ -13,7 +13,6 @@ import tempfile
 __all__ = ["generate_pdf"]
 
 
-
 def generate_pdf(
     returns,
     benchmark_rets,

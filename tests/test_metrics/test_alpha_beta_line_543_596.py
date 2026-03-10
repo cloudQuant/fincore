@@ -4,9 +4,10 @@ These lines are defensive checks that are hard to reach with normal input
 due to how aligned_series works. We use mocking to force these paths.
 """
 
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
-from unittest.mock import patch
 
 from fincore.metrics import alpha_beta
 
@@ -29,7 +30,7 @@ class TestAnnualAlphaLine543:
         )
 
         # Mock aligned_series to return empty results
-        with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
             mock_aligned.return_value = (
                 pd.Series([], dtype=float).rename(0),
                 pd.Series([], dtype=float).rename(1),
@@ -57,7 +58,7 @@ class TestAnnualBetaLine596:
         )
 
         # Mock aligned_series to return empty results
-        with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
             mock_aligned.return_value = (
                 pd.Series([], dtype=float).rename(0),
                 pd.Series([], dtype=float).rename(1),

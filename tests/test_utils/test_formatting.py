@@ -56,6 +56,7 @@ class TestAssetFormatting:
 
     def test_format_asset_with_zipline_asset_class_via_stub_module(self, monkeypatch):
         """Test format_asset extracts symbol from zipline Asset class."""
+
         class Asset:
             def __init__(self, symbol: str) -> None:
                 self.symbol = symbol
@@ -69,6 +70,7 @@ class TestAssetFormatting:
 
     def test_format_asset_with_zipline_available_but_not_asset(self, monkeypatch):
         """Test format_asset when zipline is available but asset is not an Asset."""
+
         class Asset:
             def __init__(self, symbol: str) -> None:
                 self.symbol = symbol

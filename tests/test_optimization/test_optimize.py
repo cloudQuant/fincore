@@ -2,6 +2,7 @@
 
 Part of test_optimization.py split - Optimize function tests with P1 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

@@ -1,6 +1,7 @@
 """Shared fixtures and test utilities for performance attribution tests."""
 
 import os
+
 import numpy as np
 import pandas as pd
 

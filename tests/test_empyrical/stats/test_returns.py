@@ -9,6 +9,7 @@ Priority Markers:
 - P1: Aggregate returns tests
 - P2: Edge cases and validation
 """
+
 from __future__ import annotations
 
 from functools import wraps
@@ -22,8 +23,9 @@ try:
     from pandas.testing import assert_index_equal
 except ImportError:
     from pandas.util.testing import assert_index_equal
-from parameterized import parameterized
 from unittest import TestCase
+
+from parameterized import parameterized
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY

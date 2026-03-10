@@ -5,9 +5,9 @@ for type checking in tests.
 
 Split from test_helpers.py for maintainability.
 """
+
 from __future__ import annotations
 
-import pytest
 from copy import copy
 from functools import wraps
 from operator import attrgetter
@@ -15,6 +15,7 @@ from unittest import SkipTest, TestCase
 
 import numpy as np
 import pandas as pd
+import pytest
 from numpy.testing import assert_allclose, assert_almost_equal
 from pandas.core.generic import NDFrame
 from parameterized import parameterized
@@ -57,28 +58,25 @@ class Test2DStats(BaseTestCase):
 
     df_index = pd.date_range("2000-1-30", periods=8, freq="D")
 
-    df_input = pd.DataFrame({
-        "one": pd.Series(input_one, index=df_index),
-        "two": pd.Series(input_two, index=df_index)
-    })
+    df_input = pd.DataFrame({"one": pd.Series(input_one, index=df_index), "two": pd.Series(input_two, index=df_index)})
 
     df_empty = pd.DataFrame()
 
-    df_0_expected = pd.DataFrame({
-        "one": pd.Series(expected_0_one, index=df_index),
-        "two": pd.Series(expected_0_two, index=df_index)
-    })
+    df_0_expected = pd.DataFrame(
+        {"one": pd.Series(expected_0_one, index=df_index), "two": pd.Series(expected_0_two, index=df_index)}
+    )
 
-    df_100_expected = pd.DataFrame({
-        "one": pd.Series(expected_100_one, index=df_index),
-        "two": pd.Series(expected_100_two, index=df_index)
-    })
+    df_100_expected = pd.DataFrame(
+        {"one": pd.Series(expected_100_one, index=df_index), "two": pd.Series(expected_100_two, index=df_index)}
+    )
 
-    @parameterized.expand([
-        (df_input, 0, df_0_expected),
-        (df_input, 100, df_100_expected),
-        (df_empty, 0, pd.DataFrame()),
-    ])
+    @parameterized.expand(
+        [
+            (df_input, 0, df_0_expected),
+            (df_input, 100, df_100_expected),
+            (df_empty, 0, pd.DataFrame()),
+        ]
+    )
     def test_cum_returns_df(self, returns, starting_value, expected):
         """Test cumulative returns with DataFrame input."""
         cum_returns = returns_module.cum_returns(
@@ -94,10 +92,12 @@ class Test2DStats(BaseTestCase):
 
         self.assert_indexes_match(cum_returns, returns)
 
-    @parameterized.expand([
-        (df_input, 0, df_0_expected.iloc[-1]),
-        (df_input, 100, df_100_expected.iloc[-1]),
-    ])
+    @parameterized.expand(
+        [
+            (df_input, 0, df_0_expected.iloc[-1]),
+            (df_input, 100, df_100_expected.iloc[-1]),
+        ]
+    )
     def test_cum_returns_final_df(self, returns, starting_value, expected):
         """Test final cumulative returns with DataFrame input."""
         return_types = (pd.Series, np.ndarray)
@@ -140,6 +140,7 @@ class Test2DStatsArrays(Test2DStats):
 # ========================================================================
 # Proxy Classes for Type Checking
 # ========================================================================
+
 
 class ReturnTypeEmpyricalProxy:
     """
@@ -195,16 +196,8 @@ class ReturnTypeEmpyricalProxy:
         @wraps(func)
         def check_not_mutated(*args, **kwargs):
             # Copy inputs to compare them to originals later.
-            arg_copies = [
-                (i, arg.copy())
-                for i, arg in enumerate(args)
-                if isinstance(arg, (NDFrame, np.ndarray))
-            ]
-            kwarg_copies = {
-                k: v.copy()
-                for k, v in kwargs.items()
-                if isinstance(v, (NDFrame, np.ndarray))
-            }
+            arg_copies = [(i, arg.copy()) for i, arg in enumerate(args) if isinstance(arg, (NDFrame, np.ndarray))]
+            kwarg_copies = {k: v.copy() for k, v in kwargs.items() if isinstance(v, (NDFrame, np.ndarray))}
 
             result = func(*args, **kwargs)
 
@@ -245,22 +238,14 @@ class ConvertPandasEmpyricalProxy(ReturnTypeEmpyricalProxy):
 
     def __getattr__(self, item):
         if self._pandas_only:
-            raise SkipTest(
-                "empyrical.%s expects pandas-only inputs that have dt indices/labels" % item
-            )
+            raise SkipTest("empyrical.%s expects pandas-only inputs that have dt indices/labels" % item)
 
         func = super().__getattr__(item)
 
         @wraps(func)
         def convert_args(*args, **kwargs):
-            args = [
-                self._convert(arg) if isinstance(arg, NDFrame) else arg
-                for arg in args
-            ]
-            kwargs = {
-                k: self._convert(v) if isinstance(v, NDFrame) else v
-                for k, v in kwargs.items()
-            }
+            args = [self._convert(arg) if isinstance(arg, NDFrame) else arg for arg in args]
+            kwargs = {k: self._convert(v) if isinstance(v, NDFrame) else v for k, v in kwargs.items()}
             return func(*args, **kwargs)
 
         return convert_args

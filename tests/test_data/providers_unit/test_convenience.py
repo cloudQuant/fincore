@@ -6,6 +6,7 @@ Split from test_providers_unit.py for maintainability.
 
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 
 

@@ -2,6 +2,7 @@
 
 Part of test_coverage_gaps.py split - Risk module edge cases.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -59,8 +60,10 @@ class TestDownsideRiskEdgeCases:
     def test_dataframe_input(self):
         """Cover lines 168-169: DataFrame branch."""
         idx = pd.bdate_range("2020-01-01", periods=50)
-        df = pd.DataFrame({"a": np.random.default_rng(0).normal(0, 0.01, 50),
-                           "b": np.random.default_rng(1).normal(0, 0.01, 50)}, index=idx)
+        df = pd.DataFrame(
+            {"a": np.random.default_rng(0).normal(0, 0.01, 50), "b": np.random.default_rng(1).normal(0, 0.01, 50)},
+            index=idx,
+        )
         result = rm.downside_risk(df)
         assert isinstance(result, pd.Series)
         assert len(result) == 2

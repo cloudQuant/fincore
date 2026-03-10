@@ -20,7 +20,6 @@ from fincore.optimization._utils import validate_result
 __all__ = ["optimize"]
 
 
-
 def optimize(
     returns: pd.DataFrame,
     objective: str = "max_sharpe",

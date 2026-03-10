@@ -14,7 +14,6 @@ __all__ = [
 ]
 
 
-
 def validate_returns(returns: pd.Series | np.ndarray) -> np.ndarray:
     """Validate and convert returns to numpy array.
 

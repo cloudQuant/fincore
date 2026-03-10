@@ -2,6 +2,7 @@
 
 Part of test_exact_line_coverage.py split - Ratios and yearly tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np

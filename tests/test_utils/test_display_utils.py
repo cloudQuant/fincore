@@ -83,10 +83,9 @@ class TestPrintTable:
         assert captured["excel_path"] is not None
         assert str(tmp_path / "static") in captured["excel_path"]
 
-    def test_print_table_run_flask_app_logs_warning_when_to_excel_fails(
-        self, monkeypatch, tmp_path
-    ):
+    def test_print_table_run_flask_app_logs_warning_when_to_excel_fails(self, monkeypatch, tmp_path):
         """Test print_table logs warning when to_excel fails."""
+
         def fake_to_excel(self, path, index=True):  # noqa: ARG001
             raise OSError("boom")
 

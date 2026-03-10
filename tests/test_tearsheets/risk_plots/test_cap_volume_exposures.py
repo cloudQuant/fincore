@@ -2,6 +2,7 @@
 
 Split from test_risk_plots_full_coverage.py for maintainability.
 """
+
 from __future__ import annotations
 
 import numpy as np

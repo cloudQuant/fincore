@@ -1,9 +1,10 @@
 """Tests for stats module missing coverage lines 175, 193, 203, 604, 625."""
 
+from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pandas as pd
 import pytest
-from unittest.mock import patch, MagicMock
 
 from fincore.metrics import stats
 

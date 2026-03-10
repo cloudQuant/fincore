@@ -4,7 +4,6 @@ from functools import wraps
 __all__ = ["deprecated"]
 
 
-
 def deprecated(msg=None, stacklevel=2):
     """
     Used to mark a function as deprecated.

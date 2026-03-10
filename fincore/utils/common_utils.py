@@ -428,7 +428,7 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
             # print(name, table)
             table.to_excel(excel_file_path, index=True)
             # print(f"Saved export to: {excel_file_path}")
-        except (OSError, IOError, PermissionError, ValueError) as e:
+        except (OSError, ValueError) as e:
             import logging
 
             logging.getLogger(__name__).warning("Failed to save table export: %s", e)

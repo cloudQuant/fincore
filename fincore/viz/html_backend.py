@@ -16,7 +16,6 @@ import pandas as pd
 __all__ = ["HtmlReportBuilder"]
 
 
-
 class HtmlReportBuilder:
     """Build a standalone HTML performance report.
 

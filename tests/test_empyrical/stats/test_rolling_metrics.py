@@ -8,14 +8,16 @@ Split from test_stats.py to improve maintainability.
 Priority Markers:
 - P1: All rolling metrics tests (important analytical features)
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.empyrical import Empyrical
@@ -81,7 +83,7 @@ class TestRollingMetrics(BaseTestCase):
         test = rolling_module.roll_max_drawdown(returns, window=window)
         assert_almost_equal(np.asarray(test), np.asarray(expected), 4)
 
-        self.assert_indexes_match(test, returns[-len(expected):])
+        self.assert_indexes_match(test, returns[-len(expected) :])
 
     # ========================================================================
     # Rolling Sharpe Ratio Tests
@@ -100,7 +102,7 @@ class TestRollingMetrics(BaseTestCase):
         test = rolling_module.roll_sharpe_ratio(returns, window=window)
         assert_almost_equal(np.asarray(test), np.asarray(expected), DECIMAL_PLACES)
 
-        self.assert_indexes_match(test, returns[-len(expected):])
+        self.assert_indexes_match(test, returns[-len(expected) :])
 
     # ========================================================================
     # Rolling Alpha/Beta Tests
@@ -136,7 +138,7 @@ class TestRollingMetrics(BaseTestCase):
             window,
         )
         if isinstance(test, pd.DataFrame):
-            self.assert_indexes_match(test, benchmark[-len(expected):])
+            self.assert_indexes_match(test, benchmark[-len(expected) :])
             test = test.values
         else:
             test = np.asarray(test)

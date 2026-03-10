@@ -12,4 +12,5 @@ class TestPyfolioMatplotlibException:
         """Lines 55-58: matplotlib.use('Agg') exception handling."""
         # The pyfolio module handles exceptions when setting matplotlib backend
         import fincore.pyfolio as pyfolio_module
+
         assert hasattr(pyfolio_module, "Pyfolio")

@@ -14,7 +14,6 @@ import pandas as pd
 __all__ = ["VizBackend", "get_backend"]
 
 
-
 @runtime_checkable
 class VizBackend(Protocol):
     """Protocol that every visualization backend must implement."""

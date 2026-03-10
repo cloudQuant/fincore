@@ -20,7 +20,6 @@ __all__ = [
 ]
 
 
-
 def plot_holdings(empyrical_instance, returns, positions, legend_loc="best", ax=None, **kwargs):
     """
     Plots total amount of stocks with an active position, either short

@@ -211,13 +211,16 @@ def test_frontier_line_106():
     # Create returns with very low variance for one asset
     # This can trigger the vol < 1e-12 condition during optimization
     np.random.seed(42)
-    returns = pd.DataFrame({
-        "A": np.random.normal(0.01, 0.0001, 50),
-        "B": np.random.normal(0.01, 0.0001, 50),
-        "C": np.random.normal(0.01, 0.01, 50),
-    })
+    returns = pd.DataFrame(
+        {
+            "A": np.random.normal(0.01, 0.0001, 50),
+            "B": np.random.normal(0.01, 0.0001, 50),
+            "C": np.random.normal(0.01, 0.01, 50),
+        }
+    )
 
     import warnings
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         try:
@@ -260,13 +263,16 @@ def test_round_trips_line_417():
     from fincore.metrics.round_trips import gen_round_trip_stats
 
     idx = pd.date_range("2024-01-01", periods=5, freq="B")
-    round_trips = pd.DataFrame({
-        "symbol": ["AAPL", "MSFT", "AAPL", "MSFT", "GOOG"],
-        "pnl": [100, -50, 75, 25, -30],
-        "returns": [0.01, -0.005, 0.008, 0.002, -0.003],
-        "duration": [5, 3, 4, 2, 6],
-        "long": [True, False, True, False, True],
-    }, index=idx)
+    round_trips = pd.DataFrame(
+        {
+            "symbol": ["AAPL", "MSFT", "AAPL", "MSFT", "GOOG"],
+            "pnl": [100, -50, 75, 25, -30],
+            "returns": [0.01, -0.005, 0.008, 0.002, -0.003],
+            "duration": [5, 3, 4, 2, 6],
+            "long": [True, False, True, False, True],
+        },
+        index=idx,
+    )
 
     result = gen_round_trip_stats(round_trips)
     assert isinstance(result, dict)
@@ -276,18 +282,21 @@ def test_pyfolio_lines_55_58():
     """pyfolio.py lines 55-58: matplotlib.use('Agg') exception."""
     # This is tested implicitly by importing the module
     import fincore.pyfolio
+
     assert hasattr(fincore.pyfolio, "Pyfolio")
 
 
 def test_sheets_line_763():
     """sheets.py line 763: return fig when run_flask_app=True."""
     from fincore.tearsheets import create_interesting_times_tear_sheet
+
     assert callable(create_interesting_times_tear_sheet)
 
 
 def test_sheets_line_950():
     """sheets.py line 950: shares_held.loc[idx] slicing."""
     from fincore.tearsheets import create_risk_tear_sheet
+
     assert callable(create_risk_tear_sheet)
 
 

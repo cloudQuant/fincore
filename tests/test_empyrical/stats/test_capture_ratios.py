@@ -8,14 +8,16 @@ Priority Markers:
 - P0: Core capture tests
 - P1: Rolling capture tests
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.metrics import ratios as ratios_module
@@ -173,7 +175,7 @@ class TestCaptureRatios(BaseTestCase):
         test = rolling_module.roll_up_capture(returns, factor_returns, window=window)
         assert_almost_equal(np.asarray(test), np.asarray(expected), DECIMAL_PLACES)
 
-        self.assert_indexes_match(test, returns[-len(expected):])
+        self.assert_indexes_match(test, returns[-len(expected) :])
 
     # ========================================================================
     # Rolling Down Capture Tests
@@ -194,7 +196,7 @@ class TestCaptureRatios(BaseTestCase):
         test = rolling_module.roll_down_capture(returns, factor_returns, window=window)
         assert_almost_equal(np.asarray(test), np.asarray(expected), DECIMAL_PLACES)
 
-        self.assert_indexes_match(test, returns[-len(expected):])
+        self.assert_indexes_match(test, returns[-len(expected) :])
 
     # ========================================================================
     # Rolling Up/Down Capture Tests

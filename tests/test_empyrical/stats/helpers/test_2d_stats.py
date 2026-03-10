@@ -4,13 +4,14 @@ Tests functions that output DataFrames with both DataFrame and array inputs.
 
 Split from test_2d_stats.py for maintainability.
 """
+
 from __future__ import annotations
 
-import pytest
 from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
 
@@ -21,7 +22,6 @@ except ImportError:
 
 from fincore.empyrical import Empyrical
 from fincore.metrics import returns as returns_module
-
 from tests.test_empyrical.stats.helpers.test_proxies import (
     PassArraysEmpyricalProxy,
     ReturnTypeEmpyricalProxy,
@@ -56,28 +56,25 @@ class Test2DStatsDataFrames(BaseTestCase):
 
     df_index = pd.date_range("2000-1-30", periods=8, freq="D")
 
-    df_input = pd.DataFrame({
-        "one": pd.Series(input_one, index=df_index),
-        "two": pd.Series(input_two, index=df_index)
-    })
+    df_input = pd.DataFrame({"one": pd.Series(input_one, index=df_index), "two": pd.Series(input_two, index=df_index)})
 
     df_empty = pd.DataFrame()
 
-    df_0_expected = pd.DataFrame({
-        "one": pd.Series(expected_0_one, index=df_index),
-        "two": pd.Series(expected_0_two, index=df_index)
-    })
+    df_0_expected = pd.DataFrame(
+        {"one": pd.Series(expected_0_one, index=df_index), "two": pd.Series(expected_0_two, index=df_index)}
+    )
 
-    df_100_expected = pd.DataFrame({
-        "one": pd.Series(expected_100_one, index=df_index),
-        "two": pd.Series(expected_100_two, index=df_index)
-    })
+    df_100_expected = pd.DataFrame(
+        {"one": pd.Series(expected_100_one, index=df_index), "two": pd.Series(expected_100_two, index=df_index)}
+    )
 
-    @parameterized.expand([
-        (df_input, 0, df_0_expected),
-        (df_input, 100, df_100_expected),
-        (df_empty, 0, pd.DataFrame()),
-    ])
+    @parameterized.expand(
+        [
+            (df_input, 0, df_0_expected),
+            (df_input, 100, df_100_expected),
+            (df_empty, 0, pd.DataFrame()),
+        ]
+    )
     def test_cum_returns_df(self, returns, starting_value, expected):
         """Test cumulative returns with DataFrame input."""
         cum_returns = returns_module.cum_returns(
@@ -93,10 +90,12 @@ class Test2DStatsDataFrames(BaseTestCase):
 
         self.assert_indexes_match(cum_returns, returns)
 
-    @parameterized.expand([
-        (df_input, 0, df_0_expected.iloc[-1]),
-        (df_input, 100, df_100_expected.iloc[-1]),
-    ])
+    @parameterized.expand(
+        [
+            (df_input, 0, df_0_expected.iloc[-1]),
+            (df_input, 100, df_100_expected.iloc[-1]),
+        ]
+    )
     def test_cum_returns_final_df(self, returns, starting_value, expected):
         """Test final cumulative returns with DataFrame input."""
         return_types = (pd.Series, np.ndarray)

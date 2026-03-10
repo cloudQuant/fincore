@@ -33,7 +33,7 @@ class TestConditionalAlphaBetaEdgeCases:
         # Let me try a different scenario
 
         # Result is a tuple of (alpha, beta)
-        assert isinstance(result, tuple) or hasattr(result, '__len__')
+        assert isinstance(result, tuple) or hasattr(result, "__len__")
         assert len(result) == 2
 
     def test_up_alpha_beta_with_mostly_nan_after_condition(self):

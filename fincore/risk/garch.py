@@ -25,7 +25,6 @@ from scipy import optimize
 __all__ = ["GARCHResult", "GARCH", "EGARCH", "GJRGARCH", "forecast_volatility", "conditional_var"]
 
 
-
 @dataclass
 class GARCHResult:
     """Result of GARCH model fitting.

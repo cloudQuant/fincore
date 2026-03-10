@@ -2,6 +2,7 @@
 
 Part of test_exact_line_coverage.py split - Alpha beta tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import pandas as pd

@@ -2,6 +2,7 @@
 
 Part of test_transactions_plotting_full_coverage.py split - Turnover tests with P2 markers.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -12,8 +13,10 @@ import pytest
 @pytest.fixture(autouse=True)
 def _mpl_cleanup():
     import matplotlib
+
     matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
+
     yield
     plt.close("all")
 

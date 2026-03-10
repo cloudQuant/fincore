@@ -10,14 +10,31 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, excess_sharpe
-from fincore.metrics.ratios import adjusted_sharpe_ratio, conditional_sharpe_ratio
-from fincore.metrics.ratios import calmar_ratio, mar_ratio, omega_ratio
-from fincore.metrics.ratios import information_ratio, cal_treynor_ratio
-from fincore.metrics.ratios import m_squared, sterling_ratio, burke_ratio, kappa_three_ratio
-from fincore.metrics.ratios import deflated_sharpe_ratio, common_sense_ratio, stability_of_timeseries
-from fincore.metrics.ratios import up_capture, down_capture, up_down_capture, capture
-from fincore.metrics.ratios import up_capture_return, down_capture_return
+from fincore.metrics.ratios import (
+    adjusted_sharpe_ratio,
+    burke_ratio,
+    cal_treynor_ratio,
+    calmar_ratio,
+    capture,
+    common_sense_ratio,
+    conditional_sharpe_ratio,
+    deflated_sharpe_ratio,
+    down_capture,
+    down_capture_return,
+    excess_sharpe,
+    information_ratio,
+    kappa_three_ratio,
+    m_squared,
+    mar_ratio,
+    omega_ratio,
+    sharpe_ratio,
+    sortino_ratio,
+    stability_of_timeseries,
+    sterling_ratio,
+    up_capture,
+    up_capture_return,
+    up_down_capture,
+)
 
 
 class TestSharpeRatioEdgeCases:

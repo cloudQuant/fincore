@@ -10,13 +10,22 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.metrics.risk import annual_volatility, downside_risk
-from fincore.metrics.risk import value_at_risk, conditional_value_at_risk
-from fincore.metrics.risk import tail_ratio, tracking_error, residual_risk
-from fincore.metrics.risk import var_excess_return, var_cov_var_normal
-from fincore.metrics.risk import trading_value_at_risk, gpd_risk_estimates
-from fincore.metrics.risk import gpd_risk_estimates_aligned
-from fincore.metrics.risk import beta_fragility_heuristic, beta_fragility_heuristic_aligned
+from fincore.metrics.risk import (
+    annual_volatility,
+    beta_fragility_heuristic,
+    beta_fragility_heuristic_aligned,
+    conditional_value_at_risk,
+    downside_risk,
+    gpd_risk_estimates,
+    gpd_risk_estimates_aligned,
+    residual_risk,
+    tail_ratio,
+    tracking_error,
+    trading_value_at_risk,
+    value_at_risk,
+    var_cov_var_normal,
+    var_excess_return,
+)
 
 
 class TestAnnualVolatilityEdgeCases:

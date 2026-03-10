@@ -3,13 +3,15 @@
 This module tests the roll, up, and down helper functions.
 Split from test_helpers.py for maintainability.
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
-from unittest import TestCase
 
 from fincore.empyrical import Empyrical
 from fincore.utils.data_utils import down, roll, up
@@ -32,13 +34,11 @@ class TestDataUtils(TestCase):
             self.month_freq = "M"
 
         self.returns = pd.Series(
-            rand.randn(1, 120)[0] / 100.0,
-            index=pd.date_range("2000-1-30", periods=120, freq=self.month_freq)
+            rand.randn(1, 120)[0] / 100.0, index=pd.date_range("2000-1-30", periods=120, freq=self.month_freq)
         )
 
         self.factor_returns = pd.Series(
-            rand.randn(1, 120)[0] / 100.0,
-            index=pd.date_range("2000-1-30", periods=120, freq=self.month_freq)
+            rand.randn(1, 120)[0] / 100.0, index=pd.date_range("2000-1-30", periods=120, freq=self.month_freq)
         )
 
     @pytest.mark.p1  # High: frequently used data utilities
@@ -53,12 +53,7 @@ class TestDataUtils(TestCase):
     def test_roll_ndarray(self):
         """Test roll function with numpy arrays."""
         emp = Empyrical()
-        res = roll(
-            self.returns.values,
-            self.factor_returns.values,
-            window=12,
-            function=emp.alpha_aligned
-        )
+        res = roll(self.returns.values, self.factor_returns.values, window=12, function=emp.alpha_aligned)
 
         self.assertEqual(len(res), self.ser_length - self.window + 1)
 
@@ -93,10 +88,5 @@ class TestDataUtils(TestCase):
     def test_roll_max_window(self):
         """Test roll function with window larger than series length."""
         emp = Empyrical()
-        res = roll(
-            self.returns,
-            self.factor_returns,
-            window=self.ser_length + 100,
-            function=emp.max_drawdown
-        )
+        res = roll(self.returns, self.factor_returns, window=self.ser_length + 100, function=emp.max_drawdown)
         self.assertTrue(res.size == 0)

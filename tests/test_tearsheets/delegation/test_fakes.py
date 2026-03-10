@@ -203,9 +203,7 @@ class _FakePyfolioPositions:
 
     def get_sector_exposures(self, positions, sector_mappings):  # noqa: ARG002
         idx = positions.index
-        return pd.DataFrame(
-            {"tech": [10.0] * len(idx), "fin": [5.0] * len(idx), "cash": [100.0] * len(idx)}, index=idx
-        )
+        return pd.DataFrame({"tech": [10.0] * len(idx), "fin": [5.0] * len(idx), "cash": [100.0] * len(idx)}, index=idx)
 
     def plot_sector_allocations(self, *args, **kwargs):  # noqa: ARG002
         self.calls.append(("plot_sector_allocations", dict(kwargs)))

@@ -6,14 +6,16 @@ Priority Markers:
 - P0: Core downside_risk tests (critical risk metric)
 - P1: Property validation tests
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY
@@ -52,15 +54,9 @@ class TestDownsideRisk(BaseTestCase):
     """Tests for downside risk calculation."""
 
     # Test data
-    empty_returns = pd.Series(
-        np.array([]) / 100,
-        index=pd.date_range("2000-1-30", periods=0, freq="D")
-    )
+    empty_returns = pd.Series(np.array([]) / 100, index=pd.date_range("2000-1-30", periods=0, freq="D"))
 
-    one_return = pd.Series(
-        np.array([1.0]) / 100,
-        index=pd.date_range("2000-1-30", periods=1, freq="D")
-    )
+    one_return = pd.Series(np.array([1.0]) / 100, index=pd.date_range("2000-1-30", periods=1, freq="D"))
 
     mixed_returns = pd.Series(
         np.array([np.nan, 1.0, 10.0, -4.0, 2.0, 3.0, 2.0, 1.0, -10.0]) / 100,
@@ -84,34 +80,22 @@ class TestDownsideRisk(BaseTestCase):
     one = [-0.00171614, 0.01322056, 0.03063862, -0.01422057, -0.00489779, 0.01268925, -0.03357711, 0.01797036]
     two = [0.01846232, 0.00793951, -0.01448395, 0.00422537, -0.00339611, 0.03756813, 0.0151531, 0.03549769]
 
-    df_simple = pd.DataFrame({
-        "one": pd.Series(one, index=df_index_simple),
-        "two": pd.Series(two, index=df_index_simple)
-    })
+    df_simple = pd.DataFrame(
+        {"one": pd.Series(one, index=df_index_simple), "two": pd.Series(two, index=df_index_simple)}
+    )
 
-    df_week = pd.DataFrame({
-        "one": pd.Series(one, index=df_index_week),
-        "two": pd.Series(two, index=df_index_week)
-    })
+    df_week = pd.DataFrame({"one": pd.Series(one, index=df_index_week), "two": pd.Series(two, index=df_index_week)})
 
-    df_month = pd.DataFrame({
-        "one": pd.Series(one, index=df_index_month),
-        "two": pd.Series(two, index=df_index_month)
-    })
+    df_month = pd.DataFrame({"one": pd.Series(one, index=df_index_month), "two": pd.Series(two, index=df_index_month)})
 
     flat_line_0 = pd.Series(
-        np.linspace(0, 0, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0, 0, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
-    noise = pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    noise = pd.Series(rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
     noise_uniform = pd.Series(
-        rand.uniform(-0.01, 0.01, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        rand.uniform(-0.01, 0.01, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
     @property
@@ -119,20 +103,22 @@ class TestDownsideRisk(BaseTestCase):
         """Get empyrical module instance."""
         return empyrical
 
-    @parameterized.expand([
-        (empty_returns, 0.0, DAILY, np.nan),
-        (one_return, 0.0, DAILY, 0.0),
-        (mixed_returns, mixed_returns, DAILY, 0.0),
-        (mixed_returns, 0.0, DAILY, 0.60448325038829653),
-        (mixed_returns, 0.1, DAILY, 1.7161730681956295),
-        (weekly_returns, 0.0, WEEKLY, 0.25888650451930134),
-        (weekly_returns, 0.1, WEEKLY, 0.7733045971672482),
-        (monthly_returns, 0.0, MONTHLY, 0.1243650540411842),
-        (monthly_returns, 0.1, MONTHLY, 0.37148351242013422),
-        (df_simple, 0.0, DAILY, pd.Series([0.20671788246185202, 0.083495680595704475], index=["one", "two"])),
-        (df_week, 0.0, WEEKLY, pd.Series([0.093902996054410062, 0.037928477556776516], index=["one", "two"])),
-        (df_month, 0.0, MONTHLY, pd.Series([0.045109540184877193, 0.018220251263412916], index=["one", "two"])),
-    ])
+    @parameterized.expand(
+        [
+            (empty_returns, 0.0, DAILY, np.nan),
+            (one_return, 0.0, DAILY, 0.0),
+            (mixed_returns, mixed_returns, DAILY, 0.0),
+            (mixed_returns, 0.0, DAILY, 0.60448325038829653),
+            (mixed_returns, 0.1, DAILY, 1.7161730681956295),
+            (weekly_returns, 0.0, WEEKLY, 0.25888650451930134),
+            (weekly_returns, 0.1, WEEKLY, 0.7733045971672482),
+            (monthly_returns, 0.0, MONTHLY, 0.1243650540411842),
+            (monthly_returns, 0.1, MONTHLY, 0.37148351242013422),
+            (df_simple, 0.0, DAILY, pd.Series([0.20671788246185202, 0.083495680595704475], index=["one", "two"])),
+            (df_week, 0.0, WEEKLY, pd.Series([0.093902996054410062, 0.037928477556776516], index=["one", "two"])),
+            (df_month, 0.0, MONTHLY, pd.Series([0.045109540184877193, 0.018220251263412916], index=["one", "two"])),
+        ]
+    )
     @pytest.mark.p0  # Critical: core risk metric
     def test_downside_risk(self, returns, required_return, period, expected):
         """Test downside risk calculation."""

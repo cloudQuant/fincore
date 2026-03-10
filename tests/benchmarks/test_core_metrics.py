@@ -18,9 +18,9 @@ import pytest
 # Try to import pytest-benchmark
 benchmark = pytest.importorskip("pytest_benchmark").plugin
 
-from fincore import sharpe_ratio, max_drawdown, annual_return, annual_volatility
-from fincore.metrics import returns as returns_mod
+from fincore import annual_return, annual_volatility, max_drawdown, sharpe_ratio
 from fincore.constants import DAILY
+from fincore.metrics import returns as returns_mod
 
 
 @pytest.fixture
@@ -118,9 +118,7 @@ def test_perf_attrib_benchmark(benchmark):
     from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
     # Generate test data with proper structure
-    returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(
-        periods=100, num_styles=2
-    )
+    returns, positions, factor_returns, factor_loadings = generate_toy_risk_model_output(periods=100, num_styles=2)
 
     result = benchmark(
         perf_attrib,

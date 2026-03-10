@@ -27,7 +27,6 @@ from fincore.report.format import (
 __all__ = ["generate_html"]
 
 
-
 def generate_html(
     returns,
     benchmark_rets,

@@ -1,4 +1,5 @@
 """Tests targeting specific uncovered lines in risk.py, drawdown.py, rolling.py, and data_utils.py."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -8,7 +9,7 @@ import pytest
 from fincore.metrics import drawdown as dd
 from fincore.metrics import risk as rm
 from fincore.metrics import rolling as rl
-from fincore.utils.data_utils import roll, rolling_window, up, down
+from fincore.utils.data_utils import down, roll, rolling_window, up
 
 
 # ---------------------------------------------------------------------------
@@ -31,6 +32,7 @@ def _factor_returns(n=300, seed=99):
 # ===================================================================
 # D1 – risk.py coverage gaps
 # ===================================================================
+
 
 class TestAnnualVolatilityEdgeCases:
     def test_short_input_returns_nan(self):
@@ -56,8 +58,10 @@ class TestDownsideRiskEdgeCases:
     def test_dataframe_input(self):
         """Cover lines 168-169: DataFrame branch."""
         idx = pd.bdate_range("2020-01-01", periods=50)
-        df = pd.DataFrame({"a": np.random.default_rng(0).normal(0, 0.01, 50),
-                           "b": np.random.default_rng(1).normal(0, 0.01, 50)}, index=idx)
+        df = pd.DataFrame(
+            {"a": np.random.default_rng(0).normal(0, 0.01, 50), "b": np.random.default_rng(1).normal(0, 0.01, 50)},
+            index=idx,
+        )
         result = rm.downside_risk(df)
         assert isinstance(result, pd.Series)
         assert len(result) == 2
@@ -142,6 +146,7 @@ class TestGpdRiskEstimatesAligned:
 # D2 – drawdown.py coverage gaps
 # ===================================================================
 
+
 class TestMaxDrawdownEdge:
     def test_empty_returns_nan(self):
         """Cover lines 81-85: len(returns) < 1."""
@@ -151,8 +156,10 @@ class TestMaxDrawdownEdge:
     def test_dataframe_returns_series(self):
         """Cover line 102-103: DataFrame branch."""
         idx = pd.bdate_range("2020-01-01", periods=50)
-        df = pd.DataFrame({"a": np.random.default_rng(0).normal(0, 0.01, 50),
-                           "b": np.random.default_rng(1).normal(0, 0.01, 50)}, index=idx)
+        df = pd.DataFrame(
+            {"a": np.random.default_rng(0).normal(0, 0.01, 50), "b": np.random.default_rng(1).normal(0, 0.01, 50)},
+            index=idx,
+        )
         result = dd.max_drawdown(df)
         assert isinstance(result, pd.Series)
 
@@ -260,6 +267,7 @@ class TestDrawdownDetailedAndTopN:
 # ===================================================================
 # D3 – rolling.py coverage gaps
 # ===================================================================
+
 
 class TestRollAlphaBeta:
     def test_ndarray_input(self):
@@ -375,6 +383,7 @@ class TestRollingRegression:
 # ===================================================================
 # D4 – data_utils.py coverage gaps
 # ===================================================================
+
 
 class TestRollingWindow:
     def test_2d_raises(self):

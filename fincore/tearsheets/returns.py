@@ -43,7 +43,6 @@ __all__ = [
 ]
 
 
-
 def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs):
     """
     Plots a heatmap of returns by month.

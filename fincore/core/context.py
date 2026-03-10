@@ -48,7 +48,6 @@ from fincore.utils import nanmean, nanstd
 __all__ = ["AnalysisContext", "analyze"]
 
 
-
 class AnalysisContext:
     """Lazy, cached container for performance analytics.
 

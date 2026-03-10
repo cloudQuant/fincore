@@ -2,6 +2,7 @@
 
 Split from test_style_more_coverage.py for maintainability.
 """
+
 from __future__ import annotations
 
 import pandas as pd
@@ -17,10 +18,7 @@ class TestPrivateHelpers:
     def test_private_helpers_momentum_and_lookback_and_size_rank(self) -> None:
         """Test _calculate_momentum, _exposure_from_lookback, _size_rank_to_exposure."""
         idx = pd.date_range("2024-01-01", periods=5, freq="B")
-        rets = pd.DataFrame(
-            {"A": [0.01, 0.0, 0.0, 0.0, 0.0], "B": [-0.01, 0.0, 0.0, 0.0, 0.0]},
-            index=idx
-        )
+        rets = pd.DataFrame({"A": [0.01, 0.0, 0.0, 0.0, 0.0], "B": [-0.01, 0.0, 0.0, 0.0, 0.0]}, index=idx)
 
         mom = style_mod._calculate_momentum(rets, window=2)
         assert isinstance(mom, pd.DataFrame)

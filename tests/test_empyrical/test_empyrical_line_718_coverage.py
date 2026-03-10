@@ -25,10 +25,10 @@ class TestEmpyricalLine718Coverage:
         emp = Empyrical(returns=returns, factor_returns=benchmark)
 
         # Import the real modules first
-        from fincore.metrics import alpha_beta
-
         # Create a mock yearly module
         from unittest.mock import MagicMock, patch
+
+        from fincore.metrics import alpha_beta
 
         mock_yr = MagicMock()
 
@@ -36,11 +36,12 @@ class TestEmpyricalLine718Coverage:
         # We return NaN to trigger line 718
         mock_yr.annual_return.return_value = np.nan
 
-        with patch('fincore.empyrical._resolve_module') as mock_resolve:
+        with patch("fincore.empyrical._resolve_module") as mock_resolve:
+
             def resolve_side_effect(name):
-                if name == '_alpha_beta':
+                if name == "_alpha_beta":
                     return alpha_beta
-                elif name == '_yearly':
+                elif name == "_yearly":
                     return mock_yr
                 return MagicMock()
 

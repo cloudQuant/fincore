@@ -8,7 +8,6 @@ import seaborn as sns
 __all__ = ["plotting_context", "axes_style"]
 
 
-
 def plotting_context(context="notebook", font_scale=1.5, rc=None):
     """
     Create pyfolio default plotting style context.

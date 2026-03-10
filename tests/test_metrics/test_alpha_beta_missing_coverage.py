@@ -69,10 +69,6 @@ class TestAnnualAlphaLine557:
         and not add anything to annual_alphas.
         After loop, annual_alphas is empty, hitting line 557.
         """
-        returns = pd.Series(
-            [0.01, 0.02, 0.015],
-            index=pd.date_range("2020-01-01", periods=3),
-        )
         # Factor returns with different year - after alignment they will have same index
         # with NaN values, but the groupby by year will still see 2020 for returns
         # and... let me think about this differently
@@ -193,6 +189,7 @@ class TestAnnualBetaLine610:
 
 # Let me try to create such a scenario:
 
+
 def test_annual_alpha_different_years():
     """Try to hit line 557 with different years."""
     # Returns in 2020
@@ -227,6 +224,7 @@ def test_annual_alpha_different_years():
 
 # Let's try mocking to force these paths:
 
+
 def test_annual_alpha_mock_to_hit_line_543():
     """Test line 543 by mocking aligned_series to return empty."""
     returns = pd.Series(
@@ -241,7 +239,7 @@ def test_annual_alpha_mock_to_hit_line_543():
     from unittest.mock import patch
 
     # Mock aligned_series to return empty results
-    with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+    with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
         mock_aligned.return_value = (pd.Series([], dtype=float), pd.Series([], dtype=float))
 
         result = alpha_beta.annual_alpha(returns, factor_returns)
@@ -262,18 +260,18 @@ def test_annual_alpha_mock_to_hit_line_557():
         index=pd.date_range("2020-01-01", periods=3),
     )
 
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import MagicMock, patch
 
     # Create a mock groupby that returns empty groups
     mock_grouped = MagicMock()
     mock_grouped.groups.keys.return_value = []
 
     # Mock aligned_series and groupby
-    with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+    with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
         # Return non-empty series so we pass line 542
         mock_aligned.return_value = (returns, factor_returns)
 
-        with patch('pandas.Series.groupby', return_value=mock_grouped):
+        with patch("pandas.Series.groupby", return_value=mock_grouped):
             # Actually, patching Series.groupby is tricky
             # Let's try a different approach
             pass

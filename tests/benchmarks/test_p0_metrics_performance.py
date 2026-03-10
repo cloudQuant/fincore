@@ -32,25 +32,24 @@ import pytest
 
 # Import all P0 metrics
 from fincore import (
-    sharpe_ratio,
-    sortino_ratio,
-    max_drawdown,
+    alpha,
     annual_return,
     annual_volatility,
-    alpha,
     beta,
+    calmar_ratio,
     cum_returns,
     cum_returns_final,
-    value_at_risk,
-    calmar_ratio,
-    omega_ratio,
-    information_ratio,
-    tail_ratio,
     downside_risk,
+    information_ratio,
+    max_drawdown,
+    omega_ratio,
+    sharpe_ratio,
+    sortino_ratio,
+    tail_ratio,
+    value_at_risk,
 )
-from fincore.metrics.risk import conditional_value_at_risk
 from fincore.constants import DAILY
-
+from fincore.metrics.risk import conditional_value_at_risk
 
 # ==============================================================================
 # Test Fixtures - Different data sizes

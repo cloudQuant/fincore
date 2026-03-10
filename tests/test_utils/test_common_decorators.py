@@ -26,6 +26,7 @@ def test_customize_decorator_set_context_false_calls_function_directly():
 
 def test_customize_decorator_fallback_when_no_plotting_helpers_present():
     """Test @customize decorator fallback when no plotting helpers present."""
+
     @cu.customize
     def f(x):
         return x + 1

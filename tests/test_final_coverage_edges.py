@@ -202,14 +202,17 @@ class TestOptimizationFrontierEdgeCase:
         # Add enough variation to avoid singular covariance matrix
         # but keep some assets with very low variance
         np.random.seed(42)
-        returns = pd.DataFrame({
-            "A": np.random.normal(0.01, 0.0001, 50),  # Very low variance
-            "B": np.random.normal(0.01, 0.0001, 50),  # Very low variance
-            "C": np.random.normal(0.01, 0.01, 50),    # Normal variance
-        })
+        returns = pd.DataFrame(
+            {
+                "A": np.random.normal(0.01, 0.0001, 50),  # Very low variance
+                "B": np.random.normal(0.01, 0.0001, 50),  # Very low variance
+                "C": np.random.normal(0.01, 0.01, 50),  # Normal variance
+            }
+        )
 
         # Filter warnings for divide by zero
         import warnings
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
             try:

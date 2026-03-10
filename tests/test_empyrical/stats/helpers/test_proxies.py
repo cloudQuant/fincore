@@ -6,17 +6,18 @@ These proxy classes wrap empyrical functions to verify:
 
 Split from test_2d_stats.py for maintainability.
 """
+
 from __future__ import annotations
 
 from copy import copy
 from functools import wraps
 from operator import attrgetter
+from unittest import SkipTest
 
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose
 from pandas.core.generic import NDFrame
-from unittest import SkipTest
 
 from fincore.empyrical import Empyrical
 
@@ -77,16 +78,8 @@ class ReturnTypeEmpyricalProxy:
         @wraps(func)
         def check_not_mutated(*args, **kwargs):
             # Copy inputs to compare them to originals later.
-            arg_copies = [
-                (i, arg.copy())
-                for i, arg in enumerate(args)
-                if isinstance(arg, (NDFrame, np.ndarray))
-            ]
-            kwarg_copies = {
-                k: v.copy()
-                for k, v in kwargs.items()
-                if isinstance(v, (NDFrame, np.ndarray))
-            }
+            arg_copies = [(i, arg.copy()) for i, arg in enumerate(args) if isinstance(arg, (NDFrame, np.ndarray))]
+            kwarg_copies = {k: v.copy() for k, v in kwargs.items() if isinstance(v, (NDFrame, np.ndarray))}
 
             result = func(*args, **kwargs)
 
@@ -127,22 +120,14 @@ class ConvertPandasEmpyricalProxy(ReturnTypeEmpyricalProxy):
 
     def __getattr__(self, item):
         if self._pandas_only:
-            raise SkipTest(
-                "empyrical.%s expects pandas-only inputs that have dt indices/labels" % item
-            )
+            raise SkipTest("empyrical.%s expects pandas-only inputs that have dt indices/labels" % item)
 
         func = super().__getattr__(item)
 
         @wraps(func)
         def convert_args(*args, **kwargs):
-            args = [
-                self._convert(arg) if isinstance(arg, NDFrame) else arg
-                for arg in args
-            ]
-            kwargs = {
-                k: self._convert(v) if isinstance(v, NDFrame) else v
-                for k, v in kwargs.items()
-            }
+            args = [self._convert(arg) if isinstance(arg, NDFrame) else arg for arg in args]
+            kwargs = {k: self._convert(v) if isinstance(v, NDFrame) else v for k, v in kwargs.items()}
             return func(*args, **kwargs)
 
         return convert_args

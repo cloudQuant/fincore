@@ -17,7 +17,6 @@ __all__ = [
 ]
 
 
-
 def plot_perf_attrib_returns(empyrical_instance, perf_attrib_data, cost=None, ax=None):
     """
     Plot total, specific, and common returns.

@@ -3,9 +3,10 @@
 These lines are hit when annual_alphas/betas is empty after iterating.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
 import pytest
-from unittest.mock import patch, MagicMock
 
 from fincore.metrics import alpha_beta
 
@@ -35,7 +36,7 @@ class TestAnnualAlphaLine557:
         # 1. grouped has the year 2020
         # 2. factor_grouped.groups.keys() returns empty (no matching years)
 
-        with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
             # Return the original series
             mock_aligned.return_value = (returns, factor_returns)
 
@@ -50,7 +51,7 @@ class TestAnnualAlphaLine557:
                     return mock_gb
                 return original_groupby(self, by)
 
-            with patch('pandas.Series.groupby', mock_groupby_factory):
+            with patch("pandas.Series.groupby", mock_groupby_factory):
                 result = alpha_beta.annual_alpha(returns, factor_returns)
 
                 # Should return empty Series (line 557)
@@ -75,7 +76,7 @@ class TestAnnualBetaLine610:
             index=pd.date_range("2020-01-01", periods=3),
         )
 
-        with patch('fincore.metrics.alpha_beta.aligned_series') as mock_aligned:
+        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
             mock_aligned.return_value = (returns, factor_returns)
 
             original_groupby = pd.Series.groupby
@@ -87,7 +88,7 @@ class TestAnnualBetaLine610:
                     return mock_gb
                 return original_groupby(self, by)
 
-            with patch('pandas.Series.groupby', mock_groupby_factory):
+            with patch("pandas.Series.groupby", mock_groupby_factory):
                 result = alpha_beta.annual_beta(returns, factor_returns)
 
                 # Should return empty Series (line 610)

@@ -14,7 +14,6 @@ import pandas as pd
 __all__ = ["brinson_attribution", "brinson_results", "brinson_cumulative", "BrinsonAttribution"]
 
 
-
 def brinson_attribution(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,

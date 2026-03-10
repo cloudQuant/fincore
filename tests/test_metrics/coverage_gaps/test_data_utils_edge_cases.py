@@ -2,13 +2,14 @@
 
 Part of test_coverage_gaps.py split - Data utilities edge cases.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.utils.data_utils import roll, rolling_window, up, down
+from fincore.utils.data_utils import down, roll, rolling_window, up
 
 
 @pytest.fixture

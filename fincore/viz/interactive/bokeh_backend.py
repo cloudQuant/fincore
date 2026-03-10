@@ -16,7 +16,6 @@ from fincore.viz.base import VizBackend
 __all__ = ["BokehBackend", "PrintfTickFormatter"]
 
 
-
 class BokehBackend(VizBackend):
     """Interactive visualization backend using Bokeh.
 

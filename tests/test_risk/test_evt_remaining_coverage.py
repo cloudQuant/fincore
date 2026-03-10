@@ -46,10 +46,12 @@ class TestEVTCVARCoverage:
         # Create extreme negative returns that might result in xi >= 1
         # Need enough data for threshold computation
         np.random.seed(42)
-        returns = np.concatenate([
-            -np.random.exponential(scale=0.01, size=100),
-            [-1.0, -2.0, -5.0, -10.0]  # Extreme negative outliers
-        ])
+        returns = np.concatenate(
+            [
+                -np.random.exponential(scale=0.01, size=100),
+                [-1.0, -2.0, -5.0, -10.0],  # Extreme negative outliers
+            ]
+        )
 
         # This might raise ValueError or return a result
         try:

@@ -31,6 +31,7 @@ def test_clip_returns_to_benchmark_noop_when_already_aligned():
 
 def test_vectorize_decorator_series_and_dataframe():
     """Test @vectorize decorator handles Series and DataFrame inputs."""
+
     @cu.vectorize
     def plus_one(s):
         return s + 1

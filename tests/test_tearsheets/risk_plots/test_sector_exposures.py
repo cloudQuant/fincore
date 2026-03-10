@@ -2,6 +2,7 @@
 
 Split from test_risk_plots_full_coverage.py for maintainability.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -50,11 +51,7 @@ class TestSectorExposurePlots:
         long_exposures = [pd.Series(0.01 * (i + 1), index=idx) for i in range(3)]
         short_exposures = [pd.Series(-0.005 * (i + 1), index=idx) for i in range(3)]
 
-        ax = tr.plot_sector_exposures_longshort(
-            long_exposures,
-            short_exposures,
-            sector_dict=custom_sectors
-        )
+        ax = tr.plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict=custom_sectors)
 
         assert ax is not None
 
@@ -120,14 +117,8 @@ class TestSectorExposurePlots:
 
         long_exposures = [pd.Series(0.02 * (i + 1), index=idx) for i in range(11)]
         short_exposures = [pd.Series(-0.01 * (i + 1), index=idx) for i in range(11)]
-        gross_exposures = [
-            pd.Series((long_exposures[i] - short_exposures[i]).abs(), index=idx)
-            for i in range(11)
-        ]
-        net_exposures = [
-            pd.Series(long_exposures[i] + short_exposures[i], index=idx)
-            for i in range(11)
-        ]
+        gross_exposures = [pd.Series((long_exposures[i] - short_exposures[i]).abs(), index=idx) for i in range(11)]
+        net_exposures = [pd.Series(long_exposures[i] + short_exposures[i], index=idx) for i in range(11)]
 
         ax1 = tr.plot_sector_exposures_longshort(long_exposures, short_exposures)
         ax2 = tr.plot_sector_exposures_gross(gross_exposures)

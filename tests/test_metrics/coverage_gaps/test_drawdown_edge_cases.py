@@ -2,6 +2,7 @@
 
 Part of test_coverage_gaps.py split - Drawdown module edge cases.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -32,8 +33,10 @@ class TestMaxDrawdownEdge:
     def test_dataframe_returns_series(self):
         """Cover line 102-103: DataFrame branch."""
         idx = pd.bdate_range("2020-01-01", periods=50)
-        df = pd.DataFrame({"a": np.random.default_rng(0).normal(0, 0.01, 50),
-                           "b": np.random.default_rng(1).normal(0, 0.01, 50)}, index=idx)
+        df = pd.DataFrame(
+            {"a": np.random.default_rng(0).normal(0, 0.01, 50), "b": np.random.default_rng(1).normal(0, 0.01, 50)},
+            index=idx,
+        )
         result = dd.max_drawdown(df)
         assert isinstance(result, pd.Series)
 

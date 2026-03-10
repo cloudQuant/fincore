@@ -9,14 +9,16 @@ Priority Markers:
 - P1: Important property tests (translation, regression properties)
 - P2: Edge cases with NaN handling
 """
+
 from __future__ import annotations
+
+from unittest import TestCase
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from parameterized import parameterized
-from unittest import TestCase
 
 from fincore import empyrical
 from fincore.empyrical import Empyrical
@@ -46,18 +48,13 @@ class TestAlphaBetaProperties(BaseTestCase):
     """Tests for alpha/beta properties like translation and correlation."""
 
     # Test data
-    noise = pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
-    )
+    noise = pd.Series(rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"))
 
     sparse_noise = pd.Series(
-        rand.normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        rand.normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
     sparse_flat_line_1_tz = pd.Series(
-        np.linspace(0.01, 0.01, num=1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        np.linspace(0.01, 0.01, num=1000), index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
     )
 
     # Add some NaN values to sparse_noise
@@ -70,10 +67,12 @@ class TestAlphaBetaProperties(BaseTestCase):
     # Alpha/Beta Translation Tests
     # ========================================================================
 
-    @parameterized.expand([
-        (0, 0.001),
-        (0.01, 0.001),
-    ])
+    @parameterized.expand(
+        [
+            (0, 0.001),
+            (0.01, 0.001),
+        ]
+    )
     def test_alpha_beta_translation(self, mean_returns, translation):
         """Test alpha/beta behavior under return translation."""
         # Generate correlated returns and benchmark.
@@ -99,14 +98,10 @@ class TestAlphaBetaProperties(BaseTestCase):
 
         # Alpha should change proportionally to how much returns were translated.
         assert_almost_equal(
-            ((alpha_standard + 1) ** (1 / 252)) - ((alpha_depressed + 1) ** (1 / 252)),
-            translation,
-            DECIMAL_PLACES
+            ((alpha_standard + 1) ** (1 / 252)) - ((alpha_depressed + 1) ** (1 / 252)), translation, DECIMAL_PLACES
         )
         assert_almost_equal(
-            ((alpha_raised + 1) ** (1 / 252)) - ((alpha_standard + 1) ** (1 / 252)),
-            translation,
-            DECIMAL_PLACES
+            ((alpha_raised + 1) ** (1 / 252)) - ((alpha_standard + 1) ** (1 / 252)), translation, DECIMAL_PLACES
         )
         # Beta remains constant.
         assert_almost_equal(beta_standard, beta_depressed, DECIMAL_PLACES)
@@ -162,7 +157,7 @@ class TestAlphaBetaNaN(BaseTestCase):
     # Test data with NaN
     sparse_noise = pd.Series(
         np.random.RandomState(1337).normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC")
+        index=pd.date_range("2000-1-30", periods=1000, freq="D", tz="UTC"),
     )
 
     # Add some NaN values
@@ -172,9 +167,11 @@ class TestAlphaBetaNaN(BaseTestCase):
 
     # When faced with data containing np.nan, do not return np.nan. Calculate
     # alpha and beta using dates containing both.
-    @parameterized.expand([
-        (sparse_noise, sparse_noise),
-    ])
+    @parameterized.expand(
+        [
+            (sparse_noise, sparse_noise),
+        ]
+    )
     def test_alpha_beta_with_nan_inputs(self, returns, benchmark):
         """Test alpha/beta handles NaN inputs correctly."""
         alpha, beta = Empyrical(return_types=np.ndarray).alpha_beta(
@@ -190,16 +187,17 @@ class TestBetaScaling(BaseTestCase):
     """Tests for beta scaling properties."""
 
     noise = pd.Series(
-        np.random.RandomState(1337).normal(0, 0.001, 1000),
-        index=pd.date_range("2000-1-30", periods=1000, freq="D")
+        np.random.RandomState(1337).normal(0, 0.001, 1000), index=pd.date_range("2000-1-30", periods=1000, freq="D")
     )
 
-    @parameterized.expand([
-        (noise, noise, 1.0),
-        (2 * noise, noise, 2.0),
-        (noise, -noise, -1.0),
-        (2 * noise, -noise, -2.0),
-    ])
+    @parameterized.expand(
+        [
+            (noise, noise, 1.0),
+            (2 * noise, noise, 2.0),
+            (noise, -noise, -1.0),
+            (2 * noise, -noise, -2.0),
+        ]
+    )
     @pytest.mark.p0  # Critical: core financial metric
     def test_beta_scaling(self, returns, benchmark, expected):
         """Test beta calculation with scaling."""

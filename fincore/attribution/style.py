@@ -22,7 +22,6 @@ __all__ = [
 ]
 
 
-
 class StyleResult:
     """Container for style analysis results."""
 

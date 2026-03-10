@@ -4,9 +4,10 @@ Targets:
 - optimization/frontier.py: 106 - max_sharpe with near-zero vol
 """
 
+import warnings
+
 import numpy as np
 import pandas as pd
-import warnings
 
 
 class TestOptimizationFrontierNearZeroVol:
@@ -19,11 +20,13 @@ class TestOptimizationFrontierNearZeroVol:
 
         np.random.seed(42)
         # Mix of very low and normal variance to trigger the penalty path
-        returns = pd.DataFrame({
-            "A": np.random.normal(0.01, 0.0001, 50),  # Very low variance
-            "B": np.random.normal(0.01, 0.0001, 50),
-            "C": np.random.normal(0.01, 0.01, 50),
-        })
+        returns = pd.DataFrame(
+            {
+                "A": np.random.normal(0.01, 0.0001, 50),  # Very low variance
+                "B": np.random.normal(0.01, 0.0001, 50),
+                "C": np.random.normal(0.01, 0.01, 50),
+            }
+        )
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
