@@ -3,7 +3,9 @@
 Targets:
 - utils/common_utils.py: 745-746, 803-809 - matplotlib utilities
 """
+import pytest
 
+pytest.importorskip("matplotlib")
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 

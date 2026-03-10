@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
+
+pytest.importorskip("matplotlib")
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-import pytest
 
 from fincore.tearsheets import create_interesting_times_tear_sheet, create_risk_tear_sheet
 from fincore.utils.common_utils import configure_legend, sample_colormap

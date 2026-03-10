@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytest.importorskip("matplotlib")
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 

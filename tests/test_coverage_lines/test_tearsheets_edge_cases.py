@@ -3,6 +3,9 @@
 Targets:
 - tearsheets/sheets.py: 763, 950 - tear sheet functions
 """
+import pytest
+
+pytest.importorskip("matplotlib")
 
 
 class TestTearsheetsSheetsLines:

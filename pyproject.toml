@@ -46,6 +46,8 @@ dev = [
     "parameterized",
     "ruff>=0.4.0",
     "mypy>=1.5",
+    "yfinance>=0.2",
+    "requests>=2.25",
 ]
 all = ["fincore[viz,bayesian,datareader]"]
 
@@ -76,6 +78,9 @@ markers = [
 norecursedirs = [".git", ".tox", "dist", "build", "*.egg", "__pycache__"]
 filterwarnings = [
     "error::RuntimeWarning",
+    # Edge case tests: empty/NaN data triggers numpy warnings (expected).
+    "ignore:Mean of empty slice:RuntimeWarning",
+    "ignore:invalid value encountered in reduce:RuntimeWarning",
     # Third-party noise (not actionable for this project).
     "ignore::UserWarning:matplotlib\\.dates",
     "ignore::PendingDeprecationWarning:seaborn\\.categorical",

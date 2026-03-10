@@ -227,6 +227,7 @@ class TestTearsheetsSheetsEdgeCases:
 
     def test_create_interesting_times_tear_sheet_run_flask(self):
         """Line 763: run_flask_app=True returns fig early."""
+        pytest.importorskip("matplotlib")
         # This test requires mocking or creating minimal tear sheet
         # The line is hit when run_flask_app=True
         # For coverage purposes, we verify the function exists
@@ -236,6 +237,7 @@ class TestTearsheetsSheetsEdgeCases:
 
     def test_create_risk_tear_sheet_with_shares_held(self):
         """Line 950: shares_held.loc[idx] slicing (create_risk_tear_sheet)."""
+        pytest.importorskip("matplotlib")
         # This line is hit when shares_held is provided in create_risk_tear_sheet
         from fincore.tearsheets import create_risk_tear_sheet
 
@@ -289,6 +291,7 @@ class TestCommonUtilsEdgeCases:
 
     def test_configure_legend_get_ydata_exception(self):
         """Lines 745-746: get_ydata() raises exception."""
+        pytest.importorskip("matplotlib")
         from matplotlib.figure import Figure
         from matplotlib.lines import Line2D
 
@@ -310,6 +313,7 @@ class TestCommonUtilsEdgeCases:
 
     def test_sample_colormap_older_api_fallback(self):
         """Lines 803-809: fallback to older matplotlib API."""
+        pytest.importorskip("matplotlib")
         from fincore.utils.common_utils import sample_colormap
 
         # Should work with various matplotlib versions
