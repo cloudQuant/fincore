@@ -56,6 +56,12 @@ dev = [
     "types-requests>=2.25",
     "yfinance>=0.2",
     "requests>=2.25",
+    # Viz deps for pyfolio, tearsheets, report tests (also in viz extra)
+    "matplotlib>=3.3",
+    "seaborn>=0.11",
+    "PyPDF2>=3.0",
+    "bokeh>=3.0",
+    "plotly>=5.0",
 ]
 all = ["fincore[viz,bayesian,datareader]"]
 

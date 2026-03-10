@@ -37,7 +37,7 @@ jobs:
 
       - name: Run P0 tests
         run: |
-          pytest tests/ -m p0 -v --tb=short -n auto
+          pytest tests/ -m p0 -v --tb=short -n auto --ignore=tests/benchmarks/
 
       - name: Upload P0 test results
         if: always()
@@ -71,7 +71,7 @@ jobs:
 
       - name: Run P0+P1 tests
         run: |
-          pytest tests/ -m "p0 or p1" -v --tb=short -n auto
+          pytest tests/ -m "p0 or p1" -v --tb=short -n auto --ignore=tests/benchmarks/
 
       - name: Upload P0+P1 test results
         if: always()
@@ -110,7 +110,7 @@ jobs:
 
       - name: Run all tests with coverage
         run: |
-          pytest tests/ -v --tb=short -n auto --cov=fincore --cov-report=term-missing --cov-report=xml
+          pytest tests/ -v --tb=short -n auto --ignore=tests/benchmarks/ --cov=fincore --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

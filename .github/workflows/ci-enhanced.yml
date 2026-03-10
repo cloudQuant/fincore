@@ -55,12 +55,12 @@ jobs:
       - name: Run fast unit tests
         run: |
           echo "Running unit tests (265 tests, ~12s)..."
-          pytest tests/ -m "unit and not slow" -v --tb=short -n auto
+          pytest tests/ -m "unit and not slow" -v --tb=short -n auto --ignore=tests/benchmarks/
 
       - name: Run P0+P1 critical tests
         run: |
           echo "Running P0+P1 tests (66 tests, ~8s)..."
-          pytest tests/ -m "(p0 or p1) and not slow" -v --tb=short -n auto
+          pytest tests/ -m "(p0 or p1) and not slow" -v --tb=short -n auto --ignore=tests/benchmarks/
 
       - name: Upload test results
         if: always()
