@@ -6,7 +6,7 @@ Provides server-compatible interactive visualizations using Bokeh.
 from __future__ import annotations
 
 import importlib
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -101,7 +101,7 @@ class BokehBackend(VizBackend):
         fig = figure(
             height=self.height,
             width=self.width,
-            sizing_mode=self.sizing_mode,
+            sizing_mode=cast(Any, self.sizing_mode),
             background_fill_color=self.bg_color,
             border_fill_color=self.bg_color,
             **kwargs,
@@ -429,7 +429,7 @@ class BokehBackend(VizBackend):
             high=max_val,
         )
 
-        p = figure(
+        p = figure(  # type: ignore[call-arg]
             title="Monthly Returns Heatmap",
             x_range=month_names,
             y_range=[str(y) for y in reversed(years)],

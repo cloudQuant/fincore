@@ -34,7 +34,9 @@ def test_import_fincore_benchmark(benchmark):
     result = benchmark(import_fincore)
     assert result is not None
     assert hasattr(result, "sharpe_ratio")
-    assert benchmark.stats.stats.median < 0.1  # <100ms
+    # benchmark.stats is None when xdist is active (parallel); skip median check then
+    if benchmark.stats is not None:
+        assert benchmark.stats.stats.median < 0.1  # <100ms
 
 
 @pytest.mark.p2
