@@ -34,7 +34,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-viz = ["matplotlib>=3.3", "seaborn>=0.11", "ipython>=7.0"]
+viz = [
+    "matplotlib>=3.3",
+    "seaborn>=0.11",
+    "ipython>=7.0",
+    "PyPDF2>=3.0",
+    "bokeh>=3.0",
+    "plotly>=5.0",
+]
 bayesian = ["pymc>=5.0"]
 datareader = ["pandas-datareader>=0.8.0"]
 dev = [

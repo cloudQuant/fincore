@@ -11,6 +11,16 @@ import pytest
 
 
 @pytest.fixture
+def small_returns():
+    """Small returns series for basic metric testing."""
+    np.random.seed(42)
+    return pd.Series(
+        np.random.randn(252) * 0.01,
+        index=pd.bdate_range("2020-01-01", periods=252),
+    )
+
+
+@pytest.fixture
 def returns_with_benchmark():
     """Returns and benchmark series for capture ratios."""
     np.random.seed(42)

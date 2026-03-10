@@ -25,7 +25,7 @@ class TestAnnualVolatilityEdgeCases:
     @pytest.mark.p1
     def test_annual_volatility_with_output_buffer(self, small_returns):
         """Test annual_volatility with pre-allocated output buffer."""
-        out = np.empty(1)
+        out = np.empty(())
         result = annual_volatility(small_returns, out=out)
         assert out is not None
         assert np.isfinite(result)
@@ -51,7 +51,7 @@ class TestDownsideRiskEdgeCases:
     @pytest.mark.p1
     def test_downside_risk_with_output_buffer(self, small_returns):
         """Test downside_risk with pre-allocated output buffer."""
-        out = np.empty(1)
+        out = np.empty(())
         result = downside_risk(small_returns, required_return=0, out=out)
         assert out is not None
         assert np.isfinite(result)
@@ -161,7 +161,7 @@ class TestTrackingErrorEdgeCases:
     def test_tracking_error_with_output_buffer(self, returns_with_benchmark):
         """Test tracking_error with pre-allocated output buffer."""
         returns, benchmark = returns_with_benchmark
-        out = np.empty(1)
+        out = np.empty(())
         result = tracking_error(returns, benchmark, out=out)
         assert out is not None
         assert np.isfinite(result)

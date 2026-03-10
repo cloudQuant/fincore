@@ -8,8 +8,6 @@ import pytest
 
 from fincore.core.context import AnalysisContext
 from fincore.viz.base import VizBackend, get_backend
-from fincore.viz.html_backend import HtmlReportBuilder
-from fincore.viz.matplotlib_backend import MatplotlibBackend
 
 
 @pytest.fixture
@@ -34,11 +32,13 @@ def ctx(returns):
 class TestGetBackend:
     def test_matplotlib(self):
         backend = get_backend("matplotlib")
-        assert isinstance(backend, MatplotlibBackend)
+        assert isinstance(backend, VizBackend)
+        assert backend.__class__.__name__ == "MatplotlibBackend"
 
     def test_html(self):
         backend = get_backend("html")
-        assert isinstance(backend, HtmlReportBuilder)
+        assert isinstance(backend, VizBackend)
+        assert backend.__class__.__name__ == "HtmlReportBuilder"
 
     def test_unknown(self):
         """Test that unknown backend raises ValueError."""
@@ -48,7 +48,8 @@ class TestGetBackend:
 
     def test_case_insensitive(self):
         backend = get_backend("Matplotlib")
-        assert isinstance(backend, MatplotlibBackend)
+        assert isinstance(backend, VizBackend)
+        assert backend.__class__.__name__ == "MatplotlibBackend"
 
 
 # ------------------------------------------------------------------
@@ -58,10 +59,12 @@ class TestGetBackend:
 
 class TestProtocol:
     def test_matplotlib_is_viz_backend(self):
-        assert isinstance(MatplotlibBackend(), VizBackend)
+        backend = get_backend("matplotlib")
+        assert isinstance(backend, VizBackend)
 
     def test_html_is_viz_backend(self):
-        assert isinstance(HtmlReportBuilder(), VizBackend)
+        backend = get_backend("html")
+        assert isinstance(backend, VizBackend)
 
 
 # ------------------------------------------------------------------
@@ -71,26 +74,26 @@ class TestProtocol:
 
 class TestHtmlReportBuilder:
     def test_build_empty(self):
-        builder = HtmlReportBuilder()
+        builder = get_backend("html")
         html = builder.build()
         assert "<!DOCTYPE html>" in html
         assert "fincore" in html
 
     def test_add_title(self):
-        builder = HtmlReportBuilder()
+        builder = get_backend("html")
         builder.add_title("Test Report")
         html = builder.build()
         assert "Test Report" in html
 
     def test_add_stats_table(self, ctx):
-        builder = HtmlReportBuilder()
+        builder = get_backend("html")
         builder.add_stats_table(ctx.perf_stats())
         html = builder.build()
         assert "Annual return" in html
         assert "Sharpe ratio" in html
 
     def test_add_metric_cards(self, ctx):
-        builder = HtmlReportBuilder()
+        builder = get_backend("html")
         builder.add_metric_cards(
             ctx.perf_stats(),
             keys=["Annual return", "Sharpe ratio"],
@@ -99,12 +102,12 @@ class TestHtmlReportBuilder:
         assert "metric-card" in html
 
     def test_chaining(self, ctx):
-        html = HtmlReportBuilder().add_title("Report").add_stats_table(ctx.perf_stats()).build()
+        html = get_backend("html").add_title("Report").add_stats_table(ctx.perf_stats()).build()
         assert "Report" in html
 
     def test_save(self, ctx, tmp_path):
         path = str(tmp_path / "report.html")
-        builder = HtmlReportBuilder()
+        builder = get_backend("html")
         builder.add_title("Test")
         builder.add_stats_table(ctx.perf_stats())
         builder.save(path)
@@ -123,7 +126,7 @@ class TestMatplotlibBackend:
         import matplotlib
 
         matplotlib.use("Agg")
-        backend = MatplotlibBackend()
+        backend = get_backend("matplotlib")
         cum_ret = (1 + returns).cumprod() - 1
         ax = backend.plot_returns(cum_ret)
         assert ax is not None
@@ -132,7 +135,7 @@ class TestMatplotlibBackend:
         import matplotlib
 
         matplotlib.use("Agg")
-        backend = MatplotlibBackend()
+        backend = get_backend("matplotlib")
         cum_ret = (1 + returns).cumprod()
         dd = cum_ret / cum_ret.cummax() - 1
         ax = backend.plot_drawdown(dd)
@@ -142,7 +145,7 @@ class TestMatplotlibBackend:
         import matplotlib
 
         matplotlib.use("Agg")
-        backend = MatplotlibBackend()
+        backend = get_backend("matplotlib")
         rolling_sharpe = returns.rolling(60).mean() / returns.rolling(60).std()
         ax = backend.plot_rolling_sharpe(rolling_sharpe.dropna())
         assert ax is not None
@@ -169,11 +172,13 @@ class TestContextVisualization:
 
     def test_plot_html_backend(self, ctx):
         viz = ctx.plot(backend="html")
-        assert isinstance(viz, HtmlReportBuilder)
+        assert isinstance(viz, VizBackend)
+        assert viz.__class__.__name__ == "HtmlReportBuilder"
 
     def test_plot_matplotlib_backend(self, ctx):
         import matplotlib
 
         matplotlib.use("Agg")
         viz = ctx.plot(backend="matplotlib")
-        assert isinstance(viz, MatplotlibBackend)
+        assert isinstance(viz, VizBackend)
+        assert viz.__class__.__name__ == "MatplotlibBackend"

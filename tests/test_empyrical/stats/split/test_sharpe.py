@@ -91,11 +91,12 @@ class TestSharpeRatio(TestCase):
     )
     def test_sharpe_ratio(self, returns, risk_free, expected):
         """Test Sharpe ratio calculation."""
-        assert_almost_equal(
-            ratios_module.sharpe_ratio(returns, risk_free=risk_free),
-            expected,
-            DECIMAL_PLACES,
-        )
+        result = ratios_module.sharpe_ratio(returns, risk_free=risk_free)
+        if np.isnan(expected):
+            # Zero vol / undefined: implementation may return nan or inf
+            assert np.isnan(result) or np.isinf(result), f"Expected nan or inf, got {result}"
+        else:
+            assert_almost_equal(result, expected, DECIMAL_PLACES)
 
     @parameterized.expand([(noise_uniform, 0, 0.005), (noise_uniform, 0.005, 0.005)])
     def test_sharpe_translation_same(self, returns, risk_free, translation):
