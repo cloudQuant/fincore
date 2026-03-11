@@ -235,8 +235,9 @@ def test_annual_alpha_mock_to_hit_line_543():
 
     from unittest.mock import patch
 
-    # Mock aligned_series to return empty results (patch where it is used)
-    with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
+    # Mock aligned_series at the use-site module; this is more robust across
+    # Python versions and parallel test workers than string-based patch paths.
+    with patch.object(alpha_beta, "aligned_series") as mock_aligned:
         mock_aligned.return_value = (pd.Series([], dtype=float), pd.Series([], dtype=float))
 
         result = alpha_beta.annual_alpha(returns, factor_returns)
