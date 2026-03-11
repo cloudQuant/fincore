@@ -174,7 +174,7 @@ def market_timing_return(
 
     excess_factor = factor_aligned - risk_free
 
-    return gamma * np.mean(excess_factor**2)
+    return float(gamma * np.mean(excess_factor**2))
 
 
 def cornell_timing(

@@ -429,7 +429,7 @@ class BokehBackend(VizBackend):
             high=max_val,
         )
 
-        p = figure(
+        p = figure(  # type: ignore[call-arg]
             title="Monthly Returns Heatmap",
             x_range=FactorRange(factors=month_names),
             y_range=FactorRange(factors=[str(y) for y in reversed(years)]),

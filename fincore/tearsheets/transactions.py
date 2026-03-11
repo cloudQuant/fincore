@@ -285,7 +285,8 @@ def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactio
         avg_returns = empyrical_instance.annual_return(adj_returns)
         avg_returns_given_slippage.loc[bps] = avg_returns
 
-    avg_returns_given_slippage.plot(alpha=1.0, lw=2, ax=ax)
+    # Use matplotlib directly to avoid pandas timeseries date formatting on integer index
+    ax.plot(avg_returns_given_slippage.index.astype(float), avg_returns_given_slippage.values, alpha=1.0, lw=2)
 
     ax.set_title("Average annual returns given additional per-dollar slippage")
     ax.set_xticks(np.arange(0, 100, 10))
