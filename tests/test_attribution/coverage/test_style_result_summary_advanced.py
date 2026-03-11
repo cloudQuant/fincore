@@ -65,7 +65,7 @@ class TestStyleResultSummaryAdvanced:
 
                 return _LocIndexer(self)
 
-        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore
+        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore[arg-type]
         summ = sr.style_summary
         assert summ["value"] == 0.0
 
@@ -98,7 +98,7 @@ class TestStyleResultSummaryAdvanced:
 
                 return _LocIndexer(self)
 
-        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore
+        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(pd.DataFrame()), overall_returns=overall)  # type: ignore[arg-type]
         summ = sr.style_summary
         assert summ["value"] == 0.0
 
@@ -130,6 +130,6 @@ class TestStyleResultSummaryAdvanced:
 
                 return _LocIndexer(self)
 
-        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(), overall_returns=overall)  # type: ignore
+        sr = StyleResult(exposures=exposures, returns_by_style=CustomDF(), overall_returns=overall)  # type: ignore[arg-type]
         summ = sr.style_summary
         assert summ["value"] == 0.5

@@ -1,5 +1,7 @@
 """Top-level constants exposed by fincore."""
 
+from __future__ import annotations
+
 from .color import COLORMAP, COLORS
 from .interesting_periods import PERIODS
 from .periods import (
@@ -18,9 +20,15 @@ from .periods import (
 )
 from .style import (
     CAP_BUCKETS,
+    CAPACITY_CAPITAL_BASE,
+    CAPACITY_SWEEP_MAX_PV,
+    CAPACITY_SWEEP_MIN_PV,
+    CAPACITY_SWEEP_STEP,
     DURATION_STATS,
+    DURATION_STATS_GROUP,
     FACTOR_PARTITIONS,
     FACTOR_STAT_FUNCS,
+    LIQUIDATION_DAILY_VOL_LIMIT,
     MM_DISPLAY_UNIT,
     PERF_ATTRIB_TURNOVER_THRESHOLD,
     PNL_STATS,
@@ -30,39 +38,42 @@ from .style import (
     STAT_FUNC_NAMES,
     STAT_FUNCS_PCT,
     SUMMARY_STATS,
+    TRADE_DAILY_VOL_LIMIT,
 )
 
 __all__ = [
-    # periods
+    "ANNUALIZATION_FACTORS",
     "APPROX_BDAYS_PER_MONTH",
     "APPROX_BDAYS_PER_YEAR",
-    "MONTHS_PER_YEAR",
-    "WEEKS_PER_YEAR",
-    "QTRS_PER_YEAR",
-    "DAILY",
-    "WEEKLY",
-    "MONTHLY",
-    "QUARTERLY",
-    "YEARLY",
-    "ANNUALIZATION_FACTORS",
-    "PERIOD_TO_FREQ",
-    # interesting_periods
-    "PERIODS",
-    # style
-    "PERF_ATTRIB_TURNOVER_THRESHOLD",
-    "SECTORS",
+    "CAPACITY_CAPITAL_BASE",
+    "CAPACITY_SWEEP_MAX_PV",
+    "CAPACITY_SWEEP_MIN_PV",
+    "CAPACITY_SWEEP_STEP",
     "CAP_BUCKETS",
-    "SIMPLE_STAT_FUNCS",
-    "FACTOR_STAT_FUNCS",
-    "STAT_FUNC_NAMES",
-    "FACTOR_PARTITIONS",
-    "STAT_FUNCS_PCT",
-    "PNL_STATS",
-    "SUMMARY_STATS",
-    "RETURN_STATS",
-    "DURATION_STATS",
-    "MM_DISPLAY_UNIT",
-    # color
     "COLORMAP",
     "COLORS",
+    "DAILY",
+    "DURATION_STATS",
+    "FACTOR_PARTITIONS",
+    "FACTOR_STAT_FUNCS",
+    "LIQUIDATION_DAILY_VOL_LIMIT",
+    "MM_DISPLAY_UNIT",
+    "MONTHLY",
+    "MONTHS_PER_YEAR",
+    "PERF_ATTRIB_TURNOVER_THRESHOLD",
+    "PERIODS",
+    "PERIOD_TO_FREQ",
+    "PNL_STATS",
+    "QTRS_PER_YEAR",
+    "QUARTERLY",
+    "RETURN_STATS",
+    "SECTORS",
+    "SIMPLE_STAT_FUNCS",
+    "STAT_FUNCS_PCT",
+    "STAT_FUNC_NAMES",
+    "SUMMARY_STATS",
+    "TRADE_DAILY_VOL_LIMIT",
+    "WEEKLY",
+    "WEEKS_PER_YEAR",
+    "YEARLY",
 ]

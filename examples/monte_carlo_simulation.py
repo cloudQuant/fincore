@@ -79,14 +79,17 @@ from fincore import Empyrical
 def sharpe_func(r):
     return Empyrical.sharpe_ratio(r)
 
+
 ci = bootstrap_ci(returns, func=sharpe_func, n_samples=5000, alpha=0.05)
 print("\nSharpe ratio bootstrap (5000 samples):")
 print(f"  Point estimate: {sharpe_func(returns):.4f}")
 print(f"  95% CI: [{ci[0]:.4f}, {ci[1]:.4f}]")
 
+
 # Bootstrap the max drawdown
 def max_dd_func(r):
     return Empyrical.max_drawdown(r)
+
 
 ci_dd = bootstrap_ci(returns, func=max_dd_func, n_samples=5000, alpha=0.05)
 print("\nMax drawdown bootstrap (5000 samples):")

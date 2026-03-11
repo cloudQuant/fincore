@@ -69,7 +69,6 @@ class AbberationStrategy(bt.Strategy):
 
     def prenext(self):
         """Called before minimum period is reached."""
-        pass
 
     def next(self):
         """Called for each bar during backtesting."""

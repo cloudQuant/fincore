@@ -48,13 +48,13 @@
 
 class TestStabilityOfTimeseries:
     """稳定性测试"""
-    
+
     def test_stable_returns(self):
         """稳定收益序列"""
         returns = pd.Series([0.01] * 100)
         result = stability_of_timeseries(returns)
         assert 0 <= result <= 1
-    
+
     def test_volatile_returns(self):
         """高波动收益"""
         returns = pd.Series(np.random.randn(100) * 0.1)
@@ -63,13 +63,13 @@ class TestStabilityOfTimeseries:
 
 class TestCaptureRatios:
     """Capture比率测试"""
-    
+
     def test_up_capture(self):
         """上涨捕获"""
         # ... test implementation
 ```
 
-**预计工作量**: 2-3天  
+**预计工作量**: 2-3天
 **新增测试**: ~30个
 
 ---
@@ -88,26 +88,26 @@ class TestCaptureRatios:
 
 class TestTailRatio:
     """尾比率测试"""
-    
+
     def test_normal_distribution(self):
         """正态分布"""
         returns = pd.Series(np.random.randn(1000))
         result = tail_ratio(returns)
         assert result > 0
-    
+
     def test_fat_tails(self):
         """肥尾分布"""
         # Heavy tail distribution test
 
 class TestCustomVaR:
     """自定义VaR测试"""
-    
+
     def test_historical_var(self):
         """历史模拟法"""
         # ... implementation
 ```
 
-**预计工作量**: 2-3天  
+**预计工作量**: 2-3天
 **新增测试**: ~25个
 
 ---
@@ -122,7 +122,7 @@ class TestCustomVaR:
 - adjust_returns
 - annualization_factor
 
-**新增测试**: ~20个  
+**新增测试**: ~20个
 **工作量**: 1-2天
 
 #### 4. stats.py (目标: 10% → 80%)
@@ -133,7 +133,7 @@ class TestCustomVaR:
 - hurst_exponent
 - stab
 
-**新增测试**: ~30个  
+**新增测试**: ~30个
 **工作量**: 2-3天
 
 ---
@@ -153,7 +153,7 @@ class TestCustomVaR:
 
 class TestExposure:
     """持仓敞口测试"""
-    
+
     def test_long_positions(self):
         """多头持仓"""
         positions = pd.DataFrame({
@@ -164,7 +164,7 @@ class TestExposure:
         # ... assertions
 ```
 
-**新增测试**: ~25个  
+**新增测试**: ~25个
 **工作量**: 2-3天
 
 ---
@@ -176,7 +176,7 @@ class TestExposure:
 - slippage
 - volume
 
-**新增测试**: ~20个  
+**新增测试**: ~20个
 **工作量**: 1-2天
 
 ---
@@ -187,7 +187,7 @@ class TestExposure:
 - extract_round_trips
 - add_round_trips_stats
 
-**新增测试**: ~15个  
+**新增测试**: ~15个
 **工作量**: 1-2天
 
 ---
@@ -198,7 +198,7 @@ class TestExposure:
 - treynor_mazuy
 - henriksson_merton
 
-**新增测试**: ~15个  
+**新增测试**: ~15个
 **工作量**: 1-2天
 
 ---
@@ -210,7 +210,7 @@ class TestExposure:
 - max_consecutive_down
 - consecutive_wins_losses
 
-**新增测试**: ~20个  
+**新增测试**: ~20个
 **工作量**: 1-2天
 
 ---
@@ -221,7 +221,7 @@ class TestExposure:
 - perf_stats
 - bootstrap_perf_stats
 
-**新增测试**: ~15个  
+**新增测试**: ~15个
 **工作量**: 1-2天
 
 ---
@@ -234,8 +234,8 @@ class TestExposure:
 - bayesian_sharpe_ratio
 - bayesian_volatility
 
-**注意**: 需要pymc依赖  
-**新增测试**: ~10个  
+**注意**: 需要pymc依赖
+**新增测试**: ~10个
 **工作量**: 2-3天
 
 #### 12. perf_attrib.py (目标: 0% → 75%)
@@ -245,7 +245,7 @@ class TestExposure:
 - factor_returns
 - specific_returns
 
-**新增测试**: ~20个  
+**新增测试**: ~20个
 **工作量**: 2-3天
 
 ---
@@ -301,11 +301,11 @@ tests/
 ```python
 class Test{FunctionName}:
     """测试{功能描述}"""
-    
+
     def test_normal_case(self):
         """正常情况测试"""
         pass
-    
+
     def test_edge_case_{type}(self):
         """边缘情况：{类型}"""
         pass
@@ -421,7 +421,7 @@ pytest tests/test_metrics/test_ratios_complete.py -v --cov=fincore.metrics.ratio
 
 ---
 
-**计划创建日期**: 2026-03-09  
-**预计完成时间**: 12周后  
-**负责人**: 开发团队  
+**计划创建日期**: 2026-03-09
+**预计完成时间**: 12周后
+**负责人**: 开发团队
 **状态**: ⏳ 计划中

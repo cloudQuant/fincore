@@ -15,7 +15,7 @@ def check_python_version():
     version = sys.version_info
     if version < (3, 11):
         print(f"  ✗ Python {version.major}.{version.minor} found")
-        print(f"  ✗ Python 3.11+ required")
+        print("  ✗ Python 3.11+ required")
         return False
     print(f"  ✓ Python {version.major}.{version.minor}.{version.micro}")
     return True
@@ -81,15 +81,15 @@ def check_fincore_imports():
             capture_output=True,
             text=True,
             cwd=Path(__file__).parent.parent,
+            timeout=30,
         )
 
         if result.returncode == 0:
             print("  ✓ Key functions imported")
             return True
-        else:
-            print(f"  ✗ Import error: {result.stderr}")
-            return False
-    except Exception as e:
+        print(f"  ✗ Import error: {result.stderr}")
+        return False
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as e:
         print(f"  ✗ Import error: {e}")
         return False
 
@@ -144,11 +144,10 @@ def main():
     if all_passed:
         print("\n✅ All checks passed! Environment is correctly configured.")
         return 0
-    else:
-        print("\n❌ Some checks failed. Please fix the issues above.")
-        print("\nTo install dependencies:")
-        print("  pip install -e '.[dev,viz]'")
-        return 1
+    print("\n❌ Some checks failed. Please fix the issues above.")
+    print("\nTo install dependencies:")
+    print("  pip install -e '.[dev,viz]'")
+    return 1
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ def test_tushare_fetch_multiple_and_get_info_empty(monkeypatch) -> None:
     from fincore.data.providers import BatchFetchError
 
     class _DummyPro:
-        def stock_basic(self, ts_code: str, fields: str):  # noqa: ARG002
+        def stock_basic(self, ts_code: str, fields: str):
             return pd.DataFrame()
 
     dummy_ts = SimpleNamespace(pro_api=lambda _token: _DummyPro())
@@ -70,7 +70,7 @@ def test_akshare_fetch_multiple_and_get_info_exception(monkeypatch) -> None:
     from fincore.data import providers as providers_mod
     from fincore.data.providers import BatchFetchError
 
-    def stock_individual_info_em(symbol: str):  # noqa: ARG001
+    def stock_individual_info_em(symbol: str):
         raise RuntimeError("down")
 
     dummy_ak = SimpleNamespace(
@@ -106,13 +106,12 @@ def test_fetch_price_data_and_multiple_prices_provider_as_string_and_date_string
     calls: list[tuple[str, pd.Timestamp, pd.Timestamp, bool]] = []
 
     class _DummyProvider:
-        def fetch(self, symbol: str, start, end, interval="1d", adjust=True):  # noqa: ARG002
+        def fetch(self, symbol: str, start, end, interval="1d", adjust=True):
             calls.append((symbol, pd.Timestamp(start), pd.Timestamp(end), bool(adjust)))
             return pd.DataFrame({"Close": [1.0]}, index=[pd.Timestamp("2024-01-02")])
 
-        def fetch_multiple(self, symbols, start, end, interval="1d", adjust=True, strict=False):  # noqa: ARG002
-            for s in symbols:
-                calls.append((s, pd.Timestamp(start), pd.Timestamp(end), bool(adjust)))
+        def fetch_multiple(self, symbols, start, end, interval="1d", adjust=True, strict=False):
+            calls.extend((s, pd.Timestamp(start), pd.Timestamp(end), bool(adjust)) for s in symbols)
             if strict:
                 raise AssertionError("strict should be passed through but not trigger here")
             return {s: pd.DataFrame({"Close": [1.0]}, index=[pd.Timestamp("2024-01-02")]) for s in symbols}
@@ -166,7 +165,7 @@ def test_tushare_provider_empty_data_raises(monkeypatch) -> None:
     from fincore.data import providers as providers_mod
 
     class _EmptyPro:
-        def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):  # noqa: ARG002
+        def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):
             return pd.DataFrame()  # Empty DataFrame
 
     dummy_ts = SimpleNamespace(pro_api=lambda _token: _EmptyPro())

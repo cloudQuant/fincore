@@ -21,7 +21,7 @@ class _DummyEmpyrical:
         pos_no_cash = positions.drop("cash", axis="columns")
         long = pos_no_cash.where(pos_no_cash > 0).fillna(0.0)
         short = (-pos_no_cash.where(pos_no_cash < 0)).fillna(0.0)
-        out = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "max_long": long.max(axis=1),
                 "median_long": long.median(axis=1),
@@ -30,7 +30,6 @@ class _DummyEmpyrical:
             },
             index=positions.index,
         )
-        return out
 
     def get_top_long_short_abs(self, positions_alloc: pd.DataFrame):
         pos_no_cash = positions_alloc.drop("cash", axis="columns", errors="ignore")

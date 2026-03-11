@@ -5,10 +5,14 @@ Provides non-parametric statistical inference using resampling techniques.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import pandas as pd
 
 __all__ = ["bootstrap", "bootstrap_ci", "bootstrap_summary"]
 
@@ -59,10 +63,7 @@ def bootstrap(
     rng = np.random.default_rng(seed)
 
     # Map string statistic to function
-    if isinstance(statistic, str):
-        statistic_fn = _get_statistic_fn(statistic)
-    else:
-        statistic_fn = statistic
+    statistic_fn = _get_statistic_fn(statistic) if isinstance(statistic, str) else statistic
 
     # Bootstrap resampling
     boot_stats = np.zeros(n_samples)
@@ -117,6 +118,8 @@ def bootstrap_ci(
     >>> ci = bootstrap_ci(returns, alpha=0.05)
     >>> print(f"95% CI: [{ci[0]:.4f}, {ci[1]:.4f}]")
     """
+    if not (0 < alpha < 1):
+        raise ValueError(f"alpha must be in (0, 1), got {alpha}")
     boot_stats = bootstrap(
         returns=returns,
         n_samples=n_samples,

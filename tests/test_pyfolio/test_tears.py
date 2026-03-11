@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from unittest import TestCase
 
 import matplotlib.pyplot as plt
@@ -17,12 +17,12 @@ def cleanup_matplotlib():
 
 
 class PositionsTestCase(TestCase):
-    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(os.path.dirname(__file__))))
+    _test_data = Path(__file__).resolve().parent.parent / "test_data"
 
-    test_returns = read_csv(__location__ + "/test_data/test_returns.csv.gz", index_col=0, parse_dates=True)
+    test_returns = read_csv(_test_data / "test_returns.csv.gz", index_col=0, parse_dates=True)
     test_returns = to_series(to_utc(test_returns))
-    test_txn = to_utc(read_csv(__location__ + "/test_data/test_txn.csv.gz", index_col=0, parse_dates=True))
-    test_pos = to_utc(read_csv(__location__ + "/test_data/test_pos.csv.gz", index_col=0, parse_dates=True))
+    test_txn = to_utc(read_csv(_test_data / "test_txn.csv.gz", index_col=0, parse_dates=True))
+    test_pos = to_utc(read_csv(_test_data / "test_pos.csv.gz", index_col=0, parse_dates=True))
 
     @parameterized.expand(
         [

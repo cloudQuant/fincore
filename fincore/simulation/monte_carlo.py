@@ -5,12 +5,16 @@ Main MonteCarlo class that orchestrates path generation and risk analysis.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-import pandas as pd
 
 from fincore.simulation.base import SimResult, compute_statistics
 from fincore.simulation.paths import gbm_from_returns, geometric_brownian_motion
 from fincore.simulation.scenarios import scenario_table, stress_test
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __all__ = ["MonteCarlo"]
 

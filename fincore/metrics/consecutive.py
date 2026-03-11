@@ -16,34 +16,44 @@
 
 """Consecutive up/down metrics."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Callable
+
 import numpy as np
 
 from fincore.constants import MONTHLY, WEEKLY
 from fincore.constants.periods import PERIOD_TO_FREQ
 from fincore.metrics.returns import cum_returns_final
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 __all__ = [
-    "max_consecutive_up_days",
+    "consecutive_stats",
     "max_consecutive_down_days",
+    "max_consecutive_down_end_date",
+    "max_consecutive_down_months",
+    "max_consecutive_down_start_date",
+    "max_consecutive_down_weeks",
     "max_consecutive_gain",
     "max_consecutive_loss",
-    "max_consecutive_up_weeks",
-    "max_consecutive_down_weeks",
-    "max_consecutive_up_months",
-    "max_consecutive_down_months",
-    "max_single_day_gain",
-    "max_single_day_loss",
-    "max_single_day_gain_date",
-    "max_single_day_loss_date",
-    "max_consecutive_up_start_date",
+    "max_consecutive_up_days",
     "max_consecutive_up_end_date",
-    "max_consecutive_down_start_date",
-    "max_consecutive_down_end_date",
-    "consecutive_stats",
+    "max_consecutive_up_months",
+    "max_consecutive_up_start_date",
+    "max_consecutive_up_weeks",
+    "max_single_day_gain",
+    "max_single_day_gain_date",
+    "max_single_day_loss",
+    "max_single_day_loss_date",
 ]
 
 
-def _max_consecutive_run(series, condition):
+def _max_consecutive_run(
+    series: pd.Series,
+    condition: Callable[[pd.Series], pd.Series],
+) -> int:
     """Helper: compute max consecutive run length for a boolean condition."""
     mask = condition(series)
     if not mask.any():
@@ -52,7 +62,7 @@ def _max_consecutive_run(series, condition):
     return int(mask.groupby(groups).sum().max())
 
 
-def consecutive_stats(returns):
+def consecutive_stats(returns: pd.Series) -> dict[str, float | int]:
     """Compute all consecutive up/down metrics in one pass.
 
     This avoids redundant resample operations when computing multiple
@@ -122,7 +132,7 @@ def consecutive_stats(returns):
     }
 
 
-def max_consecutive_up_days(returns):
+def max_consecutive_up_days(returns: pd.Series) -> float:
     """Determine the maximum number of consecutive days with positive returns.
 
     Parameters
@@ -150,7 +160,7 @@ def max_consecutive_up_days(returns):
     return consecutive_counts.max()
 
 
-def max_consecutive_down_days(returns):
+def max_consecutive_down_days(returns: pd.Series) -> float:
     """Determine the maximum number of consecutive days with negative returns.
 
     Parameters
@@ -178,7 +188,7 @@ def max_consecutive_down_days(returns):
     return consecutive_counts.max()
 
 
-def max_consecutive_gain(returns):
+def max_consecutive_gain(returns: pd.Series) -> float:
     """Determine the maximum cumulative gain over consecutive positive days.
 
     Parameters
@@ -206,7 +216,7 @@ def max_consecutive_gain(returns):
     return consecutive_gains.max()
 
 
-def max_consecutive_loss(returns):
+def max_consecutive_loss(returns: pd.Series) -> float:
     """Determine the maximum cumulative loss over consecutive negative days.
 
     Parameters
@@ -235,7 +245,7 @@ def max_consecutive_loss(returns):
     return consecutive_losses.min()
 
 
-def max_consecutive_up_weeks(returns):
+def max_consecutive_up_weeks(returns: pd.Series) -> float | int:
     """Determine the maximum number of consecutive weeks with positive returns.
 
     Parameters
@@ -255,7 +265,7 @@ def max_consecutive_up_weeks(returns):
     return _max_consecutive_run(weekly_returns, lambda s: s > 0)
 
 
-def max_consecutive_down_weeks(returns):
+def max_consecutive_down_weeks(returns: pd.Series) -> float | int:
     """Determine the maximum number of consecutive weeks with negative returns.
 
     Parameters
@@ -275,7 +285,7 @@ def max_consecutive_down_weeks(returns):
     return _max_consecutive_run(weekly_returns, lambda s: s < 0)
 
 
-def max_consecutive_up_months(returns):
+def max_consecutive_up_months(returns: pd.Series) -> float | int:
     """Determine the maximum number of consecutive months with positive returns.
 
     Parameters
@@ -295,7 +305,7 @@ def max_consecutive_up_months(returns):
     return _max_consecutive_run(monthly_returns, lambda s: s > 0)
 
 
-def max_consecutive_down_months(returns):
+def max_consecutive_down_months(returns: pd.Series) -> float | int:
     """Determine the maximum number of consecutive months with negative returns.
 
     Parameters
@@ -315,7 +325,7 @@ def max_consecutive_down_months(returns):
     return _max_consecutive_run(monthly_returns, lambda s: s < 0)
 
 
-def max_single_day_gain(returns):
+def max_single_day_gain(returns: pd.Series) -> float:
     """Determine the maximum single-day gain.
 
     Parameters
@@ -333,7 +343,7 @@ def max_single_day_gain(returns):
     return returns.max()
 
 
-def max_single_day_loss(returns):
+def max_single_day_loss(returns: pd.Series) -> float:
     """Determine the maximum single-day loss.
 
     Parameters
@@ -351,7 +361,7 @@ def max_single_day_loss(returns):
     return returns.min()
 
 
-def max_single_day_gain_date(returns):
+def max_single_day_gain_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the date of the maximum single-day gain.
 
     Parameters
@@ -369,7 +379,7 @@ def max_single_day_gain_date(returns):
     return returns.idxmax()
 
 
-def max_single_day_loss_date(returns):
+def max_single_day_loss_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the date of the maximum single-day loss.
 
     Parameters
@@ -387,7 +397,7 @@ def max_single_day_loss_date(returns):
     return returns.idxmin()
 
 
-def max_consecutive_up_start_date(returns):
+def max_consecutive_up_start_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the start date of the longest consecutive up period.
 
     Parameters
@@ -418,7 +428,7 @@ def max_consecutive_up_start_date(returns):
     return returns[group_mask & up_days].index[0]
 
 
-def max_consecutive_up_end_date(returns):
+def max_consecutive_up_end_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the end date of the longest consecutive up period.
 
     Parameters
@@ -449,7 +459,7 @@ def max_consecutive_up_end_date(returns):
     return returns[group_mask & up_days].index[-1]
 
 
-def max_consecutive_down_start_date(returns):
+def max_consecutive_down_start_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the start date of the longest consecutive down period.
 
     Parameters
@@ -480,7 +490,7 @@ def max_consecutive_down_start_date(returns):
     return returns[group_mask & down_days].index[0]
 
 
-def max_consecutive_down_end_date(returns):
+def max_consecutive_down_end_date(returns: pd.Series) -> pd.Timestamp | None:
     """Determine the end date of the longest consecutive down period.
 
     Parameters

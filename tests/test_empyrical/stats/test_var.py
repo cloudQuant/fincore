@@ -28,8 +28,6 @@ rand = np.random.RandomState(1337)
 class BaseTestCase(TestCase):
     """Base test case for VaR tests."""
 
-    pass
-
 
 class TestValueAtRisk(BaseTestCase):
     """Tests for Value at Risk and Conditional Value at Risk."""

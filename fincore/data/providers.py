@@ -11,29 +11,31 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pandas as pd
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
 __all__ = [
+    "AkShareProvider",
+    "AlphaVantageProvider",
     "BatchFetchError",
     "DataProvider",
-    "YahooFinanceProvider",
-    "AlphaVantageProvider",
     "TushareProvider",
-    "AkShareProvider",
-    "get_provider",
-    "fetch_price_data",
+    "YahooFinanceProvider",
     "fetch_multiple_prices",
+    "fetch_price_data",
+    "get_provider",
 ]
 
 
-if TYPE_CHECKING:
-    pass
-
 # Module-level logger
 logger = logging.getLogger(__name__)
+
+# Default HTTP timeout (seconds) for requests; prevents indefinite hangs
+HTTP_TIMEOUT = 30
 
 
 class BatchFetchError(Exception):
@@ -96,7 +98,7 @@ class DataProvider(ABC):
             DataFrame with price data. Columns typically include:
             Open, High, Low, Close, Adj Close, Volume
         """
-        pass
+        ...
 
     @abstractmethod
     def fetch_multiple(
@@ -131,7 +133,7 @@ class DataProvider(ABC):
         dict
             Dictionary mapping symbols to their DataFrames.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_info(self, symbol: str) -> dict:
@@ -147,7 +149,7 @@ class DataProvider(ABC):
         dict
             Dictionary with symbol information (name, exchange, etc.).
         """
-        pass
+        ...
 
     def to_returns(
         self,
@@ -192,15 +194,8 @@ class DataProvider(ABC):
         tuple
             (start_dt, end_dt) as datetime objects.
         """
-        if isinstance(start, str):
-            start_dt = pd.to_datetime(start)
-        else:
-            start_dt = pd.to_datetime(start)
-
-        if isinstance(end, str):
-            end_dt = pd.to_datetime(end)
-        else:
-            end_dt = pd.to_datetime(end)
+        start_dt = pd.to_datetime(start)
+        end_dt = pd.to_datetime(end)
 
         if start_dt >= end_dt:
             raise ValueError("start date must be before end date")
@@ -236,8 +231,10 @@ class YahooFinanceProvider(DataProvider):
 
             self._yf = yf
             self._session = session
-        except ImportError:
-            raise ImportError("yfinance is required for YahooFinanceProvider. Install with: pip install yfinance")
+        except ImportError as e:
+            raise ImportError(
+                "yfinance is required for YahooFinanceProvider. Install with: pip install yfinance"
+            ) from e
 
     def fetch(
         self,
@@ -397,8 +394,10 @@ class AlphaVantageProvider(DataProvider):
             import requests
 
             self._requests = requests
-        except ImportError:
-            raise ImportError("requests is required for AlphaVantageProvider. Install with: pip install requests")
+        except ImportError as e:
+            raise ImportError(
+                "requests is required for AlphaVantageProvider. Install with: pip install requests"
+            ) from e
 
         self.api_key = api_key
         self.outputsize = outputsize
@@ -431,7 +430,7 @@ class AlphaVantageProvider(DataProvider):
             "apikey": self.api_key,
         }
 
-        response = self._session.get(self.BASE_URL, params=params)
+        response = self._session.get(self.BASE_URL, params=params, timeout=HTTP_TIMEOUT)
         data = response.json()
 
         # Parse response
@@ -501,7 +500,7 @@ class AlphaVantageProvider(DataProvider):
             "apikey": self.api_key,
         }
 
-        response = self._session.get(self.BASE_URL, params=params)
+        response = self._session.get(self.BASE_URL, params=params, timeout=HTTP_TIMEOUT)
         info = response.json()
 
         return {
@@ -540,8 +539,8 @@ class TushareProvider(DataProvider):
             self._ts = ts
             self._token = token
             self._pro = None
-        except ImportError:
-            raise ImportError("tushare is required for TushareProvider. Install with: pip install tushare")
+        except ImportError as e:
+            raise ImportError("tushare is required for TushareProvider. Install with: pip install tushare") from e
 
     def _get_pro(self):
         """Lazy initialization of Pro API."""
@@ -693,8 +692,8 @@ class AkShareProvider(DataProvider):
             import akshare as ak
 
             self._ak = ak
-        except ImportError:
-            raise ImportError("akshare is required for AkShareProvider. Install with: pip install akshare")
+        except ImportError as e:
+            raise ImportError("akshare is required for AkShareProvider. Install with: pip install akshare") from e
 
     def fetch(  # type: ignore[override]
         self,

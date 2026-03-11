@@ -16,27 +16,36 @@
 
 """Bayesian models and helpers."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 import pandas as pd
 
 from fincore.metrics.returns import cum_returns
 
 __all__ = [
-    "model_returns_t_alpha_beta",
-    "model_returns_normal",
-    "model_returns_t",
-    "model_best",
-    "model_stoch_vol",
     "compute_bayes_cone",
     "compute_consistency_score",
+    "forecast_cone_bootstrap",
+    "model_best",
+    "model_returns_normal",
+    "model_returns_t",
+    "model_returns_t_alpha_beta",
+    "model_stoch_vol",
     "run_model",
     "simulate_paths",
     "summarize_paths",
-    "forecast_cone_bootstrap",
 ]
 
 
-def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
+def model_returns_t_alpha_beta(
+    data: pd.Series,
+    bmark: pd.Series,
+    samples: int = 2000,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Run Bayesian alpha-beta model assuming returns are T-distributed.
 
     Parameters
@@ -81,7 +90,11 @@ def model_returns_t_alpha_beta(data, bmark, samples=2000, progressbar=True):
     return model, trace
 
 
-def model_returns_normal(data, samples=500, progressbar=True):
+def model_returns_normal(
+    data: pd.Series,
+    samples: int = 500,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Run Bayesian model assuming returns are normally distributed.
 
     Parameters
@@ -115,7 +128,11 @@ def model_returns_normal(data, samples=500, progressbar=True):
     return model, trace
 
 
-def model_returns_t(data, samples=500, progressbar=True):
+def model_returns_t(
+    data: pd.Series,
+    samples: int = 500,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Run Bayesian model assuming returns are Student-T distributed.
 
     Parameters
@@ -150,7 +167,12 @@ def model_returns_t(data, samples=500, progressbar=True):
     return model, trace
 
 
-def model_best(y1, y2, samples=1000, progressbar=True):
+def model_best(
+    y1: pd.Series | np.ndarray,
+    y2: pd.Series | np.ndarray,
+    samples: int = 1000,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Bayesian Estimation Supersedes the T-Test.
 
     This model runs a Bayesian hypothesis comparing if y1 and y2 come
@@ -205,7 +227,11 @@ def model_best(y1, y2, samples=1000, progressbar=True):
     return model, trace
 
 
-def model_stoch_vol(data, samples=2000, progressbar=True):
+def model_stoch_vol(
+    data: pd.Series,
+    samples: int = 2000,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Run a stochastic volatility model.
 
     This model estimates the volatility of a returns series over time.
@@ -243,7 +269,10 @@ def model_stoch_vol(data, samples=2000, progressbar=True):
     return model, trace
 
 
-def compute_bayes_cone(preds, starting_value=1.0):
+def compute_bayes_cone(
+    preds: np.ndarray,
+    starting_value: float = 1.0,
+) -> dict[int, list[float]]:
     """Compute Bayesian cone from predictions.
 
     Parameters
@@ -263,7 +292,7 @@ def compute_bayes_cone(preds, starting_value=1.0):
     def scoreatpercentile(cum_predictions, p):
         return np.percentile(cum_predictions, p, axis=0).tolist()
 
-    perc = {
+    return {
         1: scoreatpercentile(cum_preds, 1),
         5: scoreatpercentile(cum_preds, 5),
         25: scoreatpercentile(cum_preds, 25),
@@ -273,10 +302,11 @@ def compute_bayes_cone(preds, starting_value=1.0):
         99: scoreatpercentile(cum_preds, 99),
     }
 
-    return perc
 
-
-def compute_consistency_score(returns_test, preds):
+def compute_consistency_score(
+    returns_test: pd.Series,
+    preds: np.ndarray,
+) -> list[float]:
     """Compute consistency score.
 
     Parameters
@@ -292,15 +322,22 @@ def compute_consistency_score(returns_test, preds):
         Consistency scores at each time point.
     """
     returns_test_cum = cum_returns(returns_test, starting_value=1.0)
+    returns_arr = np.asarray(returns_test_cum)
 
     cum_preds = np.cumprod(preds + 1, axis=1)
 
-    q = (cum_preds < returns_test_cum.values[np.newaxis, :]).mean(axis=0).tolist()
-
-    return q
+    return (cum_preds < returns_arr[np.newaxis, :]).mean(axis=0).tolist()
 
 
-def run_model(model, returns_train, returns_test=None, bmark=None, samples=500, ppc=False, progressbar=True):
+def run_model(
+    model: str,
+    returns_train: pd.Series,
+    returns_test: pd.Series | None = None,
+    bmark: pd.Series | None = None,
+    samples: int = 500,
+    ppc: bool = False,
+    progressbar: bool = True,
+) -> tuple[Any, Any]:
     """Run Bayesian model on returns data.
 
     Parameters
@@ -341,7 +378,13 @@ def run_model(model, returns_train, returns_test=None, bmark=None, samples=500, 
     return model_obj, trace
 
 
-def simulate_paths(is_returns, num_days, _starting_value=1, num_samples=1000, random_seed=None):
+def simulate_paths(
+    is_returns: pd.DataFrame | pd.Series | np.ndarray,
+    num_days: int,
+    _starting_value: float = 1,
+    num_samples: int = 1000,
+    random_seed: int | None = None,
+) -> np.ndarray:
     """Generate alternate paths using available values from in-sample returns.
 
     Parameters
@@ -364,12 +407,14 @@ def simulate_paths(is_returns, num_days, _starting_value=1, num_samples=1000, ra
     rng = np.random.RandomState(seed=random_seed)
     is_values = np.asarray(is_returns)
     indices = rng.randint(0, len(is_values), size=(num_samples, num_days))
-    samples = is_values[indices]
-
-    return samples
+    return is_values[indices]
 
 
-def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
+def summarize_paths(
+    samples: np.ndarray,
+    cone_std: tuple[float, ...] | float = (1.0, 1.5, 2.0),
+    starting_value: float = 1.0,
+) -> pd.DataFrame:
     """Generate the upper and lower bounds of an n standard deviation cone.
 
     Parameters
@@ -394,11 +439,10 @@ def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
     cum_mean = cum_samples.mean(axis=0)
     cum_std = cum_samples.std(axis=0)
 
-    if isinstance(cone_std, (float, int)):
-        cone_std = [cone_std]
+    stds: list[float] = [float(cone_std)] if isinstance(cone_std, (float, int)) else list(cone_std)
 
     cone_bounds = pd.DataFrame(columns=pd.Index([], dtype="float64"))
-    for num_std in cone_std:
+    for num_std in stds:
         cone_bounds.loc[:, float(num_std)] = cum_mean + cum_std * num_std
         cone_bounds.loc[:, float(-num_std)] = cum_mean - cum_std * num_std
 
@@ -406,8 +450,13 @@ def summarize_paths(samples, cone_std=(1.0, 1.5, 2.0), starting_value=1.0):
 
 
 def forecast_cone_bootstrap(
-    is_returns, num_days, cone_std=(1.0, 1.5, 2.0), starting_value=1, num_samples=1000, random_seed=None
-):
+    is_returns: pd.Series,
+    num_days: int,
+    cone_std: tuple[float, ...] | float = (1.0, 1.5, 2.0),
+    starting_value: float = 1,
+    num_samples: int = 1000,
+    random_seed: int | None = None,
+) -> pd.DataFrame:
     """Determine the upper and lower bounds of an n standard deviation cone.
 
     Future cumulative mean and standard deviation are computed by repeatedly sampling from the
@@ -444,6 +493,4 @@ def forecast_cone_bootstrap(
         random_seed=random_seed,
     )
 
-    cone_bounds = summarize_paths(samples=samples, cone_std=cone_std, starting_value=starting_value)
-
-    return cone_bounds
+    return summarize_paths(samples=samples, cone_std=cone_std, starting_value=starting_value)

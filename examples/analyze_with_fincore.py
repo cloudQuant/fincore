@@ -18,8 +18,8 @@ Output:
 """
 
 import json
-import os
 import warnings
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -39,22 +39,21 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # =========================================================================
 # 1. Load data (reuse 011_abberation logs)
 # =========================================================================
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(SCRIPT_DIR, "011_abberation", "logs")
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "011_abberation", "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_DIR = SCRIPT_DIR / "011_abberation" / "logs"
+OUTPUT_DIR = SCRIPT_DIR / "011_abberation" / "output"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-run_dirs = sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
-RUN_DIR = os.path.join(DATA_DIR, run_dirs[-1])
+run_dirs = sorted([d.name for d in DATA_DIR.iterdir() if d.is_dir()])
+RUN_DIR = DATA_DIR / run_dirs[-1]
 
-with open(os.path.join(RUN_DIR, "run_info.json")) as f:
-    run_info = json.load(f)
+run_info = json.loads((RUN_DIR / "run_info.json").read_text())
 
 print(f"Strategy: {run_info['strategy_name']}")
 print(f"Run ID:   {run_info['run_id']}")
 
 # --- value.log -> daily returns ---
-value_df = pd.read_csv(os.path.join(RUN_DIR, "value.log"), sep="\t", usecols=["dt", "value", "cash"])
+value_df = pd.read_csv(RUN_DIR / "value.log", sep="\t", usecols=["dt", "value", "cash"])
 value_df["dt"] = pd.to_datetime(value_df["dt"])
 daily_value = value_df.groupby(value_df["dt"].dt.date).last()
 daily_value.index = pd.to_datetime(daily_value.index)
@@ -65,7 +64,7 @@ daily_returns.index = daily_returns.index.tz_localize("UTC")
 daily_returns.index.name = None
 
 # --- position.log → positions DataFrame ---
-pos_df = pd.read_csv(os.path.join(RUN_DIR, "position.log"), sep="\t", usecols=["dt", "data_name", "size", "price"])
+pos_df = pd.read_csv(RUN_DIR / "position.log", sep="\t", usecols=["dt", "data_name", "size", "price"])
 pos_df["dt"] = pd.to_datetime(pos_df["dt"])
 asset_names = pos_df["data_name"].unique()
 
@@ -81,7 +80,7 @@ positions.index = positions.index.tz_localize("UTC")
 positions = positions.loc[daily_returns.index]
 
 # --- order.log → transactions DataFrame ---
-order_df = pd.read_csv(os.path.join(RUN_DIR, "order.log"), sep="\t")
+order_df = pd.read_csv(RUN_DIR / "order.log", sep="\t")
 completed = order_df[order_df["status"] == "Completed"].copy()
 completed["dt"] = pd.to_datetime(completed["dt"])
 txn_index = pd.DatetimeIndex(completed["dt"].values).tz_localize("UTC")
@@ -100,7 +99,7 @@ print(f"Trading days: {len(daily_returns)}, transactions: {len(transactions)}")
 # =========================================================================
 # 2. Analysis + plotting
 # =========================================================================
-pdf_path = os.path.join(OUTPUT_DIR, "analysis_report.pdf")
+pdf_path = OUTPUT_DIR / "analysis_report.pdf"
 pdf = PdfPages(pdf_path)
 page_count = 0
 
@@ -446,7 +445,7 @@ for n in plt.get_fignums():
     save_page(plt.figure(n), tight=True)
 
 # ctx.to_html() exports an HTML report
-html_path = os.path.join(OUTPUT_DIR, "analysis_report.html")
+html_path = OUTPUT_DIR / "analysis_report.html"
 ctx.to_html(path=html_path)
 print(f"  -> HTML report: {html_path}")
 

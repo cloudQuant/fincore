@@ -43,24 +43,35 @@ FINCORE_RUN_INTEGRATION_TESTS=1 pytest tests/test_data/test_providers_integratio
 [Ruff](https://docs.astral.sh/ruff/) is used for both linting and formatting:
 
 ```bash
-# Check for lint issues
-ruff check fincore/ tests/
+# Check for lint issues (includes scripts/)
+ruff check fincore/ tests/ scripts/
 
 # Auto-fix lint issues
-ruff check --fix fincore/ tests/
+ruff check --fix fincore/ tests/ scripts/
 
 # Format code
-ruff format fincore/ tests/
+ruff format fincore/ tests/ scripts/
 ```
 
 Configuration is in `pyproject.toml` under `[tool.ruff]`.
+
+### Pre-commit (Optional)
+
+To run Ruff and common hooks automatically before each commit:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Then `pre-commit run --all-files` to validate the repo or let hooks run on `git commit`.
 
 ## Type Checking
 
 Mypy is run over selected modules:
 
 ```bash
-python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data \
+python -m mypy fincore/core fincore/constants fincore/metrics fincore/plugin fincore/data \
     fincore/optimization fincore/attribution fincore/report fincore/risk \
     fincore/simulation fincore/utils fincore/viz fincore/empyrical.py \
     fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
@@ -93,4 +104,3 @@ scripts\test_python_versions_simple.bat
 - **Registry-based methods**: `fincore/_registry.py` auto-generates 100+ `Empyrical` class methods via metaclass
 - **Star import elimination**: All `__init__.py` files use explicit imports + `__all__`
 - **Docstring coverage**: Target is 90%+ across all public modules
-

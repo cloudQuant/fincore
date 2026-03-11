@@ -352,7 +352,7 @@ rolling_vol = np.std(windows, axis=1, ddof=1) * np.sqrt(252)
 ```python
 try:
     from numba import njit
-    
+
     @njit
     def _max_drawdown_numba(returns_array):
         cumulative = 1.0
@@ -480,4 +480,3 @@ weekly_returns = returns.resample(...).apply(cum_returns_final)
 2. **高优先级**: 性能1（annualization_factor缓存）、性能6（bottleneck移动窗口）、Bug 11-12（代码重复）
 3. **中优先级**: 优化1（rolling计算向量化）、性能3（numba JIT）、Bug 4-6（边界情况处理）
 4. **低优先级**: 性能8（类设计）、性能10（导入策略统一）
-

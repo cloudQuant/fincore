@@ -26,12 +26,12 @@ import pandas as pd
 from fincore.constants import ANNUALIZATION_FACTORS, DAILY, PERIOD_TO_FREQ
 
 __all__ = [
+    "adjust_returns",
+    "aligned_series",
+    "annualization_factor",
     "ensure_datetime_index_series",
     "flatten",
-    "adjust_returns",
-    "annualization_factor",
     "to_pandas",
-    "aligned_series",
 ]
 
 
@@ -92,7 +92,7 @@ def flatten(arr: pd.Series | np.ndarray) -> np.ndarray:
 
 def adjust_returns(
     returns: pd.Series | pd.DataFrame | np.ndarray,
-    adjustment_factor: float | int | pd.Series | pd.DataFrame | np.ndarray,
+    adjustment_factor: float | pd.Series | pd.DataFrame | np.ndarray,
 ) -> pd.Series | pd.DataFrame | np.ndarray:
     """Adjust returns by subtracting an adjustment factor.
 
@@ -151,10 +151,10 @@ def annualization_factor(period: str, annualization: float | None = None) -> flo
     if annualization is None:
         try:
             factor = float(ANNUALIZATION_FACTORS[period])
-        except KeyError:
+        except KeyError as e:
             raise ValueError(
                 "Period cannot be '{}'. Can be '{}'.".format(period, "', '".join(ANNUALIZATION_FACTORS.keys()))
-            )
+            ) from e
     else:
         factor = float(annualization)
     return factor
@@ -185,12 +185,11 @@ def to_pandas(ob: np.ndarray | pd.Series | pd.DataFrame) -> pd.Series | pd.DataF
 
     if ob.ndim == 1:
         return pd.Series(ob)
-    elif ob.ndim == 2:
+    if ob.ndim == 2:
         return pd.DataFrame(ob)
-    else:
-        raise ValueError(
-            "cannot convert array of dim > 2 to a pandas structure",
-        )
+    raise ValueError(
+        "cannot convert array of dim > 2 to a pandas structure",
+    )
 
 
 def aligned_series(

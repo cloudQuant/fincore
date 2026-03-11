@@ -1,20 +1,10 @@
-# =============================================================================
-# Pyfolio class methods
-# =============================================================================
-#
-# This class extends ``Empyrical`` and provides tear sheet generation and plotting utilities.
-# It contains ~66 methods organized into:
-#
-# 1. Tear sheet creation methods (~11):
-#    - create_full_tear_sheet, create_simple_tear_sheet,
-#    - create_returns_tear_sheet, create_risk_tear_sheet, etc.
-# 2. Plotting methods (~30):
-#    - plot_returns, plot_drawdown, plot_rolling_sharpe, etc.
-# 3. Other helpers (~2):
-#    - adjust_returns_for_slippage, get_leverage
-#
-# =============================================================================
+"""Pyfolio class: tear sheet generation and plotting utilities.
 
+Extends Empyrical with ~66 methods: tear sheet creation (~11), plotting (~30),
+and helpers (adjust_returns_for_slippage, get_leverage).
+"""
+
+from __future__ import annotations
 
 import importlib
 from collections.abc import Callable
@@ -23,14 +13,20 @@ from typing import Any
 import matplotlib
 import matplotlib.pyplot as plt
 
-from fincore.constants import APPROX_BDAYS_PER_MONTH, FACTOR_PARTITIONS
+from fincore.constants import (
+    APPROX_BDAYS_PER_MONTH,
+    CAPACITY_SWEEP_MAX_PV,
+    CAPACITY_SWEEP_MIN_PV,
+    CAPACITY_SWEEP_STEP,
+    FACTOR_PARTITIONS,
+)
 from fincore.utils.common_utils import customize
 
 DisplayFunc = Callable[..., Any]
 MarkdownFunc = Callable[[str], Any]
 
 
-def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+def _fallback_display(*objs: Any, **_kwargs: Any) -> None:
     print(*objs)
 
 
@@ -164,14 +160,12 @@ from fincore.tearsheets import (
     plot_monthly_returns_dist as _plot_monthly_returns_dist,
 )
 from fincore.tearsheets import (
-    # returns
     plot_monthly_returns_heatmap as _plot_monthly_returns_heatmap,
 )
 from fincore.tearsheets import (
     plot_monthly_returns_timeseries as _plot_monthly_returns_timeseries,
 )
 from fincore.tearsheets import (
-    # perf_attrib
     plot_perf_attrib_returns as _plot_perf_attrib_returns,
 )
 from fincore.tearsheets import (
@@ -1048,9 +1042,9 @@ class Pyfolio(Empyrical):
         transactions,
         market_data,
         bt_starting_capital,
-        min_pv=100000,
-        max_pv=300000000,
-        step_size=1000000,
+        min_pv=CAPACITY_SWEEP_MIN_PV,
+        max_pv=CAPACITY_SWEEP_MAX_PV,
+        step_size=CAPACITY_SWEEP_STEP,
         ax=None,
     ):
         """
@@ -1103,56 +1097,6 @@ class Pyfolio(Empyrical):
         See fincore.tearsheets.returns.plot_monthly_returns_timeseries for full documentation.
         """
         return _plot_monthly_returns_timeseries(self, returns, ax=ax, **_kwargs)
-
-    # Def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
-    #     """
-    #     Plots timespans and directions of a sample of round trip trades.
-    #
-    #     Parameters
-    #     ----------
-    #     round_trips : `pd.DataFrame`
-    #         DataFrame with one row per-round-trip trade.
-    #         - See full explanation in round_trips.extract_round_trips
-    #     ax: matplotlib.Axes, optional
-    #         Axes upon which to plot.
-    #
-    #     Returns
-    #     -------
-    #     ax : matplotlib.Axes
-    #         The axes that were plotted on.
-    #     """
-    #
-    #     if ax is None:
-    #         ax = plt.subplot()
-    #
-    #     symbols_sample = round_trips.symbol.unique()
-    #     np.random.seed(1)
-    #     sample = np.random.choice(round_trips.symbol.unique(), replace=False,
-    #                               size=min(disp_amount, len(symbols_sample)))
-    #     sample_round_trips = round_trips[round_trips.symbol.isin(sample)]
-    #
-    #     symbol_idx = pd.Series(np.arange(len(sample)), index=sample)
-    #
-    #     for symbol, sym_round_trips in sample_round_trips.groupby('symbol'):
-    #         for _, row in sym_round_trips.iterrows():
-    #             c = 'b' if row.long else 'r'
-    #             y_ix = symbol_idx[symbol] + 0.05
-    #             ax.plot([row['open_dt'], row['close_dt']],
-    #                     [y_ix, y_ix], color=c,
-    #                     linewidth=lsize, solid_capstyle='butt')
-    #
-    #     ax.set_yticks(range(disp_amount))
-    #     ax.set_yticklabels([format_asset(s) for s in sample])
-    #
-    #     ax.set_ylim((-0.5, min(len(sample), disp_amount) - 0.5))
-    #     blue = patches.Rectangle([0, 0], 1, 1, color='b', label='Long')
-    #     red = patches.Rectangle([0, 0], 1, 1, color='r', label='Short')
-    #     leg = ax.legend(handles=[blue, red], loc='lower left',
-    #                     frameon=True, framealpha=0.5)
-    #     leg.get_frame().set_edgecolor('black')
-    #     ax.grid(False)
-    #
-    #     return ax
 
     def plot_round_trip_lifetimes(self, round_trips, disp_amount=16, lsize=18, ax=None):
         """

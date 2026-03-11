@@ -14,11 +14,11 @@ import pandas as pd
 
 __all__ = [
     "StyleResult",
-    "style_analysis",
-    "calculate_style_tilts",
-    "calculate_regression_attribution",
     "analyze_performance_by_style",
+    "calculate_regression_attribution",
+    "calculate_style_tilts",
     "fetch_style_factors",
+    "style_analysis",
 ]
 
 
@@ -153,9 +153,9 @@ def style_analysis(
     if size_quantiles is None:
         size_quantiles = [0.5, 0.5]
 
-    n_periods, n_assets = returns.shape
+    _n_periods, n_assets = returns.shape
 
-    # exposures_data: {style_name: {asset: weight}}
+    # exposures_data maps style_name -> {asset -> weight}
     exposures_data: dict[str, dict[str, float]] = {}
     assets = list(returns.columns)
 
@@ -258,6 +258,8 @@ def _calculate_size_exposure(
         Binary exposure matrix (N x categories).
         Columns: small, mid, large (using first two quantiles).
     """
+    if len(quantiles) < 2 or not all(0 <= q <= 1 for q in quantiles[:2]):
+        raise ValueError(f"quantiles must have at least 2 elements in [0, 1]; got quantiles={quantiles}")
     exposures = pd.DataFrame(index=market_caps.index)
 
     exposures["large"] = (market_caps >= np.percentile(market_caps, quantiles[1] * 100)).astype(int)
@@ -591,8 +593,7 @@ def analyze_performance_by_style(
         results.append(row_data)
 
     # returns is guaranteed non-empty above, so results is also non-empty here.
-    df = pd.DataFrame(results).set_index("Period")
-    return df
+    return pd.DataFrame(results).set_index("Period")
 
 
 def fetch_style_factors(

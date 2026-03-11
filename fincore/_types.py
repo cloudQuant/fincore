@@ -50,6 +50,12 @@ class BootstrapResult(NamedTuple):
 
 
 # ---------------------------------------------------------------------------
+# Metric result types (scalar or per-column)
+# ---------------------------------------------------------------------------
+# Return type for metrics that yield one value per input column (or scalar for 1D).
+MetricResult = Union[float, np.ndarray, pd.Series]
+
+# ---------------------------------------------------------------------------
 # Constant type aliases
 # ---------------------------------------------------------------------------
 Period = str  # 'daily', 'weekly', 'monthly', 'yearly'

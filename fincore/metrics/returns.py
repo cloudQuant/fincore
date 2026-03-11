@@ -33,11 +33,11 @@ import pandas as pd
 from fincore.constants import MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 __all__ = [
-    "simple_returns",
+    "aggregate_returns",
     "cum_returns",
     "cum_returns_final",
-    "aggregate_returns",
     "normalize",
+    "simple_returns",
 ]
 
 
@@ -55,7 +55,7 @@ def _get_annual_return():
 
 
 # Re-export annual_return for backwards compatibility
-def annual_return(*args: object, **kwargs: object) -> float:
+def annual_return(*args: object, **kwargs: object) -> float | np.ndarray | pd.Series:
     """Backwards-compatible wrapper for computing annual return (CAGR).
 
     The implementation lives in :func:`fincore.metrics.yearly.annual_return`.
@@ -199,10 +199,7 @@ def cum_returns_final(
     if len(returns) == 0:
         return np.nan
 
-    if isinstance(returns, pd.DataFrame):
-        result = (returns + 1).prod()
-    else:
-        result = np.nanprod(returns + 1, axis=0)
+    result = (returns + 1).prod() if isinstance(returns, pd.DataFrame) else np.nanprod(returns + 1, axis=0)
 
     if starting_value == 0:
         result -= 1
@@ -263,7 +260,7 @@ def aggregate_returns(
     elif convert_to == MONTHLY:
         grouping = [lambda dt: dt.year, lambda dt: dt.month]
     elif convert_to == QUARTERLY:
-        grouping = [lambda dt: dt.year, lambda dt: int(math.ceil(dt.month / 3.0))]
+        grouping = [lambda dt: dt.year, lambda dt: math.ceil(dt.month / 3.0)]
     elif convert_to == YEARLY:
         grouping = [lambda dt: dt.year]
     else:

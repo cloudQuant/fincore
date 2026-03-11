@@ -36,12 +36,14 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -x -q --tb=short -n auto -m "not slow and not integration" --ignore=tests/benchmarks/
+          pytest tests/ -x -q --tb=short -m "not slow and not integration and not serial" --ignore=tests/benchmarks/ -n auto
+          pytest tests/ -x -q --tb=short -m "serial" --ignore=tests/benchmarks/ -n 0
 
       - name: Run tests with coverage (Ubuntu + Python 3.11 only)
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         run: |
-          pytest tests/ -x -q --tb=short -n auto -m "not slow and not integration" --ignore=tests/benchmarks/ --cov=fincore --cov-report=xml --cov-report=term-missing
+          pytest tests/ -x -q --tb=short -m "not slow and not integration and not serial" --ignore=tests/benchmarks/ -n auto --cov=fincore --cov-report=xml --cov-report=term-missing --cov-fail-under=60
+          pytest tests/ -x -q --tb=short -m "serial" --ignore=tests/benchmarks/ -n 0 --cov=fincore --cov-append --cov-report=xml --cov-report=term-missing --cov-fail-under=60
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -65,10 +67,27 @@ jobs:
         run: pip install ruff
 
       - name: Ruff check
-        run: ruff check fincore/ tests/ --output-format=github
+        run: ruff check fincore/ tests/ scripts/ examples/ benchmarks/ --output-format=github
 
       - name: Ruff format (check)
-        run: ruff format --check fincore/ tests/
+        run: ruff format --check fincore/ tests/ scripts/ examples/ benchmarks/
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Bandit security scan
+        run: bandit -r fincore/ -c pyproject.toml
 
   typecheck:
     runs-on: ubuntu-latest
@@ -88,7 +107,7 @@ jobs:
 
       - name: mypy (selected modules)
         run: |
-          python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data fincore/optimization fincore/attribution fincore/report fincore/risk fincore/simulation fincore/utils fincore/viz fincore/empyrical.py fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
+          python -m mypy fincore/core fincore/constants fincore/metrics fincore/plugin fincore/data fincore/optimization fincore/attribution fincore/report fincore/risk fincore/simulation fincore/utils fincore/viz fincore/empyrical.py fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
 
       - name: compileall (syntax check)
         run: |

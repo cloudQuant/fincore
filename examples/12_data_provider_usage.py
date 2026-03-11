@@ -14,8 +14,8 @@
 - 多数据源整合
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 print("=" * 70)
 print("数据获取示例")
@@ -36,34 +36,27 @@ try:
 
     # 获取单只股票数据
     print("\n获取 AAPL 股票数据...")
-    aapl_data = yahoo.get_prices(
-        symbols='AAPL',
-        start='2023-01-01',
-        end='2024-01-01'
-    )
+    aapl_data = yahoo.get_prices(symbols="AAPL", start="2023-01-01", end="2024-01-01")
 
     if aapl_data is not None and not aapl_data.empty:
-        print(f"\nAAPL 数据概览:")
+        print("\nAAPL 数据概览:")
         print(f"  数据形状: {aapl_data.shape}")
         print(f"  列: {list(aapl_data.columns)}")
         print(f"  日期范围: {aapl_data.index[0].date()} 至 {aapl_data.index[-1].date()}")
-        print(f"\n最近5个交易日数据:")
+        print("\n最近5个交易日数据:")
         print(aapl_data.tail())
 
         # 计算收益
         from fincore import simple_returns
-        aapl_returns = simple_returns(aapl_data['Close'])
-        print(f"\nAAPL 收益统计 (2023年):")
+
+        aapl_returns = simple_returns(aapl_data["Close"])
+        print("\nAAPL 收益统计 (2023年):")
         print(f"  年化收益: {aapl_returns.mean() * 252:.4f}")
         print(f"  年化波动: {aapl_returns.std() * np.sqrt(252):.4f}")
 
     # 获取多只股票数据
     print("\n\n获取多只股票数据 (AAPL, MSFT, GOOGL)...")
-    multi_data = yahoo.get_prices(
-        symbols=['AAPL', 'MSFT', 'GOOGL'],
-        start='2023-06-01',
-        end='2024-01-01'
-    )
+    multi_data = yahoo.get_prices(symbols=["AAPL", "MSFT", "GOOGL"], start="2023-06-01", end="2024-01-01")
 
     if multi_data is not None and not multi_data.empty:
         print(f"\n多股票数据形状: {multi_data.shape}")
@@ -71,7 +64,7 @@ try:
 
 except ImportError:
     print("\n未安装 yfinance，请运行: pip install yfinance")
-except Exception as e:
+except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
     print(f"\nYahoo Finance 数据获取失败: {e}")
 
 # ============================================================
@@ -82,24 +75,21 @@ print("2. Alpha Vantage 数据")
 print("=" * 70)
 
 try:
-    from fincore.data import AlphaVantageProvider
-
     # 注意: 需要设置 API key
     import os
-    api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
+
+    from fincore.data import AlphaVantageProvider
+
+    api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
     if api_key:
         av = AlphaVantageProvider(api_key=api_key)
 
         print("\n获取 SPY (标普500 ETF) 数据...")
-        spy_data = av.get_prices(
-            symbols='SPY',
-            start='2023-01-01',
-            end='2024-01-01'
-        )
+        spy_data = av.get_prices(symbols="SPY", start="2023-01-01", end="2024-01-01")
 
         if spy_data is not None and not spy_data.empty:
-            print(f"\nSPY 数据概览:")
+            print("\nSPY 数据概览:")
             print(f"  数据形状: {spy_data.shape}")
             print(f"  最近价格: ${spy_data['Close'].iloc[-1]:.2f}")
     else:
@@ -108,7 +98,7 @@ try:
 
 except ImportError:
     print("\n未安装 requests，请运行: pip install requests")
-except Exception as e:
+except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
     print(f"\nAlpha Vantage 数据获取失败: {e}")
 
 # ============================================================
@@ -119,11 +109,12 @@ print("3. Tushare 数据 (中国市场)")
 print("=" * 70)
 
 try:
-    import tushare as ts
     import os
 
+    import tushare as ts
+
     # 注意: 需要设置 Tushare token
-    token = os.environ.get('TUSHARE_TOKEN')
+    token = os.environ.get("TUSHARE_TOKEN")
 
     if token:
         from fincore.data import TushareProvider
@@ -131,14 +122,10 @@ try:
         ts_provider = TushareProvider(token=token)
 
         print("\n获取平安银行 (000001.SZ) 数据...")
-        bank_data = ts_provider.get_prices(
-            symbols='000001.SZ',
-            start='2023-01-01',
-            end='2024-01-01'
-        )
+        bank_data = ts_provider.get_prices(symbols="000001.SZ", start="2023-01-01", end="2024-01-01")
 
         if bank_data is not None and not bank_data.empty:
-            print(f"\n平安银行数据概览:")
+            print("\n平安银行数据概览:")
             print(f"  数据形状: {bank_data.shape}")
             print(f"  最近收盘价: {bank_data['Close'].iloc[-1]:.2f} 元")
     else:
@@ -147,7 +134,7 @@ try:
 
 except ImportError:
     print("\n未安装 tushare，请运行: pip install tushare")
-except Exception as e:
+except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
     print(f"\nTushare 数据获取失败: {e}")
 
 # ============================================================
@@ -164,13 +151,13 @@ try:
 
     print("\n获取上证指数数据...")
     index_data = akshare.get_prices(
-        symbols='000001',  # 上证指数代码
-        start='2023-01-01',
-        end='2024-01-01'
+        symbols="000001",  # 上证指数代码
+        start="2023-01-01",
+        end="2024-01-01",
     )
 
     if index_data is not None and not index_data.empty:
-        print(f"\n上证指数数据概览:")
+        print("\n上证指数数据概览:")
         print(f"  数据形状: {index_data.shape}")
         print(f"  最近收盘: {index_data['Close'].iloc[-1]:.2f} 点")
     else:
@@ -178,7 +165,7 @@ try:
 
 except ImportError:
     print("\n未安装 akshare，请运行: pip install akshare")
-except Exception as e:
+except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
     print(f"\nAkShare 数据获取失败: {e}")
 
 # ============================================================
@@ -263,15 +250,12 @@ def get_cached_data(provider, symbol, start, end, cache_dir='cache'):
 
     # 尝试从缓存加载
     if cache_file.exists():
-        with open(cache_file, 'rb') as f:
-            return pickle.load(f)
+        return pickle.loads(cache_file.read_bytes())
 
     # 获取新数据并缓存
     data = provider.get_prices(symbol, start, end)
     cache_file.parent.mkdir(exist_ok=True)
-
-    with open(cache_file, 'wb') as f:
-        pickle.dump(data, f)
+    cache_file.write_bytes(pickle.dumps(data))
 
     return data
 ```

@@ -6,13 +6,11 @@ Provides specific exception classes for better error handling.
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, ClassVar, Optional
+from typing import Any, Callable, ClassVar
 
 import numpy as np
-import pandas as pd
 
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
-from fincore.metrics.basic import aligned_series
 
 __all__ = [
     "DataAlignmentError",
@@ -29,18 +27,11 @@ __all__ = [
     "handle_numerical_error",
     "safe_divide",
     "safe_sqrt",
-    "validate_alignment",
-    "validate_percentage",
-    "validate_period",
-    "validate_positive",
-    "validate_returns",
 ]
 
 
 class FincoreError(Exception):
     """Base exception for all fincore errors."""
-
-    pass
 
 
 class ValidationError(FincoreError):
@@ -339,115 +330,8 @@ class DependencyError(FincoreError):
 
 
 # ---------------------------------------------------------------------------
-# Validation helpers
+# Error-handling utilities
 # ---------------------------------------------------------------------------
-
-
-def validate_returns(
-    returns: Any,
-    min_length: int = 1,
-    allow_empty: bool = False,
-    require_datetime_index: bool = True,
-) -> Any:
-    """Validate returns input."""
-    if returns is None:
-        raise MissingDataError("Returns data is required", missing_field="returns")
-
-    if not isinstance(returns, (np.ndarray, pd.Series, pd.DataFrame, list)):
-        raise UnsupportedFormatError(
-            f"Expected numpy array, pandas Series/DataFrame, or list, got {type(returns).__name__}",
-            expected_format="numpy.ndarray, pandas.Series/DataFrame, or list",
-            actual_format=type(returns).__name__,
-        )
-
-    if not allow_empty and len(returns) == 0:
-        raise InsufficientDataError(
-            "Returns array cannot be empty",
-            required_length=1,
-            actual_length=0,
-        )
-
-    if len(returns) < min_length:
-        raise InsufficientDataError(
-            f"Returns array must have at least {min_length} observations",
-            required_length=min_length,
-            actual_length=len(returns),
-        )
-
-    if require_datetime_index and isinstance(returns, (pd.Series, pd.DataFrame)):
-        if not isinstance(returns.index, pd.DatetimeIndex):
-            raise ValidationError(
-                "Returns must have a DatetimeIndex",
-                param_name="returns",
-                value=returns.index,
-            )
-
-    if isinstance(returns, list):
-        returns = np.array(returns)
-
-    return returns
-
-
-def validate_period(period: str) -> str:
-    """Validate period parameter."""
-    valid_periods = [DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY]
-    if period not in valid_periods:
-        raise InvalidPeriodError(period)
-    return period
-
-
-def validate_positive(
-    value: float,
-    param_name: str,
-    allow_zero: bool = True,
-) -> float:
-    """Validate that a value is positive."""
-    if allow_zero:
-        if value < 0:
-            raise ValidationError(
-                f"{param_name} must be non-negative, got {value}",
-                param_name=param_name,
-                value=value,
-            )
-    else:
-        if value <= 0:
-            raise ValidationError(
-                f"{param_name} must be positive, got {value}",
-                param_name=param_name,
-                value=value,
-            )
-    return value
-
-
-def validate_percentage(value: float, param_name: str) -> float:
-    """Validate that a value is between 0 and 1."""
-    if not 0 <= value <= 1:
-        raise ValidationError(
-            f"{param_name} must be between 0 and 1, got {value}",
-            param_name=param_name,
-            value=value,
-        )
-    return value
-
-
-def validate_alignment(
-    returns: Any,
-    factor_returns: Any,
-    require_equal_length: bool = True,
-) -> tuple[Any, Any]:
-    """Validate that returns and factor_returns are aligned."""
-    if isinstance(returns, (pd.Series, pd.DataFrame)) and isinstance(factor_returns, (pd.Series, pd.DataFrame)):
-        aligned_ret, aligned_factor = aligned_series(returns, factor_returns)
-
-        if require_equal_length and len(aligned_ret) != len(aligned_factor):
-            raise DataAlignmentError(
-                f"Returns and factor_returns have different lengths: {len(returns)} vs {len(factor_returns)}",
-                returns_length=len(returns),
-                factor_length=len(factor_returns),
-            )
-
-        return aligned_ret, aligned_factor
-    return returns, factor_returns
 
 
 def handle_numerical_error(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -512,10 +396,10 @@ def safe_divide(
 ) -> Any:
     """Safely divide two values, returning default if denominator is zero."""
     with np.errstate(divide="ignore", invalid="ignore"):
-        if denominator == 0 or (isinstance(denominator, (int, float)) and denominator == 0):
+        if isinstance(denominator, (int, float)) and denominator == 0:
             return default
         if isinstance(numerator, np.ndarray) and isinstance(denominator, np.ndarray):
-            return np.divide(numerator, denominator)
+            return np.where(denominator != 0, np.divide(numerator, denominator), default)
         return numerator / denominator
 
 

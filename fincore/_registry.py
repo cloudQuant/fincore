@@ -15,6 +15,8 @@ Method types:
     'dual_rf' — _dual_method that auto-fills ``returns`` and ``factor_returns``
 """
 
+from __future__ import annotations
+
 # ---------------------------------------------------------------------------
 # Static methods  (module_alias, func_name)
 # ---------------------------------------------------------------------------
@@ -28,11 +30,11 @@ STATIC_METHODS = {
 }
 
 # ---------------------------------------------------------------------------
-# Class methods — simple forwarding to module function
-# (method_name, module_alias, func_name)
+# Class methods — simple forwarding to module function.
+# Each entry: (method_name, module_alias, func_name).
 # ---------------------------------------------------------------------------
 CLASSMETHOD_REGISTRY = {
-    # returns
+    # Returns group
     "simple_returns": ("_returns", "simple_returns"),
     "cum_returns": ("_returns", "cum_returns"),
     "cum_returns_final": ("_returns", "cum_returns_final"),
@@ -164,8 +166,8 @@ CLASSMETHOD_REGISTRY = {
 }
 
 # ---------------------------------------------------------------------------
-# Dual methods — auto-fill ``returns`` from instance state
-# (method_name, module_alias, func_name)
+# Dual methods — auto-fill ``returns`` from instance state.
+# Each entry: (method_name, module_alias, func_name).
 # ---------------------------------------------------------------------------
 DUAL_RETURNS_REGISTRY = {
     "get_max_drawdown_period": ("_drawdown", "get_max_drawdown_period"),
@@ -212,8 +214,8 @@ DUAL_RETURNS_REGISTRY = {
 }
 
 # ---------------------------------------------------------------------------
-# Dual methods — auto-fill ``returns`` AND ``factor_returns`` from instance
-# (method_name, module_alias, func_name)
+# Dual methods — auto-fill ``returns`` AND ``factor_returns`` from instance.
+# Each entry: (method_name, module_alias, func_name).
 # ---------------------------------------------------------------------------
 DUAL_RETURNS_FACTOR_REGISTRY = {
     "futures_market_correlation": ("_stats", "futures_market_correlation"),

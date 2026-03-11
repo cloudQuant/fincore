@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from scipy import optimize, stats
 
-__all__ = ["hill_estimator", "gpd_fit", "gev_fit", "evt_var", "evt_cvar", "extreme_risk"]
+__all__ = ["evt_cvar", "evt_var", "extreme_risk", "gev_fit", "gpd_fit", "hill_estimator"]
 
 
 if TYPE_CHECKING:
@@ -336,12 +336,7 @@ def evt_var(
         # where F_u = n_exceed/n is the empirical exceedance probability
         # Reference: McNeil, Frey, Embrechts - Quantitative Risk Management
         ratio = alpha / exceed_prob
-        if np.abs(xi) < 1e-10:
-            # Exponential case
-            var = u - beta * np.log(ratio)
-        else:
-            # General case
-            var = u + (beta / xi) * (ratio ** (-xi) - 1)
+        var = u - beta * np.log(ratio) if np.abs(xi) < 1e-10 else u + (beta / xi) * (ratio ** (-xi) - 1)
 
         # Convert to return-space (negative for losses)
         var = -var
@@ -512,7 +507,7 @@ def extreme_risk(
             index=[alpha],
         )
 
-    elif model == "gev":
+    if model == "gev":
         params = gev_fit(data, block_size=block_size)
         var = evt_var(data, alpha, model, tail, block_size=block_size)
         cvar = evt_cvar(data, alpha, model, tail, block_size=block_size)
@@ -527,5 +522,4 @@ def extreme_risk(
             },
             index=[alpha],
         )
-    else:
-        raise ValueError(f"Unknown model: {model}")  # pragma: no cover -- Invalid input
+    raise ValueError(f"Unknown model: {model}")  # pragma: no cover -- Invalid input

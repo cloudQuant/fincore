@@ -1,3 +1,5 @@
+"""Deprecation decorator for marking deprecated functions."""
+
 import warnings
 from functools import wraps
 

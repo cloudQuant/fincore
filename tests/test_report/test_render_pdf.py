@@ -36,7 +36,7 @@ class _FakePage:
         # Write a minimal valid PDF so that PyPDF2 can read it and bookmarks can be added.
         writer = PdfWriter()
         writer.add_blank_page(width=612, height=792)
-        with open(path, "wb") as f:
+        with Path(path).open("wb") as f:
             writer.write(f)
 
 

@@ -29,14 +29,14 @@ from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
 
 __all__ = [
-    "annual_return",
-    "annual_return_by_year",
-    "sharpe_ratio_by_year",
-    "max_drawdown_by_year",
-    "annual_volatility_by_year",
     "annual_active_return",
     "annual_active_return_by_year",
+    "annual_return",
+    "annual_return_by_year",
+    "annual_volatility_by_year",
     "information_ratio_by_year",
+    "max_drawdown_by_year",
+    "sharpe_ratio_by_year",
 ]
 
 
@@ -296,8 +296,8 @@ def annual_active_return_by_year(
     factor_grouped = factor_returns.groupby(factor_returns.index.year)
 
     annual_active_returns = []
-    for year in grouped.groups.keys():
-        if year in factor_grouped.groups.keys():
+    for year in grouped.groups:
+        if year in factor_grouped.groups:
             year_returns = grouped.get_group(year)
             year_factor = factor_grouped.get_group(year)
             active_return = annual_active_return(year_returns, year_factor, period, annualization)

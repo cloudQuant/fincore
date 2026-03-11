@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Update global index data script.
 
@@ -12,7 +11,6 @@ Usage:
 If data_root is not specified, it defaults to 'tests/test_data'.
 """
 
-import os
 import sys
 import time
 from pathlib import Path
@@ -25,7 +23,7 @@ RETRY_DELAY_SECONDS = 10
 MAX_RETRIES = 3
 
 
-def get_data_root(default_path='tests/test_data', custom_path=None):
+def get_data_root(default_path="tests/test_data", custom_path=None):
     """
     Determine the data root directory.
 
@@ -41,12 +39,9 @@ def get_data_root(default_path='tests/test_data', custom_path=None):
     str
         Absolute path to the data root directory
     """
-    if custom_path:
-        data_root = custom_path
-    else:
-        data_root = default_path
+    data_root = custom_path or default_path
 
-    if not os.path.isabs(data_root):
+    if not Path(data_root).is_absolute():
         script_dir = Path(__file__).parent.resolve()
         project_root = script_dir.parent
         data_root = str(project_root / data_root)
@@ -76,19 +71,19 @@ def update_global_index_data(data_root):
     data_root : str
         Root directory to save data files
     """
-    print(f"\n{'='*60}")
-    print(f"Updating global index data")
+    print(f"\n{'=' * 60}")
+    print("Updating global index data")
     print(f"Data root: {data_root}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     ensure_directory(data_root)
 
     try:
-        main_data_path = os.path.join(data_root, 'global_index_data.csv')
+        main_data_path = Path(data_root) / "global_index_data.csv"
 
-        if os.path.exists(main_data_path):
+        if main_data_path.exists():
             print(f"[SKIP] Spot data already exists, loading from: {main_data_path}")
-            spot_em_df = pd.read_csv(main_data_path)
+            spot_em_df = pd.read_csv(str(main_data_path))
             print(f"[OK] Loaded {len(spot_em_df)} global indices from local file")
         else:
             print("Fetching global index spot data...")
@@ -98,25 +93,25 @@ def update_global_index_data(data_root):
             spot_em_df.to_csv(main_data_path, index=False)
             print(f"[OK] Saved main index data to: {main_data_path}")
 
-        unique_names = spot_em_df['名称'].unique()
+        unique_names = spot_em_df["名称"].unique()
         print(f"\nFound {len(unique_names)} unique indices")
 
-        print(f"\nFetching historical data for each index...")
-        print(f"-" * 60)
+        print("\nFetching historical data for each index...")
+        print("-" * 60)
 
         for i, name in enumerate(unique_names, 1):
             progress = f"[{i}/{len(unique_names)}]"
-            safe_name = name.replace('/', '_')
-            file_path = os.path.join(data_root, f'{safe_name}.csv')
+            safe_name = name.replace("/", "_")
+            file_path = Path(data_root) / f"{safe_name}.csv"
 
-            if os.path.exists(file_path):
+            if file_path.exists():
                 print(f"{progress} [SKIP] {name} already exists, skipping download")
                 continue
 
             for attempt in range(1, MAX_RETRIES + 1):
                 try:
                     df = ak.index_global_hist_em(symbol=name)
-                    df.to_csv(file_path, index=False)
+                    df.to_csv(str(file_path), index=False)
 
                     print(f"{progress} [OK] {name}")
                     time.sleep(REQUEST_DELAY_SECONDS)
@@ -125,33 +120,28 @@ def update_global_index_data(data_root):
                 except Exception as e:
                     if attempt < MAX_RETRIES:
                         print(
-                            f"{progress} [WARN] Attempt {attempt} failed for {name}: {str(e)}. "
+                            f"{progress} [WARN] Attempt {attempt} failed for {name}: {e!s}. "
                             f"Retrying in {RETRY_DELAY_SECONDS}s..."
                         )
                         time.sleep(RETRY_DELAY_SECONDS)
                     else:
-                        print(
-                            f"{progress} [ERROR] Failed to fetch {name} after {MAX_RETRIES} attempts: {str(e)}"
-                        )
+                        print(f"{progress} [ERROR] Failed to fetch {name} after {MAX_RETRIES} attempts: {e!s}")
 
-        print(f"\n{'='*60}")
-        print(f"[OK] Update complete!")
+        print(f"\n{'=' * 60}")
+        print("[OK] Update complete!")
         print(f"[OK] Data saved to: {data_root}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
     except Exception as e:
-        print(f"\n[ERROR] Error updating global index data: {str(e)}")
+        print(f"\n[ERROR] Error updating global index data: {e!s}")
         sys.exit(1)
 
 
 def main():
     """Main entry point."""
-    if len(sys.argv) > 1:
-        custom_data_root = sys.argv[1]
-    else:
-        custom_data_root = None
+    custom_data_root = sys.argv[1] if len(sys.argv) > 1 else None
 
-    data_root = get_data_root(default_path='tests/test_data/index_data', custom_path=custom_data_root)
+    data_root = get_data_root(default_path="tests/test_data/index_data", custom_path=custom_data_root)
     update_global_index_data(data_root)
 
 

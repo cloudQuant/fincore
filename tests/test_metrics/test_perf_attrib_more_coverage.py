@@ -16,7 +16,7 @@ def _make_core_inputs(periods: int = 10, n_tickers: int = 10, n_factors: int = 2
 
     returns = pd.Series(np.linspace(0.001, -0.001, len(dts)), index=dts, name="r")
 
-    positions_df = pd.DataFrame(index=dts, columns=tickers + ["cash"], data=1.0)
+    positions_df = pd.DataFrame(index=dts, columns=[*tickers, "cash"], data=1.0)
     positions_df["cash"] = 0.0
 
     index = pd.MultiIndex.from_product([dts, tickers], names=["dt", "ticker"])
@@ -71,7 +71,7 @@ def test_perf_attrib_core_tilt_returns_non_dataframe_branch_via_custom_dataframe
         def _constructor(self):
             return WeirdFactorReturns
 
-        def multiply(self, other, axis="columns", level=None, fill_value=None):  # noqa: D401
+        def multiply(self, other, axis="columns", level=None, fill_value=None):
             out = super().multiply(other, axis=axis, level=level, fill_value=fill_value)
             return out.sum(axis="columns")
 

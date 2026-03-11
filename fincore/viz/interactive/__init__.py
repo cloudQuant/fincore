@@ -16,8 +16,8 @@ try:
     from importlib.util import find_spec
 
     if find_spec("bokeh") is not None:
-        from fincore.viz.interactive.bokeh_backend import BokehBackend  # noqa: F401
+        from fincore.viz.interactive.bokeh_backend import BokehBackend
 
-        __all__.append("BokehBackend")
+        __all__ += ["BokehBackend"]
 except ImportError:
     pass

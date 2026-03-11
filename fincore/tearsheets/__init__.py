@@ -7,14 +7,17 @@ All submodules are lazily imported via ``__getattr__`` to avoid importing heavy
 dependencies (matplotlib/seaborn) at ``import fincore.tearsheets`` time.
 """
 
+from __future__ import annotations
+
 import importlib as _importlib
+from typing import Any
 
 # Maps exported name → (submodule, attribute)
 _ATTR_MAP = {
-    # utils
+    # utils group
     "plotting_context": ("utils", "plotting_context"),
     "axes_style": ("utils", "axes_style"),
-    # returns
+    # returns group
     "plot_monthly_returns_heatmap": ("returns", "plot_monthly_returns_heatmap"),
     "plot_annual_returns": ("returns", "plot_annual_returns"),
     "plot_monthly_returns_dist": ("returns", "plot_monthly_returns_dist"),
@@ -30,7 +33,7 @@ _ATTR_MAP = {
     "plot_perf_stats": ("returns", "plot_perf_stats"),
     "show_perf_stats": ("returns", "show_perf_stats"),
     "show_worst_drawdown_periods": ("returns", "show_worst_drawdown_periods"),
-    # positions
+    # positions group
     "plot_holdings": ("positions", "plot_holdings"),
     "plot_long_short_holdings": ("positions", "plot_long_short_holdings"),
     "plot_exposures": ("positions", "plot_exposures"),
@@ -38,24 +41,24 @@ _ATTR_MAP = {
     "plot_max_median_position_concentration": ("positions", "plot_max_median_position_concentration"),
     "plot_sector_allocations": ("positions", "plot_sector_allocations"),
     "show_and_plot_top_positions": ("positions", "show_and_plot_top_positions"),
-    # transactions
+    # transactions group
     "plot_turnover": ("transactions", "plot_turnover"),
     "plot_daily_volume": ("transactions", "plot_daily_volume"),
     "plot_daily_turnover_hist": ("transactions", "plot_daily_turnover_hist"),
     "plot_txn_time_hist": ("transactions", "plot_txn_time_hist"),
     "plot_slippage_sweep": ("transactions", "plot_slippage_sweep"),
     "plot_slippage_sensitivity": ("transactions", "plot_slippage_sensitivity"),
-    # round_trips
+    # round_trips group
     "plot_round_trip_lifetimes": ("round_trips", "plot_round_trip_lifetimes"),
     "plot_prob_profit_trade": ("round_trips", "plot_prob_profit_trade"),
     "print_round_trip_stats": ("round_trips", "print_round_trip_stats"),
     "show_profit_attribution": ("round_trips", "show_profit_attribution"),
-    # bayesian
+    # bayesian group
     "plot_best": ("bayesian", "plot_best"),
     "plot_stoch_vol": ("bayesian", "plot_stoch_vol"),
     "plot_bayes_cone": ("bayesian", "plot_bayes_cone"),
     "_plot_bayes_cone": ("bayesian", "_plot_bayes_cone"),
-    # risk
+    # risk group
     "plot_style_factor_exposures": ("risk", "plot_style_factor_exposures"),
     "plot_sector_exposures_longshort": ("risk", "plot_sector_exposures_longshort"),
     "plot_sector_exposures_gross": ("risk", "plot_sector_exposures_gross"),
@@ -91,7 +94,8 @@ _ATTR_MAP = {
 _SUBMODULE_CACHE = {}
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
+    """Lazy-load submodule attribute by name. Raises AttributeError if unknown."""
     entry = _ATTR_MAP.get(name)
     if entry is not None:
         submod_name, attr_name = entry

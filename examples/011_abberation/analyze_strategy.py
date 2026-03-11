@@ -9,7 +9,7 @@ Usage:
 """
 
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -20,23 +20,20 @@ from fincore import Empyrical
 # ============================================================================
 # 1. Locate log directory
 # ============================================================================
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-LOGS_DIR = os.path.join(SCRIPT_DIR, "logs")
+SCRIPT_DIR = Path(__file__).resolve().parent
+LOGS_DIR = SCRIPT_DIR / "logs"
 
 # Auto-select the latest run directory.
-run_dirs = sorted(
-    [d for d in os.listdir(LOGS_DIR) if os.path.isdir(os.path.join(LOGS_DIR, d))],
-)
+run_dirs = sorted([d.name for d in LOGS_DIR.iterdir() if d.is_dir()])
 if not run_dirs:
     raise FileNotFoundError(f"No run directories found in {LOGS_DIR}")
-RUN_DIR = os.path.join(LOGS_DIR, run_dirs[-1])
+RUN_DIR = LOGS_DIR / run_dirs[-1]
 print(f"Analyzing run directory: {RUN_DIR}\n")
 
 # ============================================================================
 # 2. Load run info
 # ============================================================================
-with open(os.path.join(RUN_DIR, "run_info.json")) as f:
-    run_info = json.load(f)
+run_info = json.loads((RUN_DIR / "run_info.json").read_text())
 
 print("=" * 70)
 print(f"Strategy:   {run_info['strategy_name']}")
@@ -48,7 +45,7 @@ print("=" * 70)
 # 3. Load value.log -> compute daily returns
 # ============================================================================
 value_df = pd.read_csv(
-    os.path.join(RUN_DIR, "value.log"),
+    RUN_DIR / "value.log",
     sep="\t",
     usecols=["dt", "value", "cash"],
 )
@@ -78,7 +75,7 @@ print(
 # ============================================================================
 # 4. Load trade.log -> trade statistics
 # ============================================================================
-trade_df = pd.read_csv(os.path.join(RUN_DIR, "trade.log"), sep="\t")
+trade_df = pd.read_csv(RUN_DIR / "trade.log", sep="\t")
 
 # Only closed trades.
 closed_trades = trade_df[trade_df["status"] == "Closed"].copy()

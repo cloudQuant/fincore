@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PyPDF2 import PdfReader, PdfWriter
 
 from fincore.report.render_pdf import _add_pdf_bookmarks
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _write_blank_pdf(path: Path, n_pages: int) -> None:

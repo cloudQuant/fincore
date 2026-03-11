@@ -16,7 +16,10 @@
 
 """Performance statistics (summary tables, bootstrap stats, etc.)."""
 
+from __future__ import annotations
+
 from collections import OrderedDict
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
@@ -32,14 +35,21 @@ from fincore.metrics.yearly import annual_return
 from fincore.utils import nanmean, nanstd
 
 __all__ = [
-    "perf_stats",
-    "perf_stats_bootstrap",
     "calc_bootstrap",
     "calc_distribution_stats",
+    "perf_stats",
+    "perf_stats_bootstrap",
 ]
 
 
-def perf_stats(returns, factor_returns=None, positions=None, transactions=None, turnover_denom="AGB", period=DAILY):
+def perf_stats(
+    returns: pd.Series,
+    factor_returns: pd.Series | None = None,
+    positions: pd.DataFrame | None = None,
+    transactions: pd.DataFrame | None = None,
+    turnover_denom: str = "AGB",
+    period: str = DAILY,
+) -> pd.Series:
     """Calculate various performance metrics of a strategy.
 
     Parameters
@@ -190,8 +200,7 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
     if return_stats:
         stats_df = bootstrap_values.apply(calc_distribution_stats)
         return stats_df.T[["mean", "median", "5%", "95%"]]
-    else:
-        return bootstrap_values
+    return bootstrap_values
 
 
 def calc_bootstrap(func, returns, *args, **kwargs):
@@ -238,7 +247,7 @@ def calc_bootstrap(func, returns, *args, **kwargs):
     return out
 
 
-def calc_distribution_stats(x):
+def calc_distribution_stats(x: np.ndarray | pd.Series) -> pd.Series:
     """Calculate various summary statistics of data.
 
     Parameters

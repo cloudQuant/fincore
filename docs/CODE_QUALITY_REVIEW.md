@@ -1,6 +1,6 @@
 # Fincore 代码质量审查报告
 
-> 审查日期: 2026-03-10  
+> 审查日期: 2026-03-10
 > 方法: BMAD 对抗式审查 + 边缘情况猎人
 
 ---
@@ -76,10 +76,10 @@
 
 ### 低优先级
 
-11. **类型注解不一致**  
+11. **类型注解不一致**
     部分函数返回 `float | np.ndarray | pd.Series`，调用方可能需额外类型守卫。
 
-12. **`calmar_ratio` DataFrame 分支返回类型**  
+12. **`calmar_ratio` DataFrame 分支返回类型**
     `ratios.py:417` 返回 `pd.Series`，但类型注解为 `float | pd.Series`，多列 DataFrame 时的行为需确认。
 
 ---

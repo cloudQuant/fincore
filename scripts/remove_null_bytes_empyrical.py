@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 if __name__ == "__main__":
     path = Path("fincore/empyrical.py")
     data = path.read_bytes()

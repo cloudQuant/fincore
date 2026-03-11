@@ -14,7 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Ratio metrics (risk-adjusted returns, drawdown ratios, capture ratios, etc.)."""
+"""Ratio metrics (risk-adjusted returns, drawdown ratios, capture ratios, etc.).
+
+Function groups: (1) Basic ratios, (2) Drawdown ratios, (3) Downside-risk ratios,
+(4) Benchmark-relative ratios, (5) Preference/stability metrics, (6) Capture metrics.
+"""
 
 from __future__ import annotations
 
@@ -27,49 +31,31 @@ from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.utils import nanmean, nanstd
 
-# =============================================================================
-# Function groups
-# =============================================================================
-#
-# This module's functions are organized into the following groups:
-#
-# 1. Basic ratios: sharpe_ratio, sortino_ratio, excess_sharpe,
-#                 adjusted_sharpe_ratio, conditional_sharpe_ratio
-# 2. Drawdown ratios: calmar_ratio, mar_ratio
-# 3. Downside-risk ratios: omega_ratio, sterling_ratio, burke_ratio,
-#                  kappa_three_ratio
-# 4. Benchmark-relative ratios: information_ratio, treynor_ratio, cal_treynor_ratio,
-#                m_squared
-# 5. Preference/stability metrics: common_sense_ratio, stability_of_timeseries
-# 6. Capture metrics: capture, up_capture, down_capture,
-#                up_down_capture, up_capture_return, down_capture_return
-#
-# =============================================================================
 __all__ = [
-    "sharpe_ratio",
-    "sortino_ratio",
-    "excess_sharpe",
     "adjusted_sharpe_ratio",
-    "conditional_sharpe_ratio",
+    "burke_ratio",
+    "cal_treynor_ratio",
     "calmar_ratio",
-    "omega_ratio",
+    "capture",
+    "common_sense_ratio",
+    "conditional_sharpe_ratio",
+    "down_capture",
+    "down_capture_return",
+    "excess_sharpe",
     # Risk-adjusted / benchmark-relative ratios
     "information_ratio",
-    "treynor_ratio",
-    "cal_treynor_ratio",
-    "m_squared",
-    "sterling_ratio",
-    "burke_ratio",
     "kappa_three_ratio",
-    "common_sense_ratio",
-    "stability_of_timeseries",
-    "capture",
-    "up_capture",
-    "down_capture",
-    "up_down_capture",
+    "m_squared",
     "mar_ratio",
+    "omega_ratio",
+    "sharpe_ratio",
+    "sortino_ratio",
+    "stability_of_timeseries",
+    "sterling_ratio",
+    "treynor_ratio",
+    "up_capture",
     "up_capture_return",
-    "down_capture_return",
+    "up_down_capture",
 ]
 
 
@@ -257,10 +243,14 @@ def excess_sharpe(
         return out  # type: ignore[return-value]
 
     active_return = adjust_returns(returns, factor_returns)
-    tracking_err = np.nan_to_num(nanstd(active_return, ddof=1, axis=0))
-
+    raw_te = nanstd(active_return, ddof=1, axis=0)
+    # Use minimum threshold; avoid nan_to_num which masks NaN as 0 and can yield inf
+    _MIN_STD = 1e-15
+    tracking_err = np.maximum(np.asanyarray(raw_te), _MIN_STD)
+    zero_te = np.asanyarray(raw_te) < _MIN_STD
     with np.errstate(divide="ignore", invalid="ignore"):
         out = np.divide(nanmean(active_return, axis=0, out=out), tracking_err, out=out)
+    np.copyto(out, np.nan, where=zero_te | ~np.isfinite(out))
     if returns_1d:
         out = out.item()  # type: ignore[union-attr]
     return out  # type: ignore[return-value]
@@ -314,10 +304,7 @@ def adjusted_sharpe_ratio(
     kurt_adj = (kurt / 24) * (sharpe**2) * dampening
     adjustment = 1 + skew_adj - kurt_adj
 
-    if n < 20:
-        adjustment = max(0.9, min(1.1, adjustment))  # type: ignore[type-var]
-    else:
-        adjustment = max(0.8, min(1.3, adjustment))  # type: ignore[type-var]
+    adjustment = max(0.9, min(1.1, adjustment)) if n < 20 else max(0.8, min(1.3, adjustment))  # type: ignore[type-var]
 
     return sharpe * adjustment  # type: ignore[return-value]
 
@@ -358,6 +345,8 @@ def conditional_sharpe_ratio(
     """
     if len(returns) < 2:
         return np.nan
+    if not (0 < cutoff < 1):
+        return np.nan
 
     ann_factor = annualization_factor(period, annualization)
 
@@ -370,7 +359,7 @@ def conditional_sharpe_ratio(
     mean_ret = np.mean(conditional_returns) - risk_free
     std_ret = np.std(conditional_returns, ddof=1)
 
-    if std_ret == 0:
+    if std_ret == 0 or not np.isfinite(mean_ret) or not np.isfinite(std_ret):
         return np.nan
 
     return mean_ret / std_ret * np.sqrt(ann_factor)
@@ -528,7 +517,9 @@ def omega_ratio(
     -------
     float
         Omega ratio of the strategy. Returns ``NaN`` if there are fewer
-        than two observations or if the downside component is zero.
+        than two observations, if the downside component is zero, or if
+        ``required_return <= -1`` (mathematically invalid for compound
+        de-annualization).
     """
     if len(returns) < 2:
         return np.nan
@@ -549,8 +540,7 @@ def omega_ratio(
 
     if denom > 0.0:
         return numer / denom
-    else:
-        return np.nan
+    return np.nan
 
 
 def information_ratio(
@@ -594,7 +584,10 @@ def information_ratio(
     std_excess_return = super_returns.std(ddof=1)
     with np.errstate(divide="ignore", invalid="ignore"):
         ir = (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
-    return ir
+    # Explicitly return NaN when tracking error is zero (avoids inf)
+    if hasattr(ir, "where"):
+        return ir.where(np.isfinite(ir), np.nan)
+    return np.nan if not np.isfinite(ir) else float(ir)
 
 
 def cal_treynor_ratio(
@@ -663,28 +656,26 @@ def cal_treynor_ratio(
     if returns_1d:
         if b == 0 or b < 0 or np.isnan(b):
             return np.nan
-        else:
-            with np.errstate(divide="ignore", invalid="ignore"):
-                out[()] = ann_excess_return / b
-            return float(out.item())
+        with np.errstate(divide="ignore", invalid="ignore"):
+            out[()] = ann_excess_return / b
+        return float(out.item())
+    if isinstance(b, (pd.Series, np.ndarray)):
+        mask = (b == 0) | (b < 0) | np.isnan(b)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            if isinstance(ann_excess_return, (pd.Series, pd.DataFrame)):
+                # Ensure the mask assignment below can write into the buffer.
+                out = (ann_excess_return / b).to_numpy(copy=True)
+            else:
+                out = ann_excess_return / b
+        out[mask] = np.nan
     else:
-        if isinstance(b, (pd.Series, np.ndarray)):
-            mask = (b == 0) | (b < 0) | np.isnan(b)
-            with np.errstate(divide="ignore", invalid="ignore"):
-                if isinstance(ann_excess_return, (pd.Series, pd.DataFrame)):
-                    # Ensure the mask assignment below can write into the buffer.
-                    out = (ann_excess_return / b).to_numpy(copy=True)
-                else:
-                    out = ann_excess_return / b
-            out[mask] = np.nan
-        else:
-            # When beta is a scalar but returns is multi-dimensional,
-            # divide each element of ann_excess_return by the scalar beta
-            with np.errstate(divide="ignore", invalid="ignore"):
-                out[:] = ann_excess_return / b
+        # When beta is a scalar but returns is multi-dimensional,
+        # divide each element of ann_excess_return by the scalar beta
+        with np.errstate(divide="ignore", invalid="ignore"):
+            out[:] = ann_excess_return / b
 
-        if allocated_output and isinstance(returns, pd.DataFrame):
-            out = pd.Series(out, index=returns.columns)
+    if allocated_output and isinstance(returns, pd.DataFrame):
+        out = pd.Series(out, index=returns.columns)
 
     return out
 
@@ -825,8 +816,10 @@ def sterling_ratio(
     Returns
     -------
     float
-        Sterling ratio of the strategy. Returns ``NaN`` when there is
-        effectively no drawdown risk.
+        Sterling ratio of the strategy. Returns ``np.inf`` when there is
+        no drawdown risk and excess return is positive; returns ``NaN``
+        when there is no drawdown risk and excess return is non-positive.
+        Downstream consumers should handle ``np.inf`` explicitly.
     """
     from fincore.metrics.drawdown import get_all_drawdowns
 
@@ -882,8 +875,10 @@ def burke_ratio(
     Returns
     -------
     float
-        Burke ratio of the strategy. Returns ``NaN`` when there is
-        effectively no drawdown risk.
+        Burke ratio of the strategy. Returns ``np.inf`` when there is
+        no drawdown risk and excess return is positive; returns ``NaN``
+        when there is no drawdown risk and excess return is non-positive.
+        Downstream consumers should handle ``np.inf`` explicitly.
     """
     from fincore.metrics.drawdown import get_all_drawdowns
 

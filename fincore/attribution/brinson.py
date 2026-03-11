@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-__all__ = ["brinson_attribution", "brinson_results", "brinson_cumulative", "BrinsonAttribution"]
+__all__ = ["BrinsonAttribution", "brinson_attribution", "brinson_cumulative", "brinson_results"]
 
 
 def brinson_attribution(
@@ -79,10 +79,7 @@ def brinson_attribution(
     benchmark_return = float(np.sum(wb * rb))
     active_return = portfolio_return - benchmark_return
 
-    # Brinson-Hood-Beebower (BHB) attribution:
-    # allocation   = (wp - wb) * rb
-    # selection    = wb * (rp - rb)
-    # interaction  = (wp - wb) * (rp - rb)
+    # BHB: allocation = (wp-wb)*rb, selection = wb*(rp-rb), interaction = (wp-wb)*(rp-rb)
     allocation_effect = float(np.sum((wp - wb) * rb))
     selection_effect = float(np.sum(wb * (rp - rb)))
     interaction_effect = float(np.sum((wp - wb) * (rp - rb)))
@@ -169,9 +166,7 @@ def brinson_results(
             }
         )
 
-    df = pd.DataFrame(results)
-
-    return df
+    return pd.DataFrame(results)
 
 
 def brinson_cumulative(
@@ -368,10 +363,7 @@ class BrinsonAttribution:
 
         for sector, assets in self.sector_mapping.items():
             sector_df = df[assets]
-            if agg == "sum":
-                sector_s = sector_df.sum(axis=1)
-            else:
-                sector_s = sector_df.mean(axis=1)
+            sector_s = sector_df.sum(axis=1) if agg == "sum" else sector_df.mean(axis=1)
             sector_series.append(sector_s)
             sector_names.append(sector)
 

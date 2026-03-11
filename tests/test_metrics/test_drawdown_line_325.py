@@ -36,7 +36,7 @@ class TestDrawdownLine325:
         # If underwater becomes empty after processing, line 325 is hit
         # Let's verify the result is valid
         if len(result) > 0:
-            peak, valley, recovery = result[0]
+            peak, valley, _recovery = result[0]
             assert peak is not None
             assert valley is not None
 

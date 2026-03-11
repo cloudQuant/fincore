@@ -21,7 +21,7 @@ class TestConfigureLegend:
         matplotlib.use("Agg", force=True)
         import matplotlib.pyplot as plt
 
-        fig, ax = plt.subplots()
+        _fig, ax = plt.subplots()
         ax.plot([0, 1], [0, 1], label="a")
         ax.plot([0, 1], [0, 2], label="b")
         ax.legend()
@@ -36,7 +36,7 @@ class TestConfigureLegend:
         matplotlib.use("Agg", force=True)
         import matplotlib.pyplot as plt
 
-        fig, ax = plt.subplots()
+        _fig, ax = plt.subplots()
         # Don't add a legend, so labels will be empty
         result = cu.configure_legend(ax, change_colors=False, autofmt_xdate=False)
         assert result is None
@@ -50,7 +50,7 @@ class TestConfigureLegend:
         from matplotlib.collections import PatchCollection
         from matplotlib.patches import Rectangle
 
-        fig, ax = plt.subplots()
+        _fig, ax = plt.subplots()
         ax.plot([0, 1], [0, 1], label="line")
 
         # Add a PatchCollection which may have different get_ydata behavior
@@ -70,7 +70,7 @@ class TestConfigureLegend:
         matplotlib.use("Agg", force=True)
         import matplotlib.pyplot as plt
 
-        fig, ax = plt.subplots()
+        _fig, ax = plt.subplots()
 
         ax.plot([0, 1], [0, 1], label="a")
         ax.legend()

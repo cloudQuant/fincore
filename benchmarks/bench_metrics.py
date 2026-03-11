@@ -86,8 +86,7 @@ def main():
     from pathlib import Path
 
     out = Path(__file__).parent / "results.json"
-    with open(out, "w") as f:
-        json.dump(results, f, indent=2)
+    out.write_text(json.dumps(results, indent=2))
     print(f"\nResults saved to {out}")
 
 

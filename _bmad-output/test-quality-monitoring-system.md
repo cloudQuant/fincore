@@ -75,43 +75,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install -e ".[dev]"
-      
+
       # 1. P0测试 (必须通过)
       - name: Run P0 tests
         run: pytest -m p0 -v --tb=short
         continue-on-error: false
-      
+
       # 2. 覆盖率检查
       - name: Coverage check
         run: |
           pytest tests/ --cov=fincore --cov-fail-under=75 \
             --cov-report=xml --cov-report=html
-      
+
       # 3. 上传覆盖率报告
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
-      
+
       # 4. 性能基准
       - name: Performance benchmarks
         run: |
           pytest tests/benchmarks/test_p0_metrics_performance.py \
             --benchmark-only --benchmark-autosave
-      
+
       # 5. 边缘情况测试
       - name: Edge case tests
         run: pytest tests/test_edge_cases.py -v
-      
+
       # 6. 集成测试
       - name: Integration tests
         run: pytest tests/integration/ -v
@@ -123,7 +123,7 @@ jobs:
     steps:
       - name: Run full test suite
         run: pytest tests/ -v --cov=fincore --cov-report=html
-      
+
       - name: Generate report
         run: |
           echo "## Test Quality Report" >> $GITHUB_STEP_SUMMARY
@@ -279,6 +279,6 @@ if test_failed:
 
 ---
 
-**创建日期**: 2026-03-09  
-**维护者**: 开发团队  
+**创建日期**: 2026-03-09
+**维护者**: 开发团队
 **更新频率**: 每月

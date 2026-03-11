@@ -63,21 +63,21 @@ def test_bayesian_models_run_with_stubbed_pymc(monkeypatch):
     data = pd.Series([0.01, -0.02, 0.0, 0.01, -0.01], index=idx)
     bmark = pd.Series([0.0, 0.01, -0.01, 0.02], index=idx[1:])  # misaligned to cover .align()
 
-    model, trace = b.model_returns_t_alpha_beta(data, bmark, samples=3, progressbar=False)
+    _model, trace = b.model_returns_t_alpha_beta(data, bmark, samples=3, progressbar=False)
     assert trace["draws"] == 3
 
-    model, trace = b.model_returns_normal(data, samples=2, progressbar=False)
+    _model, trace = b.model_returns_normal(data, samples=2, progressbar=False)
     assert trace["draws"] == 2
 
-    model, trace = b.model_returns_t(data, samples=2, progressbar=False)
+    _model, trace = b.model_returns_t(data, samples=2, progressbar=False)
     assert trace["draws"] == 2
 
     y1 = np.array([0.01, np.nan, 0.02, -0.01])
     y2 = np.array([0.00, 0.01, np.nan, 0.02])
-    model, trace = b.model_best(y1, y2, samples=4, progressbar=False)
+    _model, trace = b.model_best(y1, y2, samples=4, progressbar=False)
     assert trace["draws"] == 4
 
-    model, trace = b.model_stoch_vol(data, samples=5, progressbar=False)
+    _model, trace = b.model_stoch_vol(data, samples=5, progressbar=False)
     assert trace["draws"] == 5
 
     # Sanity check: stub got used.

@@ -185,7 +185,7 @@ def test_brinson_attribution_apply_sector_mapping_rejects_bad_agg():
     returns = pd.DataFrame({"A": [0.01, 0.02]}, index=idx)
     ba = BrinsonAttribution(sector_mapping={"S1": ["A"]})
     with pytest.raises(ValueError, match="agg must be"):
-        ba._apply_sector_mapping(returns, agg="nope")  # noqa: SLF001
+        ba._apply_sector_mapping(returns, agg="nope")
 
 
 def test_brinson_attribution_repr_includes_sector_count():

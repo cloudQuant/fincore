@@ -1,10 +1,12 @@
-import os
 import unittest
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+
+_TEST_DATA = Path(__file__).resolve().parent.parent / "test_data"
 
 
 class PerfAttribTestCase(unittest.TestCase):
@@ -154,17 +156,14 @@ class PerfAttribTestCase(unittest.TestCase):
         self.assertTrue(expected_exposures_portfolio.equals(exposures_portfolio))
 
     def test_perf_attrib_regression(self):
-        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        positions = pd.read_csv(os.path.join(current_dir, "test_data", "positions.csv"), index_col=0, parse_dates=True)
+        positions = pd.read_csv(_TEST_DATA / "positions.csv", index_col=0, parse_dates=True)
 
         positions.columns = [int(col) if col != "cash" else col for col in positions.columns]
 
         positions = positions.divide(positions.sum(axis="columns"), axis="rows")
         positions = positions.drop("cash", axis="columns").stack()
 
-        returns = pd.read_csv(
-            os.path.join(current_dir, "test_data", "returns.csv"), index_col=0, parse_dates=True, header=None
-        )
+        returns = pd.read_csv(_TEST_DATA / "returns.csv", index_col=0, parse_dates=True, header=None)
         if returns.shape[1] == 1:
             returns = returns.iloc[:, 0]
 
@@ -172,24 +171,18 @@ class PerfAttribTestCase(unittest.TestCase):
         read_csv_kwargs = {"index_col": [0, 1], "parse_dates": True}
         try:
             # Try with date_format for newer pandas
-            factor_loadings = pd.read_csv(
-                os.path.join(current_dir, "test_data", "factor_loadings.csv"), date_format="ISO8601", **read_csv_kwargs
-            )
+            factor_loadings = pd.read_csv(_TEST_DATA / "factor_loadings.csv", date_format="ISO8601", **read_csv_kwargs)
         except TypeError:
             # Fall back without date_format for older pandas
-            factor_loadings = pd.read_csv(
-                os.path.join(current_dir, "test_data", "factor_loadings.csv"), **read_csv_kwargs
-            )
+            factor_loadings = pd.read_csv(_TEST_DATA / "factor_loadings.csv", **read_csv_kwargs)
 
-        factor_returns = pd.read_csv(
-            os.path.join(current_dir, "test_data", "factor_returns.csv"), index_col=0, parse_dates=True
-        )
+        factor_returns = pd.read_csv(_TEST_DATA / "factor_returns.csv", index_col=0, parse_dates=True)
 
-        residuals = pd.read_csv(os.path.join(current_dir, "test_data", "residuals.csv"), index_col=0, parse_dates=True)
+        residuals = pd.read_csv(_TEST_DATA / "residuals.csv", index_col=0, parse_dates=True)
 
         residuals.columns = [int(col) for col in residuals.columns]
 
-        intercepts = pd.read_csv(os.path.join(current_dir, "test_data", "intercepts.csv"), index_col=0, header=None)
+        intercepts = pd.read_csv(_TEST_DATA / "intercepts.csv", index_col=0, header=None)
         if intercepts.shape[1] == 1:
             intercepts = intercepts.iloc[:, 0]
 

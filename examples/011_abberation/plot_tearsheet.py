@@ -15,8 +15,8 @@ Outputs:
 """
 
 import json
-import os
 import warnings
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -32,21 +32,18 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # ============================================================================
 # 1. Locate log directory
 # ============================================================================
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-LOGS_DIR = os.path.join(SCRIPT_DIR, "logs")
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+SCRIPT_DIR = Path(__file__).resolve().parent
+LOGS_DIR = SCRIPT_DIR / "logs"
+OUTPUT_DIR = SCRIPT_DIR / "output"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-run_dirs = sorted(
-    [d for d in os.listdir(LOGS_DIR) if os.path.isdir(os.path.join(LOGS_DIR, d))],
-)
+run_dirs = sorted([d.name for d in LOGS_DIR.iterdir() if d.is_dir()])
 if not run_dirs:
     raise FileNotFoundError(f"No run directories found in {LOGS_DIR}")
-RUN_DIR = os.path.join(LOGS_DIR, run_dirs[-1])
+RUN_DIR = LOGS_DIR / run_dirs[-1]
 print(f"Analyzing run directory: {RUN_DIR}")
 
-with open(os.path.join(RUN_DIR, "run_info.json")) as f:
-    run_info = json.load(f)
+run_info = json.loads((RUN_DIR / "run_info.json").read_text())
 print(f"Strategy: {run_info['strategy_name']}")
 
 # ============================================================================
@@ -54,7 +51,7 @@ print(f"Strategy: {run_info['strategy_name']}")
 # ============================================================================
 print("\n[1/3] Loading value.log ...")
 value_df = pd.read_csv(
-    os.path.join(RUN_DIR, "value.log"),
+    RUN_DIR / "value.log",
     sep="\t",
     usecols=["dt", "value", "cash"],
 )
@@ -83,7 +80,7 @@ print(f"  Trading days: {len(daily_returns)}")
 # ============================================================================
 print("[2/3] Loading position.log -> building positions DataFrame ...")
 pos_df = pd.read_csv(
-    os.path.join(RUN_DIR, "position.log"),
+    RUN_DIR / "position.log",
     sep="\t",
     usecols=["dt", "data_name", "size", "price"],
 )
@@ -125,7 +122,7 @@ print(f"  Position rows: {len(positions)}")
 # ============================================================================
 print("[3/3] Loading order.log -> building transactions DataFrame ...")
 order_df = pd.read_csv(
-    os.path.join(RUN_DIR, "order.log"),
+    RUN_DIR / "order.log",
     sep="\t",
 )
 
@@ -246,7 +243,7 @@ if hasattr(_ttxn, "print_table"):
     _ttxn.print_table = _original_print_table
 
 # Collect all figures and save to a multi-page PDF.
-pdf_path = os.path.join(OUTPUT_DIR, "tearsheet_full.pdf")
+pdf_path = OUTPUT_DIR / "tearsheet_full.pdf"
 all_figs = [plt.figure(n) for n in plt.get_fignums()]
 
 with PdfPages(pdf_path) as pdf:

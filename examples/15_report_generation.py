@@ -16,8 +16,9 @@
 
 import numpy as np
 import pandas as pd
-from fincore.report import create_strategy_report
+
 from fincore import simple_returns
+from fincore.report import create_strategy_report
 
 print("=" * 70)
 print("策略报告生成示例")
@@ -30,39 +31,31 @@ print("\n数据准备...")
 
 # 生成模拟策略数据
 np.random.seed(42)
-dates = pd.date_range("2023-01-01", periods=252*2, freq="B", tz="UTC")
+dates = pd.date_range("2023-01-01", periods=252 * 2, freq="B", tz="UTC")
 
 # 策略收益
-strategy_returns = pd.Series(
-    np.random.normal(0.0008, 0.015, len(dates)),
-    index=dates,
-    name="strategy"
-)
+strategy_returns = pd.Series(np.random.normal(0.0008, 0.015, len(dates)), index=dates, name="strategy")
 
 # 基准收益
-benchmark_returns = pd.Series(
-    np.random.normal(0.0005, 0.012, len(dates)),
-    index=dates,
-    name="benchmark"
-)
+benchmark_returns = pd.Series(np.random.normal(0.0005, 0.012, len(dates)), index=dates, name="benchmark")
 
 # 持仓数据 (简化版)
 positions = pd.DataFrame(
-    np.random.uniform(-100000, 100000, (len(dates), 5)),
-    index=dates,
-    columns=['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']
+    np.random.uniform(-100000, 100000, (len(dates), 5)), index=dates, columns=["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 )
 
 # 交易数据 (简化版)
 transactions_data = []
 for i in range(100):
     txn_date = np.random.choice(dates)
-    transactions_data.append({
-        'date': txn_date,
-        'symbol': np.random.choice(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']),
-        'amount': np.random.randint(-100, 100),
-        'price': np.random.uniform(100, 200)
-    })
+    transactions_data.append(
+        {
+            "date": txn_date,
+            "symbol": np.random.choice(["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]),
+            "amount": np.random.randint(-100, 100),
+            "price": np.random.uniform(100, 200),
+        }
+    )
 transactions = pd.DataFrame(transactions_data)
 
 print(f"  策略收益: {len(strategy_returns)} 个交易日")
@@ -77,11 +70,7 @@ print("\n" + "=" * 70)
 print("1. 生成基础报告 (仅策略收益)")
 print("=" * 70)
 
-create_strategy_report(
-    strategy_returns,
-    title="我的量化策略 - 基础报告",
-    output="report_basic.html"
-)
+create_strategy_report(strategy_returns, title="我的量化策略 - 基础报告", output="report_basic.html")
 print("\n基础报告已保存: report_basic.html")
 print("  包含内容:")
 print("    - 累计收益曲线")
@@ -97,10 +86,7 @@ print("2. 生成标准报告 (策略收益 + 基准)")
 print("=" * 70)
 
 create_strategy_report(
-    strategy_returns,
-    benchmark_rets=benchmark_returns,
-    title="我的量化策略 - 标准报告",
-    output="report_standard.html"
+    strategy_returns, benchmark_rets=benchmark_returns, title="我的量化策略 - 标准报告", output="report_standard.html"
 )
 print("\n标准报告已保存: report_standard.html")
 print("  包含内容:")
@@ -123,7 +109,7 @@ create_strategy_report(
     positions=positions,
     transactions=transactions,
     title="我的量化策略 - 完整报告",
-    output="report_full.html"
+    output="report_full.html",
 )
 print("\n完整报告已保存: report_full.html")
 print("  包含内容:")
@@ -147,7 +133,7 @@ create_strategy_report(
     title="我的量化策略 - 自定义样式",
     output="report_custom.html",
     # 自定义样式参数
-    theme='dark'  # 使用深色主题 (如果支持)
+    theme="dark",  # 使用深色主题 (如果支持)
 )
 print("\n自定义样式报告已保存: report_custom.html")
 
@@ -192,13 +178,10 @@ print("=" * 70)
 
 try:
     create_strategy_report(
-        strategy_returns,
-        benchmark_rets=benchmark_returns,
-        title="我的量化策略 - PDF报告",
-        output="report.pdf"
+        strategy_returns, benchmark_rets=benchmark_returns, title="我的量化策略 - PDF报告", output="report.pdf"
     )
     print("\nPDF 报告已保存: report.pdf")
-except Exception as e:
+except (ImportError, OSError, ValueError, RuntimeError) as e:
     print(f"\nPDF 生成失败: {e}")
     print("  注意: PDF 生成需要安装额外的依赖 (playwright)")
 

@@ -70,7 +70,7 @@ class TestPlotDailyVolume:
         """Test plot_daily_volume without providing ax."""
         from fincore.tearsheets.transactions import plot_daily_volume
 
-        returns, positions, transactions = sample_data
+        returns, _positions, transactions = sample_data
         ax = plot_daily_volume(empyrical_instance, returns, transactions)
 
         assert ax is not None
@@ -83,8 +83,8 @@ class TestPlotDailyVolume:
 
         from fincore.tearsheets.transactions import plot_daily_volume
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        returns, _positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_daily_volume(empyrical_instance, returns, transactions, ax=custom_ax)
 
@@ -99,7 +99,7 @@ class TestPlotDailyTurnoverHist:
         """Test plot_daily_turnover_hist without providing ax."""
         from fincore.tearsheets.transactions import plot_daily_turnover_hist
 
-        returns, positions, transactions = sample_data
+        _returns, positions, transactions = sample_data
         ax = plot_daily_turnover_hist(empyrical_instance, transactions, positions)
 
         assert ax is not None
@@ -111,8 +111,8 @@ class TestPlotDailyTurnoverHist:
 
         from fincore.tearsheets.transactions import plot_daily_turnover_hist
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _returns, positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_daily_turnover_hist(empyrical_instance, transactions, positions, ax=custom_ax)
 

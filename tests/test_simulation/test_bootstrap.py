@@ -84,6 +84,15 @@ class TestBootstrap:
         with pytest.raises(ValueError, match="not implemented"):
             bootstrap_ci(sample_returns, n_samples=100, method="bc", seed=42)
 
+    def test_bootstrap_ci_invalid_alpha_raises(self, sample_returns):
+        """Edge case: alpha outside (0, 1) raises ValueError (industry best practice)."""
+        with pytest.raises(ValueError, match="alpha must be in"):
+            bootstrap_ci(sample_returns, n_samples=100, alpha=0)
+        with pytest.raises(ValueError, match="alpha must be in"):
+            bootstrap_ci(sample_returns, n_samples=100, alpha=1)
+        with pytest.raises(ValueError, match="alpha must be in"):
+            bootstrap_ci(sample_returns, n_samples=100, alpha=1.5)
+
     def test_bootstrap_ci_different_alpha(self, sample_returns):
         """Test CI with different alpha levels."""
         ci_90 = bootstrap_ci(sample_returns, n_samples=5000, alpha=0.10, seed=42)

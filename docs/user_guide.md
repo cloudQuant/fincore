@@ -80,4 +80,3 @@ Notes:
 
 - PDF rendering requires the optional PDF toolchain used by `fincore.report.render_pdf`.
 - If you only have returns, the report will only include the returns-focused sections.
-

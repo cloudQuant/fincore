@@ -150,4 +150,3 @@
 | 优化 4 | `m_squared` 未使用导入 | `fincore/metrics/ratios.py` | 移除 `from fincore.metrics.returns import cum_returns_final` | ✅ 已修复 |
 | Bug 4 | `perf_stats` Calmar 内联不一致 | `fincore/metrics/perf_stats.py` | 替换内联计算为 `calmar_ratio(returns, period=period)` | ✅ 已修复 |
 | 性能1 | `get_top_drawdowns` 串行扫描 | `fincore/metrics/drawdown.py` | 尝试单遍扫描优化但回退：测试依赖旧算法在无回撤时返回退化结果的行为 | ⏭️ 跳过 |
-

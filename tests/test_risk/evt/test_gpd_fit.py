@@ -6,6 +6,8 @@ Split from test_evt_full_coverage.py for maintainability.
 
 from __future__ import annotations
 
+import contextlib
+
 import numpy as np
 import pytest
 
@@ -123,11 +125,11 @@ class TestGPDFitEdgeCases:
         # The function should still run (beta gets abs() applied after)
         # But we need to handle the case where optimizer returns negative beta
         # Let's patch to test the branch directly
-        with patch.object(evt_module.optimize, "minimize", return_value=MockResult()):
+        with (
+            patch.object(evt_module.optimize, "minimize", return_value=MockResult()),
+            contextlib.suppress(Exception),
+        ):
             # This may raise due to negative beta being processed
-            try:
-                params = gpd_fit(returns, method="mle")
-                # If it succeeds, beta should be positive due to abs()
-                assert params["beta"] >= 0
-            except Exception:
-                pass  # Expected if validation fails
+            params = gpd_fit(returns, method="mle")
+            # If it succeeds, beta should be positive due to abs()
+            assert params["beta"] >= 0

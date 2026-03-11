@@ -1,32 +1,40 @@
+"""Quantitative finance risk and performance analytics library.
+
+Lazy-loading facade: Empyrical, Pyfolio, analyze(), create_strategy_report(),
+and flat API functions (sharpe_ratio, max_drawdown, etc.) load on first access.
+"""
+
+from __future__ import annotations
+
 __version__ = "1.0.0"
 
 __all__ = [
     # Core classes
     "Empyrical",
     "Pyfolio",
+    "aggregate_returns",
+    "alpha",
+    "alpha_beta",
     "analyze",
-    "create_strategy_report",
-    # Commonly-used metric functions (flat API)
-    "sharpe_ratio",
-    "sortino_ratio",
-    "max_drawdown",
     "annual_return",
     "annual_volatility",
+    "beta",
+    "calmar_ratio",
+    "capture",
+    "create_strategy_report",
     "cum_returns",
     "cum_returns_final",
-    "alpha",
-    "beta",
-    "alpha_beta",
-    "calmar_ratio",
-    "omega_ratio",
+    "downside_risk",
     "information_ratio",
+    "max_drawdown",
+    "omega_ratio",
+    # Commonly-used metric functions (flat API)
+    "sharpe_ratio",
+    "simple_returns",
+    "sortino_ratio",
     "stability_of_timeseries",
     "tail_ratio",
     "value_at_risk",
-    "capture",
-    "downside_risk",
-    "simple_returns",
-    "aggregate_returns",
 ]
 
 # ---------------------------------------------------------------------------

@@ -5,7 +5,7 @@ Contains shared utilities for plotting context and axes styles.
 
 import seaborn as sns
 
-__all__ = ["plotting_context", "axes_style"]
+__all__ = ["axes_style", "plotting_context"]
 
 
 def plotting_context(context="notebook", font_scale=1.5, rc=None):

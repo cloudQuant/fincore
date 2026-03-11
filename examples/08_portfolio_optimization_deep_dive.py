@@ -13,11 +13,13 @@
 - 风险预算管理
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
+from fincore import annual_volatility, max_drawdown, sharpe_ratio
 from fincore.optimization import efficient_frontier, risk_parity
-from fincore import sharpe_ratio, max_drawdown, annual_volatility
 
 print("=" * 70)
 print("组合优化深度示例")
@@ -25,11 +27,11 @@ print("=" * 70)
 
 # 生成多资产收益数据
 np.random.seed(42)
-dates = pd.date_range("2020-01-01", periods=252*3, freq="B", tz="UTC")
+dates = pd.date_range("2020-01-01", periods=252 * 3, freq="B", tz="UTC")
 n_assets = 5
 
 # 模拟5个资产的收益，具有一定的相关性
-assets = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']
+assets = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
 
 # 生成相关收益
 mean_returns = np.array([0.0008, 0.0006, 0.0005, 0.0007, 0.0012])
@@ -38,13 +40,13 @@ returns = pd.DataFrame(
     np.random.multivariate_normal(
         mean_returns,
         np.diag([0.015, 0.012, 0.018, 0.020, 0.025]),  # 对角协方差矩阵
-        len(dates)
+        len(dates),
     ),
     index=dates,
-    columns=assets
+    columns=assets,
 )
 
-print(f"\n数据概览:")
+print("\n数据概览:")
 print(f"  资产数量: {n_assets}")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  观测值数: {len(returns)}")
@@ -78,19 +80,19 @@ try:
     print("-" * 70)
 
     # 选择5个代表性的点
-    indices = np.linspace(0, len(frontier)-1, 5, dtype=int)
+    indices = np.linspace(0, len(frontier) - 1, 5, dtype=int)
     for i, idx in enumerate(indices):
         portfolio = frontier[idx]
-        print(f"\n  组合 {i+1}:")
+        print(f"\n  组合 {i + 1}:")
         print(f"    预期收益:  {portfolio['expected_return']:.4f}")
         print(f"    预期波动:  {portfolio['volatility']:.4f}")
         print(f"    夏普比率:  {portfolio.get('sharpe', 'N/A')}")
-        print(f"    权重分配:")
-        for asset, weight in zip(assets, portfolio['weights']):
+        print("    权重分配:")
+        for asset, weight in zip(assets, portfolio["weights"], strict=True):
             if weight > 0.01:  # 只显示权重大于1%的资产
                 print(f"      {asset}: {weight:.2%}")
 
-except Exception as e:
+except (ImportError, ValueError, RuntimeError, np.linalg.LinAlgError) as e:
     print(f"\n有效前沿计算失败: {e}")
     print("注意: 需要 scipy 来运行组合优化")
 
@@ -106,7 +108,7 @@ try:
 
     print("\n风险平价权重:")
     print("-" * 30)
-    for asset, weight in zip(assets, rp_weights):
+    for asset, weight in zip(assets, rp_weights, strict=True):
         print(f"  {asset:<10} {weight:>10.2%}")
 
     # 计算风险平价组合的收益
@@ -116,14 +118,14 @@ try:
     rp_ret = portfolio_returns.mean() * 252
     rp_dd = max_drawdown(portfolio_returns)
 
-    print(f"\n风险平价组合绩效:")
+    print("\n风险平价组合绩效:")
     print("-" * 30)
     print(f"  年化收益:     {rp_ret:.4f}")
     print(f"  年化波动率:   {rp_vol:.4f}")
     print(f"  夏普比率:     {rp_sharpe:.4f}")
     print(f"  最大回撤:     {rp_dd:.4f}")
 
-except Exception as e:
+except (ImportError, ValueError, RuntimeError, np.linalg.LinAlgError) as e:
     print(f"\n风险平价计算失败: {e}")
 
 # ============================================================
@@ -176,16 +178,13 @@ print("组合策略对比汇总")
 print("=" * 70)
 
 comparison = []
-if 'rp_sharpe' in locals():
+if "rp_sharpe" in locals():
     comparison.append(("风险平价", rp_ret, rp_vol, rp_sharpe, rp_dd))
 comparison.append(("等权重", ew_ret, ew_vol, ew_sharpe, ew_dd))
 comparison.append(("60/40 股债", sb_ret, sb_vol, sb_sharpe, sb_dd))
 
 if comparison:
-    comparison_df = pd.DataFrame(
-        comparison,
-        columns=['策略', '年化收益', '年化波动率', '夏普比率', '最大回撤']
-    )
+    comparison_df = pd.DataFrame(comparison, columns=["策略", "年化收益", "年化波动率", "夏普比率", "最大回撤"])
     print("\n" + comparison_df.to_string(index=False))
 
 # ============================================================
@@ -199,25 +198,23 @@ try:
     # 资产收益散点图
     ax = axes[0]
     for asset in assets:
-        ax.scatter(annual_volatility(returns[asset]),
-                  returns[asset].mean() * 252,
-                  label=asset, s=100, alpha=0.7)
-    ax.set_xlabel('年化波动率')
-    ax.set_ylabel('年化收益率')
-    ax.set_title('风险-收益散点图')
+        ax.scatter(annual_volatility(returns[asset]), returns[asset].mean() * 252, label=asset, s=100, alpha=0.7)
+    ax.set_xlabel("年化波动率")
+    ax.set_ylabel("年化收益率")
+    ax.set_title("风险-收益散点图")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 资产收益热力图
     ax = axes[1]
     corr = returns.corr()
-    im = ax.imshow(corr, cmap='RdYlGn', aspect='auto', vmin=-1, vmax=1)
+    im = ax.imshow(corr, cmap="RdYlGn", aspect="auto", vmin=-1, vmax=1)
     ax.set_xticks(range(len(assets)))
     ax.set_yticks(range(len(assets)))
     ax.set_xticklabels(assets, rotation=45)
     ax.set_yticklabels(assets)
-    ax.set_title('资产收益相关性')
-    plt.colorbar(im, ax=ax, label='相关系数')
+    ax.set_title("资产收益相关性")
+    plt.colorbar(im, ax=ax, label="相关系数")
     ax.grid(False)
 
     plt.tight_layout()

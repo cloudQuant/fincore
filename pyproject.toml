@@ -26,8 +26,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy>=1.17.0",
-    "pandas>=0.25.0",
+    "numpy>=1.24.0",
+    "pandas>=1.5.0",
     "scipy>=1.3.0",
     "pytz>=2023.3",
     "packaging>=21.0",
@@ -50,7 +50,7 @@ dev = [
     "pytest-cov>=2.10",
     "pytest-benchmark>=3.2",
     "pytest-sugar>=0.9",
-    "parameterized",
+    "parameterized>=0.7",
     "ruff>=0.4.0",
     "mypy>=1.5",
     "types-requests>=2.25",
@@ -64,6 +64,8 @@ dev = [
     "plotly>=5.0",
     "playwright>=1.40",
     "openpyxl>=3.0",
+    "pre-commit>=3.0",
+    "bandit[toml]>=1.7",
 ]
 all = ["fincore[viz,bayesian,datareader]"]
 
@@ -86,6 +88,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "serial: marks tests that must run without -n (flaky under pytest-xdist)",
     "p0: marks tests as critical priority (core metrics, revenue-critical, security, compliance)",
     "p1: marks tests as high priority (frequently used features, important edge cases)",
     "p2: marks tests as medium priority (secondary features, admin functions)",
@@ -159,22 +162,34 @@ target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
-	ignore = [
-	    "E402",   # module-level import not at top of file (intentional in this codebase)
-	    "E501",   # line too long (handled by ruff format)
-	    "F401",   # unused import (many are dynamically accessed via __getattr__ / registry)
-	    "UP007",  # use X | Y for union types
-	    "UP031",  # use format specifiers instead of percent format
-	    "UP035",  # import from typing (kept for clarity)
-	    "B007",   # unused loop variable
-	    "B023",   # function definition does not bind loop variable
-	    "B028",   # no explicit stacklevel keyword argument
-	    "B904",   # raise without from inside except
-	    "SIM102", # collapsible if
-	    "SIM105", # use contextlib.suppress
-	    "SIM108", # use ternary operator
-	    "SIM113", # use enumerate for index variable
-    "SIM118", # use key in dict instead of key in dict.keys()
-    "SIM201", # use != instead of not ==
+select = ["E", "F", "I", "UP", "B", "BLE", "SIM", "PIE790", "C4", "PTH", "PERF", "RUF", "ERA", "D100", "D104", "S110", "S113", "RET", "TCH", "LOG", "G", "PGH"]
+ignore = [
+    "C408",   # dict() literal (plotly API prefers dict(); defer to avoid large refactor)
+    "E402",   # module-level import not at top of file (intentional in this codebase)
+    "E501",   # line too long (handled by ruff format)
+    "F401",   # unused import (many are dynamically accessed via __getattr__ / registry)
+    "UP007",  # use X | Y for union types
+    "UP031",  # use format specifiers instead of percent format
+    "UP035",  # import from typing (kept for clarity)
+    "B007",   # unused loop variable
+    "B023",   # function definition does not bind loop variable
+    "B028",   # no explicit stacklevel keyword argument
+    "SIM113", # use enumerate for index variable
+    "RUF001", # ambiguous unicode in strings (Chinese examples use fullwidth punctuation intentionally)
+    "RUF002", # ambiguous unicode in docstrings (Chinese + math notation)
+    "RUF003", # ambiguous unicode in comments (Chinese)
+    "RUF012", # mutable class attrs (test fixtures)
+    "RUF043", # pytest match= raw string (many test files)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Examples/tests often have commented config snippets and doc blocks
+"examples/**" = ["ERA001"]
+"tests/**" = ["ERA001", "D100", "D104"]
+"benchmarks/**" = ["ERA001"]
+"scripts/**" = ["D100", "BLE001"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "scripts", "benchmarks"]
+exclude = ["*/test_*.py", "*/tests/*"]
+skips = ["B101"]  # assert_used: intentional for type narrowing in fincore

@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-__all__ = ["stress_test", "generate_correlation_breakdown", "scenario_table"]
+__all__ = ["generate_correlation_breakdown", "scenario_table", "stress_test"]
 
 
 def stress_test(

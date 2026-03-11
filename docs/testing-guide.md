@@ -49,13 +49,13 @@ tests/
 ```python
 class TestSharpeRatio:
     """Sharpe ratio测试"""
-    
+
     @pytest.mark.p0
     def test_normal_case(self, returns):
         """正常情况"""
         result = sharpe_ratio(returns)
         assert np.isfinite(result)
-    
+
     @pytest.mark.p1
     def test_edge_case(self, empty_returns):
         """边缘情况"""

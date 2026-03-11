@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Simple import test."""
 
-import sys
 import subprocess
+import sys
+from pathlib import Path
 
 # Add tests to path
-sys.path.insert(0, "/Users/yunjinqi/Documents/source_code/fincore/tests")
+sys.path.insert(0, str(Path(__file__).parent.parent / "tests"))
 
 # Test import
 print("Testing import from fincore.metrics.ratios...")

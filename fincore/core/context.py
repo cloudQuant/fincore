@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from functools import cached_property
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -325,8 +326,7 @@ class AnalysisContext:
         builder.add_stats_table(self.perf_stats())
         html = builder.build()
         if path is not None:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(html)
+            Path(path).write_text(html, encoding="utf-8")
         return html
 
     # ------------------------------------------------------------------
@@ -337,11 +337,12 @@ class AnalysisContext:
         """Clear all cached metric values."""
         cls = type(self)
         for attr in list(self.__dict__):
-            if attr.startswith("_") and not attr.startswith("__"):
-                # preserve the constructor-set private attrs
-                if attr in ("_returns", "_factor_returns", "_positions", "_transactions", "_period"):
-                    continue
-            # remove cached_property entries
+            if (
+                attr.startswith("_")
+                and not attr.startswith("__")
+                and attr in ("_returns", "_factor_returns", "_positions", "_transactions", "_period")
+            ):
+                continue
             if isinstance(getattr(cls, attr, None), cached_property):
                 del self.__dict__[attr]
 

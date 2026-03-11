@@ -3,26 +3,38 @@
 Includes capacity sweep and cone plots.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import matplotlib.pyplot as plt
 from matplotlib import figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
-from fincore.constants import MM_DISPLAY_UNIT
+from fincore.constants import (
+    CAPACITY_SWEEP_MAX_PV,
+    CAPACITY_SWEEP_MIN_PV,
+    CAPACITY_SWEEP_STEP,
+    MM_DISPLAY_UNIT,
+)
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __all__ = ["plot_capacity_sweep", "plot_cones"]
 
 
 def plot_capacity_sweep(
-    empyrical_instance,
-    returns,
-    transactions,
-    market_data,
-    bt_starting_capital,
-    min_pv=100000,
-    max_pv=300000000,
-    step_size=1000000,
-    ax=None,
-):
+    empyrical_instance: Any,
+    returns: pd.Series,
+    transactions: pd.DataFrame,
+    market_data: Any,
+    bt_starting_capital: float,
+    min_pv: int = CAPACITY_SWEEP_MIN_PV,
+    max_pv: int = CAPACITY_SWEEP_MAX_PV,
+    step_size: int = CAPACITY_SWEEP_STEP,
+    ax: Any = None,
+) -> Any:
     """
     Plots capacity sweep showing Sharpe ratio vs. capital base.
 
@@ -78,16 +90,16 @@ def plot_capacity_sweep(
 
 
 def plot_cones(
-    empyrical_instance,
-    name,
-    bounds,
-    oos_returns,
-    _num_samples=1000,
-    ax=None,
-    cone_std=(1.0, 1.5, 2.0),
-    _random_seed=None,
-    num_strikes=3,
-):
+    empyrical_instance: Any,
+    name: str,
+    bounds: Any,
+    oos_returns: pd.Series,
+    _num_samples: int = 1000,
+    ax: Any = None,
+    cone_std: tuple[float, ...] = (1.0, 1.5, 2.0),
+    _random_seed: int | None = None,
+    num_strikes: int = 3,
+) -> Any:
     """
     Plots the upper and lower bounds of an n standard deviation
     cone of forecasted cumulative returns. Redraws a new cone when
@@ -163,5 +175,4 @@ def plot_cones(
 
     if ax is None:
         return fig
-    else:
-        return axes
+    return axes

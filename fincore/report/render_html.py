@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 
@@ -27,20 +28,16 @@ from fincore.report.format import (
 __all__ = ["generate_html"]
 
 
-def generate_html(
-    returns,
-    benchmark_rets,
-    positions,
-    transactions,
-    trades,
-    title,
-    output,
-    rolling_window,
-):
-    """Generate an interactive HTML report (ECharts + sidebar navigation)."""
-    s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
+def _histogram_data(values, bins, decimals=2):
+    """Compute histogram bin centers and counts."""
+    h, edges = np.histogram(values, bins=bins)
+    centers = [round(float((edges[i] + edges[i + 1]) / 2), decimals) for i in range(len(h))]
+    counts = [int(v) for v in h]
+    return centers, counts
 
-    # ---- chart data ----
+
+def _prepare_chart_data_core(s):
+    """Prepare core chart data (returns, rolling, heatmap, histogram)."""
     cd = {}
     dates = date_list(s["cum_returns"].index)
     cd["dates"] = dates
@@ -75,73 +72,20 @@ def generate_html(
     cd["yrRets"] = [round(float(v) * 100, 2) for v in ys["Annual Return"].values]
 
     ret_vals = s["returns"].values
-    hist, edges = np.histogram(ret_vals * 100, bins=min(60, max(10, len(ret_vals) // 5)))
-    cd["histBins"] = [round(float((edges[i] + edges[i + 1]) / 2), 3) for i in range(len(hist))]
-    cd["histCnts"] = [int(v) for v in hist]
+    cd["histBins"], cd["histCnts"] = _histogram_data(
+        ret_vals * 100, bins=min(60, max(10, len(ret_vals) // 5)), decimals=3
+    )
 
-    if "has_positions" in s:
-        cd["posDates"] = date_list(s["pos_long"].index)
-        cd["posLong"] = safe_list(s["pos_long"], decimals=2)
-        cd["posShort"] = safe_list(s["pos_short"], decimals=2)
-        gl = s["gross_leverage"].dropna()
-        cd["glDates"], cd["glVals"] = date_list(gl.index), safe_list(gl, decimals=4)
-
-    if "has_transactions" in s:
-        dv = s["daily_txn_value"]
-        cd["txnDates"], cd["txnVol"] = date_list(dv.index), safe_list(dv, decimals=2)
-        dc = s["daily_txn_count"]
-        cd["txnCntDates"], cd["txnCnts"] = date_list(dc.index), [int(v) for v in dc.values]
-        if "turnover" in s:
-            to = s["turnover"].dropna()
-            cd["toDates"], cd["toVals"] = date_list(to.index), safe_list(to, decimals=4)
-        if "txn_hours" in s:
-            hours = s["txn_hours"]
-            hh, he = np.histogram(hours, bins=range(25))
-            cd["txnHrLabels"] = [f"{int(he[i]):02d}" for i in range(len(hh))]
-            cd["txnHrCnts"] = [int(v) for v in hh]
-
-    if "trade_pnl" in s:
-        pnl = s["trade_pnl"]
-        ph, pe = np.histogram(pnl, bins=max(10, min(40, len(pnl) // 3)))
-        cd["pnlBins"] = [round(float((pe[i] + pe[i + 1]) / 2), 2) for i in range(len(ph))]
-        cd["pnlCnts"] = [int(v) for v in ph]
-        if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
-            pl = s["trade_pnl_long"]
-            plh, ple = np.histogram(pl, bins=max(5, min(30, len(pl) // 3)))
-            cd["pnlLBins"] = [round(float((ple[i] + ple[i + 1]) / 2), 2) for i in range(len(plh))]
-            cd["pnlLCnts"] = [int(v) for v in plh]
-        if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
-            ps = s["trade_pnl_short"]
-            psh, pse = np.histogram(ps, bins=max(5, min(30, len(ps) // 3)))
-            cd["pnlSBins"] = [round(float((pse[i] + pse[i + 1]) / 2), 2) for i in range(len(psh))]
-            cd["pnlSCnts"] = [int(v) for v in psh]
-        if "trade_barlen" in s:
-            bl = s["trade_barlen"]
-            bh, be = np.histogram(bl, bins=max(10, min(50, len(bl) // 3)))
-            cd["blBins"] = [round(float((be[i] + be[i + 1]) / 2), 1) for i in range(len(bh))]
-            cd["blCnts"] = [int(v) for v in bh]
-
-    # Position allocation data (for stacked area chart, max 20 assets)
-    if "pos_alloc" in s:
-        pa = s["pos_alloc"]
-        if len(pa.columns) <= 20:
-            cd["paDates"] = date_list(pa.index)
-            cd["paNames"] = list(pa.columns)
-            cd["paData"] = {str(c): safe_list(pa[c], decimals=4) for c in pa.columns}
-
-    # Return quantiles data
     q = s["return_quantiles"]
     cd["quantLabels"] = [str(p) for p in q.index]
     cd["quantVals"] = [round(float(v) * 100, 4) for v in q.values]
 
-    # Monthly returns distribution
     monthly_vals = s["monthly_returns"].dropna().values
     if len(monthly_vals) > 2:
-        mh, me = np.histogram(monthly_vals * 100, bins=min(30, max(5, len(monthly_vals) // 2)))
-        cd["mDistBins"] = [round(float((me[i] + me[i + 1]) / 2), 2) for i in range(len(mh))]
-        cd["mDistCnts"] = [int(v) for v in mh]
+        cd["mDistBins"], cd["mDistCnts"] = _histogram_data(
+            monthly_vals * 100, bins=min(30, max(5, len(monthly_vals) // 2))
+        )
 
-    # Period returns data
     pr = s["period_returns"]
     cd["prLabels"] = list(pr.keys())
     cd["prVals"] = [
@@ -153,14 +97,65 @@ def generate_html(
             round(float(bpr.get(k, np.nan)) * 100, 2) if not np.isnan(bpr.get(k, np.nan)) else None for k in pr
         ]
 
-    # Position concentration data
+    return cd, monthly_tbl, hm_months
+
+
+def _prepare_chart_data_positions(s, cd):
+    """Prepare position-related chart data."""
+    if "has_positions" not in s:
+        return
+    cd["posDates"] = date_list(s["pos_long"].index)
+    cd["posLong"] = safe_list(s["pos_long"], decimals=2)
+    cd["posShort"] = safe_list(s["pos_short"], decimals=2)
+    gl = s["gross_leverage"].dropna()
+    cd["glDates"], cd["glVals"] = date_list(gl.index), safe_list(gl, decimals=4)
     if "pos_max_concentration" in s:
         mc = s["pos_max_concentration"]
         cd["mcDates"] = date_list(mc.index)
         cd["mcMax"] = safe_list(mc, decimals=4, pct=True)
         cd["mcMed"] = safe_list(s["pos_median_concentration"], decimals=4, pct=True)
+    if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
+        pa = s["pos_alloc"]
+        cd["paDates"] = date_list(pa.index)
+        cd["paNames"] = list(pa.columns)
+        cd["paData"] = {str(c): safe_list(pa[c], decimals=4) for c in pa.columns}
 
-    # ---- sidebar ----
+
+def _prepare_chart_data_transactions(s, cd):
+    """Prepare transaction-related chart data."""
+    if "has_transactions" not in s:
+        return
+    dv = s["daily_txn_value"]
+    cd["txnDates"], cd["txnVol"] = date_list(dv.index), safe_list(dv, decimals=2)
+    dc = s["daily_txn_count"]
+    cd["txnCntDates"], cd["txnCnts"] = date_list(dc.index), [int(v) for v in dc.values]
+    if "turnover" in s:
+        to = s["turnover"].dropna()
+        cd["toDates"], cd["toVals"] = date_list(to.index), safe_list(to, decimals=4)
+    if "txn_hours" in s:
+        cd["txnHrLabels"], cd["txnHrCnts"] = _histogram_data(s["txn_hours"], bins=range(25), decimals=0)
+        cd["txnHrLabels"] = [f"{int(v):02d}" for v in cd["txnHrLabels"]]
+
+
+def _prepare_chart_data_trades(s, cd):
+    """Prepare trade-related chart data."""
+    if "trade_pnl" not in s:
+        return
+    pnl = s["trade_pnl"]
+    cd["pnlBins"], cd["pnlCnts"] = _histogram_data(pnl, bins=max(10, min(40, len(pnl) // 3)))
+    if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
+        pl = s["trade_pnl_long"]
+        cd["pnlLBins"], cd["pnlLCnts"] = _histogram_data(pl, bins=max(5, min(30, len(pl) // 3)))
+    if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
+        ps = s["trade_pnl_short"]
+        cd["pnlSBins"], cd["pnlSCnts"] = _histogram_data(ps, bins=max(5, min(30, len(ps) // 3)))
+    if "trade_barlen" in s:
+        bl = s["trade_barlen"]
+        cd["blBins"], cd["blCnts"] = _histogram_data(bl, bins=max(10, min(50, len(bl) // 3)), decimals=1)
+
+
+def _build_sidebar(s):
+    """Build the sidebar navigation HTML."""
     nav = [
         ("overview", "Overview"),
         ("period", "Period Returns"),
@@ -181,6 +176,44 @@ def generate_html(
     for aid, label in nav:
         sidebar += f'<a href="#{aid}">{label}</a>'
     sidebar += "</nav>"
+    return sidebar
+
+
+def _dedup_date_arrays(cd):
+    """Deduplicate date arrays to reduce JSON size."""
+    aliases = []
+    base_dates = cd.get("dates")
+    for dk in ("posDates", "glDates", "mcDates"):
+        if dk in cd and cd[dk] == base_dates:
+            del cd[dk]
+            aliases.append(f"D.{dk}=D.dates;")
+    if "rvDates" in cd and "rsDates" in cd and cd["rvDates"] == cd["rsDates"]:
+        del cd["rvDates"]
+        aliases.append("D.rvDates=D.rsDates;")
+    return "\n".join(aliases)
+
+
+def generate_html(
+    returns,
+    benchmark_rets,
+    positions,
+    transactions,
+    trades,
+    title,
+    output,
+    rolling_window,
+):
+    """Generate an interactive HTML report (ECharts + sidebar navigation)."""
+    s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
+
+    # ---- chart data ----
+    cd, monthly_tbl, hm_months = _prepare_chart_data_core(s)
+    _prepare_chart_data_positions(s, cd)
+    _prepare_chart_data_transactions(s, cd)
+    _prepare_chart_data_trades(s, cd)
+
+    # ---- sidebar ----
+    sidebar = _build_sidebar(s)
 
     # ---- body sections ----
     pct_perf = {
@@ -199,22 +232,11 @@ def generate_html(
     b = _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window)
 
     # ---- ECharts JavaScript ----
-    js_parts = _build_echart_js(s, rolling_window)
-    js = "\n".join(js_parts)
+    js = "\n".join(_build_echart_js(s, rolling_window))
 
-    # Deduplicate date arrays to reduce JSON size
-    _dedup_aliases = []
-    _base_dates = cd.get("dates")
-    for _dk in ("posDates", "glDates", "mcDates"):
-        if _dk in cd and cd[_dk] == _base_dates:
-            del cd[_dk]
-            _dedup_aliases.append(f"D.{_dk}=D.dates;")
-    if "rvDates" in cd and "rsDates" in cd and cd["rvDates"] == cd["rsDates"]:
-        del cd["rvDates"]
-        _dedup_aliases.append("D.rvDates=D.rsDates;")
+    # ---- assemble HTML ----
+    _alias_js = _dedup_date_arrays(cd)
     chart_json = json.dumps(cd, ensure_ascii=False)
-    _alias_js = "\n".join(_dedup_aliases)
-
     body_html = "\n".join(b)
     html = (
         f"<!DOCTYPE html>\n<html lang='zh'><head><meta charset='utf-8'>\n"
@@ -235,15 +257,135 @@ def generate_html(
         f"{js}\n</script>\n</body></html>"
     )
 
-    with open(output, "w", encoding="utf-8") as f:
-        f.write(html)
-
+    Path(output).write_text(html, encoding="utf-8")
     return output
 
 
 # =========================================================================
 # Body sections builder
 # =========================================================================
+
+
+def _build_period_returns_table(s):
+    """Build the period returns comparison HTML table."""
+    _pr = s["period_returns"]
+    _wr = s["period_win_rates"]
+    _phdr = "<tr><th>Metric</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
+    _prow1 = '<tr><td style="text-align:left;font-weight:600">Strategy</td>'
+    for _k, _v in _pr.items():
+        _prow1 += f'<td class="{css_cls(_v)}">{fmt(_v, pct=True)}</td>'
+    _prow1 += "</tr>"
+    _prows = _phdr + _prow1
+    if "benchmark_period_returns" in s:
+        _bpr = s["benchmark_period_returns"]
+        _prow2 = '<tr><td style="text-align:left;font-weight:600">Benchmark</td>'
+        for _k in _pr:
+            _bv = _bpr.get(_k, np.nan)
+            _prow2 += f'<td class="{css_cls(_bv)}">{fmt(_bv, pct=True)}</td>'
+        _prow2 += "</tr>"
+        _prow3 = '<tr><td style="text-align:left;font-weight:600">Excess</td>'
+        for _k in _pr:
+            _sv = _pr.get(_k, np.nan)
+            _bv2 = _bpr.get(_k, np.nan)
+            _exc = (_sv - _bv2) if not (np.isnan(_sv) or np.isnan(_bv2)) else np.nan
+            _prow3 += f'<td class="{css_cls(_exc)}">{fmt(_exc, pct=True)}</td>'
+        _prow3 += "</tr>"
+        _prows += _prow2 + _prow3
+    _prow_wr = '<tr><td style="text-align:left;font-weight:600">Daily Win Rate</td>'
+    for _k in _pr:
+        _wv = _wr.get(_k, np.nan)
+        _prow_wr += f"<td>{fmt(_wv, pct=True)}</td>"
+    _prow_wr += "</tr>"
+    _prows += _prow_wr
+    return f'<table class="ptbl">{_prows}</table>'
+
+
+def _build_body_benchmark(b, s):
+    """Build the benchmark body section."""
+    if "benchmark_stats" not in s:
+        return
+    b.append('<div class="sec" id="benchmark"><div class="sec-title">Benchmark</div>')
+    b.append(
+        html_cards(
+            s["benchmark_stats"],
+            [
+                "Alpha",
+                "Beta",
+                "Information Ratio",
+                "Tracking Error",
+                "Up Capture",
+                "Down Capture",
+                "Capture Ratio",
+                "Correlation",
+            ],
+        )
+    )
+    b.append(html_table(s["benchmark_stats"]))
+    if "rolling_beta" in s:
+        b.append('<div class="chart-sm" id="c-rb"></div>')
+    b.append("</div>")
+
+
+def _build_body_positions(b, s):
+    """Build the positions body section."""
+    if "has_positions" not in s:
+        return
+    b.append('<div class="sec" id="positions"><div class="sec-title">Positions</div>')
+    b.append(html_cards(s["position_summary"], list(s["position_summary"].keys())))
+    b.append(html_table(s["position_summary"]))
+    b.append('<div class="chart-box" id="c-expo"></div>')
+    b.append('<div class="grid-2">')
+    b.append('<div class="chart-sm" id="c-lev"></div>')
+    b.append('<div class="chart-sm" id="c-conc"></div>')
+    b.append("</div>")
+    if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
+        b.append('<div class="chart-box" id="c-alloc"></div>')
+    b.append("</div>")
+
+
+def _build_body_transactions(b, s):
+    """Build the transactions body section."""
+    if "has_transactions" not in s:
+        return
+    b.append('<div class="sec" id="transactions"><div class="sec-title">Transactions</div>')
+    b.append(html_cards(s["txn_summary"], list(s["txn_summary"].keys())))
+    b.append(html_table(s["txn_summary"]))
+    b.append('<div class="grid-2">')
+    b.append('<div class="chart-sm" id="c-txn"></div>')
+    b.append('<div class="chart-sm" id="c-txn-cnt"></div>')
+    b.append("</div>")
+    if "turnover" in s:
+        b.append('<div class="chart-sm" id="c-turnover"></div>')
+    if "txn_hours" in s:
+        b.append('<div class="chart-sm" id="c-txn-hours"></div>')
+    b.append("</div>")
+
+
+def _build_body_trades(b, s):
+    """Build the trades body section."""
+    if "trade_stats" not in s:
+        return
+    ts = s["trade_stats"]
+    pct_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
+    b.append('<div class="sec" id="trades"><div class="sec-title">Trades</div>')
+    b.append(
+        html_cards(
+            ts,
+            ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"],
+            pct_keys=pct_t,
+        )
+    )
+    b.append(html_table(ts, pct_keys=pct_t))
+    if "trade_pnl" in s:
+        b.append('<div class="chart-sm" id="c-pnl"></div>')
+        if "trade_pnl_long" in s or "trade_pnl_short" in s:
+            b.append('<div class="grid-2">')
+            b.append('<div class="chart-sm" id="c-pnl-long"></div>')
+            b.append('<div class="chart-sm" id="c-pnl-short"></div>')
+            b.append("</div>")
+    if "trade_barlen" in s:
+        b.append('<div class="chart-sm" id="c-barlen"></div>')
+    b.append("</div>")
 
 
 def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
@@ -286,37 +428,7 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     # -- Period Returns --
     b.append('<div class="sec" id="period"><div class="sec-title">Period Returns</div>')
     b.append('<div class="chart-sm" id="c-period"></div>')
-    _pr = s["period_returns"]
-    _has_bpr = "benchmark_period_returns" in s
-    _wr = s["period_win_rates"]
-    _phdr = "<tr><th>Metric</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
-    _prow1 = '<tr><td style="text-align:left;font-weight:600">Strategy</td>'
-    for _k, _v in _pr.items():
-        _prow1 += f'<td class="{css_cls(_v)}">{fmt(_v, pct=True)}</td>'
-    _prow1 += "</tr>"
-    _prows = _phdr + _prow1
-    if _has_bpr:
-        _bpr = s["benchmark_period_returns"]
-        _prow2 = '<tr><td style="text-align:left;font-weight:600">Benchmark</td>'
-        for _k in _pr:
-            _bv = _bpr.get(_k, np.nan)
-            _prow2 += f'<td class="{css_cls(_bv)}">{fmt(_bv, pct=True)}</td>'
-        _prow2 += "</tr>"
-        _prow3 = '<tr><td style="text-align:left;font-weight:600">Excess</td>'
-        for _k in _pr:
-            _sv = _pr.get(_k, np.nan)
-            _bv2 = _bpr.get(_k, np.nan)
-            _exc = (_sv - _bv2) if not (np.isnan(_sv) or np.isnan(_bv2)) else np.nan
-            _prow3 += f'<td class="{css_cls(_exc)}">{fmt(_exc, pct=True)}</td>'
-        _prow3 += "</tr>"
-        _prows += _prow2 + _prow3
-    _prow_wr = '<tr><td style="text-align:left;font-weight:600">Daily Win Rate</td>'
-    for _k in _pr:
-        _wv = _wr.get(_k, np.nan)
-        _prow_wr += f"<td>{fmt(_wv, pct=True)}</td>"
-    _prow_wr += "</tr>"
-    _prows += _prow_wr
-    b.append(f'<table class="ptbl">{_prows}</table>')
+    b.append(_build_period_returns_table(s))
     b.append("</div>")
 
     # -- Performance --
@@ -369,81 +481,10 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     b.append(html_df(s["dd_table"], float_format=".2f"))
     b.append("</div>")
 
-    # -- Benchmark --
-    if "benchmark_stats" in s:
-        b.append('<div class="sec" id="benchmark"><div class="sec-title">Benchmark</div>')
-        b.append(
-            html_cards(
-                s["benchmark_stats"],
-                [
-                    "Alpha",
-                    "Beta",
-                    "Information Ratio",
-                    "Tracking Error",
-                    "Up Capture",
-                    "Down Capture",
-                    "Capture Ratio",
-                    "Correlation",
-                ],
-            )
-        )
-        b.append(html_table(s["benchmark_stats"]))
-        if "rolling_beta" in s:
-            b.append('<div class="chart-sm" id="c-rb"></div>')
-        b.append("</div>")
-
-    # -- Positions --
-    if "has_positions" in s:
-        b.append('<div class="sec" id="positions"><div class="sec-title">Positions</div>')
-        b.append(html_cards(s["position_summary"], list(s["position_summary"].keys())))
-        b.append(html_table(s["position_summary"]))
-        b.append('<div class="chart-box" id="c-expo"></div>')
-        b.append('<div class="grid-2">')
-        b.append('<div class="chart-sm" id="c-lev"></div>')
-        b.append('<div class="chart-sm" id="c-conc"></div>')
-        b.append("</div>")
-        if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
-            b.append('<div class="chart-box" id="c-alloc"></div>')
-        b.append("</div>")
-
-    # -- Transactions --
-    if "has_transactions" in s:
-        b.append('<div class="sec" id="transactions"><div class="sec-title">Transactions</div>')
-        b.append(html_cards(s["txn_summary"], list(s["txn_summary"].keys())))
-        b.append(html_table(s["txn_summary"]))
-        b.append('<div class="grid-2">')
-        b.append('<div class="chart-sm" id="c-txn"></div>')
-        b.append('<div class="chart-sm" id="c-txn-cnt"></div>')
-        b.append("</div>")
-        if "turnover" in s:
-            b.append('<div class="chart-sm" id="c-turnover"></div>')
-        if "txn_hours" in s:
-            b.append('<div class="chart-sm" id="c-txn-hours"></div>')
-        b.append("</div>")
-
-    # -- Trades --
-    if "trade_stats" in s:
-        ts = s["trade_stats"]
-        pct_t = {"Win Rate", "Long Win Rate", "Short Win Rate"}
-        b.append('<div class="sec" id="trades"><div class="sec-title">Trades</div>')
-        b.append(
-            html_cards(
-                ts,
-                ["Total Trades", "Win Rate", "Profit/Loss Ratio", "Total PnL", "Expectancy", "Avg PnL per Trade"],
-                pct_keys=pct_t,
-            )
-        )
-        b.append(html_table(ts, pct_keys=pct_t))
-        if "trade_pnl" in s:
-            b.append('<div class="chart-sm" id="c-pnl"></div>')
-            if "trade_pnl_long" in s or "trade_pnl_short" in s:
-                b.append('<div class="grid-2">')
-                b.append('<div class="chart-sm" id="c-pnl-long"></div>')
-                b.append('<div class="chart-sm" id="c-pnl-short"></div>')
-                b.append("</div>")
-        if "trade_barlen" in s:
-            b.append('<div class="chart-sm" id="c-barlen"></div>')
-        b.append("</div>")
+    _build_body_benchmark(b, s)
+    _build_body_positions(b, s)
+    _build_body_transactions(b, s)
+    _build_body_trades(b, s)
 
     b.append("<footer>Generated by <strong>fincore</strong> | create_strategy_report()</footer>")
     return b
@@ -662,158 +703,166 @@ def _build_echart_js(s, rw):
             f"}});"
         )
 
-    # Position exposure
-    if "has_positions" in s:
-        js.append(
-            f"C('c-expo',{{"
-            f"title:{{text:'Long/Short Exposure',textStyle:{{fontSize:12}}}},"
-            f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},{_zoom_s},"
-            f"xAxis:{{type:'category',data:D.posDates,axisLabel:{{fontSize:10}}}},"
-            f"yAxis:{{type:'value'}},"
-            f"series:["
-            f"{{name:'Long',type:'line',data:D.posLong,showSymbol:false,"
-            f"lineStyle:{{width:1,color:G}},areaStyle:{{color:'rgba(56,161,105,0.2)'}}}},"
-            f"{{name:'Short',type:'line',data:D.posShort,showSymbol:false,"
-            f"lineStyle:{{width:1,color:R}},areaStyle:{{color:'rgba(229,62,62,0.2)'}}}}]"
-            f"}});"
-        )
-        js.append(
-            f"C('c-lev',{{"
-            f"title:{{text:'Gross Leverage',textStyle:{{fontSize:12}}}},"
-            f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
-            f"xAxis:{{type:'category',data:D.glDates,axisLabel:{{fontSize:10}}}},"
-            f"yAxis:{{type:'value'}},"
-            f"series:[{{type:'line',data:D.glVals,showSymbol:false,"
-            f"lineStyle:{{width:1.2,color:'#2b6cb0'}},"
-            f"areaStyle:{{color:'rgba(43,108,176,0.1)'}}}}]"
-            f"}});"
-        )
-        # Position concentration
-        if "pos_max_concentration" in s:
-            js.append(
-                f"C('c-conc',{{"
-                f"title:{{text:'Position Concentration (%)',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
-                f"legend:{{top:4,right:10}},{_grid_s},{_zoom_s},"
-                f"xAxis:{{type:'category',data:D.mcDates,axisLabel:{{fontSize:10}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:["
-                f"{{name:'Max',type:'line',data:D.mcMax,showSymbol:false,"
-                f"lineStyle:{{width:1,color:'#c53030'}},areaStyle:{{color:'rgba(197,48,48,0.1)'}}}},"
-                f"{{name:'Median',type:'line',data:D.mcMed,showSymbol:false,"
-                f"lineStyle:{{width:1,color:O}},areaStyle:{{color:'rgba(221,107,32,0.08)'}}}}]"
-                f"}});"
-            )
-        # Holdings allocation stacked area
-        if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
-            _pa_colors = "['#3182ce','#38a169','#e53e3e','#dd6b20','#805ad5','#d69e2e','#319795','#b83280','#2b6cb0','#276749','#c53030','#9c4221','#6b46c1','#975a16','#2c7a7b','#97266d','#2a4365','#22543d','#742a2a','#7b341e']"
-            _pa_series = ",".join(
-                f"{{name:D.paNames[{i}],type:'line',stack:'alloc',data:D.paData[D.paNames[{i}]],"
-                f"showSymbol:false,areaStyle:{{}},lineStyle:{{width:0.5}}}}"
-                for i in range(len(s["pos_alloc"].columns))
-            )
-            js.append(
-                f"C('c-alloc',{{"
-                f"title:{{text:'Holdings Allocation',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10,textStyle:{{fontSize:9}}}},"
-                f"color:{_pa_colors},"
-                f"{_grid},{_zoom_s},"
-                f"xAxis:{{type:'category',data:D.paDates,axisLabel:{{fontSize:10}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{_pa_series}]"
-                f"}});"
-            )
-
-    # Transaction volume + count
-    if "has_transactions" in s:
-        js.append(
-            f"C('c-txn',{{"
-            f"title:{{text:'Daily Trading Value',textStyle:{{fontSize:12}}}},"
-            f"tooltip:{{trigger:'axis'}},{_grid_s},"
-            f"xAxis:{{type:'category',data:D.txnDates,axisLabel:{{fontSize:10}}}},"
-            f"yAxis:{{type:'value'}},"
-            f"series:[{{type:'bar',data:D.txnVol,barWidth:'60%',itemStyle:{{color:B}}}}]"
-            f"}});"
-        )
-        js.append(
-            f"C('c-txn-cnt',{{"
-            f"title:{{text:'Daily Trade Count',textStyle:{{fontSize:12}}}},"
-            f"tooltip:{{trigger:'axis'}},{_grid_s},"
-            f"xAxis:{{type:'category',data:D.txnCntDates,axisLabel:{{fontSize:10}}}},"
-            f"yAxis:{{type:'value'}},"
-            f"series:[{{type:'bar',data:D.txnCnts,barWidth:'60%',itemStyle:{{color:O}}}}]"
-            f"}});"
-        )
-        if "turnover" in s:
-            js.append(
-                f"C('c-turnover',{{"
-                f"title:{{text:'Daily Turnover',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
-                f"xAxis:{{type:'category',data:D.toDates,axisLabel:{{fontSize:10}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{{type:'line',data:D.toVals,showSymbol:false,"
-                f"lineStyle:{{width:1.2,color:P}},areaStyle:{{color:'rgba(128,90,213,0.1)'}}}}]"
-                f"}});"
-            )
-        if "txn_hours" in s:
-            js.append(
-                f"C('c-txn-hours',{{"
-                f"title:{{text:'Trading Hour Distribution',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},{_grid_s},"
-                f"xAxis:{{type:'category',data:D.txnHrLabels}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{{type:'bar',data:D.txnHrCnts,barWidth:'60%',"
-                f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
-                f"}});"
-            )
-
-    # PnL distribution (all trades)
-    if "trade_pnl" in s:
-        js.append(
-            f"C('c-pnl',{{"
-            f"title:{{text:'PnL Distribution',textStyle:{{fontSize:12}}}},"
-            f"tooltip:{{trigger:'axis'}},{_grid_s},"
-            f"xAxis:{{type:'category',data:D.pnlBins,axisLabel:{{fontSize:9}}}},"
-            f"yAxis:{{type:'value'}},"
-            f"series:[{{type:'bar',data:D.pnlCnts,barWidth:'80%',"
-            f"itemStyle:{{color:function(p){{return D.pnlBins[p.dataIndex]>=0?G:R}}}}}}]"
-            f"}});"
-        )
-        # Long trades PnL
-        if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
-            js.append(
-                f"C('c-pnl-long',{{"
-                f"title:{{text:'Long PnL',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},{_grid_s},"
-                f"xAxis:{{type:'category',data:D.pnlLBins,axisLabel:{{fontSize:9}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{{type:'bar',data:D.pnlLCnts,barWidth:'80%',"
-                f"itemStyle:{{color:function(p){{return D.pnlLBins[p.dataIndex]>=0?G:R}}}}}}]"
-                f"}});"
-            )
-        # Short trades PnL
-        if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
-            js.append(
-                f"C('c-pnl-short',{{"
-                f"title:{{text:'Short PnL',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},{_grid_s},"
-                f"xAxis:{{type:'category',data:D.pnlSBins,axisLabel:{{fontSize:9}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{{type:'bar',data:D.pnlSCnts,barWidth:'80%',"
-                f"itemStyle:{{color:function(p){{return D.pnlSBins[p.dataIndex]>=0?G:R}}}}}}]"
-                f"}});"
-            )
-        # Holding time distribution
-        if "trade_barlen" in s:
-            js.append(
-                f"C('c-barlen',{{"
-                f"title:{{text:'Holding Time Distribution',textStyle:{{fontSize:12}}}},"
-                f"tooltip:{{trigger:'axis'}},{_grid_s},"
-                f"xAxis:{{type:'category',data:D.blBins,axisLabel:{{fontSize:9}}}},"
-                f"yAxis:{{type:'value'}},"
-                f"series:[{{type:'bar',data:D.blCnts,barWidth:'80%',"
-                f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
-                f"}});"
-            )
+    _build_echart_positions(js, s, _grid, _grid_s, _zoom_s)
+    _build_echart_transactions(js, s, _grid_s, _zoom_s)
+    _build_echart_trades(js, s, _grid_s)
 
     return js
+
+
+def _build_echart_positions(js, s, _grid, _grid_s, _zoom_s):
+    """Build ECharts JS for position-related charts."""
+    if "has_positions" not in s:
+        return
+    js.append(
+        f"C('c-expo',{{"
+        f"title:{{text:'Long/Short Exposure',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10}},{_grid},{_zoom_s},"
+        f"xAxis:{{type:'category',data:D.posDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:["
+        f"{{name:'Long',type:'line',data:D.posLong,showSymbol:false,"
+        f"lineStyle:{{width:1,color:G}},areaStyle:{{color:'rgba(56,161,105,0.2)'}}}},"
+        f"{{name:'Short',type:'line',data:D.posShort,showSymbol:false,"
+        f"lineStyle:{{width:1,color:R}},areaStyle:{{color:'rgba(229,62,62,0.2)'}}}}]"
+        f"}});"
+    )
+    js.append(
+        f"C('c-lev',{{"
+        f"title:{{text:'Gross Leverage',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
+        f"xAxis:{{type:'category',data:D.glDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'line',data:D.glVals,showSymbol:false,"
+        f"lineStyle:{{width:1.2,color:'#2b6cb0'}},"
+        f"areaStyle:{{color:'rgba(43,108,176,0.1)'}}}}]"
+        f"}});"
+    )
+    if "pos_max_concentration" in s:
+        js.append(
+            f"C('c-conc',{{"
+            f"title:{{text:'Position Concentration (%)',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
+            f"legend:{{top:4,right:10}},{_grid_s},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.mcDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:["
+            f"{{name:'Max',type:'line',data:D.mcMax,showSymbol:false,"
+            f"lineStyle:{{width:1,color:'#c53030'}},areaStyle:{{color:'rgba(197,48,48,0.1)'}}}},"
+            f"{{name:'Median',type:'line',data:D.mcMed,showSymbol:false,"
+            f"lineStyle:{{width:1,color:O}},areaStyle:{{color:'rgba(221,107,32,0.08)'}}}}]"
+            f"}});"
+        )
+    if "pos_alloc" in s and len(s["pos_alloc"].columns) <= 20:
+        _pa_colors = "['#3182ce','#38a169','#e53e3e','#dd6b20','#805ad5','#d69e2e','#319795','#b83280','#2b6cb0','#276749','#c53030','#9c4221','#6b46c1','#975a16','#2c7a7b','#97266d','#2a4365','#22543d','#742a2a','#7b341e']"
+        _pa_series = ",".join(
+            f"{{name:D.paNames[{i}],type:'line',stack:'alloc',data:D.paData[D.paNames[{i}]],"
+            f"showSymbol:false,areaStyle:{{}},lineStyle:{{width:0.5}}}}"
+            for i in range(len(s["pos_alloc"].columns))
+        )
+        js.append(
+            f"C('c-alloc',{{"
+            f"title:{{text:'Holdings Allocation',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},legend:{{top:4,right:10,textStyle:{{fontSize:9}}}},"
+            f"color:{_pa_colors},"
+            f"{_grid},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.paDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{_pa_series}]"
+            f"}});"
+        )
+
+
+def _build_echart_transactions(js, s, _grid_s, _zoom_s):
+    """Build ECharts JS for transaction-related charts."""
+    if "has_transactions" not in s:
+        return
+    js.append(
+        f"C('c-txn',{{"
+        f"title:{{text:'Daily Trading Value',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},{_grid_s},"
+        f"xAxis:{{type:'category',data:D.txnDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'bar',data:D.txnVol,barWidth:'60%',itemStyle:{{color:B}}}}]"
+        f"}});"
+    )
+    js.append(
+        f"C('c-txn-cnt',{{"
+        f"title:{{text:'Daily Trade Count',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},{_grid_s},"
+        f"xAxis:{{type:'category',data:D.txnCntDates,axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'bar',data:D.txnCnts,barWidth:'60%',itemStyle:{{color:O}}}}]"
+        f"}});"
+    )
+    if "turnover" in s:
+        js.append(
+            f"C('c-turnover',{{"
+            f"title:{{text:'Daily Turnover',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
+            f"xAxis:{{type:'category',data:D.toDates,axisLabel:{{fontSize:10}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'line',data:D.toVals,showSymbol:false,"
+            f"lineStyle:{{width:1.2,color:P}},areaStyle:{{color:'rgba(128,90,213,0.1)'}}}}]"
+            f"}});"
+        )
+    if "txn_hours" in s:
+        js.append(
+            f"C('c-txn-hours',{{"
+            f"title:{{text:'Trading Hour Distribution',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.txnHrLabels}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.txnHrCnts,barWidth:'60%',"
+            f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
+            f"}});"
+        )
+
+
+def _build_echart_trades(js, s, _grid_s):
+    """Build ECharts JS for trade-related charts."""
+    if "trade_pnl" not in s:
+        return
+    js.append(
+        f"C('c-pnl',{{"
+        f"title:{{text:'PnL Distribution',textStyle:{{fontSize:12}}}},"
+        f"tooltip:{{trigger:'axis'}},{_grid_s},"
+        f"xAxis:{{type:'category',data:D.pnlBins,axisLabel:{{fontSize:9}}}},"
+        f"yAxis:{{type:'value'}},"
+        f"series:[{{type:'bar',data:D.pnlCnts,barWidth:'80%',"
+        f"itemStyle:{{color:function(p){{return D.pnlBins[p.dataIndex]>=0?G:R}}}}}}]"
+        f"}});"
+    )
+    if "trade_pnl_long" in s and len(s["trade_pnl_long"]) > 0:
+        js.append(
+            f"C('c-pnl-long',{{"
+            f"title:{{text:'Long PnL',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.pnlLBins,axisLabel:{{fontSize:9}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.pnlLCnts,barWidth:'80%',"
+            f"itemStyle:{{color:function(p){{return D.pnlLBins[p.dataIndex]>=0?G:R}}}}}}]"
+            f"}});"
+        )
+    if "trade_pnl_short" in s and len(s["trade_pnl_short"]) > 0:
+        js.append(
+            f"C('c-pnl-short',{{"
+            f"title:{{text:'Short PnL',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.pnlSBins,axisLabel:{{fontSize:9}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.pnlSCnts,barWidth:'80%',"
+            f"itemStyle:{{color:function(p){{return D.pnlSBins[p.dataIndex]>=0?G:R}}}}}}]"
+            f"}});"
+        )
+    if "trade_barlen" in s:
+        js.append(
+            f"C('c-barlen',{{"
+            f"title:{{text:'Holding Time Distribution',textStyle:{{fontSize:12}}}},"
+            f"tooltip:{{trigger:'axis'}},{_grid_s},"
+            f"xAxis:{{type:'category',data:D.blBins,axisLabel:{{fontSize:9}}}},"
+            f"yAxis:{{type:'value'}},"
+            f"series:[{{type:'bar',data:D.blCnts,barWidth:'80%',"
+            f"itemStyle:{{color:'#319795',borderRadius:[2,2,0,0]}}}}]"
+            f"}});"
+        )

@@ -6,7 +6,6 @@ Split from test_perf_attrib.py for maintainability.
 
 from __future__ import annotations
 
-import os
 import unittest
 import warnings
 
@@ -23,28 +22,25 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
 
     def test_perf_attrib_regression(self):
         """Test performance attribution with real CSV data."""
-        positions = pd.read_csv(os.path.join(self.__location__, "positions.csv"), index_col=0, parse_dates=True)
+        loc = self.__location__
+        positions = pd.read_csv(loc / "positions.csv", index_col=0, parse_dates=True)
 
         positions.columns = [int(col) if col != "cash" else col for col in positions.columns]
 
-        returns = pd.read_csv(
-            os.path.join(self.__location__, "returns.csv"), index_col=0, parse_dates=True, header=None
-        )
+        returns = pd.read_csv(loc / "returns.csv", index_col=0, parse_dates=True, header=None)
         returns = returns.squeeze()  # Manually squeeze if needed
-        factor_loadings = pd.read_csv(os.path.join(self.__location__, "factor_loadings.csv"), index_col=[0, 1])
+        factor_loadings = pd.read_csv(loc / "factor_loadings.csv", index_col=[0, 1])
         factor_loadings.index = factor_loadings.index.set_levels(
             pd.to_datetime(factor_loadings.index.levels[0]), level=0
         )
 
-        factor_returns = pd.read_csv(
-            os.path.join(self.__location__, "factor_returns.csv"), index_col=0, parse_dates=True
-        )
+        factor_returns = pd.read_csv(loc / "factor_returns.csv", index_col=0, parse_dates=True)
 
-        residuals = pd.read_csv(os.path.join(self.__location__, "residuals.csv"), index_col=0, parse_dates=True)
+        residuals = pd.read_csv(loc / "residuals.csv", index_col=0, parse_dates=True)
 
         residuals.columns = [int(col) for col in residuals.columns]
 
-        intercepts = pd.read_csv(os.path.join(self.__location__, "intercepts.csv"), index_col=0, header=None)
+        intercepts = pd.read_csv(loc / "intercepts.csv", index_col=0, header=None)
 
         intercepts = intercepts.squeeze()  # Manually squeeze if needed
         risk_exposures_portfolio, perf_attrib_output = perf_attrib(

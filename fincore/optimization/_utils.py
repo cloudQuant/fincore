@@ -6,9 +6,13 @@ results across the optimization module.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-from numpy.typing import NDArray
-from scipy import optimize
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+    from scipy import optimize
 
 
 class OptimizationError(Exception):
@@ -62,14 +66,13 @@ def validate_result(
     weights: NDArray[np.float64] = res.x
 
     # Check for NaN/inf
-    if not allow_nan:
-        if np.any(~np.isfinite(weights)):
-            msg = f"Optimization for {context} returned invalid weights (NaN/inf detected): {weights}"
-            raise OptimizationError(
-                msg,
-                status=res.status,
-                solver_message=str(res.message),
-            )
+    if not allow_nan and np.any(~np.isfinite(weights)):
+        msg = f"Optimization for {context} returned invalid weights (NaN/inf detected): {weights}"
+        raise OptimizationError(
+            msg,
+            status=res.status,
+            solver_message=str(res.message),
+        )
 
     return weights
 

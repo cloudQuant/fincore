@@ -8,10 +8,13 @@ matplotlib or any other visualization library.
 from __future__ import annotations
 
 import html as _html
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+
+from fincore.constants import APPROX_BDAYS_PER_YEAR
 
 __all__ = ["HtmlReportBuilder"]
 
@@ -133,7 +136,7 @@ tr:nth-child(even) { background: #f9fafb; }
         self,
         sharpe: pd.Series,
         benchmark_sharpe: pd.Series | None = None,
-        window: int = 252,
+        window: int = APPROX_BDAYS_PER_YEAR,
         **kwargs: Any,
     ) -> HtmlReportBuilder:
         """Append a rolling Sharpe ratio table section (VizBackend protocol)."""
@@ -175,8 +178,7 @@ tr:nth-child(even) { background: #f9fafb; }
 
     def save(self, path: str) -> None:
         """Write the report to a file at *path*."""
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(self.build())
+        Path(path).write_text(self.build(), encoding="utf-8")
 
     # ------------------------------------------------------------------
     # Helpers

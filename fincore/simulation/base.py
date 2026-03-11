@@ -6,11 +6,11 @@ import numpy as np
 import pandas as pd
 
 __all__ = [
-    "validate_returns",
+    "SimResult",
     "annualize",
     "compute_statistics",
     "estimate_parameters",
-    "SimResult",
+    "validate_returns",
 ]
 
 
@@ -181,13 +181,16 @@ class SimResult:
         Parameters
         ----------
         alpha : float, default 0.05
-            Significance level (0.05 = 95% VaR).
+            Significance level (0.05 = 95% VaR). Must be in (0, 1).
 
         Returns
         -------
         float
-            VaR at the specified significance level.
+            VaR at the specified significance level. Returns NaN if alpha
+            is outside (0, 1).
         """
+        if not (0 < alpha < 1):
+            return float("nan")
         terminal = self.paths[:, -1] if self.paths.ndim > 1 else self.paths
         return float(np.percentile(terminal, alpha * 100))
 
@@ -200,13 +203,16 @@ class SimResult:
         Parameters
         ----------
         alpha : float, default 0.05
-            Significance level (0.05 = 95% CVaR).
+            Significance level (0.05 = 95% CVaR). Must be in (0, 1).
 
         Returns
         -------
         float
-            CVaR at the specified significance level.
+            CVaR at the specified significance level. Returns NaN if alpha
+            is outside (0, 1).
         """
+        if not (0 < alpha < 1):
+            return float("nan")
         terminal = self.paths[:, -1] if self.paths.ndim > 1 else self.paths
         var = self.var(alpha)
         # Mean of values below VaR

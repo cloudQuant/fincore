@@ -25,7 +25,7 @@ class TestEVTWithNanData:
         """Test Hill estimator handles NaN values."""
         np.random.seed(42)
         data = np.concatenate([np.random.standard_t(3, 1000), [np.nan, np.nan]])
-        xi, excesses = hill_estimator(data)
+        xi, _excesses = hill_estimator(data)
 
         assert isinstance(xi, float)
 

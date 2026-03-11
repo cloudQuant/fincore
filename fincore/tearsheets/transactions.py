@@ -15,12 +15,12 @@ from matplotlib.ticker import FuncFormatter
 from fincore.utils import get_month_end_freq, two_dec_places
 
 __all__ = [
-    "plot_turnover",
-    "plot_daily_volume",
     "plot_daily_turnover_hist",
-    "plot_txn_time_hist",
-    "plot_slippage_sweep",
+    "plot_daily_volume",
     "plot_slippage_sensitivity",
+    "plot_slippage_sweep",
+    "plot_turnover",
+    "plot_txn_time_hist",
 ]
 
 

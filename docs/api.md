@@ -63,4 +63,3 @@ def my_provider(start: str, end: str, library: str):
 fama_french.set_ff_provider(my_provider)
 df = fama_french.fetch_ff_factors("2020-01-01", "2020-12-31", library="french")
 ```
-

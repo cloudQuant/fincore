@@ -11,8 +11,8 @@ from scipy import stats
 from fincore.utils import format_asset, print_table
 
 __all__ = [
-    "plot_round_trip_lifetimes",
     "plot_prob_profit_trade",
+    "plot_round_trip_lifetimes",
     "print_round_trip_stats",
     "show_profit_attribution",
 ]
@@ -42,8 +42,8 @@ def plot_round_trip_lifetimes(round_trips, disp_amount=16, lsize=18, ax=None):
         ax = plt.subplot()
 
     symbols_sample = round_trips.symbol.unique()
-    np.random.seed(1)
-    sample = np.random.choice(symbols_sample, replace=False, size=min(disp_amount, len(symbols_sample)))
+    rng = np.random.default_rng(1)
+    sample = rng.choice(symbols_sample, replace=False, size=min(disp_amount, len(symbols_sample)))
     sample_round_trips = round_trips[round_trips.symbol.isin(sample)]
 
     import pandas as pd

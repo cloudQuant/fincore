@@ -21,12 +21,14 @@ Example::
 
 from __future__ import annotations
 
+from fincore.optimization._utils import OptimizationError
 from fincore.optimization.frontier import efficient_frontier
 from fincore.optimization.objectives import optimize
 from fincore.optimization.risk_parity import risk_parity
 
 __all__ = [
+    "OptimizationError",
     "efficient_frontier",
-    "risk_parity",
     "optimize",
+    "risk_parity",
 ]

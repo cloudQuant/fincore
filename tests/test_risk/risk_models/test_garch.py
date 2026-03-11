@@ -142,7 +142,7 @@ class TestForecastVolatility:
 
         returns = pd.Series(np.random.randn(1000) * 0.02)
 
-        forecasts, result = forecast_volatility(returns, model="EGARCH", horizon=3)
+        forecasts, _result = forecast_volatility(returns, model="EGARCH", horizon=3)
 
         assert len(forecasts) == 3
 

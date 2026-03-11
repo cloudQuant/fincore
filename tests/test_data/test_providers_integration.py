@@ -228,6 +228,14 @@ class TestAkShareProviderIntegration:
             assert not data.empty
         except ImportError:
             pytest.skip("akshare not installed")
-        except Exception as e:
+        except (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            RuntimeError,
+            ValueError,
+            KeyError,
+            AttributeError,
+        ) as e:
             # Network errors or API changes are OK for testing
             pytest.skip(f"AkShare test failed: {e}")

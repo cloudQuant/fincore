@@ -10,9 +10,11 @@
 - 风险管理和仓位控制
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
 from fincore import Empyrical
 
 print("=" * 70)
@@ -30,13 +32,14 @@ returns = pd.Series(trend + noise, index=dates, name="strategy_returns")
 
 # 计算累计收益
 from fincore import cum_returns
+
 cum_ret = cum_returns(returns, starting_value=1.0)
 
-print(f"\n数据概览:")
+print("\n数据概览:")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  交易日数: {len(returns)}")
 print(f"  累计收益: {cum_ret.iloc[-1]:.2%}")
-print(f"" )
+print("")
 
 # ============================================================
 # 1. 回撤分析
@@ -47,11 +50,11 @@ print("-" * 70)
 
 # 最大回撤
 max_dd = Empyrical.max_drawdown(returns)
-print(f"最大回撤: {max_dd:.4f} ({max_dd*100:.2f}%)")
+print(f"最大回撤: {max_dd:.4f} ({max_dd * 100:.2f}%)")
 
 # 回撤周期
 dd_period = Empyrical.get_max_drawdown_period(returns)
-print(f"\n最大回撤周期:")
+print("\n最大回撤周期:")
 print(f"  回撤开始: {dd_period[0]}")
 print(f"  回撤谷底: {dd_period[1]}")
 # 检查是否有恢复日期
@@ -59,7 +62,7 @@ if len(dd_period) > 2:
     print(f"  恢复日期: {dd_period[2]}")
     print(f"  回撤天数: {(dd_period[2] - dd_period[0]).days} 天")
 else:
-    print(f"  状态: 尚未恢复")
+    print("  状态: 尚未恢复")
 
 # 回撤恢复天数
 recovery_days = Empyrical.max_drawdown_recovery_days(returns)
@@ -76,7 +79,7 @@ print(f"  恢复天数: {second_dd_recovery} 天")
 
 # 回撤表
 drawdown_table = Empyrical.gen_drawdown_table(returns, top=5)
-print(f"\n前 5 大回撤:")
+print("\n前 5 大回撤:")
 print(drawdown_table.to_string())
 
 # ============================================================
@@ -121,7 +124,7 @@ for year, ret in annual_returns.items():
 
 # 按月度分解
 monthly_returns = Empyrical.aggregate_returns(returns, "monthly")
-print(f"\n月度收益率 (前10 个):")
+print("\n月度收益率 (前10 个):")
 for i in range(min(10, len(monthly_returns))):
     year, month = monthly_returns.index[i]
     print(f"  {year}-{month:02d}: {monthly_returns.iloc[i]:>7.2%}")
@@ -177,56 +180,56 @@ print(stats.to_string())
 # 7. 可视化（如果安装了 matplotlib）
 # ============================================================
 try:
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
     # 累计收益曲线
     ax = axes[0, 0]
-    cum_ret.plot(ax=ax, title='累计收益曲线')
-    ax.axhline(y=1, color='black', linestyle='--', alpha=0.3)
-    ax.set_ylabel('累计收益')
+    cum_ret.plot(ax=ax, title="累计收益曲线")
+    ax.axhline(y=1, color="black", linestyle="--", alpha=0.3)
+    ax.set_ylabel("累计收益")
     ax.grid(True, alpha=0.3)
 
     # 回撤曲线
     ax = axes[0, 1]
     underwater = cum_ret / cum_ret.cummax() - 1
-    underwater.plot(ax=ax, title='回撤曲线', color='red')
-    ax.fill_between(underwater.index, underwater, 0, alpha=0.3, color='red')
-    ax.set_ylabel('回撤')
+    underwater.plot(ax=ax, title="回撤曲线", color="red")
+    ax.fill_between(underwater.index, underwater, 0, alpha=0.3, color="red")
+    ax.set_ylabel("回撤")
     ax.grid(True, alpha=0.3)
 
     # 月度收益热力图
     ax = axes[1, 0]
     monthly_ret_table = Empyrical.aggregate_returns(returns, "monthly")
     monthly_ret_table = monthly_ret_table.to_frame()
-    monthly_ret_table.columns = ['Returns']
+    monthly_ret_table.columns = ["Returns"]
 
     # 重塑为年x月的矩阵
-    monthly_matrix = monthly_ret_table['Returns'].unstack()
+    monthly_matrix = monthly_ret_table["Returns"].unstack()
     if not monthly_matrix.empty:
-        im = ax.imshow(monthly_matrix.T, cmap='RdYlGn', aspect='auto')
-        ax.set_title('月度收益热力图')
-        ax.set_ylabel('月份')
-        ax.set_xlabel('年份')
+        im = ax.imshow(monthly_matrix.T, cmap="RdYlGn", aspect="auto")
+        ax.set_title("月度收益热力图")
+        ax.set_ylabel("月份")
+        ax.set_xlabel("年份")
 
         # 设置 y 轴标签
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         ax.set_yticks(range(12))
         ax.set_yticklabels(months)
 
-        plt.colorbar(im, ax=ax, label='收益率')
+        plt.colorbar(im, ax=ax, label="收益率")
         ax.grid(False)
 
     # 滚动 Sharpe 比率
     ax = axes[1, 1]
     from fincore.metrics.rolling import roll_sharpe_ratio
+
     rolling_sharpe = roll_sharpe_ratio(returns, window=60)
-    rolling_sharpe.plot(ax=ax, title='滚动 Sharpe 比率 (60日)')
-    ax.axhline(y=0, color='red', linestyle='--', alpha=0.5)
-    ax.set_ylabel('Sharpe 比率')
+    rolling_sharpe.plot(ax=ax, title="滚动 Sharpe 比率 (60日)")
+    ax.axhline(y=0, color="red", linestyle="--", alpha=0.5)
+    ax.set_ylabel("Sharpe 比率")
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()

@@ -13,7 +13,7 @@ from scipy import stats
 
 from fincore.empyrical import Empyrical
 
-__all__ = ["plot_best", "plot_stoch_vol", "plot_bayes_cone"]
+__all__ = ["plot_bayes_cone", "plot_best", "plot_stoch_vol"]
 
 
 def plot_best(empyrical_instance, trace=None, data_train=None, data_test=None, samples=1000, burn=200, axs=None):
@@ -155,7 +155,7 @@ def plot_stoch_vol(empyrical_instance, data, trace=None, ax=None):
         trace = empyrical_instance.model_stoch_vol(data)
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(15, 8))
+        _fig, ax = plt.subplots(figsize=(15, 8))
 
     x = data.index
     ax.plot(x, data.abs().values)

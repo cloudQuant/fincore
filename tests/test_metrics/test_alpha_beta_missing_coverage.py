@@ -39,7 +39,6 @@ class TestAnnualAlphaLine543:
 
         # This test documents that line 543 may be unreachable with normal input
         # It's a defensive check that might be hit with edge cases in future changes
-        pass
 
 
 class TestAnnualAlphaLine557:
@@ -99,7 +98,6 @@ class TestAnnualAlphaLine557:
 
         # Actually pandas groupby by default doesn't drop groups with all NaN values.
         # Let me check...
-        pass
 
     def test_annual_alpha_all_nan_factor_values(self):
         """Test annual_alpha when factor_returns has all NaN values after alignment."""
@@ -165,7 +163,6 @@ class TestAnnualBetaLine596:
         Similar to line 543, this may be unreachable with normal input.
         """
         # See comments in TestAnnualAlphaLine543
-        pass
 
 
 class TestAnnualBetaLine610:
@@ -177,7 +174,6 @@ class TestAnnualBetaLine610:
         Similar to line 557, this may be unreachable with normal input.
         """
         # See comments in TestAnnualAlphaLine557
-        pass
 
 
 # Actually, let me try a different approach.
@@ -225,8 +221,9 @@ def test_annual_alpha_different_years():
 # Let's try mocking to force these paths:
 
 
+@pytest.mark.serial
 def test_annual_alpha_mock_to_hit_line_543():
-    """Test line 543 by mocking aligned_series to return empty."""
+    """Test early return when aligned_series yields empty (defensive path)."""
     returns = pd.Series(
         [0.01, 0.02, 0.015],
         index=pd.date_range("2020-01-01", periods=3),
@@ -238,7 +235,7 @@ def test_annual_alpha_mock_to_hit_line_543():
 
     from unittest.mock import patch
 
-    # Mock aligned_series to return empty results
+    # Mock aligned_series to return empty results (patch where it is used)
     with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
         mock_aligned.return_value = (pd.Series([], dtype=float), pd.Series([], dtype=float))
 

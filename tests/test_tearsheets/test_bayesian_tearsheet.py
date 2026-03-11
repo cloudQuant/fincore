@@ -182,7 +182,7 @@ class TestPlotStochVolErrors:
 
         class Trace:
             def __getitem__(self, key):
-                name, step = key
+                _name, step = key
                 return s[step, :]
 
         emp = Empyrical(data)
@@ -276,7 +276,7 @@ def test_plot_stoch_vol_creates_trace_from_data_line_153(monkeypatch):
         def model_stoch_vol(self, data):
             class Trace:
                 def __getitem__(self, key):
-                    name, step = key
+                    _name, step = key
                     return s[step, :]
 
             return Trace()

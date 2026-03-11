@@ -17,12 +17,15 @@ Between the Expected Value and the Volatility of the Nominal Excess Return on St
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from scipy import optimize
 
-__all__ = ["GARCHResult", "GARCH", "EGARCH", "GJRGARCH", "forecast_volatility", "conditional_var"]
+if TYPE_CHECKING:
+    import pandas as pd
+
+__all__ = ["EGARCH", "GARCH", "GJRGARCH", "GARCHResult", "conditional_var", "forecast_volatility"]
 
 
 @dataclass
@@ -294,8 +297,7 @@ class EGARCH:
         if T < 10:
             raise ValueError("Insufficient data for EGARCH estimation")
 
-        # Initialize parameters
-        # omega, alpha (magnitude), gamma (asymmetry), beta
+        # Initialize EGARCH params: omega, alpha, gamma, beta
         init_params = [0.01, 0.1, -0.1, 0.95]
 
         bounds = [
@@ -492,7 +494,7 @@ class GJRGARCH:
             # Indicator for negative shock
             indicator = 1 if y[t - 1] < 0 else 0
 
-            # GJR-GARCH(1,1)
+            # GJR-GARCH variance recursion
             sigma2[t] = omega + alpha * y[t - 1] ** 2 + gamma * indicator * y[t - 1] ** 2 + beta * sigma2[t - 1]
 
         return sigma2

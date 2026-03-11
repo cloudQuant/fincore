@@ -39,10 +39,7 @@ def test_plot_capacity_sweep_runs_and_returns_axes() -> None:
 
 class _FakeEmpyricalCones:
     def cum_returns(self, returns, starting_value=1.0):
-        if isinstance(returns, pd.DataFrame):
-            series = returns.iloc[:, 0]
-        else:
-            series = returns
+        series = returns.iloc[:, 0] if isinstance(returns, pd.DataFrame) else returns
         return (1 + series).cumprod() * starting_value
 
 
@@ -134,10 +131,7 @@ def test_plot_cones_breaks_when_no_crossing_line_143() -> None:
 
     class _FakeEmpyricalConesNoCrossing:
         def cum_returns(self, returns, starting_value=1.0):
-            if isinstance(returns, pd.DataFrame):
-                series = returns.iloc[:, 0]
-            else:
-                series = returns
+            series = returns.iloc[:, 0] if isinstance(returns, pd.DataFrame) else returns
             # Always above bounds, so no crossing
             return (1 + series).cumprod() * starting_value * 1.5
 

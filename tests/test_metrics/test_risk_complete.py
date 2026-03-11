@@ -337,7 +337,7 @@ class TestBetaFragilityHeuristicEdgeCases:
     @pytest.mark.p1
     def test_beta_fragility_short_factor_returns(self, returns_with_benchmark):
         """Test beta_fragility_heuristic with short factor returns."""
-        returns, benchmark = returns_with_benchmark
+        returns, _benchmark = returns_with_benchmark
         short_factor = pd.Series([0.01], index=returns.index[:1])
         result = beta_fragility_heuristic(returns[:1], short_factor)
         assert np.isnan(result)

@@ -7,16 +7,16 @@ workflowType: 'test-coverage-analysis'
 
 # 测试覆盖率报告
 
-**项目**: fincore  
-**报告日期**: 2026-03-09  
-**分析范围**: 核心模块 + P0测试  
+**项目**: fincore
+**报告日期**: 2026-03-09
+**分析范围**: 核心模块 + P0测试
 
 ---
 
 ## 执行摘要
 
-✅ **第一阶段完成**: 覆盖率数据已成功获取  
-✅ **P0测试**: 168个测试100%通过  
+✅ **第一阶段完成**: 覆盖率数据已成功获取
+✅ **P0测试**: 168个测试100%通过
 ⚠️ **改进机会**: metrics模块覆盖率需提升
 
 ---
@@ -87,7 +87,7 @@ workflowType: 'test-coverage-analysis'
 1. **模块缓存污染**
    - `_MODULE_CACHE` 在测试间共享
    - 可能影响懒加载行为
-   
+
 2. **缺少cleanup hooks**
    - conftest.py中没有自动清理
    - 全局状态未隔离
@@ -101,9 +101,9 @@ def cleanup_global_state():
     """自动清理全局状态，确保测试隔离"""
     import fincore._registry as registry
     original_cache = registry._MODULE_CACHE.copy()
-    
+
     yield
-    
+
     registry._MODULE_CACHE.clear()
     registry._MODULE_CACHE.update(original_cache)
 ```
@@ -285,6 +285,6 @@ Core测试: 68个通过 ✅
 
 ---
 
-**报告生成**: TEA Agent (Test Coverage Analysis)  
-**报告版本**: 1.0  
+**报告生成**: TEA Agent (Test Coverage Analysis)
+**报告版本**: 1.0
 **报告日期**: 2026-03-09

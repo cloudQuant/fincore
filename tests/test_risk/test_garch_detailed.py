@@ -16,8 +16,7 @@ class TestGARCHForecastMeanReversion:
         np.random.seed(42)
         returns = np.random.randn(500) * 0.01
         model = GARCH(p=1, q=1)
-        result = model.fit(returns)
-        return result
+        return model.fit(returns)
 
     def test_forecast_returns_array(self, fitted_garch):
         fc = fitted_garch.forecast(horizon=10)

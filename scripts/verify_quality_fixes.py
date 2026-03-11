@@ -49,10 +49,10 @@ def _verify():
     if not np.isfinite(v):
         errors.append("value_at_risk: expected finite for valid cutoff")
 
-    # 4. annual_volatility alpha_ param
-    vol = annual_volatility(r.values, alpha_=2.0)
+    # 4. annual_volatility volatility_power param
+    vol = annual_volatility(r.values, volatility_power=2.0)
     if not np.isfinite(vol):
-        errors.append("annual_volatility: expected finite with alpha_=2.0")
+        errors.append("annual_volatility: expected finite with volatility_power=2.0")
 
     return errors
 

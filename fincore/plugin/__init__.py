@@ -28,14 +28,14 @@ from fincore.plugin.registry import (
 )
 
 __all__ = [
-    "register_metric",
-    "register_viz_backend",
-    "register_hook",
-    "list_metrics",
-    "list_viz_backends",
-    "list_hooks",
+    "clear_registry",
+    "execute_hooks",
     "get_metric",
     "get_viz_backend",
-    "execute_hooks",
-    "clear_registry",
+    "list_hooks",
+    "list_metrics",
+    "list_viz_backends",
+    "register_hook",
+    "register_metric",
+    "register_viz_backend",
 ]

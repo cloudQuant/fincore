@@ -111,8 +111,7 @@ class TestHtmlReportBuilder:
         builder.add_title("Test")
         builder.add_stats_table(ctx.perf_stats())
         builder.save(path)
-        with open(path) as f:
-            content = f.read()
+        content = (tmp_path / "report.html").read_text()
         assert "<!DOCTYPE html>" in content
 
 
@@ -164,11 +163,10 @@ class TestContextVisualization:
         assert "Sharpe ratio" in html
 
     def test_to_html_save(self, ctx, tmp_path):
-        path = str(tmp_path / "ctx_report.html")
-        html = ctx.to_html(path=path)
+        path = tmp_path / "ctx_report.html"
+        html = ctx.to_html(path=str(path))
         assert len(html) > 100
-        with open(path) as f:
-            assert "Performance Report" in f.read()
+        assert "Performance Report" in path.read_text()
 
     def test_plot_html_backend(self, ctx):
         viz = ctx.plot(backend="html")

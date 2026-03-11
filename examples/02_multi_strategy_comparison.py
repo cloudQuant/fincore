@@ -9,11 +9,7 @@ import pandas as pd
 import fincore
 
 
-def generate_multiple_strategies(
-    n_days: int = 252 * 3,
-    n_strategies: int = 5,
-    seed: int = 42
-) -> pd.DataFrame:
+def generate_multiple_strategies(n_days: int = 252 * 3, n_strategies: int = 5, seed: int = 42) -> pd.DataFrame:
     """Generate synthetic returns for multiple strategies."""
     np.random.seed(seed)
 
@@ -26,7 +22,7 @@ def generate_multiple_strategies(
         {"name": "MeanReversion", "ret": 0.08, "vol": 0.12},
     ]
 
-    dates = pd.bdate_range('2021-01-01', periods=n_days)
+    dates = pd.bdate_range("2021-01-01", periods=n_days)
 
     for config in strategy_configs[:n_strategies]:
         daily_ret = config["ret"] / 252
@@ -58,12 +54,14 @@ def main():
     calmar_ratios = fincore.calmar_ratio(returns)
 
     # Create comparison table
-    comparison = pd.DataFrame({
-        "Sharpe Ratio": sharpe_ratios,
-        "Sortino Ratio": sortino_ratios,
-        "Max Drawdown": max_drawdowns,
-        "Calmar Ratio": calmar_ratios,
-    })
+    comparison = pd.DataFrame(
+        {
+            "Sharpe Ratio": sharpe_ratios,
+            "Sortino Ratio": sortino_ratios,
+            "Max Drawdown": max_drawdowns,
+            "Calmar Ratio": calmar_ratios,
+        }
+    )
 
     # Sort by Sharpe Ratio
     comparison = comparison.sort_values("Sharpe Ratio", ascending=False)
@@ -74,11 +72,13 @@ def main():
     annual_returns = fincore.annual_return(returns)
     annual_vols = fincore.annual_volatility(returns)
 
-    returns_vol_comparison = pd.DataFrame({
-        "Annual Return": annual_returns,
-        "Annual Volatility": annual_vols,
-        "Return/Vol": annual_returns / annual_vols,
-    })
+    returns_vol_comparison = pd.DataFrame(
+        {
+            "Annual Return": annual_returns,
+            "Annual Volatility": annual_vols,
+            "Return/Vol": annual_returns / annual_vols,
+        }
+    )
     print(returns_vol_comparison.sort_values("Annual Return", ascending=False))
 
     # Find best strategy by different metrics

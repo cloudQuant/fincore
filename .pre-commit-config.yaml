@@ -1,0 +1,55 @@
+# Pre-commit hooks for fincore
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.5
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^(fincore|tests|scripts|examples|benchmarks)/
+      - id: ruff-format
+        files: ^(fincore|tests|scripts|examples|benchmarks)/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.10"
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        files: ^fincore/
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        args:
+          - --ignore-missing-imports
+          - fincore/core
+          - fincore/constants
+          - fincore/metrics
+          - fincore/plugin
+          - fincore/data
+          - fincore/optimization
+          - fincore/attribution
+          - fincore/report
+          - fincore/risk
+          - fincore/simulation
+          - fincore/utils
+          - fincore/viz
+          - fincore/empyrical.py
+          - fincore/tearsheets
+          - fincore/pyfolio.py
+        language: system
+        files: ^fincore/

@@ -9,17 +9,25 @@ Contains:
 
 from __future__ import annotations
 
+import contextlib
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    import pandas as pd
 
 __all__ = [
     "HTML_CSS",
-    "fmt",
     "css_cls",
-    "html_table",
-    "html_df",
-    "html_cards",
-    "safe_list",
     "date_list",
+    "fmt",
+    "html_cards",
+    "html_df",
+    "html_table",
+    "safe_list",
 ]
 
 
@@ -119,32 +127,32 @@ footer { margin-top: 28px; padding: 14px 0; border-top: 1px solid var(--g200);
 # =========================================================================
 
 
-def fmt(v, pct=False):
+def fmt(v: Any, pct: bool = False) -> str:
     """Format a scalar for display in HTML tables/cards."""
     if isinstance(v, (int, np.integer)):
-        return f"{v:,}" if abs(v) >= 10000 else str(v)
+        return f"{int(v):,}" if abs(int(v)) >= 10000 else str(v)
     if isinstance(v, (float, np.floating)):
         if np.isnan(v):
             return "N/A"
+        vf = float(v)
         if pct:
-            return f"{v * 100:.2f}%"
-        a = abs(v)
+            return f"{vf * 100:.2f}%"
+        a = abs(vf)
         if a >= 1e6:
-            return f"{v:,.0f}"
+            return f"{vf:,.0f}"
         if a >= 100:
-            return f"{v:,.2f}"
-        return f"{v:.4f}"
+            return f"{vf:,.2f}"
+        return f"{vf:.4f}"
     return str(v)
 
 
-def css_cls(v):
+def css_cls(v: Any) -> str:
     """Return CSS class for positive/negative coloring."""
     if isinstance(v, (int, float, np.integer, np.floating)):
-        try:
+        # np.isnan can raise for edge-case numeric types; suppress and treat as non-NaN
+        with contextlib.suppress(TypeError, ValueError):
             if np.isnan(v):
                 return ""
-        except (TypeError, ValueError):
-            pass
         return "pos" if v > 0 else ("neg" if v < 0 else "")
     return ""
 
@@ -154,7 +162,10 @@ def css_cls(v):
 # =========================================================================
 
 
-def html_table(d, pct_keys=None):
+def html_table(
+    d: Mapping[str, Any],
+    pct_keys: Iterable[str] | None = None,
+) -> str:
     """OrderedDict → HTML table."""
     pct_keys = set(pct_keys or [])
     rows = []
@@ -164,7 +175,12 @@ def html_table(d, pct_keys=None):
     return "<table>" + "".join(rows) + "</table>"
 
 
-def html_df(df, float_format=".4f", table_class="", left_align=False):
+def html_df(
+    df: pd.DataFrame,
+    float_format: str = ".4f",
+    table_class: str = "",
+    left_align: bool = False,
+) -> str:
     """DataFrame → HTML table."""
     cls_attr = f' class="{table_class}"' if table_class else ""
     _td_sty = ' style="text-align:left"' if left_align else ""
@@ -184,7 +200,11 @@ def html_df(df, float_format=".4f", table_class="", left_align=False):
     return f"<table{cls_attr}>" + "".join(rows) + "</table>"
 
 
-def html_cards(d, keys, pct_keys=None):
+def html_cards(
+    d: Mapping[str, Any],
+    keys: Iterable[str],
+    pct_keys: Iterable[str] | None = None,
+) -> str:
     """Render metric cards."""
     pct_keys = set(pct_keys or [])
     cards = []
@@ -203,10 +223,14 @@ def html_cards(d, keys, pct_keys=None):
 # =========================================================================
 
 
-def safe_list(arr, decimals=6, pct=False):
+def safe_list(
+    arr: np.ndarray | Iterable[float],
+    decimals: int = 6,
+    pct: bool = False,
+) -> list[float | None]:
     """Convert numpy array to JSON-safe list."""
     factor = 100.0 if pct else 1.0
-    out = []
+    out: list[float | None] = []
     for v in np.asanyarray(arr, dtype=float):
         if np.isnan(v) or np.isinf(v):
             out.append(None)
@@ -215,6 +239,6 @@ def safe_list(arr, decimals=6, pct=False):
     return out
 
 
-def date_list(index):
+def date_list(index: pd.DatetimeIndex) -> list[str]:
     """Convert DatetimeIndex to list of 'YYYY-MM-DD' strings."""
     return [d.strftime("%Y-%m-%d") for d in index]

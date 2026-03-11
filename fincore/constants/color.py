@@ -4,6 +4,8 @@ This module provides color palette constants used throughout fincore
 for consistent visualization styling.
 """
 
+from __future__ import annotations
+
 __all__ = ["COLORMAP", "COLORS"]
 
 

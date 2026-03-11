@@ -26,7 +26,7 @@ class TestLegendSortingExceptionPath:
             try:
                 y = ydata_fn()
                 result = float(y[-1])
-            except Exception:
+            except (RuntimeError, IndexError, TypeError, ValueError):
                 result = 0.0
 
         # Should return 0.0 for handle that raises exception

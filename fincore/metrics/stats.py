@@ -29,24 +29,24 @@ from fincore.constants import DAILY
 from fincore.metrics.basic import aligned_series
 
 __all__ = [
-    "skewness",
-    "kurtosis",
-    "hurst_exponent",
-    "stutzer_index",
-    "serial_correlation",
-    "stock_market_correlation",
     "bond_market_correlation",
+    "capm_r_squared",
+    "common_sense_ratio",
     "futures_market_correlation",
-    "win_rate",
+    "hurst_exponent",
+    "kurtosis",
     "loss_rate",
-    "relative_win_rate",
+    "normalize",
     "r_cubed",
     "r_cubed_turtle",
-    "capm_r_squared",
+    "relative_win_rate",
+    "serial_correlation",
+    "skewness",
+    "stock_market_correlation",
+    "stutzer_index",
     "tracking_difference",
-    "common_sense_ratio",
     "var_cov_var_normal",
-    "normalize",
+    "win_rate",
 ]
 
 
@@ -273,8 +273,7 @@ def stutzer_index(returns: pd.Series | np.ndarray, target_return: float = 0.0) -
             exp_theta_r = np.exp(theta * excess_returns)
             if np.any(np.isinf(exp_theta_r)) or np.any(np.isnan(exp_theta_r)):
                 return 0.0
-            log_mean = np.log(exp_theta_r.mean())
-            return log_mean
+            return np.log(exp_theta_r.mean())
 
         if mean_excess > 0:
             result = minimize_scalar(neg_ip, bounds=(-50, -1e-10), method="bounded")
@@ -287,8 +286,7 @@ def stutzer_index(returns: pd.Series | np.ndarray, target_return: float = 0.0) -
                 ip = 0.0
             sign = 1.0 if mean_excess > 0 else -1.0
             return sign * np.sqrt(2 * ip)
-        else:
-            return np.nan
+        return np.nan
     except (ValueError, FloatingPointError, ZeroDivisionError, RuntimeError) as e:
         logger.debug("stutzer_index failed: %s", e)
         return np.nan
@@ -457,8 +455,7 @@ def win_rate(returns: pd.Series | np.ndarray) -> float:
     if returns_array.ndim == 1:
         val = win_rate_value.item() if isinstance(win_rate_value, np.ndarray) else win_rate_value
         return float(val)
-    else:
-        return float(win_rate_value)
+    return float(win_rate_value)
 
 
 def loss_rate(returns: pd.Series | np.ndarray) -> float:
@@ -491,8 +488,7 @@ def loss_rate(returns: pd.Series | np.ndarray) -> float:
     if returns_array.ndim == 1:
         val = loss_rate_value.item() if isinstance(loss_rate_value, np.ndarray) else loss_rate_value
         return float(val)
-    else:
-        return float(loss_rate_value)
+    return float(loss_rate_value)
 
 
 def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
@@ -606,7 +602,7 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
         years = returns.index.year.unique()
     else:
         n_obs = len(returns)
-        n_years = max(1, int(round(n_obs / ann_factor)))
+        n_years = max(1, round(n_obs / ann_factor))
         years = range(n_years)
 
     if len(years) < 1:

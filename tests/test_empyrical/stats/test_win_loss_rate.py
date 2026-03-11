@@ -27,8 +27,6 @@ DECIMAL_PLACES = 8
 class BaseTestCase(TestCase):
     """Base test case for win/loss rate tests."""
 
-    pass
-
 
 class TestWinLossRate(BaseTestCase):
     """Tests for win rate and loss rate calculations."""

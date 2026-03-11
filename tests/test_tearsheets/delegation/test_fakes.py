@@ -129,46 +129,46 @@ class _FakePyfolioReturns:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    def show_perf_stats(self, *args, **kwargs):  # noqa: ARG002
+    def show_perf_stats(self, *args, **kwargs):
         self.calls.append("show_perf_stats")
 
-    def show_worst_drawdown_periods(self, *args, **kwargs):  # noqa: ARG002
+    def show_worst_drawdown_periods(self, *args, **kwargs):
         self.calls.append("show_worst_drawdown_periods")
 
-    def plot_rolling_returns(self, *args, **kwargs):  # noqa: ARG002
+    def plot_rolling_returns(self, *args, **kwargs):
         self.calls.append("plot_rolling_returns")
 
-    def plot_returns(self, *args, **kwargs):  # noqa: ARG002
+    def plot_returns(self, *args, **kwargs):
         self.calls.append("plot_returns")
 
-    def plot_rolling_beta(self, *args, **kwargs):  # noqa: ARG002
+    def plot_rolling_beta(self, *args, **kwargs):
         self.calls.append("plot_rolling_beta")
 
-    def plot_rolling_volatility(self, *args, **kwargs):  # noqa: ARG002
+    def plot_rolling_volatility(self, *args, **kwargs):
         self.calls.append("plot_rolling_volatility")
 
-    def plot_rolling_sharpe(self, *args, **kwargs):  # noqa: ARG002
+    def plot_rolling_sharpe(self, *args, **kwargs):
         self.calls.append("plot_rolling_sharpe")
 
-    def plot_drawdown_periods(self, *args, **kwargs):  # noqa: ARG002
+    def plot_drawdown_periods(self, *args, **kwargs):
         self.calls.append("plot_drawdown_periods")
 
-    def plot_drawdown_underwater(self, *args, **kwargs):  # noqa: ARG002
+    def plot_drawdown_underwater(self, *args, **kwargs):
         self.calls.append("plot_drawdown_underwater")
 
-    def plot_monthly_returns_heatmap(self, *args, **kwargs):  # noqa: ARG002
+    def plot_monthly_returns_heatmap(self, *args, **kwargs):
         self.calls.append("plot_monthly_returns_heatmap")
 
-    def plot_annual_returns(self, *args, **kwargs):  # noqa: ARG002
+    def plot_annual_returns(self, *args, **kwargs):
         self.calls.append("plot_annual_returns")
 
-    def plot_monthly_returns_dist(self, *args, **kwargs):  # noqa: ARG002
+    def plot_monthly_returns_dist(self, *args, **kwargs):
         self.calls.append("plot_monthly_returns_dist")
 
-    def plot_return_quantiles(self, *args, **kwargs):  # noqa: ARG002
+    def plot_return_quantiles(self, *args, **kwargs):
         self.calls.append("plot_return_quantiles")
 
-    def plot_perf_stats(self, *args, **kwargs):  # noqa: ARG002
+    def plot_perf_stats(self, *args, **kwargs):
         self.calls.append("plot_perf_stats")
 
 
@@ -183,29 +183,29 @@ class _FakePyfolioPositions:
         denom = positions.abs().sum(axis=1).replace(0, np.nan)
         return positions.div(denom, axis=0).fillna(0)
 
-    def plot_exposures(self, *args, **kwargs):  # noqa: ARG002
+    def plot_exposures(self, *args, **kwargs):
         self.calls.append(("plot_exposures", dict(kwargs)))
 
-    def show_and_plot_top_positions(self, *args, **kwargs):  # noqa: ARG002
+    def show_and_plot_top_positions(self, *args, **kwargs):
         self.calls.append(("show_and_plot_top_positions", dict(kwargs)))
 
-    def plot_max_median_position_concentration(self, *args, **kwargs):  # noqa: ARG002
+    def plot_max_median_position_concentration(self, *args, **kwargs):
         self.calls.append(("plot_max_median_position_concentration", dict(kwargs)))
 
-    def plot_holdings(self, *args, **kwargs):  # noqa: ARG002
+    def plot_holdings(self, *args, **kwargs):
         self.calls.append(("plot_holdings", dict(kwargs)))
 
-    def plot_long_short_holdings(self, *args, **kwargs):  # noqa: ARG002
+    def plot_long_short_holdings(self, *args, **kwargs):
         self.calls.append(("plot_long_short_holdings", dict(kwargs)))
 
-    def plot_gross_leverage(self, *args, **kwargs):  # noqa: ARG002
+    def plot_gross_leverage(self, *args, **kwargs):
         self.calls.append(("plot_gross_leverage", dict(kwargs)))
 
-    def get_sector_exposures(self, positions, sector_mappings):  # noqa: ARG002
+    def get_sector_exposures(self, positions, sector_mappings):
         idx = positions.index
         return pd.DataFrame({"tech": [10.0] * len(idx), "fin": [5.0] * len(idx), "cash": [100.0] * len(idx)}, index=idx)
 
-    def plot_sector_allocations(self, *args, **kwargs):  # noqa: ARG002
+    def plot_sector_allocations(self, *args, **kwargs):
         self.calls.append(("plot_sector_allocations", dict(kwargs)))
 
 
@@ -215,22 +215,22 @@ class _FakePyfolioTxns:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    def plot_turnover(self, *args, **kwargs):  # noqa: ARG002
+    def plot_turnover(self, *args, **kwargs):
         self.calls.append("plot_turnover")
 
-    def plot_daily_volume(self, *args, **kwargs):  # noqa: ARG002
+    def plot_daily_volume(self, *args, **kwargs):
         self.calls.append("plot_daily_volume")
 
-    def plot_daily_turnover_hist(self, *args, **kwargs):  # noqa: ARG002
+    def plot_daily_turnover_hist(self, *args, **kwargs):
         raise ValueError("nope")
 
-    def plot_txn_time_hist(self, *args, **kwargs):  # noqa: ARG002
+    def plot_txn_time_hist(self, *args, **kwargs):
         self.calls.append("plot_txn_time_hist")
 
-    def plot_slippage_sweep(self, *args, **kwargs):  # noqa: ARG002
+    def plot_slippage_sweep(self, *args, **kwargs):
         self.calls.append("plot_slippage_sweep")
 
-    def plot_slippage_sensitivity(self, *args, **kwargs):  # noqa: ARG002
+    def plot_slippage_sensitivity(self, *args, **kwargs):
         self.calls.append("plot_slippage_sensitivity")
 
 
@@ -240,14 +240,14 @@ class _FakePyfolioRoundTrips:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    def print_round_trip_stats(self, *args, **kwargs):  # noqa: ARG002
+    def print_round_trip_stats(self, *args, **kwargs):
         self.calls.append("print_round_trip_stats")
 
-    def show_profit_attribution(self, *args, **kwargs):  # noqa: ARG002
+    def show_profit_attribution(self, *args, **kwargs):
         self.calls.append("show_profit_attribution")
 
-    def plot_round_trip_lifetimes(self, *args, **kwargs):  # noqa: ARG002
+    def plot_round_trip_lifetimes(self, *args, **kwargs):
         self.calls.append("plot_round_trip_lifetimes")
 
-    def plot_prob_profit_trade(self, *args, **kwargs):  # noqa: ARG002
+    def plot_prob_profit_trade(self, *args, **kwargs):
         self.calls.append("plot_prob_profit_trade")

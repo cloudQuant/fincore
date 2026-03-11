@@ -13,7 +13,7 @@ def generate_strategy_returns(
     n_days: int = 252 * 3,  # 3 years of daily data
     annual_return: float = 0.12,
     annual_volatility: float = 0.18,
-    seed: int = 42
+    seed: int = 42,
 ) -> pd.Series:
     """Generate synthetic strategy returns for demonstration."""
     np.random.seed(seed)
@@ -28,7 +28,7 @@ def generate_strategy_returns(
     returns[50:60] -= 0.02  # First drawdown
     returns[150:165] -= 0.03  # Second drawdown
 
-    dates = pd.bdate_range('2021-01-01', periods=n_days)
+    dates = pd.bdate_range("2021-01-01", periods=n_days)
     return pd.Series(returns, index=dates)
 
 
@@ -41,7 +41,9 @@ def main():
 
     # Generate strategy returns
     strategy_returns = generate_strategy_returns()
-    print(f"\nStrategy data: {len(strategy_returns)} days from {strategy_returns.index[0].date()} to {strategy_returns.index[-1].date()}")
+    print(
+        f"\nStrategy data: {len(strategy_returns)} days from {strategy_returns.index[0].date()} to {strategy_returns.index[-1].date()}"
+    )
 
     # Method 1: Using individual metrics
     print("\n--- Individual Metrics ---")
@@ -69,6 +71,7 @@ def main():
 
     # Export to JSON
     import json
+
     stats_dict = ctx.to_dict()
     print("\n--- JSON Export ---")
     print(json.dumps(stats_dict, indent=2, default=str))
@@ -81,6 +84,7 @@ def main():
     # Drawdown analysis
     print("\n--- Drawdown Analysis ---")
     from fincore.metrics.drawdown import get_all_drawdowns
+
     drawdowns = get_all_drawdowns(strategy_returns)
     print(f"Number of drawdowns: {len(drawdowns)}")
     for i, dd_val in enumerate(sorted(drawdowns)[:3], 1):
@@ -89,7 +93,8 @@ def main():
     # Monthly returns heatmap
     print("\n--- Monthly Returns ---")
     from fincore.metrics.returns import aggregate_returns
-    monthly_returns = aggregate_returns(strategy_returns, 'monthly')
+
+    monthly_returns = aggregate_returns(strategy_returns, "monthly")
     print(f"Average monthly return: {monthly_returns.mean() * 100:.2f}%")
     print(f"Best month: {monthly_returns.max() * 100:.2f}%")
     print(f"Worst month: {monthly_returns.min() * 100:.2f}%")

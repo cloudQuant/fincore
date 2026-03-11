@@ -25,24 +25,24 @@ from fincore.metrics.returns import cum_returns
 from fincore.utils import nanmin
 
 __all__ = [
-    "max_drawdown",
+    "gen_drawdown_table",
     "get_all_drawdowns",
     "get_all_drawdowns_detailed",
     "get_max_drawdown",
+    "get_max_drawdown_period",
     "get_max_drawdown_underwater",
     "get_top_drawdowns",
-    "gen_drawdown_table",
-    "get_max_drawdown_period",
+    "max_drawdown",
     "max_drawdown_days",
-    "max_drawdown_weeks",
     "max_drawdown_months",
     "max_drawdown_recovery_days",
-    "max_drawdown_recovery_weeks",
     "max_drawdown_recovery_months",
+    "max_drawdown_recovery_weeks",
+    "max_drawdown_weeks",
     "second_max_drawdown",
-    "third_max_drawdown",
     "second_max_drawdown_days",
     "second_max_drawdown_recovery_days",
+    "third_max_drawdown",
     "third_max_drawdown_days",
     "third_max_drawdown_recovery_days",
 ]
@@ -87,7 +87,7 @@ def max_drawdown(
     returns_array = np.asanyarray(returns)
 
     cumulative = np.empty(
-        (returns.shape[0] + 1,) + returns.shape[1:],
+        (returns.shape[0] + 1, *returns.shape[1:]),
         dtype="float64",
     )
     cumulative[0] = start = 100
@@ -206,10 +206,7 @@ def get_all_drawdowns_detailed(returns: pd.Series | np.ndarray) -> list[dict]:
         trough_idx = s + trough_offset
         value = float(segment[trough_offset])
         duration = trough_idx - s
-        if ends_in_dd and k == len(starts) - 1:
-            recovery_duration = None
-        else:
-            recovery_duration = e - trough_idx
+        recovery_duration = None if ends_in_dd and k == len(starts) - 1 else e - trough_idx
         drawdown_periods.append(
             {
                 "value": value,
@@ -446,10 +443,9 @@ def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
 
     if isinstance(returns.index, pd.DatetimeIndex):
         return (end_idx - start_idx).days  # type: ignore[union-attr]
-    else:
-        start_pos = returns.index.get_loc(start_idx)
-        end_pos = returns.index.get_loc(end_idx)
-        return end_pos - start_pos  # type: ignore[return-value]
+    start_pos = returns.index.get_loc(start_idx)
+    end_pos = returns.index.get_loc(end_idx)
+    return end_pos - start_pos  # type: ignore[return-value]
 
 
 def max_drawdown_weeks(returns: pd.Series | np.ndarray) -> float:
@@ -530,10 +526,8 @@ def max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
         recovery_date = post_dd_data[recovery_mask].index[0]
         if hasattr(recovery_date - max_dd_date, "days"):
             return (recovery_date - max_dd_date).days
-        else:
-            return int(recovery_date - max_dd_date)
-    else:
-        return np.nan
+        return int(recovery_date - max_dd_date)
+    return np.nan
 
 
 def max_drawdown_recovery_weeks(returns: pd.Series | np.ndarray) -> float:

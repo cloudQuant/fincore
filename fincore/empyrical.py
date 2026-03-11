@@ -28,6 +28,8 @@ The codebase has been refactored:
   explicitly defined to preserve precise call signatures.
 """
 
+from __future__ import annotations
+
 import functools
 import importlib
 from typing import Any
@@ -726,4 +728,4 @@ class Empyrical:
         return _resolve_module("_round_trips").groupby_consecutive(txn, max_delta)
 
 
-__all__ = ["Empyrical", "ZIPLINE"]
+__all__ = ["ZIPLINE", "Empyrical"]

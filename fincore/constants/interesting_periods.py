@@ -15,6 +15,8 @@
 """Generates a list of historical event dates that may have had
 significant impact on markets.  See extract_interesting_date_ranges."""
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import pandas as pd

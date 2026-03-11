@@ -1,6 +1,6 @@
 """Shared fixtures and test utilities for performance attribution tests."""
 
-import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -78,10 +78,10 @@ class PerfAttribTestLocation:
     """Mixin to provide test data location."""
 
     @property
-    def __location__(self):
+    def __location__(self) -> Path:
         """Get the test data directory location."""
         # The test data is in tests/test_data/
-        return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "test_data")
+        return Path(__file__).resolve().parent.parent.parent / "test_data"
 
 
 # Export functions for tests

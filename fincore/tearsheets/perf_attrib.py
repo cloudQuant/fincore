@@ -3,21 +3,30 @@
 Includes attribution return series, factor contributions, and risk exposures.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from fincore.utils import configure_legend, print_table
 
 __all__ = [
-    "plot_perf_attrib_returns",
     "plot_alpha_returns",
     "plot_factor_contribution_to_perf",
+    "plot_perf_attrib_returns",
     "plot_risk_exposures",
     "show_perf_attrib_stats",
 ]
 
 
-def plot_perf_attrib_returns(empyrical_instance, perf_attrib_data, cost=None, ax=None):
+def plot_perf_attrib_returns(
+    empyrical_instance: Any,
+    perf_attrib_data: pd.DataFrame,
+    cost: pd.Series | None = None,
+    ax: Any = None,
+) -> Any:
     """
     Plot total, specific, and common returns.
 
@@ -67,7 +76,10 @@ def plot_perf_attrib_returns(empyrical_instance, perf_attrib_data, cost=None, ax
     return ax
 
 
-def plot_alpha_returns(alpha_returns, ax=None):
+def plot_alpha_returns(
+    alpha_returns: pd.Series,
+    ax: Any = None,
+) -> Any:
     """
     Plot histogram of daily multifactor alpha returns (specific returns).
 
@@ -97,8 +109,11 @@ def plot_alpha_returns(alpha_returns, ax=None):
 
 
 def plot_factor_contribution_to_perf(
-    empyrical_instance, perf_attrib_data, ax=None, title="Cumulative common returns attribution"
-):
+    empyrical_instance: Any,
+    perf_attrib_data: pd.DataFrame,
+    ax: Any = None,
+    title: str = "Cumulative common returns attribution",
+) -> Any:
     """
     Plot each factor's contribution to performance.
 
@@ -139,7 +154,11 @@ def plot_factor_contribution_to_perf(
     return ax
 
 
-def plot_risk_exposures(exposures, ax=None, title="Daily risk factor exposures"):
+def plot_risk_exposures(
+    exposures: pd.DataFrame,
+    ax: Any = None,
+    title: str = "Daily risk factor exposures",
+) -> Any:
     """
     Plot daily risk factor exposures.
 
@@ -170,8 +189,14 @@ def plot_risk_exposures(exposures, ax=None, title="Daily risk factor exposures")
 
 
 def show_perf_attrib_stats(
-    empyrical_instance, returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True
-):
+    empyrical_instance: Any,
+    returns: pd.Series,
+    positions: pd.DataFrame,
+    factor_returns: pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+    transactions: pd.DataFrame | None = None,
+    pos_in_dollars: bool = True,
+) -> None:
     """
     Calls `perf_attrib` using inputs, and displays outputs using
     `print_table`.

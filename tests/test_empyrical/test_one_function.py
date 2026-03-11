@@ -61,14 +61,12 @@ def beta_fragility_heuristic_aligned(returns, factor_returns):
 
     # find weights for the start and end returns
     # using a convex combination
-    if not factor_returns_range == 0:
+    if factor_returns_range != 0:
         start_returns_weight = (mid_factor_returns - start_factor_returns) / factor_returns_range
         end_returns_weight = (end_factor_returns - mid_factor_returns) / factor_returns_range
 
     # calculate fragility heuristic
-    heuristic = (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
-
-    return heuristic
+    return (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
 
 
 if __name__ == "__main__":

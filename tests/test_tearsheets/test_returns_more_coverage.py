@@ -22,23 +22,22 @@ class _DummyEmpyrical:
             y = returns.resample("YE").apply(agg)
             return pd.Series(y.values, index=y.index.year)
         if period == "weekly":
-            w = returns.resample("W").apply(agg)
-            return w
+            return returns.resample("W").apply(agg)
         raise ValueError(period)
 
     def cum_returns(self, returns: pd.Series, starting_value: float = 1.0) -> pd.Series:
         return starting_value * (1 + returns.fillna(0)).cumprod()
 
-    def rolling_beta(self, returns: pd.Series, factor_returns: pd.Series, rolling_window: int) -> pd.Series:  # noqa: ARG002
+    def rolling_beta(self, returns: pd.Series, factor_returns: pd.Series, rolling_window: int) -> pd.Series:
         return pd.Series(0.5, index=returns.index)
 
-    def rolling_volatility(self, returns: pd.Series, rolling_window: int) -> pd.Series:  # noqa: ARG002
+    def rolling_volatility(self, returns: pd.Series, rolling_window: int) -> pd.Series:
         return pd.Series(0.1, index=returns.index)
 
-    def rolling_sharpe(self, returns: pd.Series, rolling_window: int) -> pd.Series:  # noqa: ARG002
+    def rolling_sharpe(self, returns: pd.Series, rolling_window: int) -> pd.Series:
         return pd.Series(1.0, index=returns.index)
 
-    def gen_drawdown_table(self, returns: pd.Series, top: int = 10) -> pd.DataFrame:  # noqa: ARG002
+    def gen_drawdown_table(self, returns: pd.Series, top: int = 10) -> pd.DataFrame:
         return pd.DataFrame(
             {"Peak date": [returns.index[0]], "Recovery date": [pd.NaT]},
             index=range(1),
@@ -72,6 +71,7 @@ def _make_returns(start: str = "2023-10-02", periods: int = 120) -> pd.Series:
     return pd.Series(vals, index=idx, name="r")
 
 
+@pytest.mark.serial
 def test_returns_plots_cover_ax_none_and_live_start_date_str(monkeypatch) -> None:
     emp = _DummyEmpyrical()
     returns = _make_returns()
@@ -93,7 +93,7 @@ def test_returns_plots_cover_ax_none_and_live_start_date_str(monkeypatch) -> Non
     factor = returns * 0.5
     factor.name = "SPY"
 
-    def fake_cone(is_returns, horizon, cone_std, starting_value):  # noqa: ARG001
+    def fake_cone(is_returns, horizon, cone_std, starting_value):
         data = {}
         for std in cone_std:
             data[float(std)] = np.full(horizon, starting_value * 1.1)

@@ -19,17 +19,17 @@ list_events = events.list_events
 clear_hooks = events.clear_hooks
 
 __all__ = [
+    "_EVENT_HOOKS",
     # Events
     "AnalysisContext",
-    "OptimizationContext",
     "ComputeContext",
-    "_EVENT_HOOKS",
+    "OptimizationContext",
+    "clear_hooks",
     "create_analysis_context",
-    "create_optimization_context",
     "create_compute_context",
+    "create_optimization_context",
     "execute_hooks",
-    "register_event_hook",
     "get_event_hooks",
     "list_events",
-    "clear_hooks",
+    "register_event_hook",
 ]

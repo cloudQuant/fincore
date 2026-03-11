@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as sp_opt
 
+from fincore.constants import APPROX_BDAYS_PER_YEAR
 from fincore.optimization._utils import normalize_weights, validate_result
 
 __all__ = ["risk_parity"]
@@ -55,7 +56,7 @@ def risk_parity(
     if not np.isfinite(returns.to_numpy(dtype=float)).all():
         raise ValueError("returns contains NaN or infinite values.")
 
-    cov = returns.cov().values * 252
+    cov = returns.cov().values * APPROX_BDAYS_PER_YEAR
     n = cov.shape[0]
     asset_names = list(returns.columns)
 

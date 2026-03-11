@@ -14,12 +14,14 @@
 - 监管报告
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
 from fincore import Empyrical
-from fincore.simulation import MonteCarlo
 from fincore.constants.interesting_periods import PERIODS
+from fincore.simulation import MonteCarlo
 
 print("=" * 70)
 print("压力测试与极端情景分析示例")
@@ -27,28 +29,20 @@ print("=" * 70)
 
 # 生成模拟策略数据
 np.random.seed(42)
-dates = pd.date_range("2018-01-01", periods=252*5, freq="B", tz="UTC")
+dates = pd.date_range("2018-01-01", periods=252 * 5, freq="B", tz="UTC")
 
 # 模拟策略收益
-strategy_returns = pd.Series(
-    np.random.normal(0.0006, 0.012, len(dates)),
-    index=dates,
-    name="strategy"
-)
+strategy_returns = pd.Series(np.random.normal(0.0006, 0.012, len(dates)), index=dates, name="strategy")
 
 # 模拟基准收益 (市场)
-market_returns = pd.Series(
-    np.random.normal(0.0004, 0.010, len(dates)),
-    index=dates,
-    name="market"
-)
+market_returns = pd.Series(np.random.normal(0.0004, 0.010, len(dates)), index=dates, name="market")
 
-print(f"\n数据概览:")
+print("\n数据概览:")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  观测值数: {len(strategy_returns)}")
 
 # 基本统计
-print(f"\n策略基本统计:")
+print("\n策略基本统计:")
 print(f"  年化收益: {strategy_returns.mean() * 252:.4f}")
 print(f"  年化波动: {strategy_returns.std() * np.sqrt(252):.4f}")
 print(f"  夏普比率: {Empyrical.sharpe_ratio(strategy_returns):.4f}")
@@ -62,13 +56,13 @@ print("1. 历史极端事件分析")
 print("=" * 70)
 
 # 显示可用的历史事件期间
-print(f"\n预定义的历史极端事件:")
+print("\n预定义的历史极端事件:")
 print("-" * 50)
 for event_name, (start, end) in list(PERIODS.items())[:10]:
     print(f"  {event_name:<30} {start.date()} ~ {end.date()}")
 
 # 分析策略在这些历史期间的表现
-print(f"\n策略在历史极端事件期间的表现 (假设覆盖期间):")
+print("\n策略在历史极端事件期间的表现 (假设覆盖期间):")
 print("-" * 70)
 print(f"{'事件':<25} {'收益':>12} {'波动率':>12} {'最大回撤':>12}")
 print("-" * 70)
@@ -77,8 +71,8 @@ print("-" * 70)
 events_in_range = []
 for event_name, (start, end) in PERIODS.items():
     # 转换为带时区的日期
-    start_tz = pd.Timestamp(start).tz_localize('UTC')
-    end_tz = pd.Timestamp(end).tz_localize('UTC')
+    start_tz = pd.Timestamp(start).tz_localize("UTC")
+    end_tz = pd.Timestamp(end).tz_localize("UTC")
     # 找到该期间的数据
     mask = (strategy_returns.index >= start_tz) & (strategy_returns.index <= end_tz)
     if mask.sum() > 0:
@@ -108,7 +102,7 @@ scenarios = {
     "崩盘情景": {"days": 3, "daily_mean": -0.05, "daily_std": 0.05},
 }
 
-print(f"\n压力情景测试:")
+print("\n压力情景测试:")
 print("-" * 60)
 print(f"{'情景':<12} {'天数':>6} {'日均值':>10} {'日波动':>10} {'预期收益':>12} {'VaR(5%)':>10}")
 print("-" * 60)
@@ -116,18 +110,16 @@ print("-" * 60)
 for name, params in scenarios.items():
     # 模拟该情景下的收益
     np.random.seed(42)
-    scenario_returns = np.random.normal(
-        params["daily_mean"],
-        params["daily_std"],
-        params["days"]
-    )
+    scenario_returns = np.random.normal(params["daily_mean"], params["daily_std"], params["days"])
 
     total_return = scenario_returns.sum()
     var_5 = np.percentile(scenario_returns, 5)
 
-    print(f"{name:<12} {params['days']:>6} "
-          f"{params['daily_mean']:>9.2%} {params['daily_std']:>9.2%} "
-          f"{total_return:>11.2%} {var_5:>9.2%}")
+    print(
+        f"{name:<12} {params['days']:>6} "
+        f"{params['daily_mean']:>9.2%} {params['daily_std']:>9.2%} "
+        f"{total_return:>11.2%} {var_5:>9.2%}"
+    )
 
 # ============================================================
 # 3. 尾部风险分析
@@ -138,13 +130,13 @@ print("=" * 70)
 
 # 分析策略的最差表现日
 worst_days = strategy_returns.nsmallest(20)
-print(f"\n最差20个交易日:")
+print("\n最差20个交易日:")
 print("-" * 40)
 for i, (date, ret) in enumerate(worst_days.items(), 1):
     print(f"  {i:2d}. {date.date()}: {ret:>7.2%}")
 
 # 尾部风险统计
-print(f"\n尾部风险统计:")
+print("\n尾部风险统计:")
 print(f"  1% 分位数 (日度):  {np.percentile(strategy_returns, 1):.4f}")
 print(f"  5% 分位数 (日度):  {np.percentile(strategy_returns, 5):.4f}")
 print(f"  10% 分位数 (日度): {np.percentile(strategy_returns, 10):.4f}")
@@ -168,7 +160,7 @@ print("=" * 70)
 mc = MonteCarlo(strategy_returns)
 
 # 模拟极端情景
-print(f"\n蒙特卡洛极端情景模拟 (1000条路径, 252天):")
+print("\n蒙特卡洛极端情景模拟 (1000条路径, 252天):")
 print("-" * 50)
 
 scenarios_mc = [
@@ -179,13 +171,7 @@ scenarios_mc = [
 ]
 
 for name, drift, vol in scenarios_mc:
-    result = mc.simulate(
-        n_paths=1000,
-        horizon=252,
-        drift=drift,
-        volatility=vol,
-        seed=42
-    )
+    result = mc.simulate(n_paths=1000, horizon=252, drift=drift, volatility=vol, seed=42)
 
     final_vals = result.paths[:, -1]
     print(f"\n  {name}:")
@@ -208,7 +194,7 @@ print("=" * 70)
 
 # 计算回撤周期
 drawdown_periods = Empyrical.gen_drawdown_table(strategy_returns, top=5)
-print(f"\n前5大回撤周期:")
+print("\n前5大回撤周期:")
 print(drawdown_periods.to_string())
 
 # 最大回撤恢复天数
@@ -222,10 +208,10 @@ print(f"最近60天最大回撤: {current_dd:.2%}")
 # 简单恢复概率计算
 historical_recoveries = []
 for i in range(60, len(strategy_returns) - 60):
-    past_returns = strategy_returns.iloc[i-60:i]
+    past_returns = strategy_returns.iloc[i - 60 : i]
     dd = Empyrical.max_drawdown(past_returns)
     if dd < -0.05:  # 5%以上回撤
-        future_returns = strategy_returns.iloc[i:i+60]
+        future_returns = strategy_returns.iloc[i : i + 60]
         recovered = future_returns.cumsum().max() >= abs(dd)
         historical_recoveries.append(recovered)
 
@@ -265,7 +251,7 @@ print("7. 综合压力测试报告")
 print("=" * 70)
 
 # 计算压力测试指标
-print(f"\n压力测试汇总:")
+print("\n压力测试汇总:")
 
 # 1. 最大损失
 max_loss = strategy_returns.min()
@@ -290,7 +276,7 @@ max_vol = rolling_vol.max()
 print(f"  最大20日波动率:   {max_vol:.2%}")
 
 # 风险等级评估
-print(f"\n风险等级评估:")
+print("\n风险等级评估:")
 risk_score = 0
 if max_dd < -0.10:
     risk_score += 2
@@ -328,22 +314,20 @@ try:
     # 1. 累计收益与回撤
     ax = axes[0, 0]
     cum_returns = (1 + strategy_returns).cumprod()
-    ax.plot(cum_returns.index, cum_returns.values * 100, label='策略')
-    ax.set_ylabel('累计收益 (%)')
-    ax.set_title('策略累计收益')
+    ax.plot(cum_returns.index, cum_returns.values * 100, label="策略")
+    ax.set_ylabel("累计收益 (%)")
+    ax.set_title("策略累计收益")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 2. 收益分布
     ax = axes[0, 1]
-    ax.hist(strategy_returns * 100, bins=50, edgecolor='black', alpha=0.7)
-    ax.axvline(x=np.percentile(strategy_returns, 5)*100, color='red',
-               linestyle='--', label='5% 分位数')
-    ax.axvline(x=np.percentile(strategy_returns, 95)*100, color='green',
-               linestyle='--', label='95% 分位数')
-    ax.set_xlabel('日收益率 (%)')
-    ax.set_ylabel('频数')
-    ax.set_title('收益分布')
+    ax.hist(strategy_returns * 100, bins=50, edgecolor="black", alpha=0.7)
+    ax.axvline(x=np.percentile(strategy_returns, 5) * 100, color="red", linestyle="--", label="5% 分位数")
+    ax.axvline(x=np.percentile(strategy_returns, 95) * 100, color="green", linestyle="--", label="95% 分位数")
+    ax.set_xlabel("日收益率 (%)")
+    ax.set_ylabel("频数")
+    ax.set_title("收益分布")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
@@ -351,24 +335,22 @@ try:
     ax = axes[1, 0]
     rolling_vol_plot = strategy_returns.rolling(60).std() * np.sqrt(252) * 100
     ax.plot(rolling_vol_plot.index, rolling_vol_plot.values)
-    ax.axhline(y=rolling_vol_plot.mean(), color='red', linestyle='--',
-               label=f'平均: {rolling_vol_plot.mean():.1f}%')
-    ax.set_ylabel('年化波动率 (%)')
-    ax.set_title('滚动波动率 (60日)')
+    ax.axhline(y=rolling_vol_plot.mean(), color="red", linestyle="--", label=f"平均: {rolling_vol_plot.mean():.1f}%")
+    ax.set_ylabel("年化波动率 (%)")
+    ax.set_title("滚动波动率 (60日)")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 4. 尾部收益
     ax = axes[1, 1]
     worst_100 = strategy_returns.nsmallest(100)
-    ax.bar(range(100), worst_100 * 100, edgecolor='black', alpha=0.7)
-    ax.axhline(y=np.percentile(strategy_returns, 5)*100, color='red',
-               linestyle='--', label='5% 分位数')
-    ax.set_xlabel('排名')
-    ax.set_ylabel('日收益率 (%)')
-    ax.set_title('最差100个交易日')
+    ax.bar(range(100), worst_100 * 100, edgecolor="black", alpha=0.7)
+    ax.axhline(y=np.percentile(strategy_returns, 5) * 100, color="red", linestyle="--", label="5% 分位数")
+    ax.set_xlabel("排名")
+    ax.set_ylabel("日收益率 (%)")
+    ax.set_title("最差100个交易日")
     ax.legend()
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.grid(True, alpha=0.3, axis="y")
 
     plt.tight_layout()
     out_dir = Path(__file__).resolve().parent / "output"

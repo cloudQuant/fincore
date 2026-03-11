@@ -8,15 +8,19 @@ Implements various stochastic processes for generating price/return paths:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-import pandas as pd
 
 from fincore.simulation.base import estimate_parameters
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 __all__ = [
-    "geometric_brownian_motion",
-    "gbm_from_returns",
     "antithetic_variates",
+    "gbm_from_returns",
+    "geometric_brownian_motion",
     "latin_hypercube_sampling",
 ]
 

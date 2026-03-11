@@ -83,7 +83,7 @@ class TestPlotSlippageSweep:
         from fincore.tearsheets.transactions import plot_slippage_sweep
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_slippage_sweep(empyrical_instance, returns, positions, transactions, ax=custom_ax)
 
@@ -122,7 +122,7 @@ class TestPlotSlippageSensitivity:
         from fincore.tearsheets.transactions import plot_slippage_sensitivity
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_slippage_sensitivity(empyrical_instance, returns, positions, transactions, ax=custom_ax)
 

@@ -23,21 +23,23 @@ Example
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
-    "register_event_hook",
-    "get_event_hooks",
-    "execute_hooks",
-    "clear_hooks",
-    "list_events",
     "AnalysisContext",
     "ComputeContext",
     "OptimizationContext",
+    "clear_hooks",
     "create_analysis_context",
     "create_compute_context",
     "create_optimization_context",
+    "execute_hooks",
+    "get_event_hooks",
+    "list_events",
+    "register_event_hook",
 ]
 
 
@@ -132,7 +134,7 @@ def execute_hooks(event: str, *args: Any, **kwargs: Any) -> Any | None:
         result = hook_func(*hook_args, **kwargs)
         # Allow hooks to modify data by returning new values
         if result is not None and len(hook_args) > 0:
-            hook_args = (result,) + hook_args[1:]
+            hook_args = (result, *hook_args[1:])
 
     if len(hook_args) == 0:
         return None

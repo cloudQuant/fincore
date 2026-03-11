@@ -16,26 +16,30 @@
 
 """Position and holdings metrics."""
 
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
 __all__ = [
-    "get_percent_alloc",
-    "get_top_long_short_abs",
-    "get_max_median_position_concentration",
-    "extract_pos",
-    "get_sector_exposures",
-    "get_long_short_pos",
-    "compute_style_factor_exposures",
-    "compute_sector_exposures",
     "compute_cap_exposures",
+    "compute_sector_exposures",
+    "compute_style_factor_exposures",
     "compute_volume_exposures",
+    "extract_pos",
+    "get_long_short_pos",
+    "get_max_median_position_concentration",
+    "get_percent_alloc",
+    "get_sector_exposures",
+    "get_top_long_short_abs",
     "gross_lev",
     "stack_positions",
 ]
 
 
-def get_percent_alloc(values):
+def get_percent_alloc(values: pd.DataFrame) -> pd.DataFrame:
     """Determine a portfolio's allocations.
 
     Parameters
@@ -52,7 +56,10 @@ def get_percent_alloc(values):
     return result.replace([np.inf, -np.inf], np.nan)
 
 
-def get_top_long_short_abs(positions, top=10):
+def get_top_long_short_abs(
+    positions: pd.DataFrame,
+    top: int = 10,
+) -> tuple[pd.Series, pd.Series, pd.Series]:
     """Find the top long, short, and absolute positions.
 
     Parameters
@@ -81,7 +88,7 @@ def get_top_long_short_abs(positions, top=10):
     return df_top_long, df_top_short, df_top_abs
 
 
-def get_max_median_position_concentration(positions):
+def get_max_median_position_concentration(positions: pd.DataFrame) -> pd.DataFrame:
     """Find the max and median long and short position concentrations.
 
     Parameters
@@ -110,7 +117,7 @@ def get_max_median_position_concentration(positions):
     return alloc_summary
 
 
-def extract_pos(positions, cash):
+def extract_pos(positions: pd.DataFrame, cash: pd.Series) -> pd.DataFrame:
     """Extract position values from get_backtest() output.
 
     Convert the backtest object's positions and cash series into a
@@ -150,7 +157,10 @@ def extract_pos(positions, cash):
     return values
 
 
-def get_sector_exposures(positions, symbol_sector_map):
+def get_sector_exposures(
+    positions: pd.DataFrame,
+    symbol_sector_map: dict[Any, Any] | pd.Series,
+) -> pd.DataFrame:
     """Sum position exposures by sector.
 
     Parameters
@@ -187,7 +197,7 @@ def get_sector_exposures(positions, symbol_sector_map):
     return sector_exp
 
 
-def get_long_short_pos(positions):
+def get_long_short_pos(positions: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     """Determine the long and short allocations in a portfolio.
 
     Parameters
@@ -211,7 +221,10 @@ def get_long_short_pos(positions):
     return longs, shorts
 
 
-def compute_style_factor_exposures(positions, risk_factor):
+def compute_style_factor_exposures(
+    positions: pd.DataFrame,
+    risk_factor: pd.DataFrame,
+) -> pd.Series:
     """Return style factor exposure of an algorithm's positions.
 
     Parameters
@@ -231,12 +244,14 @@ def compute_style_factor_exposures(positions, risk_factor):
     aligned = positions.align(risk_factor, axis=0, join="inner")[0]
     risk_factor_aligned = risk_factor.loc[aligned.index]
 
-    exposures = aligned.mul(risk_factor_aligned, axis=0).sum(axis=1)
-
-    return exposures
+    return aligned.mul(risk_factor_aligned, axis=0).sum(axis=1)
 
 
-def compute_sector_exposures(positions, sectors, sector_dict=None):
+def compute_sector_exposures(
+    positions: pd.DataFrame,
+    sectors: list[str],
+    sector_dict: dict[Any, str] | None = None,
+) -> pd.DataFrame:
     """Return sector exposures of an algorithm's positions.
 
     Parameters
@@ -267,7 +282,10 @@ def compute_sector_exposures(positions, sectors, sector_dict=None):
     return pd.DataFrame(exposures)
 
 
-def compute_cap_exposures(positions, caps):
+def compute_cap_exposures(
+    positions: pd.DataFrame,
+    caps: dict[str, list[Any]],
+) -> pd.DataFrame:
     """Compute market capitalization exposures.
 
     Parameters
@@ -292,7 +310,11 @@ def compute_cap_exposures(positions, caps):
     return pd.DataFrame(exposures)
 
 
-def compute_volume_exposures(shares_held, volumes, percentile):
+def compute_volume_exposures(
+    shares_held: pd.DataFrame,
+    volumes: pd.DataFrame,
+    percentile: float,
+) -> pd.Series:
     """Compute volume-based liquidity exposures.
 
     Parameters
@@ -314,7 +336,7 @@ def compute_volume_exposures(shares_held, volumes, percentile):
     return (days_to_liquidate > percentile).sum(axis=1)
 
 
-def gross_lev(positions):
+def gross_lev(positions: pd.DataFrame) -> pd.Series:
     """Calculate the gross leverage of a strategy.
 
     Parameters
@@ -333,7 +355,10 @@ def gross_lev(positions):
     return result.replace([np.inf, -np.inf], np.nan)
 
 
-def stack_positions(positions, pos_in_dollars=True):
+def stack_positions(
+    positions: pd.DataFrame,
+    pos_in_dollars: bool = True,
+) -> pd.Series:
     """Stack positions into a multi-index Series.
 
     Parameters

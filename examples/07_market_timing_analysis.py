@@ -14,9 +14,11 @@
 - 期权定价和风险管理
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
 from fincore import Empyrical
 
 print("=" * 70)
@@ -30,11 +32,11 @@ dates = pd.date_range("2020-01-01", periods=1260, freq="B", tz="UTC")
 # 模拟具有厚尾分布的收益（更接近真实市场）
 returns = pd.Series(np.random.standard_t(4, 1260) * 0.01, index=dates, name="returns")
 
-print(f"\n数据概览:")
+print("\n数据概览:")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  交易日数: {len(returns)}")
 print(f"  年化波动率: {Empyrical.annual_volatility(returns):.2%}")
-print(f"")
+print("")
 
 # ============================================================
 # 1. 风险价值 (VaR) 和 条件风险价值 (CVaR)
@@ -49,7 +51,7 @@ print("\n不同置信水平的 VaR:")
 print("-" * 40)
 for cutoff in confidence_levels:
     var = Empyrical.value_at_risk(returns, cutoff=cutoff)
-    print(f"  {int(cutoff*100):3d}% VaR:     {var:>8.4f}")
+    print(f"  {int(cutoff * 100):3d}% VaR:     {var:>8.4f}")
 
 # 超额收益的 VaR (相对于无风险利率)
 var_excess = Empyrical.var_excess_return(returns, cutoff=0.05, risk_free=0.03)
@@ -98,17 +100,15 @@ try:
 
     # 相对于无风险利率的超额收益 EVT 风险
     rf = 0.03
-    var_excess_evt = Empyrical.gpd_risk_estimates_aligned(
-        returns, benchmark_returns=None, p=0.05
-    )
+    var_excess_evt = Empyrical.gpd_risk_estimates_aligned(returns, benchmark_returns=None, p=0.05)
     if isinstance(var_excess_evt, dict):
-        print(f"\n超额收益 GPD 风险估计:")
+        print("\n超额收益 GPD 风险估计:")
         print(f"  VaR (GPD):     {var_excess_evt.get('var', np.nan):.4f}")
         print(f"  CVaR (GPD):    {var_excess_evt.get('cvar', np.nan):.4f}")
     else:
         print(f"\n超额收益 GPD VaR (5%): {var_excess_evt:.4f}")
 
-except Exception as e:
+except (ImportError, ValueError, RuntimeError, FloatingPointError) as e:
     print(f"\nEVT 计算（需要 scipy）: {e}")
     print("注意: 安装 scipy 后可使用极值理论功能")
 
@@ -132,13 +132,13 @@ try:
     print(f"  持续方差 (persistence): {garch_result.get('persistence', np.nan):.6f}")
 
     # 预测波动率
-    forecast = garch_result.get('forecast', None)
+    forecast = garch_result.get("forecast", None)
     if forecast is not None:
-        print(f"\n未来 5 天波动率预测:")
+        print("\n未来 5 天波动率预测:")
         for i, val in enumerate(forecast[:5]):
-            print(f"  第 {i+1} 天: {val**2:.4f} (日化)")
+            print(f"  第 {i + 1} 天: {val**2:.4f} (日化)")
 
-except Exception as e:
+except (ImportError, ValueError, RuntimeError) as e:
     print(f"\nGARCH 计算（需要 arch）: {e}")
     print("注意: 安装 arch 后可使用 GARCH 功能")
 
@@ -167,8 +167,8 @@ for scenario_name, shock in scenarios.items():
 
     print(f"\n  {scenario_name}:")
     print(f"    单日冲击:      {shock:.1%}")
-    print(f"    5% VaR:        {var_5:.4f} ({var_5*100:.2f}%)")
-    print(f"    1% VaR:        {var_1:.4f} ({var_1*100:.2f}%)")
+    print(f"    5% VaR:        {var_5:.4f} ({var_5 * 100:.2f}%)")
+    print(f"    1% VaR:        {var_1:.4f} ({var_1 * 100:.2f}%)")
 
 # 计算压力情景后的组合价值
 initial_value = 1000000  # 100万初始投资
@@ -234,38 +234,41 @@ try:
 
     # 收益分布直方图
     ax = axes[0, 0]
-    returns.hist(bins=50, ax=ax, edgecolor='black', alpha=0.7)
-    ax.axvline(x=0, color='red', linestyle='--', linewidth=2)
-    ax.set_title('收益分布')
-    ax.set_xlabel('日收益率')
-    ax.set_ylabel('频数')
+    returns.hist(bins=50, ax=ax, edgecolor="black", alpha=0.7)
+    ax.axvline(x=0, color="red", linestyle="--", linewidth=2)
+    ax.set_title("收益分布")
+    ax.set_xlabel("日收益率")
+    ax.set_ylabel("频数")
     ax.grid(True, alpha=0.3)
 
     # Q-Q 图（检查正态性）
     ax = axes[0, 1]
     from scipy import stats
+
     stats.probplot(returns, dist="norm", plot=ax)
-    ax.set_title('Q-Q 图（正态性检验）')
+    ax.set_title("Q-Q 图（正态性检验）")
     ax.grid(True, alpha=0.3)
 
     # 滚动 VaR
     ax = axes[1, 0]
     from fincore.metrics.rolling import roll_max_drawdown
-    rolling_var = [Empyrical.value_at_risk(returns.iloc[:i+1], cutoff=0.05) for i in range(250, len(returns), 50)]
-    var_dates = returns.index[250::50][:len(rolling_var)]  # 匹配日期长度
-    ax.plot(var_dates, rolling_var, label='滚动 5% VaR')
-    ax.axhline(y=0, color='black', linestyle='--', alpha=0.5)
-    ax.set_title('滚动 VaR (5%)')
-    ax.set_ylabel('VaR')
+
+    rolling_var = [Empyrical.value_at_risk(returns.iloc[: i + 1], cutoff=0.05) for i in range(250, len(returns), 50)]
+    var_dates = returns.index[250::50][: len(rolling_var)]  # 匹配日期长度
+    ax.plot(var_dates, rolling_var, label="滚动 5% VaR")
+    ax.axhline(y=0, color="black", linestyle="--", alpha=0.5)
+    ax.set_title("滚动 VaR (5%)")
+    ax.set_ylabel("VaR")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 滚动波动率
     ax = axes[1, 1]
     from fincore.metrics.rolling import roll_annual_volatility
+
     rolling_vol = roll_annual_volatility(returns, window=60)
-    rolling_vol.plot(ax=ax, title='滚动年化波动率 (60日)')
-    ax.set_ylabel('波动率')
+    rolling_vol.plot(ax=ax, title="滚动年化波动率 (60日)")
+    ax.set_ylabel("波动率")
     ax.grid(True, alpha=0.3)
 
     plt.tight_layout()

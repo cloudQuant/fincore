@@ -13,11 +13,15 @@ Usage::
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
-import pandas as pd
 
 from fincore.constants import DAILY
 from fincore.metrics.basic import annualization_factor as _ann_factor
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 __all__ = ["RollingEngine"]
 

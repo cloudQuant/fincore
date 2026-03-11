@@ -26,17 +26,17 @@ from fincore.risk.garch import (
 )
 
 __all__ = [
-    # EVT functions
-    "hill_estimator",
-    "gev_fit",
-    "gpd_fit",
-    "evt_var",
-    "evt_cvar",
-    "extreme_risk",
+    "EGARCH",
     # GARCH classes
     "GARCH",
-    "EGARCH",
     "GJRGARCH",
-    "forecast_volatility",
     "conditional_var",
+    "evt_cvar",
+    "evt_var",
+    "extreme_risk",
+    "forecast_volatility",
+    "gev_fit",
+    "gpd_fit",
+    # EVT functions
+    "hill_estimator",
 ]

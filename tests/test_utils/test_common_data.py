@@ -68,7 +68,7 @@ def test_rolling_window_fallback_when_writeable_kwarg_not_supported(monkeypatch)
     import numpy as _np
     from numpy.lib.stride_tricks import as_strided as _real_as_strided
 
-    def _as_strided_no_writeable(array, shape, strides, writeable=None):  # noqa: ARG001
+    def _as_strided_no_writeable(array, shape, strides, writeable=None):
         raise TypeError("no writeable")
 
     a = _np.arange(9).reshape(3, 3)

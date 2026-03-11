@@ -16,13 +16,15 @@
 - 最佳实践演示
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from fincore import analyze, sharpe_ratio, max_drawdown
+
+from fincore import analyze, max_drawdown, sharpe_ratio
 from fincore.core.engine import RollingEngine
-from fincore.report import create_strategy_report
 from fincore.optimization import optimize
+from fincore.report import create_strategy_report
 from fincore.simulation import MonteCarlo
 
 print("=" * 70)
@@ -37,7 +39,7 @@ print("第一步: 数据准备")
 print("=" * 70)
 
 np.random.seed(42)
-dates = pd.date_range("2023-01-01", periods=252*2, freq="B", tz="UTC")
+dates = pd.date_range("2023-01-01", periods=252 * 2, freq="B", tz="UTC")
 
 # 模拟策略数据 (双均线策略信号)
 price = 100 * np.cumprod(1 + np.random.normal(0.0005, 0.015, len(dates)))
@@ -56,12 +58,9 @@ price_returns = price.pct_change()
 strategy_returns = (signals * price_returns).fillna(0)
 
 # 基准收益
-benchmark_returns = pd.Series(
-    np.random.normal(0.0005, 0.012, len(dates)),
-    index=dates
-)
+benchmark_returns = pd.Series(np.random.normal(0.0005, 0.012, len(dates)), index=dates)
 
-print(f"数据准备完成:")
+print("数据准备完成:")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  信号数量: {signals.sum()}")
 print(f"  策略收益率: {len(strategy_returns)} 个交易日")
@@ -79,7 +78,7 @@ ctx = analyze(strategy_returns, factor_returns=benchmark_returns)
 # 获取性能统计
 perf_stats = ctx.perf_stats()
 
-print(f"\n基本性能指标:")
+print("\n基本性能指标:")
 print("-" * 50)
 print(f"  年化收益:   {perf_stats.get('Annual return', 'N/A')}")
 print(f"  累计收益:   {perf_stats.get('Cumulative returns', 'N/A')}")
@@ -99,14 +98,12 @@ print("=" * 70)
 engine = RollingEngine(
     returns=strategy_returns,
     factor_returns=benchmark_returns,
-    window=126  # 半年
+    window=126,  # 半年
 )
 
-rolling_results = engine.compute([
-    'sharpe', 'volatility', 'max_drawdown', 'beta'
-])
+rolling_results = engine.compute(["sharpe", "volatility", "max_drawdown", "beta"])
 
-print(f"\n滚动指标统计 (窗口=126天):")
+print("\n滚动指标统计 (窗口=126天):")
 print("-" * 50)
 for metric, values in rolling_results.items():
     if isinstance(values, pd.Series):
@@ -127,13 +124,13 @@ print("=" * 70)
 var_95 = np.percentile(strategy_returns, 5)
 cvar_95 = strategy_returns[strategy_returns <= var_95].mean()
 
-print(f"\n风险指标:")
+print("\n风险指标:")
 print(f"  95% VaR (日度):  {var_95:.4f}")
 print(f"  95% CVaR (日度): {cvar_95:.4f}")
 
 # 回撤分析
 drawdown_periods = ctx.gen_drawdown_table(top=3)
-print(f"\n前3大回撤:")
+print("\n前3大回撤:")
 print(drawdown_periods.to_string())
 
 # ============================================================
@@ -147,7 +144,7 @@ print("=" * 70)
 alpha = ctx.alpha()
 beta = ctx.beta()
 
-print(f"\n市场风险归因:")
+print("\n市场风险归因:")
 print(f"  Alpha (年化):  {alpha * 252:.4f}")
 print(f"  Beta:         {beta:.4f}")
 print(f"  R-squared:    {ctx.r_squared():.4f}")
@@ -179,10 +176,9 @@ scenarios = [
     ("负漂移", -0.0003, None),
 ]
 
-print(f"\n压力测试结果 (1000路径, 252天):")
+print("\n压力测试结果 (1000路径, 252天):")
 for name, drift, vol in scenarios:
-    result = mc.simulate(n_paths=1000, horizon=252,
-                        drift=drift, volatility=vol, seed=42)
+    result = mc.simulate(n_paths=1000, horizon=252, drift=drift, volatility=vol, seed=42)
     final_vals = result.paths[:, -1]
     print(f"  {name}:")
     print(f"    均值:   {final_vals.mean():.4f}")
@@ -200,33 +196,27 @@ np.random.seed(42)
 n_assets = 5
 asset_returns = pd.DataFrame(
     np.random.multivariate_normal(
-        [0.0008, 0.0006, 0.0005, 0.0007, 0.0004],
-        np.diag([0.015, 0.012, 0.018, 0.020, 0.014]),
-        len(dates)
+        [0.0008, 0.0006, 0.0005, 0.0007, 0.0004], np.diag([0.015, 0.012, 0.018, 0.020, 0.014]), len(dates)
     ),
     index=dates,
-    columns=['Asset1', 'Asset2', 'Asset3', 'Asset4', 'Asset5']
+    columns=["Asset1", "Asset2", "Asset3", "Asset4", "Asset5"],
 )
 
 try:
     # 优化最大夏普组合
     opt_result = optimize(
-        asset_returns,
-        objective="max_sharpe",
-        risk_free_rate=0.02,
-        short_allowed=False,
-        max_weight=0.4
+        asset_returns, objective="max_sharpe", risk_free_rate=0.02, short_allowed=False, max_weight=0.4
     )
 
-    print(f"\n优化组合建议:")
-    print(f"  最优权重:")
-    for asset, weight in zip(asset_returns.columns, opt_result['weights']):
+    print("\n优化组合建议:")
+    print("  最优权重:")
+    for asset, weight in zip(asset_returns.columns, opt_result["weights"], strict=True):
         if weight > 0.001:
             print(f"    {asset}: {weight:.2%}")
 
     print(f"  预期夏普: {opt_result['sharpe']:.4f}")
 
-except Exception as e:
+except (ImportError, ValueError, RuntimeError, np.linalg.LinAlgError) as e:
     print(f"\n优化计算失败: {e}")
 
 # ============================================================
@@ -238,12 +228,7 @@ print("=" * 70)
 
 # 生成 HTML 报告
 report_file = "workflow_report.html"
-create_strategy_report(
-    strategy_returns,
-    benchmark_rets=benchmark_returns,
-    title="量化策略分析报告",
-    output=report_file
-)
+create_strategy_report(strategy_returns, benchmark_rets=benchmark_returns, title="量化策略分析报告", output=report_file)
 print(f"\n报告已生成: {report_file}")
 
 # ============================================================
@@ -258,23 +243,23 @@ scores = {}
 
 # 收益评分
 ann_ret = strategy_returns.mean() * 252
-scores['收益'] = min(100, max(0, (ann_ret + 0.1) * 500))
+scores["收益"] = min(100, max(0, (ann_ret + 0.1) * 500))
 
 # 风险调整收益评分
 sharpe = sharpe_ratio(strategy_returns)
-scores['Sharpe'] = min(100, max(0, sharpe * 50))
+scores["Sharpe"] = min(100, max(0, sharpe * 50))
 
 # 回撤评分
 max_dd = max_drawdown(strategy_returns)
-scores['回撤'] = min(100, max(0, (1 + max_dd) * 100))
+scores["回撤"] = min(100, max(0, (1 + max_dd) * 100))
 
 # 稳定性评分
-sharpe_std = rolling_results['sharpe'].std()
-scores['稳定性'] = min(100, max(0, 100 - sharpe_std * 200))
+sharpe_std = rolling_results["sharpe"].std()
+scores["稳定性"] = min(100, max(0, 100 - sharpe_std * 200))
 
 overall_score = np.mean(list(scores.values()))
 
-print(f"\n策略评分 (0-100):")
+print("\n策略评分 (0-100):")
 for metric, score in scores.items():
     print(f"  {metric:<8}: {score:>6.1f}")
 print(f"  {'综合':<8}: {overall_score:>6.1f}")
@@ -305,10 +290,10 @@ try:
 
     # 1. 累计收益对比
     ax = axes[0, 0]
-    ((1 + strategy_returns).cumprod() * 100).plot(ax=ax, label='策略')
-    ((1 + benchmark_returns).cumprod() * 100).plot(ax=ax, label='基准')
-    ax.set_ylabel('累计收益 (%)')
-    ax.set_title('累计收益对比')
+    ((1 + strategy_returns).cumprod() * 100).plot(ax=ax, label="策略")
+    ((1 + benchmark_returns).cumprod() * 100).plot(ax=ax, label="基准")
+    ax.set_ylabel("累计收益 (%)")
+    ax.set_title("累计收益对比")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
@@ -317,34 +302,34 @@ try:
     cum = (1 + strategy_returns).cumprod()
     running_max = cum.expanding().max()
     dd = (cum - running_max) / running_max
-    ax.fill_between(dd.index, dd.values * 100, 0, alpha=0.3, color='red')
-    ax.set_ylabel('回撤 (%)')
-    ax.set_title('策略回撤')
+    ax.fill_between(dd.index, dd.values * 100, 0, alpha=0.3, color="red")
+    ax.set_ylabel("回撤 (%)")
+    ax.set_title("策略回撤")
     ax.grid(True, alpha=0.3)
 
     # 3. 滚动夏普
     ax = axes[1, 0]
-    rolling_results['sharpe'].plot(ax=ax)
-    ax.axhline(y=0, color='black', linestyle='--', alpha=0.5)
-    ax.set_ylabel('Sharpe 比率')
-    ax.set_title('滚动夏普比率')
+    rolling_results["sharpe"].plot(ax=ax)
+    ax.axhline(y=0, color="black", linestyle="--", alpha=0.5)
+    ax.set_ylabel("Sharpe 比率")
+    ax.set_title("滚动夏普比率")
     ax.grid(True, alpha=0.3)
 
     # 4. 评分雷达图
     ax = axes[1, 1]
     categories = list(scores.keys())
     values = list(scores.values())
-    angles = np.linspace(0, 2*np.pi, len(categories), endpoint=False).tolist()
+    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
     values += values[:1]
     angles += angles[:1]
 
     ax = plt.subplot(2, 2, 4, polar=True)
-    ax.plot(angles, values, 'o-', linewidth=2)
+    ax.plot(angles, values, "o-", linewidth=2)
     ax.fill(angles, values, alpha=0.25)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories)
     ax.set_ylim(0, 100)
-    ax.set_title('策略评分雷达图')
+    ax.set_title("策略评分雷达图")
 
     plt.tight_layout()
     out_dir = Path(__file__).resolve().parent / "output"

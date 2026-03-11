@@ -16,7 +16,10 @@
 
 """Alpha/beta related metrics."""
 
+from __future__ import annotations
+
 import warnings
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 import pandas as pd
@@ -25,22 +28,30 @@ from fincore.constants import DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.utils import nanmean
 
+if TYPE_CHECKING:
+    from fincore._types import ReturnOrDataFrame
+
 __all__ = [
     "alpha",
     "alpha_aligned",
-    "beta",
-    "beta_aligned",
     "alpha_beta",
     "alpha_beta_aligned",
-    "up_alpha_beta",
-    "down_alpha_beta",
+    "alpha_percentile_rank",
     "annual_alpha",
     "annual_beta",
-    "alpha_percentile_rank",
+    "beta",
+    "beta_aligned",
+    "down_alpha_beta",
+    "up_alpha_beta",
 ]
 
 
-def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
+def beta_aligned(
+    returns: np.ndarray,
+    factor_returns: np.ndarray,
+    risk_free: float = 0.0,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray:
     """Calculate beta for already-aligned data.
 
     This function assumes that ``returns`` and ``factor_returns`` are
@@ -80,18 +91,19 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
     if factor_returns.ndim == 1:
         factor_returns = np.asanyarray(factor_returns)[:, np.newaxis]
 
-    n, m = returns.shape
+    _n, m = returns.shape
 
     if out is None:
         out = np.full(m, nan)
     elif out.ndim == 0:
         out = out[np.newaxis]
+    assert out is not None  # Helps type checker
 
     if len(returns) < 2 or len(factor_returns) < 2:
         out[()] = nan
         if returns_1d:
             out = out.item()
-        return out
+        return cast("float | np.ndarray", out)
 
     if risk_free != 0.0:
         returns = returns - risk_free
@@ -112,10 +124,18 @@ def beta_aligned(returns, factor_returns, risk_free=0.0, out=None):
     if returns_1d:
         out = out.item()
 
-    return out
+    return cast("float | np.ndarray", out)
 
 
-def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None):
+def alpha_aligned(
+    returns: np.ndarray,
+    factor_returns: np.ndarray,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+    _beta: float | np.ndarray | None = None,
+) -> float | np.ndarray | pd.Series:
     """Calculate annualized alpha for already-aligned series.
 
     This function assumes that ``returns`` and ``factor_returns`` are
@@ -161,6 +181,7 @@ def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:], dtype="float64")
+    assert out is not None  # Set by allocation or caller; helps type checker
 
     if len(returns) < 2:
         out[()] = np.nan
@@ -190,12 +211,19 @@ def alpha_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
         out = pd.Series(out)
 
     if returns.ndim == 1:
-        out = out.item()
+        out = out.item()  # type: ignore[union-attr]
 
     return out
 
 
-def alpha_beta_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+def alpha_beta_aligned(
+    returns: np.ndarray,
+    factor_returns: np.ndarray,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Calculate annualized alpha and beta for already-aligned series.
 
     This function assumes that ``returns`` and ``factor_returns`` are
@@ -230,7 +258,7 @@ def alpha_beta_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, ann
         contains ``[alpha, beta]``.
     """
     if out is None:
-        out = np.empty(returns.shape[1:] + (2,), dtype="float64")
+        out = np.empty((*returns.shape[1:], 2), dtype="float64")
 
     b = beta_aligned(returns, factor_returns, risk_free, out=out[..., 1])
     alpha_aligned(
@@ -246,7 +274,14 @@ def alpha_beta_aligned(returns, factor_returns, risk_free=0.0, period=DAILY, ann
     return out
 
 
-def beta(returns, factor_returns, risk_free=0.0, _period=DAILY, _annualization=None, out=None):
+def beta(
+    returns: ReturnOrDataFrame,
+    factor_returns: ReturnOrDataFrame,
+    risk_free: float = 0.0,
+    _period: str = DAILY,
+    _annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> float | np.ndarray | pd.Series:
     """Calculate beta versus a benchmark.
 
     This mirrors ``empyrical.stats.beta``: non-ndarray inputs are first
@@ -280,7 +315,15 @@ def beta(returns, factor_returns, risk_free=0.0, _period=DAILY, _annualization=N
     return beta_aligned(returns, factor_returns, risk_free=risk_free, out=out)
 
 
-def alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None):
+def alpha(
+    returns: ReturnOrDataFrame,
+    factor_returns: ReturnOrDataFrame,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+    _beta: float | np.ndarray | None = None,
+) -> float | np.ndarray | pd.Series:
     """Calculate annualized alpha versus a benchmark.
 
     This mirrors ``empyrical.stats.alpha``: non-ndarray inputs are first
@@ -323,7 +366,14 @@ def alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=No
     )
 
 
-def alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+def alpha_beta(
+    returns: pd.Series | pd.DataFrame | np.ndarray,
+    factor_returns: pd.Series | pd.DataFrame | np.ndarray,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Calculate annualized alpha and beta versus a benchmark.
 
     This is a convenience wrapper that aligns ``returns`` and
@@ -365,8 +415,14 @@ def alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizati
 
 
 def _conditional_alpha_beta(
-    returns, factor_returns, condition_func, risk_free=0.0, period=DAILY, annualization=None, out=None
-):
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    condition_func: Callable[[np.ndarray], np.ndarray],
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Calculate alpha and beta for a conditional subset of market periods.
 
     Parameters
@@ -441,7 +497,14 @@ def _conditional_alpha_beta(
     return out
 
 
-def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+def up_alpha_beta(
+    returns: ReturnOrDataFrame,
+    factor_returns: ReturnOrDataFrame,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Calculate alpha and beta for up-market periods only.
 
     This helper restricts the sample to periods where the benchmark
@@ -474,7 +537,14 @@ def up_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualiz
     return _conditional_alpha_beta(returns, factor_returns, lambda f: f > 0, risk_free, period, annualization, out)
 
 
-def down_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None):
+def down_alpha_beta(
+    returns: ReturnOrDataFrame,
+    factor_returns: ReturnOrDataFrame,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+    out: np.ndarray | None = None,
+) -> np.ndarray:
     """Calculate alpha and beta for down-market periods only.
 
     This helper restricts the sample to periods where the benchmark
@@ -507,7 +577,13 @@ def down_alpha_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annual
     return _conditional_alpha_beta(returns, factor_returns, lambda f: f <= 0, risk_free, period, annualization, out)
 
 
-def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
+def annual_alpha(
+    returns: pd.Series,
+    factor_returns: pd.Series,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series:
     """Determine the annual alpha for each calendar year.
 
     This groups aligned strategy and benchmark returns by calendar year
@@ -546,8 +622,8 @@ def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualiza
     factor_grouped = factor_returns.groupby(factor_returns.index.year)
 
     annual_alphas = []
-    for year in grouped.groups.keys():
-        if year in factor_grouped.groups.keys():
+    for year in grouped.groups:
+        if year in factor_grouped.groups:
             returns_for_year = grouped.get_group(year)
             factor_for_year = factor_grouped.get_group(year)
             alpha_val = alpha(returns_for_year, factor_for_year, risk_free, period, annualization)
@@ -560,7 +636,13 @@ def annual_alpha(returns, factor_returns, risk_free=0.0, period=DAILY, annualiza
     return pd.Series(alphas, index=years)
 
 
-def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None):
+def annual_beta(
+    returns: pd.Series,
+    factor_returns: pd.Series,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> pd.Series:
     """Determine the annual beta for each calendar year.
 
     This groups aligned strategy and benchmark returns by calendar year
@@ -599,8 +681,8 @@ def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizat
     factor_grouped = factor_returns.groupby(factor_returns.index.year)
 
     annual_betas = []
-    for year in grouped.groups.keys():
-        if year in factor_grouped.groups.keys():
+    for year in grouped.groups:
+        if year in factor_grouped.groups:
             year_returns = grouped.get_group(year)
             year_factor = factor_grouped.get_group(year)
             beta_val = beta(year_returns, year_factor, risk_free, period, annualization)
@@ -614,8 +696,13 @@ def annual_beta(returns, factor_returns, risk_free=0.0, period=DAILY, annualizat
 
 
 def alpha_percentile_rank(
-    strategy_returns, all_strategies_returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None
-):
+    strategy_returns: pd.Series,
+    all_strategies_returns: list[pd.Series],
+    factor_returns: pd.Series,
+    risk_free: float = 0.0,
+    period: str = DAILY,
+    annualization: float | None = None,
+) -> float:
     """Calculate the percentile rank of alpha versus a peer universe.
 
     This computes the strategy's alpha and compares it to the alphas of

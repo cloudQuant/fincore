@@ -11,12 +11,12 @@ import fincore
 
 def generate_portfolio_data(
     n_days: int = 252 * 5,  # 5 years
-    seed: int = 42
+    seed: int = 42,
 ) -> pd.Series:
     """Generate synthetic portfolio returns with various risk characteristics."""
     np.random.seed(seed)
 
-    dates = pd.bdate_range('2019-01-01', periods=n_days)
+    dates = pd.bdate_range("2019-01-01", periods=n_days)
 
     # Base returns
     daily_return = 0.10 / 252
@@ -124,6 +124,7 @@ def main():
     print("=" * 70)
 
     from fincore.metrics.stats import kurtosis, skewness
+
     print(f"Skewness:                   {skewness(returns):.4f}")
     print(f"Kurtosis:                   {kurtosis(returns):.4f}")
 
@@ -168,6 +169,7 @@ def main():
 
     # Hurst exponent
     from fincore.metrics.stats import hurst_exponent
+
     hurst = hurst_exponent(returns)
     print(f"Hurst Exponent:             {hurst:.4f}")
     if hurst < 0.5:

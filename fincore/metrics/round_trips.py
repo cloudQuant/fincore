@@ -25,18 +25,23 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "agg_all_long_short",
-    "groupby_consecutive",
-    "extract_round_trips",
     "add_closing_transactions",
+    "agg_all_long_short",
     "apply_sector_mappings_to_round_trips",
+    "extract_round_trips",
     "gen_round_trip_stats",
+    "groupby_consecutive",
 ]
 
 _DEFAULT_MAX_DELTA = pd.Timedelta("8h")
 
 
-def agg_all_long_short(round_trips, col, stats_dict):
+def agg_all_long_short(
+    round_trips: pd.DataFrame,
+    col: str,
+    stats_dict: dict,
+    group_aware_stats: dict | None = None,
+) -> pd.DataFrame:
     """Aggregate statistics for long and short round trips.
 
     Computes statistics separately for long trades, short trades, and
@@ -50,6 +55,10 @@ def agg_all_long_short(round_trips, col, stats_dict):
         Column name to compute statistics on (e.g., 'pnl', 'duration').
     stats_dict : dict
         Dictionary mapping statistic names to functions or method names.
+    group_aware_stats : dict, optional
+        Optional dict of stats that receive (data, group) instead of just data.
+        Used when stats need full group context (e.g. open_dt/close_dt for
+        calendar span). Applied only when col has matching data.
 
     Returns
     -------
@@ -58,12 +67,10 @@ def agg_all_long_short(round_trips, col, stats_dict):
     """
     stats_all = []
     stats_long_short = []
+    group_aware = group_aware_stats or {}
 
     for kind, group in round_trips.groupby("long"):
-        if kind:
-            label = "long"
-        else:
-            label = "short"
+        label = "long" if kind else "short"
 
         stat = {}
         data = group[col]
@@ -79,6 +86,16 @@ def agg_all_long_short(round_trips, col, stats_dict):
                     stat[name] = np.nan
             except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
                 logger.debug("round_trip stat %s failed for %s: %s", name, label, e)
+                stat[name] = np.nan
+
+        for name, func in group_aware.items():
+            try:
+                if callable(func):
+                    stat[name] = func(data, group)
+                else:
+                    stat[name] = np.nan
+            except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
+                logger.debug("round_trip group stat %s failed for %s: %s", name, label, e)
                 stat[name] = np.nan
 
         stat_series = pd.Series(stat, name=label)
@@ -99,14 +116,21 @@ def agg_all_long_short(round_trips, col, stats_dict):
             logger.debug("round_trip stat %s failed for All trades: %s", name, e)
             all_stat[name] = np.nan
 
+    for name, func in group_aware.items():
+        try:
+            if callable(func):
+                all_stat[name] = func(all_data, round_trips)
+            else:
+                all_stat[name] = np.nan
+        except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
+            logger.debug("round_trip group stat %s failed for All trades: %s", name, e)
+            all_stat[name] = np.nan
+
     all_series = pd.Series(all_stat, name="All trades")
     stats_all.append(all_series)
 
     # Combine into DataFrame
-    if stats_long_short:
-        df_long_short = pd.concat(stats_long_short, axis=1).T
-    else:
-        df_long_short = pd.DataFrame()
+    df_long_short = pd.concat(stats_long_short, axis=1).T if stats_long_short else pd.DataFrame()
 
     df_all = pd.concat(stats_all, axis=1).T
 
@@ -169,8 +193,7 @@ def groupby_consecutive(txn, max_delta=_DEFAULT_MAX_DELTA):
         out.append(grouped)
 
     out = pd.concat(out)
-    out = out.set_index("dt")
-    return out
+    return out.set_index("dt")
 
 
 def extract_round_trips(transactions, portfolio_value=None):
@@ -329,9 +352,7 @@ def add_closing_transactions(positions, transactions):
         closing_txn = pd.DataFrame(closing_txn, index=[end_dt])
         closed_txns = pd.concat([closed_txns, closing_txn], ignore_index=False)
 
-    closed_txns = closed_txns[closed_txns.amount != 0]
-
-    return closed_txns
+    return closed_txns[closed_txns.amount != 0]
 
 
 def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
@@ -357,7 +378,7 @@ def apply_sector_mappings_to_round_trips(round_trips, sector_mappings):
     return round_trips
 
 
-def gen_round_trip_stats(round_trips):
+def gen_round_trip_stats(round_trips: pd.DataFrame) -> dict:
     """Generate various round-trip statistics.
 
     Parameters
@@ -371,7 +392,13 @@ def gen_round_trip_stats(round_trips):
         A dictionary where each value is a pandas DataFrame containing
         various round-trip statistics.
     """
-    from fincore.constants.style import DURATION_STATS, PNL_STATS, RETURN_STATS, SUMMARY_STATS
+    from fincore.constants.style import (
+        DURATION_STATS,
+        DURATION_STATS_GROUP,
+        PNL_STATS,
+        RETURN_STATS,
+        SUMMARY_STATS,
+    )
 
     if len(round_trips) == 0:
         return {
@@ -420,12 +447,10 @@ def gen_round_trip_stats(round_trips):
     returns_col = "returns" if "returns" in round_trips.columns else "rt_returns"
 
     # Generate statistics for pnl, summary, duration, and returns
-    round_trip_stats = {
+    return {
         "pnl": agg_all_long_short(round_trips, "pnl", PNL_STATS),
         "summary": agg_all_long_short(round_trips, "pnl", SUMMARY_STATS),
-        "duration": agg_all_long_short(round_trips, "duration", DURATION_STATS),
+        "duration": agg_all_long_short(round_trips, "duration", DURATION_STATS, group_aware_stats=DURATION_STATS_GROUP),
         "returns": agg_all_long_short(round_trips, returns_col, RETURN_STATS),
         "symbols": apply_custom_and_built_in_funcs(round_trips.groupby("symbol")[returns_col], RETURN_STATS).T,
     }
-
-    return round_trip_stats

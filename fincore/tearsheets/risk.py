@@ -4,21 +4,28 @@ Includes style factor exposures, sector exposures, cap exposures, and volume
 exposures.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from fincore.constants import CAP_BUCKETS, SECTORS
 
+if TYPE_CHECKING:
+    import pandas as pd
+
 __all__ = [
-    "plot_style_factor_exposures",
-    "plot_sector_exposures_longshort",
-    "plot_sector_exposures_gross",
-    "plot_sector_exposures_net",
-    "plot_cap_exposures_longshort",
     "plot_cap_exposures_gross",
+    "plot_cap_exposures_longshort",
     "plot_cap_exposures_net",
-    "plot_volume_exposures_longshort",
+    "plot_sector_exposures_gross",
+    "plot_sector_exposures_longshort",
+    "plot_sector_exposures_net",
+    "plot_style_factor_exposures",
     "plot_volume_exposures_gross",
+    "plot_volume_exposures_longshort",
 ]
 
 
@@ -26,7 +33,11 @@ __all__ = [
 cmap = plt.get_cmap("gist_rainbow")
 
 
-def plot_style_factor_exposures(tot_style_factor_exposure, factor_name=None, ax=None):
+def plot_style_factor_exposures(
+    tot_style_factor_exposure: pd.Series,
+    factor_name: str | None = None,
+    ax: Any = None,
+) -> Any:
     """
     Plots DataFrame output of compute_style_factor_exposures as a line graph.
 
@@ -63,7 +74,12 @@ def plot_style_factor_exposures(tot_style_factor_exposure, factor_name=None, ax=
     return ax
 
 
-def plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict=None, ax=None):
+def plot_sector_exposures_longshort(
+    long_exposures: Any,
+    short_exposures: Any,
+    sector_dict: dict[str, str] | None = None,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_sector_exposures as area charts.
 
@@ -85,10 +101,7 @@ def plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict
     if ax is None:
         ax = plt.gca()
 
-    if sector_dict is None:
-        sector_names = list(SECTORS.values())
-    else:
-        sector_names = list(sector_dict.values())
+    sector_names = list(SECTORS.values()) if sector_dict is None else list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -103,7 +116,11 @@ def plot_sector_exposures_longshort(long_exposures, short_exposures, sector_dict
     return ax
 
 
-def plot_sector_exposures_gross(gross_exposures, sector_dict=None, ax=None):
+def plot_sector_exposures_gross(
+    gross_exposures: Any,
+    sector_dict: dict[str, str] | None = None,
+    ax: Any = None,
+) -> Any:
     """
     Plots output of compute_sector_exposures as area charts.
 
@@ -124,10 +141,7 @@ def plot_sector_exposures_gross(gross_exposures, sector_dict=None, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    if sector_dict is None:
-        sector_names = list(SECTORS.values())
-    else:
-        sector_names = list(sector_dict.values())
+    sector_names = list(SECTORS.values()) if sector_dict is None else list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -140,7 +154,11 @@ def plot_sector_exposures_gross(gross_exposures, sector_dict=None, ax=None):
     return ax
 
 
-def plot_sector_exposures_net(net_exposures, sector_dict=None, ax=None):
+def plot_sector_exposures_net(
+    net_exposures: Any,
+    sector_dict: dict[str, str] | None = None,
+    ax: Any = None,
+) -> Any:
     """
     Plots output of compute_sector_exposures as line graphs.
 
@@ -161,10 +179,7 @@ def plot_sector_exposures_net(net_exposures, sector_dict=None, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    if sector_dict is None:
-        sector_names = list(SECTORS.values())
-    else:
-        sector_names = list(sector_dict.values())
+    sector_names = list(SECTORS.values()) if sector_dict is None else list(sector_dict.values())
 
     color_list = cmap(np.linspace(0, 1, 11))
 
@@ -175,7 +190,11 @@ def plot_sector_exposures_net(net_exposures, sector_dict=None, ax=None):
     return ax
 
 
-def plot_cap_exposures_longshort(long_exposures, short_exposures, ax=None):
+def plot_cap_exposures_longshort(
+    long_exposures: Any,
+    short_exposures: Any,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_cap_exposures as area charts.
 
@@ -216,7 +235,10 @@ def plot_cap_exposures_longshort(long_exposures, short_exposures, ax=None):
     return ax
 
 
-def plot_cap_exposures_gross(gross_exposures, ax=None):
+def plot_cap_exposures_gross(
+    gross_exposures: Any,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_cap_exposures as area charts.
 
@@ -251,7 +273,10 @@ def plot_cap_exposures_gross(gross_exposures, ax=None):
     return ax
 
 
-def plot_cap_exposures_net(net_exposures, ax=None):
+def plot_cap_exposures_net(
+    net_exposures: Any,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_cap_exposures as line graphs.
 
@@ -281,7 +306,12 @@ def plot_cap_exposures_net(net_exposures, ax=None):
     return ax
 
 
-def plot_volume_exposures_longshort(longed_threshold, shorted_threshold, percentile, ax=None):
+def plot_volume_exposures_longshort(
+    longed_threshold: pd.Series,
+    shorted_threshold: pd.Series,
+    percentile: float,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_volume_exposures as line graphs.
 
@@ -315,7 +345,11 @@ def plot_volume_exposures_longshort(longed_threshold, shorted_threshold, percent
     return ax
 
 
-def plot_volume_exposures_gross(grossed_threshold, percentile, ax=None):
+def plot_volume_exposures_gross(
+    grossed_threshold: pd.Series,
+    percentile: float,
+    ax: Any = None,
+) -> Any:
     """
     Plots outputs of compute_volume_exposures as line graphs.
 

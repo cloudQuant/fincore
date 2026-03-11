@@ -22,9 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent
 def load_config():
     """Load strategy configuration from config.yaml."""
     config_path = BASE_DIR / "config.yaml"
-    with open(config_path, encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-    return config
+    return yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
 
 def resolve_data_path(filename: str) -> Path:
@@ -134,7 +132,7 @@ def run():
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="my_drawdown")
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="my_trade_analyzer")
     # Logging configuration
-    log_dir = os.path.join(os.path.dirname(__file__), "logs")
+    log_dir = str(BASE_DIR / "logs")
     cerebro.addobserver(
         bt.observers.TradeLogger,
         log_orders=True,

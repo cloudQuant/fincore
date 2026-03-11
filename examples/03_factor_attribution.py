@@ -9,14 +9,11 @@ import pandas as pd
 import fincore
 
 
-def generate_factor_data(
-    n_days: int = 252 * 3,
-    seed: int = 42
-) -> tuple[pd.Series, pd.Series]:
+def generate_factor_data(n_days: int = 252 * 3, seed: int = 42) -> tuple[pd.Series, pd.Series]:
     """Generate synthetic strategy and factor returns."""
     np.random.seed(seed)
 
-    dates = pd.bdate_range('2021-01-01', periods=n_days)
+    dates = pd.bdate_range("2021-01-01", periods=n_days)
 
     # Factor returns (market)
     market_daily_return = 0.08 / 252
@@ -47,17 +44,13 @@ def main():
     # Calculate alpha and beta
     print("\n--- Alpha & Beta ---")
     alpha, beta = fincore.alpha_beta(strategy_returns, factor_returns)
-    print(f"Alpha:  {alpha:.4f} ({alpha*252:.2%} annual)")
+    print(f"Alpha:  {alpha:.4f} ({alpha * 252:.2%} annual)")
     print(f"Beta:   {beta:.4f}")
 
     # Calculate rolling alpha and beta
     print("\n--- Rolling Alpha & Beta (126-day window) ---")
-    rolling_alpha = fincore.empyrical.roll_alpha(
-        strategy_returns, factor_returns, window=126
-    )
-    rolling_beta = fincore.empyrical.roll_beta(
-        strategy_returns, factor_returns, window=126
-    )
+    rolling_alpha = fincore.empyrical.roll_alpha(strategy_returns, factor_returns, window=126)
+    rolling_beta = fincore.empyrical.roll_beta(strategy_returns, factor_returns, window=126)
 
     print(f"Rolling Alpha (latest): {rolling_alpha.iloc[-1]:.4f}")
     print(f"Rolling Beta (latest):  {rolling_beta.iloc[-1]:.4f}")
@@ -105,9 +98,7 @@ def main():
 
     # Compare to benchmark
     print("\n--- Benchmark Comparison ---")
-    active_return = fincore.empyrical.annual_active_return(
-        strategy_returns, factor_returns
-    )
+    active_return = fincore.empyrical.annual_active_return(strategy_returns, factor_returns)
 
     print(f"Active Return: {active_return:.2%}")
 
@@ -118,12 +109,8 @@ def main():
 
     # Monthly analysis
     print("\n--- Monthly Alpha & Beta ---")
-    annual_alpha = fincore.empyrical.annual_alpha(
-        strategy_returns, factor_returns
-    )
-    annual_beta = fincore.empyrical.annual_beta(
-        strategy_returns, factor_returns
-    )
+    annual_alpha = fincore.empyrical.annual_alpha(strategy_returns, factor_returns)
+    annual_beta = fincore.empyrical.annual_beta(strategy_returns, factor_returns)
 
     print("Alpha by Year:")
     if len(annual_alpha) > 0:

@@ -6,9 +6,9 @@ pytest-benchmark>=3.2
 pytest-sugar>=0.9
 parameterized>=0.7
 
-# Numerical dependencies
-numpy>=1.17.0
-pandas>=0.25.0
+# Numerical dependencies (align with pyproject.toml)
+numpy>=1.24.0
+pandas>=1.5.0
 scipy>=1.3.0
 bottleneck>=1.3.0
 

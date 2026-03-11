@@ -37,9 +37,10 @@ Modular structure
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 def create_strategy_report(
@@ -84,7 +85,7 @@ def create_strategy_report(
         from fincore.report.render_pdf import generate_pdf
 
         return cast(
-            str,
+            "str",
             generate_pdf(
                 returns,
                 benchmark_rets=benchmark_rets,
@@ -96,22 +97,21 @@ def create_strategy_report(
                 rolling_window=rolling_window,
             ),
         )
-    else:
-        from fincore.report.render_html import generate_html
+    from fincore.report.render_html import generate_html
 
-        return cast(
-            str,
-            generate_html(
-                returns,
-                benchmark_rets=benchmark_rets,
-                positions=positions,
-                transactions=transactions,
-                trades=trades,
-                title=title,
-                output=output,
-                rolling_window=rolling_window,
-            ),
-        )
+    return cast(
+        "str",
+        generate_html(
+            returns,
+            benchmark_rets=benchmark_rets,
+            positions=positions,
+            transactions=transactions,
+            trades=trades,
+            title=title,
+            output=output,
+            rolling_window=rolling_window,
+        ),
+    )
 
 
 __all__ = ["create_strategy_report"]

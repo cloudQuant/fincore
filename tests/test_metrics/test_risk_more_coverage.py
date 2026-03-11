@@ -56,7 +56,7 @@ def test_gpd_risk_estimates_covers_attributeerror_fallback_and_scale_only_path(m
 
     calls = {"n": 0}
 
-    def fake_minimize(fun, x0, method):  # noqa: ARG001
+    def fake_minimize(fun, x0, method):
         # Make sure the scale-only loglikelihood branch runs at least once.
         fun(np.array([1.0, 0.0]))
         calls["n"] += 1

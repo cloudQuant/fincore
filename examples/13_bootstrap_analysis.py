@@ -14,11 +14,13 @@
 - 小样本统计推断
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
+from fincore import max_drawdown, sharpe_ratio
 from fincore.simulation import bootstrap
-from fincore import sharpe_ratio, max_drawdown
 
 print("=" * 70)
 print("自助法统计分析示例")
@@ -27,13 +29,9 @@ print("=" * 70)
 # 生成模拟收益数据
 np.random.seed(42)
 dates = pd.date_range("2020-01-01", periods=252, freq="B", tz="UTC")
-returns = pd.Series(
-    np.random.normal(0.0008, 0.015, len(dates)),
-    index=dates,
-    name="strategy_returns"
-)
+returns = pd.Series(np.random.normal(0.0008, 0.015, len(dates)), index=dates, name="strategy_returns")
 
-print(f"\n数据概览:")
+print("\n数据概览:")
 print(f"  时间范围: {dates[0].date()} 至 {dates[-1].date()}")
 print(f"  观测值数: {len(returns)}")
 print(f"  年化收益: {returns.mean() * 252:.4f}")
@@ -89,13 +87,13 @@ print(f"  95% 置信区间: [{ci_95_sharpe[0]:.6f}, {ci_95_sharpe[1]:.6f}]")
 
 # Sharpe 比率的显著性检验
 sharpe_p_value = (boot_sharpe <= 0).mean()
-print(f"\nSharpe 比率显著性检验:")
-print(f"  H0: Sharpe = 0")
+print("\nSharpe 比率显著性检验:")
+print("  H0: Sharpe = 0")
 print(f"  p值: {sharpe_p_value:.4f}")
 if sharpe_p_value < 0.05:
-    print(f"  结论: Sharpe 比率在 5% 水平下显著异于 0")
+    print("  结论: Sharpe 比率在 5% 水平下显著异于 0")
 else:
-    print(f"  结论: Sharpe 比率在 5% 水平下不显著")
+    print("  结论: Sharpe 比率在 5% 水平下不显著")
 
 # ============================================================
 # 3. 自定义统计量 Bootstrap
@@ -104,6 +102,7 @@ print("\n" + "=" * 70)
 print("3. 自定义统计量 Bootstrap")
 print("=" * 70)
 
+
 # 定义自定义统计量函数
 def custom_statistic(returns):
     """自定义统计量: 95分位数与5分位数的比率"""
@@ -111,15 +110,16 @@ def custom_statistic(returns):
     p5 = np.percentile(returns, 5)
     return p95 / abs(p5) if p5 != 0 else np.nan
 
+
 print("\n自定义统计量 Bootstrap (尾部比率):")
-boot_custom = bootstrap(returns, n_samples=10000,
-                        statistic=custom_statistic, seed=42)
+boot_custom = bootstrap(returns, n_samples=10000, statistic=custom_statistic, seed=42)
 
 original_custom = custom_statistic(returns)
 print(f"  原始值:       {original_custom:.6f}")
 print(f"  Bootstrap均值: {boot_custom.mean():.6f}")
 ci_95_custom = np.percentile(boot_custom, [2.5, 97.5])
 print(f"  95% 置信区间: [{ci_95_custom[0]:.6f}, {ci_95_custom[1]:.6f}]")
+
 
 # 定义最大回撤统计量
 def max_dd_stat(returns):
@@ -129,9 +129,9 @@ def max_dd_stat(returns):
     drawdown = (cum - running_max) / running_max
     return drawdown.min()
 
+
 print("\n最大回撤 Bootstrap:")
-boot_dd = bootstrap(returns, n_samples=10000,
-                   statistic=max_dd_stat, seed=42)
+boot_dd = bootstrap(returns, n_samples=10000, statistic=max_dd_stat, seed=42)
 
 original_dd = max_dd_stat(returns)
 print(f"  原始最大回撤:  {original_dd:.6f}")
@@ -160,7 +160,7 @@ print("\n均值 vs 中位数分析:")
 print(f"  偏度:         {returns.skew():.4f}")
 print(f"  峰度:         {returns.kurtosis():.4f}")
 if abs(returns.skew()) > 0.5:
-    print(f"  说明: 数据存在明显偏态，中位数可能更稳健")
+    print("  说明: 数据存在明显偏态，中位数可能更稳健")
 
 # ============================================================
 # 5. Bootstrap 样本量敏感性分析
@@ -170,7 +170,7 @@ print("5. Bootstrap 样本量敏感性分析")
 print("=" * 70)
 
 sample_sizes = [100, 500, 1000, 5000, 10000]
-print(f"\n不同 Bootstrap 样本量下的标准误估计:")
+print("\n不同 Bootstrap 样本量下的标准误估计:")
 print(f"{'样本量':<10} {'均值标准误':>15} {'Sharpe标准误':>15}")
 print("-" * 45)
 
@@ -188,7 +188,7 @@ print("=" * 70)
 
 # 计算多个分位数的 Bootstrap 置信区间
 quantiles = [1, 5, 10, 25, 50, 75, 90, 95, 99]
-print(f"\n收益分布分位数 Bootstrap 95% 置信区间:")
+print("\n收益分布分位数 Bootstrap 95% 置信区间:")
 print(f"{'分位数':<8} {'原始值':>12} {'下限':>12} {'上限':>12} {'宽度':>12}")
 print("-" * 60)
 
@@ -199,7 +199,7 @@ for q in quantiles:
     boot_q = np.percentile(boot_median_full, [q])
     ci_low = np.percentile(returns, q) - 2 * (np.percentile(returns, q) - np.percentile(boot_median_full, q))
     ci_high = np.percentile(returns, q) + 2 * (np.percentile(boot_median_full, q) - np.percentile(returns, q))
-    print(f"{q:>3}%     {original:>10.4f}  {ci_low:>10.4f}  {ci_high:>10.4f}  {ci_high-ci_low:>10.4f}")
+    print(f"{q:>3}%     {original:>10.4f}  {ci_low:>10.4f}  {ci_high:>10.4f}  {ci_high - ci_low:>10.4f}")
 
 # ============================================================
 # 7. 假设检验
@@ -212,9 +212,7 @@ print("=" * 70)
 print("\n检验: 年化收益是否显著大于 0?")
 
 # Bootstrap 年化收益
-boot_annual_return = bootstrap(returns, n_samples=10000,
-                                statistic=lambda x: x.mean() * 252,
-                                seed=42)
+boot_annual_return = bootstrap(returns, n_samples=10000, statistic=lambda x: x.mean() * 252, seed=42)
 
 # 原假设: 年化收益 = 0
 original_annual = returns.mean() * 252
@@ -224,13 +222,13 @@ print(f"  原始年化收益: {original_annual:.4f}")
 print(f"  p值: {p_value:.4f}")
 
 if p_value < 0.01:
-    print(f"  结论: 在 1% 显著性水平下拒绝原假设，收益显著 > 0")
+    print("  结论: 在 1% 显著性水平下拒绝原假设，收益显著 > 0")
 elif p_value < 0.05:
-    print(f"  结论: 在 5% 显著性水平下拒绝原假设，收益显著 > 0")
+    print("  结论: 在 5% 显著性水平下拒绝原假设，收益显著 > 0")
 elif p_value < 0.10:
-    print(f"  结论: 在 10% 显著性水平下拒绝原假设，收益显著 > 0")
+    print("  结论: 在 10% 显著性水平下拒绝原假设，收益显著 > 0")
 else:
-    print(f"  结论: 无法拒绝原假设，收益不显著")
+    print("  结论: 无法拒绝原假设，收益不显著")
 
 # ============================================================
 # 8. 可视化
@@ -242,38 +240,38 @@ try:
 
     # 1. 均值 Bootstrap 分布
     ax = axes[0, 0]
-    ax.hist(boot_mean, bins=50, edgecolor='black', alpha=0.7, density=True)
-    ax.axvline(x=returns.mean(), color='red', linestyle='--', linewidth=2, label='原始均值')
-    ax.axvline(x=ci_95[0], color='orange', linestyle=':', label='95% CI')
-    ax.axvline(x=ci_95[1], color='orange', linestyle=':')
-    ax.set_title('均值 Bootstrap 分布')
-    ax.set_xlabel('均值')
-    ax.set_ylabel('密度')
+    ax.hist(boot_mean, bins=50, edgecolor="black", alpha=0.7, density=True)
+    ax.axvline(x=returns.mean(), color="red", linestyle="--", linewidth=2, label="原始均值")
+    ax.axvline(x=ci_95[0], color="orange", linestyle=":", label="95% CI")
+    ax.axvline(x=ci_95[1], color="orange", linestyle=":")
+    ax.set_title("均值 Bootstrap 分布")
+    ax.set_xlabel("均值")
+    ax.set_ylabel("密度")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 2. Sharpe 比率 Bootstrap 分布
     ax = axes[0, 1]
-    ax.hist(boot_sharpe, bins=50, edgecolor='black', alpha=0.7, density=True)
-    ax.axvline(x=original_sharpe, color='red', linestyle='--', linewidth=2, label='原始 Sharpe')
-    ax.axvline(x=0, color='black', linestyle='-', linewidth=1, label='零值')
-    ax.axvline(x=ci_95_sharpe[0], color='orange', linestyle=':', label='95% CI')
-    ax.axvline(x=ci_95_sharpe[1], color='orange', linestyle=':')
-    ax.set_title('Sharpe 比率 Bootstrap 分布')
-    ax.set_xlabel('Sharpe 比率')
-    ax.set_ylabel('密度')
+    ax.hist(boot_sharpe, bins=50, edgecolor="black", alpha=0.7, density=True)
+    ax.axvline(x=original_sharpe, color="red", linestyle="--", linewidth=2, label="原始 Sharpe")
+    ax.axvline(x=0, color="black", linestyle="-", linewidth=1, label="零值")
+    ax.axvline(x=ci_95_sharpe[0], color="orange", linestyle=":", label="95% CI")
+    ax.axvline(x=ci_95_sharpe[1], color="orange", linestyle=":")
+    ax.set_title("Sharpe 比率 Bootstrap 分布")
+    ax.set_xlabel("Sharpe 比率")
+    ax.set_ylabel("密度")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
     # 3. 最大回撤 Bootstrap 分布
     ax = axes[1, 0]
-    ax.hist(boot_dd, bins=50, edgecolor='black', alpha=0.7, density=True)
-    ax.axvline(x=original_dd, color='red', linestyle='--', linewidth=2, label='原始最大回撤')
-    ax.axvline(x=ci_95_dd[0], color='orange', linestyle=':', label='90% CI')
-    ax.axvline(x=ci_95_dd[1], color='orange', linestyle=':')
-    ax.set_title('最大回撤 Bootstrap 分布')
-    ax.set_xlabel('最大回撤')
-    ax.set_ylabel('密度')
+    ax.hist(boot_dd, bins=50, edgecolor="black", alpha=0.7, density=True)
+    ax.axvline(x=original_dd, color="red", linestyle="--", linewidth=2, label="原始最大回撤")
+    ax.axvline(x=ci_95_dd[0], color="orange", linestyle=":", label="90% CI")
+    ax.axvline(x=ci_95_dd[1], color="orange", linestyle=":")
+    ax.set_title("最大回撤 Bootstrap 分布")
+    ax.set_xlabel("最大回撤")
+    ax.set_ylabel("密度")
     ax.legend()
     ax.grid(True, alpha=0.3)
 
@@ -289,11 +287,11 @@ try:
         se_means.append(bm.std())
         se_sharpes.append(bs.std())
 
-    ax.plot(sample_sizes_range, se_means, label='均值标准误', marker='o', markersize=3)
-    ax.plot(sample_sizes_range, se_sharpes, label='Sharpe标准误', marker='s', markersize=3)
-    ax.set_xlabel('Bootstrap 样本量')
-    ax.set_ylabel('标准误')
-    ax.set_title('Bootstrap 样本量对标准误的影响')
+    ax.plot(sample_sizes_range, se_means, label="均值标准误", marker="o", markersize=3)
+    ax.plot(sample_sizes_range, se_sharpes, label="Sharpe标准误", marker="s", markersize=3)
+    ax.set_xlabel("Bootstrap 样本量")
+    ax.set_ylabel("标准误")
+    ax.set_title("Bootstrap 样本量对标准误的影响")
     ax.legend()
     ax.grid(True, alpha=0.3)
 

@@ -133,17 +133,17 @@ print(f"\n{'=' * 50}")
 print("5. Strategy Report")
 print("=" * 50)
 
-import os
 import tempfile
+from pathlib import Path
 
 with tempfile.TemporaryDirectory() as tmpdir:
-    html_path = os.path.join(tmpdir, "report.html")
+    html_path = Path(tmpdir) / "report.html"
     out = fincore.create_strategy_report(
         returns,
         title="Quick Start Strategy",
-        output=html_path,
+        output=str(html_path),
     )
-    file_size = os.path.getsize(html_path)
+    file_size = html_path.stat().st_size
     print(f"Generated HTML report: {file_size:,} bytes")
     print(f"Path: {out}")
 

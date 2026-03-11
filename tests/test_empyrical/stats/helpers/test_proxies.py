@@ -63,10 +63,7 @@ class ReturnTypeEmpyricalProxy:
         @wraps(func)
         def check_return_type(*args, **kwargs):
             result = func(*args, **kwargs)
-            if isinstance(result, tuple):
-                tuple_result = result
-            else:
-                tuple_result = (result,)
+            tuple_result = result if isinstance(result, tuple) else (result,)
 
             for r in tuple_result:
                 self._test_case.assertIsInstance(r, self._return_types)

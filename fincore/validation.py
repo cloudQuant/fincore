@@ -55,6 +55,9 @@ def validate_input(
                     result = validator(args_list[i])
                     if result is not None:
                         args_list[i] = result
+                # Broad except intentional: validators may raise diverse errors
+                # (e.g. pandas KeyError, numpy ValueError). Narrowing would risk
+                # uncaught exceptions from third-party validators.
                 except (TypeError, ValueError, AttributeError, KeyError, RuntimeError, LookupError) as e:
                     if raise_on_error:
                         param_name = func.__code__.co_varnames[i] if i < len(func.__code__.co_varnames) else f"arg{i}"
@@ -102,13 +105,16 @@ def validate_returns(
             actual_length=len(returns),
         )
 
-    if require_datetime_index and isinstance(returns, (pd.Series, pd.DataFrame)):
-        if not isinstance(returns.index, pd.DatetimeIndex):
-            raise ValidationError(
-                f"{name} must have a DatetimeIndex",
-                param_name=name,
-                value=returns.index,
-            )
+    if (
+        require_datetime_index
+        and isinstance(returns, (pd.Series, pd.DataFrame))
+        and not isinstance(returns.index, pd.DatetimeIndex)
+    ):
+        raise ValidationError(
+            f"{name} must have a DatetimeIndex",
+            param_name=name,
+            value=returns.index,
+        )
 
     if isinstance(returns, list):
         returns = np.array(returns)
@@ -116,7 +122,7 @@ def validate_returns(
     return returns
 
 
-def validate_period(period: str, name: str = "period") -> str:
+def validate_period(period: str, _name: str = "period") -> str:
     """Validate period parameter."""
     valid_periods = [DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY]
     if period not in valid_periods:
@@ -163,13 +169,16 @@ def validate_alignment(
                 factor_length=len(series2),
             )
 
-        if isinstance(series1.index, pd.DatetimeIndex) and isinstance(series2.index, pd.DatetimeIndex):
-            if not series1.index.equals(series2.index):
-                raise DataAlignmentError(
-                    f"{name1} and {name2} must have the same index",
-                    returns_length=len(series1),
-                    factor_length=len(series2),
-                )
+        if (
+            isinstance(series1.index, pd.DatetimeIndex)
+            and isinstance(series2.index, pd.DatetimeIndex)
+            and not series1.index.equals(series2.index)
+        ):
+            raise DataAlignmentError(
+                f"{name1} and {name2} must have the same index",
+                returns_length=len(series1),
+                factor_length=len(series2),
+            )
 
     return series1, series2
 

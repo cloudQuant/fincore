@@ -4,6 +4,7 @@ Tests error handling and edge cases for PlotlyBackend.
 Split from test_bokeh_plotly_coverage.py for maintainability.
 """
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -158,10 +159,9 @@ class TestPlotlyBackendAdditionalCoverage:
             backend.save_html(temp_path)
             fig.write_html.assert_called_once_with(temp_path)
         finally:
-            import os
-
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
+            p = Path(temp_path)
+            if p.exists():
+                p.unlink()
 
     def test_save_image_with_existing_figure(self):
         """Test save_image with existing figure (line 556 positive case)."""
@@ -185,10 +185,9 @@ class TestPlotlyBackendAdditionalCoverage:
             backend.save_image(temp_path)
             fig.write_image.assert_called_once_with(temp_path)
         finally:
-            import os
-
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
+            p = Path(temp_path)
+            if p.exists():
+                p.unlink()
 
     def test_monthly_heatmap_with_dataframe_input(self):
         """Test plot_monthly_heatmap with DataFrame input (line 354)."""

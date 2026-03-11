@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Test runner that reloads fincore before running tests."""
 
-import sys
 import importlib
 import subprocess
+import sys
+from pathlib import Path
 
 # Add tests directory to path
-sys.path.insert(0, "/Users/yunjinqi/Documents/source_code/fincore/tests")
+sys.path.insert(0, str(Path(__file__).parent.parent / "tests"))
 
 # Force reload fincore to pick up __all__ changes
 if "fincore" in sys.modules:
@@ -34,6 +35,7 @@ result = subprocess.run(
     ],
     capture_output=True,
     text=True,
+    timeout=60,
 )
 
 print(result.stdout)

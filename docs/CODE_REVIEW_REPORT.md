@@ -25,7 +25,7 @@
 #### 1. 零波动率处理缺陷
 **状态**: ✅ 已修复
 
-**位置**: 
+**位置**:
 - `fincore/metrics/ratios.py:130` (sharpe_ratio)
 - `fincore/metrics/ratios.py:206` (sortino_ratio)
 

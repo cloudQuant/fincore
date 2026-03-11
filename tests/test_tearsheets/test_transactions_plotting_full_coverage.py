@@ -116,7 +116,7 @@ class TestPlotTurnover:
         from fincore.tearsheets.transactions import plot_turnover
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_turnover(empyrical_instance, returns, transactions, positions, ax=custom_ax)
 
@@ -145,7 +145,7 @@ class TestPlotDailyVolume:
         """Test plot_daily_volume without providing ax."""
         from fincore.tearsheets.transactions import plot_daily_volume
 
-        returns, positions, transactions = sample_data
+        returns, _positions, transactions = sample_data
         ax = plot_daily_volume(empyrical_instance, returns, transactions)
 
         assert ax is not None
@@ -158,8 +158,8 @@ class TestPlotDailyVolume:
 
         from fincore.tearsheets.transactions import plot_daily_volume
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        returns, _positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_daily_volume(empyrical_instance, returns, transactions, ax=custom_ax)
 
@@ -173,7 +173,7 @@ class TestPlotDailyTurnoverHist:
         """Test plot_daily_turnover_hist without providing ax."""
         from fincore.tearsheets.transactions import plot_daily_turnover_hist
 
-        returns, positions, transactions = sample_data
+        _returns, positions, transactions = sample_data
         ax = plot_daily_turnover_hist(empyrical_instance, transactions, positions)
 
         assert ax is not None
@@ -185,8 +185,8 @@ class TestPlotDailyTurnoverHist:
 
         from fincore.tearsheets.transactions import plot_daily_turnover_hist
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _returns, positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_daily_turnover_hist(empyrical_instance, transactions, positions, ax=custom_ax)
 
@@ -200,7 +200,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist without providing ax."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions)
 
         assert ax is not None
@@ -212,8 +212,8 @@ class TestPlotTxnTimeHist:
 
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _returns, _positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_txn_time_hist(transactions, ax=custom_ax)
 
@@ -223,7 +223,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist with custom bin_minutes."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions, bin_minutes=10)
 
         assert ax is not None
@@ -232,7 +232,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist with custom timezone."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions, tz="UTC")
 
         assert ax is not None
@@ -258,7 +258,7 @@ class TestPlotSlippageSweep:
         from fincore.tearsheets.transactions import plot_slippage_sweep
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_slippage_sweep(empyrical_instance, returns, positions, transactions, ax=custom_ax)
 
@@ -296,7 +296,7 @@ class TestPlotSlippageSensitivity:
         from fincore.tearsheets.transactions import plot_slippage_sensitivity
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_slippage_sensitivity(empyrical_instance, returns, positions, transactions, ax=custom_ax)
 

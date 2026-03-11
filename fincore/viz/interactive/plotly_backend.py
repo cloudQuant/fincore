@@ -130,8 +130,8 @@ class PlotlyBackend(VizBackend):
         """Create a new figure with configured template."""
         try:
             import plotly.graph_objects as go
-        except ImportError:
-            raise ImportError("Plotly is required for PlotlyBackend. Install with: pip install plotly")
+        except ImportError as e:
+            raise ImportError("Plotly is required for PlotlyBackend. Install with: pip install plotly") from e
 
         fig = go.Figure(
             layout=dict(

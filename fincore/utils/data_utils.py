@@ -139,9 +139,8 @@ def roll(*args, **kwargs):
     if len(args) > 2:
         raise ValueError("Cannot pass more than 2 return sets")
 
-    if len(args) == 2:
-        if not isinstance(args[0], type(args[1])):
-            raise ValueError("The two returns arguments are not the same.")
+    if len(args) == 2 and not isinstance(args[0], type(args[1])):
+        raise ValueError("The two returns arguments are not the same.")
 
     if isinstance(args[0], np.ndarray):
         return _roll_ndarray(func, window, *args, **kwargs)
@@ -198,4 +197,4 @@ def down(returns, factor_returns, **kwargs):
     return func(returns, factor_returns, **kwargs)
 
 
-__all__ = ["rolling_window", "roll", "up", "down"]
+__all__ = ["down", "roll", "rolling_window", "up"]

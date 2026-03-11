@@ -24,12 +24,11 @@ class TestCalculateStyleTilts:
         n_assets = 3
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        returns = pd.DataFrame(
+        return pd.DataFrame(
             np.random.normal(0.0005, 0.01, (periods, n_assets)),
             index=pd.date_range("2020-01-01", periods=periods),
             columns=assets,
         )
-        return returns
 
     def test_calculate_style_tilts_basic(self, sample_returns):
         """Test basic style tilts calculation."""

@@ -24,12 +24,11 @@ class TestStyleAnalysis:
         n_assets = 5
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        returns = pd.DataFrame(
+        return pd.DataFrame(
             np.random.normal(0.0005, 0.01, (periods, n_assets)),
             index=pd.date_range("2020-01-01", periods=periods),
             columns=assets,
         )
-        return returns
 
     @pytest.fixture
     def sample_market_caps(self):
@@ -37,11 +36,10 @@ class TestStyleAnalysis:
         n_assets = 5
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        market_caps = pd.Series(
+        return pd.Series(
             [1e9, 5e8, 2e8, 1e8, 5e7],
             index=assets,
         )
-        return market_caps
 
     @pytest.fixture
     def sample_book_to_price(self):
@@ -49,11 +47,10 @@ class TestStyleAnalysis:
         n_assets = 5
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        bp = pd.Series(
+        return pd.Series(
             [0.8, 0.9, 1.0, 1.1, 1.2],
             index=assets,
         )
-        return bp
 
     def test_style_analysis_basic(self, sample_returns):
         """Test basic style analysis without optional data."""
@@ -96,3 +93,10 @@ class TestStyleAnalysis:
         assert "exposures" in d
         assert "returns_by_style" in d
         assert "overall_returns" in d
+
+    def test_style_analysis_invalid_size_quantiles_raises(self, sample_returns, sample_market_caps):
+        """Edge case: size_quantiles with <2 elements or out of [0,1] raises (industry best practice)."""
+        with pytest.raises(ValueError, match="quantiles must have at least 2"):
+            style_analysis(sample_returns, market_caps=sample_market_caps, size_quantiles=[0.5])
+        with pytest.raises(ValueError, match="quantiles must have at least 2"):
+            style_analysis(sample_returns, market_caps=sample_market_caps, size_quantiles=[0.3, 1.5])

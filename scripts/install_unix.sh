@@ -46,5 +46,3 @@ fi
 echo "Deleting all .log files..."
 find . -type f -name "*.log" -exec rm -f {} \;
 echo "All .log files deleted."
-
-

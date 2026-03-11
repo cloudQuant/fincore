@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import logging
 from sys import float_info
 
 import numpy as np
@@ -27,30 +28,34 @@ from fincore.constants import DAILY
 from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
 from fincore.utils import nanmean, nanstd
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
     "annual_volatility",
-    "downside_risk",
-    "value_at_risk",
-    "conditional_value_at_risk",
-    "tail_ratio",
-    "tracking_error",
-    "residual_risk",
-    "var_excess_return",
-    "var_cov_var_normal",
-    "trading_value_at_risk",
-    "gpd_risk_estimates",
-    "gpd_risk_estimates_aligned",
     "beta_fragility_heuristic",
     "beta_fragility_heuristic_aligned",
+    "conditional_value_at_risk",
+    "downside_risk",
+    "gpd_risk_estimates",
+    "gpd_risk_estimates_aligned",
+    "residual_risk",
+    "tail_ratio",
+    "tracking_error",
+    "trading_value_at_risk",
+    "value_at_risk",
+    "var_cov_var_normal",
+    "var_excess_return",
 ]
 
 
 def annual_volatility(
     returns: pd.Series | pd.DataFrame | np.ndarray,
     period: str = DAILY,
-    alpha_: float = 2.0,
+    volatility_power: float = 2.0,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alpha_: float | None = None,
 ) -> float | np.ndarray:
     """Determine the annualized volatility of a return series.
 
@@ -64,16 +69,20 @@ def annual_volatility(
     period : str, optional
         Frequency of the input data (for example ``DAILY``). Used to
         infer the annualization factor when ``annualization`` is ``None``.
-    alpha_ : float, optional
+    volatility_power : float, optional
         Power used when scaling volatility (for example 2.0 for variance,
         1.0 for standard deviation). Defaults to 2.0 to match the
-        original empyrical implementation.
+        original empyrical implementation. Named to avoid confusion with
+        alpha (excess return) in finance.
     annualization : float, optional
         Custom annualization factor. If provided, this value is used
         directly instead of inferring it from ``period``.
     out : np.ndarray, optional
         pre-allocated output array. If provided, the result is
         written in-place into this array.
+    alpha_ : float, optional
+        Deprecated. Use ``volatility_power`` instead. If provided, takes
+        precedence over ``volatility_power`` for backward compatibility.
 
     Returns
     -------
@@ -81,6 +90,15 @@ def annual_volatility(
         Annualized volatility. For 1D input a scalar is returned; for 2D
         input one value is returned per column.
     """
+    import warnings
+
+    if alpha_ is not None:
+        warnings.warn(
+            "The parameter 'alpha_' is deprecated. Use 'volatility_power' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        volatility_power = alpha_
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
@@ -96,7 +114,7 @@ def annual_volatility(
 
     ann_factor = annualization_factor(period, annualization)
     nanstd(returns, ddof=1, axis=0, out=out)
-    out = np.multiply(out, ann_factor ** (1.0 / alpha_), out=out)
+    out = np.multiply(out, ann_factor ** (1.0 / volatility_power), out=out)
     if returns_1d:
         out = out.item()  # type: ignore[union-attr]
     return out  # type: ignore[return-value]
@@ -135,7 +153,8 @@ def downside_risk(
     -------
     float or np.ndarray or pd.Series
         Annualized downside risk. For 1D input a scalar is returned; for
-        2D input one value is returned per column.
+        2D input one value is returned per column. Returns 0 when all
+        returns are above ``required_return`` (no downside component).
     """
     allocated_output = out is None
     if allocated_output:
@@ -148,6 +167,15 @@ def downside_risk(
         out[()] = np.nan
         if returns_1d:
             out = out.item()
+        return out  # type: ignore[return-value]
+    # Reject scalar required_return that is nan/inf (array required_return may have NaN per-period)
+    req_arr = np.asarray(required_return)
+    if req_arr.ndim == 0 and not np.isfinite(req_arr.item()):
+        out[()] = np.nan
+        if returns_1d:
+            out = out.item()
+        elif isinstance(returns, pd.DataFrame):
+            out = pd.Series(out, index=returns.columns)
         return out  # type: ignore[return-value]
 
     ann_factor = annualization_factor(period, annualization)
@@ -181,18 +209,24 @@ def value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0.05) -> floa
     returns : array-like or pd.Series
         Non-cumulative strategy returns.
     cutoff : float, optional
-        Left-tail probability level in (0, 1). For example ``0.05``
-        selects the 5th percentile. Default is 0.05.
+        Left-tail probability level in [0, 1]. For example ``0.05``
+        selects the 5th percentile. Values outside [0, 1] return NaN.
+        Default is 0.05.
 
     Returns
     -------
     float
         Historical VaR at the given confidence level, or ``NaN`` if there
-        are no observations.
+        are no observations or cutoff is invalid.
     """
     if len(returns) < 1:
         return np.nan
-    return np.percentile(returns, cutoff * 100)
+    if not (0 <= cutoff <= 1):
+        return np.nan
+    arr = np.asanyarray(returns)
+    if not np.all(np.isfinite(arr)):
+        return np.nan
+    return float(np.percentile(arr, cutoff * 100))
 
 
 def conditional_value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0.05) -> float:
@@ -206,15 +240,21 @@ def conditional_value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0
     returns : array-like or pd.Series
         Non-cumulative strategy returns.
     cutoff : float, optional
-        Left-tail probability level in (0, 1). Default is 0.05.
+        Left-tail probability level in [0, 1]. Values outside [0, 1]
+        return NaN. Default is 0.05.
 
     Returns
     -------
     float
         Conditional VaR (expected shortfall) at the given confidence
-        level, or ``NaN`` if there are no observations.
+        level, or ``NaN`` if there are no observations or cutoff is invalid.
     """
     if len(returns) < 1:
+        return np.nan
+    if not (0 <= cutoff <= 1):
+        return np.nan
+    arr = np.asanyarray(returns)
+    if not np.all(np.isfinite(arr)):
         return np.nan
     cutoff_index = value_at_risk(returns, cutoff=cutoff)
     return np.mean(returns[returns <= cutoff_index])
@@ -445,6 +485,66 @@ def var_cov_var_normal(p: float, c: float, mu: float = 0, sigma: float = 1) -> f
     return float(p - p * (alpha + 1))
 
 
+def _gpd_loglikelihood_scale_and_shape(scale: float, shape: float, price_data: np.ndarray) -> float:
+    """GPD log-likelihood when both scale and shape are non-zero."""
+    n = len(price_data)
+    result = -1 * float_info.max
+    if scale != 0:
+        param_factor = shape / scale
+        if shape != 0 and param_factor >= 0 and scale >= 0:
+            result = (-n * np.log(scale)) - (((1 / shape) + 1) * (np.log((shape / scale * price_data) + 1)).sum())
+    return result
+
+
+def _gpd_loglikelihood_scale_only(scale: float, price_data: np.ndarray) -> float:
+    """GPD log-likelihood when shape is zero (exponential tail)."""
+    n = len(price_data)
+    data_sum = price_data.sum()
+    result = -1 * float_info.max
+    if scale >= 0:
+        result = (-n * np.log(scale)) - (data_sum / scale)
+    return result
+
+
+def _gpd_var_calculator(
+    threshold: float,
+    scale_param: float,
+    shape_param: float,
+    probability: float,
+    total_n: int,
+    exceedance_n: int,
+) -> float:
+    """Compute VaR from GPD parameters."""
+    result = 0.0
+    if exceedance_n > 0 and shape_param > 0:
+        param_ratio = scale_param / shape_param
+        prob_ratio = (total_n / exceedance_n) * probability
+        result = threshold + (param_ratio * (pow(prob_ratio, -shape_param) - 1))
+    return result
+
+
+def _gpd_es_calculator(
+    var_estimate: float,
+    threshold: float,
+    scale_param: float,
+    shape_param: float,
+) -> float:
+    """Compute Expected Shortfall from GPD parameters."""
+    result = 0.0
+    if (1 - shape_param) != 0:
+        var_ratio = var_estimate / (1 - shape_param)
+        param_ratio = (scale_param - (shape_param * threshold)) / (1 - shape_param)
+        result = var_ratio + param_ratio
+    return result
+
+
+def _gpd_loglikelihood(params: np.ndarray, price_data: np.ndarray) -> float:
+    """Negative log-likelihood for GPD, used by scipy.optimize.minimize."""
+    if params[1] != 0:
+        return -_gpd_loglikelihood_scale_and_shape(params[0], params[1], price_data)
+    return -_gpd_loglikelihood_scale_only(params[0], price_data)
+
+
 def trading_value_at_risk(
     returns: pd.Series | np.ndarray,
     period: str | None = None,
@@ -522,55 +622,16 @@ def gpd_risk_estimates(
     losses = flipped_returns[flipped_returns > 0]
     threshold = default_threshold
     finished = False
-    scale_param = 0
-    shape_param = 0
-    var_estimate = 0
-
-    def gpd_loglikelihood(params, price_data):
-        if params[1] != 0:
-            return -_gpd_loglikelihood_scale_and_shape(params[0], params[1], price_data)
-        else:
-            return -_gpd_loglikelihood_scale_only(params[0], price_data)
-
-    def _gpd_loglikelihood_scale_and_shape(scale, shape, price_data):
-        n = len(price_data)
-        result = -1 * float_info.max
-        if scale != 0:
-            param_factor = shape / scale
-            if shape != 0 and param_factor >= 0 and scale >= 0:
-                result = (-n * np.log(scale)) - (((1 / shape) + 1) * (np.log((shape / scale * price_data) + 1)).sum())
-        return result
-
-    def _gpd_loglikelihood_scale_only(scale, price_data):
-        n = len(price_data)
-        data_sum = price_data.sum()
-        result = -1 * float_info.max
-        if scale >= 0:
-            result = (-n * np.log(scale)) - (data_sum / scale)
-        return result
-
-    def _gpd_var_calculator(threshold, scale_param, shape_param, probability, total_n, exceedance_n):
-        result = 0
-        if exceedance_n > 0 and shape_param > 0:
-            param_ratio = scale_param / shape_param
-            prob_ratio = (total_n / exceedance_n) * probability
-            result = threshold + (param_ratio * (pow(prob_ratio, -shape_param) - 1))
-        return result
-
-    def _gpd_es_calculator(var_estimate, threshold, scale_param, shape_param):
-        result = 0
-        if (1 - shape_param) != 0:
-            var_ratio = var_estimate / (1 - shape_param)
-            param_ratio = (scale_param - (shape_param * threshold)) / (1 - shape_param)
-            result = var_ratio + param_ratio
-        return result
+    scale_param = 0.0
+    shape_param = 0.0
+    var_estimate = 0.0
 
     while not finished and threshold > minimum_threshold:
         losses_beyond_threshold = losses[losses >= threshold]
         if len(losses_beyond_threshold) > 0:
             try:
                 optimization_results = optimize.minimize(
-                    lambda params: gpd_loglikelihood(params, losses_beyond_threshold),
+                    lambda params: _gpd_loglikelihood(params, losses_beyond_threshold),
                     np.array([1, 1]),
                     method="Nelder-Mead",
                 )
@@ -584,8 +645,8 @@ def gpd_risk_estimates(
                         )
                         if shape_param > 0 and var_estimate > 0:
                             finished = True
-            except (ValueError, RuntimeError, FloatingPointError):
-                pass
+            except (ValueError, RuntimeError, FloatingPointError) as e:
+                logger.debug("gpd_risk_estimates optimization failed at threshold %.6e: %s", threshold, e)
         if not finished:
             threshold = threshold / 2
 
@@ -671,13 +732,11 @@ def beta_fragility_heuristic(
     start_returns_weight = 0.5
     end_returns_weight = 0.5
 
-    if not factor_returns_range == 0:
+    if factor_returns_range != 0:
         start_returns_weight = (mid_factor_returns - start_factor_returns) / factor_returns_range
         end_returns_weight = (end_factor_returns - mid_factor_returns) / factor_returns_range
 
-    heuristic = (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
-
-    return heuristic
+    return (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
 
 
 def beta_fragility_heuristic_aligned(

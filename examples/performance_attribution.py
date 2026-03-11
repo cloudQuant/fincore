@@ -39,12 +39,15 @@ benchmark = pd.Series(
 )
 
 # Style factor returns (value, growth, momentum, quality)
-factors = pd.DataFrame({
-    "value": np.random.normal(0.0002, 0.008, n_days),
-    "growth": np.random.normal(0.0004, 0.01, n_days),
-    "momentum": np.random.normal(0.0003, 0.009, n_days),
-    "quality": np.random.normal(0.0001, 0.006, n_days),
-}, index=dates)
+factors = pd.DataFrame(
+    {
+        "value": np.random.normal(0.0002, 0.008, n_days),
+        "growth": np.random.normal(0.0004, 0.01, n_days),
+        "momentum": np.random.normal(0.0003, 0.009, n_days),
+        "quality": np.random.normal(0.0001, 0.006, n_days),
+    },
+    index=dates,
+)
 
 print(f"Data: {n_days} days, {dates[0].strftime('%Y-%m-%d')} -> {dates[-1].strftime('%Y-%m-%d')}")
 print()
@@ -102,11 +105,11 @@ print("=" * 60)
 style_result = style_analysis(returns, factors)
 print(f"\nStyle analysis result type: {type(style_result).__name__}")
 print("Style exposures:")
-if hasattr(style_result, 'exposures'):
+if hasattr(style_result, "exposures"):
     for factor_name, exposure in style_result.exposures.items():
         print(f"  {factor_name:<12} {exposure:.4f}")
-elif hasattr(style_result, 'weights'):
-    for factor_name, weight in zip(factors.columns, style_result.weights):
+elif hasattr(style_result, "weights"):
+    for factor_name, weight in zip(factors.columns, style_result.weights, strict=True):
         print(f"  {factor_name:<12} {weight:.4f}")
 
 # Style tilts
@@ -128,7 +131,7 @@ print("\nRegression attribution:")
 print(f"  Alpha:     {reg_result['alpha']:.6f}")
 print(f"  R-squared: {reg_result['r_squared']:.4f}")
 print("\n  Factor betas:")
-for factor_name, beta_val in reg_result['betas'].items():
+for factor_name, beta_val in reg_result["betas"].items():
     print(f"    {factor_name:<12} {beta_val:.4f}")
 
 # =========================================================================

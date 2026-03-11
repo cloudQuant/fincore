@@ -4,9 +4,9 @@ REM Run from any dir: scripts\test_python_versions_simple.bat
 
 cd /d "%~dp0.."
 
-echo ======================================== 
+echo ========================================
 echo fincore Python Compatibility Test
-echo ======================================== 
+echo ========================================
 echo.
 
 REM Create results directory
@@ -23,7 +23,7 @@ for %%v in (py37 py38 py39 py310 py311 py312 py313) do (
     echo.
     echo Testing %%v...
     echo ----------------------------------------
-    
+
     REM Activate environment and run tests
     call conda activate %%v 2>nul
     if errorlevel 1 (
@@ -33,40 +33,40 @@ for %%v in (py37 py38 py39 py310 py311 py312 py313) do (
         REM Get Python version
         for /f "tokens=*" %%p in ('python --version 2^>^&1') do set pyver=%%p
         echo Using !pyver!
-        
+
         REM Install and test
         echo Installing dependencies...
         pip install -U -r requirements.txt >test_results\%%v_install.log 2>&1
-        
+
         echo Installing fincore...
         pip install -U . >>test_results\%%v_install.log 2>&1
-        
+
         echo Running tests...
         pytest tests -n 4 --tb=short >test_results\%%v_tests.log 2>&1
-        
+
         if errorlevel 1 (
             echo %%v: FAILED - !pyver! >> %summary%
             echo [FAIL] Tests failed for %%v
-            
+
             REM Extract failure summary
             findstr /C:"FAILED" /C:"ERROR" test_results\%%v_tests.log | findstr /V ".py" >> %summary%
         ) else (
             echo %%v: PASSED - !pyver! >> %summary%
             echo [PASS] All tests passed for %%v
-            
-            REM Extract success summary  
+
+            REM Extract success summary
             findstr "passed" test_results\%%v_tests.log | findstr "==" >> %summary%
         )
-        
+
         echo. >> %summary%
         call conda deactivate
     )
 )
 
 echo.
-echo ======================================== 
+echo ========================================
 echo Test Summary:
-echo ======================================== 
+echo ========================================
 type %summary%
 echo.
 echo Detailed logs: test_results\

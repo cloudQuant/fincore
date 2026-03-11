@@ -17,12 +17,12 @@ from fincore.attribution.style import (
 )
 
 __all__ = [
+    "FamaFrenchModel",
+    "StyleResult",
+    "analyze_performance_by_style",
     "brinson_attribution",
     "brinson_results",
-    "FamaFrenchModel",
-    "style_analysis",
-    "StyleResult",
-    "calculate_style_tilts",
     "calculate_regression_attribution",
-    "analyze_performance_by_style",
+    "calculate_style_tilts",
+    "style_analysis",
 ]

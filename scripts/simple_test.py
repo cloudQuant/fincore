@@ -2,12 +2,15 @@
 """Simplified test runner to verify imports."""
 
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/Users/yunjinqi/Documents/source_code/fincore/tests")
+sys.path.insert(0, str(Path(__file__).parent.parent / "tests"))
+
+import fincore
 
 # Import and test fincore imports
 print("Importing fincore.metrics.ratios...")
-from fincore.metrics.ratios import sharpe_ratio, sortino_ratio, excess_sharpe
+from fincore.metrics.ratios import excess_sharpe, sharpe_ratio, sortino_ratio
 
 print("Sharpe ratio available:", hasattr(fincore, "sharpe_ratio"))
 

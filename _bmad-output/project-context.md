@@ -445,15 +445,15 @@ fincore/
 ```python
 def sharpe_ratio(returns, risk_free=0.0, period=DAILY):
     """Calculate the Sharpe ratio.
-    
+
     Args:
         returns: Series of returns
         risk_free: Risk-free rate (default 0.0)
         period: Period for annualization (default DAILY)
-    
+
     Returns:
         float: Sharpe ratio
-    
+
     Example:
         >>> returns = pd.Series([0.01, 0.02, -0.01])
         >>> sharpe_ratio(returns)

@@ -58,7 +58,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist without providing ax."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions)
 
         assert ax is not None
@@ -70,8 +70,8 @@ class TestPlotTxnTimeHist:
 
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _returns, _positions, transactions = sample_data
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_txn_time_hist(transactions, ax=custom_ax)
 
@@ -81,7 +81,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist with custom bin_minutes."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions, bin_minutes=10)
 
         assert ax is not None
@@ -90,7 +90,7 @@ class TestPlotTxnTimeHist:
         """Test plot_txn_time_hist with custom timezone."""
         from fincore.tearsheets.transactions import plot_txn_time_hist
 
-        returns, positions, transactions = sample_data
+        _returns, _positions, transactions = sample_data
         ax = plot_txn_time_hist(transactions, tz="UTC")
 
         assert ax is not None

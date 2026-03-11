@@ -13,6 +13,8 @@ Tests the remaining 34 uncovered lines:
 - viz/interactive/bokeh_backend.py: 419
 """
 
+import contextlib
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -266,11 +268,8 @@ class TestBokehBackendEdgeCase:
             )
 
             # Should handle empty data gracefully
-            try:
+            with contextlib.suppress(ValueError, KeyError):
                 backend.plot_monthly_heatmap(empty_returns)
-            except (ValueError, KeyError):
-                # Expected for empty data
-                pass
         except ImportError:
             # Bokeh not installed - skip
             pytest.skip("Bokeh not installed")

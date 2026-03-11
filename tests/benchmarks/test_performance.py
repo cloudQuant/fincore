@@ -23,6 +23,7 @@ def test_import_time(benchmark):
             [sys.executable, "-c", "import fincore"],
             capture_output=True,
             text=True,
+            timeout=120,
         )
         if result.returncode != 0:
             raise RuntimeError(f"Import failed: {result.stderr}")
@@ -159,8 +160,7 @@ def test_memory_usage_large_dataset(benchmark):
 
     def process_large_data():
         ctx = fincore.analyze(returns.iloc[:, 0])  # Single asset
-        stats = ctx.perf_stats()
-        return stats
+        return ctx.perf_stats()
 
     result = benchmark(process_large_data)
     assert "Annual return" in result
@@ -176,21 +176,21 @@ class TestComparison:
 
         # Lazy import (just fincore)
         def lazy_import():
-            result = subprocess.run(
+            return subprocess.run(
                 [sys.executable, "-c", "import fincore; print('OK')"],
                 capture_output=True,
                 text=True,
+                timeout=120,
             )
-            return result
 
         # Full import (all submodules)
         def eager_import():
-            result = subprocess.run(
+            return subprocess.run(
                 [sys.executable, "-c", "import fincore; _ = fincore.Empyrical; _ = fincore.Pyfolio; print('OK')"],
                 capture_output=True,
                 text=True,
+                timeout=120,
             )
-            return result
 
         lazy_result = lazy_import()
         eager_result = eager_import()

@@ -50,3 +50,14 @@ def test_sim_result_properties_var_cvar_and_to_dataframe() -> None:
     sr1 = SimResult(np.array([1.0, 2.0, 3.0]))
     assert sr1.n_paths == 1
     assert sr1.horizon == 3
+
+
+def test_sim_result_var_cvar_invalid_alpha_returns_nan() -> None:
+    """Edge case: alpha outside (0, 1) returns NaN (industry best practice)."""
+    paths = np.array([[1.0, 0.9], [1.0, 1.1], [1.0, 0.8]])
+    sr = SimResult(paths)
+    assert np.isnan(sr.var(alpha=0))
+    assert np.isnan(sr.var(alpha=1))
+    assert np.isnan(sr.var(alpha=1.5))
+    assert np.isnan(sr.cvar(alpha=0))
+    assert np.isnan(sr.cvar(alpha=1))

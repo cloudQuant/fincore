@@ -134,7 +134,7 @@ class TestAlphaBetaBasic(BaseTestCase):
             if np.all(benchmark_arr == benchmark_arr[0]):
                 return
             mask = ~np.isnan(returns_arr) & ~np.isnan(benchmark_arr)
-            slope, intercept, _, _, _ = stats.linregress(benchmark_arr[mask], returns_arr[mask])
+            _slope, intercept, _, _, _ = stats.linregress(benchmark_arr[mask], returns_arr[mask])
 
             assert_almost_equal(observed, intercept * 252, DECIMAL_PLACES)
 

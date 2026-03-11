@@ -10,15 +10,17 @@ RollingEngine 是 fincore 提供的高性能批量滚动指标计算工具，
 - 支持的指标：sharpe, volatility, max_drawdown, beta, sortino, mean_return
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
+
 from fincore.core.engine import RollingEngine
-from fincore.metrics.rolling import roll_sharpe_ratio, roll_max_drawdown
+from fincore.metrics.rolling import roll_max_drawdown, roll_sharpe_ratio
 
 # 生成示例数据
 np.random.seed(42)
-dates = pd.bdate_range('2020-01-01', periods=2520)
+dates = pd.bdate_range("2020-01-01", periods=2520)
 returns = pd.Series(np.random.normal(0.0005, 0.015, 2520), index=dates)
 benchmark = pd.Series(np.random.normal(0.0003, 0.012, 2520), index=dates)
 
@@ -49,18 +51,20 @@ print("-" * 60)
 engine = RollingEngine(
     returns=returns,
     factor_returns=benchmark,
-    window=252  # 滚动窗口大小
+    window=252,  # 滚动窗口大小
 )
 
 # 一次性计算多个滚动指标
-results = engine.compute([
-    'sharpe',       # Sharpe 比率
-    'volatility',   # 波动率
-    'max_drawdown', # 最大回撤
-    'beta',         # Beta（相对于基准）
-    'sortino',      # Sortino 比率
-    'mean_return'   # 平均收益
-])
+results = engine.compute(
+    [
+        "sharpe",  # Sharpe 比率
+        "volatility",  # 波动率
+        "max_drawdown",  # 最大回撤
+        "beta",  # Beta（相对于基准）
+        "sortino",  # Sortino 比率
+        "mean_return",  # 平均收益
+    ]
+)
 
 # 将字典转换为 DataFrame 以便分析
 results_df = pd.DataFrame(results)
@@ -89,15 +93,15 @@ try:
     fig, axes = plt.subplots(3, 1, figsize=(12, 10))
 
     # Sharpe 比率
-    results_df['sharpe'].plot(ax=axes[0], title='Rolling Sharpe Ratio (252-day window)')
-    axes[0].axhline(y=0, color='red', linestyle='--', alpha=0.5)
+    results_df["sharpe"].plot(ax=axes[0], title="Rolling Sharpe Ratio (252-day window)")
+    axes[0].axhline(y=0, color="red", linestyle="--", alpha=0.5)
 
     # 波动率
-    results_df['volatility'].plot(ax=axes[1], title='Rolling Volatility (252-day window)')
+    results_df["volatility"].plot(ax=axes[1], title="Rolling Volatility (252-day window)")
 
     # 最大回撤
-    results_df['max_drawdown'].plot(ax=axes[2], title='Rolling Max Drawdown (252-day window)')
-    axes[2].fill_between(results_df.index, results_df['max_drawdown'], 0, alpha=0.3)
+    results_df["max_drawdown"].plot(ax=axes[2], title="Rolling Max Drawdown (252-day window)")
+    axes[2].fill_between(results_df.index, results_df["max_drawdown"], 0, alpha=0.3)
 
     plt.tight_layout()
     out_dir = Path(__file__).resolve().parent / "output"

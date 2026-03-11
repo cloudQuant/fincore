@@ -37,7 +37,7 @@ def test_stutzer_index_minimize_scalar_paths(monkeypatch) -> None:
 
     called = {"ok": 0, "fail": 0, "raise": 0}
 
-    def fake_minimize_scalar(fn, bounds=None, method=None, **_kwargs):  # noqa: ARG001
+    def fake_minimize_scalar(fn, bounds=None, method=None, **_kwargs):
         called["ok"] += 1
         # Avoid tests becoming sensitive to global warning filters.
         with np.errstate(over="ignore", invalid="ignore"):
@@ -51,7 +51,7 @@ def test_stutzer_index_minimize_scalar_paths(monkeypatch) -> None:
     assert called["ok"] == 1
     assert out == 0.0
 
-    def fake_fail(fn, bounds=None, method=None, **_kwargs):  # noqa: ARG001
+    def fake_fail(fn, bounds=None, method=None, **_kwargs):
         called["fail"] += 1
         return SimpleNamespace(success=False, fun=0.0)
 
@@ -59,7 +59,7 @@ def test_stutzer_index_minimize_scalar_paths(monkeypatch) -> None:
     assert np.isnan(stats_mod.stutzer_index(np.array([0.01, 0.02, 0.01, 0.02]), target_return=0.0))
     assert called["fail"] == 1
 
-    def fake_raise(fn, bounds=None, method=None, **_kwargs):  # noqa: ARG001
+    def fake_raise(fn, bounds=None, method=None, **_kwargs):
         called["raise"] += 1
         raise RuntimeError("boom")
 

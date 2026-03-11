@@ -15,6 +15,7 @@ Priority Levels:
 
 from __future__ import annotations
 
+import contextlib
 import copy
 
 import pytest
@@ -151,10 +152,8 @@ def cleanup_empyrical_cache():
         # Clear any cached bound methods
         for attr_name in dir(Empyrical):
             if attr_name.startswith("_bound_"):
-                try:
+                with contextlib.suppress(AttributeError):
                     delattr(Empyrical, attr_name)
-                except AttributeError:
-                    pass
     except (ImportError, AttributeError):
         pass
 

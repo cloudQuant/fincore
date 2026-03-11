@@ -131,7 +131,7 @@ def efficient_frontier(
     frontier_weights = np.empty((n_points, n))
 
     for i, target in enumerate(target_rets):
-        cons_i = constraints + [{"type": "eq", "fun": lambda w, t=target: _port_ret(w) - t}]
+        cons_i = [*constraints, {"type": "eq", "fun": lambda w, t=target: _port_ret(w) - t}]
         res = sp_opt.minimize(
             _port_vol,
             w0,

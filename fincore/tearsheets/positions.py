@@ -10,10 +10,10 @@ import numpy as np
 from fincore.utils import format_asset, get_month_end_freq, print_table
 
 __all__ = [
-    "plot_holdings",
-    "plot_long_short_holdings",
     "plot_exposures",
     "plot_gross_leverage",
+    "plot_holdings",
+    "plot_long_short_holdings",
     "plot_max_median_position_concentration",
     "plot_sector_allocations",
     "show_and_plot_top_positions",
@@ -374,3 +374,4 @@ def show_and_plot_top_positions(
             ax.legend_.remove()
 
         return ax
+    return None

@@ -70,7 +70,7 @@ class TestPrintTable:
         """Test print_table with run_flask_app uses temp static dir."""
         captured = {"excel_path": None}
 
-        def fake_to_excel(self, path, index=True):  # noqa: ARG001
+        def fake_to_excel(self, path, index=True):
             captured["excel_path"] = str(path)
 
         monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel, raising=True)
@@ -86,7 +86,7 @@ class TestPrintTable:
     def test_print_table_run_flask_app_logs_warning_when_to_excel_fails(self, monkeypatch, tmp_path):
         """Test print_table logs warning when to_excel fails."""
 
-        def fake_to_excel(self, path, index=True):  # noqa: ARG001
+        def fake_to_excel(self, path, index=True):
             raise OSError("boom")
 
         monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel, raising=True)

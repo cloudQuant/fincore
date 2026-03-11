@@ -84,7 +84,7 @@ class TestPlotTurnover:
         from fincore.tearsheets.transactions import plot_turnover
 
         returns, positions, transactions = sample_data
-        fig, custom_ax = plt.subplots()
+        _fig, custom_ax = plt.subplots()
 
         ax = plot_turnover(empyrical_instance, returns, transactions, positions, ax=custom_ax)
 

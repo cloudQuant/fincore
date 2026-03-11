@@ -35,6 +35,6 @@ def test_create_position_tear_sheet_smoke_with_sector_mappings_and_hide_position
     top_calls = [c for c, _ in pyf.calls if c == "show_and_plot_top_positions"]
     assert top_calls
     # hide_positions forces show_and_plot_top_pos=0
-    top_kwargs = [kw for c, kw in pyf.calls if c == "show_and_plot_top_positions"][0]
+    top_kwargs = next(kw for c, kw in pyf.calls if c == "show_and_plot_top_positions")
     assert top_kwargs.get("show_and_plot") == 0
     assert any(c == "plot_sector_allocations" for c, _ in pyf.calls)

@@ -25,19 +25,19 @@ from fincore.utils import (
 )
 
 __all__ = [
-    "plot_monthly_returns_heatmap",
     "plot_annual_returns",
-    "plot_monthly_returns_dist",
-    "plot_returns",
-    "plot_rolling_returns",
-    "plot_rolling_beta",
-    "plot_rolling_volatility",
-    "plot_rolling_sharpe",
     "plot_drawdown_periods",
     "plot_drawdown_underwater",
-    "plot_return_quantiles",
+    "plot_monthly_returns_dist",
+    "plot_monthly_returns_heatmap",
     "plot_monthly_returns_timeseries",
     "plot_perf_stats",
+    "plot_return_quantiles",
+    "plot_returns",
+    "plot_rolling_beta",
+    "plot_rolling_returns",
+    "plot_rolling_sharpe",
+    "plot_rolling_volatility",
     "show_perf_stats",
     "show_worst_drawdown_periods",
 ]
@@ -273,7 +273,7 @@ def plot_rolling_returns(
 
     if volatility_match and factor_returns is None:
         raise ValueError("volatility_match requires passing of factor_returns.")
-    elif volatility_match and factor_returns is not None:
+    if volatility_match and factor_returns is not None:
         bmark_vol = factor_returns.loc[returns.index].std()
         returns = (returns / returns.std()) * bmark_vol
 
@@ -665,7 +665,7 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
 
     sns.barplot(x=monthly_rets.index, y=monthly_rets.values, color="steelblue")
 
-    locs, labels = plt.xticks()
+    _locs, labels = plt.xticks()
     plt.setp(labels, rotation=90)
 
     # only show x-labels on year boundary
@@ -755,10 +755,7 @@ def show_perf_stats(
     run_flask_app : boolean, optional, default False
         Whether to run the flask app.
     """
-    if bootstrap:
-        perf_func = empyrical_instance.perf_stats_bootstrap
-    else:
-        perf_func = empyrical_instance.perf_stats
+    perf_func = empyrical_instance.perf_stats_bootstrap if bootstrap else empyrical_instance.perf_stats
 
     perf_stats_all = perf_func(
         returns,

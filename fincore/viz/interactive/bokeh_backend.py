@@ -95,13 +95,13 @@ class BokehBackend(VizBackend):
         """Create a new Bokeh figure."""
         try:
             from bokeh.plotting import figure
-        except ImportError:
-            raise ImportError("Bokeh is required for BokehBackend. Install with: pip install bokeh")
+        except ImportError as e:
+            raise ImportError("Bokeh is required for BokehBackend. Install with: pip install bokeh") from e
 
         fig = figure(
             height=self.height,
             width=self.width,
-            sizing_mode=cast(Any, self.sizing_mode),
+            sizing_mode=cast("Any", self.sizing_mode),
             background_fill_color=self.bg_color,
             border_fill_color=self.bg_color,
             **kwargs,

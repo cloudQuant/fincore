@@ -24,12 +24,11 @@ class TestAnalyzePerformanceByStyle:
         n_assets = 5
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        returns = pd.DataFrame(
+        return pd.DataFrame(
             np.random.normal(0.0005, 0.01, (periods, n_assets)),
             index=pd.date_range("2020-01-01", periods=periods),
             columns=assets,
         )
-        return returns
 
     @pytest.fixture
     def sample_style_exposures(self):
@@ -38,11 +37,10 @@ class TestAnalyzePerformanceByStyle:
         periods = 50
         n_assets = 5
 
-        exposures = pd.DataFrame(
+        return pd.DataFrame(
             np.random.randint(0, 2, (periods, n_assets)),
             columns=[f"ASSET_{i}" for i in range(n_assets)],
         )
-        return exposures
 
     def test_analyze_performance_by_style_basic(self, sample_returns, sample_style_exposures):
         """Test basic performance analysis by style."""
@@ -75,12 +73,11 @@ class TestStyleResultEdgeCases:
         n_assets = 5
         assets = [f"ASSET_{i}" for i in range(n_assets)]
 
-        returns = pd.DataFrame(
+        return pd.DataFrame(
             np.random.normal(0.0005, 0.01, (periods, n_assets)),
             index=pd.date_range("2020-01-01", periods=periods),
             columns=assets,
         )
-        return returns
 
     def test_style_summary_with_duplicate_index_labels(self, sample_returns):
         """Test style_summary when DataFrame has duplicate index labels."""

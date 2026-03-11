@@ -1,20 +1,22 @@
 """Project-wide period constants and annualization factors."""
 
+from __future__ import annotations
+
 import pandas as pd
 from packaging import version as _pkg_version
 
 __all__ = [
+    "ANNUALIZATION_FACTORS",
     "APPROX_BDAYS_PER_MONTH",
     "APPROX_BDAYS_PER_YEAR",
-    "MONTHS_PER_YEAR",
-    "WEEKS_PER_YEAR",
-    "QTRS_PER_YEAR",
     "DAILY",
-    "WEEKLY",
     "MONTHLY",
+    "MONTHS_PER_YEAR",
+    "QTRS_PER_YEAR",
     "QUARTERLY",
+    "WEEKLY",
+    "WEEKS_PER_YEAR",
     "YEARLY",
-    "ANNUALIZATION_FACTORS",
 ]
 
 

@@ -26,13 +26,15 @@ dates = pd.date_range("2020-01-01", periods=n_days, freq="B")
 
 # Simulate 5 correlated assets
 mean_returns = [0.0005, 0.0003, 0.0008, 0.0002, 0.0006]
-cov_matrix = np.array([
-    [0.0004, 0.0001, 0.0002, 0.00005, 0.00015],
-    [0.0001, 0.0003, 0.00008, 0.0001, 0.0001],
-    [0.0002, 0.00008, 0.0006, 0.0001, 0.00025],
-    [0.00005, 0.0001, 0.0001, 0.0002, 0.00008],
-    [0.00015, 0.0001, 0.00025, 0.00008, 0.0005],
-])
+cov_matrix = np.array(
+    [
+        [0.0004, 0.0001, 0.0002, 0.00005, 0.00015],
+        [0.0001, 0.0003, 0.00008, 0.0001, 0.0001],
+        [0.0002, 0.00008, 0.0006, 0.0001, 0.00025],
+        [0.00005, 0.0001, 0.0001, 0.0002, 0.00008],
+        [0.00015, 0.0001, 0.00025, 0.00008, 0.0005],
+    ]
+)
 
 raw = np.random.multivariate_normal(mean_returns, cov_matrix, n_days)
 asset_names = ["Equity_US", "Bonds_US", "Equity_EM", "Bonds_EM", "Commodities"]
@@ -63,7 +65,7 @@ print(f"\nComputed {len(ef)} points on the efficient frontier.")
 print(f"Frontier columns: {list(ef.columns)}")
 print("\nFirst 5 points (return vs risk):")
 for i, (_, row) in enumerate(ef.head().iterrows()):
-    print(f"  Point {i+1}: return={row['return']:.4f}, risk={row['risk']:.4f}")
+    print(f"  Point {i + 1}: return={row['return']:.4f}, risk={row['risk']:.4f}")
 
 # =========================================================================
 # 3. Risk Parity
@@ -76,7 +78,7 @@ print("=" * 60)
 
 rp_weights = risk_parity(returns)
 print("\nRisk parity weights:")
-for asset, w in zip(asset_names, rp_weights):
+for asset, w in zip(asset_names, rp_weights, strict=True):
     print(f"  {asset:<15} {w:.4f} ({w:.1%})")
 print(f"  Sum: {sum(rp_weights):.4f}")
 
@@ -86,7 +88,7 @@ port_vol = np.sqrt(rp_weights @ cov @ rp_weights)
 marginal_contrib = cov @ rp_weights
 risk_contrib = rp_weights * marginal_contrib / port_vol
 print("\nRisk contributions (should be roughly equal):")
-for asset, rc in zip(asset_names, risk_contrib):
+for asset, rc in zip(asset_names, risk_contrib, strict=True):
     print(f"  {asset:<15} {rc:.4f}")
 
 # =========================================================================
@@ -101,7 +103,7 @@ print("=" * 60)
 # Max Sharpe portfolio
 max_sharpe = optimize(returns, objective="max_sharpe")
 print("\nMax Sharpe portfolio:")
-print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in max_sharpe['weights']]))}")
+print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in max_sharpe['weights']], strict=True))}")
 print(f"  Expected return: {max_sharpe['return']:.4f}")
 print(f"  Risk:            {max_sharpe['risk']:.4f}")
 print(f"  Sharpe ratio:    {max_sharpe['sharpe']:.4f}")
@@ -109,14 +111,14 @@ print(f"  Sharpe ratio:    {max_sharpe['sharpe']:.4f}")
 # Min Variance portfolio
 min_var = optimize(returns, objective="min_variance")
 print("\nMin Variance portfolio:")
-print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in min_var['weights']]))}")
+print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in min_var['weights']], strict=True))}")
 print(f"  Expected return: {min_var['return']:.4f}")
 print(f"  Risk:            {min_var['risk']:.4f}")
 
 # Target return portfolio
 target_ret = optimize(returns, objective="target_return", target=0.10)
 print("\nTarget Return (10%) portfolio:")
-print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in target_ret['weights']]))}")
+print(f"  Weights: {dict(zip(asset_names, [f'{w:.4f}' for w in target_ret['weights']], strict=True))}")
 print(f"  Expected return: {target_ret['return']:.4f}")
 print(f"  Risk:            {target_ret['risk']:.4f}")
 
@@ -133,9 +135,11 @@ eq_risk = np.sqrt(equal_weight @ (returns.cov().values * 252) @ equal_weight)
 
 print(f"\n{'Portfolio':<20} {'Return':<10} {'Risk':<10} {'Sharpe':<10}")
 print("-" * 50)
-print(f"{'Equal Weight':<20} {eq_ret:<10.4f} {eq_risk:<10.4f} {eq_ret/eq_risk:<10.4f}")
+print(f"{'Equal Weight':<20} {eq_ret:<10.4f} {eq_risk:<10.4f} {eq_ret / eq_risk:<10.4f}")
 print(f"{'Risk Parity':<20} {'-':<10} {port_vol:<10.4f} {'-':<10}")
 print(f"{'Max Sharpe':<20} {max_sharpe['return']:<10.4f} {max_sharpe['risk']:<10.4f} {max_sharpe['sharpe']:<10.4f}")
-print(f"{'Min Variance':<20} {min_var['return']:<10.4f} {min_var['risk']:<10.4f} {min_var['return']/min_var['risk']:<10.4f}")
+print(
+    f"{'Min Variance':<20} {min_var['return']:<10.4f} {min_var['risk']:<10.4f} {min_var['return'] / min_var['risk']:<10.4f}"
+)
 
 print("\nDone! All optimization examples executed successfully.")

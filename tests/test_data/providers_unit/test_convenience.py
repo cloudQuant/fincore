@@ -59,7 +59,7 @@ class TestConvenienceFunctionsUnit:
         from fincore.data.providers import BatchFetchError, fetch_multiple_prices
 
         class DummyProvider:
-            def fetch_multiple(self, symbols, start, end, interval="1d", adjust=True, strict=False):  # noqa: ARG002
+            def fetch_multiple(self, symbols, start, end, interval="1d", adjust=True, strict=False):
                 if strict:
                     raise BatchFetchError("Dummy", errors={"BAD": ValueError("x")}, partial_results={})
                 return {s: pd.DataFrame() for s in symbols}

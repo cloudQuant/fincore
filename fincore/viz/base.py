@@ -7,9 +7,10 @@ name.
 
 from __future__ import annotations
 
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-import pandas as pd
+if TYPE_CHECKING:
+    import pandas as pd
 
 __all__ = ["VizBackend", "get_backend"]
 

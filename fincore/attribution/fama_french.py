@@ -18,15 +18,15 @@ from scipy import stats
 
 __all__ = [
     "FF3_FACTORS",
-    "FF5_FACTORS",
     "FF4MOM_FACTORS",
+    "FF5_FACTORS",
     "FamaFrenchFitResult",
     "FamaFrenchModel",
-    "fetch_ff_factors",
     "FamaFrenchProvider",
-    "set_ff_provider",
-    "clear_ff_factor_cache",
     "calculate_idiosyncratic_risk",
+    "clear_ff_factor_cache",
+    "fetch_ff_factors",
+    "set_ff_provider",
 ]
 
 
@@ -34,6 +34,9 @@ __all__ = [
 FF3_FACTORS = ["MKT", "SMB", "HML"]
 FF5_FACTORS = ["MKT", "SMB", "HML", "RMW", "CMA"]
 FF4MOM_FACTORS = ["MKT", "SMB", "HML", "MOM"]
+
+# Minimum std threshold for near-zero variance (avoids div-by-zero in autocorrelation)
+_MIN_STD = 1e-15
 
 
 class FamaFrenchFitResult(TypedDict):
@@ -177,7 +180,7 @@ class FamaFrenchModel:
                 if len(residuals) > lag:
                     resid_prev = residuals[:-lag]
                     resid_next = residuals[lag:]
-                    if np.std(resid_prev) < 1e-15 or np.std(resid_next) < 1e-15:
+                    if np.std(resid_prev) < _MIN_STD or np.std(resid_next) < _MIN_STD:
                         acorr_vals.append(0.0)
                     else:
                         with np.errstate(invalid="ignore", divide="ignore"):
@@ -297,10 +300,8 @@ class FamaFrenchModel:
                 exposures.append([np.nan] * (len(self.factors) + 1))
 
         # Create column names
-        column_names = ["alpha"] + self.factors
-        df = pd.DataFrame(exposures, index=returns.index, columns=column_names)
-
-        return df
+        column_names = ["alpha", *self.factors]
+        return pd.DataFrame(exposures, index=returns.index, columns=column_names)
 
     def attribution_decomposition(
         self,

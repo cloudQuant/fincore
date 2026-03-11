@@ -1,3 +1,5 @@
+"""Common utilities for display, data handling, and formatting."""
+
 import importlib
 import warnings
 from collections.abc import Callable
@@ -16,36 +18,36 @@ from pandas.tseries.offsets import BDay
 from fincore.constants.color import COLORS
 
 __all__ = [
+    "HAS_IPYTHON",
+    "SETTINGS",
     "DisplayFunc",
     "HTMLFunc",
-    "HAS_IPYTHON",
-    "customize",
     "analyze_dataframe_differences",
     "analyze_series_differences",
-    "one_dec_places",
-    "two_dec_places",
-    "percentage",
-    "format_asset",
-    "vectorize",
-    "extract_rets_pos_txn_from_zipline",
-    "print_table",
-    "standardize_data",
-    "detect_intraday",
     "check_intraday",
-    "estimate_intraday",
     "clip_returns_to_benchmark",
-    "to_utc",
-    "to_series",
-    "get_month_end_freq",
-    "make_timezone_aware",
-    "SETTINGS",
-    "register_return_func",
-    "get_symbol_rets",
     "configure_legend",
-    "sample_colormap",
-    "get_utc_timestamp",
-    "rolling_window",
+    "customize",
     "default_returns_func",
+    "detect_intraday",
+    "estimate_intraday",
+    "extract_rets_pos_txn_from_zipline",
+    "format_asset",
+    "get_month_end_freq",
+    "get_symbol_rets",
+    "get_utc_timestamp",
+    "make_timezone_aware",
+    "one_dec_places",
+    "percentage",
+    "print_table",
+    "register_return_func",
+    "rolling_window",
+    "sample_colormap",
+    "standardize_data",
+    "to_series",
+    "to_utc",
+    "two_dec_places",
+    "vectorize",
 ]
 
 
@@ -62,7 +64,7 @@ else:
     _IPY_display = getattr(_ipy_display_mod, "display", None)
 
 
-def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+def _fallback_display(*objs: Any, **_kwargs: Any) -> None:
     # Minimal fallback for non-IPython environments.
     print(*objs)
 
@@ -252,7 +254,7 @@ def analyze_series_differences(series1, series2):
         print("Index frequencies are identical.")
 
 
-def one_dec_places(x, pos):
+def one_dec_places(x, _pos):
     """
     Adds 1/10th decimal to plot ticks.
     """
@@ -260,7 +262,7 @@ def one_dec_places(x, pos):
     return "%.1f" % x
 
 
-def two_dec_places(x, pos):
+def two_dec_places(x, _pos):
     """
     Adds 1/100th decimal to plot ticks.
     """
@@ -268,7 +270,7 @@ def two_dec_places(x, pos):
     return "%.2f" % x
 
 
-def percentage(x, pos):
+def percentage(x, _pos):
     """
     Adds percentage sign to plot ticks.
     """
@@ -290,8 +292,7 @@ def format_asset(asset):
 
     if isinstance(asset, zipline.assets.Asset):
         return asset.symbol
-    else:
-        return asset
+    return asset
 
 
 def vectorize(func):
@@ -303,8 +304,9 @@ def vectorize(func):
     def wrapper(df, *args, **kwargs):
         if df.ndim == 1:
             return func(df, *args, **kwargs)
-        elif df.ndim == 2:
+        if df.ndim == 2:
             return df.apply(func, *args, **kwargs)
+        return None
 
     return wrapper
 
@@ -425,9 +427,7 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
         target_static_path.mkdir(parents=True, exist_ok=True)
         excel_file_path = target_static_path / f"strategy_performance_{name}.xlsx"
         try:
-            # print(name, table)
             table.to_excel(excel_file_path, index=True)
-            # print(f"Saved export to: {excel_file_path}")
         except (OSError, ValueError) as e:
             import logging
 
@@ -516,18 +516,14 @@ def check_intraday(estimate, returns, positions, transactions):
                     stacklevel=2,
                 )
                 return estimate_intraday(returns, positions, transactions)
-            else:
-                return positions
-        else:
             return positions
+        return positions
 
-    elif estimate:
+    if estimate:
         if positions is not None and transactions is not None:
             return estimate_intraday(returns, positions, transactions)
-        else:
-            raise ValueError("Positions and txns needed to estimate intraday")
-    else:
-        return positions
+        raise ValueError("Positions and txns needed to estimate intraday")
+    return positions
 
 
 def estimate_intraday(returns, positions, transactions, eod_hour=23):
@@ -578,12 +574,10 @@ def estimate_intraday(returns, positions, transactions, eod_hour=23):
 
     # Shift EOD positions to positions at start of next trading day
     positions_shifted = positions.copy().shift(1).fillna(0)
-    # starting_capital = positions.iloc[0].sum() / (1 + returns[0])
     divisor = 1 + returns.iloc[0]
     if divisor == 0 or not np.isfinite(divisor):
         divisor = 1.0
     starting_capital = positions.iloc[0].sum() / divisor
-    # positions_shifted.cash[0] = starting_capital
     positions_shifted.iloc[0, positions_shifted.columns.get_loc("cash")] = starting_capital
 
     # Format and add start positions to intraday position changes
@@ -656,8 +650,7 @@ def get_month_end_freq():
     """
     if version.parse(pd.__version__) < version.parse("2.2.0"):
         return "M"
-    else:
-        return "ME"
+    return "ME"
 
 
 def make_timezone_aware(timestamp, target_tz):
@@ -679,9 +672,8 @@ def make_timezone_aware(timestamp, target_tz):
     if target_tz is not None:
         if timestamp.tz is None:
             return timestamp.tz_localize(target_tz)
-        else:
-            return timestamp.tz_convert(target_tz)
-    elif timestamp.tz is not None:
+        return timestamp.tz_convert(target_tz)
+    if timestamp.tz is not None:
         # Target is tz-naive but timestamp is tz-aware, remove tz
         return timestamp.tz_localize(None)
     return timestamp
@@ -820,11 +812,7 @@ def sample_colormap(cmap_name, n_samples):
     # Use the non-deprecated colormaps registry (matplotlib >= 3.5).
     colormap = mpl.colormaps[cmap_name]
 
-    colors = []
-    for i in np.linspace(0, 1, n_samples):
-        colors.append(colormap(i))
-
-    return colors
+    return [colormap(i) for i in np.linspace(0, 1, n_samples)]
 
 
 def get_utc_timestamp(dt):
@@ -919,13 +907,13 @@ def rolling_window(array, length, mutable=False):
     orig_shape = array.shape
     if not orig_shape:
         raise IndexError("Can't restride a scalar.")
-    elif orig_shape[0] < length:
+    if orig_shape[0] < length:
         raise IndexError(f"Can't restride array of shape {orig_shape} with a window length of {length}")
 
     num_windows = orig_shape[0] - length + 1
-    new_shape = (num_windows, length) + orig_shape[1:]
+    new_shape = (num_windows, length, *orig_shape[1:])
 
-    new_strides = (array.strides[0],) + array.strides
+    new_strides = (array.strides[0], *array.strides)
 
     # Prefer the `writeable` kwarg when available; some NumPy versions disallow
     # flipping the WRITEABLE flag on as_strided views after creation.

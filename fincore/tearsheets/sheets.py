@@ -37,7 +37,16 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 
-from fincore.constants import APPROX_BDAYS_PER_MONTH, FACTOR_PARTITIONS
+from fincore.constants import (
+    APPROX_BDAYS_PER_MONTH,
+    CAPACITY_CAPITAL_BASE,
+    CAPACITY_SWEEP_MAX_PV,
+    CAPACITY_SWEEP_MIN_PV,
+    CAPACITY_SWEEP_STEP,
+    FACTOR_PARTITIONS,
+    LIQUIDATION_DAILY_VOL_LIMIT,
+    TRADE_DAILY_VOL_LIMIT,
+)
 from fincore.empyrical import Empyrical
 from fincore.utils import (
     check_intraday,
@@ -52,17 +61,17 @@ from fincore.utils import (
 __all__ = [
     "DisplayFunc",
     "MarkdownFunc",
-    "create_full_tear_sheet",
-    "create_simple_tear_sheet",
-    "create_returns_tear_sheet",
-    "create_position_tear_sheet",
-    "create_txn_tear_sheet",
-    "create_round_trip_tear_sheet",
-    "create_interesting_times_tear_sheet",
-    "create_capacity_tear_sheet",
     "create_bayesian_tear_sheet",
-    "create_risk_tear_sheet",
+    "create_capacity_tear_sheet",
+    "create_full_tear_sheet",
+    "create_interesting_times_tear_sheet",
     "create_perf_attrib_tear_sheet",
+    "create_position_tear_sheet",
+    "create_returns_tear_sheet",
+    "create_risk_tear_sheet",
+    "create_round_trip_tear_sheet",
+    "create_simple_tear_sheet",
+    "create_txn_tear_sheet",
 ]
 
 
@@ -70,7 +79,7 @@ DisplayFunc = Callable[..., Any]
 MarkdownFunc = Callable[[str], Any]
 
 
-def _fallback_display(*objs: Any, **kwargs: Any) -> None:
+def _fallback_display(*objs: Any, **_kwargs: Any) -> None:
     print(*objs)
 
 
@@ -463,6 +472,7 @@ def create_returns_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Positions tear sheet
@@ -530,6 +540,7 @@ def create_position_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Transactions tear sheet
@@ -581,6 +592,7 @@ def create_txn_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Round trip tear sheet
@@ -612,7 +624,7 @@ def create_round_trip_tear_sheet(
             UserWarning,
             stacklevel=2,
         )
-        return
+        return None
 
     pyfolio_instance.print_round_trip_stats(trades, run_flask_app=run_flask_app)
 
@@ -650,6 +662,7 @@ def create_round_trip_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Interesting times tear sheet
@@ -663,7 +676,7 @@ def create_interesting_times_tear_sheet(
 
     if not rets_interesting:
         warnings.warn("Passed returns do not overlap with any interesting times.", UserWarning, stacklevel=2)
-        return
+        return None
 
     print_table(
         pd.DataFrame(rets_interesting).describe().transpose().loc[:, ["mean", "min", "max"]] * 100,
@@ -700,6 +713,7 @@ def create_interesting_times_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Capacity tear sheet
@@ -710,8 +724,8 @@ def create_capacity_tear_sheet(
     positions,
     transactions,
     market_data,
-    liquidation_daily_vol_limit=0.2,
-    trade_daily_vol_limit=0.05,
+    liquidation_daily_vol_limit=LIQUIDATION_DAILY_VOL_LIMIT,
+    trade_daily_vol_limit=TRADE_DAILY_VOL_LIMIT,
     last_n_days=APPROX_BDAYS_PER_MONTH * 6,
     days_to_liquidate_limit=1,
     estimate_intraday="infer",
@@ -731,7 +745,11 @@ def create_capacity_tear_sheet(
     )
 
     max_days_by_ticker = pyfolio_instance.get_max_days_to_liquidate_by_ticker(
-        positions, market_data, max_bar_consumption=liquidation_daily_vol_limit, capital_base=1e6, mean_volume_window=5
+        positions,
+        market_data,
+        max_bar_consumption=liquidation_daily_vol_limit,
+        capital_base=CAPACITY_CAPITAL_BASE,
+        mean_volume_window=5,
     )
     max_days_by_ticker.index = max_days_by_ticker.index.map(format_asset)
 
@@ -744,7 +762,7 @@ def create_capacity_tear_sheet(
         positions,
         market_data,
         max_bar_consumption=liquidation_daily_vol_limit,
-        capital_base=1e6,
+        capital_base=CAPACITY_CAPITAL_BASE,
         mean_volume_window=5,
         last_n_days=last_n_days,
     )
@@ -771,13 +789,14 @@ def create_capacity_tear_sheet(
         transactions,
         market_data,
         bt_starting_capital,
-        min_pv=100000,
-        max_pv=300000000,
-        step_size=1000000,
+        min_pv=CAPACITY_SWEEP_MIN_PV,
+        max_pv=CAPACITY_SWEEP_MAX_PV,
+        step_size=CAPACITY_SWEEP_STEP,
         ax=ax_capacity_sweep,
     )
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Bayesian tear sheet
@@ -807,7 +826,7 @@ def create_bayesian_tear_sheet(
     previous_time = time.time()
     start_time = previous_time
 
-    trace_t, ppc_t = pyfolio_instance.run_model(
+    _trace_t, ppc_t = pyfolio_instance.run_model(
         "t", df_train, returns_test=df_test, samples=samples, ppc=True, progressbar=progressbar
     )
     previous_time = timer("T model", previous_time)
@@ -900,10 +919,7 @@ def create_bayesian_tear_sheet(
     if stoch_vol:
         returns_cutoff = 400
         print(f"\nRunning stochastic volatility model on most recent {returns_cutoff} days of returns.")
-        if df_train.size > returns_cutoff:
-            df_train_truncated = df_train[-returns_cutoff:]
-        else:
-            df_train_truncated = df_train
+        df_train_truncated = df_train[-returns_cutoff:] if df_train.size > returns_cutoff else df_train
         _, trace_stoch_vol = pyfolio_instance.model_stoch_vol(df_train_truncated)
         previous_time = timer("running stochastic volatility model", previous_time)
 
@@ -919,6 +935,7 @@ def create_bayesian_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 # # Risk tear sheet
@@ -954,7 +971,7 @@ def create_risk_tear_sheet(
 
     if len(idx) == 0:
         warnings.warn("No overlapping index across risk tear sheet inputs; nothing to plot.", UserWarning, stacklevel=2)
-        return
+        return None
 
     positions = positions.loc[idx]
     if style_factor_panel is not None:
@@ -1047,6 +1064,7 @@ def create_risk_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None
 
 
 def create_perf_attrib_tear_sheet(
@@ -1112,3 +1130,4 @@ def create_perf_attrib_tear_sheet(
 
     if run_flask_app:
         return fig  # pragma: no cover -- Flask app mode
+    return None

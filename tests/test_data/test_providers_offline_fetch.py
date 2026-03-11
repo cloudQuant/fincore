@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import pytest
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class _DummyResponse:
@@ -151,7 +154,7 @@ def test_tushare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) ->
     from fincore.data import providers as providers_mod
 
     class _DummyPro:
-        def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):  # noqa: ARG002
+        def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):
             return pd.DataFrame(
                 {
                     "trade_date": ["20240102", "20240103"],
@@ -164,7 +167,7 @@ def test_tushare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) ->
                 }
             )
 
-        def stock_basic(self, ts_code: str, fields: str):  # noqa: ARG002
+        def stock_basic(self, ts_code: str, fields: str):
             return pd.DataFrame([{"ts_code": ts_code, "name": "Example", "industry": "X", "list_date": "20200101"}])
 
     dummy_ts = SimpleNamespace(pro_api=lambda _token: _DummyPro())
@@ -186,7 +189,7 @@ def test_tushare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) ->
 def test_akshare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) -> None:
     from fincore.data import providers as providers_mod
 
-    def stock_zh_a_hist(symbol: str, period: str, start_date: str, end_date: str, adjust: str):  # noqa: ARG001
+    def stock_zh_a_hist(symbol: str, period: str, start_date: str, end_date: str, adjust: str):
         return pd.DataFrame(
             {
                 "日期": ["2024-01-02", "2024-01-03"],
@@ -199,7 +202,7 @@ def test_akshare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) ->
             }
         )
 
-    def stock_individual_info_em(symbol: str):  # noqa: ARG001
+    def stock_individual_info_em(symbol: str):
         return {"item": {"股票简称": "Example", "交易所": "SZ", "行业": "X"}}
 
     dummy_ak = SimpleNamespace(
@@ -224,13 +227,12 @@ def test_fetch_price_data_and_multiple_prices_default_date_logic(monkeypatch) ->
     calls: list[tuple[str, datetime, datetime]] = []
 
     class DummyProvider:
-        def fetch(self, symbol: str, start, end, interval="1d", adjust=True):  # noqa: ARG002
+        def fetch(self, symbol: str, start, end, interval="1d", adjust=True):
             calls.append((symbol, pd.Timestamp(start).to_pydatetime(), pd.Timestamp(end).to_pydatetime()))
             return pd.DataFrame({"Close": [1.0]}, index=[pd.Timestamp("2024-01-02")])
 
-        def fetch_multiple(self, symbols: list[str], start, end, interval="1d", adjust=True, strict=False):  # noqa: ARG002
-            for s in symbols:
-                calls.append((s, pd.Timestamp(start).to_pydatetime(), pd.Timestamp(end).to_pydatetime()))
+        def fetch_multiple(self, symbols: list[str], start, end, interval="1d", adjust=True, strict=False):
+            calls.extend((s, pd.Timestamp(start).to_pydatetime(), pd.Timestamp(end).to_pydatetime()) for s in symbols)
             return {s: pd.DataFrame({"Close": [1.0]}, index=[pd.Timestamp("2024-01-02")]) for s in symbols}
 
     # Cover end=None branch with a fixed "today".

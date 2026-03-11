@@ -24,11 +24,10 @@ class TestCalculateRegressionAttribution:
         np.random.seed(42)
         periods = 100
 
-        returns = pd.Series(
+        return pd.Series(
             np.random.normal(0.0005, 0.01, periods),
             index=pd.date_range("2020-01-01", periods=periods),
         )
-        return returns
 
     @pytest.fixture
     def sample_style_returns(self):
@@ -36,7 +35,7 @@ class TestCalculateRegressionAttribution:
         np.random.seed(42)
         periods = 100
 
-        returns = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "value": np.random.normal(0.0003, 0.01, periods),
                 "growth": np.random.normal(0.0007, 0.015, periods),
@@ -45,14 +44,13 @@ class TestCalculateRegressionAttribution:
             },
             index=pd.date_range("2020-01-01", periods=periods),
         )
-        return returns
 
     @pytest.fixture
     def sample_style_exposures(self):
         """Create sample style exposures."""
         np.random.seed(42)
 
-        exposures = pd.DataFrame(
+        return pd.DataFrame(
             {
                 "value": [0.5, 0.3, 0.2],
                 "growth": [0.5, 0.7, 0.8],
@@ -60,7 +58,6 @@ class TestCalculateRegressionAttribution:
                 "small": [0.4, 0.6, 0.7],
             }
         )
-        return exposures
 
     def test_regression_attribution_basic(self, sample_portfolio_returns, sample_style_returns, sample_style_exposures):
         """Test basic regression attribution."""

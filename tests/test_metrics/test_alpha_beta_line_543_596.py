@@ -12,6 +12,7 @@ import pytest
 from fincore.metrics import alpha_beta
 
 
+@pytest.mark.serial
 class TestAnnualAlphaLine543:
     """Test to cover line 543 in alpha_beta.py.
 
@@ -43,6 +44,7 @@ class TestAnnualAlphaLine543:
             assert len(result) == 0
 
 
+@pytest.mark.serial
 class TestAnnualBetaLine596:
     """Test to cover line 596 in alpha_beta.py (similar to line 543)."""
 

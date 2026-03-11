@@ -16,23 +16,30 @@
 
 """Performance attribution functions."""
 
+from __future__ import annotations
+
 from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
 
 __all__ = [
-    "perf_attrib_core",
-    "compute_exposures_internal",
-    "perf_attrib",
-    "compute_exposures",
-    "create_perf_attrib_stats",
     "align_and_warn",
+    "compute_exposures",
+    "compute_exposures_internal",
+    "create_perf_attrib_stats",
     "cumulative_returns_less_costs",
+    "perf_attrib",
+    "perf_attrib_core",
 ]
 
 
-def perf_attrib_core(returns, positions, factor_returns, factor_loadings):
+def perf_attrib_core(
+    returns: pd.Series,
+    positions: pd.Series | pd.DataFrame,
+    factor_returns: pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Core performance attribution computation.
 
     Computes risk exposures and performance attribution by factor.
@@ -109,7 +116,10 @@ def perf_attrib_core(returns, positions, factor_returns, factor_loadings):
     return risk_exposures_portfolio, perf_attribution
 
 
-def compute_exposures_internal(positions, factor_loadings):
+def compute_exposures_internal(
+    positions: pd.Series | pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+) -> pd.DataFrame:
     """Compute exposures from positions and factor loadings.
 
     Parameters
@@ -133,20 +143,38 @@ def compute_exposures_internal(positions, factor_loadings):
 
 
 def perf_attrib(
-    returns,
-    positions=None,
-    factor_returns=None,
-    factor_loadings=None,
-    transactions=None,
-    pos_in_dollars=True,
-    regression_style="OLS",
-):
+    returns: pd.Series,
+    positions: pd.Series | pd.DataFrame | None = None,
+    factor_returns: pd.DataFrame | None = None,
+    factor_loadings: pd.DataFrame | None = None,
+    transactions: pd.DataFrame | None = None,
+    pos_in_dollars: bool = True,
+    regression_style: str = "OLS",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate performance attribution.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily returns of the strategy, noncumulative.
+    positions : pd.Series or pd.DataFrame, optional
+        Daily position values. If DataFrame, columns are tickers.
+    factor_returns : pd.DataFrame, optional
+        Daily factor returns.
+    factor_loadings : pd.DataFrame, optional
+        Factor loadings with MultiIndex (dt, ticker).
+    transactions : pd.DataFrame, optional
+        Transaction data for turnover checks.
+    pos_in_dollars : bool, optional
+        If True, positions are in dollars (default True).
+    regression_style : str, optional
+        Regression style for attribution (default "OLS").
 
     Returns
     -------
-    tuple
-        (risk_exposures, perf_attrib_data) - risk exposures portfolio and performance attribution data
+    tuple of (pd.DataFrame, pd.DataFrame)
+        (risk_exposures, perf_attrib_data) - risk exposures portfolio and
+        performance attribution data.
     """
     if positions is None or factor_returns is None or factor_loadings is None:
         raise ValueError("positions, factor_returns, and factor_loadings are required")
@@ -170,7 +198,10 @@ def perf_attrib(
     return risk_exposures, perf_attrib_data
 
 
-def normalize_and_stack_positions(positions, pos_in_dollars=True):
+def normalize_and_stack_positions(
+    positions: pd.DataFrame,
+    pos_in_dollars: bool = True,
+) -> pd.Series:
     """Normalize dollar positions to percentage weights and stack.
 
     Unlike :func:`fincore.metrics.positions.stack_positions`, this version
@@ -205,15 +236,48 @@ def normalize_and_stack_positions(positions, pos_in_dollars=True):
     return stacked
 
 
-def compute_exposures(positions, factor_loadings):
-    """Compute factor exposures from positions."""
+def compute_exposures(
+    positions: pd.Series | pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute factor exposures from positions and factor loadings.
+
+    Parameters
+    ----------
+    positions : pd.Series or pd.DataFrame
+        Daily position values with MultiIndex (dt, ticker).
+    factor_loadings : pd.DataFrame
+        Factor loadings with MultiIndex (dt, ticker) and factors as columns.
+
+    Returns
+    -------
+    pd.DataFrame
+        Portfolio risk exposures by factor and date.
+    """
     return compute_exposures_internal(positions, factor_loadings)
 
 
-def create_perf_attrib_stats(perf_attrib_, risk_exposures):
+def create_perf_attrib_stats(
+    perf_attrib_: pd.DataFrame,
+    risk_exposures: pd.DataFrame,
+) -> tuple[pd.Series, pd.DataFrame]:
     """Take perf attribution data and compute annualized statistics.
 
     Computes annualized multifactor alpha, multifactor sharpe, risk exposures.
+
+    Parameters
+    ----------
+    perf_attrib_ : pd.DataFrame
+        Performance attribution output with columns total_returns, specific_returns,
+        common_returns, and factor contributions.
+    risk_exposures : pd.DataFrame
+        Risk exposures by factor and date.
+
+    Returns
+    -------
+    tuple of (pd.Series, pd.DataFrame)
+        (summary_stats, risk_exposure_summary) - summary performance stats and
+        annualized return/exposure by factor.
     """
     from collections import OrderedDict
 
@@ -254,8 +318,36 @@ def create_perf_attrib_stats(perf_attrib_, risk_exposures):
     return summary, risk_exposure_summary
 
 
-def align_and_warn(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True):
-    """Make sure that all inputs have matching dates and tickers. Raise warnings if necessary."""
+def align_and_warn(
+    returns: pd.Series,
+    positions: pd.Series | pd.DataFrame,
+    factor_returns: pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+    transactions: pd.DataFrame | None = None,
+    pos_in_dollars: bool = True,
+) -> tuple[pd.Series, pd.Series | pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Make sure that all inputs have matching dates and tickers. Raise warnings if necessary.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Strategy returns.
+    positions : pd.Series or pd.DataFrame
+        Position data.
+    factor_returns : pd.DataFrame
+        Factor returns.
+    factor_loadings : pd.DataFrame
+        Factor loadings.
+    transactions : pd.DataFrame, optional
+        Transaction data for turnover checks.
+    pos_in_dollars : bool, optional
+        If True, positions are in dollars.
+
+    Returns
+    -------
+    tuple of (pd.Series, pd.Series|pd.DataFrame, pd.DataFrame, pd.DataFrame)
+        (returns, positions, factor_returns, factor_loadings) aligned to common dates/tickers.
+    """
     import warnings
 
     from fincore.constants.style import PERF_ATTRIB_TURNOVER_THRESHOLD
@@ -333,7 +425,7 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
         if len(missing_factor_loadings_index) > 5:
             missing_dates_displayed = f"(first missing is {missing_factor_loadings_index[0]}, last missing is {missing_factor_loadings_index[-1]})"
         else:
-            missing_dates_displayed = list(missing_factor_loadings_index)
+            missing_dates_displayed = str(list(missing_factor_loadings_index))
 
         warning_msg = f"Could not find factor loadings for {len(missing_factor_loadings_index)} dates: {missing_dates_displayed}. Truncating date range for performance attribution. "
 
@@ -369,7 +461,10 @@ def align_and_warn(returns, positions, factor_returns, factor_loadings, transact
     return returns, positions, factor_returns, factor_loadings
 
 
-def cumulative_returns_less_costs(returns, costs):
+def cumulative_returns_less_costs(
+    returns: pd.Series,
+    costs: pd.Series | None,
+) -> pd.Series:
     """Compute cumulative returns, less costs.
 
     Parameters

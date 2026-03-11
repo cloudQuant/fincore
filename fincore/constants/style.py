@@ -9,26 +9,52 @@ from __future__ import annotations
 from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
 
 __all__ = [
-    "PERF_ATTRIB_TURNOVER_THRESHOLD",
-    "SECTORS",
+    "CAPACITY_CAPITAL_BASE",
+    "CAPACITY_SWEEP_MAX_PV",
+    "CAPACITY_SWEEP_MIN_PV",
+    "CAPACITY_SWEEP_STEP",
     "CAP_BUCKETS",
-    "SIMPLE_STAT_FUNCS",
-    "FACTOR_STAT_FUNCS",
-    "STAT_FUNC_NAMES",
-    "FACTOR_PARTITIONS",
-    "STAT_FUNCS_PCT",
-    "PNL_STATS",
-    "SUMMARY_STATS",
-    "RETURN_STATS",
     "DURATION_STATS",
+    "FACTOR_PARTITIONS",
+    "FACTOR_STAT_FUNCS",
+    "LIQUIDATION_DAILY_VOL_LIMIT",
     "MM_DISPLAY_UNIT",
+    "PERF_ATTRIB_TURNOVER_THRESHOLD",
+    "PNL_STATS",
+    "RETURN_STATS",
+    "SECTORS",
+    "SIMPLE_STAT_FUNCS",
+    "STAT_FUNCS_PCT",
+    "STAT_FUNC_NAMES",
+    "SUMMARY_STATS",
+    "TRADE_DAILY_VOL_LIMIT",
 ]
 
 
 PERF_ATTRIB_TURNOVER_THRESHOLD = 0.25
 """Minimum turnover threshold for performance attribution."""
+
+# Capacity tear sheet defaults
+LIQUIDATION_DAILY_VOL_LIMIT = 0.2
+"""Default max bar consumption for liquidation (20%)."""
+
+TRADE_DAILY_VOL_LIMIT = 0.05
+"""Default max bar consumption per trade (5%)."""
+
+CAPACITY_CAPITAL_BASE = 1_000_000
+"""Default capital base ($1M) for liquidation analysis."""
+
+CAPACITY_SWEEP_MIN_PV = 100_000
+"""Min portfolio value for capacity sweep."""
+
+CAPACITY_SWEEP_MAX_PV = 300_000_000
+"""Max portfolio value for capacity sweep."""
+
+CAPACITY_SWEEP_STEP = 1_000_000
+"""Step size for capacity sweep."""
 
 SECTORS = OrderedDict(
     [
@@ -169,16 +195,42 @@ DURATION_STATS = OrderedDict(
         ("Median duration", lambda x: x.median()),
         ("Longest duration", lambda x: x.max()),
         ("Shortest duration", lambda x: x.min()),
-        #  FIXME: Instead of x.max() - x.min() this should be
-        #  rts.close_dt.max() - rts.open_dt.min() which is not
-        #  available here. As it would require a new approach here
-        #  that passes in multiple fields we disable these measures
-        #  for now.
-        #  ('Avg # round_trips per day', lambda x: float(len(x)) /
-        #   (x.max() - x.min()).days),
-        #  ('Avg # round_trips per month', lambda x: float(len(x)) /
-        #   (((x.max() - x.min()).days) / APPROX_BDAYS_PER_MONTH)),
     ]
 )
+
+# Stats that require the full group (open_dt, close_dt) to compute calendar span.
+# Used by agg_all_long_short when col="duration" via group_aware_stats.
+DURATION_STATS_GROUP = OrderedDict(
+    [
+        (
+            "Avg # round_trips per day",
+            lambda data, group: (
+                float(len(data)) / _duration_span_days(group)
+                if len(data) > 0 and _duration_span_days(group) > 0
+                else np.nan
+            ),
+        ),
+        (
+            "Avg # round_trips per month",
+            lambda data, group: (
+                float(len(data)) / (_duration_span_days(group) / 21.0)
+                if len(data) > 0 and _duration_span_days(group) > 0
+                else np.nan
+            ),
+        ),
+    ]
+)
+
+
+def _duration_span_days(group: pd.DataFrame) -> float:
+    """Calendar span in days: close_dt.max() - open_dt.min(). Returns 0 if missing cols or NaT."""
+    if "open_dt" not in group.columns or "close_dt" not in group.columns:
+        return 0.0
+    span = group["close_dt"].max() - group["open_dt"].min()
+    if pd.isna(span):
+        return 0.0
+    seconds = float(span.total_seconds())
+    return max(seconds / 86400.0, 0.0)
+
 
 MM_DISPLAY_UNIT = 1000000.0

@@ -14,6 +14,7 @@ import pytest
 from fincore.empyrical import Empyrical
 
 
+@pytest.mark.serial
 class TestEmpyricalLine718Coverage:
     """Test coverage for line 718 in empyrical.py."""
 

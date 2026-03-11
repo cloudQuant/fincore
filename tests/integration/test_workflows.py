@@ -36,11 +36,10 @@ def strategy_returns():
     """Generate realistic strategy returns for integration testing."""
     np.random.seed(42)
     n_days = 252 * 3  # 3 years of data
-    returns = pd.Series(
+    return pd.Series(
         np.random.randn(n_days) * 0.01 + 0.0003,  # Slight positive drift
         index=pd.bdate_range("2020-01-01", periods=n_days),
     )
-    return returns
 
 
 @pytest.fixture
@@ -48,11 +47,10 @@ def benchmark_returns(strategy_returns):
     """Generate benchmark returns for comparison."""
     np.random.seed(123)
     n_days = len(strategy_returns)
-    returns = pd.Series(
+    return pd.Series(
         np.random.randn(n_days) * 0.008 + 0.0002,  # Lower volatility and drift
         index=strategy_returns.index,
     )
-    return returns
 
 
 @pytest.fixture
@@ -145,7 +143,7 @@ class TestCompleteAnalysisWorkflow:
         assert len(results) == 3  # 3 strategies
 
         # 3. Validate each strategy
-        for strategy, stats in results.items():
+        for stats in results.values():
             assert np.isfinite(stats.get("Sharpe ratio", np.nan))
             assert stats.get("Max drawdown", 0) <= 0
 

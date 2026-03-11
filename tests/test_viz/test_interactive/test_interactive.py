@@ -17,9 +17,7 @@ def sample_returns():
     n = 252 * 3  # 3 years of daily data
 
     dates = pd.date_range("2020-01-01", periods=n, freq="B")
-    returns = pd.Series(np.random.randn(n) * 0.01, index=dates)
-
-    return returns
+    return pd.Series(np.random.randn(n) * 0.01, index=dates)
 
 
 @pytest.fixture
@@ -29,9 +27,7 @@ def sample_benchmark():
     n = 252 * 3
 
     dates = pd.date_range("2020-01-01", periods=n, freq="B")
-    returns = pd.Series(np.random.randn(n) * 0.008, index=dates)
-
-    return returns
+    return pd.Series(np.random.randn(n) * 0.008, index=dates)
 
 
 @pytest.fixture
@@ -65,13 +61,11 @@ def multi_asset_returns():
     dates = pd.date_range("2020-01-01", periods=n, freq="B")
     assets = ["Asset_A", "Asset_B", "Asset_C"]
 
-    returns = pd.DataFrame(
+    return pd.DataFrame(
         np.random.randn(n, 3) * 0.015,
         index=dates,
         columns=assets,
     )
-
-    return returns
 
 
 class TestPlotlyBackend:

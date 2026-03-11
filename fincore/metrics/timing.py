@@ -16,6 +16,8 @@
 
 """Market timing metrics."""
 
+from __future__ import annotations
+
 import logging
 from collections import OrderedDict
 
@@ -28,15 +30,19 @@ from fincore.constants.interesting_periods import PERIODS
 from fincore.metrics.basic import aligned_series
 
 __all__ = [
-    "treynor_mazuy_timing",
-    "henriksson_merton_timing",
-    "market_timing_return",
     "cornell_timing",
     "extract_interesting_date_ranges",
+    "henriksson_merton_timing",
+    "market_timing_return",
+    "treynor_mazuy_timing",
 ]
 
 
-def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
+def treynor_mazuy_timing(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    risk_free: float = 0.0,
+) -> float:
     """Calculate the Treynor–Mazuy market timing coefficient (gamma).
 
     This fits a quadratic regression of excess strategy returns on excess
@@ -83,7 +89,11 @@ def treynor_mazuy_timing(returns, factor_returns, risk_free=0.0):
         return np.nan
 
 
-def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
+def henriksson_merton_timing(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    risk_free: float = 0.0,
+) -> float:
     """Calculate the Henriksson–Merton market timing coefficient.
 
     This fits a regression of excess strategy returns on excess factor
@@ -130,7 +140,11 @@ def henriksson_merton_timing(returns, factor_returns, risk_free=0.0):
         return np.nan
 
 
-def market_timing_return(returns, factor_returns, risk_free=0.0):
+def market_timing_return(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    risk_free: float = 0.0,
+) -> float:
     """Calculate the market timing return component.
 
     Given the Treynor–Mazuy timing coefficient, this computes the portion
@@ -163,7 +177,11 @@ def market_timing_return(returns, factor_returns, risk_free=0.0):
     return gamma * np.mean(excess_factor**2)
 
 
-def cornell_timing(returns, factor_returns, risk_free=0.0):
+def cornell_timing(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    risk_free: float = 0.0,
+) -> float:
     """Calculate the Cornell timing model coefficient.
 
     The Cornell timing model decomposes market returns into positive and
@@ -230,7 +248,7 @@ def cornell_timing(returns, factor_returns, risk_free=0.0):
         return np.nan
 
 
-def extract_interesting_date_ranges(returns):
+def extract_interesting_date_ranges(returns: pd.Series) -> OrderedDict[str, pd.Series]:
     """Extract returns based on interesting events.
 
     Parameters

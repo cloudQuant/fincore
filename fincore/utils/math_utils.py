@@ -61,4 +61,4 @@ except ImportError:
     nanargmin = np.nanargmin
 
 
-__all__ = ["nanmean", "nanstd", "nansum", "nanmax", "nanmin", "nanargmax", "nanargmin"]
+__all__ = ["nanargmax", "nanargmin", "nanmax", "nanmean", "nanmin", "nanstd", "nansum"]

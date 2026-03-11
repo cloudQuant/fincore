@@ -78,7 +78,7 @@ class TestYahooFinanceProviderUnit:
             index=pd.date_range("2023-01-01", periods=2, freq="D"),
         )
 
-        def fake_fetch(symbol, start, end, interval="1d", adjust=True):  # noqa: ARG001
+        def fake_fetch(symbol, start, end, interval="1d", adjust=True):
             if symbol == "BAD":
                 raise ValueError("fetch failed")
             return sample
@@ -102,7 +102,7 @@ class TestYahooFinanceProviderUnit:
             index=pd.date_range("2023-01-01", periods=2, freq="D"),
         )
 
-        def fake_fetch(symbol, start, end, interval="1d", adjust=True):  # noqa: ARG001
+        def fake_fetch(symbol, start, end, interval="1d", adjust=True):
             if symbol in {"BAD1", "BAD2"}:
                 raise ValueError(f"failed: {symbol}")
             return sample
