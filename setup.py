@@ -16,7 +16,7 @@
 from setuptools import setup, find_packages
 
 DISTNAME = "fincore"
-VERSION = "0.1.0"
+VERSION = "0.3.0"
 DESCRIPTION = """fincore is a Python library for quantitative performance and risk analytics"""
 LONG_DESCRIPTION = """fincore is a continuation of the empyrical analytics stack maintained by `cloudQuant`_.
 It delivers more than 50 return, risk, attribution, timing, and streak statistics with

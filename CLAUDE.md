@@ -24,7 +24,7 @@ pip install -U .
 ### Testing
 
 ```bash
-# Run all tests (1299 tests) with 4 parallel workers
+# Run all tests (2345 tests) with 4 parallel workers
 pytest tests/ -n 4
 
 # Run with coverage

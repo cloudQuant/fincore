@@ -1,8 +1,8 @@
-# fincore | 量化绩效与风险分析 | Quantitative Performance & Risk Analytics
+# fincore | Quantitative Performance & Risk Analytics
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-1.0.0-blueviolet.svg" alt="Version 1.0.0"/>
-    <img src="https://img.shields.io/badge/tests-1800%20passed-brightgreen.svg" alt="Tests Passing"/>
+    <img src="https://img.shields.io/badge/version-0.3.0-blueviolet.svg" alt="Version 0.3.0"/>
+    <img src="https://img.shields.io/badge/tests-2345%20passed-brightgreen.svg" alt="Tests Passing"/>
     <img src="https://img.shields.io/badge/coverage-100%25-brightgreen.svg" alt="Coverage"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Platforms"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions"/>
@@ -116,7 +116,7 @@ fincore/
 ### Testing
 
 ```bash
-pytest tests/ -n 4                   # Parallel (1800 tests)
+pytest tests/ -n 4                   # Parallel (2345 tests)
 pytest tests/ --cov=fincore          # With coverage
 pytest tests/test_core/              # AnalysisContext, RollingEngine, Viz
 ```
@@ -222,7 +222,7 @@ w = optimize(returns_df, objective="max_sharpe")
 ### 测试
 
 ```bash
-pytest tests/ -n 4                   # 并行运行（1800 个测试）
+pytest tests/ -n 4                   # 并行运行（2345 个测试）
 pytest tests/ --cov=fincore          # 含覆盖率
 pytest tests/test_core/              # AnalysisContext、RollingEngine、可视化
 ```

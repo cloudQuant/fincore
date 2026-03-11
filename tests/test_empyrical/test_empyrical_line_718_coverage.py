@@ -20,15 +20,27 @@ class TestEmpyricalLine718Coverage:
 
     def test_regression_annual_return_direct_mock(self):
         """Test line 718 by patching annual_return to return NaN for benchmark."""
-        from unittest.mock import patch
+        from unittest.mock import MagicMock, patch
+
+        import fincore.empyrical as empyrical_mod
 
         returns = pd.Series([0.01, 0.02, -0.01, 0.015, 0.005])
         benchmark = pd.Series([0.005, 0.01, -0.005, 0.008, 0.002])
 
         emp = Empyrical(returns=returns, factor_returns=benchmark)
 
-        # Patch annual_return when called with factor_returns; return NaN to trigger line 718
-        with patch("fincore.metrics.yearly.annual_return", return_value=np.nan):
+        # Mock yearly module's annual_return to return NaN. Patching _resolve_module
+        # ensures correct behavior across Python 3.11/3.12/3.13 and parallel test runs.
+        real_resolve = empyrical_mod._resolve_module
+        mock_yearly = MagicMock()
+        mock_yearly.annual_return = MagicMock(return_value=np.nan)
+
+        def resolve(alias):
+            if alias == "_yearly":
+                return mock_yearly
+            return real_resolve(alias)
+
+        with patch.object(empyrical_mod, "_resolve_module", side_effect=resolve):
             result = emp.regression_annual_return()
 
         assert pd.isna(result), f"Expected NaN but got {result}"

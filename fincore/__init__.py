@@ -6,7 +6,7 @@ and flat API functions (sharpe_ratio, max_drawdown, etc.) load on first access.
 
 from __future__ import annotations
 
-__version__ = "1.0.0"
+__version__ = "0.3.0"
 
 __all__ = [
     # Core classes
