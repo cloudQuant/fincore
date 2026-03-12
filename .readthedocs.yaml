@@ -8,5 +8,6 @@ build:
   jobs:
     post_checkout:
       - pip install -e ".[viz]"
-  mkdocs:
-    configuration: mkdocs.yml
+# MkDocs config must be top-level (required as of 2025)
+mkdocs:
+  configuration: mkdocs.yml
