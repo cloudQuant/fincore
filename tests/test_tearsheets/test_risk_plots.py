@@ -10,8 +10,15 @@ import pytest
 @pytest.fixture(autouse=True)
 def _mpl_cleanup():
     import matplotlib
+    import warnings
 
     matplotlib.use("Agg", force=True)
+    # Disable noisy max-open-figures warning in CI; tests explicitly close figs.
+    warnings.filterwarnings(
+        "ignore",
+        message="More than 20 figures have been opened.*",
+        category=RuntimeWarning,
+    )
     import matplotlib.pyplot as plt
 
     yield
