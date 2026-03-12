@@ -9,8 +9,9 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _mpl_cleanup():
-    import matplotlib
     import warnings
+
+    import matplotlib
 
     matplotlib.use("Agg", force=True)
     # Disable noisy max-open-figures warning in CI; tests explicitly close figs.
