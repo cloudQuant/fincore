@@ -30,8 +30,8 @@ class TestAnnualAlphaLine543:
             index=pd.date_range("2020-01-01", periods=3),
         )
 
-        # Mock aligned_series to return empty results
-        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
+        # Mock aligned_series at use-site; string path is fragile across Python/xdist
+        with patch.object(alpha_beta, "aligned_series") as mock_aligned:
             mock_aligned.return_value = (
                 pd.Series([], dtype=float).rename(0),
                 pd.Series([], dtype=float).rename(1),
@@ -59,8 +59,8 @@ class TestAnnualBetaLine596:
             index=pd.date_range("2020-01-01", periods=3),
         )
 
-        # Mock aligned_series to return empty results
-        with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
+        # Mock aligned_series at use-site; string path is fragile across Python/xdist
+        with patch.object(alpha_beta, "aligned_series") as mock_aligned:
             mock_aligned.return_value = (
                 pd.Series([], dtype=float).rename(0),
                 pd.Series([], dtype=float).rename(1),
