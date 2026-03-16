@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload P0 test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: p0-test-results
           path: |
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload P0+P1 test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: p0-p1-test-results
           path: |
@@ -120,7 +120,7 @@ jobs:
           name: codecov-py${{ matrix.python-version }}
 
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-py${{ matrix.python-version }}
           path: |
