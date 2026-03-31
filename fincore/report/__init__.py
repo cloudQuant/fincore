@@ -53,6 +53,7 @@ def create_strategy_report(
     title: str = "Strategy Report",
     output: str = "report.html",
     rolling_window: int = 63,
+    period: str = "daily",
 ) -> str:
     """Generate a strategy report (HTML or PDF) based on the inputs you provide.
 
@@ -75,6 +76,8 @@ def create_strategy_report(
         Output path. Use ``.html`` for HTML and ``.pdf`` for PDF.
     rolling_window : int
         Rolling window size (trading days). Default is 63 (about 3 months).
+    period : str
+        Returns period. Default is "daily".
 
     Returns
     -------
@@ -95,6 +98,7 @@ def create_strategy_report(
                 title=title,
                 output=output,
                 rolling_window=rolling_window,
+                period=period,
             ),
         )
     from fincore.report.render_html import generate_html
@@ -110,6 +114,7 @@ def create_strategy_report(
             title=title,
             output=output,
             rolling_window=rolling_window,
+            period=period,
         ),
     )
 

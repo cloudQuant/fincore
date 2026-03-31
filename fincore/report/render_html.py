@@ -202,9 +202,11 @@ def generate_html(
     title,
     output,
     rolling_window,
+    period="daily",
 ):
     """Generate an interactive HTML report (ECharts + sidebar navigation)."""
-    s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window)
+    s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window, period=period)
+    s["_title"] = title
 
     # ---- chart data ----
     cd, monthly_tbl, hm_months = _prepare_chart_data_core(s)
@@ -216,18 +218,20 @@ def generate_html(
     sidebar = _build_sidebar(s)
 
     # ---- body sections ----
+    period_title = s.get("period_title", "Daily")
+    period_unit = s.get("period_unit", "Day")
     pct_perf = {
         "Annual Return",
         "Cumulative Returns",
         "Annual Volatility",
         "Max Drawdown",
         "Downside Risk",
-        "Daily Value at Risk",
-        "Daily Mean Return",
-        "Daily Std Return",
-        "Best Day",
-        "Worst Day",
-        "Avg Daily Turnover",
+        f"{period_title} Value at Risk",
+        f"{period_title} Mean Return",
+        f"{period_title} Std Return",
+        f"Best {period_unit}",
+        f"Worst {period_unit}",
+        f"Avg {period_title} Turnover",
     }
     b = _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window)
 
@@ -270,6 +274,7 @@ def _build_period_returns_table(s):
     """Build the period returns comparison HTML table."""
     _pr = s["period_returns"]
     _wr = s["period_win_rates"]
+    _period_title = s.get("period_title", "Daily")
     _phdr = "<tr><th>Metric</th>" + "".join(f"<th>{k}</th>" for k in _pr) + "</tr>"
     _prow1 = '<tr><td style="text-align:left;font-weight:600">Strategy</td>'
     for _k, _v in _pr.items():
@@ -291,7 +296,7 @@ def _build_period_returns_table(s):
             _prow3 += f'<td class="{css_cls(_exc)}">{fmt(_exc, pct=True)}</td>'
         _prow3 += "</tr>"
         _prows += _prow2 + _prow3
-    _prow_wr = '<tr><td style="text-align:left;font-weight:600">Daily Win Rate</td>'
+    _prow_wr = f'<tr><td style="text-align:left;font-weight:600">{_period_title} Win Rate</td>'
     for _k in _pr:
         _wv = _wr.get(_k, np.nan)
         _prow_wr += f"<td>{fmt(_wv, pct=True)}</td>"
@@ -392,11 +397,13 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     """Build the HTML body section list."""
     b = []
 
+    # -- Hero --
     title = s.get("_title", "Strategy Report")
+    period_unit_plural = s.get("period_unit_plural", "trading days")
     b.append(f"<h1>{title}</h1>")
     b.append(
         f'<div class="meta">{s["date_range"][0]} → {s["date_range"][1]}'
-        f" | {s['n_days']} trading days | ~{s['n_months']} months</div>"
+        f" | {s['n_periods']} {period_unit_plural} | ~{s['n_months']} months</div>"
     )
 
     # -- Summary --
@@ -495,9 +502,16 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
 # =========================================================================
 
 
-def _build_echart_js(s, rw):
-    """Build ECharts initialization JavaScript statements."""
+def _build_echart_js(s, rolling_window):
+    """Build all ECharts JS snippets."""
     js = []
+    period_title = s.get("period_title", "Daily")
+    period_name = s.get("period", "daily")
+
+    # theme colors
+    B = "#3182ce"
+    R = "#e53e3e"
+    G = "#2f855a"
     _grid = "grid:{left:60,right:30,bottom:30,top:50}"
     _grid_s = "grid:{left:55,right:15,bottom:25,top:45}"
     _zoom = "dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:4}]"
@@ -570,7 +584,7 @@ def _build_echart_js(s, rw):
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{fontSize:10}}}},"
-        f"yAxis:{{type:'value',axisLabel:{{fontSize:10}}}},"
+        f"yAxis:{{type:'value'}},"
         f"{_zoom_s},"
         f"series:[{{type:'line',data:D.dd,showSymbol:false,"
         f"lineStyle:{{width:1,color:R}},areaStyle:{{color:'rgba(229,62,62,0.2)'}}}}]"
@@ -580,7 +594,7 @@ def _build_echart_js(s, rw):
     # Daily returns
     js.append(
         f"C('c-daily',{{"
-        f"title:{{text:'Daily Returns (%)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'{period_title} Returns (%)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(3)+'%'}}}},"
         f"{_grid_s},"
         f"xAxis:{{type:'category',data:D.dates,axisLabel:{{show:false}}}},"
@@ -663,7 +677,7 @@ def _build_echart_js(s, rw):
     # Rolling Sharpe
     js.append(
         f"C('c-rs',{{"
-        f"title:{{text:'Rolling Sharpe ({rw}d)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Rolling Sharpe ({rolling_window} {period_name})',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis'}},{_grid},{_zoom_s},"
         f"xAxis:{{type:'category',data:D.rsDates,axisLabel:{{fontSize:10}}}},"
         f"yAxis:{{type:'value'}},"
@@ -679,7 +693,7 @@ def _build_echart_js(s, rw):
     # Rolling Volatility
     js.append(
         f"C('c-rv',{{"
-        f"title:{{text:'Rolling Volatility ({rw}d, %)',textStyle:{{fontSize:12}}}},"
+        f"title:{{text:'Rolling Volatility ({rolling_window} {period_name}, %)',textStyle:{{fontSize:12}}}},"
         f"tooltip:{{trigger:'axis',valueFormatter:function(v){{return v.toFixed(2)+'%'}}}},"
         f"{_grid_s},{_zoom_s},"
         f"xAxis:{{type:'category',data:D.rvDates,axisLabel:{{fontSize:10}}}},"
@@ -693,7 +707,7 @@ def _build_echart_js(s, rw):
     if "rolling_beta" in s:
         js.append(
             f"C('c-rb',{{"
-            f"title:{{text:'Rolling Beta ({rw}d)',textStyle:{{fontSize:12}}}},"
+            f"title:{{text:'Rolling Beta ({rolling_window} {period_name})',textStyle:{{fontSize:12}}}},"
             f"tooltip:{{trigger:'axis'}},{_grid_s},{_zoom_s},"
             f"xAxis:{{type:'category',data:D.rbDates,axisLabel:{{fontSize:10}}}},"
             f"yAxis:{{type:'value'}},"

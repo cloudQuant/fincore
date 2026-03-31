@@ -19,38 +19,80 @@ __all__ = ["compute_sections"]
 logger = logging.getLogger(__name__)
 
 
-def _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions):
+def _period_title(period):
+    return {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+    }.get(period, "Daily")
+
+
+def _period_unit(period):
+    return {
+        "daily": "Day",
+        "weekly": "Week",
+        "monthly": "Month",
+    }.get(period, "Day")
+
+
+def _period_unit_plural(period):
+    return {
+        "daily": "trading days",
+        "weekly": "weeks",
+        "monthly": "months",
+    }.get(period, "trading days")
+
+
+def _approx_months(period_count, period):
+    if period == "weekly":
+        return int(period_count * 12 / 52)
+    if period == "monthly":
+        return int(period_count)
+    return int(period_count / 21)
+
+
+def _period_defs(period):
+    if period == "weekly":
+        return [("1W", 1), ("1M", 4), ("3M", 13), ("6M", 26), ("1Y", 52), ("3Y", 156), ("5Y", 260)]
+    if period == "monthly":
+        return [("1M", 1), ("3M", 3), ("6M", 6), ("1Y", 12), ("3Y", 36), ("5Y", 60)]
+    return _PERIOD_DEFS
+
+
+def _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions, period):
     """Compute core performance statistics."""
+    period_title = _period_title(period)
+    period_unit = _period_unit(period)
     perf = OrderedDict()
-    perf["Annual Return"] = Empyrical.annual_return(returns)
+    perf["Annual Return"] = Empyrical.annual_return(returns, period=period)
     perf["Cumulative Returns"] = Empyrical.cum_returns_final(returns)
-    perf["Annual Volatility"] = Empyrical.annual_volatility(returns)
-    perf["Sharpe Ratio"] = Empyrical.sharpe_ratio(returns)
-    perf["Calmar Ratio"] = Empyrical.calmar_ratio(returns)
+    perf["Annual Volatility"] = Empyrical.annual_volatility(returns, period=period)
+    perf["Sharpe Ratio"] = Empyrical.sharpe_ratio(returns, period=period)
+    perf["Calmar Ratio"] = Empyrical.calmar_ratio(returns, period=period)
     perf["Stability"] = Empyrical.stability_of_timeseries(returns)
     perf["Max Drawdown"] = Empyrical.max_drawdown(returns)
     perf["Omega Ratio"] = Empyrical.omega_ratio(returns)
-    perf["Sortino Ratio"] = Empyrical.sortino_ratio(returns)
+    perf["Sortino Ratio"] = Empyrical.sortino_ratio(returns, period=period)
     perf["Skew"] = Empyrical.skewness(returns)
     perf["Kurtosis"] = Empyrical.kurtosis(returns)
     perf["Tail Ratio"] = Empyrical.tail_ratio(returns)
-    perf["Daily Value at Risk"] = Empyrical.value_at_risk(returns)
-    perf["Downside Risk"] = Empyrical.downside_risk(returns)
+    perf[f"{period_title} Value at Risk"] = Empyrical.value_at_risk(returns)
+    perf["Downside Risk"] = Empyrical.downside_risk(returns, period=period)
 
-    perf["Daily Mean Return"] = float(np.nanmean(returns))
-    perf["Daily Std Return"] = float(np.nanstd(returns, ddof=1))
-    perf["Best Day"] = float(returns.max())
-    perf["Worst Day"] = float(returns.min())
+    perf[f"{period_title} Mean Return"] = float(np.nanmean(returns))
+    perf[f"{period_title} Std Return"] = float(np.nanstd(returns, ddof=1))
+    perf[f"Best {period_unit}"] = float(returns.max())
+    perf[f"Worst {period_unit}"] = float(returns.min())
 
     if benchmark_rets is not None:
-        a, b = Empyrical.alpha_beta(returns, benchmark_rets)
+        a, b = Empyrical.alpha_beta(returns, benchmark_rets, period=period)
         perf["Alpha"] = a
         perf["Beta"] = b
 
     if positions is not None and transactions is not None:
         try:
             turnover = Empyrical.get_turnover(positions, transactions)
-            perf["Avg Daily Turnover"] = float(turnover.mean())
+            perf[f"Avg {period_title} Turnover"] = float(turnover.mean())
         except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
             logger.warning("Failed to calculate turnover: %s", e)
 
@@ -65,30 +107,43 @@ def _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactio
     return perf
 
 
-def _compute_extended_stats(Empyrical, returns):
+def _compute_extended_stats(Empyrical, returns, period):
     """Compute extended strategy statistics."""
+    period_unit_plural = _period_unit_plural(period)
+    period_unit = _period_unit(period)
     ext = OrderedDict()
     emp = Empyrical(returns=returns)
-    ext["Win Rate (daily)"] = emp.win_rate()
-    ext["Loss Rate (daily)"] = emp.loss_rate()
+    ext[f"Win Rate ({period})"] = emp.win_rate()
+    ext[f"Loss Rate ({period})"] = emp.loss_rate()
     ext["Serial Correlation"] = emp.serial_correlation()
     ext["Common Sense Ratio"] = emp.common_sense_ratio()
-    ext["Sterling Ratio"] = emp.sterling_ratio()
-    ext["Burke Ratio"] = emp.burke_ratio()
-    ext["Kappa Three Ratio"] = emp.kappa_three_ratio()
-    ext["Max Drawdown Days"] = emp.max_drawdown_days()
-    ext["Max Drawdown Recovery Days"] = emp.max_drawdown_recovery_days()
+    ext["Sterling Ratio"] = emp.sterling_ratio(period=period)
+    ext["Burke Ratio"] = emp.burke_ratio(period=period)
+    ext["Kappa Three Ratio"] = emp.kappa_three_ratio(period=period)
     ext["2nd Max Drawdown"] = emp.second_max_drawdown()
     ext["3rd Max Drawdown"] = emp.third_max_drawdown()
-    ext["Max Consecutive Up Days"] = Empyrical.max_consecutive_up_days(returns)
-    ext["Max Consecutive Down Days"] = Empyrical.max_consecutive_down_days(returns)
-    ext["Max Single Day Gain"] = Empyrical.max_single_day_gain(returns)
-    ext["Max Single Day Loss"] = Empyrical.max_single_day_loss(returns)
+    if period == "weekly":
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_weeks()
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_weeks()
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_weeks(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_weeks(returns)
+    elif period == "monthly":
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_months()
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_months()
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_months(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_months(returns)
+    else:
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_days()
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_days()
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_days(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_days(returns)
+    ext[f"Max Single {period_unit} Gain"] = float(returns.max())
+    ext[f"Max Single {period_unit} Loss"] = float(returns.min())
     ext["Hurst Exponent"] = Empyrical.hurst_exponent(returns)
     return ext
 
 
-def _compute_time_series(Empyrical, returns, rolling_window):
+def _compute_time_series(Empyrical, returns, rolling_window, period):
     """Compute time-series data for charts."""
     ts = {}
     ts["returns"] = returns
@@ -96,14 +151,14 @@ def _compute_time_series(Empyrical, returns, rolling_window):
     cum_ret_0 = Empyrical.cum_returns(returns, starting_value=0)
     running_max = (1 + cum_ret_0).cummax()
     ts["drawdown"] = (1 + cum_ret_0) / running_max - 1
-    ts["rolling_sharpe"] = Empyrical.rolling_sharpe(returns, rolling_sharpe_window=rolling_window)
-    ts["rolling_volatility"] = Empyrical.rolling_volatility(returns, rolling_vol_window=rolling_window)
+    ts["rolling_sharpe"] = Empyrical.rolling_sharpe(returns, rolling_sharpe_window=rolling_window, period=period)
+    ts["rolling_volatility"] = Empyrical.rolling_volatility(returns, rolling_vol_window=rolling_window, period=period)
     ts["dd_table"] = Empyrical.gen_drawdown_table(returns, top=5)
 
     ts["yearly_stats"] = pd.DataFrame(
         {
-            "Annual Return": Empyrical.annual_return_by_year(returns),
-            "Sharpe Ratio": Empyrical.sharpe_ratio_by_year(returns),
+            "Annual Return": Empyrical.annual_return_by_year(returns, period=period),
+            "Sharpe Ratio": Empyrical.sharpe_ratio_by_year(returns, period=period),
             "Max Drawdown": Empyrical.max_drawdown_by_year(returns),
         }
     )
@@ -119,15 +174,15 @@ def _compute_time_series(Empyrical, returns, rolling_window):
     return ts
 
 
-def _compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window):
+def _compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window, period):
     """Compute benchmark comparison stats."""
     bm = OrderedDict()
     bm["Alpha"] = perf["Alpha"]
     bm["Beta"] = perf["Beta"]
-    bm["Information Ratio"] = Empyrical.information_ratio(returns, benchmark_rets)
-    bm["Tracking Error"] = Empyrical.tracking_error(returns, benchmark_rets)
-    bm["Up Capture"] = Empyrical.up_capture(returns, benchmark_rets)
-    bm["Down Capture"] = Empyrical.down_capture(returns, benchmark_rets)
+    bm["Information Ratio"] = Empyrical.information_ratio(returns, benchmark_rets, period=period)
+    bm["Tracking Error"] = Empyrical.tracking_error(returns, benchmark_rets, period=period)
+    bm["Up Capture"] = Empyrical.up_capture(returns, benchmark_rets, period=period)
+    bm["Down Capture"] = Empyrical.down_capture(returns, benchmark_rets, period=period)
     bm["Capture Ratio"] = bm["Up Capture"] / bm["Down Capture"] if bm["Down Capture"] != 0 else np.nan
     bm["Correlation"] = float(returns.corr(benchmark_rets))
     return {
@@ -271,7 +326,7 @@ _PERIOD_DEFS = [
 ]
 
 
-def _compute_period_returns(Empyrical, returns, benchmark_rets):
+def _compute_period_returns(Empyrical, returns, benchmark_rets, period):
     """Compute period returns and win rates."""
     s = {}
     end_date = returns.index[-1]
@@ -280,7 +335,7 @@ def _compute_period_returns(Empyrical, returns, benchmark_rets):
     ytd_mask = returns.index >= _ytd_ts
 
     pr = OrderedDict()
-    for label, days in _PERIOD_DEFS:
+    for label, days in _period_defs(period):
         pr[label] = float(Empyrical.cum_returns_final(returns.iloc[-days:])) if len(returns) >= days else np.nan
     if ytd_mask.sum() > 0:
         pr["YTD"] = float(Empyrical.cum_returns_final(returns[ytd_mask]))
@@ -291,7 +346,7 @@ def _compute_period_returns(Empyrical, returns, benchmark_rets):
         _bm_tz = getattr(benchmark_rets.index[-1], "tzinfo", None)
         _bm_ytd_ts = pd.Timestamp(end_date.year, 1, 1, tz=_bm_tz)
         bpr = OrderedDict()
-        for label, days in _PERIOD_DEFS:
+        for label, days in _period_defs(period):
             bpr[label] = (
                 float(Empyrical.cum_returns_final(benchmark_rets.iloc[-days:]))
                 if len(benchmark_rets) >= days
@@ -304,7 +359,7 @@ def _compute_period_returns(Empyrical, returns, benchmark_rets):
         s["benchmark_period_returns"] = bpr
 
     wr = OrderedDict()
-    for label, days in _PERIOD_DEFS:
+    for label, days in _period_defs(period):
         if len(returns) >= days:
             r = returns.iloc[-days:]
             wr[label] = float((r > 0).sum() / len(r))
@@ -363,6 +418,7 @@ def compute_sections(
     transactions,
     trades,
     rolling_window,
+    period="daily",
 ):
     """Compute all statistics and time series needed by the report renderers.
 
@@ -380,22 +436,27 @@ def compute_sections(
         returns.index[0].strftime("%Y-%m-%d"),
         returns.index[-1].strftime("%Y-%m-%d"),
     )
+    sections["period"] = period
+    sections["period_title"] = _period_title(period)
+    sections["period_unit"] = _period_unit(period)
+    sections["period_unit_plural"] = _period_unit_plural(period)
+    sections["n_periods"] = len(returns)
     sections["n_days"] = len(returns)
-    sections["n_months"] = int(len(returns) / 21)
+    sections["n_months"] = _approx_months(len(returns), period)
 
     # ------ Core performance ------
-    perf = _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions)
+    perf = _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions, period)
     sections["perf_stats"] = perf
 
     # ------ Extended stats ------
-    sections["extended_stats"] = _compute_extended_stats(Empyrical, returns)
+    sections["extended_stats"] = _compute_extended_stats(Empyrical, returns, period)
 
     # ------ Time series ------
-    sections.update(_compute_time_series(Empyrical, returns, rolling_window))
+    sections.update(_compute_time_series(Empyrical, returns, rolling_window, period))
 
     # ------ Benchmark ------
     if benchmark_rets is not None:
-        sections.update(_compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window))
+        sections.update(_compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window, period))
 
     # ------ Positions ------
     if positions is not None:
@@ -410,7 +471,7 @@ def compute_sections(
         sections.update(_compute_trades(trades))
 
     # ------ Period returns ------
-    sections.update(_compute_period_returns(Empyrical, returns, benchmark_rets))
+    sections.update(_compute_period_returns(Empyrical, returns, benchmark_rets, period))
 
     # ------ Summary text ------
     sections["summary_text"] = _compute_summary_text(perf, benchmark_rets)

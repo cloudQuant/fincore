@@ -22,6 +22,7 @@ def generate_pdf(
     title,
     output,
     rolling_window,
+    period="daily",
 ):
     """Generate a PDF report by rendering the HTML report via Playwright."""
     from fincore.report.render_html import generate_html
@@ -40,6 +41,7 @@ def generate_pdf(
         title=title,
         output=tmp_html,
         rolling_window=rolling_window,
+        period=period,
     )
 
     # 2) Render HTML to PDF via Playwright.
