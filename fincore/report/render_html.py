@@ -508,10 +508,6 @@ def _build_echart_js(s, rolling_window):
     period_title = s.get("period_title", "Daily")
     period_name = s.get("period", "daily")
 
-    # theme colors
-    B = "#3182ce"
-    R = "#e53e3e"
-    G = "#2f855a"
     _grid = "grid:{left:60,right:30,bottom:30,top:50}"
     _grid_s = "grid:{left:55,right:15,bottom:25,top:45}"
     _zoom = "dataZoom:[{type:'inside'},{type:'slider',height:18,bottom:4}]"
