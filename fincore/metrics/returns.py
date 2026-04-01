@@ -159,7 +159,7 @@ def cum_returns(
 
     if allocated_output:
         if returns.ndim == 1 and isinstance(returns, pd.Series):
-            out = pd.Series(out, index=returns.index)
+            out = pd.Series(out, index=returns.index)  # type: ignore[union-attr]
         elif isinstance(returns, pd.DataFrame):
             out = pd.DataFrame(
                 out,
