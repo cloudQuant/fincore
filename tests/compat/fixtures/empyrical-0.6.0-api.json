@@ -1,0 +1,5477 @@
+{
+  "callables": [
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "convert_to",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.aggregate_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, convert_to)",
+      "source": {
+        "line": 318,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "aggregate_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_beta",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None)",
+      "source": {
+        "line": 1161,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_beta",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None)",
+      "source": {
+        "line": 1226,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 1014,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 1093,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_beta_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.annual_return",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 410,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "annual_return",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "2.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "alpha_",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.annual_volatility",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, alpha_=2.0, annualization=None, out=None)",
+      "source": {
+        "line": 488,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "annual_volatility",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, out=None)",
+      "source": {
+        "line": 1321,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, out=None)",
+      "source": {
+        "line": 1359,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cagr",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 452,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cagr",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.beta_fragility_heuristic",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns)",
+      "source": {
+        "line": 1573,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_fragility_heuristic",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.beta_fragility_heuristic_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns)",
+      "source": {
+        "line": 1608,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_fragility_heuristic_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.01",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "var_p",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.gpd_risk_estimates",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, var_p=0.01)",
+      "source": {
+        "line": 1682,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "gpd_risk_estimates",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.01",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "var_p",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.gpd_risk_estimates_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, var_p=0.01)",
+      "source": {
+        "line": 1721,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "gpd_risk_estimates_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.calmar_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 549,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "calmar_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, period=DAILY)",
+      "source": {
+        "line": 1539,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.05",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cutoff",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.conditional_value_at_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, cutoff=0.05)",
+      "source": {
+        "line": 2128,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "conditional_value_at_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "starting_value",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cum_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, starting_value=0, out=None)",
+      "source": {
+        "line": 221,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cum_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "starting_value",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cum_returns_final",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, starting_value=0)",
+      "source": {
+        "line": 282,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cum_returns_final",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.down_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 2017,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "down_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1933,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.downside_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, required_return=0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 819,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "downside_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.excess_sharpe",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, out=None)",
+      "source": {
+        "line": 902,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "excess_sharpe",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.max_drawdown",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, out=None)",
+      "source": {
+        "line": 354,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "max_drawdown",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "APPROX_BDAYS_PER_YEAR",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.omega_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, risk_free=0.0, required_return=0.0, annualization=APPROX_BDAYS_PER_YEAR)",
+      "source": {
+        "line": 600,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "omega_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1223,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1318,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 1068,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1156,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_beta_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_annual_volatility",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 544,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_annual_volatility",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1356,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_beta",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1476,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_beta_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2058,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_max_drawdown",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 407,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_max_drawdown",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_sharpe_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 730,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_sharpe_ratio",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_sortino_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 816,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_sortino_ratio",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_up_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2033,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_up_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_up_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2083,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_up_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.sharpe_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, risk_free=0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 652,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "sharpe_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "prices",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.simple_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(prices)",
+      "source": {
+        "line": 193,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "simple_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_downside_risk",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.sortino_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, required_return=0, period=DAILY, annualization=None, out=None, _downside_risk=None)",
+      "source": {
+        "line": 733,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "sortino_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.stability_of_timeseries",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns)",
+      "source": {
+        "line": 1479,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "stability_of_timeseries",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.tail_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns)",
+      "source": {
+        "line": 1509,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "tail_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1999,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1898,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1968,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.05",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cutoff",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.value_at_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, cutoff=0.05)",
+      "source": {
+        "line": 2108,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "value_at_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.perf_attrib",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, factor_returns, factor_loadings)",
+      "source": {
+        "line": 5,
+        "path": "perf_attrib.py",
+        "sha256": "859ce666e3160e84ce9fb409a854d1e6c01cf3df979246967825129909d72243"
+      },
+      "symbol": "perf_attrib",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.compute_exposures",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(positions, factor_loadings)",
+      "source": {
+        "line": 120,
+        "path": "perf_attrib.py",
+        "sha256": "859ce666e3160e84ce9fb409a854d1e6c01cf3df979246967825129909d72243"
+      },
+      "symbol": "compute_exposures",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    }
+  ],
+  "commit": "74655e974ed2935563820c548c339731f1fe0621",
+  "fixture_source": {
+    "generator": "scripts/generate_compat_manifest.py",
+    "mode": "static_ast",
+    "root": "external pinned checkout supplied with --empyrical-root"
+  },
+  "oracle_verification": {
+    "reviewed": false,
+    "status": "not_run"
+  },
+  "project": "empyrical",
+  "public_symbols": [
+    "aggregate_returns",
+    "alpha",
+    "alpha_aligned",
+    "alpha_beta",
+    "alpha_beta_aligned",
+    "annual_return",
+    "annual_volatility",
+    "beta",
+    "beta_aligned",
+    "cagr",
+    "beta_fragility_heuristic",
+    "beta_fragility_heuristic_aligned",
+    "gpd_risk_estimates",
+    "gpd_risk_estimates_aligned",
+    "calmar_ratio",
+    "capture",
+    "conditional_value_at_risk",
+    "cum_returns",
+    "cum_returns_final",
+    "down_alpha_beta",
+    "down_capture",
+    "downside_risk",
+    "excess_sharpe",
+    "max_drawdown",
+    "omega_ratio",
+    "roll_alpha",
+    "roll_alpha_aligned",
+    "roll_alpha_beta",
+    "roll_alpha_beta_aligned",
+    "roll_annual_volatility",
+    "roll_beta",
+    "roll_beta_aligned",
+    "roll_down_capture",
+    "roll_max_drawdown",
+    "roll_sharpe_ratio",
+    "roll_sortino_ratio",
+    "roll_up_capture",
+    "roll_up_down_capture",
+    "sharpe_ratio",
+    "simple_returns",
+    "sortino_ratio",
+    "stability_of_timeseries",
+    "tail_ratio",
+    "up_alpha_beta",
+    "up_capture",
+    "up_down_capture",
+    "value_at_risk",
+    "DAILY",
+    "WEEKLY",
+    "MONTHLY",
+    "QUARTERLY",
+    "YEARLY",
+    "perf_attrib",
+    "compute_exposures"
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "__init__.py",
+      "sha256": "c0f115ede515fbc1216f5a34d45a9d8d4c813f6e1d73871415eb246b4ade4127"
+    },
+    {
+      "path": "stats.py",
+      "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+    },
+    {
+      "path": "periods.py",
+      "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+    },
+    {
+      "path": "perf_attrib.py",
+      "sha256": "859ce666e3160e84ce9fb409a854d1e6c01cf3df979246967825129909d72243"
+    }
+  ],
+  "symbols": [
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "convert_to",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.aggregate_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, convert_to)",
+      "source": {
+        "line": 318,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "aggregate_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_beta",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None)",
+      "source": {
+        "line": 1161,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_beta",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None, _beta=None)",
+      "source": {
+        "line": 1226,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 1014,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.alpha_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 1093,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "alpha_beta_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.annual_return",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 410,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "annual_return",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "2.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "alpha_",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.annual_volatility",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, alpha_=2.0, annualization=None, out=None)",
+      "source": {
+        "line": 488,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "annual_volatility",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, out=None)",
+      "source": {
+        "line": 1321,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, risk_free=0.0, out=None)",
+      "source": {
+        "line": 1359,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cagr",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 452,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cagr",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.beta_fragility_heuristic",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns)",
+      "source": {
+        "line": 1573,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_fragility_heuristic",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.beta_fragility_heuristic_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns)",
+      "source": {
+        "line": 1608,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "beta_fragility_heuristic_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.01",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "var_p",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.gpd_risk_estimates",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, var_p=0.01)",
+      "source": {
+        "line": 1682,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "gpd_risk_estimates",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.01",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "var_p",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.gpd_risk_estimates_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, var_p=0.01)",
+      "source": {
+        "line": 1721,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "gpd_risk_estimates_aligned",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.calmar_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, period=DAILY, annualization=None)",
+      "source": {
+        "line": 549,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "calmar_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, period=DAILY)",
+      "source": {
+        "line": 1539,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.05",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cutoff",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.conditional_value_at_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, cutoff=0.05)",
+      "source": {
+        "line": 2128,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "conditional_value_at_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "starting_value",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cum_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, starting_value=0, out=None)",
+      "source": {
+        "line": 221,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cum_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "starting_value",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.cum_returns_final",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, starting_value=0)",
+      "source": {
+        "line": 282,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "cum_returns_final",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.down_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 2017,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "down_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1933,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.downside_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, required_return=0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 819,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "downside_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.excess_sharpe",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, out=None)",
+      "source": {
+        "line": 902,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "excess_sharpe",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.max_drawdown",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, out=None)",
+      "source": {
+        "line": 354,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "max_drawdown",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "0.0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "APPROX_BDAYS_PER_YEAR",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.omega_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, risk_free=0.0, required_return=0.0, annualization=APPROX_BDAYS_PER_YEAR)",
+      "source": {
+        "line": 600,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "omega_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1223,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1318,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 1068,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_alpha_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1156,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_alpha_beta_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_annual_volatility",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 544,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_annual_volatility",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1356,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_beta",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_binary_vectorized_roll_function",
+      "factory_template_line": 78,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rhs",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_beta_aligned",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(lhs, rhs, window, out=None, **kwargs)",
+      "source": {
+        "line": 1476,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_beta_aligned",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2058,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_max_drawdown",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 407,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_max_drawdown",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_sharpe_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 730,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_sharpe_ratio",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "factory": "_create_unary_vectorized_roll_function",
+      "factory_template_line": 32,
+      "kind": "callable",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "arr",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_sortino_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(arr, window, out=None, **kwargs)",
+      "source": {
+        "line": 816,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_sortino_ratio",
+      "target_evidence": {
+        "signature_frozen_from_factory_template": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_up_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2033,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_up_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "window",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.roll_up_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, window=10, **kwargs)",
+      "source": {
+        "line": 2083,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "roll_up_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "risk_free",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.sharpe_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, risk_free=0, period=DAILY, annualization=None, out=None)",
+      "source": {
+        "line": 652,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "sharpe_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "prices",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.simple_returns",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(prices)",
+      "source": {
+        "line": 193,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "simple_returns",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "required_return",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "DAILY",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "annualization",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "out",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "_downside_risk",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.sortino_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, required_return=0, period=DAILY, annualization=None, out=None, _downside_risk=None)",
+      "source": {
+        "line": 733,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "sortino_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.stability_of_timeseries",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns)",
+      "source": {
+        "line": 1479,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "stability_of_timeseries",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.tail_ratio",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns)",
+      "source": {
+        "line": 1509,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "tail_ratio",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_alpha_beta",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1999,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_alpha_beta",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1898,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "VAR_KEYWORD",
+          "name": "kwargs",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.up_down_capture",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, factor_returns, **kwargs)",
+      "source": {
+        "line": 1968,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "up_down_capture",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.05",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cutoff",
+          "required": false
+        }
+      ],
+      "public_path": "empyrical.value_at_risk",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, cutoff=0.05)",
+      "source": {
+        "line": 2108,
+        "path": "stats.py",
+        "sha256": "c8edee822c26efc0b6b52eb853e0cc39d828a48afa876f6b6d51709504cb7311"
+      },
+      "symbol": "value_at_risk",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-applicable",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "constant",
+      "needs_dynamic_review": false,
+      "parameters": [],
+      "public_path": "empyrical.DAILY",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": null,
+      "source": {
+        "line": 8,
+        "path": "periods.py",
+        "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+      },
+      "symbol": "DAILY",
+      "target_evidence": {
+        "signature_frozen": false,
+        "source_frozen": true
+      },
+      "value": "daily"
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-applicable",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "constant",
+      "needs_dynamic_review": false,
+      "parameters": [],
+      "public_path": "empyrical.WEEKLY",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": null,
+      "source": {
+        "line": 9,
+        "path": "periods.py",
+        "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+      },
+      "symbol": "WEEKLY",
+      "target_evidence": {
+        "signature_frozen": false,
+        "source_frozen": true
+      },
+      "value": "weekly"
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-applicable",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "constant",
+      "needs_dynamic_review": false,
+      "parameters": [],
+      "public_path": "empyrical.MONTHLY",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": null,
+      "source": {
+        "line": 10,
+        "path": "periods.py",
+        "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+      },
+      "symbol": "MONTHLY",
+      "target_evidence": {
+        "signature_frozen": false,
+        "source_frozen": true
+      },
+      "value": "monthly"
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-applicable",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "constant",
+      "needs_dynamic_review": false,
+      "parameters": [],
+      "public_path": "empyrical.QUARTERLY",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": null,
+      "source": {
+        "line": 11,
+        "path": "periods.py",
+        "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+      },
+      "symbol": "QUARTERLY",
+      "target_evidence": {
+        "signature_frozen": false,
+        "source_frozen": true
+      },
+      "value": "quarterly"
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-applicable",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "constant",
+      "needs_dynamic_review": false,
+      "parameters": [],
+      "public_path": "empyrical.YEARLY",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": null,
+      "source": {
+        "line": 12,
+        "path": "periods.py",
+        "sha256": "c1650af00a46001d89dae4c8aaf01e92bda573f4b2999ccb46ebd06868956a3c"
+      },
+      "symbol": "YEARLY",
+      "target_evidence": {
+        "signature_frozen": false,
+        "source_frozen": true
+      },
+      "value": "yearly"
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.perf_attrib",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, factor_returns, factor_loadings)",
+      "source": {
+        "line": 5,
+        "path": "perf_attrib.py",
+        "sha256": "859ce666e3160e84ce9fb409a854d1e6c01cf3df979246967825129909d72243"
+      },
+      "symbol": "perf_attrib",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": true
+        }
+      ],
+      "public_path": "empyrical.compute_exposures",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(positions, factor_loadings)",
+      "source": {
+        "line": 120,
+        "path": "perf_attrib.py",
+        "sha256": "859ce666e3160e84ce9fb409a854d1e6c01cf3df979246967825129909d72243"
+      },
+      "symbol": "compute_exposures",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    }
+  ],
+  "version": "0.6.0"
+}

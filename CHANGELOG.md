@@ -5,9 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-02-18
+## [Unreleased]
 
-### Added
+The package metadata currently reports version **0.3.0**. No 1.0.0 release is
+recorded here.
+
+### Current changes
+
+- Pinned static API/signature manifests for empyrical 0.6.0 and a bounded
+  pyfolio 0.9.6 compatibility profile.
+- Added explicit compatibility matrices and upstream provenance review notes.
+- Corrected migration and README claims that previously implied certified
+  drop-in compatibility, no breaking changes, or 100% coverage.
+
+### Historical 1.0 planning snapshot (not release evidence)
+
+The material below was previously labeled `1.0.0 - 2025-02-18`. It is retained
+as a historical completion/planning snapshot only. Its counts and completion
+claims are not current acceptance evidence and must be revalidated before any
+future release.
+
+#### Reported as added in the historical snapshot
 - **100% test coverage** - 8177 lines of code with 1800 passing tests
 - **Comprehensive test suite** - Edge case coverage for all metrics and modules
 - **AnalysisContext API** - Lazy, cached metric computation with `analyze()` function
@@ -22,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Three-tier lazy loading** - Fast import (~0.06s) with deferred heavy module loading
 - **Registry-based method generation** - Eliminates ~1000 lines of boilerplate code
 
-### Changed
+#### Reported as changed in the historical snapshot
 - **Migrated from empyirical to fincore** package name
 - **Python version support** - Now requires Python 3.11+
 - **Improved NaN handling** - Robust handling of missing data throughout all calculations
@@ -30,19 +48,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Type annotations** - Core modules fully annotated with type hints
 - **Documentation** - Comprehensive bilingual (English/Chinese) user guide
 
-### Deprecated
+#### Reported as deprecated in the historical snapshot
 - None
 
-### Removed
+#### Reported as removed in the historical snapshot
 - None
 
-### Fixed
+#### Reported as fixed in the historical snapshot
 - Fixed NaN handling in edge cases for all metrics
 - Improved error messages for invalid inputs
 - Fixed numerical stability issues in extreme value theory calculations
 - Corrected timezone handling in date range calculations
 
-### Security
+#### Reported security status in the historical snapshot
 - None
 
 ## [0.1.0] - 2024-XX-XX

@@ -2,8 +2,7 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/version-0.3.0-blueviolet.svg" alt="Version 0.3.0"/>
-    <img src="https://img.shields.io/badge/tests-2345%20passed-brightgreen.svg" alt="Tests Passing"/>
-    <img src="https://img.shields.io/badge/coverage-100%25-brightgreen.svg" alt="Coverage"/>
+    <img src="https://img.shields.io/badge/compatibility-pinned%20manifests-blue.svg" alt="Pinned compatibility manifests"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Platforms"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions"/>
     <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
@@ -32,7 +31,7 @@
 | **Portfolio Optimization** | Efficient frontier, risk parity, constrained optimization |
 | **Monte Carlo** | Bootstrap, scenario testing, path simulation |
 | **Performance Attribution** | Brinson, Fama-French, style analysis |
-| **Lazy Imports** | `import fincore` in ~0.04s — heavy deps load on first access |
+| **Lazy Imports** | Heavy dependencies are loaded on first use |
 | **PEP 561** | `py.typed` marker for type checker support |
 
 ### Installation
@@ -55,26 +54,20 @@ cd fincore && pip install -e ".[dev,viz]"
 
 ```python
 import fincore
+import pandas as pd
 
-# One-liner analysis — lazy, cached
-ctx = fincore.analyze(returns, factor_returns=benchmark)
+# A self-contained return series
+returns = pd.Series([0.01, -0.005, 0.002, 0.004])
 
-print(f"Sharpe:  {ctx.sharpe_ratio:.4f}")
-print(f"Max DD:  {ctx.max_drawdown:.4f}")
-print(f"Alpha:   {ctx.alpha:.6f}")
-
-ctx.to_html(path="report.html")       # Self-contained HTML report
-ctx.to_json()                          # JSON export
+print(f"Sharpe: {fincore.sharpe_ratio(returns):.4f}")
+print(f"Max DD: {fincore.max_drawdown(returns):.4f}")
 ```
 
-**Classic API** (drop-in empyrical replacement):
-```python
-from fincore import empyrical
-
-sharpe = empyrical.sharpe_ratio(returns, risk_free=0.02/252)
-alpha, beta = empyrical.alpha_beta(returns, benchmark)
-mdd = empyrical.max_drawdown(returns)
-```
+**Compatibility status:** empyrical 0.6.0 and the bounded pyfolio 0.9.6
+profile are pinned as targets, but fincore 0.3.0 is not yet certified as a
+drop-in replacement. See the [empyrical matrix](docs/compatibility/empyrical-0.6.0.md),
+[pyfolio profile](docs/compatibility/pyfolio-0.9.6.md), and
+[migration guide](docs/MIGRATION.md).
 
 **RollingEngine** (batch rolling metrics):
 ```python
@@ -116,14 +109,16 @@ fincore/
 ### Testing
 
 ```bash
-pytest tests/ -n 4                   # Parallel (2345 tests)
+pytest tests/ -n 4                   # Parallel
 pytest tests/ --cov=fincore          # With coverage
 pytest tests/test_core/              # AnalysisContext, RollingEngine, Viz
 ```
 
 ### License
 
-Apache License 2.0 — see [LICENSE](LICENSE). Originally by Quantopian Inc., maintained by the open-source community.
+The fincore repository declares Apache License 2.0; see [LICENSE](LICENSE).
+Adapted-source provenance and unresolved upstream notice questions are tracked
+in [docs/upstream-provenance.md](docs/upstream-provenance.md).
 
 ---
 
@@ -144,7 +139,7 @@ Apache License 2.0 — see [LICENSE](LICENSE). Originally by Quantopian Inc., ma
 | **组合优化** | 有效前沿、风险平价、约束优化 |
 | **蒙特卡洛** | Bootstrap、情景测试、路径模拟 |
 | **绩效归因** | Brinson、Fama-French、风格分析 |
-| **惰性导入** | `import fincore` 仅需 ~0.04 秒 |
+| **惰性导入** | 重型依赖在首次使用时加载 |
 | **PEP 561** | `py.typed` 标记，支持类型检查器 |
 
 ### 安装
@@ -167,26 +162,20 @@ cd fincore && pip install -e ".[dev,viz]"
 
 ```python
 import fincore
+import pandas as pd
 
-# 一行代码完成分析 — 惰性计算、自动缓存
-ctx = fincore.analyze(returns, factor_returns=benchmark)
+# 自包含的收益率序列
+returns = pd.Series([0.01, -0.005, 0.002, 0.004])
 
-print(f"夏普比率: {ctx.sharpe_ratio:.4f}")
-print(f"最大回撤: {ctx.max_drawdown:.4f}")
-print(f"Alpha:    {ctx.alpha:.6f}")
-
-ctx.to_html(path="report.html")       # 独立 HTML 报告
-ctx.to_json()                          # JSON 导出
+print(f"夏普比率: {fincore.sharpe_ratio(returns):.4f}")
+print(f"最大回撤: {fincore.max_drawdown(returns):.4f}")
 ```
 
-**经典 API**（可直接替换 empyrical）：
-```python
-from fincore import empyrical
-
-sharpe = empyrical.sharpe_ratio(returns, risk_free=0.02/252)
-alpha, beta = empyrical.alpha_beta(returns, benchmark)
-mdd = empyrical.max_drawdown(returns)
-```
+**兼容状态：** empyrical 0.6.0 与限定的 pyfolio 0.9.6 profile 已冻结为
+目标，但 fincore 0.3.0 尚未被认证为可直接替换。请参阅
+[empyrical 矩阵](docs/compatibility/empyrical-0.6.0.md)、
+[pyfolio profile](docs/compatibility/pyfolio-0.9.6.md) 与
+[迁移指南](docs/MIGRATION.md)。
 
 **RollingEngine**（批量滚动指标）：
 ```python
@@ -222,7 +211,7 @@ w = optimize(returns_df, objective="max_sharpe")
 ### 测试
 
 ```bash
-pytest tests/ -n 4                   # 并行运行（2345 个测试）
+pytest tests/ -n 4                   # 并行运行
 pytest tests/ --cov=fincore          # 含覆盖率
 pytest tests/test_core/              # AnalysisContext、RollingEngine、可视化
 ```
@@ -233,4 +222,6 @@ pytest tests/test_core/              # AnalysisContext、RollingEngine、可视�
 
 ### 许可证
 
-Apache License 2.0 — 详见 [LICENSE](LICENSE)。最初由 Quantopian Inc. 开发，目前由开源社区维护。
+fincore 仓库声明采用 Apache License 2.0，详见 [LICENSE](LICENSE)。
+改编来源与尚待人工确认的上游 notice 问题记录于
+[docs/upstream-provenance.md](docs/upstream-provenance.md)。

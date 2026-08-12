@@ -1,0 +1,7 @@
+# Optional human-review oracle only; CI reads the frozen JSON fixture.
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.14.1
+six==1.16.0
+pandas-datareader==0.10.0
+empyrical @ git+https://github.com/cloudQuant/empyrical.git@74655e974ed2935563820c548c339731f1fe0621

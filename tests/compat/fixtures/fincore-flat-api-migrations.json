@@ -1,0 +1,171 @@
+{
+  "entries": [
+    {
+      "current_target": "fincore.metrics.ratios.sharpe_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.sharpe_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "sharpe_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.sortino_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.sortino_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "sortino_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.calmar_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.calmar_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "calmar_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.omega_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.omega_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "omega_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.information_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.metrics.ratios.information_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "information_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.stability_of_timeseries",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.stability_of_timeseries",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "stability_of_timeseries"
+    },
+    {
+      "current_target": "fincore.metrics.ratios.capture",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.capture",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "capture"
+    },
+    {
+      "current_target": "fincore.metrics.drawdown.max_drawdown",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.max_drawdown",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "max_drawdown"
+    },
+    {
+      "current_target": "fincore.metrics.yearly.annual_return",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.annual_return",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "annual_return"
+    },
+    {
+      "current_target": "fincore.metrics.risk.annual_volatility",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.annual_volatility",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "annual_volatility"
+    },
+    {
+      "current_target": "fincore.metrics.risk.downside_risk",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.downside_risk",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "downside_risk"
+    },
+    {
+      "current_target": "fincore.metrics.risk.value_at_risk",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.value_at_risk",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "value_at_risk"
+    },
+    {
+      "current_target": "fincore.metrics.risk.tail_ratio",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.tail_ratio",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "tail_ratio"
+    },
+    {
+      "current_target": "fincore.metrics.returns.cum_returns",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.cum_returns",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "cum_returns"
+    },
+    {
+      "current_target": "fincore.metrics.returns.cum_returns_final",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.cum_returns_final",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "cum_returns_final"
+    },
+    {
+      "current_target": "fincore.metrics.returns.simple_returns",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.simple_returns",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "simple_returns"
+    },
+    {
+      "current_target": "fincore.metrics.returns.aggregate_returns",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.aggregate_returns",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "aggregate_returns"
+    },
+    {
+      "current_target": "fincore.metrics.alpha_beta.alpha",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.alpha",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "alpha"
+    },
+    {
+      "current_target": "fincore.metrics.alpha_beta.beta",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.beta",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "beta"
+    },
+    {
+      "current_target": "fincore.metrics.alpha_beta.alpha_beta",
+      "deprecate_in": null,
+      "recommended_target": "fincore.empyrical.alpha_beta",
+      "remove_or_switch_in": "next-major-not-scheduled",
+      "status": "unchanged-in-0.3.x",
+      "symbol": "alpha_beta"
+    }
+  ],
+  "fincore_version": "0.3.0",
+  "policy": "preserve-0.3.x-flat-api",
+  "schema_version": 1,
+  "source": {
+    "path": "fincore/__init__.py",
+    "sha256": "4f4189c8cba6190d81ec97469a5fefa663728e998f112193a0dfcb7d5cd0a173"
+  }
+}

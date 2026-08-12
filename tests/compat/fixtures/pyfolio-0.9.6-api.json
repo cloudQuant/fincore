@@ -1,0 +1,1084 @@
+{
+  "commit": "724bbd7dbed9a88bb47e1057f2ca29b3409d8e7a",
+  "compatibility_profile": {
+    "create_bayesian_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_rets",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "live_start_date",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "2000",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "samples",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "stoch_vol",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "progressbar",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_bayesian_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, benchmark_rets=None, live_start_date=None, samples=2000, run_flask_app=False, stoch_vol=False, progressbar=True)",
+      "source": {
+        "line": 1293,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_bayesian_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_capacity_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "market_data",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "0.2",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "liquidation_daily_vol_limit",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "0.05",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "trade_daily_vol_limit",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "utils.APPROX_BDAYS_PER_MONTH * 6",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "last_n_days",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "days_to_liquidate_limit",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_capacity_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, transactions, market_data, liquidation_daily_vol_limit=0.2, trade_daily_vol_limit=0.05, last_n_days=utils.APPROX_BDAYS_PER_MONTH * 6, days_to_liquidate_limit=1, estimate_intraday='infer', run_flask_app=False)",
+      "source": {
+        "line": 1183,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_capacity_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_full_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "market_data",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_rets",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "slippage",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "live_start_date",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sector_mappings",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bayesian",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "round_trips",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "hide_positions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "(1.0, 1.5, 2.0)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cone_std",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bootstrap",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "unadjusted_returns",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "style_factor_panel",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sectors",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "caps",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "shares_held",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "volumes",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "percentile",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'AGB'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "turnover_denom",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "set_context",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "pos_in_dollars",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "header_rows",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "FACTOR_PARTITIONS",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_partitions",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_full_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions=None, transactions=None, market_data=None, benchmark_rets=None, slippage=None, live_start_date=None, sector_mappings=None, bayesian=False, round_trips=False, estimate_intraday='infer', hide_positions=False, cone_std=(1.0, 1.5, 2.0), bootstrap=False, unadjusted_returns=None, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, turnover_denom='AGB', set_context=True, factor_returns=None, factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions=FACTOR_PARTITIONS)",
+      "source": {
+        "line": 242,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_full_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_interesting_times_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_rets",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'best'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "legend_loc",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_interesting_times_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, benchmark_rets=None, legend_loc='best', run_flask_app=False)",
+      "source": {
+        "line": 1103,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_interesting_times_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_perf_attrib_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_loadings",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "pos_in_dollars",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "FACTOR_PARTITIONS",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_partitions",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_perf_attrib_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True, run_flask_app=False, factor_partitions=FACTOR_PARTITIONS)",
+      "source": {
+        "line": 1666,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_perf_attrib_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_position_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "2",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "show_and_plot_top_pos",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "hide_positions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sector_mappings",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_position_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, show_and_plot_top_pos=2, hide_positions=False, run_flask_app=False, sector_mappings=None, transactions=None, estimate_intraday='infer')",
+      "source": {
+        "line": 832,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_position_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_returns_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "live_start_date",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "(1.0, 1.5, 2.0)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cone_std",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_rets",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bootstrap",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'AGB'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "turnover_denom",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "header_rows",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_returns_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions=None, transactions=None, live_start_date=None, cone_std=(1.0, 1.5, 2.0), benchmark_rets=None, bootstrap=False, turnover_denom='AGB', header_rows=None, run_flask_app=False)",
+      "source": {
+        "line": 641,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_returns_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_risk_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "style_factor_panel",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sectors",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "caps",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "shares_held",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "volumes",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "percentile",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_risk_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(positions, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, returns=None, transactions=None, estimate_intraday='infer', run_flask_app=False)",
+      "source": {
+        "line": 1482,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_risk_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_round_trip_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sector_mappings",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_round_trip_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, transactions, sector_mappings=None, estimate_intraday='infer', run_flask_app=False)",
+      "source": {
+        "line": 1008,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_round_trip_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_simple_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_rets",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "slippage",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "live_start_date",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'AGB'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "turnover_denom",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "header_rows",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_simple_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions=None, transactions=None, benchmark_rets=None, slippage=None, estimate_intraday='infer', live_start_date=None, turnover_denom='AGB', header_rows=None)",
+      "source": {
+        "line": 465,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_simple_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    },
+    "create_txn_tear_sheet": {
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "extraction": "static_ast",
+      "kind": "callable",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "positions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "transactions",
+          "required": true
+        },
+        {
+          "annotation": null,
+          "default": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "unadjusted_returns",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "'infer'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "estimate_intraday",
+          "required": false
+        },
+        {
+          "annotation": null,
+          "default": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "run_flask_app",
+          "required": false
+        }
+      ],
+      "public_path": "pyfolio.create_txn_tear_sheet",
+      "return_annotation": null,
+      "reviewed": false,
+      "signature": "(returns, positions, transactions, unadjusted_returns=None, estimate_intraday='infer', run_flask_app=False)",
+      "source": {
+        "line": 928,
+        "path": "tears.py",
+        "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+      },
+      "symbol": "create_txn_tear_sheet",
+      "target_evidence": {
+        "signature_frozen": true,
+        "source_frozen": true
+      }
+    }
+  },
+  "fixture_source": {
+    "generator": "scripts/generate_compat_manifest.py",
+    "mode": "static_ast",
+    "root": "external pinned checkout supplied with --pyfolio-root"
+  },
+  "oracle_verification": {
+    "reviewed": false,
+    "status": "not_run"
+  },
+  "project": "pyfolio",
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "__init__.py",
+      "sha256": "92d4418efc129627e49526b1665f50bbccea9661f4d42908b98dd29f71a818be"
+    },
+    {
+      "path": "tears.py",
+      "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+    }
+  ],
+  "version": "0.9.6"
+}
