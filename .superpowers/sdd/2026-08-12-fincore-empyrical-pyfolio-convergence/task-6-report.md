@@ -150,6 +150,32 @@ isolated dependency + public/drawdown + legacy dummy: 36 passed
 Task 6 impact selector: 888 passed, 9 expected business warnings
 ```
 
+### Second-review follow-up
+
+The second independent review found one empty-input P1 and requested a P2
+strengthening of the DST regression.  Tests were changed before production;
+after correcting the endpoint assertion to use the axis' active date units,
+the exact RED was:
+
+```text
+empty drawdown + exact shaded endpoints: 1 failed, 1 passed
+```
+
+`plot_drawdown_periods` now returns its correctly titled and labelled axis
+before metric evaluation when given an empty returns series.  The result has
+no shading or warnings and the caller's empty `DatetimeIndex` is unchanged.
+The Sao Paulo regression also asserts that the shaded polygon begins and ends
+at the exact UTC-naive peak and recovery instants, rather than proving only
+that plotting does not crash.
+
+Fresh second-review gates are:
+
+```text
+empty drawdown + exact shaded endpoints: 2 passed
+public/drawdown/legacy focused selector: 37 passed
+Task 6 impact selector: 889 passed, 9 expected business warnings
+```
+
 ## Regression and migration gates
 
 The Task 6 impact selector includes all Pyfolio compatibility tests, the full
@@ -177,5 +203,5 @@ The implementation includes the planned workflow, attribution, drawdown, and
 public/private façade files; the approved lazy display boundary; the approved
 stored-state plot dispatch in attribution and transaction tear sheets; and
 the directly affected legacy and compatibility tests.  Task 4 and Task 5
-contracts were not changed.  Task 6 is awaiting independent re-review after
-the first-review follow-up.
+contracts were not changed.  Task 6 is awaiting final independent re-review
+after the second-review follow-up.

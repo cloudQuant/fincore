@@ -4,6 +4,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import pytest
 
 from fincore.metrics.drawdown import gen_drawdown_table
 
@@ -45,6 +46,30 @@ def test_drawdown_plot_preserves_exact_instants_across_nonexistent_dst_midnight(
 
     assert result is ax
     assert len(ax.collections) == 1
+    shaded_x = ax.collections[0].get_paths()[0].vertices[:, 0]
+    assert shaded_x.min() == pytest.approx(ax.convert_xunits(pd.Timestamp("2018-11-04 03:00")))
+    assert shaded_x.max() == pytest.approx(ax.convert_xunits(pd.Timestamp("2018-11-04 05:00")))
+    assert caught == []
+    pd.testing.assert_series_equal(returns, original)
+    plt.close(figure)
+
+
+def test_drawdown_plot_handles_empty_datetime_series_without_shading() -> None:
+    from fincore.pyfolio import Pyfolio
+
+    returns = pd.Series([], index=pd.DatetimeIndex([], name="date"), dtype=float, name="returns")
+    original = returns.copy()
+
+    figure, ax = plt.subplots()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = Pyfolio().plot_drawdown_periods(returns, top=10, ax=ax)
+
+    assert result is ax
+    assert ax.get_title() == "Top 10 drawdown periods"
+    assert ax.get_ylabel() == "Cumulative returns"
+    assert ax.get_xlabel() == ""
+    assert len(ax.collections) == 0
     assert caught == []
     pd.testing.assert_series_equal(returns, original)
     plt.close(figure)

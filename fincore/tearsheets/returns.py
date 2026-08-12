@@ -514,6 +514,12 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     y_axis_formatter = FuncFormatter(two_dec_places)
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
+    if returns.empty:
+        ax.set_title("Top %i drawdown periods" % top)
+        ax.set_ylabel("Cumulative returns")
+        ax.set_xlabel("")
+        return ax
+
     df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
     drawdown_periods = empyrical_instance.get_top_drawdowns(returns, top=top)
 
