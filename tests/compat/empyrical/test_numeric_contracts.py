@@ -47,12 +47,33 @@ def test_legacy_cvar_matches_pinned_non_finite_and_boundary_semantics(
     values: np.ndarray,
     expected: float,
 ) -> None:
-    result = ep.conditional_value_at_risk(values)
+    if values.size == 0:
+        with pytest.warns(RuntimeWarning, match="invalid value"):
+            result = ep.conditional_value_at_risk(values)
+    else:
+        result = ep.conditional_value_at_risk(values)
 
     if np.isnan(expected):
         assert np.isnan(result)
     else:
         assert result == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("cutoff", "error_type", "message"),
+    [
+        (np.nan, ValueError, "cannot convert float NaN to integer"),
+        (np.inf, OverflowError, "cannot convert float infinity to integer"),
+        (None, TypeError, "unsupported operand type"),
+    ],
+)
+def test_legacy_cvar_invalid_cutoff_matches_pinned_exception_surface(
+    cutoff: float | None,
+    error_type: type[Exception],
+    message: str,
+) -> None:
+    with pytest.raises(error_type, match=message):
+        ep.conditional_value_at_risk(np.array([], dtype=np.float64), cutoff=cutoff)
 
 
 def test_legacy_empty_var_keeps_pinned_exception_contract() -> None:

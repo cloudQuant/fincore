@@ -150,6 +150,13 @@ def test_explicit_utc_normalization_aligns_naive_utc_and_asia_shanghai_inputs() 
     pd.testing.assert_index_equal(shanghai_aligned.index, utc_index)
 
 
+def test_timezone_option_is_validated_before_inspecting_index_type() -> None:
+    values = pd.Series([1.0, 2.0])
+
+    with pytest.raises(ValueError, match="only 'UTC'"):
+        _contract_align(values, policy="strict", normalize_tz="Asia/Shanghai")
+
+
 def test_utc_normalization_handles_dst_transition_by_instant() -> None:
     eastern_index = pd.date_range("2024-03-10 01:00", periods=3, freq="h", tz="America/New_York")
     utc_index = eastern_index.tz_convert("UTC")
@@ -204,6 +211,77 @@ def test_analysis_context_accepts_explicit_utc_normalization() -> None:
     context = AnalysisContext(returns, factor_returns=factor_returns, normalize_tz="UTC")
 
     assert context.beta == pytest.approx(2.0)
+
+
+def test_analysis_context_validates_timezone_across_all_time_indexed_inputs() -> None:
+    utc_index = pd.date_range("2024-01-01", periods=3, tz="UTC")
+    returns = pd.Series([0.01, 0.02, -0.01], index=utc_index)
+    factor_returns = pd.Series([0.005, 0.01, -0.005], index=utc_index)
+    positions = pd.DataFrame(
+        {"A": [1.0, 1.0, 1.0]},
+        index=utc_index.tz_convert("Asia/Shanghai"),
+    )
+    transactions = pd.DataFrame(
+        {"amount": [1.0, 2.0, 3.0]},
+        index=utc_index.tz_localize(None),
+    )
+
+    with pytest.raises(DataAlignmentError, match="timezone"):
+        AnalysisContext(
+            returns,
+            factor_returns=factor_returns,
+            positions=positions,
+            transactions=transactions,
+        )
+
+
+def test_analysis_context_normalizes_all_time_indexed_inputs_to_utc() -> None:
+    utc_index = pd.date_range("2024-01-01", periods=3, tz="UTC")
+    returns = pd.Series([0.01, 0.02, -0.01], index=utc_index)
+    factor_returns = pd.Series([0.005, 0.01, -0.005], index=utc_index)
+    positions = pd.DataFrame(
+        {"A": [1.0, 1.0, 1.0]},
+        index=utc_index.tz_convert("Asia/Shanghai"),
+    )
+    transactions = pd.DataFrame(
+        {"amount": [1.0, 2.0, 3.0]},
+        index=utc_index.tz_localize(None),
+    )
+
+    context = AnalysisContext(
+        returns,
+        factor_returns=factor_returns,
+        positions=positions,
+        transactions=transactions,
+        normalize_tz="UTC",
+    )
+
+    for value in (context._returns, context._factor_returns, context._positions, context._transactions):
+        pd.testing.assert_index_equal(value.index, utc_index)
+
+
+@pytest.mark.parametrize("normalize_tz", [None, "UTC"])
+def test_analysis_context_preserves_duplicate_transaction_timestamps(
+    normalize_tz: str | None,
+) -> None:
+    utc_index = pd.date_range("2024-01-01", periods=2, tz="UTC")
+    returns = pd.Series([0.01, 0.02], index=utc_index)
+    duplicate_index = pd.DatetimeIndex([utc_index[0], utc_index[0]])
+    transactions = pd.DataFrame(
+        {"amount": [2.0, 1.0], "sequence": ["first", "second"]},
+        index=duplicate_index,
+    )
+
+    context = AnalysisContext(
+        returns,
+        transactions=transactions,
+        normalize_tz=normalize_tz,
+    )
+
+    pd.testing.assert_index_equal(context._transactions.index, duplicate_index)
+    assert context._transactions["sequence"].tolist() == ["first", "second"]
+    if normalize_tz is None:
+        assert context._transactions is transactions
 
 
 def test_legacy_mixed_timezone_alignment_keeps_pinned_exception_surface() -> None:

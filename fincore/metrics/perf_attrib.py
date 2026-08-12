@@ -84,6 +84,7 @@ def perf_attrib_core(
         positions=positions,
         factor_loadings=factor_loadings,
     )
+    risk_exposures_portfolio = risk_exposures_portfolio.loc[risk_exposures_portfolio.notna().any(axis="columns")]
     common_dates = returns.index.intersection(factor_returns.index, sort=False)
     common_dates = common_dates.intersection(risk_exposures_portfolio.index, sort=False).sort_values()
     if common_dates.empty:
@@ -93,12 +94,12 @@ def perf_attrib_core(
     risk_exposures_portfolio = risk_exposures_portfolio.loc[common_dates]
 
     perf_attrib_by_factor = risk_exposures_portfolio.multiply(factor_returns)
-    common_returns = perf_attrib_by_factor.sum(axis="columns")
+    common_returns = perf_attrib_by_factor.sum(axis="columns", min_count=len(perf_attrib_by_factor.columns))
     tilt_exposure = risk_exposures_portfolio.mean()
 
     tilt_returns_raw = factor_returns.multiply(tilt_exposure)
     if isinstance(tilt_returns_raw, pd.DataFrame):
-        tilt_returns = tilt_returns_raw.sum(axis="columns")
+        tilt_returns = tilt_returns_raw.sum(axis="columns", min_count=len(tilt_returns_raw.columns))
     else:
         tilt_returns = tilt_returns_raw.sum()
 
@@ -129,10 +130,12 @@ def _date_index(value: pd.Series | pd.DataFrame) -> pd.Index:
 
 
 def _normalize_date_index(index: pd.Index, normalize_tz: str | None) -> pd.Index:
-    if not isinstance(index, pd.DatetimeIndex) or normalize_tz is None:
+    if normalize_tz is None:
         return index
     if normalize_tz.upper() != "UTC":
         raise ValueError("normalize_tz currently supports only 'UTC'")
+    if not isinstance(index, pd.DatetimeIndex):
+        return index
     if index.tz is None:
         return index.tz_localize("UTC")
     return index.tz_convert("UTC")
@@ -165,6 +168,32 @@ def _select_attribution_dates(
     return value.loc[dates]
 
 
+def _date_completeness(value: pd.Series | pd.DataFrame) -> pd.Series:
+    complete = value.notna() if isinstance(value, pd.Series) else value.notna().all(axis="columns")
+    if isinstance(value.index, pd.MultiIndex):
+        complete = complete.groupby(level=0).all()
+    return pd.Series(np.where(complete, 1.0, np.nan), index=complete.index)
+
+
+def _align_factor_columns(
+    factor_returns: pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+    *,
+    policy: AlignmentPolicy,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if factor_returns.columns.has_duplicates or factor_loadings.columns.has_duplicates:
+        raise DataAlignmentError("duplicate factor columns are ambiguous")
+    if policy == "strict":
+        if not factor_returns.columns.equals(factor_loadings.columns):
+            raise DataAlignmentError("strict attribution requires identical factor columns")
+        return factor_returns, factor_loadings
+
+    common = factor_returns.columns.intersection(factor_loadings.columns, sort=False)
+    if common.empty:
+        raise DataAlignmentError("performance attribution has no common factor columns")
+    return factor_returns.loc[:, common], factor_loadings.loc[:, common]
+
+
 def _align_attribution_dates(
     returns: pd.Series,
     positions: pd.Series | pd.DataFrame,
@@ -178,7 +207,7 @@ def _align_attribution_dates(
         _normalize_attribution_index(value, normalize_tz)
         for value in (returns, positions, factor_returns, factor_loadings)
     )
-    date_carriers = tuple(pd.Series(1.0, index=_date_index(value)) for value in normalized)
+    date_carriers = tuple(_date_completeness(value) for value in normalized)
     aligned_carriers = align_time_series(
         *date_carriers,
         policy=policy,
@@ -213,7 +242,7 @@ def compute_exposures_internal(
     if factor_loadings is None:
         raise ValueError("Either provide factor_loadings or set factor_loadings data")
     risk_exposures = factor_loadings.multiply(positions, axis="rows")
-    return risk_exposures.groupby(level="dt").sum()
+    return risk_exposures.groupby(level="dt").sum(min_count=1)
 
 
 def perf_attrib(
@@ -261,6 +290,11 @@ def perf_attrib(
         for value in (returns, positions, factor_returns, factor_loadings)
     )
     returns, positions, factor_returns, factor_loadings = normalized
+    factor_returns, factor_loadings = _align_factor_columns(
+        factor_returns,
+        factor_loadings,
+        policy=alignment,
+    )
 
     if alignment == "strict":
         returns, positions, factor_returns, factor_loadings = _align_attribution_dates(
@@ -294,6 +328,17 @@ def perf_attrib(
     # Stack positions if needed (convert from DataFrame to Series with MultiIndex)
     if not isinstance(positions, pd.Series):
         positions = normalize_and_stack_positions(positions, pos_in_dollars=pos_in_dollars)
+
+    preview_exposures = compute_exposures_internal(positions, factor_loadings)
+    usable_dates = preview_exposures.index[preview_exposures.notna().any(axis="columns")]
+    if usable_dates.empty:
+        raise DataAlignmentError("performance attribution has no dates with usable ticker coverage")
+    if alignment == "strict" and not returns.index.equals(usable_dates):
+        raise DataAlignmentError("strict attribution requires usable ticker coverage on every date")
+    returns = returns.loc[returns.index.intersection(usable_dates, sort=False)]
+    factor_returns = factor_returns.loc[factor_returns.index.intersection(usable_dates, sort=False)]
+    positions = _select_attribution_dates(positions, usable_dates)
+    factor_loadings = _select_attribution_dates(factor_loadings, usable_dates)
 
     risk_exposures, perf_attrib_data = perf_attrib_core(returns, positions, factor_returns, factor_loadings)
 

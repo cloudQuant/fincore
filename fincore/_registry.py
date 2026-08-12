@@ -469,6 +469,10 @@ def _legacy_adapter_for(name: str) -> str:
         return "fincore.empyrical:_legacy_conditional_value_at_risk_adapter"
     if name == "value_at_risk":
         return "fincore.empyrical:_legacy_value_at_risk_adapter"
+    if name == "perf_attrib":
+        return "fincore.empyrical:_legacy_perf_attrib_adapter"
+    if name in {"roll_up_capture", "roll_down_capture", "roll_up_down_capture"}:
+        return "fincore.empyrical:_legacy_capture_rolling_adapter"
     if name in _FACTORY_NAMES:
         return "fincore.empyrical:_legacy_rolling_adapter"
     return "fincore.empyrical:_legacy_identity_adapter"

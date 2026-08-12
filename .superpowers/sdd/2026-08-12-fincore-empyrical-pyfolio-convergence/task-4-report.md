@@ -7,30 +7,45 @@ contracts without changing the enhanced metrics kernels globally.
 
 - Strict CVaR uses the upstream fixed-count order-statistics tail; the tie case
   `[-.2, -.1, -.1, -.1, 1]` at `cutoff=.25` is `-.15`. The enhanced direct
-  metric retains its threshold-inclusive `-.125` result.
-- Strict factory-generated `roll_*` functions use `min(len, window)`, preserve
-  ndarray/Series shape and labels, and mutate supplied `out` buffers. The
-  independently implemented capture family retains its pinned empty short
-  result, while enhanced `rolling_*` APIs retain full pandas-shaped output.
+  metric retains its threshold-inclusive `-.125` result. Empty input and
+  invalid `NaN`, infinite, and `None` cutoffs now retain the pinned exception
+  and warning behavior instead of taking a façade shortcut.
+- Strict factory-generated `roll_*` functions now reproduce the pinned unary
+  and binary branches separately: unary invalid windows raise, binary invalid
+  or empty input follows the empty/`out=nan` contract, each binary operand uses
+  its own effective window, Series labels project from the left operand, and
+  supplied `out` buffers retain upstream mutation semantics. Strict rolling
+  max drawdown treats window-local `NaN` as zero return, while strict rolling
+  Sharpe retains the pinned `Inf` behavior.
+- The independently implemented strict capture family now follows pinned
+  `utils.roll`: inputs must have the same concrete type, Series windows use
+  `iloc`, ndarray windows are positional, keyword arguments such as `period`
+  are forwarded, and short/invalid windows retain their upstream result shape.
 - The shared enhanced alignment contract makes `strict`, `inner`, and
-  `outer_dropna` policies explicit, rejects duplicate labels, rejects mixed
-  timezone awareness by default, and permits explicit UTC normalization.
-  Legacy metric alignment remains unchanged.
+  `outer_dropna` policies explicit, rejects duplicate labels, validates
+  `normalize_tz` before inspecting index type, rejects mixed timezone awareness
+  by default, and permits explicit UTC normalization. The low-level legacy
+  `metrics.basic.aligned_series` outer-join shim remains unchanged.
 - Strict weekly aggregation keeps calendar year plus ISO week. The enhanced
   `week_year="iso"` option uses ISO year plus ISO week; the intentional
   divergence is recorded in `docs/compatibility/empyrical-0.6.0.md`.
-- Performance attribution intersects by actual date labels and never assigns
-  an index merely because lengths match. Each output day satisfies
-  `total_returns = common_returns + specific_returns`.
-- `AnalysisContext` only applies the Task 4 timezone contract. With no
-  normalization it preserves existing input identity and partial-index
-  behavior; defensive copies and general strict schema validation remain
-  outside this task.
+- Enhanced performance attribution intersects by actual date labels and never
+  assigns an index merely because lengths match. `outer_dropna` uses the real
+  per-day completeness mask, factor-column `strict` and `inner` policies are
+  explicit, and dates without usable ticker exposure cannot become false zero
+  attribution. The strict `fincore.empyrical.perf_attrib` adapter separately
+  reproduces pinned outer label/column broadcasting and all-NaN sum behavior.
+- `AnalysisContext` checks all four time-index inputs (`returns`, factors,
+  positions, and transactions). With no normalization it preserves established
+  object identity and partial labels; explicit UTC normalization covers all
+  inputs while preserving duplicate transaction timestamps and event order.
+  Defensive copies and general schema validation remain outside this task.
 
 Strict result projection is implemented in the strict façade adapters in
-`fincore/_registry.py` and `fincore/empyrical.py`. Consequently the enhanced
-`risk.py`, `rolling.py`, and shared `basic.py` kernels required no behavioral
-change.
+`fincore/_registry.py` and `fincore/empyrical.py`. Enhanced attribution and
+timezone behavior are implemented at their explicit enhanced/context entry
+points. Consequently the enhanced `risk.py`, `rolling.py`, and shared
+`basic.py` kernels required no global behavioral change.
 
 ## TDD evidence
 
@@ -60,6 +75,29 @@ four Task 4 compatibility modules: 64 passed in 0.65s
 four Task 4 modules + complete context suite: 95 passed in 1.24s
 ```
 
+The review-fix cycle added source-derived boundary tests before each production
+change. Its initial RED groups were:
+
+```text
+strict CVaR + rolling/capture boundary matrix: 18 failed, 46 passed
+enhanced attribution + context timezone matrix: 10 failed, 23 passed
+duplicate transaction timestamp preservation: 2 failed
+```
+
+The final expanded focused gates are:
+
+```text
+four Task 4 compatibility modules: 109 passed, 3 warnings
+four Task 4 modules + complete context suite: 140 passed, 3 warnings
+enhanced attribution-only selection: 12 passed, 4 deselected, 0 warnings
+```
+
+The three warnings belong only to strict pinned `perf_attrib`: pandas emits a
+`Pandas4Warning` for the upstream-style outer `pd.concat` of differently
+ordered `DatetimeIndex` values. Silencing that warning by changing sort or
+label semantics would stop mirroring the pinned path, so it is recorded rather
+than folded into the warning-free enhanced contract.
+
 ## Provenance and manifest evidence
 
 The generator now freezes the pinned `empyrical/utils.py` blob because its
@@ -80,18 +118,29 @@ tests/compat/test_manifest_integrity.py: 26 passed in 3.75s
 
 ## Regression gates
 
-The Task 4 brief impact gate, excluding only the concurrently owned Task 5
-file `tests/test_metrics/test_positions_metrics.py`, is green:
+The expanded Task 4 brief impact gate, excluding only the Task 5-owned
+positions module, is green:
 
 ```text
 tests/compat/empyrical + tests/test_empyrical/stats + tests/test_metrics:
-1088 passed in 2.44s
+1133 passed, 3 strict-pinned warnings in 2.86s
 ```
 
-The unexcluded run is expected to contain two Task 5 RED tests:
-`test_get_long_short_pos_returns_normalized_long_short_and_net_exposure` and
-`test_get_long_short_notional_keeps_the_previous_amount_summary`. Task 4 did
-not change or stage that file.
+The independently reviewed Task 3 strict surface remains green:
+
+```text
+public API + signatures + state binding + out contract: 203 passed
+```
+
+The current Task 5 compatibility selector also remains green after the Task 4
+changes:
+
+```text
+manifest + pyfolio + positions/transactions/risk/common compatibility: 117 passed
+```
+
+That selector is cross-task regression evidence only. Task 5 is in a separate
+review-fix cycle and is not claimed complete by this report.
 
 ## Deferred integration ledger
 
@@ -111,9 +160,37 @@ binding contract. They are recorded for the Task 12 offline integration gate;
 Task 4 deliberately does not weaken Task 3 production behavior or edit those
 tests.
 
+### Task 7 required alignment work
+
+Task 4 intentionally did not change `fincore.metrics.basic.aligned_series`,
+because it is a shared legacy outer-join shim used by both strict compatibility
+and enhanced metrics. Task 7 must add explicit enhanced alignment and timezone
+options at the binary public entry points that still call this shim directly:
+
+- `alpha_beta`: `beta`, `alpha`, `alpha_beta`, `annual_alpha`, `annual_beta`;
+- `ratios`: `information_ratio`, `cal_treynor_ratio`, `m_squared`, `capture`,
+  `up_capture`, `down_capture`, `up_down_capture`, `up_capture_return`, and
+  `down_capture_return`;
+- `risk`: `tracking_error`, `residual_risk`, `beta_fragility_heuristic`;
+- `rolling`: `roll_alpha`, `roll_beta`, `roll_alpha_beta`, `roll_up_capture`,
+  `roll_down_capture`, and `rolling_regression`;
+- `stats`: `relative_win_rate`, `r_cubed`, `capm_r_squared`,
+  `tracking_difference`;
+- `timing`: `treynor_mazuy_timing`, `henriksson_merton_timing`,
+  `market_timing_return`, `cornell_timing`;
+- `yearly`: `annual_active_return`, `information_ratio_by_year`.
+
+Task 7 acceptance must cover partial and disjoint Series labels under
+`strict`, `inner`, and `outer_dropna`; mixed naive/aware indices with default
+failure and explicit UTC normalization; positional ndarray behavior; dependent
+public callers; and strict façade differential regressions. It must also keep
+the direct `basic.aligned_series` outer-join regression green. This is a named
+Task 7 acceptance gap, not a claim that all enhanced binary metrics were
+unified by Task 4.
+
 ## Scope and handoff
 
-Only Task 4-owned production, compatibility tests, provenance generator and
-fixture, compatibility documentation, ledger, and this report are included.
-Task 5-owned pyfolio compatibility files and
-`tests/test_metrics/test_positions_metrics.py` are excluded from staging.
+The review follow-up contains only Task 4-owned production, compatibility
+tests, ledger, and this report. No Task 5-owned pyfolio, portfolio,
+positions/transactions, sheets, generator, manifest, or compatibility-test
+path is staged by Task 4.

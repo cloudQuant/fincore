@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
-from fincore.contracts.time_series import align_time_series
+from fincore.contracts.time_series import normalize_time_series_timezone, validate_time_series_timezones
 from fincore.metrics.basic import annualization_factor as _ann_factor
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.ratios import (
@@ -100,38 +100,23 @@ class AnalysisContext:
             Explicit timezone normalization for datetime-indexed inputs. Mixed
             timezones are rejected unless UTC normalization is requested.
         """
+        time_series_inputs = [returns]
+        time_series_inputs.extend(value for value in (factor_returns, positions, transactions) if value is not None)
         if normalize_tz is not None:
-            self._returns = align_time_series(
-                returns,
-                policy="strict",
-                normalize_tz=normalize_tz,
-            )[0]
-            if factor_returns is None:
-                self._factor_returns = None
-            else:
-                self._factor_returns = align_time_series(
-                    factor_returns,
-                    policy="strict",
-                    normalize_tz=normalize_tz,
-                )[0]
+            normalized = [normalize_time_series_timezone(value, normalize_tz) for value in time_series_inputs]
+            normalized_iter = iter(normalized)
+            self._returns = next(normalized_iter)
+            self._factor_returns = next(normalized_iter) if factor_returns is not None else None
+            self._positions = next(normalized_iter) if positions is not None else None
+            self._transactions = next(normalized_iter) if transactions is not None else None
         else:
-            if factor_returns is not None:
-                return_index = returns.index
-                factor_index = factor_returns.index
-                if isinstance(return_index, pd.DatetimeIndex) and isinstance(
-                    factor_index,
-                    pd.DatetimeIndex,
-                ):
-                    return_tz = str(return_index.tz)
-                    factor_tz = str(factor_index.tz)
-                    if return_tz != factor_tz:
-                        # Route the public error surface through the shared
-                        # contract without changing legacy partial-index data.
-                        align_time_series(returns, factor_returns, policy="inner")
+            # Validate the shared timezone contract, then
+            # retain the established identity and partial-index behavior.
+            validate_time_series_timezones(*time_series_inputs)
             self._returns = returns
             self._factor_returns = factor_returns
-        self._positions = positions
-        self._transactions = transactions
+            self._positions = positions
+            self._transactions = transactions
         self._period = period
 
     # ------------------------------------------------------------------
