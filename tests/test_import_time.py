@@ -40,6 +40,7 @@ def test_import_fincore_direct():
 
     assert elapsed >= 0
 
+
 @pytest.mark.p2
 def test_import_empyrical_fast():
     """Verify a cold Empyrical import in an isolated interpreter."""

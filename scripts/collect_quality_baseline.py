@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 
 CACHE_PARTS = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "__pycache__", "build", "dist", "htmlcov"}
+COMMAND_TIMEOUT_SECONDS = 900
 NON_SERIAL_SELECTOR = "not serial and not slow and not integration"
 TRUSTED_SELECTOR = "not slow and not integration"
 BENCHMARKS_IGNORE = "--ignore=tests/benchmarks"
@@ -29,14 +30,25 @@ BENCHMARKS_IGNORE = "--ignore=tests/benchmarks"
 class PackageWriteError(RuntimeError):
     """Raised when a baseline test writes to its disposable package copy."""
 
+    def __init__(self, message: str, record: dict[str, Any]) -> None:
+        super().__init__(message)
+        self.record = record
 
-def _is_excluded(relative: Path) -> bool:
-    return any(part in CACHE_PARTS for part in relative.parts) or relative.name.startswith(".coverage")
+
+def _is_excluded(relative: Path, excluded_paths: set[Path] | None = None) -> bool:
+    return (
+        relative in (excluded_paths or set())
+        or any(part in CACHE_PARTS for part in relative.parts)
+        or relative.name.startswith(".coverage")
+    )
 
 
-def _copy_ignore(directory: str, names: list[str]) -> set[str]:
-    parent = Path(directory)
-    return {name for name in names if _is_excluded(parent.joinpath(name).relative_to(parent))}
+def _copy_ignore(source_root: Path, excluded_paths: set[Path]):
+    def ignore(directory: str, names: list[str]) -> set[str]:
+        parent = Path(directory)
+        return {name for name in names if _is_excluded(parent.joinpath(name).relative_to(source_root), excluded_paths)}
+
+    return ignore
 
 
 def _sha256(path: Path) -> str:
@@ -47,11 +59,11 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _inventory(root: Path) -> dict[str, str]:
+def _inventory(root: Path, excluded_paths: set[Path] | None = None) -> dict[str, str]:
     return {
         path.relative_to(root).as_posix(): _sha256(path)
         for path in sorted(root.rglob("*"))
-        if path.is_file() and not _is_excluded(path.relative_to(root))
+        if path.is_file() and not _is_excluded(path.relative_to(root), excluded_paths)
     }
 
 
@@ -70,7 +82,12 @@ def _copy_manifest_sha256(inventory: dict[str, str]) -> str:
 
 def _git_lines(source_root: Path, *args: str) -> list[str]:
     result = subprocess.run(
-        ["git", *args], cwd=source_root, capture_output=True, text=True, check=True
+        ["git", *args],
+        cwd=source_root,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=30,
     )
     return [line for line in result.stdout.splitlines() if line]
 
@@ -80,13 +97,33 @@ def _parse_count(output: str, name: str) -> int:
     return int(matches[-1]) if matches else 0
 
 
-def _parse_collected(output: str) -> int:
+def _parse_test_counts(output: str) -> dict[str, int | None]:
     matches = re.findall(r"collected (\d+) items?(?: / (\d+) deselected)?", output)
     if matches:
         collected, deselected = matches[-1]
-        return int(collected) - int(deselected or 0)
+        return {"discovered": int(collected), "selected": int(collected) - int(deselected or 0)}
     xdist_matches = re.findall(r"\[(\d+) items\]|(?:\d+/)?(\d+) tests collected", output)
-    return int(next(value for value in xdist_matches[-1] if value)) if xdist_matches else 0
+    if xdist_matches:
+        return {"discovered": None, "selected": int(next(value for value in xdist_matches[-1] if value))}
+    return {"discovered": None, "selected": None}
+
+
+def _dirty_provenance(source_root: Path) -> dict[str, Any]:
+    diff = subprocess.run(
+        ["git", "diff", "--binary", "HEAD"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        timeout=30,
+    ).stdout
+    untracked = _git_lines(source_root, "ls-files", "--others", "--exclude-standard")
+    inventory = {name: _sha256(source_root / name) for name in untracked if (source_root / name).is_file()}
+    return {
+        "dirty": bool(_git_lines(source_root, "status", "--short")),
+        "tracked_diff_sha256": hashlib.sha256(diff).hexdigest(),
+        "untracked_inventory": inventory,
+        "untracked_manifest_sha256": _copy_manifest_sha256(inventory),
+    }
 
 
 def _parse_warnings(output: str) -> int:
@@ -111,24 +148,36 @@ def _run_checked(
     inventory_before = _inventory(copy_root)
     command = [sys.executable, "-m", "pytest", "-o", "addopts=", *pytest_args]
     started = time.perf_counter()
-    result = subprocess.run(command, cwd=copy_root, capture_output=True, text=True, check=False)
+    try:
+        result = subprocess.run(
+            command,
+            cwd=copy_root,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=COMMAND_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        output = (exc.stdout or "") + (exc.stderr or "")
+        result = subprocess.CompletedProcess(command, 124, output, "baseline command timed out")
     duration_seconds = time.perf_counter() - started
     package_after = _tracked_package_snapshot(copy_root, tracked_package_files)
     inventory_after = _inventory(copy_root)
-    changed_package_files = sorted(
-        name for name in package_before if package_before[name] != package_after[name]
-    )
+    changed_package_files = sorted(name for name in package_before if package_before[name] != package_after[name])
     added_files = sorted(set(inventory_after) - set(inventory_before))
     removed_files = sorted(set(inventory_before) - set(inventory_after))
     changed_files = sorted(
         name for name in set(inventory_before) & set(inventory_after) if inventory_before[name] != inventory_after[name]
     )
     integrity_ok = not (changed_package_files or added_files or removed_files or changed_files)
+    counts = _parse_test_counts(result.stdout)
     record: dict[str, Any] = {
         "label": label,
         "command": command,
         "selector": selector,
         "returncode": result.returncode,
+        "discovered": counts["discovered"],
+        "selected": counts["selected"],
         "passed": _parse_count(result.stdout, "passed"),
         "skipped": _parse_count(result.stdout, "skipped"),
         "warnings": _parse_warnings(result.stdout),
@@ -142,13 +191,14 @@ def _run_checked(
         },
         "output_tail": (result.stdout + result.stderr)[-6000:],
     }
-    record["collected"] = _parse_collected(result.stdout) or (
-        record["passed"] + record["skipped"] if result.returncode == 0 else 0
-    )
+    if record["selected"] is None and result.returncode == 0:
+        record["selected"] = record["passed"] + record["skipped"]
     if coverage:
         record["branch_coverage_percent"] = _parse_branch_coverage(result.stdout)
     if not integrity_ok:
-        raise PackageWriteError(f"{label} modified disposable-copy files: {record['write_check']}")
+        message = f"{label} modified disposable-copy files: {record['write_check']}"
+        record["failure"] = message
+        raise PackageWriteError(message, record)
     return record
 
 
@@ -175,40 +225,87 @@ def _render_markdown(data: dict[str, Any]) -> str:
         "",
         "## Provenance",
         "",
-        f"- Source commit: `{data['source']['commit']}`",
-        f"- Dirty state: `{data['source']['dirty']}`",
-        f"- Disposable-copy manifest SHA256: `{data['copy_manifest_sha256']}`",
+        f"- Source commit: `{data['source'].get('commit', 'unknown')}`",
+        f"- Dirty state: `{data['source'].get('dirty', 'unknown')}`",
+        f"- Tracked diff SHA256: `{data['source'].get('tracked_diff_sha256', 'unknown')}`",
+        f"- Untracked manifest SHA256: `{data['source'].get('untracked_manifest_sha256', 'unknown')}`",
+        f"- Disposable-copy manifest SHA256: `{data.get('copy_manifest_sha256', 'unknown')}`",
+        "- Manifest exclusions: `" + ", ".join(data.get("copy_manifest_excluded_paths", [])) + "`",
         "",
         "## Environment",
         "",
     ]
     lines.extend(f"- {name}: `{value}`" for name, value in data["environment"].items())
-    lines.extend(["", "## Test Runs", "", "| Run | Selector | Collected | Passed | Skipped | Warnings | Duration | Exit |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |"])
     lines.extend(
-        f"| {run['label']} | `{run['selector']}` | {run['collected']} | {run['passed']} | {run['skipped']} | {run['warnings']} | {run['duration_seconds']:.3f}s | {run['returncode']} |"
+        [
+            "",
+            "## Test Runs",
+            "",
+            "| Run | Selector | Discovered | Selected | Passed | Skipped | Warnings | Duration | Exit |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    lines.extend(
+        f"| {run.get('label', 'unknown')} | `{run.get('selector', '')}` | {run.get('discovered', 'N/A') if run.get('discovered') is not None else 'N/A'} | {run.get('selected', 'N/A') if run.get('selected') is not None else 'N/A'} | {run.get('passed', 0)} | {run.get('skipped', 0)} | {run.get('warnings', 0)} | {run.get('duration_seconds', 0):.3f}s | {run.get('returncode', 'N/A')} |"
         for run in data["runs"]
     )
-    coverage = next(run for run in data["runs"] if run["label"] == "branch-coverage")
-    lines.extend(["", "## Branch Coverage", "", f"- Total: `{coverage['branch_coverage_percent']}%`", "", "## Integrity", ""])
-    lines.extend(f"- {run['label']}: `{run['integrity_ok']}`" for run in data["runs"])
+    coverage = next((run for run in data["runs"] if run.get("label") == "branch-coverage"), None)
+    total_coverage = coverage.get("branch_coverage_percent", "N/A") if coverage else "N/A"
+    lines.extend(["", "## Branch Coverage", "", f"- Total: `{total_coverage}%`", "", "## Integrity", ""])
+    lines.extend(f"- {run.get('label', 'unknown')}: `{run.get('integrity_ok', False)}`" for run in data["runs"])
+    if data.get("outcome") != "pass":
+        lines.extend(["", "## Incomplete Baseline", "", str(data.get("failure", "baseline did not complete"))])
     lines.append("")
     return "\n".join(lines)
+
+
+def _write_artifacts(data: dict[str, Any], json_path: Path, markdown_path: Path) -> None:
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    markdown_path.parent.mkdir(parents=True, exist_ok=True)
+    for path, content in (
+        (json_path, json.dumps(data, indent=2, sort_keys=True) + "\n"),
+        (markdown_path, _render_markdown(data)),
+    ):
+        with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding="utf-8") as stream:
+            stream.write(content)
+            temporary_path = Path(stream.name)
+        temporary_path.replace(path)
+
+
+def _append_failure_run(data: dict[str, Any], error: PackageWriteError) -> None:
+    data["runs"].append(error.record)
+    data["failure"] = str(error)
+
+
+def _normalize_nonserial_counts(single: dict[str, Any], xdist: dict[str, Any]) -> bool:
+    if xdist.get("discovered") is None:
+        xdist["discovered"] = single.get("discovered")
+        xdist["collection_source"] = "non-serial-single pytest collection"
+    else:
+        xdist["collection_source"] = "xdist pytest collection"
+    return all(single.get(key) == xdist.get(key) for key in ("selected", "passed", "skipped"))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", type=Path, required=True, help="JSON output path, relative to the source root")
-    parser.add_argument("--markdown", type=Path, required=True, help="Markdown output path, relative to the source root")
+    parser.add_argument(
+        "--markdown", type=Path, required=True, help="Markdown output path, relative to the source root"
+    )
     args = parser.parse_args()
     source_root = Path(__file__).resolve().parents[1]
     json_path = args.json if args.json.is_absolute() else source_root / args.json
     markdown_path = args.markdown if args.markdown.is_absolute() else source_root / args.markdown
+    output_paths = {
+        path.relative_to(source_root) for path in (json_path, markdown_path) if path.is_relative_to(source_root)
+    }
     tracked_package_files = _git_lines(source_root, "ls-files", "fincore")
+    dirty_provenance = _dirty_provenance(source_root)
     data: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),
         "source": {
             "commit": _git_lines(source_root, "rev-parse", "HEAD")[0],
-            "dirty": bool(_git_lines(source_root, "status", "--short")),
+            **dirty_provenance,
         },
         "copy_manifest_sha256": "",
         "environment": _dependency_versions(),
@@ -217,14 +314,29 @@ def main() -> int:
     failure: str | None = None
     with tempfile.TemporaryDirectory(prefix="fincore-quality-baseline-") as temp_dir:
         copy_root = Path(temp_dir) / "fincore"
-        shutil.copytree(source_root, copy_root, ignore=_copy_ignore)
-        data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root))
+        shutil.copytree(source_root, copy_root, ignore=_copy_ignore(source_root, output_paths))
+        data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root, output_paths))
         specifications = [
             ("trusted-baseline", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR]),
             ("serial", "serial", [BENCHMARKS_IGNORE, "-m", "serial"]),
             ("non-serial-single", NON_SERIAL_SELECTOR, [BENCHMARKS_IGNORE, "-m", NON_SERIAL_SELECTOR]),
-            ("non-serial-xdist", NON_SERIAL_SELECTOR, [BENCHMARKS_IGNORE, "-m", NON_SERIAL_SELECTOR, "-n", "auto", "--dist=loadscope"]),
-            ("branch-coverage", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR, "--cov=fincore", "--cov-branch", "--cov-report=term-missing"]),
+            (
+                "non-serial-xdist",
+                NON_SERIAL_SELECTOR,
+                [BENCHMARKS_IGNORE, "-m", NON_SERIAL_SELECTOR, "-n", "auto", "--dist=loadscope"],
+            ),
+            (
+                "branch-coverage",
+                TRUSTED_SELECTOR,
+                [
+                    BENCHMARKS_IGNORE,
+                    "-m",
+                    TRUSTED_SELECTOR,
+                    "--cov=fincore",
+                    "--cov-branch",
+                    "--cov-report=term-missing",
+                ],
+            ),
         ]
         try:
             for label, selector, pytest_args in specifications:
@@ -240,20 +352,20 @@ def main() -> int:
                 )
             single = next(run for run in data["runs"] if run["label"] == "non-serial-single")
             xdist = next(run for run in data["runs"] if run["label"] == "non-serial-xdist")
-            data["non_serial_counts_match"] = all(
-                single[key] == xdist[key] for key in ("collected", "passed", "skipped")
-            )
+            data["non_serial_counts_match"] = _normalize_nonserial_counts(single, xdist)
             if not data["non_serial_counts_match"]:
                 failure = "non-serial single-process and xdist counts differ"
         except PackageWriteError as exc:
-            failure = str(exc)
+            _append_failure_run(data, exc)
+            failure = data["failure"]
+        except Exception as exc:  # pragma: no cover - defensive artifact path
+            failure = f"baseline collection error: {exc}"
+    data.setdefault("non_serial_counts_match", False)
     data["outcome"] = "pass" if failure is None and all(run["returncode"] == 0 for run in data["runs"]) else "fail"
     if failure:
         data["failure"] = failure
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    markdown_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
-    markdown_path.write_text(_render_markdown(data))
+    data["copy_manifest_excluded_paths"] = sorted(path.as_posix() for path in output_paths)
+    _write_artifacts(data, json_path, markdown_path)
     return 0 if data["outcome"] == "pass" else 1
 
 
