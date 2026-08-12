@@ -300,10 +300,7 @@ def compute_style_factor_exposures(
         right_name="risk_factor",
     )
     assets = positions.drop(columns="cash", errors="ignore")
-    factors = risk_factor.drop(columns="cash", errors="ignore")
-    common_columns = assets.columns.intersection(factors.columns, sort=False)
-    assets = assets.loc[:, common_columns]
-    factors = factors.loc[:, common_columns]
+    factors = risk_factor.drop(columns="cash", errors="ignore").reindex(columns=assets.columns)
 
     gross = assets.abs().sum(axis="columns").replace(0, np.nan)
     exposure = assets.multiply(factors).sum(axis="columns", skipna=True).divide(gross)
@@ -332,6 +329,13 @@ def compute_sector_exposures(
         Named exposure tables in the frozen sector order.
     """
     sector_map = dict(SECTORS if sector_dict is None else sector_dict)
+    sector_names = list(sector_map.values())
+    if len(sector_names) != len(set(sector_names)):
+        raise ValidationError(
+            "duplicate sector display names are ambiguous",
+            param_name="sector_dict",
+            value=sector_names,
+        )
     positions, sector_panel = _align_portfolio_panels(
         positions,
         sectors,
@@ -339,9 +343,7 @@ def compute_sector_exposures(
         right_name="sectors",
     )
     assets = positions.drop(columns="cash", errors="ignore")
-    common_columns = assets.columns.intersection(sector_panel.columns, sort=False)
-    assets = assets.loc[:, common_columns]
-    sector_panel = sector_panel.loc[:, common_columns]
+    sector_panel = sector_panel.reindex(columns=assets.columns)
 
     total_long = assets.where(assets > 0).sum(axis="columns").replace(0, np.nan)
     total_short = assets.where(assets < 0).abs().sum(axis="columns").replace(0, np.nan)
@@ -394,9 +396,7 @@ def compute_cap_exposures(
         right_name="caps",
     )
     assets = positions.drop(columns="cash", errors="ignore")
-    common_columns = assets.columns.intersection(cap_panel.columns, sort=False)
-    assets = assets.loc[:, common_columns]
-    cap_panel = cap_panel.loc[:, common_columns]
+    cap_panel = cap_panel.reindex(columns=assets.columns)
 
     total_long = assets.where(assets > 0).sum(axis="columns").replace(0, np.nan)
     total_short = assets.where(assets < 0).abs().sum(axis="columns").replace(0, np.nan)
@@ -457,10 +457,10 @@ def compute_volume_exposures(
 
     def percentile_exposure(values: pd.DataFrame) -> pd.Series:
         if values.empty:
-            return pd.Series(index=values.index, dtype=float)
+            return pd.Series(0.0, index=values.index, dtype=float)
         fraction = values.divide(aligned_volumes)
         result = 100.0 * fraction.quantile(percentile, axis="columns")
-        return result.replace([np.inf, -np.inf], np.nan)
+        return result.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
     long = percentile_exposure(shares.where(shares > 0))
     short = percentile_exposure(-shares.where(shares < 0))

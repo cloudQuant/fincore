@@ -47,6 +47,7 @@ from fincore.constants import (
     LIQUIDATION_DAILY_VOL_LIMIT,
     TRADE_DAILY_VOL_LIMIT,
 )
+from fincore.contracts.time_series import align_time_series
 from fincore.empyrical import Empyrical
 from fincore.exceptions import ValidationError
 from fincore.utils import (
@@ -966,31 +967,36 @@ def create_risk_tear_sheet(
             param_name="shares_held",
         )
 
-    # Align inputs on the overlapping time index. Most upstream implementations
-    # expect these inputs to be time-indexed.
-    idx = positions.index
-    if style_factor_panel is not None:
-        for df in style_factor_panel.values():
-            idx = idx.intersection(df.index)
-    for maybe_panel in (sectors, caps, shares_held, volumes):
-        if maybe_panel is not None:
-            idx = idx.intersection(maybe_panel.index)
+    # Align only panels consumed by active sections. The shared contract also
+    # rejects duplicate dates and mixed timezone policies explicitly.
+    style_items = list(style_factor_panel.items()) if style_factor_panel is not None else []
+    active_panels = [panel for _, panel in style_items]
+    if sectors is not None:
+        active_panels.append(sectors)
+    if caps is not None:
+        active_panels.append(caps)
+    if volumes is not None:
+        active_panels.extend((shares_held, volumes))
 
-    if len(idx) == 0:
+    aligned = align_time_series(positions, *active_panels, policy="inner")
+    positions = aligned[0]
+    if len(positions.index) == 0:
         warnings.warn("No overlapping index across risk tear sheet inputs; nothing to plot.", UserWarning, stacklevel=2)
         return None
 
-    positions = positions.loc[idx]
+    cursor = 1
     if style_factor_panel is not None:
-        style_factor_panel = {k: v.loc[idx] for k, v in style_factor_panel.items()}
+        style_factor_panel = {name: aligned[cursor + offset] for offset, (name, _) in enumerate(style_items)}
+        cursor += len(style_items)
     if sectors is not None:
-        sectors = sectors.loc[idx]
+        sectors = aligned[cursor]
+        cursor += 1
     if caps is not None:
-        caps = caps.loc[idx]
-    if shares_held is not None:
-        shares_held = shares_held.loc[idx]  # pragma: no cover -- Edge case
+        caps = aligned[cursor]
+        cursor += 1
     if volumes is not None:
-        volumes = volumes.loc[idx]
+        shares_held = aligned[cursor]
+        volumes = aligned[cursor + 1]
 
     if percentile is None:
         percentile = 0.1

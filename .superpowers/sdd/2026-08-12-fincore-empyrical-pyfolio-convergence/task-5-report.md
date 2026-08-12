@@ -13,20 +13,31 @@ while keeping the enhanced internal API explicit.
   exactly three dates. Projection rejects missing, unexpected, or duplicate
   categories, and panel computation rejects duplicate dates or asset columns.
 - Style factors exclude cash, align by date and asset label, and normalize by
-  gross asset exposure. Sector, cap, and volume results preserve pinned
-  category order and return finite empty/zero/all-cash boundary results.
+  gross exposure across every non-cash position asset. Sector and cap
+  denominators likewise retain position assets missing from metadata while
+  numerator metadata is reindexed to position columns; extra metadata assets
+  are ignored. Sector, cap, and volume results preserve pinned category order
+  and return finite empty/zero/all-cash boundary results. Inclusive cap
+  endpoints deliberately double count exactly like pinned Pyfolio.
 - `get_long_short_pos` now returns the pinned normalized `long`, `short`, and
   `net exposure` DataFrame. The previous absolute amount summary remains
-  available as `get_long_short_notional`.
+  available as `get_long_short_notional` on the `Empyrical` and `Pyfolio`
+  class surfaces without expanding the strict pinned `fincore.empyrical`
+  module API.
 - Transaction normalization accepts flat lists, canonical DataFrames, pandas
   date-to-list Series, and plain date-to-list mappings. All paths return the
   fixed eight-column schema, preserve nested sid/symbol, order, commission and
   duplicate timestamps, sort by `dt` stably, recompute `txn_dollars`, and reject
-  missing or non-numeric required values with `ValidationError`.
+  missing, duplicate canonical columns, booleans, Decimal values, or non-finite
+  required numeric values with `ValidationError`. Mapping keys are ignored in
+  favor of each transaction's embedded `dt`; commission remains an opaque
+  pinned field and may be `None`.
 - The real risk sheet now computes volume exposure from `shares_held`, never
   dollar positions. A headless real compute-to-plot-to-sheet test renders the
   expected eight axes without replacing the computation or plotting chain
-  with fakes.
+  with fakes. Sheet alignment uses the shared label/timezone policy and only
+  includes panels consumed by active sections, so an unused disjoint shares
+  panel cannot suppress a sector-only sheet.
 
 `fincore/tearsheets/risk.py` required no production edit: its plotting
 functions already accept the ordered facade projections. The fix belongs at
@@ -59,6 +70,29 @@ Duplicate dates were already rejected by the shared Task 4
 `align_time_series` contract; the eleven failures were the missing mapping,
 numeric, and duplicate-column contracts.
 
+The independent review follow-up was also test-driven. The first focused run
+of the 27 new decision/regression tests recorded:
+
+```text
+17 failed, 10 passed
+```
+
+The failure clusters were the three partial-metadata denominator cases, one
+duplicate canonical transaction-column case, six non-finite amount/price
+cases, one missing class-surface method, two duplicate sector-name cases, two
+finite-zero volume boundaries, and two risk-sheet active-alignment cases. The
+already-green decision tests pinned Decimal rejection, opaque `None`
+commission, active no-overlap behavior, inclusive cap endpoints, ignored
+Zipline mapping keys, and all three invalid bundle-projection branches. The
+generated-fixture divergence assertion was separately captured RED before the
+controlled generator was extended.
+
+After implementation, the 27-test matrix plus the fixture assertion is green:
+
+```text
+28 passed
+```
+
 ## Provenance and generated contract fixture
 
 `scripts/generate_compat_manifest.py` now generates
@@ -74,7 +108,9 @@ and order; the non-finite upper cap boundary is represented portably as the
 string `"Infinity"`. Numeric behavior is checked by independent regression
 oracles in `tests/compat/pyfolio`. No dynamic upstream import was used, and
 the fixture and all six golden-case entries remain explicitly
-`reviewed: false`. The existing three generated fixtures were byte-unchanged.
+`reviewed: false`. The volume golden case records the intentional enhancement
+that zero-share and no-asset rows return finite zero rather than pinned NaN.
+Regeneration changed only this generated portfolio fixture.
 
 Generator integrity and two-pass byte-idempotence are green:
 
@@ -84,16 +120,24 @@ tests/compat/test_manifest_integrity.py: 26 passed
 
 ## Regression gates
 
-The plan-specified Task 5 gate, including the migrated old risk, positions,
-transactions, and common-Zipline tests, is green:
+The final plan-specified Task 5 domain gate, including the migrated old risk,
+positions, transactions, common-Zipline, and review-follow-up tests, is green:
 
 ```text
-91 passed in 2.15s
+118 passed in 1.93s
 ```
 
-The manifest plus Task 5 combined gate is green (117 tests), `ruff check`
-reports no violations, all 17 owned Python paths pass `ruff format --check`,
-and `git diff --check` is clean.
+The manifest plus Task 5 combined authoritative gate is green:
+
+```text
+144 passed in 5.42s
+```
+
+The existing Task 4 context-impact gate remains green at `140 passed` with
+three expected pinned `perf_attrib` Pandas warnings, and the Task 3 public API
+regression gate remains green at `203 passed`. `ruff check`, `ruff format
+--check`, and `git diff --check` are clean for every Task 5 follow-up Python
+path.
 
 The isolated mypy audit of the three core Task 5 modules has no errors in new
 Task 5 code. Four pre-existing errors remain in untouched implementations:

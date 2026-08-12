@@ -7,7 +7,7 @@
 - Task 2: complete (commits `99a57df`, `d277ea6`, `a569315`; final review CLEAN; manifest suite `25 passed`; 54/49 empyrical and 11-workflow pyfolio targets frozen)
 - Task 3: complete (commits `a5302f4`, `404f80b`; final review CLEAN; focused `203 passed`; broad `1349 passed`; manifest `25 passed`; C0 `54/54`, C1 `49/49`)
 - Task 4: review-fix implementation complete, follow-up review pending (base commit `cc12cb7`; expanded focused `109 passed`; context impact `140 passed`; isolated broad gate `1133 passed`; manifest `26 passed`; Task 3 regression `203 passed`; Task 5 selector regression `117 passed`)
-- Task 5: initial commit `575a040`; review CHANGES REQUIRED and follow-up in progress (Task 4 does not claim Task 5 complete)
+- Task 5: review-follow-up implementation complete, independent re-review pending (initial commit `575a040`; follow-up RED `17 failed, 10 passed` plus generated-fixture RED; focused review matrix `28 passed`; domain `118 passed`; manifest + domain `144 passed`; Task 4 regression `140 passed`; Task 3 regression `203 passed`)
 - Task 7 ledger: replace direct enhanced binary uses of the legacy outer-join `metrics.basic.aligned_series` with explicit `strict`/`inner`/`outer_dropna` plus timezone policy at the `alpha_beta`, `ratios`, `risk`, `rolling`, `stats`, `timing`, and `yearly` public entry points enumerated in `task-4-report.md`; acceptance must retain strict façade and direct legacy-shim regressions.
 - Task 12 ledger: update three stale instance-call assertions in `tests/integration/test_workflows.py` to the Task 3 stored-state positional-binding contract before the offline integration release gate.
-- Status: Task 4 review-fix ready for independent review; Task 5 follow-up remains in progress
+- Status: Task 5 follow-up ready for independent re-review; Task 4's next review-fix resumes after the Task 5 follow-up commit

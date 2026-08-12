@@ -123,7 +123,9 @@ def test_compute_volume_exposures_returns_named_percentile_series():
     vols = pd.DataFrame({"A": [10, 10], "B": [100, 10]}, index=idx)
     out = pm.compute_volume_exposures(shares, vols, percentile=0.5)
     assert np.allclose(out.long.values, [1000.0, 300.0])
-    assert out.short.isna().all()
+    # Enhanced Task 5 contract: absent long/short sides are finite zeros,
+    # intentionally improving on pinned Pyfolio's NaN output.
+    assert np.allclose(out.short.values, [0.0, 0.0])
     assert np.allclose(out.gross.values, [1000.0, 300.0])
 
 

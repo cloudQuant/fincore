@@ -295,7 +295,10 @@ def map_transaction(txn: dict[str, Any]) -> dict[str, Any]:
     Parameters
     ----------
     txn : dict
-        Transaction dictionary with keys like 'amount', 'price', 'sid', 'symbol', 'dt'.
+        Transaction dictionary with keys like 'amount', 'price', 'sid',
+        'symbol', and 'dt'. Amount and price must be finite
+        :class:`numbers.Real` values; booleans and Decimal values are rejected.
+        Commission is preserved as an opaque upstream field, including None.
 
     Returns
     -------
@@ -328,9 +331,9 @@ def map_transaction(txn: dict[str, Any]) -> dict[str, Any]:
     amount = txn["amount"]
     price = txn["price"]
     for field, value in (("amount", amount), ("price", price)):
-        if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real) or not np.isfinite(float(value)):
             raise ValidationError(
-                f"transaction {field} must be numeric",
+                f"transaction {field} must be a finite real number",
                 param_name=field,
                 value=value,
             )
@@ -365,6 +368,13 @@ def make_transaction_frame(
 
     if isinstance(transactions, pd.DataFrame):
         source = transactions.copy(deep=True)
+        if not source.columns.is_unique:
+            duplicates = source.columns[source.columns.duplicated()].tolist()
+            raise ValidationError(
+                "duplicate transaction columns are ambiguous",
+                param_name="transactions",
+                value=duplicates,
+            )
         missing = sorted(REQUIRED_TRANSACTION_FIELDS.difference(source.columns))
         if missing:
             raise ValidationError(

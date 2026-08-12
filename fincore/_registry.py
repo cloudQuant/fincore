@@ -143,6 +143,7 @@ CLASSMETHOD_REGISTRY = {
     "get_percent_alloc": ("_positions", "get_percent_alloc"),
     "get_top_long_short_abs": ("_positions", "get_top_long_short_abs"),
     "get_long_short_pos": ("_positions", "get_long_short_pos"),
+    "get_long_short_notional": ("_positions", "get_long_short_notional"),
     "gross_lev": ("_positions", "gross_lev"),
     "get_max_median_position_concentration": ("_positions", "get_max_median_position_concentration"),
     "extract_pos": ("_positions", "extract_pos"),

@@ -873,6 +873,10 @@ def _generate_pyfolio_portfolio_contracts(root: Path) -> dict[str, Any]:
             "reviewed": False,
             "source_symbol": symbol,
         }
+        if contract == "volume_exposures":
+            golden_cases[contract]["intentional_enhancement"] = (
+                "zero-share and no-asset rows return finite zero instead of pinned NaN"
+            )
 
     return {
         "schema_version": 1,

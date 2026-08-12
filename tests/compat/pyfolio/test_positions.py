@@ -57,7 +57,7 @@ def _assert_volume_bundle(result: Any, *, index: pd.DatetimeIndex) -> None:
         series = getattr(result, field)
         assert isinstance(series, pd.Series)
         assert_index_equal(series.index, index)
-        assert not np.isinf(series.to_numpy(dtype=float)).any()
+        assert np.isfinite(series.to_numpy(dtype=float)).all()
 
     with pytest.raises(FrozenInstanceError):
         result.long = result.long.copy()
@@ -407,3 +407,6 @@ def test_portfolio_contract_fixture_is_generator_backed_and_pins_source_goldens(
         "transactions",
     } <= set(data["golden_cases"])
     assert all(case["reviewed"] is False for case in data["golden_cases"].values())
+    assert data["golden_cases"]["volume_exposures"]["intentional_enhancement"] == (
+        "zero-share and no-asset rows return finite zero instead of pinned NaN"
+    )

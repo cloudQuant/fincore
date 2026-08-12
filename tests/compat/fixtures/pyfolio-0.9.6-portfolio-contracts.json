@@ -140,6 +140,7 @@
     },
     "volume_exposures": {
       "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "intentional_enhancement": "zero-share and no-asset rows return finite zero instead of pinned NaN",
       "reviewed": false,
       "source_symbol": "compute_volume_exposures"
     }
