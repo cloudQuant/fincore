@@ -13,13 +13,15 @@ implements it. The machine-readable source of truth is
 | Public symbols | 54 |
 | Callable symbols | 49 |
 | Constants | `DAILY`, `WEEKLY`, `MONTHLY`, `QUARTERLY`, `YEARLY` |
-| Extraction | Static AST; sibling package is not imported |
+| Extraction | Static AST from `git show <commit>:<path>` blobs; sibling package is not imported |
 
 Every symbol in the JSON has an explicit C0–C4 status. At this baseline all
 implementation levels are `not-verified` (C1 is `not-applicable` to constants).
 The `target_evidence` field separately records which upstream source and
-signature facts were frozen. This distinction prevents an upstream manifest
-from being mistaken for fincore compatibility proof.
+signature facts were frozen. Canonical defaults are restricted-AST evaluated
+runtime literals; their original spelling remains in `default_expression`.
+Aliases retain both `symbol` and `source_name`. This distinction prevents an
+upstream manifest from being mistaken for fincore compatibility proof.
 
 ## Compatibility levels
 
@@ -37,6 +39,8 @@ Nine rolling callables (`roll_alpha`, `roll_alpha_aligned`,
 `roll_sortino_ratio`) are created by upstream factories. Their template
 signatures are statically frozen, but `needs_dynamic_review=true` and
 `reviewed=false` remain until an isolated oracle run is reviewed by a person.
+An unresolved default forces canonical `signature=null` and therefore cannot
+masquerade as C1-ready evidence.
 
 ## Reproduction
 
@@ -52,5 +56,9 @@ Run the generator against checkouts at the pinned commits:
 
 CI consumes only the frozen JSON. It does not need either sibling checkout,
 network access, or an oracle environment. The optional oracle requirements are
-in `tests/compat/oracle/requirements-empyrical-0.6.0.txt`; oracle output is
-unreviewed evidence until a reviewer deliberately sets `reviewed=true`.
+in `tests/compat/oracle/requirements-empyrical-0.6.0.txt`. Oracle mode clones
+the pinned local commit into an isolated temporary checkout, imports only from
+that root, and validates module path, version, commit, and source hashes.
+Oracle output is unreviewed evidence until a reviewer deliberately sets
+`reviewed=true`. Regeneration preserves that flag only when its evidence key
+(project, commit, hashes, symbol, signature, and oracle payload) is unchanged.

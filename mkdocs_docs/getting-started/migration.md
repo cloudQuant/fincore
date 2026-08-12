@@ -14,8 +14,8 @@ has frozen two targets:
 The frozen manifests describe upstream source and signatures. Their C0–C4
 implementation statuses remain unverified until executable compatibility tests
 are completed. See the repository's
-[empyrical matrix](https://github.com/cloudQuant/fincore/blob/main/docs/compatibility/empyrical-0.6.0.md)
-and [pyfolio profile](https://github.com/cloudQuant/fincore/blob/main/docs/compatibility/pyfolio-0.9.6.md).
+[empyrical matrix](https://github.com/cloudQuant/fincore/blob/master/docs/compatibility/empyrical-0.6.0.md)
+and [pyfolio profile](https://github.com/cloudQuant/fincore/blob/master/docs/compatibility/pyfolio-0.9.6.md).
 
 ## 0.3.x imports
 

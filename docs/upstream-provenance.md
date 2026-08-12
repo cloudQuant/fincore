@@ -15,12 +15,14 @@ determination.
 | empyrical 0.6.0 | same | root `LICENSE` | `2b651c2d29c644d1c73417cd96e6cfa506d6de102ed96fc3de96d676e089cf29` | Apache License 2.0 text |
 | pyfolio 0.9.6 | `724bbd7dbed9a88bb47e1057f2ca29b3409d8e7a` | `pyfolio/__init__.py` | `92d4418efc129627e49526b1665f50bbccea9661f4d42908b98dd29f71a818be` | no license header in inspected file |
 | pyfolio 0.9.6 | same | `pyfolio/tears.py` | `14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c` | Apache-2.0 header |
+| pyfolio 0.9.6 | same | `pyfolio/utils.py` | `b4423661845a1ece0e6f59dcade2f87d255b696088cdc71e8cc8db8caeff4b6b` | no license header in inspected file |
 | pyfolio 0.9.6 | same | `pyfolio/plotting.py` | `b15a1ed427417ba53811e9c561da6143130f5585c0e9a132f32bb99132e7cd0e` | Apache-2.0 header |
 | pyfolio 0.9.6 | same | `pyfolio/perf_attrib.py` | `a4436cc02a9f345ea2e238e914b255c72f5fca57305cd965228309a0f25a04c6` | Apache-2.0 header |
 | pyfolio 0.9.6 | same | root `LICENSE` | `4391163aa82bbe18b3d5c9670d3b08e0f249d966d689874c3306bcfc91e51941` | MIT text |
 
-Paths above are checkout-relative. Absolute sibling locations are deliberately
-absent from frozen fixtures.
+Paths above are checkout-relative. Manifest source bytes and hashes come from
+the pinned Git blobs, not potentially dirty worktree files. Absolute sibling
+locations are deliberately absent from frozen fixtures.
 
 ## Adaptation inventory
 

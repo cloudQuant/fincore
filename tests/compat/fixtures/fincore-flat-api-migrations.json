@@ -163,7 +163,7 @@
   ],
   "fincore_version": "0.3.0",
   "policy": "preserve-0.3.x-flat-api",
-  "schema_version": 1,
+  "schema_version": 2,
   "source": {
     "path": "fincore/__init__.py",
     "sha256": "4f4189c8cba6190d81ec97469a5fefa663728e998f112193a0dfcb7d5cd0a173"

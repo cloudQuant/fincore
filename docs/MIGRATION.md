@@ -73,6 +73,115 @@ print(sharpe_ratio(returns))
 print(max_drawdown(returns))
 ```
 
+## Enhanced fincore APIs
+
+The following interfaces are fincore features. They are useful migration
+destinations, but they are not evidence of empyrical or pyfolio compatibility.
+
+### AnalysisContext
+
+`AnalysisContext` groups a return series, optional benchmark, positions, and
+transactions. Metrics are computed lazily and reused by export/render methods.
+
+```python
+import pandas as pd
+
+import fincore
+
+index = pd.date_range("2024-01-02", periods=5, freq="B")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
+benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
+
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+print(ctx.sharpe_ratio)
+print(ctx.max_drawdown)
+json_text = ctx.to_json()
+```
+
+`ctx.to_html(path="report.html")` and `ctx.plot(backend="matplotlib")` are
+enhanced output operations. Install `fincore[viz]` before using visualization
+backends.
+
+### RollingEngine
+
+```python
+from fincore.core.engine import RollingEngine
+
+engine = RollingEngine(returns, factor_returns=benchmark, window=3)
+rolling = engine.compute(["sharpe", "volatility", "max_drawdown", "beta"])
+```
+
+The metric names and result dictionary are fincore contracts, not legacy
+empyrical rolling signatures.
+
+### Data providers
+
+Provider integrations are optional and may require extra packages, credentials,
+network access, or provider-specific configuration:
+
+```python
+from fincore.data import YahooFinanceProvider
+
+provider = YahooFinanceProvider()
+prices = provider.fetch("AAPL", start="2024-01-01", end="2024-02-01")
+```
+
+This is an integration example, not an offline Quick Start. The provider may
+raise an actionable import error when its optional SDK is absent.
+
+### Portfolio optimization
+
+```python
+import pandas as pd
+
+from fincore.optimization import efficient_frontier, optimize, risk_parity
+
+asset_returns = pd.DataFrame(
+    {
+        "asset_a": [0.01, -0.005, 0.004, 0.002],
+        "asset_b": [0.003, 0.002, -0.001, 0.005],
+    }
+)
+frontier = efficient_frontier(asset_returns, n_points=5)
+parity = risk_parity(asset_returns)
+maximum_sharpe = optimize(asset_returns, objective="max_sharpe")
+```
+
+### Visualization backends
+
+The enhanced context API accepts `matplotlib`, `html`, `plotly`, or `bokeh`
+backend names when their optional dependencies are installed:
+
+```python
+figure_or_document = ctx.plot(backend="matplotlib")
+```
+
+Backend output types are fincore contracts and are not part of the pinned
+pyfolio profile.
+
+## Frequently asked questions
+
+### Is fincore 0.3.0 a drop-in replacement for empyrical?
+
+No certification is claimed. Migrate symbol by symbol after the corresponding
+matrix row has the required executable C-level evidence.
+
+### Can empyrical and fincore be installed together?
+
+Yes. Keeping both during differential testing is often useful. Use explicit
+module imports so the implementation under test is unambiguous.
+
+### Which Python versions are supported?
+
+Current package metadata requires Python 3.11 or newer. Validate the exact
+wheel/environment you plan to deploy.
+
+### Where should compatibility bugs be reported?
+
+Open an issue with the pinned upstream version, the fincore version, a minimal
+input, actual output, expected output, and whether the discrepancy concerns
+C0, C1, C2, C3, or C4.
+
 ## Known migration boundaries
 
 - `fincore.empyrical` is the strict-compatibility target surface, but Task 2

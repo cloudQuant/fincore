@@ -1,9 +1,5 @@
 #!/usr/bin/env python
-"""Generate portable compatibility manifests from pinned upstream source trees.
-
-The default path is deliberately static: sibling projects are parsed with the
-standard-library AST and are never imported into this interpreter.
-"""
+"""Generate portable compatibility manifests from pinned Git source blobs."""
 
 from __future__ import annotations
 
@@ -11,7 +7,11 @@ import argparse
 import ast
 import hashlib
 import json
+import operator
 import subprocess
+import tempfile
+from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -30,35 +30,212 @@ PYFOLIO_PROFILE = (
     "create_risk_tear_sheet",
     "create_perf_attrib_tear_sheet",
 )
-COMPAT_PENDING = {
-    "C0": "not-verified",
-    "C1": "not-verified",
-    "C2": "not-verified",
-    "C3": "not-verified",
-    "C4": "not-verified",
+COMPAT_PENDING = dict.fromkeys(("C0", "C1", "C2", "C3", "C4"), "not-verified")
+SAFE_BINARY_OPERATORS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv,
+    ast.Mod: operator.mod,
+    ast.Pow: operator.pow,
 }
+SAFE_UNARY_OPERATORS = {ast.UAdd: operator.pos, ast.USub: operator.neg, ast.Not: operator.not_}
+UNRESOLVED = object()
 ORACLE_SCRIPT = r"""
+import hashlib
 import importlib
 import inspect
 import json
+from pathlib import Path
+import subprocess
 import sys
 
-package = importlib.import_module(sys.argv[1])
-names = json.loads(sys.argv[2])
-result = {}
-for name in names:
-    value = getattr(package, name)
-    result[name] = str(inspect.signature(value))
-print(json.dumps(result, sort_keys=True))
+root = Path(sys.argv[1]).resolve()
+package_name = sys.argv[2]
+names = json.loads(sys.argv[3])
+source_paths = json.loads(sys.argv[4])
+sys.path.insert(0, str(root))
+package = importlib.import_module(package_name)
+module_path = Path(package.__file__).resolve()
+try:
+    relative_module = module_path.relative_to(root).as_posix()
+except ValueError as error:
+    raise RuntimeError(f"oracle imported outside pinned root: {module_path}") from error
+commit = subprocess.run(
+    ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+).stdout.strip()
+source_files = []
+for relative in source_paths:
+    blob = subprocess.run(
+        ["git", "show", f"{commit}:{package_name}/{relative}"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+    ).stdout
+    source_files.append({
+        "path": relative,
+        "sha256": hashlib.sha256(blob).hexdigest(),
+    })
+print(json.dumps({
+    "version": package.__version__,
+    "commit": commit,
+    "module_path": relative_module,
+    "source_root": "isolated-pinned-git-checkout",
+    "source_files": source_files,
+    "signatures": {name: str(inspect.signature(getattr(package, name))) for name in names},
+}, sort_keys=True))
 """
 
 
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+@dataclass(frozen=True)
+class Export:
+    """A public name and the source definition that provides it."""
+
+    public_name: str
+    source_name: str
+    source_module: str
 
 
-def _read_ast(path: Path) -> ast.Module:
-    return ast.parse(path.read_text(encoding="utf-8"), filename=path.as_posix())
+@dataclass(frozen=True)
+class _ModuleReference:
+    module: str
+
+
+class PinnedGitSource:
+    """Read bytes from one immutable Git commit, never from worktree files."""
+
+    def __init__(self, root: Path, commit: str) -> None:
+        self.root = root.resolve()
+        self.commit = commit
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+
+    def read_bytes(self, path: str) -> bytes:
+        result = subprocess.run(
+            ["git", "show", f"{self.commit}:{path}"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+        )
+        return result.stdout
+
+    def read_text(self, path: str) -> str:
+        return self.read_bytes(path).decode("utf-8")
+
+    def sha256(self, path: str) -> str:
+        return hashlib.sha256(self.read_bytes(path)).hexdigest()
+
+
+class StaticConstantResolver:
+    """Resolve a deliberately small, import-free subset of Python constants."""
+
+    def __init__(self, trees: dict[str, ast.Module]) -> None:
+        self.trees = trees
+        self.assignments: dict[str, dict[str, ast.expr]] = {}
+        self.imports: dict[str, dict[str, tuple[str, str | None]]] = {}
+        for module, tree in trees.items():
+            assignments: dict[str, ast.expr] = {}
+            imports: dict[str, tuple[str, str | None]] = {}
+            for node in tree.body:
+                if isinstance(node, (ast.Assign, ast.AnnAssign)):
+                    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                    for target in targets:
+                        if isinstance(target, ast.Name):
+                            assignments[target.id] = node.value
+                elif isinstance(node, ast.ImportFrom) and node.level:
+                    target_module = node.module
+                    for alias in node.names:
+                        if alias.name == "*":
+                            continue
+                        local_name = alias.asname or alias.name
+                        if target_module is None:
+                            imports[local_name] = (alias.name, None)
+                        else:
+                            imports[local_name] = (target_module, alias.name)
+            self.assignments[module] = assignments
+            self.imports[module] = imports
+
+    def resolve(self, node: ast.expr | None, module: str) -> tuple[Any, bool]:
+        value = self._resolve(node, module, set())
+        return (None, False) if value is UNRESOLVED else (value, True)
+
+    def _resolve(self, node: ast.expr | None, module: str, seen: set[tuple[str, str]]) -> Any:
+        if node is None:
+            return None
+        if isinstance(node, ast.Constant):
+            return node.value
+        if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
+            values = [self._resolve(item, module, seen.copy()) for item in node.elts]
+            if any(value is UNRESOLVED for value in values):
+                return UNRESOLVED
+            if isinstance(node, ast.Tuple):
+                return tuple(values)
+            if isinstance(node, ast.Set):
+                return set(values)
+            return values
+        if isinstance(node, ast.Dict):
+            keys = [self._resolve(item, module, seen.copy()) for item in node.keys]
+            values = [self._resolve(item, module, seen.copy()) for item in node.values]
+            if any(value is UNRESOLVED for value in [*keys, *values]):
+                return UNRESOLVED
+            return dict(zip(keys, values, strict=True))
+        if isinstance(node, ast.Name):
+            key = (module, node.id)
+            if key in seen:
+                return UNRESOLVED
+            seen.add(key)
+            if node.id in self.assignments.get(module, {}):
+                return self._resolve(self.assignments[module][node.id], module, seen)
+            imported = self.imports.get(module, {}).get(node.id)
+            if imported is None:
+                return UNRESOLVED
+            target_module, target_name = imported
+            if target_name is None:
+                return _ModuleReference(target_module)
+            return self._resolve(ast.Name(id=target_name), target_module, seen)
+        if isinstance(node, ast.Attribute):
+            owner = self._resolve(node.value, module, seen.copy())
+            if not isinstance(owner, _ModuleReference):
+                return UNRESOLVED
+            return self._resolve(ast.Name(id=node.attr), owner.module, seen)
+        if isinstance(node, ast.BinOp) and type(node.op) in SAFE_BINARY_OPERATORS:
+            left = self._resolve(node.left, module, seen.copy())
+            right = self._resolve(node.right, module, seen.copy())
+            if left is UNRESOLVED or right is UNRESOLVED:
+                return UNRESOLVED
+            try:
+                value = SAFE_BINARY_OPERATORS[type(node.op)](left, right)
+            except (ArithmeticError, TypeError, ValueError):
+                return UNRESOLVED
+            return value if _portable_value(value) else UNRESOLVED
+        if isinstance(node, ast.UnaryOp) and type(node.op) in SAFE_UNARY_OPERATORS:
+            operand = self._resolve(node.operand, module, seen.copy())
+            if operand is UNRESOLVED:
+                return UNRESOLVED
+            try:
+                return SAFE_UNARY_OPERATORS[type(node.op)](operand)
+            except (ArithmeticError, TypeError, ValueError):
+                return UNRESOLVED
+        return UNRESOLVED
+
+
+def _portable_value(value: Any) -> bool:
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return True
+    if isinstance(value, (list, tuple, set)):
+        return len(value) <= 1000 and all(_portable_value(item) for item in value)
+    if isinstance(value, dict):
+        return len(value) <= 1000 and all(_portable_value(key) and _portable_value(item) for key, item in value.items())
+    return False
+
+
+def _read_ast(text: str, filename: str) -> ast.Module:
+    return ast.parse(text, filename=filename)
 
 
 def _literal_assignment(tree: ast.Module, name: str) -> Any:
@@ -70,82 +247,69 @@ def _literal_assignment(tree: ast.Module, name: str) -> Any:
     raise ValueError(f"static assignment {name!r} was not found")
 
 
-def _git_commit(root: Path) -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip()
+def _relative_module(node: ast.ImportFrom, alias: ast.alias) -> str | None:
+    if not node.level:
+        return None
+    return node.module if node.module is not None else alias.name
 
 
-def _require_pin(root: Path, expected: str, project: str) -> str:
-    actual = _git_commit(root)
-    if actual != expected:
-        raise ValueError(f"{project} root is at {actual}; expected pinned commit {expected}")
-    return actual
-
-
-def _expr(node: ast.expr | None) -> str | None:
-    return None if node is None else ast.unparse(node)
-
-
-def _signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
-    rendered = f"({ast.unparse(node.args)})"
-    if node.returns is not None:
-        rendered = f"{rendered} -> {ast.unparse(node.returns)}"
-    return rendered
-
-
-def _parameters(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[dict[str, Any]]:
-    result: list[dict[str, Any]] = []
-    positional = [*node.args.posonlyargs, *node.args.args]
-    defaults: list[ast.expr | None] = [None] * (len(positional) - len(node.args.defaults))
-    defaults.extend(node.args.defaults)
-    posonly_count = len(node.args.posonlyargs)
-    for index, (argument, default) in enumerate(zip(positional, defaults, strict=True)):
-        result.append(
-            {
-                "name": argument.arg,
-                "kind": "POSITIONAL_ONLY" if index < posonly_count else "POSITIONAL_OR_KEYWORD",
-                "required": default is None,
-                "default": _expr(default),
-                "annotation": _expr(argument.annotation),
-            }
-        )
-    if node.args.vararg is not None:
-        result.append(
-            {
-                "name": node.args.vararg.arg,
-                "kind": "VAR_POSITIONAL",
-                "required": False,
-                "default": None,
-                "annotation": _expr(node.args.vararg.annotation),
-            }
-        )
-    for argument, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=True):
-        result.append(
-            {
-                "name": argument.arg,
-                "kind": "KEYWORD_ONLY",
-                "required": default is None,
-                "default": _expr(default),
-                "annotation": _expr(argument.annotation),
-            }
-        )
-    if node.args.kwarg is not None:
-        result.append(
-            {
-                "name": node.args.kwarg.arg,
-                "kind": "VAR_KEYWORD",
-                "required": False,
-                "default": None,
-                "annotation": _expr(node.args.kwarg.annotation),
-            }
-        )
-    return result
+def _resolve_public_exports(
+    module: str,
+    trees: dict[str, ast.Module],
+    active: frozenset[str] = frozenset(),
+) -> list[Export]:
+    """Mirror static alias/star namespace behavior for local modules."""
+    if module in active or module not in trees:
+        return []
+    active = active | {module}
+    namespace: dict[str, Export] = {}
+    explicit_all: list[str] | None = None
+    for node in trees[module].body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            namespace[node.name] = Export(node.name, node.name, module)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    namespace[target.id] = Export(target.id, target.id, module)
+                    if target.id == "__all__":
+                        try:
+                            explicit_all = list(ast.literal_eval(node.value))
+                        except (ValueError, TypeError):
+                            explicit_all = None
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                public_name = alias.asname or alias.name.split(".")[0]
+                namespace[public_name] = Export(public_name, alias.name, module)
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                target_module = _relative_module(node, alias)
+                if alias.name == "*":
+                    if target_module is None:
+                        continue
+                    for exported in _resolve_public_exports(target_module, trees, active):
+                        namespace[exported.public_name] = exported
+                    continue
+                public_name = alias.asname or alias.name
+                if target_module is None:
+                    namespace[public_name] = Export(public_name, alias.name, module)
+                    continue
+                target_exports = {
+                    exported.public_name: exported for exported in _resolve_public_exports(target_module, trees, active)
+                }
+                source = target_exports.get(alias.name)
+                namespace[public_name] = (
+                    Export(public_name, source.source_name, source.source_module)
+                    if source is not None
+                    else Export(public_name, alias.name, target_module)
+                )
+    names = explicit_all if explicit_all is not None else [name for name in namespace if not name.startswith("_")]
+    return [
+        Export(name, namespace[name].source_name, namespace[name].source_module)
+        if name in namespace
+        else Export(name, name, module)
+        for name in names
+    ]
 
 
 def _definitions(tree: ast.Module) -> dict[str, ast.AST]:
@@ -161,174 +325,235 @@ def _definitions(tree: ast.Module) -> dict[str, ast.AST]:
     return definitions
 
 
-def _source_record(package_root: Path, path: Path) -> dict[str, str]:
-    return {"path": path.relative_to(package_root).as_posix(), "sha256": _sha256(path)}
+def _expression(node: ast.expr | None) -> str | None:
+    return None if node is None else ast.unparse(node)
 
 
-def _symbol_entry(
+def _parameter_record(
+    argument: ast.arg,
+    kind: str,
+    default: ast.expr | None,
+    resolver: StaticConstantResolver,
+    module: str,
+) -> dict[str, Any]:
+    required = default is None
+    value, resolved = (None, True) if required else resolver.resolve(default, module)
+    return {
+        "name": argument.arg,
+        "kind": kind,
+        "required": required,
+        "default": value,
+        "default_expression": _expression(default),
+        "resolved": resolved,
+        "annotation": _expression(argument.annotation),
+    }
+
+
+def _parameters(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    resolver: StaticConstantResolver,
+    module: str,
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    positional = [*node.args.posonlyargs, *node.args.args]
+    defaults: list[ast.expr | None] = [None] * (len(positional) - len(node.args.defaults))
+    defaults.extend(node.args.defaults)
+    for index, (argument, default) in enumerate(zip(positional, defaults, strict=True)):
+        kind = "POSITIONAL_ONLY" if index < len(node.args.posonlyargs) else "POSITIONAL_OR_KEYWORD"
+        result.append(_parameter_record(argument, kind, default, resolver, module))
+    if node.args.vararg is not None:
+        result.append(_parameter_record(node.args.vararg, "VAR_POSITIONAL", None, resolver, module))
+    for argument, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=True):
+        result.append(_parameter_record(argument, "KEYWORD_ONLY", default, resolver, module))
+    if node.args.kwarg is not None:
+        result.append(_parameter_record(node.args.kwarg, "VAR_KEYWORD", None, resolver, module))
+    return result
+
+
+def _canonical_signature(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    parameters: list[dict[str, Any]],
+) -> str | None:
+    if any(not parameter["resolved"] for parameter in parameters):
+        return None
+    parts: list[str] = []
+    positional_only = sum(parameter["kind"] == "POSITIONAL_ONLY" for parameter in parameters)
+    has_varargs = any(parameter["kind"] == "VAR_POSITIONAL" for parameter in parameters)
+    keyword_marker_added = False
+    positional_seen = 0
+    for parameter in parameters:
+        kind = parameter["kind"]
+        if kind == "KEYWORD_ONLY" and not has_varargs and not keyword_marker_added:
+            parts.append("*")
+            keyword_marker_added = True
+        prefix = "*" if kind == "VAR_POSITIONAL" else "**" if kind == "VAR_KEYWORD" else ""
+        rendered = f"{prefix}{parameter['name']}"
+        if parameter["annotation"] is not None:
+            rendered += f": {parameter['annotation']}"
+        if not parameter["required"]:
+            rendered += f"={parameter['default']!r}"
+        parts.append(rendered)
+        if kind in {"POSITIONAL_ONLY", "POSITIONAL_OR_KEYWORD"}:
+            positional_seen += 1
+            if positional_seen == positional_only:
+                parts.append("/")
+    rendered = f"({', '.join(parts)})"
+    if node.returns is not None:
+        rendered += f" -> {ast.unparse(node.returns)}"
+    return rendered
+
+
+def _source_record(source: PinnedGitSource, package: str, path: str) -> dict[str, str]:
+    repository_path = f"{package}/{path}"
+    return {"path": path, "sha256": source.sha256(repository_path)}
+
+
+def _entry(
     *,
     package: str,
-    package_root: Path,
-    source_path: Path,
-    name: str,
+    source: PinnedGitSource,
+    export: Export,
     node: ast.AST | None,
+    resolver: StaticConstantResolver,
+    definitions: dict[str, dict[str, ast.AST]],
 ) -> dict[str, Any]:
+    module_path = f"{export.source_module}.py"
     is_callable = isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    parameters: list[dict[str, Any]] = []
+    signature = None
+    factory_name = None
+    factory_template_line = None
     needs_review = node is None or isinstance(node, ast.ClassDef)
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        parameters = _parameters(node, resolver, export.source_module)
+        signature = _canonical_signature(node, parameters)
+        needs_review = signature is None
+    elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+        value = node.value
+        if isinstance(value, ast.Call) and isinstance(value.func, ast.Name):
+            factory = definitions[export.source_module].get(value.func.id)
+            generated = next(
+                (
+                    child
+                    for child in getattr(factory, "body", [])
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                ),
+                None,
+            )
+            if value.func.id.startswith("_create_") and generated is not None:
+                is_callable = True
+                parameters = _parameters(generated, resolver, export.source_module)
+                signature = _canonical_signature(generated, parameters)
+                factory_name = value.func.id
+                factory_template_line = generated.lineno
+                needs_review = True
     compatibility = dict(COMPAT_PENDING)
     if not is_callable:
         compatibility["C1"] = "not-applicable"
-    entry: dict[str, Any] = {
-        "symbol": name,
-        "public_path": f"{package}.{name}",
+    result: dict[str, Any] = {
+        "symbol": export.public_name,
+        "source_name": export.source_name,
+        "public_path": f"{package}.{export.public_name}",
         "kind": "callable" if is_callable else "constant",
         "source": {
-            **_source_record(package_root, source_path),
+            **_source_record(source, package, module_path),
             "line": getattr(node, "lineno", None),
         },
-        "parameters": [],
-        "signature": None,
-        "return_annotation": None,
-        "extraction": "static_ast",
+        "parameters": parameters,
+        "signature": signature,
+        "signature_expression": (
+            f"({ast.unparse(node.args)})" if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) else None
+        ),
+        "return_annotation": (
+            _expression(node.returns) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) else None
+        ),
+        "extraction": "static_ast_from_pinned_git_blob",
         "target_evidence": {
             "source_frozen": node is not None,
-            "signature_frozen": isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)),
+            "signature_frozen": signature is not None,
         },
         "needs_dynamic_review": needs_review,
         "reviewed": False,
         "compatibility": compatibility,
     }
-    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        entry["parameters"] = _parameters(node)
-        entry["signature"] = _signature(node)
-        entry["return_annotation"] = _expr(node.returns)
-    elif isinstance(node, (ast.Assign, ast.AnnAssign)):
-        value = node.value
-        try:
-            entry["value"] = ast.literal_eval(value)
-        except (ValueError, TypeError):
-            entry["value_expression"] = ast.unparse(value)
-            entry["needs_dynamic_review"] = True
-    return entry
+    if factory_name is not None:
+        result.update({"factory": factory_name, "factory_template_line": factory_template_line})
+    if not is_callable and isinstance(node, (ast.Assign, ast.AnnAssign)):
+        value, resolved = resolver.resolve(node.value, export.source_module)
+        result.update(
+            {
+                "value": value,
+                "value_expression": ast.unparse(node.value),
+                "value_resolved": resolved,
+            }
+        )
+        result["needs_dynamic_review"] = not resolved
+    return result
 
 
-def _static_factory_entry(
-    *,
-    package_root: Path,
-    source_path: Path,
-    name: str,
-    assignment: ast.Assign | ast.AnnAssign,
-    definitions: dict[str, ast.AST],
-) -> dict[str, Any] | None:
-    value = assignment.value
-    if not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name):
-        return None
-    factory_name = value.func.id
-    if not factory_name.startswith("_create_") or not factory_name.endswith("_function"):
-        return None
-    factory = definitions.get(factory_name)
-    if not isinstance(factory, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        return None
-    generated = next(
-        (node for node in factory.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))),
-        None,
-    )
-    if generated is None:
-        return None
+def _package_trees(
+    source: PinnedGitSource,
+    package: str,
+    modules: tuple[str, ...],
+) -> dict[str, ast.Module]:
     return {
-        "symbol": name,
-        "public_path": f"empyrical.{name}",
-        "kind": "callable",
-        "source": {
-            **_source_record(package_root, source_path),
-            "line": assignment.lineno,
-        },
-        "parameters": _parameters(generated),
-        "signature": _signature(generated),
-        "return_annotation": _expr(generated.returns),
-        "factory": factory_name,
-        "factory_template_line": generated.lineno,
-        "extraction": "static_ast",
-        "target_evidence": {
-            "source_frozen": True,
-            "signature_frozen_from_factory_template": True,
-        },
-        "needs_dynamic_review": True,
-        "reviewed": False,
-        "compatibility": {
-            **COMPAT_PENDING,
-        },
+        module: _read_ast(
+            source.read_text(f"{package}/{module}.py"),
+            f"{package}/{module}.py@{source.commit}",
+        )
+        for module in modules
     }
 
 
-def _empyrical_exports(init_tree: ast.Module) -> list[tuple[str, str]]:
-    exports: list[tuple[str, str]] = []
-    seen: set[str] = set()
-    allowed_modules = {"stats", "periods", "perf_attrib"}
-    for node in init_tree.body:
-        if not isinstance(node, ast.ImportFrom) or node.module not in allowed_modules:
-            continue
-        for alias in node.names:
-            public_name = alias.asname or alias.name
-            if alias.name == "*" or public_name in seen:
-                continue
-            seen.add(public_name)
-            exports.append((public_name, node.module))
-    return exports
+def _manifest_base(
+    project: str,
+    version: str,
+    commit: str,
+    source_files: list[dict[str, str]],
+) -> dict[str, Any]:
+    return {
+        "schema_version": 2,
+        "project": project,
+        "version": version,
+        "commit": commit,
+        "fixture_source": {
+            "mode": "static_ast_from_pinned_git_blob",
+            "generator": "scripts/generate_compat_manifest.py",
+            "root": f"external Git object database supplied with --{project}-root",
+        },
+        "oracle_verification": {"status": "not_run", "reviewed": False},
+        "source_files": source_files,
+    }
 
 
 def _generate_empyrical(root: Path) -> dict[str, Any]:
-    package_root = root / "empyrical"
-    init_path = package_root / "__init__.py"
-    init_tree = _read_ast(init_path)
-    version = _literal_assignment(init_tree, "__version__")
-    commit = _require_pin(root, EMPYRICAL_COMMIT, "empyrical")
-    module_cache: dict[str, tuple[Path, dict[str, ast.AST]]] = {}
-    symbols: list[dict[str, Any]] = []
-    for name, module in _empyrical_exports(init_tree):
-        if module not in module_cache:
-            source_path = package_root / f"{module}.py"
-            module_cache[module] = (source_path, _definitions(_read_ast(source_path)))
-        source_path, definitions = module_cache[module]
-        node = definitions.get(name)
-        factory_entry = (
-            _static_factory_entry(
-                package_root=package_root,
-                source_path=source_path,
-                name=name,
-                assignment=node,
-                definitions=definitions,
-            )
-            if isinstance(node, (ast.Assign, ast.AnnAssign))
-            else None
+    source = PinnedGitSource(root, EMPYRICAL_COMMIT)
+    _require_head(source, EMPYRICAL_COMMIT, "empyrical")
+    modules = ("__init__", "stats", "periods", "perf_attrib")
+    trees = _package_trees(source, "empyrical", modules)
+    resolver = StaticConstantResolver(trees)
+    definitions = {module: _definitions(tree) for module, tree in trees.items()}
+    exports = _resolve_public_exports("__init__", trees)
+    symbols = [
+        _entry(
+            package="empyrical",
+            source=source,
+            export=export,
+            node=definitions.get(export.source_module, {}).get(export.source_name),
+            resolver=resolver,
+            definitions=definitions,
         )
-        symbols.append(
-            factory_entry
-            or _symbol_entry(
-                package="empyrical",
-                package_root=package_root,
-                source_path=source_path,
-                name=name,
-                node=node,
-            )
-        )
+        for export in exports
+    ]
     public_symbols = [entry["symbol"] for entry in symbols]
     callables = [entry for entry in symbols if entry["kind"] == "callable"]
     if (len(public_symbols), len(callables)) != (54, 49):
         raise ValueError(f"unexpected empyrical surface: {len(public_symbols)} symbols, {len(callables)} callables")
-    source_paths = [init_path, *(path for path, _ in module_cache.values())]
+    source_files = [_source_record(source, "empyrical", f"{module}.py") for module in modules]
     return {
-        "schema_version": 1,
-        "project": "empyrical",
-        "version": version,
-        "commit": commit,
-        "fixture_source": {
-            "mode": "static_ast",
-            "generator": "scripts/generate_compat_manifest.py",
-            "root": "external pinned checkout supplied with --empyrical-root",
-        },
-        "oracle_verification": {"status": "not_run", "reviewed": False},
-        "source_files": [_source_record(package_root, path) for path in dict.fromkeys(source_paths)],
+        **_manifest_base(
+            "empyrical", _literal_assignment(trees["__init__"], "__version__"), source.commit, source_files
+        ),
         "public_symbols": public_symbols,
         "callables": callables,
         "symbols": symbols,
@@ -336,80 +561,180 @@ def _generate_empyrical(root: Path) -> dict[str, Any]:
 
 
 def _generate_pyfolio(root: Path) -> dict[str, Any]:
-    package_root = root / "pyfolio"
-    init_path = package_root / "__init__.py"
-    tears_path = package_root / "tears.py"
-    init_tree = _read_ast(init_path)
-    version = _literal_assignment(init_tree, "__version__")
-    commit = _require_pin(root, PYFOLIO_COMMIT, "pyfolio")
-    definitions = _definitions(_read_ast(tears_path))
-    profile: dict[str, dict[str, Any]] = {}
+    source = PinnedGitSource(root, PYFOLIO_COMMIT)
+    _require_head(source, PYFOLIO_COMMIT, "pyfolio")
+    modules = ("__init__", "tears", "utils")
+    trees = _package_trees(source, "pyfolio", modules)
+    resolver = StaticConstantResolver(trees)
+    definitions = {module: _definitions(tree) for module, tree in trees.items()}
+    exports = {export.public_name: export for export in _resolve_public_exports("__init__", trees)}
+    profile = {}
     for name in PYFOLIO_PROFILE:
-        entry = _symbol_entry(
+        export = exports.get(name, Export(name, name, "tears"))
+        entry = _entry(
             package="pyfolio",
-            package_root=package_root,
-            source_path=tears_path,
-            name=name,
-            node=definitions.get(name),
+            source=source,
+            export=export,
+            node=definitions.get(export.source_module, {}).get(export.source_name),
+            resolver=resolver,
+            definitions=definitions,
         )
         if entry["kind"] != "callable":
             raise ValueError(f"pyfolio profile entry {name!r} is not a static callable")
         profile[name] = entry
+    source_files = [_source_record(source, "pyfolio", f"{module}.py") for module in modules]
     return {
-        "schema_version": 1,
-        "project": "pyfolio",
-        "version": version,
-        "commit": commit,
-        "fixture_source": {
-            "mode": "static_ast",
-            "generator": "scripts/generate_compat_manifest.py",
-            "root": "external pinned checkout supplied with --pyfolio-root",
-        },
-        "oracle_verification": {"status": "not_run", "reviewed": False},
-        "source_files": [
-            _source_record(package_root, init_path),
-            _source_record(package_root, tears_path),
-        ],
+        **_manifest_base("pyfolio", _literal_assignment(trees["__init__"], "__version__"), source.commit, source_files),
         "compatibility_profile": profile,
     }
 
 
+def _require_head(source: PinnedGitSource, expected: str, project: str) -> None:
+    actual = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=source.root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if actual != expected:
+        raise ValueError(f"{project} root is at {actual}; expected pinned commit {expected}")
+
+
 def _generate_flat_migrations(repo_root: Path) -> dict[str, Any]:
     init_path = repo_root / "fincore" / "__init__.py"
-    tree = _read_ast(init_path)
-    version = _literal_assignment(tree, "__version__")
-    flat_api = _literal_assignment(tree, "_FLAT_API")
+    tree = _read_ast(init_path.read_text(encoding="utf-8"), init_path.as_posix())
     entries = []
-    for symbol, target in flat_api.items():
+    for symbol, target in _literal_assignment(tree, "_FLAT_API").items():
         current_target = ".".join(target)
-        recommended_target = f"fincore.empyrical.{symbol}" if symbol != "information_ratio" else current_target
         entries.append(
             {
                 "symbol": symbol,
                 "current_target": current_target,
-                "recommended_target": recommended_target,
+                "recommended_target": (
+                    f"fincore.empyrical.{symbol}" if symbol != "information_ratio" else current_target
+                ),
                 "deprecate_in": None,
                 "remove_or_switch_in": "next-major-not-scheduled",
                 "status": "unchanged-in-0.3.x",
             }
         )
     return {
-        "schema_version": 1,
-        "fincore_version": version,
+        "schema_version": 2,
+        "fincore_version": _literal_assignment(tree, "__version__"),
         "policy": "preserve-0.3.x-flat-api",
-        "source": {"path": "fincore/__init__.py", "sha256": _sha256(init_path)},
+        "source": {"path": "fincore/__init__.py", "sha256": hashlib.sha256(init_path.read_bytes()).hexdigest()},
         "entries": entries,
     }
 
 
-def _run_oracle(interpreter: Path, package: str, names: list[str]) -> dict[str, str]:
-    result = subprocess.run(
-        [interpreter.as_posix(), "-I", "-c", ORACLE_SCRIPT, package, json.dumps(names)],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return json.loads(result.stdout)
+def _run_oracle(
+    interpreter: Path,
+    root: Path,
+    package: str,
+    names: list[str],
+    *,
+    expected_version: str,
+    expected_commit: str,
+    expected_source_files: list[dict[str, str]],
+) -> dict[str, Any]:
+    """Import only an isolated checkout of the exact pinned commit."""
+    with tempfile.TemporaryDirectory(prefix=f"{package}-oracle-") as temporary:
+        checkout = Path(temporary) / "checkout"
+        subprocess.run(
+            ["git", "clone", "--quiet", "--no-checkout", root.resolve().as_posix(), checkout.as_posix()],
+            check=True,
+        )
+        subprocess.run(["git", "checkout", "--quiet", expected_commit], cwd=checkout, check=True)
+        try:
+            result = subprocess.run(
+                [
+                    interpreter.as_posix(),
+                    "-I",
+                    "-c",
+                    ORACLE_SCRIPT,
+                    checkout.as_posix(),
+                    package,
+                    json.dumps(names),
+                    json.dumps([item["path"] for item in expected_source_files]),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as error:
+            detail = (error.stderr or error.stdout or str(error)).strip()
+            raise ValueError(f"oracle rejected pinned source: {detail}") from error
+    payload = json.loads(result.stdout)
+    if payload["version"] != expected_version:
+        raise ValueError(f"oracle version {payload['version']!r} != pinned version {expected_version!r}")
+    if payload["commit"] != expected_commit:
+        raise ValueError(f"oracle commit {payload['commit']} != pinned commit {expected_commit}")
+    if payload["source_files"] != expected_source_files:
+        raise ValueError("oracle source hashes differ from pinned manifest source hashes")
+    if not payload["module_path"].startswith(f"{package}/"):
+        raise ValueError("oracle module path is outside the requested pinned package")
+    return {"status": "captured-unreviewed", "reviewed": False, **payload}
+
+
+def _without_review(value: dict[str, Any]) -> dict[str, Any]:
+    result = deepcopy(value)
+    result.pop("reviewed", None)
+    return result
+
+
+def _entry_evidence(manifest: dict[str, Any], entry: dict[str, Any]) -> str:
+    evidence = {
+        "project": manifest["project"],
+        "commit": manifest["commit"],
+        "source_files": manifest["source_files"],
+        "symbol": entry["symbol"],
+        "signature": entry.get("signature"),
+        "oracle": _without_review(manifest["oracle_verification"]),
+    }
+    return hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _merge_review_attestations(
+    generated: dict[str, Any],
+    previous: dict[str, Any] | None,
+    section: str,
+) -> dict[str, Any]:
+    result = deepcopy(generated)
+    generated_entries = result[section]
+    iterable = generated_entries.values() if isinstance(generated_entries, dict) else generated_entries
+    for entry in iterable:
+        entry["evidence_key"] = _entry_evidence(result, entry)
+    if previous is None:
+        return result
+    previous_entries = previous.get(section, {})
+    if isinstance(previous_entries, dict):
+        previous_by_symbol = {entry["symbol"]: entry for entry in previous_entries.values()}
+    else:
+        previous_by_symbol = {entry["symbol"]: entry for entry in previous_entries}
+    for entry in iterable:
+        old = previous_by_symbol.get(entry["symbol"])
+        old_key = (
+            old.get("evidence_key")
+            if old and old.get("evidence_key")
+            else _entry_evidence(previous, old)
+            if old
+            else None
+        )
+        if old and old.get("reviewed") is True and old_key == entry["evidence_key"]:
+            entry["reviewed"] = True
+    old_oracle = previous.get("oracle_verification", {})
+    if old_oracle.get("reviewed") is True and _without_review(old_oracle) == _without_review(
+        result["oracle_verification"]
+    ):
+        result["oracle_verification"]["reviewed"] = True
+    return result
+
+
+def _load_existing(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _write_json(path: Path, data: dict[str, Any]) -> None:
@@ -425,31 +750,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--oracle-python",
         type=Path,
-        help="optional isolated interpreter with pinned upstream packages installed",
+        help="optional isolated interpreter with pinned upstream dependencies installed",
     )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    empyrical_path = args.output / "empyrical-0.6.0-api.json"
+    pyfolio_path = args.output / "pyfolio-0.9.6-api.json"
     empyrical = _generate_empyrical(args.empyrical_root.resolve())
     pyfolio = _generate_pyfolio(args.pyfolio_root.resolve())
     if args.oracle_python is not None:
-        empyrical["oracle_verification"] = {
-            "status": "captured-unreviewed",
-            "reviewed": False,
-            "signatures": _run_oracle(
-                args.oracle_python, "empyrical", [entry["symbol"] for entry in empyrical["callables"]]
-            ),
-        }
-        pyfolio["oracle_verification"] = {
-            "status": "captured-unreviewed",
-            "reviewed": False,
-            "signatures": _run_oracle(args.oracle_python, "pyfolio", list(pyfolio["compatibility_profile"])),
-        }
+        empyrical["oracle_verification"] = _run_oracle(
+            args.oracle_python,
+            args.empyrical_root,
+            "empyrical",
+            [entry["symbol"] for entry in empyrical["callables"]],
+            expected_version=empyrical["version"],
+            expected_commit=empyrical["commit"],
+            expected_source_files=empyrical["source_files"],
+        )
+        pyfolio["oracle_verification"] = _run_oracle(
+            args.oracle_python,
+            args.pyfolio_root,
+            "pyfolio",
+            list(pyfolio["compatibility_profile"]),
+            expected_version=pyfolio["version"],
+            expected_commit=pyfolio["commit"],
+            expected_source_files=pyfolio["source_files"],
+        )
+    empyrical = _merge_review_attestations(empyrical, _load_existing(empyrical_path), "symbols")
+    empyrical["callables"] = [entry for entry in empyrical["symbols"] if entry["kind"] == "callable"]
+    pyfolio = _merge_review_attestations(pyfolio, _load_existing(pyfolio_path), "compatibility_profile")
     repo_root = Path(__file__).resolve().parents[1]
-    _write_json(args.output / "empyrical-0.6.0-api.json", empyrical)
-    _write_json(args.output / "pyfolio-0.9.6-api.json", pyfolio)
+    _write_json(empyrical_path, empyrical)
+    _write_json(pyfolio_path, pyfolio)
     _write_json(args.output / "fincore-flat-api-migrations.json", _generate_flat_migrations(repo_root))
 
 

@@ -9,69 +9,86 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "59965e732205dda62b1e298a6f936fb6848a9592f1ac6c0d99d0337cfcb458c8",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "benchmark_rets",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "live_start_date",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "2000",
+          "default": 2000,
+          "default_expression": "2000",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "samples",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "stoch_vol",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "True",
+          "default": true,
+          "default_expression": "True",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "progressbar",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_bayesian_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, benchmark_rets=None, live_start_date=None, samples=2000, run_flask_app=False, stoch_vol=False, progressbar=True)",
+      "signature_expression": "(returns, benchmark_rets=None, live_start_date=None, samples=2000, run_flask_app=False, stoch_vol=False, progressbar=True)",
       "source": {
         "line": 1293,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_bayesian_tear_sheet",
       "symbol": "create_bayesian_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -86,90 +103,113 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "3bbee9e9630b4a15a20252100acb540c86473aae185bdd5254f51ded7fae431c",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "market_data",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "0.2",
+          "default": 0.2,
+          "default_expression": "0.2",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "liquidation_daily_vol_limit",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "0.05",
+          "default": 0.05,
+          "default_expression": "0.05",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "trade_daily_vol_limit",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "utils.APPROX_BDAYS_PER_MONTH * 6",
+          "default": 126,
+          "default_expression": "utils.APPROX_BDAYS_PER_MONTH * 6",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "last_n_days",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "1",
+          "default": 1,
+          "default_expression": "1",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "days_to_liquidate_limit",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_capacity_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
-      "signature": "(returns, positions, transactions, market_data, liquidation_daily_vol_limit=0.2, trade_daily_vol_limit=0.05, last_n_days=utils.APPROX_BDAYS_PER_MONTH * 6, days_to_liquidate_limit=1, estimate_intraday='infer', run_flask_app=False)",
+      "signature": "(returns, positions, transactions, market_data, liquidation_daily_vol_limit=0.2, trade_daily_vol_limit=0.05, last_n_days=126, days_to_liquidate_limit=1, estimate_intraday='infer', run_flask_app=False)",
+      "signature_expression": "(returns, positions, transactions, market_data, liquidation_daily_vol_limit=0.2, trade_daily_vol_limit=0.05, last_n_days=utils.APPROX_BDAYS_PER_MONTH * 6, days_to_liquidate_limit=1, estimate_intraday='infer', run_flask_app=False)",
       "source": {
         "line": 1183,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_capacity_tear_sheet",
       "symbol": "create_capacity_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -184,216 +224,300 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "7327e572fe2e860150dfddd00acb676eb664e134dd3cf843bea03348bcce07db",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "market_data",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "benchmark_rets",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "slippage",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "live_start_date",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "sector_mappings",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "bayesian",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "round_trips",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "hide_positions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "(1.0, 1.5, 2.0)",
+          "default": [
+            1.0,
+            1.5,
+            2.0
+          ],
+          "default_expression": "(1.0, 1.5, 2.0)",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "cone_std",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "bootstrap",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "unadjusted_returns",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "style_factor_panel",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "sectors",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "caps",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "shares_held",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "volumes",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "percentile",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'AGB'",
+          "default": "AGB",
+          "default_expression": "'AGB'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "turnover_denom",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "True",
+          "default": true,
+          "default_expression": "True",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "set_context",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_returns",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_loadings",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "True",
+          "default": true,
+          "default_expression": "True",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "pos_in_dollars",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "header_rows",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "FACTOR_PARTITIONS",
+          "default": {
+            "sector": [
+              "basic_materials",
+              "consumer_cyclical",
+              "financial_services",
+              "real_estate",
+              "consumer_defensive",
+              "health_care",
+              "utilities",
+              "communication_services",
+              "energy",
+              "industrials",
+              "technology"
+            ],
+            "style": [
+              "momentum",
+              "size",
+              "value",
+              "reversal_short_term",
+              "volatility"
+            ]
+          },
+          "default_expression": "FACTOR_PARTITIONS",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_partitions",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_full_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
-      "signature": "(returns, positions=None, transactions=None, market_data=None, benchmark_rets=None, slippage=None, live_start_date=None, sector_mappings=None, bayesian=False, round_trips=False, estimate_intraday='infer', hide_positions=False, cone_std=(1.0, 1.5, 2.0), bootstrap=False, unadjusted_returns=None, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, turnover_denom='AGB', set_context=True, factor_returns=None, factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions=FACTOR_PARTITIONS)",
+      "signature": "(returns, positions=None, transactions=None, market_data=None, benchmark_rets=None, slippage=None, live_start_date=None, sector_mappings=None, bayesian=False, round_trips=False, estimate_intraday='infer', hide_positions=False, cone_std=(1.0, 1.5, 2.0), bootstrap=False, unadjusted_returns=None, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, turnover_denom='AGB', set_context=True, factor_returns=None, factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions={'style': ['momentum', 'size', 'value', 'reversal_short_term', 'volatility'], 'sector': ['basic_materials', 'consumer_cyclical', 'financial_services', 'real_estate', 'consumer_defensive', 'health_care', 'utilities', 'communication_services', 'energy', 'industrials', 'technology']})",
+      "signature_expression": "(returns, positions=None, transactions=None, market_data=None, benchmark_rets=None, slippage=None, live_start_date=None, sector_mappings=None, bayesian=False, round_trips=False, estimate_intraday='infer', hide_positions=False, cone_std=(1.0, 1.5, 2.0), bootstrap=False, unadjusted_returns=None, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, turnover_denom='AGB', set_context=True, factor_returns=None, factor_loadings=None, pos_in_dollars=True, header_rows=None, factor_partitions=FACTOR_PARTITIONS)",
       "source": {
         "line": 242,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_full_tear_sheet",
       "symbol": "create_full_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -408,48 +532,59 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "d3ba655abc337efb313d12cb99c45a1846a7ea230113fbab89cc4c7f37f0c337",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "benchmark_rets",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'best'",
+          "default": "best",
+          "default_expression": "'best'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "legend_loc",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_interesting_times_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, benchmark_rets=None, legend_loc='best', run_flask_app=False)",
+      "signature_expression": "(returns, benchmark_rets=None, legend_loc='best', run_flask_app=False)",
       "source": {
         "line": 1103,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_interesting_times_tear_sheet",
       "symbol": "create_interesting_times_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -464,76 +599,116 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "2aaffd2f5270fdd3645c9412a52b387214be1e91a56defb553fc1d951409e2ed",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_loadings",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "True",
+          "default": true,
+          "default_expression": "True",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "pos_in_dollars",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "FACTOR_PARTITIONS",
+          "default": {
+            "sector": [
+              "basic_materials",
+              "consumer_cyclical",
+              "financial_services",
+              "real_estate",
+              "consumer_defensive",
+              "health_care",
+              "utilities",
+              "communication_services",
+              "energy",
+              "industrials",
+              "technology"
+            ],
+            "style": [
+              "momentum",
+              "size",
+              "value",
+              "reversal_short_term",
+              "volatility"
+            ]
+          },
+          "default_expression": "FACTOR_PARTITIONS",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "factor_partitions",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_perf_attrib_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
-      "signature": "(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True, run_flask_app=False, factor_partitions=FACTOR_PARTITIONS)",
+      "signature": "(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True, run_flask_app=False, factor_partitions={'style': ['momentum', 'size', 'value', 'reversal_short_term', 'volatility'], 'sector': ['basic_materials', 'consumer_cyclical', 'financial_services', 'real_estate', 'consumer_defensive', 'health_care', 'utilities', 'communication_services', 'energy', 'industrials', 'technology']})",
+      "signature_expression": "(returns, positions, factor_returns, factor_loadings, transactions=None, pos_in_dollars=True, run_flask_app=False, factor_partitions=FACTOR_PARTITIONS)",
       "source": {
         "line": 1666,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_perf_attrib_tear_sheet",
       "symbol": "create_perf_attrib_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -548,76 +723,95 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "0968c1c570994ed9889dc15b354db151d732aec0eb71f15f220b42b297642c78",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "2",
+          "default": 2,
+          "default_expression": "2",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "show_and_plot_top_pos",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "hide_positions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "sector_mappings",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_position_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, positions, show_and_plot_top_pos=2, hide_positions=False, run_flask_app=False, sector_mappings=None, transactions=None, estimate_intraday='infer')",
+      "signature_expression": "(returns, positions, show_and_plot_top_pos=2, hide_positions=False, run_flask_app=False, sector_mappings=None, transactions=None, estimate_intraday='infer')",
       "source": {
         "line": 832,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_position_tear_sheet",
       "symbol": "create_position_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -632,90 +826,117 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "7089c6e3c5aeb7f000e50625a7bcab601830f66711b58192ce4e0b56bf1097b9",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "live_start_date",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "(1.0, 1.5, 2.0)",
+          "default": [
+            1.0,
+            1.5,
+            2.0
+          ],
+          "default_expression": "(1.0, 1.5, 2.0)",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "cone_std",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "benchmark_rets",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "bootstrap",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'AGB'",
+          "default": "AGB",
+          "default_expression": "'AGB'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "turnover_denom",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "header_rows",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_returns_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, positions=None, transactions=None, live_start_date=None, cone_std=(1.0, 1.5, 2.0), benchmark_rets=None, bootstrap=False, turnover_denom='AGB', header_rows=None, run_flask_app=False)",
+      "signature_expression": "(returns, positions=None, transactions=None, live_start_date=None, cone_std=(1.0, 1.5, 2.0), benchmark_rets=None, bootstrap=False, turnover_denom='AGB', header_rows=None, run_flask_app=False)",
       "source": {
         "line": 641,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_returns_tear_sheet",
       "symbol": "create_returns_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -730,97 +951,122 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "2140e4cb3e287585bea5f157a9c794eb691888be16b481d46003facf529dd8a0",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "style_factor_panel",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "sectors",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "caps",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "shares_held",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "volumes",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "percentile",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_risk_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(positions, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, returns=None, transactions=None, estimate_intraday='infer', run_flask_app=False)",
+      "signature_expression": "(positions, style_factor_panel=None, sectors=None, caps=None, shares_held=None, volumes=None, percentile=None, returns=None, transactions=None, estimate_intraday='infer', run_flask_app=False)",
       "source": {
         "line": 1482,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_risk_tear_sheet",
       "symbol": "create_risk_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -835,62 +1081,77 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "3e3a4e6a1798f6c5643d76ea2dd77f0982a3894ecfe65c231184d039ffd1ff37",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "sector_mappings",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_round_trip_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, positions, transactions, sector_mappings=None, estimate_intraday='infer', run_flask_app=False)",
+      "signature_expression": "(returns, positions, transactions, sector_mappings=None, estimate_intraday='infer', run_flask_app=False)",
       "source": {
         "line": 1008,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_round_trip_tear_sheet",
       "symbol": "create_round_trip_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -905,83 +1166,104 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "5d15c6f8f1e9076017033a5c9a5ec8cbc6c2c13b219be443f4615fa9c81bfa38",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "benchmark_rets",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "slippage",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "live_start_date",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'AGB'",
+          "default": "AGB",
+          "default_expression": "'AGB'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "turnover_denom",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "header_rows",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_simple_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, positions=None, transactions=None, benchmark_rets=None, slippage=None, estimate_intraday='infer', live_start_date=None, turnover_denom='AGB', header_rows=None)",
+      "signature_expression": "(returns, positions=None, transactions=None, benchmark_rets=None, slippage=None, estimate_intraday='infer', live_start_date=None, turnover_denom='AGB', header_rows=None)",
       "source": {
         "line": 465,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_simple_tear_sheet",
       "symbol": "create_simple_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -996,62 +1278,77 @@
         "C3": "not-verified",
         "C4": "not-verified"
       },
-      "extraction": "static_ast",
+      "evidence_key": "5b25d1b8a79fb17fb765ffccfc60572a4fb20d69247a06e796723d9f82099056",
+      "extraction": "static_ast_from_pinned_git_blob",
       "kind": "callable",
       "needs_dynamic_review": false,
       "parameters": [
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "returns",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "positions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
           "default": null,
+          "default_expression": null,
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "transactions",
-          "required": true
+          "required": true,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "None",
+          "default": null,
+          "default_expression": "None",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "unadjusted_returns",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "'infer'",
+          "default": "infer",
+          "default_expression": "'infer'",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "estimate_intraday",
-          "required": false
+          "required": false,
+          "resolved": true
         },
         {
           "annotation": null,
-          "default": "False",
+          "default": false,
+          "default_expression": "False",
           "kind": "POSITIONAL_OR_KEYWORD",
           "name": "run_flask_app",
-          "required": false
+          "required": false,
+          "resolved": true
         }
       ],
       "public_path": "pyfolio.create_txn_tear_sheet",
       "return_annotation": null,
       "reviewed": false,
       "signature": "(returns, positions, transactions, unadjusted_returns=None, estimate_intraday='infer', run_flask_app=False)",
+      "signature_expression": "(returns, positions, transactions, unadjusted_returns=None, estimate_intraday='infer', run_flask_app=False)",
       "source": {
         "line": 928,
         "path": "tears.py",
         "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
       },
+      "source_name": "create_txn_tear_sheet",
       "symbol": "create_txn_tear_sheet",
       "target_evidence": {
         "signature_frozen": true,
@@ -1061,15 +1358,15 @@
   },
   "fixture_source": {
     "generator": "scripts/generate_compat_manifest.py",
-    "mode": "static_ast",
-    "root": "external pinned checkout supplied with --pyfolio-root"
+    "mode": "static_ast_from_pinned_git_blob",
+    "root": "external Git object database supplied with --pyfolio-root"
   },
   "oracle_verification": {
     "reviewed": false,
     "status": "not_run"
   },
   "project": "pyfolio",
-  "schema_version": 1,
+  "schema_version": 2,
   "source_files": [
     {
       "path": "__init__.py",
@@ -1078,6 +1375,10 @@
     {
       "path": "tears.py",
       "sha256": "14e75d15c933c022d698c6cad454e0d4b5187fff5c5ae129eeae08e53297995c"
+    },
+    {
+      "path": "utils.py",
+      "sha256": "b4423661845a1ece0e6f59dcade2f87d255b696088cdc71e8cc8db8caeff4b6b"
     }
   ],
   "version": "0.9.6"

@@ -11,12 +11,14 @@ replacement. The frozen source of truth is
 | Upstream version | `0.9.6` |
 | Upstream commit | `724bbd7dbed9a88bb47e1057f2ca29b3409d8e7a` |
 | Profile size | 11 callable workflows |
-| Extraction | Static AST from `pyfolio/tears.py`; sibling package is not imported |
+| Extraction | Static AST from pinned Git blobs for `__init__.py`, `tears.py`, and `utils.py` |
 
 ## Profile and current status
 
 All entries start as unverified against fincore 0.3.0. Static signatures here
-describe the pinned upstream target only.
+describe the pinned upstream target only. Restricted AST resolution evaluates
+known constants and safe arithmetic (`last_n_days=126`) and the portable
+`FACTOR_PARTITIONS` dictionary while retaining each `default_expression`.
 
 | Public symbol | C0 | C1 | C2 | C3 | C4 |
 | --- | --- | --- | --- | --- | --- |
@@ -46,5 +48,8 @@ created. See [upstream provenance](../upstream-provenance.md) for file hashes
 and audit scope.
 
 The optional isolated environment is described by
-`tests/compat/oracle/requirements-pyfolio-0.9.6.txt`. CI does not create it or
-import pyfolio; it reads the frozen JSON only.
+`tests/compat/oracle/requirements-pyfolio-0.9.6.txt`. Oracle mode imports from a
+temporary checkout of the pinned commit and rejects an installed package with
+the same name. CI does not create this environment or import pyfolio; it reads
+the frozen JSON only. Human `reviewed=true` attestations survive regeneration
+only while the exact evidence key is unchanged.

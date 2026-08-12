@@ -14,6 +14,9 @@ recorded here.
 
 - Pinned static API/signature manifests for empyrical 0.6.0 and a bounded
   pyfolio 0.9.6 compatibility profile.
+- Hardened those manifests to read pinned Git blobs, resolve safe constant
+  defaults, preserve aliases/star exports, bind optional oracle evidence to the
+  pinned checkout, and invalidate human review attestations on evidence drift.
 - Added explicit compatibility matrices and upstream provenance review notes.
 - Corrected migration and README claims that previously implied certified
   drop-in compatibility, no breaking changes, or 100% coverage.
