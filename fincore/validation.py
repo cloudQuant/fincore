@@ -5,6 +5,7 @@ Provides decorators and functions for validating inputs to financial metrics.
 
 from __future__ import annotations
 
+import inspect
 from functools import wraps
 from typing import Any, Callable, Optional, TypeVar
 
@@ -45,28 +46,37 @@ def validate_input(
     """Decorator to validate function inputs with a list of validators."""
 
     def decorator(func: F) -> F:
+        signature = inspect.signature(func)
+        parameter_names = [
+            parameter.name
+            for parameter in signature.parameters.values()
+            if parameter.kind not in {inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD}
+        ]
+
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            args_list = list(args)
+            bound = signature.bind(*args, **kwargs)
             for i, validator in enumerate(validators):
-                if i >= len(args_list):
+                if i >= len(parameter_names):
                     break
+                param_name = parameter_names[i]
+                if param_name not in bound.arguments:
+                    continue
                 try:
-                    result = validator(args_list[i])
+                    result = validator(bound.arguments[param_name])
                     if result is not None:
-                        args_list[i] = result
+                        bound.arguments[param_name] = result
                 # Broad except intentional: validators may raise diverse errors
                 # (e.g. pandas KeyError, numpy ValueError). Narrowing would risk
                 # uncaught exceptions from third-party validators.
                 except (TypeError, ValueError, AttributeError, KeyError, RuntimeError, LookupError) as e:
                     if raise_on_error:
-                        param_name = func.__code__.co_varnames[i] if i < len(func.__code__.co_varnames) else f"arg{i}"
                         raise ValidationError(
                             f"{error_message}: {e!s}",
                             param_name=param_name,
-                            value=args_list[i],
+                            value=bound.arguments[param_name],
                         ) from e
-            return func(*args_list, **kwargs)
+            return func(*bound.args, **bound.kwargs)
 
         return wrapper  # type: ignore[return-value]
 

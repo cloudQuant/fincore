@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.core.context import AnalysisContext
+from fincore.exceptions import NumericalError
 from fincore.report.compute import compute_sections
 
 
@@ -71,3 +73,53 @@ class TestComputeSections:
         sections = compute_sections(daily_returns, None, None, None, None, 126)
         assert isinstance(sections, dict)
         assert len(sections) > 0
+
+    def test_core_performance_consumes_one_analysis_context_snapshot(self, daily_returns, monkeypatch):
+        calls = 0
+        original = AnalysisContext.perf_stats
+
+        def recording(context):
+            nonlocal calls
+            calls += 1
+            return original(context)
+
+        monkeypatch.setattr(AnalysisContext, "perf_stats", recording)
+
+        sections = compute_sections(daily_returns, None, None, None, None, 126)
+
+        assert calls == 1
+        assert sections["perf_stats"]["Sharpe Ratio"] == AnalysisContext(daily_returns).sharpe_ratio
+
+    def test_report_uses_context_validation_profile(self, daily_returns):
+        invalid = daily_returns.copy()
+        invalid.iloc[3] = np.inf
+
+        with pytest.raises(NumericalError, match="finite"):
+            compute_sections(invalid, None, None, None, None, 126)
+
+    def test_report_reuses_context_leverage_and_turnover_once(self, daily_returns, monkeypatch):
+        positions = pd.DataFrame(
+            {"AAA": 100.0, "cash": 50.0},
+            index=daily_returns.index,
+        )
+        transactions = pd.DataFrame(
+            {"amount": [2.0], "price": [10.0], "symbol": ["AAA"]},
+            index=pd.DatetimeIndex([daily_returns.index[3] + pd.Timedelta(hours=10)]),
+        )
+        calls = {"gross": 0, "turnover": 0}
+        original_metric = AnalysisContext._metric
+
+        def recording(context, name, *args, **kwargs):
+            if name == "gross_leverage":
+                calls["gross"] += 1
+            elif name == "turnover":
+                calls["turnover"] += 1
+            return original_metric(context, name, *args, **kwargs)
+
+        monkeypatch.setattr(AnalysisContext, "_metric", recording)
+
+        sections = compute_sections(daily_returns, None, positions, transactions, None, 126)
+
+        assert calls == {"gross": 1, "turnover": 1}
+        assert sections["gross_leverage"] is not None
+        assert sections["turnover"] is not None

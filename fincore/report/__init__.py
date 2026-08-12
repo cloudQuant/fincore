@@ -39,6 +39,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from fincore.report.artifacts import ReportArtifacts
+
 if TYPE_CHECKING:
     import pandas as pd
 
@@ -119,4 +121,4 @@ def create_strategy_report(
     )
 
 
-__all__ = ["create_strategy_report"]
+__all__ = ["ReportArtifacts", "create_strategy_report"]

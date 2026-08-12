@@ -68,11 +68,11 @@ _FLAT_API = {
     "alpha_beta": ("fincore.metrics.alpha_beta", "alpha_beta"),
 }
 _FLAT_REGISTRY = {
-    name: tuple(spec.kernel_ref.split(":", 1))
+    name: (surface, name, variant)
     for (surface, name, variant), spec in METRIC_REGISTRY.items()
     if surface == "fincore_flat" and variant == "enhanced-0.3.x"
 }
-assert _FLAT_REGISTRY == _FLAT_API
+assert set(_FLAT_REGISTRY) == set(_FLAT_API)
 
 
 def __getattr__(name: str):
@@ -106,11 +106,9 @@ def __getattr__(name: str):
     # Flat metric function API
     entry = _FLAT_REGISTRY.get(name)
     if entry is not None:
-        import importlib
+        from fincore._dispatch import metric_callable
 
-        mod_path, attr_name = entry
-        mod = importlib.import_module(mod_path)
-        func = getattr(mod, attr_name)
+        func = metric_callable(*entry)
         globals()[name] = func
         return func
 

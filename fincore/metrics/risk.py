@@ -783,3 +783,9 @@ def beta_fragility_heuristic_aligned(
         Beta fragility heuristic, or ``NaN`` if there is insufficient data.
     """
     return _beta_fragility_heuristic_aligned(returns, factor_returns)
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface

@@ -59,24 +59,29 @@ def _period_defs(period):
     return _PERIOD_DEFS
 
 
-def _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions, period):
+def _compute_core_perf(context, Empyrical, returns, benchmark_rets, period):
     """Compute core performance statistics."""
     period_title = _period_title(period)
     period_unit = _period_unit(period)
+    context_stats = context.perf_stats()
     perf = OrderedDict()
-    perf["Annual Return"] = Empyrical.annual_return(returns, period=period)
-    perf["Cumulative Returns"] = Empyrical.cum_returns_final(returns)
-    perf["Annual Volatility"] = Empyrical.annual_volatility(returns, period=period)
-    perf["Sharpe Ratio"] = Empyrical.sharpe_ratio(returns, period=period)
-    perf["Calmar Ratio"] = Empyrical.calmar_ratio(returns, period=period)
-    perf["Stability"] = Empyrical.stability_of_timeseries(returns)
-    perf["Max Drawdown"] = Empyrical.max_drawdown(returns)
-    perf["Omega Ratio"] = Empyrical.omega_ratio(returns)
-    perf["Sortino Ratio"] = Empyrical.sortino_ratio(returns, period=period)
-    perf["Skew"] = Empyrical.skewness(returns)
-    perf["Kurtosis"] = Empyrical.kurtosis(returns)
-    perf["Tail Ratio"] = Empyrical.tail_ratio(returns)
-    perf[f"{period_title} Value at Risk"] = Empyrical.value_at_risk(returns)
+    context_names = {
+        "Annual Return": "Annual return",
+        "Cumulative Returns": "Cumulative returns",
+        "Annual Volatility": "Annual volatility",
+        "Sharpe Ratio": "Sharpe ratio",
+        "Calmar Ratio": "Calmar ratio",
+        "Stability": "Stability",
+        "Max Drawdown": "Max drawdown",
+        "Omega Ratio": "Omega ratio",
+        "Sortino Ratio": "Sortino ratio",
+        "Skew": "Skew",
+        "Kurtosis": "Kurtosis",
+        "Tail Ratio": "Tail ratio",
+        f"{period_title} Value at Risk": "Daily value at risk",
+    }
+    for report_name, context_name in context_names.items():
+        perf[report_name] = context_stats[context_name]
     perf["Downside Risk"] = Empyrical.downside_risk(returns, period=period)
 
     perf[f"{period_title} Mean Return"] = float(np.nanmean(returns))
@@ -85,24 +90,15 @@ def _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactio
     perf[f"Worst {period_unit}"] = float(returns.min())
 
     if benchmark_rets is not None:
-        a, b = Empyrical.alpha_beta(returns, benchmark_rets, period=period)
-        perf["Alpha"] = a
-        perf["Beta"] = b
+        perf["Alpha"] = context_stats["Alpha"]
+        perf["Beta"] = context_stats["Beta"]
 
-    if positions is not None and transactions is not None:
-        try:
-            turnover = Empyrical.get_turnover(positions, transactions)
-            perf[f"Avg {period_title} Turnover"] = float(turnover.mean())
-        except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
-            logger.warning("Failed to calculate turnover: %s", e)
-
-    if positions is not None:
-        try:
-            gl = Empyrical.gross_lev(positions)
-            perf["Avg Gross Leverage"] = float(gl.mean())
-            perf["Max Gross Leverage"] = float(gl.max())
-        except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
-            logger.warning("Failed to calculate gross leverage: %s", e)
+    if context._positions is not None:
+        gross_leverage = context.gross_leverage
+        perf["Avg Gross Leverage"] = float(gross_leverage.mean())
+        perf["Max Gross Leverage"] = float(gross_leverage.max())
+    if context._positions is not None and context._transactions is not None:
+        perf[f"Avg {period_title} Turnover"] = float(context.turnover.mean())
 
     return perf
 
@@ -192,7 +188,7 @@ def _compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window,
     }
 
 
-def _compute_positions(positions):
+def _compute_positions(positions, gross_leverage=None):
     """Compute position analysis."""
     s = {"has_positions": True}
     pos_no_cash = positions.drop("cash", axis=1, errors="ignore")
@@ -202,7 +198,9 @@ def _compute_positions(positions):
     s["pos_short"] = pos_no_cash.where(pos_no_cash < 0, 0).sum(axis=1)
     total = positions.sum(axis=1).replace(0, np.nan)
     exposure = pos_no_cash.abs().sum(axis=1)
-    s["gross_leverage"] = (exposure / total).replace([np.inf, -np.inf], np.nan)
+    s["gross_leverage"] = (
+        gross_leverage if gross_leverage is not None else (exposure / total).replace([np.inf, -np.inf], np.nan)
+    )
 
     pos_abs = pos_no_cash.abs()
     pos_total = pos_abs.sum(axis=1).replace(0, np.nan)
@@ -222,7 +220,7 @@ def _compute_positions(positions):
     return s
 
 
-def _compute_transactions(Empyrical, transactions, positions):
+def _compute_transactions(Empyrical, transactions, positions, turnover=None):
     """Compute transaction analysis."""
     s = {"has_transactions": True}
     txn = transactions.copy()
@@ -234,7 +232,9 @@ def _compute_transactions(Empyrical, transactions, positions):
     if hasattr(txn.index, "hour"):
         s["txn_hours"] = txn.index.hour
 
-    if positions is not None:
+    if turnover is not None:
+        s["turnover"] = turnover
+    elif positions is not None:
         try:
             s["turnover"] = Empyrical.get_turnover(positions, transactions)
         except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
@@ -428,6 +428,19 @@ def compute_sections(
         A sections dictionary consumed by the HTML/PDF renderers.
     """
     from fincore import Empyrical
+    from fincore.core.context import AnalysisContext
+
+    context = AnalysisContext(
+        returns,
+        factor_returns=benchmark_rets,
+        positions=positions,
+        transactions=transactions,
+        period=period,
+    )
+    returns = context._returns
+    benchmark_rets = context._factor_returns
+    positions = context._positions
+    transactions = context._transactions
 
     sections = {}
 
@@ -445,7 +458,7 @@ def compute_sections(
     sections["n_months"] = _approx_months(len(returns), period)
 
     # ------ Core performance ------
-    perf = _compute_core_perf(Empyrical, returns, benchmark_rets, positions, transactions, period)
+    perf = _compute_core_perf(context, Empyrical, returns, benchmark_rets, period)
     sections["perf_stats"] = perf
 
     # ------ Extended stats ------
@@ -460,11 +473,18 @@ def compute_sections(
 
     # ------ Positions ------
     if positions is not None:
-        sections.update(_compute_positions(positions))
+        sections.update(_compute_positions(positions, context.gross_leverage))
 
     # ------ Transactions ------
     if transactions is not None:
-        sections.update(_compute_transactions(Empyrical, transactions, positions))
+        sections.update(
+            _compute_transactions(
+                Empyrical,
+                transactions,
+                positions,
+                context.turnover if positions is not None else None,
+            )
+        )
 
     # ------ Trades ------
     if trades is not None and len(trades) > 0:

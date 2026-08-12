@@ -197,8 +197,10 @@ def test_analysis_context_preserves_partial_same_timezone_inputs() -> None:
 
     context = AnalysisContext(returns, factor_returns=factor_returns)
 
-    assert context._returns is returns
-    assert context._factor_returns is factor_returns
+    assert context._returns is not returns
+    assert context._factor_returns is not factor_returns
+    pd.testing.assert_series_equal(context._returns, returns)
+    pd.testing.assert_series_equal(context._factor_returns, factor_returns)
 
 
 def test_analysis_context_accepts_explicit_utc_normalization() -> None:
@@ -218,11 +220,15 @@ def test_analysis_context_validates_timezone_across_all_time_indexed_inputs() ->
     returns = pd.Series([0.01, 0.02, -0.01], index=utc_index)
     factor_returns = pd.Series([0.005, 0.01, -0.005], index=utc_index)
     positions = pd.DataFrame(
-        {"A": [1.0, 1.0, 1.0]},
+        {"A": [1.0, 1.0, 1.0], "cash": [0.0, 0.0, 0.0]},
         index=utc_index.tz_convert("Asia/Shanghai"),
     )
     transactions = pd.DataFrame(
-        {"amount": [1.0, 2.0, 3.0]},
+        {
+            "amount": [1.0, 2.0, 3.0],
+            "price": [10.0, 11.0, 12.0],
+            "symbol": ["A", "A", "A"],
+        },
         index=utc_index.tz_localize(None),
     )
 
@@ -240,11 +246,15 @@ def test_analysis_context_normalizes_all_time_indexed_inputs_to_utc() -> None:
     returns = pd.Series([0.01, 0.02, -0.01], index=utc_index)
     factor_returns = pd.Series([0.005, 0.01, -0.005], index=utc_index)
     positions = pd.DataFrame(
-        {"A": [1.0, 1.0, 1.0]},
+        {"A": [1.0, 1.0, 1.0], "cash": [0.0, 0.0, 0.0]},
         index=utc_index.tz_convert("Asia/Shanghai"),
     )
     transactions = pd.DataFrame(
-        {"amount": [1.0, 2.0, 3.0]},
+        {
+            "amount": [1.0, 2.0, 3.0],
+            "price": [10.0, 11.0, 12.0],
+            "symbol": ["A", "A", "A"],
+        },
         index=utc_index.tz_localize(None),
     )
 
@@ -268,7 +278,12 @@ def test_analysis_context_preserves_duplicate_transaction_timestamps(
     returns = pd.Series([0.01, 0.02], index=utc_index)
     duplicate_index = pd.DatetimeIndex([utc_index[0], utc_index[0]])
     transactions = pd.DataFrame(
-        {"amount": [2.0, 1.0], "sequence": ["first", "second"]},
+        {
+            "amount": [2.0, 1.0],
+            "price": [10.0, 11.0],
+            "symbol": ["A", "A"],
+            "sequence": ["first", "second"],
+        },
         index=duplicate_index,
     )
 
@@ -280,8 +295,8 @@ def test_analysis_context_preserves_duplicate_transaction_timestamps(
 
     pd.testing.assert_index_equal(context._transactions.index, duplicate_index)
     assert context._transactions["sequence"].tolist() == ["first", "second"]
-    if normalize_tz is None:
-        assert context._transactions is transactions
+    assert context._transactions is not transactions
+    pd.testing.assert_frame_equal(context._transactions, transactions)
 
 
 def test_legacy_mixed_timezone_alignment_keeps_pinned_exception_surface() -> None:

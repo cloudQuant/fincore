@@ -183,8 +183,10 @@ class TestAnalysisContextInvalidate:
         ctx = AnalysisContext(returns, factor_returns=factor_returns)
         _ = ctx.perf_stats()
         ctx.invalidate()
-        assert ctx._returns is returns
-        assert ctx._factor_returns is factor_returns
+        assert ctx._returns is not returns
+        assert ctx._factor_returns is not factor_returns
+        pd.testing.assert_series_equal(ctx._returns, returns)
+        pd.testing.assert_series_equal(ctx._factor_returns, factor_returns)
 
 
 class TestAnalyzeConvenience:

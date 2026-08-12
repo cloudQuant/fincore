@@ -120,7 +120,7 @@ def _resolve_ref(reference: str):
     """Resolve a lazy ``module:attribute`` registry reference."""
 
     module_name, attribute = reference.split(":", 1)
-    return getattr(importlib.import_module(module_name), attribute)
+    return vars(importlib.import_module(module_name))[attribute]
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +157,9 @@ class _MetricMethod:
         self.__name__ = spec.public_name
 
     def __get__(self, obj, objtype=None):
-        kernel = _resolve_ref(self.spec.kernel_ref)
+        from fincore._dispatch import metric_callable
+
+        kernel = metric_callable(self.spec.surface, self.spec.public_name, self.spec.variant)
         if obj is None or self.spec.binding == "static":
             return kernel
 
@@ -1025,12 +1027,6 @@ class Empyrical:
         return _resolve_module("_round_trips").groupby_consecutive(txn, max_delta)
 
 
-def _enhanced_identity_adapter(kernel, arguments):
-    """Forward an enhanced-surface call without changing its contract."""
-
-    return kernel(**arguments)
-
-
 def _legacy_identity_adapter(kernel, arguments):
     """Project legacy-named arguments onto a compatible metric kernel."""
 
@@ -1407,13 +1403,17 @@ def _make_strict_wrapper(spec: MetricSpec):
         bound.apply_defaults()
         kernel = _resolve_ref(spec.kernel_ref)
         adapter = _resolve_ref(spec.adapter_ref)
-        return adapter(kernel, bound.arguments)
+        from fincore._dispatch import _raw_kernel_execution
 
-    wrapper.__name__ = spec.public_name
-    wrapper.__qualname__ = spec.public_name
-    wrapper.__module__ = __name__
-    wrapper.__signature__ = signature
-    return wrapper
+        with _raw_kernel_execution():
+            return adapter(kernel, bound.arguments)
+
+    wrapped: Any = wrapper
+    wrapped.__name__ = spec.public_name
+    wrapped.__qualname__ = spec.public_name
+    wrapped.__module__ = __name__
+    wrapped.__signature__ = signature
+    return wrapped
 
 
 _LEGACY_PUBLIC = []

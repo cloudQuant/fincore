@@ -1495,3 +1495,9 @@ def down_capture_return(
         return np.nan
 
     return annual_return(down_returns, period=period, annualization=annualization)  # type: ignore[return-value]
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface

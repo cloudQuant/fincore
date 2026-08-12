@@ -322,3 +322,9 @@ def normalize(
         )
         return returns * np.nan
     return starting_value * (returns / first_value)
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface

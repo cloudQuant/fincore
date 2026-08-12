@@ -21,8 +21,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 Surface = Literal["empyrical_module", "fincore_flat", "empyrical_class", "metrics", "context"]
-Binding = Literal["static", "returns", "returns_factor"]
-ValidationProfile = Literal["legacy_empyrical", "enhanced"]
+Binding = Literal["static", "returns", "returns_factor", "positions", "positions_transactions"]
+ValidationProfile = Literal["legacy_empyrical", "enhanced", "context"]
 ResultProjection = Literal["identity", "scalar", "series", "frame", "legacy_tuple", "out_buffer"]
 OutPolicy = Literal["unsupported", "return_only", "write_and_return"]
 
@@ -451,6 +451,24 @@ _FACTORY_NAMES = frozenset(
 _OUT_NAMES = frozenset(name for name, signature in EMPYRICAL_SIGNATURES.items() if "out=None" in signature)
 
 
+def _enhanced_out_contract(name: str, kernel_ref: str) -> tuple[ResultProjection, OutPolicy]:
+    """Return metadata for the real enhanced kernel signature.
+
+    Most names match the pinned manifest. Conditional alpha/beta gained an
+    explicit ``out`` in the enhanced API, while direct rolling conveniences
+    intentionally expose the returned Series/array and reserve the pinned
+    buffer contract for their ``*_aligned`` compatibility factories.
+    """
+
+    if name in {"up_alpha_beta", "down_alpha_beta"}:
+        return "out_buffer", "write_and_return"
+    if name in {"roll_alpha", "roll_beta", "roll_alpha_beta", "roll_max_drawdown", "roll_sharpe_ratio"}:
+        return "identity", "unsupported"
+    if name in _OUT_NAMES:
+        return "out_buffer", "write_and_return"
+    return "identity", "unsupported"
+
+
 def _binding_for(name: str) -> Binding:
     if name in _STATIC_NAMES:
         return "static"
@@ -498,6 +516,7 @@ def _register(spec: MetricSpec) -> None:
 for _name, _kernel_ref in _EMPYRICAL_KERNELS.items():
     _out_policy: OutPolicy = "write_and_return" if _name in _OUT_NAMES else "unsupported"
     _projection: ResultProjection = "out_buffer" if _name in _OUT_NAMES else "identity"
+    _enhanced_projection, _enhanced_out_policy = _enhanced_out_contract(_name, _kernel_ref)
     _register(
         MetricSpec(
             surface="empyrical_module",
@@ -519,13 +538,13 @@ for _name, _kernel_ref in _EMPYRICAL_KERNELS.items():
             public_name=_name,
             variant="stateful-enhanced",
             kernel_ref=_kernel_ref,
-            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
             signature_manifest_key=None,
             binding=_binding_for(_name),
             validation_profile="enhanced",
             result_contract_key=f"fincore-0.3.x:{_name}",
-            result_projection="identity",
-            out_policy="return_only",
+            result_projection=_enhanced_projection,
+            out_policy=_enhanced_out_policy,
         )
     )
     _register(
@@ -534,13 +553,13 @@ for _name, _kernel_ref in _EMPYRICAL_KERNELS.items():
             public_name=_name,
             variant="enhanced",
             kernel_ref=_kernel_ref,
-            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
             signature_manifest_key=None,
             binding="static",
             validation_profile="enhanced",
             result_contract_key=f"fincore-0.3.x:{_name}",
-            result_projection="identity",
-            out_policy="return_only",
+            result_projection=_enhanced_projection,
+            out_policy=_enhanced_out_policy,
         )
     )
 
@@ -569,56 +588,100 @@ _FLAT_NAMES = frozenset(
     }
 )
 for _name in _FLAT_NAMES:
+    _projection, _out_policy = _enhanced_out_contract(_name, _EMPYRICAL_KERNELS[_name])
     _register(
         MetricSpec(
             surface="fincore_flat",
             public_name=_name,
             variant="enhanced-0.3.x",
             kernel_ref=_EMPYRICAL_KERNELS[_name],
-            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
             signature_manifest_key=None,
             binding="static",
             validation_profile="enhanced",
             result_contract_key=f"fincore-0.3.x:{_name}",
-            result_projection="identity",
-            out_policy="return_only",
+            result_projection=_projection,
+            out_policy=_out_policy,
         )
     )
 
 
 _FLAT_EXTRA_KERNELS = {"information_ratio": "fincore.metrics.ratios:information_ratio"}
 for _name, _kernel_ref in _FLAT_EXTRA_KERNELS.items():
+    _projection, _out_policy = _enhanced_out_contract(_name, _kernel_ref)
     _register(
         MetricSpec(
             surface="fincore_flat",
             public_name=_name,
             variant="enhanced-0.3.x",
             kernel_ref=_kernel_ref,
-            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
             signature_manifest_key=None,
             binding="static",
             validation_profile="enhanced",
             result_contract_key=f"fincore-0.3.x:{_name}",
-            result_projection="identity",
-            out_policy="return_only",
+            result_projection=_projection,
+            out_policy=_out_policy,
         )
     )
 
 
-for _name in frozenset({"sharpe_ratio", "sortino_ratio", "calmar_ratio", "max_drawdown", "beta"}):
+_CONTEXT_KERNELS = {
+    "annual_return": "annual_return",
+    "cumulative_returns": "cum_returns_final",
+    "annual_volatility": "annual_volatility",
+    "sharpe_ratio": "sharpe_ratio",
+    "calmar_ratio": "calmar_ratio",
+    "stability": "stability_of_timeseries",
+    "max_drawdown": "max_drawdown",
+    "omega_ratio": "omega_ratio",
+    "sortino_ratio": "sortino_ratio",
+    "skew": "skewness",
+    "kurtosis": "kurtosis",
+    "tail_ratio": "tail_ratio",
+    "daily_value_at_risk": "value_at_risk",
+    "alpha": "alpha_beta",
+    "beta": "alpha_beta",
+    "information_ratio": "information_ratio",
+    "gross_leverage": "gross_lev",
+    "turnover": "get_turnover",
+}
+_CONTEXT_EXTRA_KERNELS = {
+    "skewness": "fincore.metrics.stats:skewness",
+    "kurtosis": "fincore.metrics.stats:kurtosis",
+    "information_ratio": "fincore.metrics.ratios:information_ratio",
+    "gross_lev": "fincore.metrics.positions:gross_lev",
+    "get_turnover": "fincore.metrics.transactions:get_turnover",
+}
+_CONTEXT_BINDINGS: dict[str, Binding] = {
+    "gross_leverage": "positions",
+    "turnover": "positions_transactions",
+}
+_CONTEXT_ADAPTERS = {
+    "alpha": "fincore._dispatch:context_alpha_adapter",
+    "beta": "fincore._dispatch:context_beta_adapter",
+}
+for _public_name, _kernel_name in _CONTEXT_KERNELS.items():
+    if _kernel_name in _CONTEXT_EXTRA_KERNELS:
+        _kernel_ref = _CONTEXT_EXTRA_KERNELS[_kernel_name]
+    else:
+        _kernel_ref = _EMPYRICAL_KERNELS[_kernel_name]
     _register(
         MetricSpec(
             surface="context",
-            public_name=_name,
+            public_name=_public_name,
             variant="cached-property",
-            kernel_ref=_EMPYRICAL_KERNELS[_name],
-            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            kernel_ref=_kernel_ref,
+            adapter_ref=_CONTEXT_ADAPTERS.get(
+                _public_name,
+                "fincore._dispatch:enhanced_identity_adapter",
+            ),
             signature_manifest_key=None,
-            binding=_binding_for(_name),
-            validation_profile="enhanced",
-            result_contract_key=f"fincore-context:{_name}",
-            result_projection="identity",
-            out_policy="return_only",
+            binding=_CONTEXT_BINDINGS.get(_public_name, _binding_for(_kernel_name)),
+            validation_profile="context",
+            result_contract_key=f"fincore-context:{_public_name}",
+            result_projection="series" if _public_name in {"gross_leverage", "turnover"} else "scalar",
+            out_policy="unsupported",
         )
     )
 

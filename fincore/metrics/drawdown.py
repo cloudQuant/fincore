@@ -21,8 +21,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fincore.metrics.returns import cum_returns
+from fincore._dispatch import resolve_raw_metric as _resolve_raw_metric
 from fincore.utils import nanmin
+
+_cum_returns = _resolve_raw_metric("fincore.metrics.returns:cum_returns")
+del _resolve_raw_metric
 
 __all__ = [
     "gen_drawdown_table",
@@ -91,7 +94,7 @@ def max_drawdown(
         dtype="float64",
     )
     cumulative[0] = start = 100
-    cum_returns(returns_array, starting_value=start, out=cumulative[1:])
+    _cum_returns(returns_array, starting_value=start, out=cumulative[1:])
 
     max_return = np.fmax.accumulate(cumulative, axis=0)
 
@@ -134,7 +137,7 @@ def _identify_drawdown_periods(
     if not isinstance(returns, pd.Series):
         returns = pd.Series(returns)
 
-    cum_ret = cum_returns(returns, starting_value=100)
+    cum_ret = _cum_returns(returns, starting_value=100)
     rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
     drawdown = (cum_ret - rolling_max) / rolling_max
 
@@ -238,7 +241,7 @@ def get_max_drawdown(
         The date of recovery or NaT if not recovered.
     """
     returns = returns.copy()
-    df_cum = cum_returns(returns, 1.0)
+    df_cum = _cum_returns(returns, 1.0)
     running_max = np.maximum.accumulate(df_cum)
     underwater = df_cum / running_max - 1
     return get_max_drawdown_underwater(underwater)
@@ -308,7 +311,7 @@ def get_top_drawdowns(
         List of (peak, valley, recovery) tuples.
     """
     returns = returns.copy()
-    df_cum = cum_returns(returns, starting_value=1.0)
+    df_cum = _cum_returns(returns, starting_value=1.0)
     running_max = np.maximum.accumulate(df_cum)
     underwater = df_cum / running_max - 1
 
@@ -357,7 +360,7 @@ def gen_drawdown_table(returns: pd.Series, top: int = 10) -> pd.DataFrame:
     df_drawdowns : pd.DataFrame
         Information about top drawdowns.
     """
-    df_cum = cum_returns(returns, starting_value=1.0)
+    df_cum = _cum_returns(returns, starting_value=1.0)
     drawdown_periods = get_top_drawdowns(returns, top=top)
     df_drawdowns = pd.DataFrame(
         index=list(range(top)),
@@ -412,7 +415,7 @@ def get_max_drawdown_period(
     if len(returns) < 1:
         return None, None
 
-    cum_ret = cum_returns(returns, starting_value=1)
+    cum_ret = _cum_returns(returns, starting_value=1)
 
     if not isinstance(cum_ret, pd.Series):
         return None, None
@@ -452,7 +455,7 @@ def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     if not isinstance(returns, pd.Series):
         returns = pd.Series(returns)
 
-    cum_ret = cum_returns(returns, starting_value=100)
+    cum_ret = _cum_returns(returns, starting_value=100)
     rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
 
     drawdown = cum_ret / rolling_max - 1
@@ -527,7 +530,7 @@ def max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
     if len(returns) < 1:
         return np.nan
 
-    cum_ret = cum_returns(returns, starting_value=1)
+    cum_ret = _cum_returns(returns, starting_value=1)
 
     if not isinstance(cum_ret, pd.Series):
         return np.nan
@@ -736,3 +739,9 @@ def third_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | f
     sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
     recovery_duration = sorted_drawdowns[2]["recovery_duration"]
     return recovery_duration if recovery_duration is not None else np.nan
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface

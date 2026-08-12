@@ -42,7 +42,15 @@ def _validate_alignment_policy(policy: AlignmentPolicy) -> None:
 def validate_time_series_timezones(*values: TimeSeries) -> None:
     """Reject mixed datetime-index timezone policies without aligning data."""
 
-    datetime_indices = [value.index for value in values if isinstance(value.index, pd.DatetimeIndex)]
+    datetime_indices: list[pd.DatetimeIndex] = []
+    for value in values:
+        index = value.index
+        if isinstance(index, pd.DatetimeIndex):
+            datetime_indices.append(index)
+        elif isinstance(index, pd.MultiIndex) and index.nlevels:
+            dates = index.get_level_values(0)
+            if isinstance(dates, pd.DatetimeIndex):
+                datetime_indices.append(dates)
     awareness = {index.tz is not None for index in datetime_indices}
     timezones = {str(index.tz) for index in datetime_indices if index.tz is not None}
     if len(awareness) > 1 or len(timezones) > 1:
@@ -120,7 +128,7 @@ def align_binary_metric_inputs(
     left_is_array = isinstance(left, np.ndarray)
     right_is_array = isinstance(right, np.ndarray)
 
-    if left_is_pandas and right_is_pandas:
+    if isinstance(left, (pd.Series, pd.DataFrame)) and isinstance(right, (pd.Series, pd.DataFrame)):
         left_aligned, right_aligned = align_time_series(
             left,
             right,
@@ -129,7 +137,7 @@ def align_binary_metric_inputs(
         )
         return left_aligned, right_aligned
 
-    if left_is_array and right_is_array:
+    if isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
         if len(left) != len(right):
             raise DataAlignmentError("positional ndarray inputs must have the same length")
         return left, right

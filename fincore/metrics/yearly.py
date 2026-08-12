@@ -396,3 +396,9 @@ def information_ratio_by_year(
     if return_as_array:
         return information_ratios.values
     return information_ratios
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface

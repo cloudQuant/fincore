@@ -1,7 +1,9 @@
-"""Shared fixtures for stats tests.
+"""Shared fixtures for the internal numerical-kernel/upstream-oracle suite.
 
-This conftest.py contains common test data used across multiple stats test modules.
-Fixtures defined here are automatically available to all tests in this directory.
+This entire subtree verifies raw numerical behavior inherited from Empyrical;
+it is not an enhanced public-API validation suite.  ``tests/contracts`` owns
+the enhanced surface contract.  Fixtures defined here are automatically
+available to all tests in this directory.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ import pandas as pd
 import pytest
 
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
+from tests.raw_metric_kernels import raw_metric_kernel_suite as raw_metric_kernel_suite
 
 # Random seed for reproducibility
 rand = np.random.RandomState(1337)

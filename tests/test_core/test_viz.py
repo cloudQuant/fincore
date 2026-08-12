@@ -169,14 +169,15 @@ class TestContextVisualization:
         assert "Performance Report" in path.read_text()
 
     def test_plot_html_backend(self, ctx):
-        viz = ctx.plot(backend="html")
-        assert isinstance(viz, VizBackend)
-        assert viz.__class__.__name__ == "HtmlReportBuilder"
+        artifacts = ctx.plot(backend="html")
+        assert artifacts.backend == "html"
+        assert artifacts.figures
+        assert artifacts.html is not None
 
     def test_plot_matplotlib_backend(self, ctx):
         import matplotlib
 
         matplotlib.use("Agg")
-        viz = ctx.plot(backend="matplotlib")
-        assert isinstance(viz, VizBackend)
-        assert viz.__class__.__name__ == "MatplotlibBackend"
+        artifacts = ctx.plot(backend="matplotlib")
+        assert artifacts.backend == "matplotlib"
+        assert len(artifacts.figures) == 2

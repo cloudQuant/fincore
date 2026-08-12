@@ -13,41 +13,17 @@ from __future__ import annotations
 import json
 from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
-from fincore.contracts.time_series import normalize_time_series_timezone, validate_time_series_timezones
-from fincore.metrics.basic import annualization_factor as _ann_factor
-from fincore.metrics.drawdown import max_drawdown
-from fincore.metrics.ratios import (
-    calmar_ratio as _calmar_ratio,
-)
-from fincore.metrics.ratios import (
-    information_ratio as _information_ratio,
-)
-from fincore.metrics.ratios import (
-    omega_ratio as _omega_ratio,
-)
-from fincore.metrics.ratios import (
-    sortino_ratio as _sortino_ratio,
-)
-from fincore.metrics.ratios import stability_of_timeseries
-from fincore.metrics.returns import cum_returns, cum_returns_final
-from fincore.metrics.risk import (
-    tail_ratio,
-    value_at_risk,
-)
-from fincore.metrics.stats import (
-    kurtosis,
-    skewness,
-)
-from fincore.metrics.yearly import annual_return as _annual_return
-from fincore.utils import nanmean, nanstd
+from fincore.contracts.validation import validate_context_inputs
 
 __all__ = ["AnalysisContext", "analyze"]
+
+_UNSET = object()
 
 
 class AnalysisContext:
@@ -100,53 +76,32 @@ class AnalysisContext:
             Explicit timezone normalization for datetime-indexed inputs. Mixed
             timezones are rejected unless UTC normalization is requested.
         """
-        time_series_inputs = [returns]
-        time_series_inputs.extend(value for value in (factor_returns, positions, transactions) if value is not None)
-        if normalize_tz is not None:
-            normalized = [normalize_time_series_timezone(value, normalize_tz) for value in time_series_inputs]
-            normalized_iter = iter(normalized)
-            self._returns = next(normalized_iter)
-            self._factor_returns = next(normalized_iter) if factor_returns is not None else None
-            self._positions = next(normalized_iter) if positions is not None else None
-            self._transactions = next(normalized_iter) if transactions is not None else None
-        else:
-            # Validate the shared timezone contract, then
-            # retain the established identity and partial-index behavior.
-            validate_time_series_timezones(*time_series_inputs)
-            self._returns = returns
-            self._factor_returns = factor_returns
-            self._positions = positions
-            self._transactions = transactions
-        self._period = period
+        from fincore.validation import validate_period
+
+        snapshot = validate_context_inputs(
+            returns=returns,
+            factor_returns=factor_returns,
+            positions=positions,
+            transactions=transactions,
+            normalize_tz=normalize_tz,
+        )
+        self._returns = snapshot.returns
+        self._factor_returns = snapshot.factor_returns
+        self._positions = snapshot.positions
+        self._transactions = snapshot.transactions
+        self._period = validate_period(period)
+        self._normalize_tz = normalize_tz
+
+    def _metric(self, public_name: str, *args: Any, **kwargs: Any) -> Any:
+        """Invoke a context registry entry on already-validated snapshot data."""
+
+        from fincore._dispatch import invoke_prevalidated_metric
+
+        return invoke_prevalidated_metric("context", public_name, "cached-property", *args, **kwargs)
 
     # ------------------------------------------------------------------
     # helpers
     # ------------------------------------------------------------------
-
-    @cached_property
-    def _ann_factor(self) -> float:
-        """Annualization factor for the configured period."""
-        return _ann_factor(self._period, None)
-
-    @cached_property
-    def _sqrt_ann(self) -> float:
-        """Square root of annualization factor."""
-        return float(np.sqrt(self._ann_factor))
-
-    @cached_property
-    def _returns_array(self) -> np.ndarray:
-        """Returns as numpy array."""
-        return np.asanyarray(self._returns)
-
-    @cached_property
-    def _mean_return(self) -> float:
-        """Mean of returns."""
-        return float(nanmean(self._returns_array, axis=0))
-
-    @cached_property
-    def _std_return(self) -> float:
-        """Standard deviation of returns."""
-        return float(nanstd(self._returns_array, ddof=1, axis=0))
 
     # ------------------------------------------------------------------
     # Core metrics (cached_property)
@@ -155,98 +110,121 @@ class AnalysisContext:
     @cached_property
     def annual_return(self) -> float:
         """Annualized return."""
-        return float(_annual_return(self._returns, period=self._period))
+        return float(self._metric("annual_return", self._returns, period=self._period))
 
     @cached_property
     def cumulative_returns(self) -> float:
         """Total cumulative return."""
-        return float(cum_returns_final(self._returns, starting_value=0))
+        return float(self._metric("cumulative_returns", self._returns, starting_value=0))
 
     @cached_property
     def annual_volatility(self) -> float:
         """Annualized volatility."""
-        return float(self._std_return * self._sqrt_ann)
+        return float(self._metric("annual_volatility", self._returns, period=self._period))
 
     @cached_property
     def sharpe_ratio(self) -> float:
         """Sharpe ratio (annualized)."""
-        if len(self._returns) < 2:
-            return np.nan
-        with np.errstate(divide="ignore", invalid="ignore"):
-            return float((self._mean_return / self._std_return) * self._sqrt_ann)
+        return float(self._metric("sharpe_ratio", self._returns, period=self._period))
 
     @cached_property
     def calmar_ratio(self) -> float:
         """Calmar ratio (annual return / max drawdown)."""
-        return float(_calmar_ratio(self._returns, period=self._period))
+        return float(self._metric("calmar_ratio", self._returns, period=self._period))
 
     @cached_property
     def stability(self) -> float:
         """R-squared of linear fit to cumulative returns."""
-        return float(stability_of_timeseries(self._returns))
+        return float(self._metric("stability", self._returns))
 
     @cached_property
     def max_drawdown(self) -> float:
         """Maximum drawdown."""
-        return float(max_drawdown(self._returns))
+        return float(self._metric("max_drawdown", self._returns))
 
     @cached_property
     def omega_ratio(self) -> float:
         """Omega ratio."""
-        return float(_omega_ratio(self._returns))
+        return float(self._metric("omega_ratio", self._returns))
 
     @cached_property
     def sortino_ratio(self) -> float:
         """Sortino ratio (annualized)."""
-        return float(_sortino_ratio(self._returns, period=self._period))
+        return float(self._metric("sortino_ratio", self._returns, period=self._period))
 
     @cached_property
     def skew(self) -> float:
         """Return skewness."""
-        return float(skewness(self._returns))
+        return float(self._metric("skew", self._returns))
 
     @cached_property
     def kurtosis(self) -> float:
         """Return kurtosis."""
-        return float(kurtosis(self._returns))
+        return float(self._metric("kurtosis", self._returns))
 
     @cached_property
     def tail_ratio(self) -> float:
         """Tail ratio (95th percentile / 5th percentile)."""
-        return float(tail_ratio(self._returns))
+        return float(self._metric("tail_ratio", self._returns))
 
     @cached_property
     def daily_value_at_risk(self) -> float:
         """Daily Value at Risk."""
-        return float(value_at_risk(self._returns))
+        return float(self._metric("daily_value_at_risk", self._returns))
 
     # ------------------------------------------------------------------
     # Factor-dependent metrics
     # ------------------------------------------------------------------
 
     @cached_property
+    def _alpha_beta_pair(self) -> tuple[float, float]:
+        """Compute the shared alpha/beta kernel exactly once."""
+
+        if self._factor_returns is None:
+            return np.nan, np.nan
+        from fincore._dispatch import invoke_prevalidated_projections
+
+        result = invoke_prevalidated_projections(
+            "context",
+            ("alpha", "beta"),
+            "cached-property",
+            self._returns,
+            self._factor_returns,
+            period=self._period,
+        )
+        return float(result["alpha"]), float(result["beta"])
+
+    @cached_property
     def alpha(self) -> float:
         """Alpha (excess return over factor returns)."""
-        if self._factor_returns is None:
-            return np.nan
-        from fincore.metrics.alpha_beta import alpha_beta
-
-        return float(alpha_beta(self._returns, self._factor_returns)[0])
+        return self._alpha_beta_pair[0]
 
     @cached_property
     def beta(self) -> float:
         """Beta (sensitivity to factor returns)."""
-        if self._factor_returns is None:
-            return np.nan
-        from fincore.metrics.alpha_beta import alpha_beta
-
-        return float(alpha_beta(self._returns, self._factor_returns)[1])
+        return self._alpha_beta_pair[1]
 
     @cached_property
     def information_ratio(self) -> float:
         if self._factor_returns is None:
             return np.nan
-        return float(_information_ratio(self._returns, self._factor_returns))
+        return float(self._metric("information_ratio", self._returns, self._factor_returns))
+
+    @cached_property
+    def gross_leverage(self) -> pd.Series:
+        """Gross leverage series for the stored positions snapshot."""
+
+        if self._positions is None:
+            return pd.Series(dtype=float)
+        return self._metric("gross_leverage", self._positions)
+
+    @cached_property
+    def turnover(self) -> pd.Series:
+        """Turnover series for the stored portfolio and transaction snapshots."""
+
+        if self._positions is None or self._transactions is None:
+            return pd.Series(dtype=float)
+        return self._metric("turnover", self._positions, self._transactions)
 
     # ------------------------------------------------------------------
     # Aggregate helpers
@@ -279,16 +257,25 @@ class AnalysisContext:
             stats["Alpha"] = self.alpha
             stats["Beta"] = self.beta
 
+        if self._positions is not None:
+            stats["Average gross leverage"] = float(self.gross_leverage.mean())
+        if self._positions is not None and self._transactions is not None:
+            stats["Average turnover"] = float(self.turnover.mean())
+
         return pd.Series(stats)
 
     def to_dict(self) -> dict[str, Any]:
         """Return metrics as a plain dict (JSON-friendly values)."""
         s = self.perf_stats()
-        return {k: (float(v) if np.isfinite(v) else None) for k, v in s.items()}
+        return {str(k): (float(v) if np.isfinite(v) else None) for k, v in s.items()}
 
-    def to_json(self, **kwargs: Any) -> str:
-        """Serialize metrics to a JSON string."""
-        return json.dumps(self.to_dict(), **kwargs)
+    def to_json(self, path: str | Path | None = None, **kwargs: Any) -> str:
+        """Serialize metrics and optionally write the exact payload to ``path``."""
+
+        payload = json.dumps(self.to_dict(), **kwargs)
+        if path is not None:
+            Path(path).write_text(payload, encoding="utf-8")
+        return payload
 
     # ------------------------------------------------------------------
     # Visualization
@@ -310,14 +297,22 @@ class AnalysisContext:
 
         viz = get_backend(backend)
 
+        from fincore._dispatch import resolve_raw_metric
+
+        cum_returns = resolve_raw_metric("fincore.metrics.returns:cum_returns")
         cum_ret = cum_returns(self._returns, starting_value=0)
         running_max = (1 + cum_ret).cummax()  # type: ignore[union-attr]
         drawdown = (1 + cum_ret) / running_max - 1
 
-        viz.plot_returns(cum_ret, **kwargs)
-        viz.plot_drawdown(drawdown, **kwargs)
+        rendered = [
+            viz.plot_returns(cum_ret, **kwargs),
+            viz.plot_drawdown(drawdown, **kwargs),
+        ]
+        from fincore.report.artifacts import ReportArtifacts
 
-        return viz
+        build = getattr(viz, "build", None)
+        html = build() if backend.lower().strip() == "html" and callable(build) else None
+        return ReportArtifacts(backend=backend.lower().strip(), figures=rendered, html=html)
 
     def to_html(self, path: str | None = None) -> str:
         """Generate a self-contained HTML performance report.
@@ -358,11 +353,55 @@ class AnalysisContext:
             if (
                 attr.startswith("_")
                 and not attr.startswith("__")
-                and attr in ("_returns", "_factor_returns", "_positions", "_transactions", "_period")
+                and attr
+                in (
+                    "_returns",
+                    "_factor_returns",
+                    "_positions",
+                    "_transactions",
+                    "_period",
+                    "_normalize_tz",
+                )
             ):
                 continue
             if isinstance(getattr(cls, attr, None), cached_property):
                 del self.__dict__[attr]
+
+    def replace_data(
+        self,
+        *,
+        returns: pd.Series | object = _UNSET,
+        factor_returns: pd.Series | None | object = _UNSET,
+        positions: pd.DataFrame | None | object = _UNSET,
+        transactions: pd.DataFrame | None | object = _UNSET,
+        period: str | object = _UNSET,
+        normalize_tz: str | None | object = _UNSET,
+    ) -> None:
+        """Atomically replace snapshot inputs and invalidate every cached metric."""
+
+        from fincore.validation import validate_period
+
+        next_returns = self._returns if returns is _UNSET else returns
+        next_factor = self._factor_returns if factor_returns is _UNSET else factor_returns
+        next_positions = self._positions if positions is _UNSET else positions
+        next_transactions = self._transactions if transactions is _UNSET else transactions
+        next_period = self._period if period is _UNSET else cast("str", period)
+        next_normalize_tz = self._normalize_tz if normalize_tz is _UNSET else cast("str | None", normalize_tz)
+        snapshot = validate_context_inputs(
+            returns=next_returns,
+            factor_returns=next_factor,
+            positions=next_positions,
+            transactions=next_transactions,
+            normalize_tz=next_normalize_tz,
+        )
+        checked_period = validate_period(next_period)
+        self.invalidate()
+        self._returns = snapshot.returns
+        self._factor_returns = snapshot.factor_returns
+        self._positions = snapshot.positions
+        self._transactions = snapshot.transactions
+        self._period = checked_period
+        self._normalize_tz = next_normalize_tz
 
     # ------------------------------------------------------------------
     # repr

@@ -1,5 +1,7 @@
-"""Metrics module fixtures for ratio and risk tests.
+"""Fixtures for the internal metric-kernel branch-coverage suite.
 
+This entire subtree exercises raw implementation branches, not the enhanced
+public API.  Public dispatch and validation are proved in ``tests/contracts``.
 These fixtures provide specialized test data for metrics testing.
 """
 
@@ -8,6 +10,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+
+from tests.raw_metric_kernels import raw_metric_kernel_suite as raw_metric_kernel_suite
 
 
 @pytest.fixture

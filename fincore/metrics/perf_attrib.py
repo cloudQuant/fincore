@@ -640,3 +640,9 @@ def cumulative_returns_less_costs(
     if costs is None:
         return cum_returns(returns)
     return cum_returns(returns - costs)
+
+
+from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
+
+_install_metric_module_surface(__name__)
+del _install_metric_module_surface
