@@ -24,15 +24,21 @@ import pandas as pd
 from fincore.constants import DAILY
 from fincore.metrics.alpha_beta import alpha_aligned, alpha_beta_aligned
 from fincore.metrics.basic import aligned_series, annualization_factor
-from fincore.metrics.ratios import down_capture, up_capture
+from fincore.metrics.ratios import down_capture, sortino_ratio, up_capture
+from fincore.metrics.risk import annual_volatility
 
 __all__ = [
     "roll_alpha",
+    "roll_alpha_aligned",
     "roll_alpha_beta",
+    "roll_alpha_beta_aligned",
+    "roll_annual_volatility",
     "roll_beta",
+    "roll_beta_aligned",
     "roll_down_capture",
     "roll_max_drawdown",
     "roll_sharpe_ratio",
+    "roll_sortino_ratio",
     "roll_up_capture",
     "roll_up_down_capture",
     "rolling_beta",
@@ -40,6 +46,51 @@ __all__ = [
     "rolling_sharpe",
     "rolling_volatility",
 ]
+
+
+def _write_rolling_out(result, out: np.ndarray | None):
+    if out is None:
+        return result
+    out[...] = np.asarray(result)
+    return out
+
+
+def roll_alpha_aligned(lhs, rhs, window, out=None, **kwargs):
+    """Empyrical-compatible aligned rolling alpha kernel."""
+
+    return _write_rolling_out(roll_alpha(lhs, rhs, window, **kwargs), out)
+
+
+def roll_beta_aligned(lhs, rhs, window, out=None, **kwargs):
+    """Empyrical-compatible aligned rolling beta kernel."""
+
+    return _write_rolling_out(roll_beta(lhs, rhs, window, **kwargs), out)
+
+
+def roll_alpha_beta_aligned(lhs, rhs, window, out=None, **kwargs):
+    """Empyrical-compatible aligned rolling alpha/beta kernel."""
+
+    return _write_rolling_out(roll_alpha_beta(lhs, rhs, window, **kwargs), out)
+
+
+def roll_annual_volatility(arr, window, out=None, **kwargs):
+    """Calculate annual volatility for each complete rolling window."""
+
+    values = np.asanyarray(arr)
+    result = np.asarray(
+        [annual_volatility(values[index : index + window], **kwargs) for index in range(len(values) - window + 1)]
+    )
+    return _write_rolling_out(result, out)
+
+
+def roll_sortino_ratio(arr, window, out=None, **kwargs):
+    """Calculate the Sortino ratio for each complete rolling window."""
+
+    values = np.asanyarray(arr)
+    result = np.asarray(
+        [sortino_ratio(values[index : index + window], **kwargs) for index in range(len(values) - window + 1)]
+    )
+    return _write_rolling_out(result, out)
 
 
 def roll_alpha(

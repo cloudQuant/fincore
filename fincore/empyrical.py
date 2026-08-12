@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import functools
 import importlib
+import inspect
 from typing import Any
 
 import numpy as np
@@ -39,10 +40,18 @@ import pandas as pd
 
 from fincore._registry import (
     CLASSMETHOD_REGISTRY,
+    EMPYRICAL_SIGNATURES,
+    METRIC_REGISTRY,
     MODULE_PATHS,
     STATIC_METHODS,
+    MetricSpec,
 )
-from fincore.constants import DAILY
+
+DAILY = "daily"
+WEEKLY = "weekly"
+MONTHLY = "monthly"
+QUARTERLY = "quarterly"
+YEARLY = "yearly"
 
 
 class _dual_method:
@@ -104,6 +113,13 @@ def _resolve_module(alias: str):
         return mod
 
 
+def _resolve_ref(reference: str):
+    """Resolve a lazy ``module:attribute`` registry reference."""
+
+    module_name, attribute = reference.split(":", 1)
+    return getattr(importlib.import_module(module_name), attribute)
+
+
 # ---------------------------------------------------------------------------
 # Lazy descriptor + class decorator — replaces metaclass for registry methods
 # ---------------------------------------------------------------------------
@@ -130,10 +146,73 @@ class _LazyMethod:
         return func
 
 
+class _MetricMethod:
+    """Descriptor for one enhanced class surface with optional state binding."""
+
+    def __init__(self, spec: MetricSpec):
+        self.spec = spec
+        self.__name__ = spec.public_name
+
+    def __get__(self, obj, objtype=None):
+        kernel = _resolve_ref(self.spec.kernel_ref)
+        if obj is None or self.spec.binding == "static":
+            return kernel
+
+        cached_name = f"_metric_bound_{self.spec.public_name}"
+        cached = obj.__dict__.get(cached_name)
+        if cached is not None:
+            return cached
+
+        kernel_signature = inspect.signature(kernel)
+        state_names = {
+            "returns": "returns",
+            "arr": "returns",
+            "lhs": "returns",
+        }
+        if self.spec.binding == "returns_factor":
+            state_names.update(
+                {
+                    "factor_returns": "factor_returns",
+                    "rhs": "factor_returns",
+                    "positions": "positions",
+                    "factor_loadings": "factor_loadings",
+                }
+            )
+
+        @functools.wraps(kernel)
+        def bound(*args, **kwargs):
+            try:
+                explicit = kernel_signature.bind(*args, **kwargs)
+            except TypeError:
+                call_kwargs = dict(kwargs)
+                for parameter_name, attribute_name in state_names.items():
+                    if parameter_name in kernel_signature.parameters and parameter_name not in call_kwargs:
+                        value = getattr(obj, attribute_name, None)
+                        if value is not None:
+                            call_kwargs[parameter_name] = value
+                kernel_signature.bind(*args, **call_kwargs)
+                return kernel(*args, **call_kwargs)
+            return kernel(*explicit.args, **explicit.kwargs)
+
+        bound.__signature__ = kernel_signature.replace(
+            parameters=[
+                parameter for parameter in kernel_signature.parameters.values() if parameter.name not in state_names
+            ]
+        )
+        obj.__dict__[cached_name] = bound
+        return bound
+
+
 def _populate_from_registry(cls):
     """Class decorator: attach ``_LazyMethod`` descriptors for all registry entries."""
+    class_names = set()
+    for (surface, name, variant), spec in METRIC_REGISTRY.items():
+        if surface == "empyrical_class" and variant == "stateful-enhanced":
+            setattr(cls, name, _MetricMethod(spec))
+            class_names.add(name)
     for name, (mod_alias, func_name) in CLASSMETHOD_REGISTRY.items():
-        setattr(cls, name, _LazyMethod(mod_alias, func_name, name, cls))
+        if name not in class_names:
+            setattr(cls, name, _LazyMethod(mod_alias, func_name, name, cls))
     for name, (mod_alias, func_name) in STATIC_METHODS.items():
         setattr(cls, name, _LazyMethod(mod_alias, func_name, name, cls))
     return cls
@@ -193,20 +272,23 @@ class Empyrical:
         self.positions = positions
         self.factor_returns = factor_returns
         self.factor_loadings = factor_loadings
-        self._ctx = None
-        if returns is not None:
-            try:
-                from fincore.core.context import AnalysisContext
 
-                self._ctx = AnalysisContext(
-                    returns,
-                    factor_returns=factor_returns,
-                    positions=positions,
-                )
-            except (TypeError, ValueError, KeyError) as e:
-                import logging
+    @property
+    def _ctx(self):
+        """Compatibility-only lazy context; metric dispatch does not retain it."""
 
-                logging.getLogger(__name__).debug("AnalysisContext creation failed: %s", e)
+        if self.returns is None:
+            return None
+        try:
+            from fincore.core.context import AnalysisContext
+
+            return AnalysisContext(
+                self.returns,
+                factor_returns=self.factor_returns,
+                positions=self.positions,
+            )
+        except (TypeError, ValueError, KeyError):
+            return None
 
     def __getattr__(self, name):
         """Safety-net for registry-backed attributes on instance access.
@@ -728,4 +810,111 @@ class Empyrical:
         return _resolve_module("_round_trips").groupby_consecutive(txn, max_delta)
 
 
-__all__ = ["ZIPLINE", "Empyrical"]
+def _enhanced_identity_adapter(kernel, arguments):
+    """Forward an enhanced-surface call without changing its contract."""
+
+    return kernel(**arguments)
+
+
+def _legacy_identity_adapter(kernel, arguments):
+    """Project legacy-named arguments onto a compatible metric kernel."""
+
+    call_arguments = dict(arguments)
+    call_arguments.update(call_arguments.pop("kwargs", {}))
+    return kernel(**call_arguments)
+
+
+def _legacy_beta_adapter(kernel, arguments):
+    """Keep legacy beta's fourth positional parameter bound to ``out``."""
+
+    return kernel(
+        arguments["returns"],
+        arguments["factor_returns"],
+        risk_free=arguments.get("risk_free", 0.0),
+        out=arguments.get("out"),
+    )
+
+
+def _legacy_annual_volatility_adapter(kernel, arguments):
+    """Map empyrical's ``alpha_`` name to fincore's enhanced spelling."""
+
+    return kernel(
+        arguments["returns"],
+        period=arguments.get("period", DAILY),
+        volatility_power=arguments.get("alpha_", 2.0),
+        annualization=arguments.get("annualization"),
+        out=arguments.get("out"),
+    )
+
+
+def _legacy_calmar_adapter(kernel, arguments):
+    """Hide fincore's enhanced risk-free parameter from the legacy surface."""
+
+    return kernel(
+        arguments["returns"],
+        period=arguments.get("period", DAILY),
+        annualization=arguments.get("annualization"),
+    )
+
+
+def _legacy_rolling_adapter(kernel, arguments):
+    """Translate canonical factory names and enforce legacy out projection."""
+
+    call_arguments = dict(arguments)
+    out = call_arguments.pop("out", None)
+    kernel_parameters = inspect.signature(kernel).parameters
+    if "lhs" in call_arguments and "lhs" not in kernel_parameters:
+        call_arguments["returns"] = call_arguments.pop("lhs")
+    if "rhs" in call_arguments and "rhs" not in kernel_parameters:
+        call_arguments["factor_returns"] = call_arguments.pop("rhs")
+    if "arr" in call_arguments and "arr" not in kernel_parameters:
+        call_arguments["returns"] = call_arguments.pop("arr")
+    kwargs = call_arguments.pop("kwargs", {})
+    call_arguments.update(kwargs)
+    result = kernel(**call_arguments)
+    if out is None:
+        return result
+    out[...] = np.asarray(result)
+    return out
+
+
+def _signature_from_text(signature_text: str) -> inspect.Signature:
+    namespace: dict[str, Any] = {}
+    exec(f"def _f{signature_text}:\n    pass", {"__builtins__": {}}, namespace)
+    return inspect.signature(namespace["_f"])
+
+
+def _make_strict_wrapper(spec: MetricSpec):
+    signature = _signature_from_text(EMPYRICAL_SIGNATURES[spec.public_name])
+
+    def wrapper(*args, **kwargs):
+        bound = signature.bind(*args, **kwargs)
+        bound.apply_defaults()
+        kernel = _resolve_ref(spec.kernel_ref)
+        adapter = _resolve_ref(spec.adapter_ref)
+        return adapter(kernel, bound.arguments)
+
+    wrapper.__name__ = spec.public_name
+    wrapper.__qualname__ = spec.public_name
+    wrapper.__module__ = __name__
+    wrapper.__signature__ = signature
+    return wrapper
+
+
+_LEGACY_PUBLIC = []
+for (_surface, _public_name, _variant), _spec in METRIC_REGISTRY.items():
+    if _surface == "empyrical_module" and _variant == "strict-0.6.0":
+        globals()[_public_name] = _make_strict_wrapper(_spec)
+        _LEGACY_PUBLIC.append(_public_name)
+
+
+__all__ = [
+    *_LEGACY_PUBLIC,
+    "DAILY",
+    "WEEKLY",
+    "MONTHLY",
+    "QUARTERLY",
+    "YEARLY",
+    "ZIPLINE",
+    "Empyrical",
+]

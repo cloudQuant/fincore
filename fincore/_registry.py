@@ -17,6 +17,33 @@ Method types:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Literal
+
+Surface = Literal["empyrical_module", "fincore_flat", "empyrical_class", "metrics", "context"]
+Binding = Literal["static", "returns", "returns_factor"]
+ValidationProfile = Literal["legacy_empyrical", "enhanced"]
+ResultProjection = Literal["identity", "scalar", "series", "frame", "legacy_tuple", "out_buffer"]
+OutPolicy = Literal["unsupported", "return_only", "write_and_return"]
+
+
+@dataclass(frozen=True)
+class MetricSpec:
+    """One public metric contract on one independently versioned surface."""
+
+    surface: Surface
+    public_name: str
+    variant: str
+    kernel_ref: str
+    adapter_ref: str
+    signature_manifest_key: str | None
+    binding: Binding
+    validation_profile: ValidationProfile
+    result_contract_key: str
+    result_projection: ResultProjection
+    out_policy: OutPolicy
+
+
 # ---------------------------------------------------------------------------
 # Static methods  (module_alias, func_name)
 # ---------------------------------------------------------------------------
@@ -263,3 +290,321 @@ MODULE_PATHS = {
     "_timing": "fincore.metrics.timing",
     "_yearly": "fincore.metrics.yearly",
 }
+
+
+# Frozen from empyrical 0.6.0.  These strings live in source rather than being
+# loaded from a test fixture so the installed package remains self-contained.
+EMPYRICAL_SIGNATURES = {
+    "aggregate_returns": "(returns, convert_to)",
+    "alpha": "(returns, factor_returns, risk_free=0.0, period='daily', annualization=None, out=None, _beta=None)",
+    "alpha_aligned": "(returns, factor_returns, risk_free=0.0, period='daily', annualization=None, out=None, _beta=None)",
+    "alpha_beta": "(returns, factor_returns, risk_free=0.0, period='daily', annualization=None, out=None)",
+    "alpha_beta_aligned": "(returns, factor_returns, risk_free=0.0, period='daily', annualization=None, out=None)",
+    "annual_return": "(returns, period='daily', annualization=None)",
+    "annual_volatility": "(returns, period='daily', alpha_=2.0, annualization=None, out=None)",
+    "beta": "(returns, factor_returns, risk_free=0.0, out=None)",
+    "beta_aligned": "(returns, factor_returns, risk_free=0.0, out=None)",
+    "cagr": "(returns, period='daily', annualization=None)",
+    "beta_fragility_heuristic": "(returns, factor_returns)",
+    "beta_fragility_heuristic_aligned": "(returns, factor_returns)",
+    "gpd_risk_estimates": "(returns, var_p=0.01)",
+    "gpd_risk_estimates_aligned": "(returns, var_p=0.01)",
+    "calmar_ratio": "(returns, period='daily', annualization=None)",
+    "capture": "(returns, factor_returns, period='daily')",
+    "conditional_value_at_risk": "(returns, cutoff=0.05)",
+    "cum_returns": "(returns, starting_value=0, out=None)",
+    "cum_returns_final": "(returns, starting_value=0)",
+    "down_alpha_beta": "(returns, factor_returns, **kwargs)",
+    "down_capture": "(returns, factor_returns, **kwargs)",
+    "downside_risk": "(returns, required_return=0, period='daily', annualization=None, out=None)",
+    "excess_sharpe": "(returns, factor_returns, out=None)",
+    "max_drawdown": "(returns, out=None)",
+    "omega_ratio": "(returns, risk_free=0.0, required_return=0.0, annualization=252)",
+    "roll_alpha": "(lhs, rhs, window, out=None, **kwargs)",
+    "roll_alpha_aligned": "(lhs, rhs, window, out=None, **kwargs)",
+    "roll_alpha_beta": "(returns, factor_returns, window=10, **kwargs)",
+    "roll_alpha_beta_aligned": "(lhs, rhs, window, out=None, **kwargs)",
+    "roll_annual_volatility": "(arr, window, out=None, **kwargs)",
+    "roll_beta": "(lhs, rhs, window, out=None, **kwargs)",
+    "roll_beta_aligned": "(lhs, rhs, window, out=None, **kwargs)",
+    "roll_down_capture": "(returns, factor_returns, window=10, **kwargs)",
+    "roll_max_drawdown": "(arr, window, out=None, **kwargs)",
+    "roll_sharpe_ratio": "(arr, window, out=None, **kwargs)",
+    "roll_sortino_ratio": "(arr, window, out=None, **kwargs)",
+    "roll_up_capture": "(returns, factor_returns, window=10, **kwargs)",
+    "roll_up_down_capture": "(returns, factor_returns, window=10, **kwargs)",
+    "sharpe_ratio": "(returns, risk_free=0, period='daily', annualization=None, out=None)",
+    "simple_returns": "(prices)",
+    "sortino_ratio": "(returns, required_return=0, period='daily', annualization=None, out=None, _downside_risk=None)",
+    "stability_of_timeseries": "(returns)",
+    "tail_ratio": "(returns)",
+    "up_alpha_beta": "(returns, factor_returns, **kwargs)",
+    "up_capture": "(returns, factor_returns, **kwargs)",
+    "up_down_capture": "(returns, factor_returns, **kwargs)",
+    "value_at_risk": "(returns, cutoff=0.05)",
+    "perf_attrib": "(returns, positions, factor_returns, factor_loadings)",
+    "compute_exposures": "(positions, factor_loadings)",
+}
+
+
+_EMPYRICAL_KERNELS = {
+    "aggregate_returns": "fincore.metrics.returns:aggregate_returns",
+    "alpha": "fincore.metrics.alpha_beta:alpha",
+    "alpha_aligned": "fincore.metrics.alpha_beta:alpha_aligned",
+    "alpha_beta": "fincore.metrics.alpha_beta:alpha_beta",
+    "alpha_beta_aligned": "fincore.metrics.alpha_beta:alpha_beta_aligned",
+    "annual_return": "fincore.metrics.yearly:annual_return",
+    "annual_volatility": "fincore.metrics.risk:annual_volatility",
+    "beta": "fincore.metrics.alpha_beta:beta",
+    "beta_aligned": "fincore.metrics.alpha_beta:beta_aligned",
+    "cagr": "fincore.metrics.yearly:annual_return",
+    "beta_fragility_heuristic": "fincore.metrics.risk:beta_fragility_heuristic",
+    "beta_fragility_heuristic_aligned": "fincore.metrics.risk:beta_fragility_heuristic_aligned",
+    "gpd_risk_estimates": "fincore.metrics.risk:gpd_risk_estimates",
+    "gpd_risk_estimates_aligned": "fincore.metrics.risk:gpd_risk_estimates_aligned",
+    "calmar_ratio": "fincore.metrics.ratios:calmar_ratio",
+    "capture": "fincore.metrics.ratios:capture",
+    "conditional_value_at_risk": "fincore.metrics.risk:conditional_value_at_risk",
+    "cum_returns": "fincore.metrics.returns:cum_returns",
+    "cum_returns_final": "fincore.metrics.returns:cum_returns_final",
+    "down_alpha_beta": "fincore.metrics.alpha_beta:down_alpha_beta",
+    "down_capture": "fincore.metrics.ratios:down_capture",
+    "downside_risk": "fincore.metrics.risk:downside_risk",
+    "excess_sharpe": "fincore.metrics.ratios:excess_sharpe",
+    "max_drawdown": "fincore.metrics.drawdown:max_drawdown",
+    "omega_ratio": "fincore.metrics.ratios:omega_ratio",
+    "roll_alpha": "fincore.metrics.rolling:roll_alpha",
+    "roll_alpha_aligned": "fincore.metrics.rolling:roll_alpha_aligned",
+    "roll_alpha_beta": "fincore.metrics.rolling:roll_alpha_beta",
+    "roll_alpha_beta_aligned": "fincore.metrics.rolling:roll_alpha_beta_aligned",
+    "roll_annual_volatility": "fincore.metrics.rolling:roll_annual_volatility",
+    "roll_beta": "fincore.metrics.rolling:roll_beta",
+    "roll_beta_aligned": "fincore.metrics.rolling:roll_beta_aligned",
+    "roll_down_capture": "fincore.metrics.rolling:roll_down_capture",
+    "roll_max_drawdown": "fincore.metrics.rolling:roll_max_drawdown",
+    "roll_sharpe_ratio": "fincore.metrics.rolling:roll_sharpe_ratio",
+    "roll_sortino_ratio": "fincore.metrics.rolling:roll_sortino_ratio",
+    "roll_up_capture": "fincore.metrics.rolling:roll_up_capture",
+    "roll_up_down_capture": "fincore.metrics.rolling:roll_up_down_capture",
+    "sharpe_ratio": "fincore.metrics.ratios:sharpe_ratio",
+    "simple_returns": "fincore.metrics.returns:simple_returns",
+    "sortino_ratio": "fincore.metrics.ratios:sortino_ratio",
+    "stability_of_timeseries": "fincore.metrics.ratios:stability_of_timeseries",
+    "tail_ratio": "fincore.metrics.risk:tail_ratio",
+    "up_alpha_beta": "fincore.metrics.alpha_beta:up_alpha_beta",
+    "up_capture": "fincore.metrics.ratios:up_capture",
+    "up_down_capture": "fincore.metrics.ratios:up_down_capture",
+    "value_at_risk": "fincore.metrics.risk:value_at_risk",
+    "perf_attrib": "fincore.metrics.perf_attrib:perf_attrib",
+    "compute_exposures": "fincore.metrics.perf_attrib:compute_exposures",
+}
+
+
+_RETURNS_FACTOR_NAMES = frozenset(
+    {
+        "alpha",
+        "alpha_aligned",
+        "alpha_beta",
+        "alpha_beta_aligned",
+        "beta",
+        "beta_aligned",
+        "beta_fragility_heuristic",
+        "beta_fragility_heuristic_aligned",
+        "capture",
+        "down_alpha_beta",
+        "down_capture",
+        "excess_sharpe",
+        "roll_alpha",
+        "roll_alpha_aligned",
+        "roll_alpha_beta",
+        "roll_alpha_beta_aligned",
+        "roll_beta",
+        "roll_beta_aligned",
+        "roll_down_capture",
+        "roll_up_capture",
+        "roll_up_down_capture",
+        "up_alpha_beta",
+        "up_capture",
+        "up_down_capture",
+        "perf_attrib",
+    }
+)
+_STATIC_NAMES = frozenset({"simple_returns", "compute_exposures"})
+_FACTORY_NAMES = frozenset(
+    {
+        "roll_alpha",
+        "roll_alpha_aligned",
+        "roll_alpha_beta_aligned",
+        "roll_annual_volatility",
+        "roll_beta",
+        "roll_beta_aligned",
+        "roll_max_drawdown",
+        "roll_sharpe_ratio",
+        "roll_sortino_ratio",
+    }
+)
+_OUT_NAMES = frozenset(name for name, signature in EMPYRICAL_SIGNATURES.items() if "out=None" in signature)
+
+
+def _binding_for(name: str) -> Binding:
+    if name in _STATIC_NAMES:
+        return "static"
+    if name in _RETURNS_FACTOR_NAMES:
+        return "returns_factor"
+    return "returns"
+
+
+def _legacy_adapter_for(name: str) -> str:
+    if name == "annual_volatility":
+        return "fincore.empyrical:_legacy_annual_volatility_adapter"
+    if name == "beta":
+        return "fincore.empyrical:_legacy_beta_adapter"
+    if name == "calmar_ratio":
+        return "fincore.empyrical:_legacy_calmar_adapter"
+    if name in _FACTORY_NAMES:
+        return "fincore.empyrical:_legacy_rolling_adapter"
+    return "fincore.empyrical:_legacy_identity_adapter"
+
+
+METRIC_REGISTRY: dict[tuple[Surface, str, str], MetricSpec] = {}
+
+
+def _register(spec: MetricSpec) -> None:
+    key = (spec.surface, spec.public_name, spec.variant)
+    if key in METRIC_REGISTRY:
+        raise ValueError(f"duplicate metric registry key: {key!r}")
+    METRIC_REGISTRY[key] = spec
+
+
+for _name, _kernel_ref in _EMPYRICAL_KERNELS.items():
+    _out_policy: OutPolicy = "write_and_return" if _name in _OUT_NAMES else "unsupported"
+    _projection: ResultProjection = "out_buffer" if _name in _OUT_NAMES else "identity"
+    _register(
+        MetricSpec(
+            surface="empyrical_module",
+            public_name=_name,
+            variant="strict-0.6.0",
+            kernel_ref=_kernel_ref,
+            adapter_ref=_legacy_adapter_for(_name),
+            signature_manifest_key=f"empyrical-0.6.0:{_name}",
+            binding="static",
+            validation_profile="legacy_empyrical",
+            result_contract_key=f"empyrical-0.6.0:{_name}",
+            result_projection=_projection,
+            out_policy=_out_policy,
+        )
+    )
+    _register(
+        MetricSpec(
+            surface="empyrical_class",
+            public_name=_name,
+            variant="stateful-enhanced",
+            kernel_ref=_kernel_ref,
+            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding=_binding_for(_name),
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection="identity",
+            out_policy="return_only",
+        )
+    )
+    _register(
+        MetricSpec(
+            surface="metrics",
+            public_name=_name,
+            variant="enhanced",
+            kernel_ref=_kernel_ref,
+            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding="static",
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection="identity",
+            out_policy="return_only",
+        )
+    )
+
+
+_FLAT_NAMES = frozenset(
+    {
+        "aggregate_returns",
+        "alpha",
+        "alpha_beta",
+        "annual_return",
+        "annual_volatility",
+        "beta",
+        "calmar_ratio",
+        "capture",
+        "cum_returns",
+        "cum_returns_final",
+        "downside_risk",
+        "max_drawdown",
+        "omega_ratio",
+        "sharpe_ratio",
+        "simple_returns",
+        "sortino_ratio",
+        "stability_of_timeseries",
+        "tail_ratio",
+        "value_at_risk",
+    }
+)
+for _name in _FLAT_NAMES:
+    _register(
+        MetricSpec(
+            surface="fincore_flat",
+            public_name=_name,
+            variant="enhanced-0.3.x",
+            kernel_ref=_EMPYRICAL_KERNELS[_name],
+            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding="static",
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection="identity",
+            out_policy="return_only",
+        )
+    )
+
+
+_FLAT_EXTRA_KERNELS = {"information_ratio": "fincore.metrics.ratios:information_ratio"}
+for _name, _kernel_ref in _FLAT_EXTRA_KERNELS.items():
+    _register(
+        MetricSpec(
+            surface="fincore_flat",
+            public_name=_name,
+            variant="enhanced-0.3.x",
+            kernel_ref=_kernel_ref,
+            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding="static",
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection="identity",
+            out_policy="return_only",
+        )
+    )
+
+
+for _name in frozenset({"sharpe_ratio", "sortino_ratio", "calmar_ratio", "max_drawdown", "beta"}):
+    _register(
+        MetricSpec(
+            surface="context",
+            public_name=_name,
+            variant="cached-property",
+            kernel_ref=_EMPYRICAL_KERNELS[_name],
+            adapter_ref="fincore.empyrical:_enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding=_binding_for(_name),
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-context:{_name}",
+            result_projection="identity",
+            out_policy="return_only",
+        )
+    )
+
+
+def get_metric_spec(surface: Surface, public_name: str, variant: str) -> MetricSpec:
+    """Return one exact public-surface contract."""
+
+    return METRIC_REGISTRY[(surface, public_name, variant)]

@@ -6,6 +6,8 @@ and flat API functions (sharpe_ratio, max_drawdown, etc.) load on first access.
 
 from __future__ import annotations
 
+from fincore._registry import METRIC_REGISTRY
+
 __version__ = "0.3.0"
 
 __all__ = [
@@ -43,7 +45,6 @@ __all__ = [
 # sub-module names before calling ``__getattr__``.
 # ---------------------------------------------------------------------------
 
-# Maps commonly-used function names to (module_path, attr_name)
 _FLAT_API = {
     "sharpe_ratio": ("fincore.metrics.ratios", "sharpe_ratio"),
     "sortino_ratio": ("fincore.metrics.ratios", "sortino_ratio"),
@@ -66,9 +67,21 @@ _FLAT_API = {
     "beta": ("fincore.metrics.alpha_beta", "beta"),
     "alpha_beta": ("fincore.metrics.alpha_beta", "alpha_beta"),
 }
+_FLAT_REGISTRY = {
+    name: tuple(spec.kernel_ref.split(":", 1))
+    for (surface, name, variant), spec in METRIC_REGISTRY.items()
+    if surface == "fincore_flat" and variant == "enhanced-0.3.x"
+}
+assert _FLAT_REGISTRY == _FLAT_API
 
 
 def __getattr__(name: str):
+    if name == "empyrical":
+        import importlib
+
+        module = importlib.import_module("fincore.empyrical")
+        globals()["empyrical"] = module
+        return module
     if name == "Empyrical":
         from .empyrical import Empyrical
 
@@ -91,7 +104,7 @@ def __getattr__(name: str):
         return create_strategy_report
 
     # Flat metric function API
-    entry = _FLAT_API.get(name)
+    entry = _FLAT_REGISTRY.get(name)
     if entry is not None:
         import importlib
 
