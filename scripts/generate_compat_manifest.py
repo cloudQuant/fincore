@@ -730,7 +730,7 @@ def _manifest_base(
 def _generate_empyrical(root: Path) -> dict[str, Any]:
     source = PinnedGitSource(root, EMPYRICAL_COMMIT)
     _require_head(source, EMPYRICAL_COMMIT, "empyrical")
-    modules = ("__init__", "stats", "periods", "perf_attrib")
+    modules = ("__init__", "stats", "periods", "perf_attrib", "utils")
     trees = _package_trees(source, "empyrical", modules)
     resolver = StaticConstantResolver(trees)
     definitions = {module: _definitions(tree) for module, tree in trees.items()}

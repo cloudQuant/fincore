@@ -437,6 +437,7 @@ _FACTORY_NAMES = frozenset(
     {
         "roll_alpha",
         "roll_alpha_aligned",
+        "roll_alpha_beta",
         "roll_alpha_beta_aligned",
         "roll_annual_volatility",
         "roll_beta",
@@ -464,6 +465,10 @@ def _legacy_adapter_for(name: str) -> str:
         return "fincore.empyrical:_legacy_beta_adapter"
     if name == "calmar_ratio":
         return "fincore.empyrical:_legacy_calmar_adapter"
+    if name == "conditional_value_at_risk":
+        return "fincore.empyrical:_legacy_conditional_value_at_risk_adapter"
+    if name == "value_at_risk":
+        return "fincore.empyrical:_legacy_value_at_risk_adapter"
     if name in _FACTORY_NAMES:
         return "fincore.empyrical:_legacy_rolling_adapter"
     return "fincore.empyrical:_legacy_identity_adapter"

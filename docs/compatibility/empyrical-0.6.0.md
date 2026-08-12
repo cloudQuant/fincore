@@ -44,6 +44,15 @@ signatures are statically frozen, but `needs_dynamic_review=true` and
 An unresolved default forces canonical `signature=null` and therefore cannot
 masquerade as C1-ready evidence.
 
+## Intentional enhanced-surface divergences
+
+The strict `fincore.empyrical.aggregate_returns(..., "weekly")` façade keeps
+the pinned 0.6.0 calendar-year plus ISO-week grouping, including two groups
+across the 2019/2020 ISO-week boundary. The enhanced
+`fincore.metrics.returns.aggregate_returns(..., week_year="iso")` option uses
+ISO year plus ISO week and therefore produces one group for that boundary.
+This correction is opt-in and does not change the strict façade.
+
 ## Reproduction
 
 Run the generator against checkouts at the pinned commits:

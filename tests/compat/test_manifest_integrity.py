@@ -93,6 +93,19 @@ def test_empyrical_manifest_is_pinned_and_complete() -> None:
     _assert_portable_provenance(data)
 
 
+def test_empyrical_manifest_includes_pinned_utils_blob() -> None:
+    data = _load("empyrical-0.6.0-api.json")
+    source_hashes = {source["path"]: source["sha256"] for source in data["source_files"]}
+    expected_hash = "aff1a9d686b576ad971e7985b22a24f0460100a90e4cb2ab6c7b7f8ca6dc76d9"
+    assert source_hashes["utils.py"] == expected_hash
+
+    empyrical_root = Path(__file__).parents[4] / "empyrical"
+    if empyrical_root.is_dir():
+        generator = _load_generator()
+        pinned = generator.PinnedGitSource(empyrical_root, data["commit"])
+        assert pinned.sha256("empyrical/utils.py") == expected_hash
+
+
 def test_empyrical_canonical_signatures_use_runtime_defaults() -> None:
     data = _load("empyrical-0.6.0-api.json")
     calmar = _by_symbol(data["callables"], "calmar_ratio")

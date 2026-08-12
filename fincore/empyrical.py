@@ -871,6 +871,24 @@ def _legacy_calmar_adapter(kernel, arguments):
     )
 
 
+def _legacy_value_at_risk_adapter(kernel, arguments):
+    """Preserve empyrical's unvalidated percentile semantics."""
+
+    del kernel
+    return np.percentile(arguments["returns"], 100 * arguments.get("cutoff", 0.05))
+
+
+def _legacy_conditional_value_at_risk_adapter(kernel, arguments):
+    """Preserve empyrical's fixed-count order-statistics tail."""
+
+    del kernel
+    returns = arguments["returns"]
+    if len(returns) == 0:
+        return np.float64(np.nan)
+    cutoff_index = int((len(returns) - 1) * arguments.get("cutoff", 0.05))
+    return np.mean(np.partition(returns, cutoff_index)[: cutoff_index + 1])
+
+
 def _legacy_rolling_adapter(kernel, arguments):
     """Translate canonical factory names and enforce legacy out projection."""
 
@@ -885,7 +903,24 @@ def _legacy_rolling_adapter(kernel, arguments):
         call_arguments["returns"] = call_arguments.pop("arr")
     kwargs = call_arguments.pop("kwargs", {})
     call_arguments.update(kwargs)
-    result = kernel(**call_arguments)
+    out = call_arguments.pop("out", out)
+
+    inputs = [
+        call_arguments[name] for name in ("arr", "lhs", "rhs", "returns", "factor_returns") if name in call_arguments
+    ]
+    requested_window = call_arguments["window"]
+    if not inputs or not all(len(values) for values in inputs) or requested_window < 1:
+        result = np.empty(0, dtype="float64")
+    else:
+        call_arguments["window"] = min(requested_window, *(len(values) for values in inputs))
+        result = kernel(**call_arguments)
+
+    first_input = inputs[0] if inputs else None
+    if isinstance(first_input, np.ndarray) and isinstance(result, (pd.Series, pd.DataFrame)):
+        result = result.to_numpy()
+    elif isinstance(first_input, pd.Series) and isinstance(result, pd.DataFrame):
+        result = result.copy()
+        result.columns = pd.RangeIndex(result.shape[1])
     if out is None:
         return result
     out[...] = np.asarray(result)

@@ -23,6 +23,9 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
+from fincore.contracts.time_series import AlignmentPolicy, align_time_series
+from fincore.exceptions import DataAlignmentError
+
 __all__ = [
     "align_and_warn",
     "compute_exposures",
@@ -68,10 +71,8 @@ def perf_attrib_core(
     if factor_loadings is None:
         raise ValueError("Either provide factor_loadings or set factor_loadings data")
 
-    start = returns.index[0]
-    end = returns.index[-1]
-    factor_returns = factor_returns.loc[start:end]
-    factor_loadings = factor_loadings.loc[start:end]
+    returns = returns.copy()
+    factor_returns = factor_returns.copy()
     factor_loadings = factor_loadings.copy()
     if isinstance(factor_loadings.index, pd.MultiIndex):
         factor_loadings.index = factor_loadings.index.set_names(["dt", "ticker"])
@@ -83,7 +84,13 @@ def perf_attrib_core(
         positions=positions,
         factor_loadings=factor_loadings,
     )
-    risk_exposures_portfolio.index = returns.index
+    common_dates = returns.index.intersection(factor_returns.index, sort=False)
+    common_dates = common_dates.intersection(risk_exposures_portfolio.index, sort=False).sort_values()
+    if common_dates.empty:
+        raise DataAlignmentError("performance attribution has no common dates")
+    returns = returns.loc[common_dates]
+    factor_returns = factor_returns.loc[common_dates]
+    risk_exposures_portfolio = risk_exposures_portfolio.loc[common_dates]
 
     perf_attrib_by_factor = risk_exposures_portfolio.multiply(factor_returns)
     common_returns = perf_attrib_by_factor.sum(axis="columns")
@@ -111,9 +118,76 @@ def perf_attrib_core(
     )
 
     perf_attribution = pd.concat([perf_attrib_by_factor, returns_df], axis="columns", sort=False)
-    perf_attribution.index = returns.index
 
     return risk_exposures_portfolio, perf_attribution
+
+
+def _date_index(value: pd.Series | pd.DataFrame) -> pd.Index:
+    if isinstance(value.index, pd.MultiIndex):
+        return value.index.get_level_values(0).unique()
+    return value.index
+
+
+def _normalize_date_index(index: pd.Index, normalize_tz: str | None) -> pd.Index:
+    if not isinstance(index, pd.DatetimeIndex) or normalize_tz is None:
+        return index
+    if normalize_tz.upper() != "UTC":
+        raise ValueError("normalize_tz currently supports only 'UTC'")
+    if index.tz is None:
+        return index.tz_localize("UTC")
+    return index.tz_convert("UTC")
+
+
+def _normalize_attribution_index(
+    value: pd.Series | pd.DataFrame,
+    normalize_tz: str | None,
+) -> pd.Series | pd.DataFrame:
+    result = value.copy()
+    if isinstance(result.index, pd.MultiIndex):
+        if result.index.has_duplicates:
+            raise DataAlignmentError("duplicate attribution labels are ambiguous")
+        arrays = [
+            _normalize_date_index(result.index.get_level_values(0), normalize_tz),
+            *[result.index.get_level_values(level) for level in range(1, result.index.nlevels)],
+        ]
+        result.index = pd.MultiIndex.from_arrays(arrays, names=result.index.names)
+    else:
+        result.index = _normalize_date_index(result.index, normalize_tz)
+    return result
+
+
+def _select_attribution_dates(
+    value: pd.Series | pd.DataFrame,
+    dates: pd.Index,
+) -> pd.Series | pd.DataFrame:
+    if isinstance(value.index, pd.MultiIndex):
+        return value[value.index.get_level_values(0).isin(dates)]
+    return value.loc[dates]
+
+
+def _align_attribution_dates(
+    returns: pd.Series,
+    positions: pd.Series | pd.DataFrame,
+    factor_returns: pd.DataFrame,
+    factor_loadings: pd.DataFrame,
+    *,
+    policy: AlignmentPolicy,
+    normalize_tz: str | None,
+) -> tuple[pd.Series, pd.Series | pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    normalized = tuple(
+        _normalize_attribution_index(value, normalize_tz)
+        for value in (returns, positions, factor_returns, factor_loadings)
+    )
+    date_carriers = tuple(pd.Series(1.0, index=_date_index(value)) for value in normalized)
+    aligned_carriers = align_time_series(
+        *date_carriers,
+        policy=policy,
+        normalize_tz=None,
+    )
+    common_dates = aligned_carriers[0].index
+    if common_dates.empty:
+        raise DataAlignmentError("performance attribution has no common dates")
+    return tuple(_select_attribution_dates(value, common_dates) for value in normalized)  # type: ignore[return-value]
 
 
 def compute_exposures_internal(
@@ -150,6 +224,9 @@ def perf_attrib(
     transactions: pd.DataFrame | None = None,
     pos_in_dollars: bool = True,
     regression_style: str = "OLS",
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate performance attribution.
 
@@ -179,6 +256,22 @@ def perf_attrib(
     if positions is None or factor_returns is None or factor_loadings is None:
         raise ValueError("positions, factor_returns, and factor_loadings are required")
 
+    normalized = tuple(
+        _normalize_attribution_index(value, normalize_tz)
+        for value in (returns, positions, factor_returns, factor_loadings)
+    )
+    returns, positions, factor_returns, factor_loadings = normalized
+
+    if alignment == "strict":
+        returns, positions, factor_returns, factor_loadings = _align_attribution_dates(
+            returns,
+            positions,
+            factor_returns,
+            factor_loadings,
+            policy=alignment,
+            normalize_tz=None,
+        )
+
     # Align data and warn about missing values
     (returns, positions, factor_returns, factor_loadings) = align_and_warn(
         returns,
@@ -187,6 +280,15 @@ def perf_attrib(
         factor_loadings,
         transactions=transactions,
         pos_in_dollars=pos_in_dollars,
+    )
+
+    returns, positions, factor_returns, factor_loadings = _align_attribution_dates(
+        returns,
+        positions,
+        factor_returns,
+        factor_loadings,
+        policy=alignment,
+        normalize_tz=None,
     )
 
     # Stack positions if needed (convert from DataFrame to Series with MultiIndex)

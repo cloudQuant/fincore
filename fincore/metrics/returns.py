@@ -212,6 +212,8 @@ def cum_returns_final(
 def aggregate_returns(
     returns: pd.Series,
     convert_to: str = "monthly",
+    *,
+    week_year: str = "calendar",
 ) -> pd.Series:
     """Aggregate returns at a weekly/monthly/quarterly/yearly frequency.
 
@@ -256,7 +258,12 @@ def aggregate_returns(
         )
 
     if convert_to == WEEKLY:
-        grouping = [lambda dt: dt.year, lambda dt: dt.isocalendar()[1]]
+        if week_year == "calendar":
+            grouping = [lambda dt: dt.year, lambda dt: dt.isocalendar()[1]]
+        elif week_year == "iso":
+            grouping = [lambda dt: dt.isocalendar().year, lambda dt: dt.isocalendar().week]
+        else:
+            raise ValueError("week_year must be 'calendar' or 'iso'")
     elif convert_to == MONTHLY:
         grouping = [lambda dt: dt.year, lambda dt: dt.month]
     elif convert_to == QUARTERLY:

@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
+from fincore.contracts.time_series import align_time_series
 from fincore.metrics.basic import annualization_factor as _ann_factor
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.ratios import (
@@ -79,6 +80,7 @@ class AnalysisContext:
         positions: pd.DataFrame | None = None,
         transactions: pd.DataFrame | None = None,
         period: str = DAILY,
+        normalize_tz: str | None = None,
     ) -> None:
         """Initialize the analysis context.
 
@@ -94,9 +96,40 @@ class AnalysisContext:
             Executed trades.
         period : str, default DAILY
             Data frequency.
+        normalize_tz : {None, "UTC"}, default None
+            Explicit timezone normalization for datetime-indexed inputs. Mixed
+            timezones are rejected unless UTC normalization is requested.
         """
-        self._returns = returns
-        self._factor_returns = factor_returns
+        if normalize_tz is not None:
+            self._returns = align_time_series(
+                returns,
+                policy="strict",
+                normalize_tz=normalize_tz,
+            )[0]
+            if factor_returns is None:
+                self._factor_returns = None
+            else:
+                self._factor_returns = align_time_series(
+                    factor_returns,
+                    policy="strict",
+                    normalize_tz=normalize_tz,
+                )[0]
+        else:
+            if factor_returns is not None:
+                return_index = returns.index
+                factor_index = factor_returns.index
+                if isinstance(return_index, pd.DatetimeIndex) and isinstance(
+                    factor_index,
+                    pd.DatetimeIndex,
+                ):
+                    return_tz = str(return_index.tz)
+                    factor_tz = str(factor_index.tz)
+                    if return_tz != factor_tz:
+                        # Route the public error surface through the shared
+                        # contract without changing legacy partial-index data.
+                        align_time_series(returns, factor_returns, policy="inner")
+            self._returns = returns
+            self._factor_returns = factor_returns
         self._positions = positions
         self._transactions = transactions
         self._period = period
@@ -370,6 +403,7 @@ def analyze(
     positions: pd.DataFrame | None = None,
     transactions: pd.DataFrame | None = None,
     period: str = DAILY,
+    normalize_tz: str | None = None,
 ) -> AnalysisContext:
     """Create an :class:`AnalysisContext` — the recommended entry point.
 
@@ -386,4 +420,5 @@ def analyze(
         positions=positions,
         transactions=transactions,
         period=period,
+        normalize_tz=normalize_tz,
     )
