@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
-from fincore.metrics.basic import aligned_series, annualization_factor, ensure_datetime_index_series
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics.basic import annualization_factor, ensure_datetime_index_series
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.ratios import sharpe_ratio
 from fincore.metrics.returns import cum_returns_final
@@ -229,6 +230,9 @@ def annual_active_return(
     factor_returns: pd.Series | np.ndarray,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate annual active return (strategy minus benchmark).
 
@@ -248,10 +252,11 @@ def annual_active_return(
     float
         Annual active return, or ``NaN`` if insufficient data.
     """
-    if len(returns) < 1:
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+    if len(returns_aligned) < 1:
         return np.nan
-
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     strategy_annual = annual_return(returns_aligned, period, annualization)
     benchmark_annual = annual_return(factor_aligned, period, annualization)
@@ -267,6 +272,9 @@ def annual_active_return_by_year(
     factor_returns: pd.Series,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series:
     """Determine the annual active return for each calendar year.
 
@@ -286,6 +294,9 @@ def annual_active_return_by_year(
     pd.Series
         Annual active return for each calendar year.
     """
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
     if len(returns) < 1:
         return pd.Series([], dtype=float)
 
@@ -300,7 +311,13 @@ def annual_active_return_by_year(
         if year in factor_grouped.groups:
             year_returns = grouped.get_group(year)
             year_factor = factor_grouped.get_group(year)
-            active_return = annual_active_return(year_returns, year_factor, period, annualization)
+            active_return = annual_active_return(
+                year_returns,
+                year_factor,
+                period,
+                annualization,
+                alignment="strict",
+            )
             annual_active_returns.append((year, active_return))
 
     if not annual_active_returns:
@@ -315,6 +332,9 @@ def information_ratio_by_year(
     factor_returns: pd.Series | np.ndarray,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Determine the information ratio for each calendar year.
 
@@ -336,16 +356,15 @@ def information_ratio_by_year(
     """
     from fincore.metrics.ratios import information_ratio as calc_ir
 
-    if len(returns) < 1:
-        return_as_array = isinstance(returns, np.ndarray)
-        return np.array([]) if return_as_array else pd.Series(dtype="float64")
-
     return_as_array = isinstance(returns, np.ndarray)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+    if len(returns) < 1:
+        return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
     returns = ensure_datetime_index_series(returns, period=period)
     factor_returns = ensure_datetime_index_series(factor_returns, period=period)
-
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     def calc_ir_for_year(returns_group: pd.Series) -> float:
         """Calculate Information Ratio for a specific year.
@@ -360,10 +379,16 @@ def information_ratio_by_year(
         float
             Information Ratio for the year.
         """
-        factor_group = factor_aligned.loc[returns_group.index]  # type: ignore[union-attr]
-        return calc_ir(returns_group, factor_group, period, annualization)
+        factor_group = factor_returns.loc[returns_group.index]
+        return calc_ir(
+            returns_group,
+            factor_group,
+            period,
+            annualization,
+            alignment="strict",
+        )
 
-    information_ratios = returns_aligned.groupby(returns_aligned.index.year).apply(calc_ir_for_year)  # type: ignore[union-attr]
+    information_ratios = returns.groupby(returns.index.year).apply(calc_ir_for_year)
 
     if hasattr(information_ratios, "name"):
         information_ratios.name = None

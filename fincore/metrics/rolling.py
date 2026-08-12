@@ -22,8 +22,9 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 from fincore.metrics.alpha_beta import alpha_aligned, alpha_beta_aligned
-from fincore.metrics.basic import aligned_series, annualization_factor
+from fincore.metrics.basic import annualization_factor
 from fincore.metrics.ratios import down_capture, sortino_ratio, up_capture
 from fincore.metrics.risk import annual_volatility
 
@@ -100,6 +101,9 @@ def roll_alpha(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Calculate rolling alpha over a specified window.
 
@@ -123,7 +127,9 @@ def roll_alpha(
     pd.Series or np.ndarray
         Rolling alpha values.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     is_series = isinstance(returns_aligned, pd.Series)
 
@@ -158,6 +164,9 @@ def roll_beta(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Calculate rolling beta over a specified window.
 
@@ -181,7 +190,9 @@ def roll_beta(
     pd.Series or np.ndarray
         Rolling beta values.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     is_series = isinstance(returns_aligned, pd.Series)
 
@@ -217,6 +228,9 @@ def roll_alpha_beta(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.DataFrame | np.ndarray:
     """Calculate rolling alpha and beta over a specified window.
 
@@ -240,7 +254,9 @@ def roll_alpha_beta(
     pd.DataFrame or np.ndarray
         Rolling alpha and beta values with columns ['alpha', 'beta'].
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     is_series = isinstance(returns_aligned, pd.Series)
 
@@ -387,6 +403,9 @@ def roll_up_capture(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     window: int = 252,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Calculate rolling up capture over a specified window.
 
@@ -404,7 +423,9 @@ def roll_up_capture(
     pd.Series or np.ndarray
         Rolling up capture values.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     is_series = isinstance(returns_aligned, pd.Series)
 
@@ -434,6 +455,9 @@ def roll_down_capture(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     window: int = 252,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Calculate rolling down capture over a specified window.
 
@@ -451,7 +475,9 @@ def roll_down_capture(
     pd.Series or np.ndarray
         Rolling down capture values.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     is_series = isinstance(returns_aligned, pd.Series)
 
@@ -481,6 +507,9 @@ def roll_up_down_capture(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     window: int = 252,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series | np.ndarray:
     """Calculate rolling up/down capture ratio over a specified window.
 
@@ -498,8 +527,20 @@ def roll_up_down_capture(
     pd.Series or np.ndarray
         Rolling up/down capture ratio values.
     """
-    up_caps = roll_up_capture(returns, factor_returns, window)
-    down_caps = roll_down_capture(returns, factor_returns, window)
+    up_caps = roll_up_capture(
+        returns,
+        factor_returns,
+        window,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
+    down_caps = roll_down_capture(
+        returns,
+        factor_returns,
+        window,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
     with np.errstate(divide="ignore", invalid="ignore"):
         return up_caps / down_caps
@@ -601,6 +642,9 @@ def rolling_regression(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     rolling_window: int = 126,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.DataFrame:
     """Calculate rolling regression alpha and beta.
 
@@ -624,7 +668,9 @@ def rolling_regression(
         Rolling alpha (non-annualized) and beta values with columns
         ['alpha', 'beta'].
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     if len(returns_aligned) < rolling_window:
         return pd.DataFrame(columns=["alpha", "beta"])

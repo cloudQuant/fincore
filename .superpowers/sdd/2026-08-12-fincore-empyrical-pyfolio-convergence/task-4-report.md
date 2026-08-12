@@ -3,7 +3,8 @@
 ## Outcome
 
 Task 4 converges the pinned empyrical 0.6.0 numeric and rolling result
-contracts without changing the enhanced metrics kernels globally.
+contracts while making enhanced time-series policies explicit at their public
+boundaries.
 
 - Strict CVaR uses the upstream fixed-count order-statistics tail; the tie case
   `[-.2, -.1, -.1, -.1, 1]` at `cutoff=.25` is `-.15`. The enhanced direct
@@ -26,6 +27,21 @@ contracts without changing the enhanced metrics kernels globally.
   `normalize_tz` before inspecting index type, rejects mixed timezone awareness
   by default, and permits explicit UTC normalization. The low-level legacy
   `metrics.basic.aligned_series` outer-join shim remains unchanged.
+- The second review closes the previously recorded binary-metric gap. All 33
+  direct enhanced entry points in `alpha_beta`, `ratios`, `risk`, `rolling`,
+  `stats`, `timing`, and `yearly` now expose keyword-only
+  `alignment="inner"` and `normalize_tz=None`. Labelled operands go through the
+  shared contract before every short/empty branch; equal-length ndarrays remain
+  positional, unequal arrays and mixed ndarray/pandas operands are rejected,
+  and dependent public callers forward the selected policy. The five
+  conditional/derived callers (`up_alpha_beta`, `down_alpha_beta`,
+  `treynor_ratio`, `roll_up_down_capture`, and
+  `annual_active_return_by_year`) expose the same enhanced options.
+- The frozen strict module does not expose either new keyword. Its alpha/beta
+  and beta-fragility adapters retain pinned outer alignment, while the capture
+  family retains the pinned independent/filtering semantics rather than being
+  blanket-prealigned. Strict rolling capture also preserves the exact pinned
+  unknown-keyword error text.
 - Strict weekly aggregation keeps calendar year plus ISO week. The enhanced
   `week_year="iso"` option uses ISO year plus ISO week; the intentional
   divergence is recorded in `docs/compatibility/empyrical-0.6.0.md`.
@@ -42,10 +58,9 @@ contracts without changing the enhanced metrics kernels globally.
   Defensive copies and general schema validation remain outside this task.
 
 Strict result projection is implemented in the strict façade adapters in
-`fincore/_registry.py` and `fincore/empyrical.py`. Enhanced attribution and
-timezone behavior are implemented at their explicit enhanced/context entry
-points. Consequently the enhanced `risk.py`, `rolling.py`, and shared
-`basic.py` kernels required no global behavioral change.
+`fincore/_registry.py` and `fincore/empyrical.py`. Enhanced attribution,
+timezone behavior, and binary alignment are implemented at their explicit
+enhanced/context entry points. The shared legacy `basic.py` shim is unchanged.
 
 ## TDD evidence
 
@@ -98,6 +113,44 @@ ordered `DatetimeIndex` values. Silencing that warning by changing sort or
 label semantics would stop mirroring the pinned path, so it is recorded rather
 than folded into the warning-free enhanced contract.
 
+The second review began with a signature/error-message test written before the
+production change:
+
+```text
+33 enhanced signatures + 3 rolling-capture errors: 36 failed
+```
+
+The behavior matrix was then expanded before implementation:
+
+```text
+central policy/routing, seven module families, dependent callers, strict
+differentials, and legacy shim: 54 failed, 2 passed
+```
+
+The final alignment module contains 132 passing cases. It parameterizes all 33
+direct sites for the public signature, duplicate-label routing, and rejection
+of mixed positional/labelled inputs. Central cases additionally cover
+partial/disjoint `strict`/`inner`/`outer_dropna`, successful strict ordering,
+timezone rejection and UTC normalization, invalid timezone options, ndarray
+length/identity, immutability, seven representative module families, nested
+policy forwarding, pinned strict numeric constants, and the unchanged legacy
+outer-join shim.
+
+### Intentional enhanced behavior changes
+
+| Surface | Partial or disjoint labels | Timezones | Public parameters |
+| --- | --- | --- | --- |
+| Enhanced direct, flat, and class convenience APIs | Default label intersection; disjoint annual alpha/beta produce empty yearly output | Mixed awareness fails unless `normalize_tz="UTC"` | Keyword-only `alignment` and `normalize_tz` |
+| Frozen strict `fincore.empyrical` module | Pinned per-function behavior: outer alpha/beta alignment; independent capture/filtering | Pinned legacy behavior | Signatures unchanged; new keywords rejected |
+| `metrics.basic.aligned_series` | Existing outer join with NaN rows | Existing shim behavior | Unchanged |
+
+Accordingly, old enhanced weekly/monthly tracking, Treynor, and annual-active
+tests now compare the convenience API with the corresponding direct enhanced
+kernel under the same period instead of freezing obsolete positional/outer
+numbers. Old annual alpha/beta no-overlap tests now assert empty output. Tests
+that mocked a removed private alignment alias were replaced with observable
+disjoint/common-year behavior; no strict façade expectation was migrated.
+
 ## Provenance and manifest evidence
 
 The generator now freezes the pinned `empyrical/utils.py` blob because its
@@ -118,12 +171,19 @@ tests/compat/test_manifest_integrity.py: 26 passed in 3.75s
 
 ## Regression gates
 
-The expanded Task 4 brief impact gate, excluding only the Task 5-owned
-positions module, is green:
+The expanded Task 4 context-impact gate is green:
+
+```text
+five Task 4 compatibility modules + complete context suite:
+272 passed, 3 strict-pinned warnings
+```
+
+The broad Task 4 brief impact gate, excluding only the Task 5-owned positions
+implementation from this change, is green:
 
 ```text
 tests/compat/empyrical + tests/test_empyrical/stats + tests/test_metrics:
-1133 passed, 3 strict-pinned warnings in 2.86s
+1278 passed, 3 strict-pinned warnings
 ```
 
 The independently reviewed Task 3 strict surface remains green:
@@ -132,15 +192,15 @@ The independently reviewed Task 3 strict surface remains green:
 public API + signatures + state binding + out contract: 203 passed
 ```
 
-The current Task 5 compatibility selector also remains green after the Task 4
-changes:
+The final independently reviewed Task 5 selector also remains green after the
+Task 4 changes:
 
 ```text
-manifest + pyfolio + positions/transactions/risk/common compatibility: 117 passed
+manifest + pyfolio + positions/transactions/risk/common compatibility: 159 passed
 ```
 
-That selector is cross-task regression evidence only. Task 5 is in a separate
-review-fix cycle and is not claimed complete by this report.
+That selector is cross-task regression evidence only. Task 5 is complete at
+commits `575a040`, `d686b11`, and `fd03bf6`, with final review CLEAN.
 
 ## Deferred integration ledger
 
@@ -160,37 +220,20 @@ binding contract. They are recorded for the Task 12 offline integration gate;
 Task 4 deliberately does not weaken Task 3 production behavior or edit those
 tests.
 
-### Task 7 required alignment work
+### Second-review alignment closure
 
-Task 4 intentionally did not change `fincore.metrics.basic.aligned_series`,
-because it is a shared legacy outer-join shim used by both strict compatibility
-and enhanced metrics. Task 7 must add explicit enhanced alignment and timezone
-options at the binary public entry points that still call this shim directly:
-
-- `alpha_beta`: `beta`, `alpha`, `alpha_beta`, `annual_alpha`, `annual_beta`;
-- `ratios`: `information_ratio`, `cal_treynor_ratio`, `m_squared`, `capture`,
-  `up_capture`, `down_capture`, `up_down_capture`, `up_capture_return`, and
-  `down_capture_return`;
-- `risk`: `tracking_error`, `residual_risk`, `beta_fragility_heuristic`;
-- `rolling`: `roll_alpha`, `roll_beta`, `roll_alpha_beta`, `roll_up_capture`,
-  `roll_down_capture`, and `rolling_regression`;
-- `stats`: `relative_win_rate`, `r_cubed`, `capm_r_squared`,
-  `tracking_difference`;
-- `timing`: `treynor_mazuy_timing`, `henriksson_merton_timing`,
-  `market_timing_return`, `cornell_timing`;
-- `yearly`: `annual_active_return`, `information_ratio_by_year`.
-
-Task 7 acceptance must cover partial and disjoint Series labels under
-`strict`, `inner`, and `outer_dropna`; mixed naive/aware indices with default
-failure and explicit UTC normalization; positional ndarray behavior; dependent
-public callers; and strict façade differential regressions. It must also keep
-the direct `basic.aligned_series` outer-join regression green. This is a named
-Task 7 acceptance gap, not a claim that all enhanced binary metrics were
-unified by Task 4.
+The former Task 7 alignment ledger is closed by this Task 4 review fix. No
+direct `aligned_series` call remains in the seven enhanced metric modules. The
+single contract helper is exercised directly and through every one of the 33
+public sites, while strict adapters deliberately retain the heterogeneous
+pinned oracle behavior described above.
 
 ## Scope and handoff
 
-The review follow-up contains only Task 4-owned production, compatibility
-tests, ledger, and this report. No Task 5-owned pyfolio, portfolio,
-positions/transactions, sheets, generator, manifest, or compatibility-test
-path is staged by Task 4.
+The second review follow-up contains only Task 4-owned production, strict
+adapter/registry changes needed to protect the frozen surface, the new
+compatibility matrix, six explicitly migrated obsolete enhanced tests, the
+ledger, and this report. No Task 5-owned pyfolio, portfolio,
+positions/transactions, sheets, generator, manifest, fixture, or compatibility
+test path is changed. Implementation is complete and awaiting independent
+review; this report does not mark Task 4 finally accepted.

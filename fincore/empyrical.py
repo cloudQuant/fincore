@@ -841,11 +841,92 @@ def _legacy_identity_adapter(kernel, arguments):
 def _legacy_beta_adapter(kernel, arguments):
     """Keep legacy beta's fourth positional parameter bound to ``out``."""
 
-    return kernel(
-        arguments["returns"],
-        arguments["factor_returns"],
+    del kernel
+    returns, factor_returns = _resolve_module("_basic").aligned_series(
+        arguments["returns"], arguments["factor_returns"]
+    )
+    return _resolve_module("_alpha_beta").beta_aligned(
+        returns,
+        factor_returns,
         risk_free=arguments.get("risk_free", 0.0),
         out=arguments.get("out"),
+    )
+
+
+def _legacy_aligned_binary_adapter(kernel, arguments):
+    """Apply the pinned outer-label projection before an aligned kernel."""
+
+    returns, factor_returns = _resolve_module("_basic").aligned_series(
+        arguments["returns"], arguments["factor_returns"]
+    )
+    name = kernel.__name__
+    if name == "alpha":
+        return _resolve_module("_alpha_beta").alpha_aligned(
+            returns,
+            factor_returns,
+            risk_free=arguments.get("risk_free", 0.0),
+            period=arguments.get("period", DAILY),
+            annualization=arguments.get("annualization"),
+            out=arguments.get("out"),
+            _beta=arguments.get("_beta"),
+        )
+    if name == "alpha_beta":
+        return _resolve_module("_alpha_beta").alpha_beta_aligned(
+            returns,
+            factor_returns,
+            risk_free=arguments.get("risk_free", 0.0),
+            period=arguments.get("period", DAILY),
+            annualization=arguments.get("annualization"),
+            out=arguments.get("out"),
+        )
+    if name == "beta_fragility_heuristic":
+        return _resolve_module("_risk").beta_fragility_heuristic_aligned(returns, factor_returns)
+    raise KeyError(f"no legacy aligned projection for {name!r}")
+
+
+def _legacy_capture_adapter(kernel, arguments):
+    """Preserve pinned capture filtering without pre-aligning Series labels."""
+
+    name = kernel.__name__
+    returns = arguments["returns"]
+    factor_returns = arguments["factor_returns"]
+    kwargs = dict(arguments.get("kwargs", {}))
+    if "period" in arguments:
+        kwargs["period"] = arguments["period"]
+    period = kwargs.pop("period", DAILY)
+    if kwargs:
+        unexpected = next(iter(kwargs))
+        raise TypeError(f"capture() got an unexpected keyword argument {unexpected!r}")
+
+    annual_return = _resolve_module("_yearly").annual_return
+
+    def capture(left, right):
+        return annual_return(left, period=period) / annual_return(right, period=period)
+
+    def filtered(sign):
+        mask = factor_returns > 0 if sign == "up" else factor_returns < 0
+        return capture(returns[mask], factor_returns[mask])
+
+    if name == "capture":
+        return capture(returns, factor_returns)
+    if name == "up_capture":
+        return filtered("up")
+    if name == "down_capture":
+        return filtered("down")
+    return filtered("up") / filtered("down")
+
+
+def _legacy_conditional_alpha_beta_adapter(kernel, arguments):
+    """Preserve pinned up/down filtering before the aligned alpha-beta kernel."""
+
+    returns = arguments["returns"]
+    factor_returns = arguments["factor_returns"]
+    kwargs = dict(arguments.get("kwargs", {}))
+    mask = factor_returns > 0 if kernel.__name__ == "up_alpha_beta" else factor_returns < 0
+    return _resolve_module("_alpha_beta").alpha_beta_aligned(
+        returns[mask],
+        factor_returns[mask],
+        **kwargs,
     )
 
 
@@ -1014,7 +1095,7 @@ def _legacy_capture_scalar(name, returns, factor_returns, **kwargs):
     period = kwargs.pop("period", DAILY)
     if kwargs:
         unexpected = next(iter(kwargs))
-        raise TypeError(f"{name}() got an unexpected keyword argument {unexpected!r}")
+        raise TypeError(f"capture() got an unexpected keyword argument {unexpected!r}")
     annual_return = _resolve_module("_yearly").annual_return
 
     def capture(left, right):

@@ -113,8 +113,7 @@ class AlphaBetaMissingCoverageTestCase(unittest.TestCase):
         factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2))
 
         result = alpha_beta.annual_alpha(returns, factor_returns)
-        self.assertEqual(len(result), 2)
-        self.assertTrue(result.isna().all())
+        self.assertTrue(result.empty)
 
     def test_annual_beta_with_no_overlap_years(self):
         """Test annual_beta when returns and factor have no overlapping years."""
@@ -122,5 +121,4 @@ class AlphaBetaMissingCoverageTestCase(unittest.TestCase):
         factor_returns = pd.Series([0.005, 0.01], index=pd.date_range("2021-01-01", periods=2))
 
         result = alpha_beta.annual_beta(returns, factor_returns)
-        self.assertEqual(len(result), 2)
-        self.assertTrue(result.isna().all())
+        self.assertTrue(result.empty)

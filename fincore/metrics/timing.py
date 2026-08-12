@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants.interesting_periods import PERIODS
-from fincore.metrics.basic import aligned_series
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 __all__ = [
     "cornell_timing",
@@ -42,6 +42,9 @@ def treynor_mazuy_timing(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     risk_free: float = 0.0,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the Treynor–Mazuy market timing coefficient (gamma).
 
@@ -64,7 +67,9 @@ def treynor_mazuy_timing(
         Treynor–Mazuy timing coefficient (gamma), or ``NaN`` if there is
         insufficient data.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     ret_arr = np.asanyarray(returns_aligned, dtype=float)
     fac_arr = np.asanyarray(factor_aligned, dtype=float)
@@ -93,6 +98,9 @@ def henriksson_merton_timing(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     risk_free: float = 0.0,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the Henriksson–Merton market timing coefficient.
 
@@ -115,7 +123,9 @@ def henriksson_merton_timing(
         Henriksson–Merton timing coefficient, or ``NaN`` if there is
         insufficient data.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     ret_arr = np.asanyarray(returns_aligned, dtype=float)
     fac_arr = np.asanyarray(factor_aligned, dtype=float)
@@ -144,6 +154,9 @@ def market_timing_return(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     risk_free: float = 0.0,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the market timing return component.
 
@@ -165,9 +178,16 @@ def market_timing_return(
         Estimated contribution of market timing to returns, or ``NaN`` if
         the timing coefficient cannot be estimated.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
-    gamma = treynor_mazuy_timing(returns_aligned, factor_aligned, risk_free)
+    gamma = treynor_mazuy_timing(
+        returns_aligned,
+        factor_aligned,
+        risk_free,
+        alignment="strict",
+    )
 
     if np.isnan(gamma):
         return np.nan
@@ -181,6 +201,9 @@ def cornell_timing(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
     risk_free: float = 0.0,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the Cornell timing model coefficient.
 
@@ -204,10 +227,12 @@ def cornell_timing(
         Cornell timing coefficient (beta_up - beta_down), or ``NaN`` if
         there is insufficient data.
     """
-    if len(returns) < 10 or len(factor_returns) < 10:
-        return np.nan
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    if len(returns_aligned) < 10:
+        return np.nan
 
     returns_array = np.asanyarray(returns_aligned)
     factor_array = np.asanyarray(factor_aligned)

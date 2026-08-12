@@ -218,63 +218,37 @@ def test_annual_alpha_different_years():
 # due to the way aligned_series works. They are defensive checks that might be
 # hit with edge cases or future changes to the aligned_series function.
 
-# Let's try mocking to force these paths:
-
 
 @pytest.mark.serial
 def test_annual_alpha_mock_to_hit_line_543():
-    """Test early return when aligned_series yields empty (defensive path)."""
+    """Disjoint enhanced inputs produce an empty annual-alpha result."""
     returns = pd.Series(
         [0.01, 0.02, 0.015],
         index=pd.date_range("2020-01-01", periods=3),
     )
     factor_returns = pd.Series(
         [0.005, 0.01, 0.008],
-        index=pd.date_range("2020-01-01", periods=3),
+        index=pd.date_range("2021-01-01", periods=3),
     )
 
-    from unittest.mock import patch
+    result = alpha_beta.annual_alpha(returns, factor_returns)
 
-    # Mock aligned_series at the use-site module; this is more robust across
-    # Python versions and parallel test workers than string-based patch paths.
-    with patch.object(alpha_beta, "aligned_series") as mock_aligned:
-        mock_aligned.return_value = (pd.Series([], dtype=float), pd.Series([], dtype=float))
-
-        result = alpha_beta.annual_alpha(returns, factor_returns)
-
-        # Should return empty Series (line 543)
-        assert isinstance(result, pd.Series)
-        assert len(result) == 0
+    assert isinstance(result, pd.Series)
+    assert result.empty
 
 
 def test_annual_alpha_mock_to_hit_line_557():
-    """Test line 557 by mocking aligned_series to return non-empty but groupby returns empty."""
+    """Partial enhanced inputs group only their common calendar year."""
     returns = pd.Series(
-        [0.01, 0.02, 0.015],
-        index=pd.date_range("2020-01-01", periods=3),
+        [0.01, 0.02, 0.015, 0.01],
+        index=pd.to_datetime(["2020-01-01", "2021-01-01", "2021-01-02", "2021-01-03"]),
     )
     factor_returns = pd.Series(
-        [0.005, 0.01, 0.008],
-        index=pd.date_range("2020-01-01", periods=3),
+        [0.005, 0.01, 0.008, 0.004],
+        index=pd.to_datetime(["2021-01-01", "2021-01-02", "2021-01-03", "2022-01-01"]),
     )
 
-    from unittest.mock import MagicMock, patch
+    result = alpha_beta.annual_alpha(returns, factor_returns)
 
-    # Create a mock groupby that returns empty groups
-    mock_grouped = MagicMock()
-    mock_grouped.groups.keys.return_value = []
-
-    # Mock aligned_series and groupby
-    with patch("fincore.metrics.alpha_beta.aligned_series") as mock_aligned:
-        # Return non-empty series so we pass line 542
-        mock_aligned.return_value = (returns, factor_returns)
-
-        with patch("pandas.Series.groupby", return_value=mock_grouped):
-            # Actually, patching Series.groupby is tricky
-            # Let's try a different approach
-            pass
-
-    # Actually, the proper way is to accept that these lines may be unreachable
-    # and mark them as such in the coverage configuration.
-    # But for now, let's create a test that documents this behavior.
-    assert True
+    assert result.index.tolist() == [2021]
+    assert result.notna().all()

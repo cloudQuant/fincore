@@ -25,7 +25,8 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
-from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics.basic import adjust_returns, annualization_factor
 from fincore.utils import nanmean
 
 if TYPE_CHECKING:
@@ -281,6 +282,9 @@ def beta(
     _period: str = DAILY,
     _annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | np.ndarray | pd.Series:
     """Calculate beta versus a benchmark.
 
@@ -309,8 +313,12 @@ def beta(
         Beta of the strategy versus the benchmark. For 1D input a scalar
         is returned; for 2D input one value is returned per column.
     """
-    if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
-        returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
     return beta_aligned(returns, factor_returns, risk_free=risk_free, out=out)
 
@@ -323,6 +331,9 @@ def alpha(
     annualization: float | None = None,
     out: np.ndarray | None = None,
     _beta: float | np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | np.ndarray | pd.Series:
     """Calculate annualized alpha versus a benchmark.
 
@@ -358,8 +369,12 @@ def alpha(
         input a scalar is returned; for 2D input one value is returned
         per column.
     """
-    if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
-        returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
     return alpha_aligned(
         returns, factor_returns, risk_free=risk_free, period=period, annualization=annualization, out=out, _beta=_beta
@@ -373,6 +388,9 @@ def alpha_beta(
     period: str = DAILY,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> np.ndarray:
     """Calculate annualized alpha and beta versus a benchmark.
 
@@ -406,8 +424,12 @@ def alpha_beta(
         in the last dimension. For 1D inputs this is length-2; for 2D
         inputs it has one row per column of ``returns``.
     """
-    if not (isinstance(returns, np.ndarray) and isinstance(factor_returns, np.ndarray)):
-        returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
     return alpha_beta_aligned(
         returns, factor_returns, risk_free=risk_free, period=period, annualization=annualization, out=out
@@ -422,6 +444,9 @@ def _conditional_alpha_beta(
     period: str = DAILY,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> np.ndarray:
     """Calculate alpha and beta for a conditional subset of market periods.
 
@@ -448,11 +473,15 @@ def _conditional_alpha_beta(
     np.ndarray
         Array ``[alpha, beta]``. Elements are ``NaN`` if insufficient data.
     """
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
+
     if out is None:
         out = np.empty((2,), dtype="float64")
-
-    if isinstance(returns, pd.Series) and isinstance(factor_returns, pd.Series):
-        returns, factor_returns = returns.align(factor_returns, join="inner")
 
     returns_array = np.asanyarray(returns)
     factor_array = np.asanyarray(factor_returns)
@@ -504,6 +533,9 @@ def up_alpha_beta(
     period: str = DAILY,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> np.ndarray:
     """Calculate alpha and beta for up-market periods only.
 
@@ -534,7 +566,17 @@ def up_alpha_beta(
         Array ``[alpha, beta]`` for up-market periods. Elements are
         ``NaN`` if there is insufficient data.
     """
-    return _conditional_alpha_beta(returns, factor_returns, lambda f: f > 0, risk_free, period, annualization, out)
+    return _conditional_alpha_beta(
+        returns,
+        factor_returns,
+        lambda f: f > 0,
+        risk_free,
+        period,
+        annualization,
+        out,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
 
 def down_alpha_beta(
@@ -544,6 +586,9 @@ def down_alpha_beta(
     period: str = DAILY,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> np.ndarray:
     """Calculate alpha and beta for down-market periods only.
 
@@ -574,7 +619,17 @@ def down_alpha_beta(
         Array ``[alpha, beta]`` for down-market periods. Elements are
         ``NaN`` if there is insufficient data.
     """
-    return _conditional_alpha_beta(returns, factor_returns, lambda f: f <= 0, risk_free, period, annualization, out)
+    return _conditional_alpha_beta(
+        returns,
+        factor_returns,
+        lambda f: f <= 0,
+        risk_free,
+        period,
+        annualization,
+        out,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
 
 def annual_alpha(
@@ -583,6 +638,9 @@ def annual_alpha(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series:
     """Determine the annual alpha for each calendar year.
 
@@ -608,14 +666,14 @@ def annual_alpha(
     pd.Series
         Annual alpha by calendar year.
     """
-    if len(returns) < 1:
-        return pd.Series([], dtype=float)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
-    if not isinstance(returns.index, pd.DatetimeIndex):
-        return pd.Series([], dtype=float)
-
-    returns, factor_returns = aligned_series(returns, factor_returns)
-    if len(returns) < 1:
+    if len(returns) < 1 or not isinstance(returns.index, pd.DatetimeIndex):
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
@@ -626,7 +684,7 @@ def annual_alpha(
         if year in factor_grouped.groups:
             returns_for_year = grouped.get_group(year)
             factor_for_year = factor_grouped.get_group(year)
-            alpha_val = alpha(returns_for_year, factor_for_year, risk_free, period, annualization)
+            alpha_val = alpha_aligned(returns_for_year, factor_for_year, risk_free, period, annualization)
             annual_alphas.append((year, alpha_val))
 
     if not annual_alphas:
@@ -642,6 +700,9 @@ def annual_beta(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> pd.Series:
     """Determine the annual beta for each calendar year.
 
@@ -667,14 +728,14 @@ def annual_beta(
     pd.Series
         Annual beta by calendar year.
     """
-    if len(returns) < 1:
-        return pd.Series([], dtype=float)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns,
+        factor_returns,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
-    if not isinstance(returns.index, pd.DatetimeIndex):
-        return pd.Series([], dtype=float)
-
-    returns, factor_returns = aligned_series(returns, factor_returns)
-    if len(returns) < 1:
+    if len(returns) < 1 or not isinstance(returns.index, pd.DatetimeIndex):
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
@@ -685,7 +746,7 @@ def annual_beta(
         if year in factor_grouped.groups:
             year_returns = grouped.get_group(year)
             year_factor = factor_grouped.get_group(year)
-            beta_val = beta(year_returns, year_factor, risk_free, period, annualization)
+            beta_val = beta_aligned(year_returns, year_factor, risk_free)
             annual_betas.append((year, beta_val))
 
     if not annual_betas:

@@ -25,7 +25,8 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import DAILY
-from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics.basic import adjust_returns, annualization_factor
 from fincore.utils import nanmean, nanstd
 
 logger = logging.getLogger(__name__)
@@ -296,6 +297,9 @@ def tracking_error(
     period: str = DAILY,
     annualization: float | None = None,
     out: np.ndarray | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | np.ndarray:
     """Determine the annualized tracking error versus a benchmark.
 
@@ -324,6 +328,10 @@ def tracking_error(
         Annualized tracking error. For 1D input a scalar is returned; for
         2D input one value is returned per column.
     """
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+
     allocated_output = out is None
     if allocated_output:
         out = np.empty(returns.shape[1:])
@@ -337,7 +345,6 @@ def tracking_error(
             out = out.item()
         return out  # type: ignore[return-value]
 
-    returns, factor_returns = aligned_series(returns, factor_returns)
     active_return = adjust_returns(returns, factor_returns)
     ann_factor = annualization_factor(period, annualization)
 
@@ -356,6 +363,9 @@ def residual_risk(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate annualized residual risk (idiosyncratic risk).
 
@@ -383,10 +393,12 @@ def residual_risk(
         Annualized residual risk, or ``NaN`` if there are fewer than two
         aligned observations.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
-    # `aligned_series` may return a union index for Series inputs; ensure we only
-    # compute the regression on paired, finite observations.
+    # Aligned inputs can still contain NaNs; compute the regression only on
+    # paired, finite observations.
     if isinstance(returns_aligned, (pd.Series, pd.DataFrame)) or isinstance(factor_aligned, (pd.Series, pd.DataFrame)):
         df = pd.concat([pd.Series(returns_aligned), pd.Series(factor_aligned)], axis=1, sort=False)
         df = df.dropna()
@@ -686,6 +698,21 @@ def gpd_risk_estimates_aligned(
 def beta_fragility_heuristic(
     returns: pd.Series | np.ndarray,
     factor_returns: pd.Series | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> float:
+    """Estimate fragility to a drop in beta with explicit alignment."""
+
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+    return _beta_fragility_heuristic_aligned(returns_aligned, factor_aligned)
+
+
+def _beta_fragility_heuristic_aligned(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
 ) -> float:
     """Estimate fragility to a drop in beta.
 
@@ -708,13 +735,8 @@ def beta_fragility_heuristic(
     if len(returns) < 3 or len(factor_returns) < 3:
         return np.nan
 
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
-
-    if len(returns_aligned) < 3 or len(factor_aligned) < 3:
-        return np.nan
-
-    returns_series = pd.Series(np.asanyarray(returns_aligned))
-    factor_returns_series = pd.Series(np.asanyarray(factor_aligned))
+    returns_series = pd.Series(np.asanyarray(returns))
+    factor_returns_series = pd.Series(np.asanyarray(factor_returns))
     pairs = pd.concat([returns_series, factor_returns_series], axis=1)
     pairs.columns = ["returns", "factor_returns"]
     pairs = pairs.dropna()
@@ -760,4 +782,4 @@ def beta_fragility_heuristic_aligned(
     float
         Beta fragility heuristic, or ``NaN`` if there is insufficient data.
     """
-    return beta_fragility_heuristic(returns, factor_returns)
+    return _beta_fragility_heuristic_aligned(returns, factor_returns)

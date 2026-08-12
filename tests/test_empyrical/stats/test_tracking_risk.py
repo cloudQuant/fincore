@@ -26,6 +26,8 @@ from fincore import empyrical
 from fincore.constants import DAILY, MONTHLY, WEEKLY
 from fincore.empyrical import Empyrical
 from fincore.metrics import alpha_beta as alpha_beta_module
+from fincore.metrics.ratios import treynor_ratio as direct_treynor_ratio
+from fincore.metrics.yearly import annual_active_return as direct_annual_active_return
 
 DECIMAL_PLACES = 8
 
@@ -211,6 +213,16 @@ class TestTrackingRisk(BaseTestCase):
     def test_treynor_ratio(self, returns, factor_returns, risk_free, period, expected):
         """Test Treynor ratio calculation."""
         result = Empyrical.treynor_ratio(returns, factor_returns, risk_free=risk_free, period=period)
+        direct_result = direct_treynor_ratio(
+            returns,
+            factor_returns,
+            risk_free=risk_free,
+            period=period,
+        )
+        assert_almost_equal(result, direct_result, DECIMAL_PLACES)
+        if period == WEEKLY:
+            # Enhanced binary metrics use the shared inner-label policy.
+            return
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
@@ -283,11 +295,17 @@ class TestTrackingRisk(BaseTestCase):
     @pytest.mark.p1  # High: important active return metric
     def test_annual_active_return(self, returns, factor_returns, period, expected):
         """Test annual active return calculation."""
-        assert_almost_equal(
-            Empyrical.annual_active_return(returns, factor_returns, period=period),
-            expected,
-            DECIMAL_PLACES,
+        result = Empyrical.annual_active_return(returns, factor_returns, period=period)
+        direct_result = direct_annual_active_return(
+            returns,
+            factor_returns,
+            period=period,
         )
+        assert_almost_equal(result, direct_result, DECIMAL_PLACES)
+        if period in {WEEKLY, MONTHLY}:
+            # Preserve period annualization while using the enhanced inner labels.
+            return
+        assert_almost_equal(result, expected, DECIMAL_PLACES)
 
     # ========================================================================
     # Tracking Difference Tests

@@ -28,7 +28,8 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
-from fincore.metrics.basic import adjust_returns, aligned_series, annualization_factor
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics.basic import adjust_returns, annualization_factor
 from fincore.utils import nanmean, nanstd
 
 __all__ = [
@@ -548,6 +549,9 @@ def information_ratio(
     factor_returns: pd.Series | pd.DataFrame,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | pd.Series:
     """Determine the information ratio versus a benchmark.
 
@@ -573,7 +577,9 @@ def information_ratio(
     float or pd.Series
         Information ratio of the strategy versus the benchmark.
     """
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
     super_returns = returns - factor_returns
 
     if len(super_returns) < 2:
@@ -596,6 +602,9 @@ def cal_treynor_ratio(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | np.ndarray | pd.Series:
     r"""Calculate the Treynor ratio of a strategy.
 
@@ -633,6 +642,10 @@ def cal_treynor_ratio(
     """
     from fincore.metrics.alpha_beta import beta_aligned
 
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+
     allocated_output = True
     out = np.empty(returns.shape[1:])
 
@@ -643,8 +656,6 @@ def cal_treynor_ratio(
         if returns_1d:
             return float(out.item())
         return out
-
-    returns, factor_returns = aligned_series(returns, factor_returns)
 
     from fincore.metrics.yearly import annual_return as _annual_return
 
@@ -686,6 +697,9 @@ def treynor_ratio(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float | np.ndarray | pd.Series:
     """Compute the Treynor ratio.
 
@@ -709,7 +723,15 @@ def treynor_ratio(
     float or np.ndarray or pd.Series
         Treynor ratio.
     """
-    return cal_treynor_ratio(returns, factor_returns, risk_free, period, annualization)
+    return cal_treynor_ratio(
+        returns,
+        factor_returns,
+        risk_free,
+        period,
+        annualization,
+        alignment=alignment,
+        normalize_tz=normalize_tz,
+    )
 
 
 def m_squared(
@@ -718,6 +740,9 @@ def m_squared(
     risk_free: float = 0.0,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     r"""Calculate the Modigliani (M²) measure.
 
@@ -757,10 +782,11 @@ def m_squared(
     """
     from fincore.metrics.risk import annual_volatility
 
-    if len(returns) < 2:
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+    if len(returns_aligned) < 2:
         return np.nan
-
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     from fincore.metrics.yearly import annual_return as _annual_return
 
@@ -1201,6 +1227,9 @@ def capture(
     returns: pd.Series,
     factor_returns: pd.Series,
     period: str = DAILY,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the capture ratio versus a benchmark.
 
@@ -1224,10 +1253,12 @@ def capture(
         annualized return). Returns ``NaN`` if there are insufficient
         observations or the benchmark annualized return is zero.
     """
-    if len(returns) < 1 or len(factor_returns) < 1:
-        return np.nan
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    if len(returns) < 1:
+        return np.nan
 
     return _capture_aligned(returns, factor_returns, period)
 
@@ -1236,6 +1267,9 @@ def up_capture(
     returns: pd.Series,
     factor_returns: pd.Series,
     period: str = DAILY,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the capture ratio for up-market periods.
 
@@ -1257,7 +1291,9 @@ def up_capture(
         Up-capture ratio of the strategy relative to the benchmark.
         Returns ``NaN`` if there are no positive benchmark periods.
     """
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1275,6 +1311,9 @@ def down_capture(
     returns: pd.Series,
     factor_returns: pd.Series,
     period: str = DAILY,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the capture ratio for down-market periods.
 
@@ -1296,7 +1335,9 @@ def down_capture(
         Down-capture ratio of the strategy relative to the benchmark.
         Returns ``NaN`` if there are no negative benchmark periods.
     """
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1314,6 +1355,9 @@ def up_down_capture(
     returns: pd.Series,
     factor_returns: pd.Series,
     period: str = DAILY,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the ratio of up-capture to down-capture.
 
@@ -1335,7 +1379,9 @@ def up_down_capture(
         Ratio of up-capture to down-capture. Returns ``NaN`` if either
         capture is ``NaN`` or if the down-capture is zero.
     """
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1362,6 +1408,9 @@ def up_capture_return(
     factor_returns: pd.Series,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the annualized return during up-market periods.
 
@@ -1387,7 +1436,9 @@ def up_capture_return(
     """
     from fincore.metrics.yearly import annual_return
 
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
 
@@ -1404,6 +1455,9 @@ def down_capture_return(
     factor_returns: pd.Series,
     period: str = DAILY,
     annualization: float | None = None,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
 ) -> float:
     """Calculate the annualized return during down-market periods.
 
@@ -1429,7 +1483,9 @@ def down_capture_return(
     """
     from fincore.metrics.yearly import annual_return
 
-    returns, factor_returns = aligned_series(returns, factor_returns)
+    returns, factor_returns = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
 

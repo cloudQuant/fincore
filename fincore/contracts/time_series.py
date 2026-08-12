@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 
 from fincore.exceptions import DataAlignmentError
@@ -11,7 +12,7 @@ from fincore.exceptions import DataAlignmentError
 AlignmentPolicy = Literal["strict", "inner", "outer_dropna"]
 TimeSeries = pd.Series | pd.DataFrame
 
-__all__ = ["AlignmentPolicy", "align_time_series"]
+__all__ = ["AlignmentPolicy", "align_binary_metric_inputs", "align_time_series"]
 
 
 def _normalize_datetime_index(index: pd.Index, normalize_tz: str | None) -> pd.Index:
@@ -31,6 +32,11 @@ def _normalize_object(value: TimeSeries, normalize_tz: str | None) -> TimeSeries
 def _validate_normalize_tz(normalize_tz: str | None) -> None:
     if normalize_tz is not None and normalize_tz.upper() != "UTC":
         raise ValueError("normalize_tz currently supports only 'UTC'")
+
+
+def _validate_alignment_policy(policy: AlignmentPolicy) -> None:
+    if policy not in {"strict", "inner", "outer_dropna"}:
+        raise ValueError(f"unknown alignment policy: {policy!r}")
 
 
 def validate_time_series_timezones(*values: TimeSeries) -> None:
@@ -65,10 +71,9 @@ def align_time_series(
     """Return copies aligned under one explicit label and timezone policy."""
 
     _validate_normalize_tz(normalize_tz)
+    _validate_alignment_policy(policy)
     if not values:
         return ()
-    if policy not in {"strict", "inner", "outer_dropna"}:
-        raise ValueError(f"unknown alignment policy: {policy!r}")
 
     normalized = tuple(_normalize_object(value, normalize_tz) for value in values)
     _validate_indices(normalized, normalize_tz)
@@ -90,3 +95,46 @@ def align_time_series(
     valid = combined.notna().all(axis="columns")
     common = combined.index[valid]
     return tuple(value.loc[common] for value in normalized)
+
+
+def align_binary_metric_inputs(
+    left: TimeSeries | np.ndarray,
+    right: TimeSeries | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> tuple[TimeSeries | np.ndarray, TimeSeries | np.ndarray]:
+    """Align the two inputs accepted by an enhanced binary metric.
+
+    Pandas inputs use their labels through :func:`align_time_series`.
+    NumPy arrays remain positional and must have the same first-axis length.
+    Mixing labelled and positional inputs is rejected because there is no
+    unambiguous policy for mapping array rows onto labels.
+    """
+
+    _validate_normalize_tz(normalize_tz)
+    _validate_alignment_policy(alignment)
+
+    left_is_pandas = isinstance(left, (pd.Series, pd.DataFrame))
+    right_is_pandas = isinstance(right, (pd.Series, pd.DataFrame))
+    left_is_array = isinstance(left, np.ndarray)
+    right_is_array = isinstance(right, np.ndarray)
+
+    if left_is_pandas and right_is_pandas:
+        left_aligned, right_aligned = align_time_series(
+            left,
+            right,
+            policy=alignment,
+            normalize_tz=normalize_tz,
+        )
+        return left_aligned, right_aligned
+
+    if left_is_array and right_is_array:
+        if len(left) != len(right):
+            raise DataAlignmentError("positional ndarray inputs must have the same length")
+        return left, right
+
+    if (left_is_pandas and right_is_array) or (left_is_array and right_is_pandas):
+        raise DataAlignmentError("cannot mix positional ndarray and labelled pandas inputs")
+
+    raise TypeError("binary metric inputs must both be pandas objects or both be ndarrays")

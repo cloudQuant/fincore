@@ -64,7 +64,7 @@ def test_key_legacy_positional_contracts_are_frozen() -> None:
 
 def test_enhanced_flat_and_metrics_signatures_do_not_drift() -> None:
     expected_calmar = "(returns: 'pd.Series | pd.DataFrame | np.ndarray', risk_free: 'float' = 0, period: 'str' = 'daily', annualization: 'float | None' = None) -> 'float | pd.Series'"
-    expected_beta = "(returns: 'ReturnOrDataFrame', factor_returns: 'ReturnOrDataFrame', risk_free: 'float' = 0.0, _period: 'str' = 'daily', _annualization: 'float | None' = None, out: 'np.ndarray | None' = None) -> 'float | np.ndarray | pd.Series'"
+    expected_beta = "(returns: 'ReturnOrDataFrame', factor_returns: 'ReturnOrDataFrame', risk_free: 'float' = 0.0, _period: 'str' = 'daily', _annualization: 'float | None' = None, out: 'np.ndarray | None' = None, *, alignment: 'AlignmentPolicy' = 'inner', normalize_tz: 'str | None' = None) -> 'float | np.ndarray | pd.Series'"
     assert str(inspect.signature(metrics_calmar_ratio)) == expected_calmar
     assert str(inspect.signature(flat_calmar_ratio)) == expected_calmar
     assert str(inspect.signature(metrics_beta)) == expected_beta

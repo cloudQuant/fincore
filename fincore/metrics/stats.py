@@ -26,7 +26,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 from fincore.constants import DAILY
-from fincore.metrics.basic import aligned_series
+from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 __all__ = [
     "bond_market_correlation",
@@ -491,7 +491,13 @@ def loss_rate(returns: pd.Series | np.ndarray) -> float:
     return float(loss_rate_value)
 
 
-def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
+def relative_win_rate(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> float:
     """Calculate the win rate of strategy returns relative to a benchmark.
 
     The relative win rate is the fraction of periods where the strategy
@@ -510,7 +516,9 @@ def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series
         Fraction of observations where ``returns > factor_returns`` in
         ``[0, 1]``, or ``NaN`` if there are no valid observations.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     ret_arr = np.asarray(returns_aligned, dtype=float)
     fac_arr = np.asarray(factor_aligned, dtype=float)
@@ -524,7 +532,13 @@ def relative_win_rate(returns: pd.Series | np.ndarray, factor_returns: pd.Series
     return float(win_count / total)
 
 
-def r_cubed(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
+def r_cubed(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> float:
     """Calculate the R-cubed (R³) measure.
 
     R³ is defined as the cube of the correlation between strategy returns
@@ -543,7 +557,9 @@ def r_cubed(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndar
         Cube of the Pearson correlation coefficient, or ``NaN`` if there
         is insufficient data.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     ret_arr = np.asarray(returns_aligned, dtype=float)
     fac_arr = np.asarray(factor_aligned, dtype=float)
@@ -636,7 +652,13 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
     return rar / avg_max_dd
 
 
-def capm_r_squared(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
+def capm_r_squared(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> float:
     """Calculate the CAPM R-squared.
 
     R² = (β × σ_B / σ_P)², measuring the proportion of strategy return
@@ -654,7 +676,9 @@ def capm_r_squared(returns: pd.Series | np.ndarray, factor_returns: pd.Series | 
     float
         CAPM R-squared in ``[0, 1]``, or ``NaN`` if insufficient data.
     """
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
 
     ret_arr = np.asarray(returns_aligned, dtype=float)
     fac_arr = np.asarray(factor_aligned, dtype=float)
@@ -681,7 +705,13 @@ def capm_r_squared(returns: pd.Series | np.ndarray, factor_returns: pd.Series | 
     return float(np.clip(r_sq, 0.0, 1.0))
 
 
-def tracking_difference(returns: pd.Series | np.ndarray, factor_returns: pd.Series | np.ndarray) -> float:
+def tracking_difference(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    *,
+    alignment: AlignmentPolicy = "inner",
+    normalize_tz: str | None = None,
+) -> float:
     """Calculate tracking difference in cumulative returns.
 
     Tracking difference is defined as the cumulative strategy return minus
@@ -701,10 +731,11 @@ def tracking_difference(returns: pd.Series | np.ndarray, factor_returns: pd.Seri
     """
     from fincore.metrics.returns import cum_returns_final
 
-    if len(returns) < 1:
+    returns_aligned, factor_aligned = align_binary_metric_inputs(
+        returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
+    )
+    if len(returns_aligned) < 1:
         return np.nan
-
-    returns_aligned, factor_aligned = aligned_series(returns, factor_returns)
 
     cum_strategy = cum_returns_final(returns_aligned, starting_value=0)
     cum_benchmark = cum_returns_final(factor_aligned, starting_value=0)

@@ -464,6 +464,12 @@ def _legacy_adapter_for(name: str) -> str:
         return "fincore.empyrical:_legacy_annual_volatility_adapter"
     if name == "beta":
         return "fincore.empyrical:_legacy_beta_adapter"
+    if name in {"alpha", "alpha_beta", "beta_fragility_heuristic"}:
+        return "fincore.empyrical:_legacy_aligned_binary_adapter"
+    if name in {"capture", "up_capture", "down_capture", "up_down_capture"}:
+        return "fincore.empyrical:_legacy_capture_adapter"
+    if name in {"up_alpha_beta", "down_alpha_beta"}:
+        return "fincore.empyrical:_legacy_conditional_alpha_beta_adapter"
     if name == "calmar_ratio":
         return "fincore.empyrical:_legacy_calmar_adapter"
     if name == "conditional_value_at_risk":

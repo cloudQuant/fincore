@@ -1,10 +1,4 @@
-"""Tests for alpha_beta missing coverage lines 543, 557, 596, 610.
-
-These lines are defensive checks that are hard to reach with normal input
-due to how aligned_series works. We use mocking to force these paths.
-"""
-
-from unittest.mock import patch
+"""Annual alpha/beta empty-alignment behavior tests."""
 
 import pandas as pd
 import pytest
@@ -20,28 +14,20 @@ class TestAnnualAlphaLine543:
     """
 
     def test_annual_alpha_empty_after_alignment(self):
-        """Test annual_alpha when aligned series is empty (line 543)."""
+        """Disjoint labels produce an empty enhanced annual-alpha result."""
         returns = pd.Series(
             [0.01, 0.02, 0.015],
             index=pd.date_range("2020-01-01", periods=3),
         )
         factor_returns = pd.Series(
             [0.005, 0.01, 0.008],
-            index=pd.date_range("2020-01-01", periods=3),
+            index=pd.date_range("2021-01-01", periods=3),
         )
 
-        # Mock aligned_series at use-site; string path is fragile across Python/xdist
-        with patch.object(alpha_beta, "aligned_series") as mock_aligned:
-            mock_aligned.return_value = (
-                pd.Series([], dtype=float).rename(0),
-                pd.Series([], dtype=float).rename(1),
-            )
+        result = alpha_beta.annual_alpha(returns, factor_returns)
 
-            result = alpha_beta.annual_alpha(returns, factor_returns)
-
-            # Should return empty Series (line 543)
-            assert isinstance(result, pd.Series)
-            assert len(result) == 0
+        assert isinstance(result, pd.Series)
+        assert result.empty
 
 
 @pytest.mark.serial
@@ -49,25 +35,17 @@ class TestAnnualBetaLine596:
     """Test to cover line 596 in alpha_beta.py (similar to line 543)."""
 
     def test_annual_beta_empty_after_alignment(self):
-        """Test annual_beta when aligned series is empty (line 596)."""
+        """Disjoint labels produce an empty enhanced annual-beta result."""
         returns = pd.Series(
             [0.01, 0.02, 0.015],
             index=pd.date_range("2020-01-01", periods=3),
         )
         factor_returns = pd.Series(
             [0.005, 0.01, 0.008],
-            index=pd.date_range("2020-01-01", periods=3),
+            index=pd.date_range("2021-01-01", periods=3),
         )
 
-        # Mock aligned_series at use-site; string path is fragile across Python/xdist
-        with patch.object(alpha_beta, "aligned_series") as mock_aligned:
-            mock_aligned.return_value = (
-                pd.Series([], dtype=float).rename(0),
-                pd.Series([], dtype=float).rename(1),
-            )
+        result = alpha_beta.annual_beta(returns, factor_returns)
 
-            result = alpha_beta.annual_beta(returns, factor_returns)
-
-            # Should return empty Series (line 596)
-            assert isinstance(result, pd.Series)
-            assert len(result) == 0
+        assert isinstance(result, pd.Series)
+        assert result.empty
