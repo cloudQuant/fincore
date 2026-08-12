@@ -22,6 +22,8 @@ signature facts were frozen. Canonical defaults are restricted-AST evaluated
 runtime literals; their original spelling remains in `default_expression`.
 Aliases retain both `symbol` and `source_name`. This distinction prevents an
 upstream manifest from being mistaken for fincore compatibility proof.
+The resolver enforces bounded recursion, node visits, containers, JSON-safe
+scalars, and numeric-only arithmetic before constructing or evaluating values.
 
 ## Compatibility levels
 

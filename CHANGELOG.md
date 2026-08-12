@@ -17,6 +17,9 @@ recorded here.
 - Hardened those manifests to read pinned Git blobs, resolve safe constant
   defaults, preserve aliases/star exports, bind optional oracle evidence to the
   pinned checkout, and invalidate human review attestations on evidence drift.
+- Bounded static constant parsing by depth, node visits, container/scalar size,
+  and numeric magnitude; all Git/oracle subprocesses are now noninteractive
+  and time-limited with operation-specific failures.
 - Added explicit compatibility matrices and upstream provenance review notes.
 - Corrected migration and README claims that previously implied certified
   drop-in compatibility, no breaking changes, or 100% coverage.

@@ -19,6 +19,8 @@ All entries start as unverified against fincore 0.3.0. Static signatures here
 describe the pinned upstream target only. Restricted AST resolution evaluates
 known constants and safe arithmetic (`last_n_days=126`) and the portable
 `FACTOR_PARTITIONS` dictionary while retaining each `default_expression`.
+Parsing is resource-bounded; Git and optional oracle processes are
+noninteractive, time-limited, and report the timed-out operation by name.
 
 | Public symbol | C0 | C1 | C2 | C3 | C4 |
 | --- | --- | --- | --- | --- | --- |

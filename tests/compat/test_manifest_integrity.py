@@ -157,7 +157,80 @@ def test_unresolved_defaults_are_not_labeled_signature_ready() -> None:
     assert parameters[0]["resolved"] is False
     assert parameters[0]["default"] is None
     assert parameters[0]["default_expression"] == "MISSING"
+    assert "unknown name" in parameters[0]["unresolved_reason"]
     assert generator._canonical_signature(function, parameters) is None
+
+
+def test_constant_resolver_rejects_huge_power_before_operator_runs(monkeypatch) -> None:
+    generator = _load_generator()
+    tree = ast.parse("VALUE = 2 ** 1000000")
+    resolver = generator.StaticConstantResolver({"module": tree})
+
+    def forbidden_power(_left: object, _right: object) -> object:
+        pytest.fail("unsafe exponent reached operator.pow")
+
+    monkeypatch.setitem(generator.SAFE_BINARY_OPERATORS, ast.Pow, forbidden_power)
+    value, resolved = resolver.resolve(tree.body[0].value, "module")
+    assert value is None
+    assert resolved is False
+    assert "exponent" in resolver.last_unresolved_reason
+
+
+def test_constant_resolver_rejects_oversized_container_before_children(monkeypatch) -> None:
+    generator = _load_generator()
+    node = ast.List(
+        elts=[ast.Constant(value=index) for index in range(generator.MAX_CONTAINER_ITEMS + 1)],
+        ctx=ast.Load(),
+    )
+    resolver = generator.StaticConstantResolver({"module": ast.Module(body=[], type_ignores=[])})
+    original = resolver._resolve
+    visits = 0
+
+    def counting_resolve(*args: Any, **kwargs: Any) -> Any:
+        nonlocal visits
+        visits += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(resolver, "_resolve", counting_resolve)
+    assert resolver.resolve(node, "module") == (None, False)
+    assert visits == 1
+    assert "container" in resolver.last_unresolved_reason
+
+
+@pytest.mark.parametrize(
+    "node",
+    [
+        ast.Constant(value=b"bytes"),
+        ast.Constant(value=1 + 2j),
+        ast.Set(elts=[ast.Constant(value=1)]),
+        ast.Constant(value=float("inf")),
+        ast.Constant(value=float("nan")),
+    ],
+)
+def test_constant_resolver_rejects_non_json_or_non_finite_values(node: ast.expr) -> None:
+    generator = _load_generator()
+    resolver = generator.StaticConstantResolver({"module": ast.Module(body=[], type_ignores=[])})
+    assert resolver.resolve(node, "module") == (None, False)
+    assert resolver.last_unresolved_reason
+
+
+def test_constant_resolver_enforces_depth_and_visit_budgets() -> None:
+    generator = _load_generator()
+    deep: ast.expr = ast.Constant(value=1)
+    for _ in range(generator.MAX_RESOLVE_DEPTH + 1):
+        deep = ast.UnaryOp(op=ast.UAdd(), operand=deep)
+    resolver = generator.StaticConstantResolver({"module": ast.Module(body=[], type_ignores=[])})
+    assert resolver.resolve(deep, "module") == (None, False)
+    assert "depth" in resolver.last_unresolved_reason
+
+    nodes: list[ast.expr] = [ast.Constant(value=1) for _ in range(2048)]
+    while len(nodes) > 1:
+        nodes = [
+            ast.BinOp(left=nodes[index], op=ast.Add(), right=nodes[index + 1]) for index in range(0, len(nodes), 2)
+        ]
+    resolver = generator.StaticConstantResolver({"module": ast.Module(body=[], type_ignores=[])})
+    assert resolver.resolve(nodes[0], "module") == (None, False)
+    assert "node visits" in resolver.last_unresolved_reason
 
 
 def test_pyfolio_manifest_is_pinned() -> None:
@@ -279,6 +352,52 @@ def test_pinned_source_reads_committed_blob_when_worktree_is_dirty(tmp_path: Pat
     pinned = generator.PinnedGitSource(root, commit)
     assert pinned.read_text("package.py") == "VALUE = 'pinned'\n"
     assert pinned.sha256("package.py") != generator.hashlib.sha256(source.read_bytes()).hexdigest()
+
+
+def test_pinned_git_read_timeout_names_operation(tmp_path: Path, monkeypatch) -> None:
+    generator = _load_generator()
+    source = object.__new__(generator.PinnedGitSource)
+    source.root = tmp_path
+    source.commit = "abc123"
+
+    def time_out(*args: Any, **kwargs: Any) -> Any:
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(generator.subprocess, "run", time_out)
+    with pytest.raises(ValueError, match="read pinned Git blob.*timed out"):
+        source.read_bytes("package.py")
+
+
+def test_oracle_execution_timeout_names_operation(tmp_path: Path, monkeypatch) -> None:
+    generator = _load_generator()
+
+    def time_out(*args: Any, **kwargs: Any) -> Any:
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(generator.subprocess, "run", time_out)
+    with pytest.raises(ValueError, match="execute isolated oracle.*timed out"):
+        generator._execute_oracle(Path(sys.executable), tmp_path, "samplepkg", ["target"], [])
+
+
+def test_generator_subprocess_calls_are_centralized_and_bounded() -> None:
+    tree = ast.parse(GENERATOR.read_text(encoding="utf-8"))
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "subprocess"
+        and node.func.attr == "run"
+    ]
+    assert len(calls) == 1
+    wrapper = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_run_process")
+    assert calls[0] in list(ast.walk(wrapper))
+    keyword_names = {keyword.arg for keyword in calls[0].keywords}
+    assert {"timeout", "env", "stdin"} <= keyword_names
+    source = GENERATOR.read_text(encoding="utf-8")
+    assert '"GIT_TERMINAL_PROMPT": "0"' in source
+    assert "timeout=LOCAL_GIT_TIMEOUT_SECONDS" in source
 
 
 def test_oracle_rejects_wrong_source_version(tmp_path: Path) -> None:

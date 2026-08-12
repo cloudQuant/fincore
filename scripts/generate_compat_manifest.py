@@ -7,7 +7,9 @@ import argparse
 import ast
 import hashlib
 import json
+import math
 import operator
+import os
 import subprocess
 import tempfile
 from copy import deepcopy
@@ -31,6 +33,17 @@ PYFOLIO_PROFILE = (
     "create_perf_attrib_tear_sheet",
 )
 COMPAT_PENDING = dict.fromkeys(("C0", "C1", "C2", "C3", "C4"), "not-verified")
+MAX_RESOLVE_DEPTH = 32
+MAX_NODE_VISITS = 2048
+MAX_CONTAINER_ITEMS = 256
+MAX_ABS_INTEGER = 10**12
+MAX_ABS_FLOAT = 10**12
+MAX_STRING_LENGTH = 4096
+MAX_POWER_BASE = 10**6
+MAX_POWER_EXPONENT = 12
+LOCAL_GIT_TIMEOUT_SECONDS = 30
+ORACLE_TIMEOUT_SECONDS = 120
+NONINTERACTIVE_ENV_OVERRIDES = {"GIT_TERMINAL_PROMPT": "0", "GIT_ASKPASS": ""}
 SAFE_BINARY_OPERATORS = {
     ast.Add: operator.add,
     ast.Sub: operator.sub,
@@ -40,16 +53,40 @@ SAFE_BINARY_OPERATORS = {
     ast.Mod: operator.mod,
     ast.Pow: operator.pow,
 }
-SAFE_UNARY_OPERATORS = {ast.UAdd: operator.pos, ast.USub: operator.neg, ast.Not: operator.not_}
+SAFE_UNARY_OPERATORS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
 UNRESOLVED = object()
 ORACLE_SCRIPT = r"""
 import hashlib
 import importlib
 import inspect
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
+
+GIT_TIMEOUT_SECONDS = 30
+environment = os.environ.copy()
+environment.update({"GIT_TERMINAL_PROMPT": "0", "GIT_ASKPASS": ""})
+
+def run_git(arguments, operation, root):
+    try:
+        return subprocess.run(
+            ["git", *arguments],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            timeout=GIT_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(
+            f"{operation} timed out after {GIT_TIMEOUT_SECONDS}s"
+        ) from error
+    except subprocess.CalledProcessError as error:
+        detail = (error.stderr or error.stdout or b"").decode(errors="replace").strip()
+        raise RuntimeError(f"{operation} failed: {detail or error}") from error
 
 root = Path(sys.argv[1]).resolve()
 package_name = sys.argv[2]
@@ -62,16 +99,13 @@ try:
     relative_module = module_path.relative_to(root).as_posix()
 except ValueError as error:
     raise RuntimeError(f"oracle imported outside pinned root: {module_path}") from error
-commit = subprocess.run(
-    ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
-).stdout.strip()
+commit = run_git(["rev-parse", "HEAD"], "resolve oracle commit", root).stdout.decode().strip()
 source_files = []
 for relative in source_paths:
-    blob = subprocess.run(
-        ["git", "show", f"{commit}:{package_name}/{relative}"],
-        cwd=root,
-        check=True,
-        capture_output=True,
+    blob = run_git(
+        ["show", f"{commit}:{package_name}/{relative}"],
+        f"read oracle source blob {relative}",
+        root,
     ).stdout
     source_files.append({
         "path": relative,
@@ -86,6 +120,38 @@ print(json.dumps({
     "signatures": {name: str(inspect.signature(getattr(package, name))) for name in names},
 }, sort_keys=True))
 """
+
+
+def _run_process(
+    command: list[str],
+    *,
+    operation: str,
+    cwd: Path | None = None,
+    timeout: int,
+    text: bool = False,
+) -> subprocess.CompletedProcess[Any]:
+    """Run one bounded, noninteractive Git/oracle subprocess."""
+    environment = os.environ.copy()
+    environment.update(NONINTERACTIVE_ENV_OVERRIDES)
+    try:
+        return subprocess.run(
+            command,
+            cwd=cwd,
+            check=True,
+            capture_output=True,
+            text=text,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise ValueError(f"{operation} timed out after {timeout}s") from error
+    except subprocess.CalledProcessError as error:
+        stderr = error.stderr or error.stdout or ""
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        detail = stderr.strip()
+        raise ValueError(f"{operation} failed: {detail or error}") from error
 
 
 @dataclass(frozen=True)
@@ -108,19 +174,19 @@ class PinnedGitSource:
     def __init__(self, root: Path, commit: str) -> None:
         self.root = root.resolve()
         self.commit = commit
-        subprocess.run(
+        _run_process(
             ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
             cwd=self.root,
-            check=True,
-            capture_output=True,
+            operation="validate pinned Git commit",
+            timeout=LOCAL_GIT_TIMEOUT_SECONDS,
         )
 
     def read_bytes(self, path: str) -> bytes:
-        result = subprocess.run(
+        result = _run_process(
             ["git", "show", f"{self.commit}:{path}"],
             cwd=self.root,
-            check=True,
-            capture_output=True,
+            operation=f"read pinned Git blob {path}",
+            timeout=LOCAL_GIT_TIMEOUT_SECONDS,
         )
         return result.stdout
 
@@ -159,78 +225,210 @@ class StaticConstantResolver:
                             imports[local_name] = (target_module, alias.name)
             self.assignments[module] = assignments
             self.imports[module] = imports
+        self.last_unresolved_reason = ""
 
     def resolve(self, node: ast.expr | None, module: str) -> tuple[Any, bool]:
-        value = self._resolve(node, module, set())
+        self.last_unresolved_reason = ""
+        value = self._resolve(node, module, set(), depth=0, budget={"visits": 0})
         return (None, False) if value is UNRESOLVED else (value, True)
 
-    def _resolve(self, node: ast.expr | None, module: str, seen: set[tuple[str, str]]) -> Any:
+    def _fail(self, reason: str) -> object:
+        if not self.last_unresolved_reason:
+            self.last_unresolved_reason = reason
+        return UNRESOLVED
+
+    def _resolve(
+        self,
+        node: ast.expr | None,
+        module: str,
+        seen: set[tuple[str, str]],
+        *,
+        depth: int,
+        budget: dict[str, int],
+    ) -> Any:
+        if depth > MAX_RESOLVE_DEPTH:
+            return self._fail(f"maximum constant resolution depth {MAX_RESOLVE_DEPTH} exceeded")
+        budget["visits"] += 1
+        if budget["visits"] > MAX_NODE_VISITS:
+            return self._fail(f"maximum constant AST node visits {MAX_NODE_VISITS} exceeded")
         if node is None:
             return None
         if isinstance(node, ast.Constant):
-            return node.value
-        if isinstance(node, (ast.Tuple, ast.List, ast.Set)):
-            values = [self._resolve(item, module, seen.copy()) for item in node.elts]
-            if any(value is UNRESOLVED for value in values):
-                return UNRESOLVED
+            if _bounded_json_scalar(node.value):
+                return node.value
+            return self._fail(f"unsupported or unbounded scalar constant: {type(node.value).__name__}")
+        if isinstance(node, ast.Set):
+            return self._fail("set literals are not JSON-safe")
+        if isinstance(node, (ast.Tuple, ast.List)):
+            if len(node.elts) > MAX_CONTAINER_ITEMS:
+                return self._fail(f"container has {len(node.elts)} items; maximum is {MAX_CONTAINER_ITEMS}")
+            values = []
+            for item in node.elts:
+                value = self._resolve(
+                    item,
+                    module,
+                    seen.copy(),
+                    depth=depth + 1,
+                    budget=budget,
+                )
+                if value is UNRESOLVED:
+                    return UNRESOLVED
+                values.append(value)
             if isinstance(node, ast.Tuple):
                 return tuple(values)
-            if isinstance(node, ast.Set):
-                return set(values)
             return values
         if isinstance(node, ast.Dict):
-            keys = [self._resolve(item, module, seen.copy()) for item in node.keys]
-            values = [self._resolve(item, module, seen.copy()) for item in node.values]
-            if any(value is UNRESOLVED for value in [*keys, *values]):
-                return UNRESOLVED
-            return dict(zip(keys, values, strict=True))
+            if len(node.keys) > MAX_CONTAINER_ITEMS:
+                return self._fail(f"container has {len(node.keys)} items; maximum is {MAX_CONTAINER_ITEMS}")
+            result: dict[str, Any] = {}
+            for key_node, value_node in zip(node.keys, node.values, strict=True):
+                key = self._resolve(
+                    key_node,
+                    module,
+                    seen.copy(),
+                    depth=depth + 1,
+                    budget=budget,
+                )
+                if key is UNRESOLVED:
+                    return UNRESOLVED
+                if not isinstance(key, str):
+                    return self._fail("dictionary keys must be bounded strings")
+                value = self._resolve(
+                    value_node,
+                    module,
+                    seen.copy(),
+                    depth=depth + 1,
+                    budget=budget,
+                )
+                if value is UNRESOLVED:
+                    return UNRESOLVED
+                result[key] = value
+            return result
         if isinstance(node, ast.Name):
             key = (module, node.id)
             if key in seen:
-                return UNRESOLVED
+                return self._fail(f"constant reference cycle at {module}.{node.id}")
             seen.add(key)
             if node.id in self.assignments.get(module, {}):
-                return self._resolve(self.assignments[module][node.id], module, seen)
+                return self._resolve(
+                    self.assignments[module][node.id],
+                    module,
+                    seen,
+                    depth=depth + 1,
+                    budget=budget,
+                )
             imported = self.imports.get(module, {}).get(node.id)
             if imported is None:
-                return UNRESOLVED
+                return self._fail(f"unknown name {module}.{node.id}")
             target_module, target_name = imported
             if target_name is None:
                 return _ModuleReference(target_module)
-            return self._resolve(ast.Name(id=target_name), target_module, seen)
+            return self._resolve(
+                ast.Name(id=target_name),
+                target_module,
+                seen,
+                depth=depth + 1,
+                budget=budget,
+            )
         if isinstance(node, ast.Attribute):
-            owner = self._resolve(node.value, module, seen.copy())
+            owner = self._resolve(
+                node.value,
+                module,
+                seen.copy(),
+                depth=depth + 1,
+                budget=budget,
+            )
             if not isinstance(owner, _ModuleReference):
-                return UNRESOLVED
-            return self._resolve(ast.Name(id=node.attr), owner.module, seen)
+                return self._fail(f"attribute owner for {ast.unparse(node)} is not a local module")
+            return self._resolve(
+                ast.Name(id=node.attr),
+                owner.module,
+                seen,
+                depth=depth + 1,
+                budget=budget,
+            )
         if isinstance(node, ast.BinOp) and type(node.op) in SAFE_BINARY_OPERATORS:
-            left = self._resolve(node.left, module, seen.copy())
-            right = self._resolve(node.right, module, seen.copy())
+            left = self._resolve(
+                node.left,
+                module,
+                seen.copy(),
+                depth=depth + 1,
+                budget=budget,
+            )
+            right = self._resolve(
+                node.right,
+                module,
+                seen.copy(),
+                depth=depth + 1,
+                budget=budget,
+            )
             if left is UNRESOLVED or right is UNRESOLVED:
                 return UNRESOLVED
+            if not (_bounded_number(left) and _bounded_number(right)):
+                return self._fail("arithmetic operands must be bounded finite numbers")
+            if isinstance(node.op, ast.Pow) and (
+                not isinstance(right, int)
+                or isinstance(right, bool)
+                or right < 0
+                or right > MAX_POWER_EXPONENT
+                or abs(left) > MAX_POWER_BASE
+            ):
+                return self._fail(f"power base/exponent exceeds bounds ({MAX_POWER_BASE}, {MAX_POWER_EXPONENT})")
             try:
                 value = SAFE_BINARY_OPERATORS[type(node.op)](left, right)
             except (ArithmeticError, TypeError, ValueError):
-                return UNRESOLVED
-            return value if _portable_value(value) else UNRESOLVED
+                return self._fail(f"unsafe arithmetic expression: {ast.unparse(node)}")
+            if not _bounded_number(value):
+                return self._fail("arithmetic result is non-finite or exceeds numeric bounds")
+            return value
         if isinstance(node, ast.UnaryOp) and type(node.op) in SAFE_UNARY_OPERATORS:
-            operand = self._resolve(node.operand, module, seen.copy())
+            operand = self._resolve(
+                node.operand,
+                module,
+                seen.copy(),
+                depth=depth + 1,
+                budget=budget,
+            )
             if operand is UNRESOLVED:
                 return UNRESOLVED
+            if not _bounded_number(operand):
+                return self._fail("unary arithmetic operand must be a bounded finite number")
             try:
-                return SAFE_UNARY_OPERATORS[type(node.op)](operand)
+                value = SAFE_UNARY_OPERATORS[type(node.op)](operand)
             except (ArithmeticError, TypeError, ValueError):
-                return UNRESOLVED
-        return UNRESOLVED
+                return self._fail(f"unsafe unary arithmetic expression: {ast.unparse(node)}")
+            return value if _bounded_number(value) else self._fail("unary result exceeds numeric bounds")
+        return self._fail(f"unsupported constant expression: {type(node).__name__}")
 
 
-def _portable_value(value: Any) -> bool:
-    if value is None or isinstance(value, (bool, int, float, str)):
+def _bounded_json_scalar(value: Any) -> bool:
+    if value is None or isinstance(value, bool):
         return True
-    if isinstance(value, (list, tuple, set)):
-        return len(value) <= 1000 and all(_portable_value(item) for item in value)
+    if isinstance(value, int):
+        return abs(value) <= MAX_ABS_INTEGER
+    if isinstance(value, float):
+        return math.isfinite(value) and abs(value) <= MAX_ABS_FLOAT
+    if isinstance(value, str):
+        return len(value) <= MAX_STRING_LENGTH
+    return False
+
+
+def _bounded_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and _bounded_json_scalar(value)
+
+
+def _portable_value(value: Any, *, depth: int = 0) -> bool:
+    if depth > MAX_RESOLVE_DEPTH:
+        return False
+    if _bounded_json_scalar(value):
+        return True
+    if isinstance(value, (list, tuple)):
+        return len(value) <= MAX_CONTAINER_ITEMS and all(_portable_value(item, depth=depth + 1) for item in value)
     if isinstance(value, dict):
-        return len(value) <= 1000 and all(_portable_value(key) and _portable_value(item) for key, item in value.items())
+        return len(value) <= MAX_CONTAINER_ITEMS and all(
+            isinstance(key, str) and _bounded_json_scalar(key) and _portable_value(item, depth=depth + 1)
+            for key, item in value.items()
+        )
     return False
 
 
@@ -338,7 +536,7 @@ def _parameter_record(
 ) -> dict[str, Any]:
     required = default is None
     value, resolved = (None, True) if required else resolver.resolve(default, module)
-    return {
+    result = {
         "name": argument.arg,
         "kind": kind,
         "required": required,
@@ -347,6 +545,9 @@ def _parameter_record(
         "resolved": resolved,
         "annotation": _expression(argument.annotation),
     }
+    if not resolved:
+        result["unresolved_reason"] = resolver.last_unresolved_reason
+    return result
 
 
 def _parameters(
@@ -590,11 +791,11 @@ def _generate_pyfolio(root: Path) -> dict[str, Any]:
 
 
 def _require_head(source: PinnedGitSource, expected: str, project: str) -> None:
-    actual = subprocess.run(
+    actual = _run_process(
         ["git", "rev-parse", "HEAD"],
         cwd=source.root,
-        check=True,
-        capture_output=True,
+        operation=f"resolve {project} checkout HEAD",
+        timeout=LOCAL_GIT_TIMEOUT_SECONDS,
         text=True,
     ).stdout.strip()
     if actual != expected:
@@ -628,6 +829,30 @@ def _generate_flat_migrations(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def _execute_oracle(
+    interpreter: Path,
+    checkout: Path,
+    package: str,
+    names: list[str],
+    source_paths: list[str],
+) -> subprocess.CompletedProcess[Any]:
+    return _run_process(
+        [
+            interpreter.as_posix(),
+            "-I",
+            "-c",
+            ORACLE_SCRIPT,
+            checkout.as_posix(),
+            package,
+            json.dumps(names),
+            json.dumps(source_paths),
+        ],
+        operation=f"execute isolated oracle for {package}",
+        timeout=ORACLE_TIMEOUT_SECONDS,
+        text=True,
+    )
+
+
 def _run_oracle(
     interpreter: Path,
     root: Path,
@@ -641,30 +866,24 @@ def _run_oracle(
     """Import only an isolated checkout of the exact pinned commit."""
     with tempfile.TemporaryDirectory(prefix=f"{package}-oracle-") as temporary:
         checkout = Path(temporary) / "checkout"
-        subprocess.run(
+        _run_process(
             ["git", "clone", "--quiet", "--no-checkout", root.resolve().as_posix(), checkout.as_posix()],
-            check=True,
+            operation=f"clone pinned {package} source for oracle",
+            timeout=LOCAL_GIT_TIMEOUT_SECONDS,
         )
-        subprocess.run(["git", "checkout", "--quiet", expected_commit], cwd=checkout, check=True)
-        try:
-            result = subprocess.run(
-                [
-                    interpreter.as_posix(),
-                    "-I",
-                    "-c",
-                    ORACLE_SCRIPT,
-                    checkout.as_posix(),
-                    package,
-                    json.dumps(names),
-                    json.dumps([item["path"] for item in expected_source_files]),
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as error:
-            detail = (error.stderr or error.stdout or str(error)).strip()
-            raise ValueError(f"oracle rejected pinned source: {detail}") from error
+        _run_process(
+            ["git", "checkout", "--quiet", expected_commit],
+            cwd=checkout,
+            operation=f"checkout pinned {package} oracle commit",
+            timeout=LOCAL_GIT_TIMEOUT_SECONDS,
+        )
+        result = _execute_oracle(
+            interpreter,
+            checkout,
+            package,
+            names,
+            [item["path"] for item in expected_source_files],
+        )
     payload = json.loads(result.stdout)
     if payload["version"] != expected_version:
         raise ValueError(f"oracle version {payload['version']!r} != pinned version {expected_version!r}")
