@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
+
+import pytest
 
 import fincore.empyrical as ep
 from fincore import _registry, empyrical
@@ -56,3 +59,29 @@ def test_registry_uses_exact_multi_surface_metric_spec_schema() -> None:
 
     calmar_surfaces = {spec.surface for spec in metric_registry.values() if spec.public_name == "calmar_ratio"}
     assert {"empyrical_module", "fincore_flat", "empyrical_class", "metrics"} <= calmar_surfaces
+
+
+def _strict_spec(name: str):
+    return _registry.METRIC_REGISTRY[("empyrical_module", name, "strict-0.6.0")]
+
+
+def test_strict_wrapper_rejects_unknown_signature_manifest_key() -> None:
+    spec = replace(_strict_spec("sharpe_ratio"), signature_manifest_key="empyrical-0.6.0:missing")
+    with pytest.raises(KeyError, match="signature manifest key"):
+        ep._make_strict_wrapper(spec)
+
+
+def test_strict_wrapper_rejects_manifest_symbol_mismatch() -> None:
+    spec = replace(_strict_spec("sharpe_ratio"), signature_manifest_key="empyrical-0.6.0:beta")
+    with pytest.raises(ValueError, match="does not match public name"):
+        ep._make_strict_wrapper(spec)
+
+
+@pytest.mark.parametrize(
+    ("name", "out_policy"),
+    [("sharpe_ratio", "unsupported"), ("cagr", "write_and_return")],
+)
+def test_strict_wrapper_rejects_out_policy_signature_mismatch(name: str, out_policy: str) -> None:
+    spec = replace(_strict_spec(name), out_policy=out_policy)
+    with pytest.raises(ValueError, match="out policy"):
+        ep._make_strict_wrapper(spec)

@@ -345,6 +345,9 @@ EMPYRICAL_SIGNATURES = {
     "perf_attrib": "(returns, positions, factor_returns, factor_loadings)",
     "compute_exposures": "(positions, factor_loadings)",
 }
+EMPYRICAL_SIGNATURE_MANIFEST = {
+    f"empyrical-0.6.0:{name}": (name, signature) for name, signature in EMPYRICAL_SIGNATURES.items()
+}
 
 
 _EMPYRICAL_KERNELS = {

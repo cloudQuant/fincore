@@ -27,6 +27,51 @@ def test_instance_binding_supplies_returns_and_factor_returns() -> None:
     assert emp.beta() == Empyrical.beta(returns, factor_returns)
 
 
+def test_instance_unary_positional_argument_binds_after_returns_state() -> None:
+    returns = _returns()
+    emp = Empyrical(returns=returns)
+    assert emp.sharpe_ratio(0.1) == Empyrical.sharpe_ratio(returns, 0.1)
+
+
+def test_instance_factor_positional_argument_binds_after_both_state_inputs() -> None:
+    returns = _returns()
+    factor_returns = returns * 0.7 + 0.001
+    emp = Empyrical(returns=returns, factor_returns=factor_returns)
+    assert emp.beta(0.1) == Empyrical.beta(returns, factor_returns, 0.1)
+
+
+def test_instance_rolling_first_optional_positional_argument_uses_public_signature() -> None:
+    returns = _returns()
+    emp = Empyrical(returns=returns)
+    expected = Empyrical.roll_sharpe_ratio(returns, 5)
+    pd.testing.assert_series_equal(emp.roll_sharpe_ratio(5), expected)
+
+
+def test_instance_rolling_multiple_optional_positionals_use_public_signature() -> None:
+    returns = _returns()
+    factor_returns = returns * 0.7 + 0.001
+    emp = Empyrical(returns=returns, factor_returns=factor_returns)
+    expected = Empyrical.roll_beta(returns, factor_returns, 5, 0.1, "weekly", 52)
+    pd.testing.assert_series_equal(emp.roll_beta(5, 0.1, "weekly", 52), expected)
+
+
+def test_instance_rejects_explicit_state_keywords_from_removed_public_signature() -> None:
+    returns = _returns()
+    factor_returns = returns * 0.7 + 0.001
+    emp = Empyrical(returns=returns, factor_returns=factor_returns)
+    with pytest.raises(TypeError):
+        emp.sharpe_ratio(returns=returns)
+    with pytest.raises(TypeError):
+        emp.beta(factor_returns=factor_returns)
+
+
+def test_class_calls_accept_explicit_state_keywords() -> None:
+    returns = _returns()
+    factor_returns = returns * 0.7 + 0.001
+    assert Empyrical.sharpe_ratio(returns=returns) == Empyrical.sharpe_ratio(returns)
+    assert Empyrical.beta(returns=returns, factor_returns=factor_returns) == Empyrical.beta(returns, factor_returns)
+
+
 def test_class_calls_still_require_explicit_data() -> None:
     with pytest.raises(TypeError):
         Empyrical.sharpe_ratio()

@@ -40,7 +40,7 @@ import pandas as pd
 
 from fincore._registry import (
     CLASSMETHOD_REGISTRY,
-    EMPYRICAL_SIGNATURES,
+    EMPYRICAL_SIGNATURE_MANIFEST,
     METRIC_REGISTRY,
     MODULE_PATHS,
     STATIC_METHODS,
@@ -178,27 +178,41 @@ class _MetricMethod:
                     "factor_loadings": "factor_loadings",
                 }
             )
+        state_parameters = {
+            name: attribute for name, attribute in state_names.items() if name in kernel_signature.parameters
+        }
+        public_signature = kernel_signature.replace(
+            parameters=[
+                parameter
+                for parameter in kernel_signature.parameters.values()
+                if parameter.name not in state_parameters
+            ]
+        )
 
         @functools.wraps(kernel)
         def bound(*args, **kwargs):
-            try:
-                explicit = kernel_signature.bind(*args, **kwargs)
-            except TypeError:
-                call_kwargs = dict(kwargs)
-                for parameter_name, attribute_name in state_names.items():
-                    if parameter_name in kernel_signature.parameters and parameter_name not in call_kwargs:
-                        value = getattr(obj, attribute_name, None)
-                        if value is not None:
-                            call_kwargs[parameter_name] = value
-                kernel_signature.bind(*args, **call_kwargs)
-                return kernel(*args, **call_kwargs)
-            return kernel(*explicit.args, **explicit.kwargs)
+            state_available = all(
+                getattr(obj, attribute_name, None) is not None for attribute_name in state_parameters.values()
+            )
+            if not state_available:
+                kernel_bound = kernel_signature.bind(*args, **kwargs)
+                return kernel(*kernel_bound.args, **kernel_bound.kwargs)
+            public_bound = public_signature.bind(*args, **kwargs)
+            call_arguments = {}
+            for name, value in public_bound.arguments.items():
+                parameter = public_signature.parameters[name]
+                if parameter.kind is inspect.Parameter.VAR_KEYWORD:
+                    call_arguments.update(value)
+                else:
+                    call_arguments[name] = value
+            for parameter_name, attribute_name in state_parameters.items():
+                value = getattr(obj, attribute_name, None)
+                if value is not None:
+                    call_arguments[parameter_name] = value
+            kernel_bound = kernel_signature.bind(**call_arguments)
+            return kernel(*kernel_bound.args, **kernel_bound.kwargs)
 
-        bound.__signature__ = kernel_signature.replace(
-            parameters=[
-                parameter for parameter in kernel_signature.parameters.values() if parameter.name not in state_names
-            ]
-        )
+        bound.__signature__ = public_signature
         obj.__dict__[cached_name] = bound
         return bound
 
@@ -885,7 +899,19 @@ def _signature_from_text(signature_text: str) -> inspect.Signature:
 
 
 def _make_strict_wrapper(spec: MetricSpec):
-    signature = _signature_from_text(EMPYRICAL_SIGNATURES[spec.public_name])
+    manifest_key = spec.signature_manifest_key
+    if manifest_key is None:
+        raise KeyError("strict wrapper requires a signature manifest key")
+    try:
+        manifest_name, signature_text = EMPYRICAL_SIGNATURE_MANIFEST[manifest_key]
+    except KeyError:
+        raise KeyError(f"unknown signature manifest key: {manifest_key}") from None
+    if manifest_name != spec.public_name:
+        raise ValueError(f"signature manifest symbol {manifest_name!r} does not match public name {spec.public_name!r}")
+    signature = _signature_from_text(signature_text)
+    expected_out_policy = "write_and_return" if "out" in signature.parameters else "unsupported"
+    if spec.out_policy != expected_out_policy:
+        raise ValueError(f"out policy {spec.out_policy!r} does not match signature policy {expected_out_policy!r}")
 
     def wrapper(*args, **kwargs):
         bound = signature.bind(*args, **kwargs)
