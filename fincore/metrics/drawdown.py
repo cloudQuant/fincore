@@ -244,6 +244,20 @@ def get_max_drawdown(
     return get_max_drawdown_underwater(underwater)
 
 
+def _get_max_drawdown_positions(underwater: pd.Series) -> tuple[int, int, int | None] | None:
+    """Return peak, valley, and recovery positions for one drawdown."""
+    if underwater.min() >= 0:
+        return None
+
+    values = underwater.to_numpy()
+    valley_position = int(underwater.argmin())
+    peak_candidates = np.flatnonzero(values[: valley_position + 1] == 0)
+    peak_position = int(peak_candidates[-1]) if len(peak_candidates) else 0
+    recovery_candidates = np.flatnonzero(values[valley_position:] == 0)
+    recovery_position = valley_position + int(recovery_candidates[0]) if len(recovery_candidates) else None
+    return peak_position, valley_position, recovery_position
+
+
 def get_max_drawdown_underwater(
     underwater: pd.Series,
 ) -> tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]:
@@ -263,20 +277,14 @@ def get_max_drawdown_underwater(
     recovery : datetime
         The date of recovery or NaT if not recovered.
     """
-    if underwater.min() >= 0:
+    positions = _get_max_drawdown_positions(underwater)
+    if positions is None:
         return pd.NaT, pd.NaT, pd.NaT
 
-    valley = underwater.idxmin()  # end of the period
-    # Find first 0 (peak is where underwater == 0 before valley)
-    try:
-        peak = underwater[:valley][underwater[:valley] == 0].index[-1]
-    except IndexError:
-        peak = underwater.index[0]
-    # Find last 0 (recovery is where underwater == 0 after valley)
-    try:
-        recovery = underwater[valley:][underwater[valley:] == 0].index[0]
-    except IndexError:
-        recovery = pd.NaT  # drawdown isn't recovered
+    peak_position, valley_position, recovery_position = positions
+    peak = underwater.index[peak_position]
+    valley = underwater.index[valley_position]
+    recovery = pd.NaT if recovery_position is None else underwater.index[recovery_position]
 
     return peak, valley, recovery
 
@@ -306,16 +314,26 @@ def get_top_drawdowns(
 
     drawdowns = []
     for _ in range(top):
-        peak, valley, recovery = get_max_drawdown_underwater(underwater)
-        if pd.isnull(peak) or pd.isnull(valley):
+        positions = _get_max_drawdown_positions(underwater)
+        if positions is None:
             break
 
+        peak_position, valley_position, recovery_position = positions
+        peak = underwater.index[peak_position]
+        valley = underwater.index[valley_position]
+        recovery = pd.NaT if recovery_position is None else underwater.index[recovery_position]
+
         # Slice out draw-down period
-        if not pd.isnull(recovery):
-            underwater = underwater.drop(underwater[peak:recovery].index[1:-1])  # type: ignore[index,union-attr]
+        if recovery_position is not None:
+            underwater = pd.concat(
+                [
+                    underwater.iloc[: peak_position + 1],
+                    underwater.iloc[recovery_position:],
+                ]
+            )
         else:
             # the drawdown has not ended yet
-            underwater = underwater.loc[:peak]  # type: ignore[index,union-attr]
+            underwater = underwater.iloc[: peak_position + 1]
 
         drawdowns.append((peak, valley, recovery))
         if (len(returns) == 0) or (len(underwater) == 0):

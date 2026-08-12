@@ -176,6 +176,41 @@ public/drawdown/legacy focused selector: 37 passed
 Task 6 impact selector: 889 passed, 9 expected business warnings
 ```
 
+### Final-review follow-up
+
+The final review found that integer-labelled drawdowns used Pandas' ambiguous
+integer slice syntax.  A recovered drawdown on `RangeIndex(10, 13)` was
+misidentified and repeated up to `top`; the plot consequently shaded the same
+period ten times.  The final test-only matrix reproduced the metric and plot
+failures, covered unique non-monotonic and duplicate object labels, and
+reported:
+
+```text
+RangeIndex/object-index drawdown matrix: 3 failed, 1 passed
+RangeIndex polygon endpoint strengthening: 1 failed
+```
+
+Peak, valley, and recovery are now derived once as positions.  Public results
+still expose the original labels, while peak/recovery searches and the period
+boundaries used for removal are positional, so integer and non-monotonic
+labels cannot switch between positional and label slicing.  Duplicate labels
+retain the frozen strict acceptance behavior and are processed
+deterministically by position rather than introducing a new validation error.
+Non-datetime plotting labels also remain unchanged; only a `DatetimeIndex` is
+converted to UTC-naive timestamps.  The
+RangeIndex plot now proves a single shaded polygon with endpoints 10 and 12.
+Direct all-NaN underwater input retains its existing `ValueError`, and
+all-NaN returns still yield no drawdowns.
+
+Fresh final-review gates are:
+
+```text
+position/index/endpoint focused matrix: 5 passed
+drawdown and strict-timeseries focused selector: 151 passed
+strict pinned timeseries selector: 17 passed
+Task 6 impact selector: 893 passed, 9 expected business warnings
+```
+
 ## Regression and migration gates
 
 The Task 6 impact selector includes all Pyfolio compatibility tests, the full
@@ -204,4 +239,4 @@ public/private façade files; the approved lazy display boundary; the approved
 stored-state plot dispatch in attribution and transaction tear sheets; and
 the directly affected legacy and compatibility tests.  Task 4 and Task 5
 contracts were not changed.  Task 6 is awaiting final independent re-review
-after the second-review follow-up.
+after the final-review follow-up.

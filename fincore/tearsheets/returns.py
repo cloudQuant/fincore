@@ -529,10 +529,13 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     # Matplotlib receives one UTC-naive representation and caller data remains
     # untouched.
     plot_cum_rets = df_cum_rets.copy()
-    if isinstance(plot_cum_rets.index, pd.DatetimeIndex) and plot_cum_rets.index.tz is not None:
+    datetime_index = isinstance(plot_cum_rets.index, pd.DatetimeIndex)
+    if datetime_index and plot_cum_rets.index.tz is not None:
         plot_cum_rets.index = plot_cum_rets.index.tz_convert("UTC").tz_localize(None)
 
     def _as_plot_timestamp(value):
+        if not datetime_index:
+            return value
         timestamp = pd.Timestamp(value)
         if timestamp.tz is not None:
             return timestamp.tz_convert("UTC").tz_localize(None)

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
-from fincore.metrics.drawdown import gen_drawdown_table
+from fincore.metrics.drawdown import gen_drawdown_table, get_top_drawdowns
 
 
 def test_drawdown_table_preserves_padded_compatibility_shape(short_drawdown_returns: pd.Series) -> None:
@@ -73,3 +73,52 @@ def test_drawdown_plot_handles_empty_datetime_series_without_shading() -> None:
     assert caught == []
     pd.testing.assert_series_equal(returns, original)
     plt.close(figure)
+
+
+def test_range_index_top_drawdowns_removes_recovered_period_once() -> None:
+    returns = pd.Series([0.10, -0.10, 0.20], index=pd.RangeIndex(10, 13), name="returns")
+    original = returns.copy()
+
+    drawdowns = get_top_drawdowns(returns, top=10)
+
+    assert drawdowns == [(10, 11, 12)]
+    pd.testing.assert_series_equal(returns, original)
+
+
+def test_range_index_drawdown_plot_shades_recovered_period_once_without_warnings() -> None:
+    from fincore.pyfolio import Pyfolio
+
+    returns = pd.Series([0.10, -0.10, 0.20], index=pd.RangeIndex(10, 13), name="returns")
+    original = returns.copy()
+
+    figure, ax = plt.subplots()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = Pyfolio().plot_drawdown_periods(returns, top=10, ax=ax)
+
+    assert result is ax
+    assert len(ax.collections) == 1
+    shaded_x = ax.collections[0].get_paths()[0].vertices[:, 0]
+    assert shaded_x.min() == pytest.approx(10)
+    assert shaded_x.max() == pytest.approx(12)
+    assert caught == []
+    pd.testing.assert_series_equal(returns, original)
+    plt.close(figure)
+
+
+def test_unique_nonmonotonic_object_index_top_drawdowns_uses_positions() -> None:
+    index = pd.Index(["z", "a", "m"], dtype=object)
+    returns = pd.Series([0.10, -0.10, 0.20], index=index, name="returns")
+    original = returns.copy()
+
+    assert get_top_drawdowns(returns, top=10) == [("z", "a", "m")]
+    pd.testing.assert_series_equal(returns, original)
+
+
+def test_duplicate_object_index_top_drawdowns_uses_positions_without_repeating() -> None:
+    index = pd.Index(["point", "point", "recovery"], dtype=object)
+    returns = pd.Series([0.10, -0.10, 0.20], index=index, name="returns")
+    original = returns.copy()
+
+    assert get_top_drawdowns(returns, top=10) == [("point", "point", "recovery")]
+    pd.testing.assert_series_equal(returns, original)
