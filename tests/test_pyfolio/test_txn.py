@@ -42,7 +42,7 @@ class TransactionsTestCase(TestCase):
         # analyze_dataframe_differences(expected, result)
         analyze_series_differences(expected, result)
         # assert_series_equal(result, expected)
-        assert result.equals(expected)
+        assert_series_equal(result, expected, check_freq=False)
 
         transactions = DataFrame(
             data=[[1, 1, 10, 0]] * len(dates) + [[2, -1, 10, 0]] * len(dates),
@@ -56,8 +56,7 @@ class TransactionsTestCase(TestCase):
         expected = Series([1.0] + [0.8] * (len(dates) - 1), index=dates)
         result = Empyrical.get_turnover(positions, transactions)
 
-        # assert_series_equal(result, expected)
-        result.equals(expected)
+        assert_series_equal(result, expected, check_freq=False)
         # Test with denominator = 'portfolio_value'
         result = Empyrical.get_turnover(
             positions,
@@ -69,8 +68,7 @@ class TransactionsTestCase(TestCase):
         # should alternate between 20/20 = 1.0 and 20/50 = 0.4.
         expected = Series([0.4, 1.0] * (int((len(dates) - 1) / 2) + 1), index=dates)
 
-        # assert_series_equal(result, expected)
-        result.equals(expected)
+        assert_series_equal(result, expected, check_freq=False)
 
     def test_adjust_returns_for_slippage(self):
         dates = date_range(start="2015-01-01", freq="D", periods=20)

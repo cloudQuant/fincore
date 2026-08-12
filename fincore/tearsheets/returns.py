@@ -517,14 +517,40 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
     df_drawdowns = empyrical_instance.gen_drawdown_table(returns, top=top)
 
-    df_cum_rets.plot(ax=ax, **kwargs)
+    # ``gen_drawdown_table`` stores dates without timezone information, while
+    # an unrecovered drawdown falls back to the (possibly timezone-aware)
+    # returns index.  Matplotlib rejects that mixed representation on shared
+    # date axes.  Plot a copy in one representation and leave caller data
+    # untouched.
+    source_tz = getattr(returns.index, "tz", None)
+    plot_cum_rets = df_cum_rets.copy()
+    if isinstance(plot_cum_rets.index, pd.DatetimeIndex) and plot_cum_rets.index.tz is not None:
+        plot_cum_rets.index = plot_cum_rets.index.tz_convert("UTC").tz_localize(None)
+
+    def _as_plot_timestamp(value):
+        timestamp = pd.Timestamp(value)
+        if source_tz is not None:
+            timestamp = timestamp.tz_localize(source_tz) if timestamp.tz is None else timestamp.tz_convert(source_tz)
+            return timestamp.tz_convert("UTC").tz_localize(None)
+        if timestamp.tz is not None:
+            return timestamp.tz_convert("UTC").tz_localize(None)
+        return timestamp
+
+    plot_cum_rets.plot(ax=ax, **kwargs)
 
     lim = ax.get_ylim()
-    colors = sns.cubehelix_palette(len(df_drawdowns))[::-1]
-    for i, (peak, recovery) in df_drawdowns[["Peak date", "Recovery date"]].iterrows():
+    real_drawdowns = df_drawdowns[df_drawdowns["Peak date"].notna()]
+    colors = sns.cubehelix_palette(len(real_drawdowns))[::-1]
+    for color, (_i, (peak, recovery)) in zip(
+        colors,
+        real_drawdowns[["Peak date", "Recovery date"]].iterrows(),
+        strict=False,
+    ):
         if pd.isnull(recovery):
             recovery = returns.index[-1]
-        ax.fill_between((peak, recovery), lim[0], lim[1], alpha=0.4, color=colors[i])
+        peak = _as_plot_timestamp(peak)
+        recovery = _as_plot_timestamp(recovery)
+        ax.fill_between((peak, recovery), lim[0], lim[1], alpha=0.4, color=color)
     ax.set_ylim(lim)
     ax.set_title("Top %i drawdown periods" % top)
     ax.set_ylabel("Cumulative returns")
@@ -611,9 +637,9 @@ def plot_return_quantiles(empyrical_instance, returns, live_start_date=None, ax=
         ]
     )
     data = data.dropna()
-    sns.boxplot(
-        data=data, x="category", y="value", palette=["#4c72B0", "#55A868", "#CCB974"], ax=ax, hue="category", **kwargs
-    )
+    for position, category in enumerate(("returns", "weekly", "monthly")):
+        values = data.loc[data["category"] == category, "value"].to_numpy()
+        ax.boxplot(values, positions=[position], widths=0.8, patch_artist=True, manage_ticks=False)
 
     if live_start_date is not None:
         oos_returns = returns.loc[returns.index >= live_start_date]
@@ -714,7 +740,11 @@ def plot_perf_stats(empyrical_instance, returns, factor_returns, ax=None):
     bootstrap_values = empyrical_instance.perf_stats_bootstrap(returns, factor_returns, return_stats=False)
     bootstrap_values = bootstrap_values.drop("Kurtosis", axis="columns")
 
-    sns.boxplot(data=bootstrap_values, orient="h", ax=ax)
+    ax.boxplot(
+        [bootstrap_values[column].dropna().to_numpy() for column in bootstrap_values],
+        orientation="horizontal",
+        tick_labels=list(bootstrap_values.columns),
+    )
 
     return ax
 

@@ -56,19 +56,19 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
 
         # since all returns are factor returns, common returns should be
         # equivalent to total returns, and specific returns should be 0
-        returns.equals(common_returns)
+        pd.testing.assert_series_equal(common_returns, returns, check_names=False, check_freq=False)
 
         self.assertTrue(np.isclose(specific_returns, 0).all())
 
         # specific and common returns combined should equal total returns
-        returns.equals(combined_returns)
+        pd.testing.assert_series_equal(combined_returns, returns, check_names=False, check_freq=False)
         # check that residuals + intercepts = specific returns
         self.assertTrue(np.isclose((residuals + intercepts), 0).all())
 
         # check that exposure * factor returns = common returns
         expected_common_returns = risk_exposures_portfolio.multiply(factor_returns, axis="rows").sum(axis="columns")
 
-        expected_common_returns.equals(common_returns)
+        pd.testing.assert_series_equal(common_returns, expected_common_returns, check_names=False, check_freq=False)
         # since factor loadings are ones, portfolio risk exposures
         # should be ones
         pd.testing.assert_frame_equal(
@@ -78,13 +78,6 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
                 index=risk_exposures_portfolio.index,
                 columns=risk_exposures_portfolio.columns,
             ),
-        )
-        risk_exposures_portfolio.equals(
-            pd.DataFrame(
-                np.ones_like(risk_exposures_portfolio),
-                index=risk_exposures_portfolio.index,
-                columns=risk_exposures_portfolio.columns,
-            )
         )
 
         perf_attrib_summary, exposures_summary = create_perf_attrib_stats(perf_attrib_output, risk_exposures_portfolio)
@@ -106,7 +99,7 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
         self.assertEqual(Empyrical.cum_returns_final(combined_returns), perf_attrib_summary["Total Returns"])
 
         avg_factor_exposure = risk_exposures_portfolio.mean().rename("Average Risk Factor Exposure")
-        avg_factor_exposure.equals(exposures_summary["Average Risk Factor Exposure"])
+        pd.testing.assert_series_equal(exposures_summary["Average Risk Factor Exposure"], avg_factor_exposure)
 
         cumulative_returns_by_factor = pd.Series(
             [Empyrical.cum_returns_final(perf_attrib_output[c]) for c in risk_exposures_portfolio.columns],
@@ -114,11 +107,11 @@ class TestPerfAttribRegression(unittest.TestCase, PerfAttribTestLocation):
             index=risk_exposures_portfolio.columns,
         )
 
-        cumulative_returns_by_factor.equals(exposures_summary["Cumulative Return"])
+        pd.testing.assert_series_equal(exposures_summary["Cumulative Return"], cumulative_returns_by_factor)
         annualized_returns_by_factor = pd.Series(
             [Empyrical.annual_return(perf_attrib_output[c]) for c in risk_exposures_portfolio.columns],
             name="Annualized Return",
             index=risk_exposures_portfolio.columns,
         )
 
-        annualized_returns_by_factor.equals(exposures_summary["Annualized Return"])
+        pd.testing.assert_series_equal(exposures_summary["Annualized Return"], annualized_returns_by_factor)

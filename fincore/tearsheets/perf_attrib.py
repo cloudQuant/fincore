@@ -21,6 +21,16 @@ __all__ = [
 ]
 
 
+def _call_explicit_metric(empyrical_instance: Any, name: str, *args: Any, **kwargs: Any) -> Any:
+    """Evaluate local plot data without rebinding a stored-state metric."""
+
+    from fincore.empyrical import Empyrical
+
+    owner = type(empyrical_instance) if isinstance(empyrical_instance, Empyrical) else None
+    metric = getattr(owner, name) if owner is not None else getattr(empyrical_instance, name)
+    return metric(*args, **kwargs)
+
+
 def plot_perf_attrib_returns(
     empyrical_instance: Any,
     perf_attrib_data: pd.DataFrame,
@@ -62,11 +72,23 @@ def plot_perf_attrib_returns(
     common_returns = perf_attrib_data["common_returns"]
 
     ax.plot(cumulative_returns_less_costs, color="b", label=total_returns_label)
-    ax.plot(empyrical_instance.cum_returns(specific_returns), color="g", label="Cumulative specific returns")
-    ax.plot(empyrical_instance.cum_returns(common_returns), color="r", label="Cumulative common returns")
+    ax.plot(
+        _call_explicit_metric(empyrical_instance, "cum_returns", specific_returns),
+        color="g",
+        label="Cumulative specific returns",
+    )
+    ax.plot(
+        _call_explicit_metric(empyrical_instance, "cum_returns", common_returns),
+        color="r",
+        label="Cumulative common returns",
+    )
 
     if cost is not None:
-        ax.plot(-empyrical_instance.cum_returns(cost), color="k", label="Cumulative cost spent")
+        ax.plot(
+            -_call_explicit_metric(empyrical_instance, "cum_returns", cost),
+            color="k",
+            label="Cumulative cost spent",
+        )
 
     ax.set_title("Time series of cumulative returns")
     ax.set_ylabel("Returns")
@@ -140,7 +162,11 @@ def plot_factor_contribution_to_perf(
 
     factors_cumulative = pd.DataFrame()
     for factor in factors_to_plot:
-        factors_cumulative[factor] = empyrical_instance.cum_returns(factors_to_plot[factor])
+        factors_cumulative[factor] = _call_explicit_metric(
+            empyrical_instance,
+            "cum_returns",
+            factors_to_plot[factor],
+        )
 
     for col in factors_cumulative:
         ax.plot(factors_cumulative[col])

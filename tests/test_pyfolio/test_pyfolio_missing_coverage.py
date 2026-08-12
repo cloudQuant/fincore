@@ -80,12 +80,16 @@ class TestPyfolioMissingCoverage:
 
         pyf = Pyfolio(returns=returns)
 
-        # Test various metrics - need to pass returns explicitly
-        sharpe = pyf.sharpe_ratio(returns)
+        # Stateful metric surfaces bind the stored returns and expose only
+        # the remaining public parameters on the instance.
+        sharpe = pyf.sharpe_ratio()
         assert isinstance(sharpe, (int, float, np.floating))
+        assert np.isfinite(sharpe)
 
-        vol = pyf.annual_volatility(returns)
+        vol = pyf.annual_volatility()
         assert isinstance(vol, (int, float, np.floating))
+        assert np.isfinite(vol)
 
-        max_dd = pyf.max_drawdown(returns)
+        max_dd = pyf.max_drawdown()
         assert isinstance(max_dd, (int, float, np.floating))
+        assert np.isfinite(max_dd)

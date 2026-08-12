@@ -76,8 +76,8 @@ class TestPerfAttribSimple(unittest.TestCase):
 
         exposures_portfolio, perf_attrib_output = perf_attrib(returns, positions, factor_returns, factor_loadings)
 
-        expected_perf_attrib_output.equals(perf_attrib_output)
-        expected_exposures_portfolio.equals(exposures_portfolio)
+        pd.testing.assert_frame_equal(perf_attrib_output, expected_perf_attrib_output, check_freq=False)
+        pd.testing.assert_frame_equal(exposures_portfolio, expected_exposures_portfolio, check_freq=False)
 
         # test long and short positions
         positions = pd.DataFrame(index=dts, data={"stock1": [20, 20], "stock2": [-20, -20], "cash": [20, 20]})
@@ -112,8 +112,8 @@ class TestPerfAttribSimple(unittest.TestCase):
             data={"risk_factor1": [0.0, 0.0], "risk_factor2": [0.0, 0.0]},
         )
 
-        expected_perf_attrib_output.equals(perf_attrib_output)
-        expected_exposures_portfolio.equals(exposures_portfolio)
+        pd.testing.assert_frame_equal(perf_attrib_output, expected_perf_attrib_output, check_freq=False)
+        pd.testing.assert_frame_equal(exposures_portfolio, expected_exposures_portfolio, check_freq=False)
 
         perf_attrib_summary, exposures_summary = create_perf_attrib_stats(perf_attrib_output, exposures_portfolio)
 
@@ -123,10 +123,11 @@ class TestPerfAttribSimple(unittest.TestCase):
 
         self.assertEqual(perf_attrib_summary["Cumulative Specific Return"], perf_attrib_summary["Total Returns"])
 
-        exposures_summary.equals(
+        pd.testing.assert_frame_equal(
+            exposures_summary,
             pd.DataFrame(
                 0.0,
                 index=["risk_factor1", "risk_factor2"],
                 columns=["Average Risk Factor Exposure", "Annualized Return", "Cumulative Return"],
-            )
+            ),
         )

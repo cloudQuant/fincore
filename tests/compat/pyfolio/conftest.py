@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import subprocess
+import sys
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 import matplotlib
 import pandas as pd
@@ -9,6 +15,103 @@ import pytest
 # These are real plotting-chain tests.  Fix the backend before importing
 # ``fincore.pyfolio`` so they remain headless and deterministic in CI.
 matplotlib.use("Agg", force=True)
+
+
+PYFOLIO_MANIFEST = Path(__file__).parents[1] / "fixtures" / "pyfolio-0.9.6-api.json"
+PACKAGE_ROOT = Path(__file__).parents[3] / "fincore"
+
+
+@dataclass(frozen=True)
+class ImportProbe:
+    backend_before: str
+    backend_after: str
+    eager_optional_modules: tuple[str, ...]
+    private_implementation_loaded: bool
+
+    @property
+    def backend_unchanged(self) -> bool:
+        return self.backend_before == self.backend_after
+
+
+def load_pyfolio_profile() -> list[dict[str, Any]]:
+    data = json.loads(PYFOLIO_MANIFEST.read_text(encoding="utf-8"))
+    return [dict(entry, name=name) for name, entry in data["compatibility_profile"].items()]
+
+
+def run_isolated_import_probe(
+    module_name: str = "fincore.pyfolio",
+    public_names: tuple[str, ...] = (),
+) -> ImportProbe:
+    script = r"""
+import inspect
+import json
+import sys
+import matplotlib
+
+before_backend = matplotlib.get_backend()
+before_modules = set(sys.modules)
+module = __import__("MODULE_NAME", fromlist=["*"])
+for public_name in PUBLIC_NAMES:
+    inspect.signature(getattr(module, public_name))
+after_backend = matplotlib.get_backend()
+heavy_prefixes = (
+    "fincore._pyfolio_impl",
+    "fincore.tearsheets",
+    "matplotlib.pyplot",
+    "IPython",
+    "scipy",
+    "seaborn",
+    "statsmodels",
+)
+new_modules = set(sys.modules) - before_modules
+eager = sorted(
+    name for name in new_modules
+    if any(name == prefix or name.startswith(prefix + ".") for prefix in heavy_prefixes)
+)
+print(json.dumps({
+    "backend_before": before_backend,
+    "backend_after": after_backend,
+    "eager_optional_modules": eager,
+    "private_implementation_loaded": "fincore._pyfolio_impl" in sys.modules,
+}))
+""".replace("MODULE_NAME", module_name).replace("PUBLIC_NAMES", repr(public_names))
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PACKAGE_ROOT.parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(completed.stdout.strip().splitlines()[-1])
+    return ImportProbe(
+        backend_before=payload["backend_before"],
+        backend_after=payload["backend_after"],
+        eager_optional_modules=tuple(payload["eager_optional_modules"]),
+        private_implementation_loaded=payload["private_implementation_loaded"],
+    )
+
+
+def hash_tracked_package_files() -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for path in sorted(PACKAGE_ROOT.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
+            continue
+        hashes[str(path.relative_to(PACKAGE_ROOT))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashes
+
+
+@pytest.fixture
+def workflow_returns() -> pd.Series:
+    index = pd.date_range("2024-01-02", periods=260, freq="B", tz="UTC")
+    values = [0.004 if i % 17 else -0.025 for i in range(len(index))]
+    return pd.Series(values, index=index, name="returns")
+
+
+@pytest.fixture
+def short_drawdown_returns() -> pd.Series:
+    index = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
+    index = pd.DatetimeIndex(index.tolist())
+    return pd.Series([0.02, -0.05, 0.005, 0.005, 0.005], index=index, name="returns")
 
 
 @dataclass(frozen=True)

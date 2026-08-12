@@ -1,0 +1,1 @@
+"""Pyfolio compatibility acceptance tests."""

@@ -1,5 +1,6 @@
 """Common utilities for display, data handling, and formatting."""
 
+import importlib
 import warnings
 from collections.abc import Callable
 from functools import wraps
@@ -52,13 +53,6 @@ __all__ = [
 DisplayFunc = Callable[..., Any]
 HTMLFunc = Callable[[str], Any]
 
-try:
-    from IPython.display import HTML as _IPY_HTML
-    from IPython.display import display as _IPY_display
-except ModuleNotFoundError:  # pragma: no cover
-    _IPY_HTML = None
-    _IPY_display = None
-
 
 def _fallback_display(*objs: Any, **_kwargs: Any) -> None:
     # Minimal fallback for non-IPython environments.
@@ -69,9 +63,28 @@ def _fallback_html(string: str) -> str:
     return string
 
 
-HAS_IPYTHON = _IPY_display is not None
-display: DisplayFunc = _IPY_display if _IPY_display is not None else _fallback_display
-HTML: HTMLFunc = _IPY_HTML if _IPY_HTML is not None else _fallback_html
+def _lazy_display(*objs: Any, **kwargs: Any) -> None:
+    try:
+        ipython_display = importlib.import_module("IPython.display")
+    except ModuleNotFoundError:  # pragma: no cover
+        _fallback_display(*objs, **kwargs)
+    else:
+        ipython_display.display(*objs, **kwargs)
+
+
+def _lazy_html(string: str) -> Any:
+    try:
+        ipython_display = importlib.import_module("IPython.display")
+    except ModuleNotFoundError:  # pragma: no cover
+        return _fallback_html(string)
+    return ipython_display.HTML(string)
+
+
+# Looking up a dotted spec imports its parent package.  Probe the top-level
+# distribution so merely importing this utility module stays side-effect free.
+HAS_IPYTHON = importlib.util.find_spec("IPython") is not None
+display: DisplayFunc = _lazy_display
+HTML: HTMLFunc = _lazy_html
 
 
 def customize(func):

@@ -24,6 +24,16 @@ __all__ = [
 ]
 
 
+def _call_explicit_metric(empyrical_instance, name, *args, **kwargs):
+    """Evaluate local plot data without rebinding a stored-state metric."""
+
+    from fincore.empyrical import Empyrical
+
+    owner = type(empyrical_instance) if isinstance(empyrical_instance, Empyrical) else None
+    metric = getattr(owner, name) if owner is not None else getattr(empyrical_instance, name)
+    return metric(*args, **kwargs)
+
+
 def plot_turnover(empyrical_instance, returns, transactions, positions, legend_loc="best", ax=None, **kwargs):
     """
     Plots turnover vs. date.
@@ -239,7 +249,12 @@ def plot_slippage_sweep(
     for bps in slippage_params:
         adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions, transactions, bps)
         label = str(bps) + " bps"
-        slippage_sweep[label] = empyrical_instance.cum_returns(adj_returns, 1)
+        slippage_sweep[label] = _call_explicit_metric(
+            empyrical_instance,
+            "cum_returns",
+            adj_returns,
+            starting_value=1,
+        )
 
     slippage_sweep.plot(alpha=1.0, lw=0.5, ax=ax)
 
@@ -282,7 +297,7 @@ def plot_slippage_sensitivity(empyrical_instance, returns, positions, transactio
     avg_returns_given_slippage = pd.Series()
     for bps in range(1, 100):
         adj_returns = empyrical_instance.adjust_returns_for_slippage(returns, positions, transactions, bps)
-        avg_returns = empyrical_instance.annual_return(adj_returns)
+        avg_returns = _call_explicit_metric(empyrical_instance, "annual_return", adj_returns)
         avg_returns_given_slippage.loc[bps] = avg_returns
 
     # Use matplotlib directly to avoid pandas timeseries date formatting on integer index

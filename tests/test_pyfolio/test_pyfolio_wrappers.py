@@ -8,14 +8,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import fincore._pyfolio_impl as pyfolio_impl
 import fincore.pyfolio as pyfolio_mod
 from fincore.pyfolio import Pyfolio
 
 
 def test_pyfolio_fallback_display_and_markdown() -> None:
     # Cover simple fallback helpers.
-    pyfolio_mod._fallback_display("x")
-    assert pyfolio_mod._fallback_markdown("md") == "md"
+    pyfolio_impl._fallback_display("x")
+    assert pyfolio_impl._fallback_markdown("md") == "md"
+
+
+def test_lightweight_pyfolio_facade_does_not_reexport_heavy_private_helpers() -> None:
+    assert "_plot_best" not in vars(pyfolio_mod)
+    assert "_create_returns_tear_sheet" not in vars(pyfolio_mod)
 
 
 def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> None:
@@ -29,19 +35,19 @@ def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> No
         return _stub
 
     # Bayesian/risk plotting wrappers.
-    monkeypatch.setattr(pyfolio_mod, "_plot_best", make_stub("plot_best"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_stoch_vol", make_stub("plot_stoch_vol"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_bayes_cone_internal", make_stub("_plot_bayes_cone"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_bayes_cone", make_stub("plot_bayes_cone"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_style_factor_exposures", make_stub("plot_style_factor_exposures"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_sector_exposures_longshort", make_stub("plot_sector_exposures_longshort"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_sector_exposures_gross", make_stub("plot_sector_exposures_gross"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_sector_exposures_net", make_stub("plot_sector_exposures_net"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_cap_exposures_longshort", make_stub("plot_cap_exposures_longshort"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_cap_exposures_gross", make_stub("plot_cap_exposures_gross"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_cap_exposures_net", make_stub("plot_cap_exposures_net"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_volume_exposures_longshort", make_stub("plot_volume_exposures_longshort"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_volume_exposures_gross", make_stub("plot_volume_exposures_gross"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_best", make_stub("plot_best"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_stoch_vol", make_stub("plot_stoch_vol"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_bayes_cone_internal", make_stub("_plot_bayes_cone"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_bayes_cone", make_stub("plot_bayes_cone"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_style_factor_exposures", make_stub("plot_style_factor_exposures"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_sector_exposures_longshort", make_stub("plot_sector_exposures_longshort"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_sector_exposures_gross", make_stub("plot_sector_exposures_gross"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_sector_exposures_net", make_stub("plot_sector_exposures_net"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_cap_exposures_longshort", make_stub("plot_cap_exposures_longshort"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_cap_exposures_gross", make_stub("plot_cap_exposures_gross"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_cap_exposures_net", make_stub("plot_cap_exposures_net"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_volume_exposures_longshort", make_stub("plot_volume_exposures_longshort"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_volume_exposures_gross", make_stub("plot_volume_exposures_gross"))
 
     assert pyf.plot_best()[0] == "plot_best"
     assert pyf.plot_stoch_vol(data=pd.Series([0.0]))[0] == "plot_stoch_vol"
@@ -60,10 +66,10 @@ def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> No
     assert pyf.plot_volume_exposures_gross(pd.DataFrame(), 0.1)[0] == "plot_volume_exposures_gross"
 
     # Tear sheet wrappers.
-    monkeypatch.setattr(pyfolio_mod, "_create_capacity_tear_sheet", make_stub("create_capacity_tear_sheet"))
-    monkeypatch.setattr(pyfolio_mod, "_create_bayesian_tear_sheet", make_stub("create_bayesian_tear_sheet"))
-    monkeypatch.setattr(pyfolio_mod, "_create_risk_tear_sheet", make_stub("create_risk_tear_sheet"))
-    monkeypatch.setattr(pyfolio_mod, "_create_perf_attrib_tear_sheet", make_stub("create_perf_attrib_tear_sheet"))
+    monkeypatch.setattr(pyfolio_impl, "_create_capacity_tear_sheet", make_stub("create_capacity_tear_sheet"))
+    monkeypatch.setattr(pyfolio_impl, "_create_bayesian_tear_sheet", make_stub("create_bayesian_tear_sheet"))
+    monkeypatch.setattr(pyfolio_impl, "_create_risk_tear_sheet", make_stub("create_risk_tear_sheet"))
+    monkeypatch.setattr(pyfolio_impl, "_create_perf_attrib_tear_sheet", make_stub("create_perf_attrib_tear_sheet"))
 
     idx = pd.date_range("2024-01-01", periods=3, freq="B", tz="UTC")
     r = pd.Series([0.0, 0.0, 0.0], index=idx)
@@ -82,15 +88,17 @@ def test_pyfolio_wrapper_methods_delegate_to_module_functions(monkeypatch) -> No
     )
 
     # Misc wrappers later in the file.
-    monkeypatch.setattr(pyfolio_mod, "_plot_sector_allocations", make_stub("plot_sector_allocations"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_capacity_sweep", make_stub("plot_capacity_sweep"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_monthly_returns_timeseries", make_stub("plot_monthly_returns_timeseries"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_cones", make_stub("plot_cones"))
-    monkeypatch.setattr(pyfolio_mod, "_show_perf_attrib_stats", make_stub("show_perf_attrib_stats"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_perf_attrib_returns", make_stub("plot_perf_attrib_returns"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_alpha_returns", make_stub("plot_alpha_returns"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_factor_contribution_to_perf", make_stub("plot_factor_contribution_to_perf"))
-    monkeypatch.setattr(pyfolio_mod, "_plot_risk_exposures", make_stub("plot_risk_exposures"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_sector_allocations", make_stub("plot_sector_allocations"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_capacity_sweep", make_stub("plot_capacity_sweep"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_monthly_returns_timeseries", make_stub("plot_monthly_returns_timeseries"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_cones", make_stub("plot_cones"))
+    monkeypatch.setattr(pyfolio_impl, "_show_perf_attrib_stats", make_stub("show_perf_attrib_stats"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_perf_attrib_returns", make_stub("plot_perf_attrib_returns"))
+    monkeypatch.setattr(pyfolio_impl, "_plot_alpha_returns", make_stub("plot_alpha_returns"))
+    monkeypatch.setattr(
+        pyfolio_impl, "_plot_factor_contribution_to_perf", make_stub("plot_factor_contribution_to_perf")
+    )
+    monkeypatch.setattr(pyfolio_impl, "_plot_risk_exposures", make_stub("plot_risk_exposures"))
 
     assert pyf.plot_sector_allocations(r, pd.DataFrame())[0] == "plot_sector_allocations"
     assert pyf.plot_capacity_sweep(r, txns, md, bt_starting_capital=1.0)[0] == "plot_capacity_sweep"

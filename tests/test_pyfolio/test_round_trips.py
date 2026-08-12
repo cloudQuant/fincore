@@ -163,7 +163,7 @@ class RoundTripTestCase(TestCase):
             positions,
             transactions,
         )
-        transactions_closed.equals(expected)
+        assert_frame_equal(transactions_closed, expected[transactions_closed.columns], check_freq=False)
 
     def test_txn_pnl_matches_round_trip_pnl(self):
         _test_data = Path(__file__).resolve().parent.parent / "test_data"

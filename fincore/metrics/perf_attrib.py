@@ -284,6 +284,8 @@ def perf_attrib(
     """
     if positions is None or factor_returns is None or factor_loadings is None:
         raise ValueError("positions, factor_returns, and factor_loadings are required")
+    if regression_style != "OLS":
+        raise ValueError("regression_style must be 'OLS'")
 
     normalized = tuple(
         _normalize_attribution_index(value, normalize_tz)
@@ -369,13 +371,13 @@ def normalize_and_stack_positions(
     """
     positions = positions.copy()
 
-    if "cash" in positions.columns:
-        positions = positions.drop("cash", axis=1)
-
     if pos_in_dollars:
-        total = positions.abs().sum(axis=1)
+        total = positions.sum(axis="columns")
         positions = positions.divide(total, axis=0)
         positions = positions.replace([np.inf, -np.inf], np.nan)
+
+    if "cash" in positions.columns:
+        positions = positions.drop("cash", axis=1)
 
     stacked = positions.stack()
     stacked.index = stacked.index.set_names(["dt", "ticker"])
@@ -386,6 +388,8 @@ def normalize_and_stack_positions(
 def compute_exposures(
     positions: pd.Series | pd.DataFrame,
     factor_loadings: pd.DataFrame,
+    stack_positions: bool = True,
+    pos_in_dollars: bool = True,
 ) -> pd.DataFrame:
     """Compute factor exposures from positions and factor loadings.
 
@@ -401,6 +405,11 @@ def compute_exposures(
     pd.DataFrame
         Portfolio risk exposures by factor and date.
     """
+    if stack_positions:
+        if isinstance(positions, pd.DataFrame):
+            positions = normalize_and_stack_positions(positions, pos_in_dollars=pos_in_dollars)
+        elif not isinstance(positions, pd.Series):
+            raise TypeError("positions must be a DataFrame or a stacked Series")
     return compute_exposures_internal(positions, factor_loadings)
 
 
