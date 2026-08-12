@@ -1,11 +1,9 @@
 """Common utilities for display, data handling, and formatting."""
 
-import importlib
 import warnings
 from collections.abc import Callable
 from functools import wraps
 from itertools import cycle
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -55,13 +53,11 @@ DisplayFunc = Callable[..., Any]
 HTMLFunc = Callable[[str], Any]
 
 try:
-    _ipy_display_mod = importlib.import_module("IPython.display")
+    from IPython.display import HTML as _IPY_HTML
+    from IPython.display import display as _IPY_display
 except ModuleNotFoundError:  # pragma: no cover
     _IPY_HTML = None
     _IPY_display = None
-else:
-    _IPY_HTML = getattr(_ipy_display_mod, "HTML", None)
-    _IPY_display = getattr(_ipy_display_mod, "display", None)
 
 
 def _fallback_display(*objs: Any, **_kwargs: Any) -> None:
@@ -420,18 +416,8 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
             )
         # Inject the new HTML
         html = html.replace("<thead>", "<thead>" + rows)
-    if run_flask_app:
-        # If running via the Flask app, persist the table under a local static/ directory.
-        data_root = Path(__file__).parent
-        target_static_path = data_root / "static"
-        target_static_path.mkdir(parents=True, exist_ok=True)
-        excel_file_path = target_static_path / f"strategy_performance_{name}.xlsx"
-        try:
-            table.to_excel(excel_file_path, index=True)
-        except (OSError, ValueError) as e:
-            import logging
-
-            logging.getLogger(__name__).warning("Failed to save table export: %s", e)
+    # ``run_flask_app`` is retained for legacy callers.  Rendering remains
+    # display-only; callers must request an explicit export destination.
     display(HTML(html))
 
 

@@ -1,0 +1,166 @@
+{
+  "copy_manifest_sha256": "a1738ac561cc5911b1a5d3577496a73fbad7e2687d99055b1c7a7179e5f3d382",
+  "environment": {
+    "matplotlib": "3.10.9",
+    "numpy": "1.26.4",
+    "pandas": "3.0.3",
+    "python": "3.11.8 | packaged by conda-forge | (main, Feb 16 2024, 20:49:36) [Clang 16.0.6 ]",
+    "scipy": "1.17.1"
+  },
+  "generated_at": "2026-08-12T15:25:35.725964+00:00",
+  "non_serial_counts_match": true,
+  "outcome": "pass",
+  "runs": [
+    {
+      "collected": 2284,
+      "command": [
+        "/Users/yunjinqi/opt/anaconda3/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--ignore=tests/benchmarks",
+        "-m",
+        "not slow and not integration"
+      ],
+      "duration_seconds": 93.992,
+      "integrity_ok": true,
+      "label": "trusted-baseline",
+      "output_tail": "risk/evt/test_hill_estimator.py .....                         [ 84%]\ntests/test_risk/risk_models/test_garch.py ............                   [ 84%]\ntests/test_risk/test_evt_remaining_coverage.py ......                    [ 85%]\ntests/test_risk/test_garch_detailed.py .........................         [ 86%]\ntests/test_simulation/test_base.py .....                                 [ 86%]\ntests/test_simulation/test_bootstrap.py ................                 [ 87%]\ntests/test_simulation/test_monte_carlo.py .............                  [ 87%]\ntests/test_simulation/test_paths.py ...............                      [ 88%]\ntests/test_simulation/test_scenarios.py ...........                      [ 88%]\ntests/test_smoke_import.py .....................................         [ 90%]\ntests/test_tearsheets/delegation/test_bayesian.py .                      [ 90%]\ntests/test_tearsheets/delegation/test_capacity.py .                      [ 90%]\ntests/test_tearsheets/delegation/test_full_simple.py ..                  [ 90%]\ntests/test_tearsheets/delegation/test_interesting_times.py .             [ 90%]\ntests/test_tearsheets/delegation/test_positions.py .                     [ 90%]\ntests/test_tearsheets/delegation/test_returns.py ..                      [ 90%]\ntests/test_tearsheets/delegation/test_round_trips.py ..                  [ 90%]\ntests/test_tearsheets/delegation/test_transactions.py .                  [ 91%]\ntests/test_tearsheets/risk_plots/test_cap_volume_exposures.py ........   [ 91%]\ntests/test_tearsheets/risk_plots/test_sector_exposures.py .........      [ 91%]\ntests/test_tearsheets/risk_plots/test_style_factor.py ....               [ 91%]\ntests/test_tearsheets/sheets_coverage/test_bayesian.py ....              [ 92%]\ntests/test_tearsheets/sheets_coverage/test_interesting_times.py ..       [ 92%]\ntests/test_tearsheets/sheets_coverage/test_perf_attrib.py .              [ 92%]\ntests/test_tearsheets/sheets_coverage/test_risk.py ...                   [ 92%]\ntests/test_tearsheets/sheets_coverage/test_utils.py .                    [ 92%]\ntests/test_tearsheets/test_bayesian_tearsheet.py ..............          [ 93%]\ntests/test_tearsheets/test_capacity.py .....                             [ 93%]\ntests/test_tearsheets/test_perf_attrib_tearsheet.py ...                  [ 93%]\ntests/test_tearsheets/test_positions_tearsheet_more_coverage.py .        [ 93%]\ntests/test_tearsheets/test_returns_more_coverage.py ..                   [ 93%]\ntests/test_tearsheets/test_risk_plots.py .                               [ 93%]\ntests/test_tearsheets/test_round_trips_tearsheet.py ....                 [ 93%]\ntests/test_tearsheets/test_transactions_plotting_full_coverage.py ...... [ 94%]\n..........                                                               [ 94%]\ntests/test_tearsheets/test_utils.py ..                                   [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_slippage.py .....      [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py ....      [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_turnover.py ...        [ 95%]\ntests/test_tearsheets/tx_plotting_split/test_plot_volume.py ....         [ 95%]\ntests/test_utils/test_colormap.py .....                                  [ 95%]\ntests/test_utils/test_common_data.py ............                        [ 95%]\ntests/test_utils/test_common_datetime.py .....                           [ 96%]\ntests/test_utils/test_common_decorators.py ......                        [ 96%]\ntests/test_utils/test_common_intraday.py .......                         [ 96%]\ntests/test_utils/test_common_utils_legend_coverage.py ...                [ 96%]\ntests/test_utils/test_common_utils_missing_coverage.py ....              [ 97%]\ntests/test_utils/test_common_zipline.py ..                               [ 97%]\ntests/test_utils/test_display_utils.py ....                              [ 97%]\ntests/test_utils/test_formatting.py ........                             [ 97%]\ntests/test_utils/test_legend_config.py ....                              [ 97%]\ntests/test_utils/test_math_utils.py ..                                   [ 97%]\ntests/test_viz/test_bokeh_coverage.py .........                          [ 98%]\ntests/test_viz/test_html_backend.py .....                                [ 98%]\ntests/test_viz/test_interactive/test_interactive.py .................... [ 99%]\n                                                                         [ 99%]\ntests/test_viz/test_matplotlib_backend.py ..                             [ 99%]\ntests/test_viz/test_plotly_coverage.py ...........                       [100%]\n\n=============================== warnings summary ===============================\ntests/test_pyfolio/test_tears.py: 11 warnings\n  /Users/yunjinqi/opt/anaconda3/lib/python3.11/site-packages/matplotlib/dates.py:449: DeprecationWarning: parsing timezone aware datetimes is deprecated; this will raise an error in the future\n    d = d.astype('datetime64[us]')\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n---------------------------------------------------- benchmark 'import_time': 1 tests ---------------------------------------------------\nName (time in ns)                     Min          Max      Mean    StdDev    Median     IQR   Outliers  OPS (Mops/s)  Rounds  Iterations\n-----------------------------------------------------------------------------------------------------------------------------------------\ntest_import_fincore_benchmark     82.9750  18,416.0017  166.8301  112.6173  166.0082  1.0186  283;78525        5.9941  187512           1\n-----------------------------------------------------------------------------------------------------------------------------------------\n\nLegend:\n  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.\n  OPS: Operations Per Second, computed as 1 / Mean\n=== 2270 passed, 14 skipped, 15 deselected, 11 warnings in 90.80s (0:01:30) ====\n",
+      "passed": 2270,
+      "returncode": 0,
+      "selector": "not slow and not integration",
+      "skipped": 14,
+      "warnings": 11,
+      "write_check": {
+        "added_non_cache_files": [],
+        "changed_non_cache_files": [],
+        "changed_tracked_package_files": [],
+        "removed_non_cache_files": []
+      }
+    },
+    {
+      "collected": 6,
+      "command": [
+        "/Users/yunjinqi/opt/anaconda3/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--ignore=tests/benchmarks",
+        "-m",
+        "serial"
+      ],
+      "duration_seconds": 6.216,
+      "integrity_ok": true,
+      "label": "serial",
+      "output_tail": "============================= test session starts ==============================\nplatform darwin -- Python 3.11.8, pytest-8.4.2, pluggy-1.6.0\nbenchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)\nrootdir: /private/var/folders/7d/hnmknylj1w91h3cvq6mh3thm0000gn/T/fincore-quality-baseline-k3z0jdxi/fincore\nconfigfile: pyproject.toml\ntestpaths: tests\nplugins: asyncio-0.24.0, cov-6.0.0, Faker-37.5.3, anyio-4.11.0, flask-1.3.0, doctestplus-1.6.0, html-4.1.1, xdist-3.8.0, time-machine-2.16.0, timeout-2.4.0, metadata-3.1.1, rerunfailures-14.0, mysql-3.1.0, playwright-0.7.0, mock-3.14.1, ordering-0.6, sugar-1.1.1, benchmark-5.1.0, allure-pytest-2.15.2, langsmith-0.4.38, base-url-2.1.0, dash-2.18.2, picked-0.5.1, hypothesis-6.148.5, requests-mock-1.12.1, postgresql-7.0.2\nasyncio: mode=Mode.STRICT, default_loop_scope=None\ncollected 2299 items / 2293 deselected / 6 selected\n\ntests/test_empyrical/test_empyrical_line_718_coverage.py ..              [ 33%]\ntests/test_metrics/test_alpha_beta_line_543_596.py ..                    [ 66%]\ntests/test_metrics/test_alpha_beta_missing_coverage.py .                 [ 83%]\ntests/test_tearsheets/test_returns_more_coverage.py .                    [100%]\n\n====================== 6 passed, 2293 deselected in 3.60s ======================\n",
+      "passed": 6,
+      "returncode": 0,
+      "selector": "serial",
+      "skipped": 0,
+      "warnings": 0,
+      "write_check": {
+        "added_non_cache_files": [],
+        "changed_non_cache_files": [],
+        "changed_tracked_package_files": [],
+        "removed_non_cache_files": []
+      }
+    },
+    {
+      "collected": 2278,
+      "command": [
+        "/Users/yunjinqi/opt/anaconda3/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--ignore=tests/benchmarks",
+        "-m",
+        "not serial and not slow and not integration"
+      ],
+      "duration_seconds": 114.095,
+      "integrity_ok": true,
+      "label": "non-serial-single",
+      "output_tail": "risk/evt/test_hill_estimator.py .....                         [ 84%]\ntests/test_risk/risk_models/test_garch.py ............                   [ 84%]\ntests/test_risk/test_evt_remaining_coverage.py ......                    [ 85%]\ntests/test_risk/test_garch_detailed.py .........................         [ 86%]\ntests/test_simulation/test_base.py .....                                 [ 86%]\ntests/test_simulation/test_bootstrap.py ................                 [ 87%]\ntests/test_simulation/test_monte_carlo.py .............                  [ 87%]\ntests/test_simulation/test_paths.py ...............                      [ 88%]\ntests/test_simulation/test_scenarios.py ...........                      [ 88%]\ntests/test_smoke_import.py .....................................         [ 90%]\ntests/test_tearsheets/delegation/test_bayesian.py .                      [ 90%]\ntests/test_tearsheets/delegation/test_capacity.py .                      [ 90%]\ntests/test_tearsheets/delegation/test_full_simple.py ..                  [ 90%]\ntests/test_tearsheets/delegation/test_interesting_times.py .             [ 90%]\ntests/test_tearsheets/delegation/test_positions.py .                     [ 90%]\ntests/test_tearsheets/delegation/test_returns.py ..                      [ 90%]\ntests/test_tearsheets/delegation/test_round_trips.py ..                  [ 91%]\ntests/test_tearsheets/delegation/test_transactions.py .                  [ 91%]\ntests/test_tearsheets/risk_plots/test_cap_volume_exposures.py ........   [ 91%]\ntests/test_tearsheets/risk_plots/test_sector_exposures.py .........      [ 91%]\ntests/test_tearsheets/risk_plots/test_style_factor.py ....               [ 91%]\ntests/test_tearsheets/sheets_coverage/test_bayesian.py ....              [ 92%]\ntests/test_tearsheets/sheets_coverage/test_interesting_times.py ..       [ 92%]\ntests/test_tearsheets/sheets_coverage/test_perf_attrib.py .              [ 92%]\ntests/test_tearsheets/sheets_coverage/test_risk.py ...                   [ 92%]\ntests/test_tearsheets/sheets_coverage/test_utils.py .                    [ 92%]\ntests/test_tearsheets/test_bayesian_tearsheet.py ..............          [ 93%]\ntests/test_tearsheets/test_capacity.py .....                             [ 93%]\ntests/test_tearsheets/test_perf_attrib_tearsheet.py ...                  [ 93%]\ntests/test_tearsheets/test_positions_tearsheet_more_coverage.py .        [ 93%]\ntests/test_tearsheets/test_returns_more_coverage.py .                    [ 93%]\ntests/test_tearsheets/test_risk_plots.py .                               [ 93%]\ntests/test_tearsheets/test_round_trips_tearsheet.py ....                 [ 93%]\ntests/test_tearsheets/test_transactions_plotting_full_coverage.py ...... [ 93%]\n..........                                                               [ 94%]\ntests/test_tearsheets/test_utils.py ..                                   [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_slippage.py .....      [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py ....      [ 94%]\ntests/test_tearsheets/tx_plotting_split/test_plot_turnover.py ...        [ 95%]\ntests/test_tearsheets/tx_plotting_split/test_plot_volume.py ....         [ 95%]\ntests/test_utils/test_colormap.py .....                                  [ 95%]\ntests/test_utils/test_common_data.py ............                        [ 95%]\ntests/test_utils/test_common_datetime.py .....                           [ 96%]\ntests/test_utils/test_common_decorators.py ......                        [ 96%]\ntests/test_utils/test_common_intraday.py .......                         [ 96%]\ntests/test_utils/test_common_utils_legend_coverage.py ...                [ 96%]\ntests/test_utils/test_common_utils_missing_coverage.py ....              [ 97%]\ntests/test_utils/test_common_zipline.py ..                               [ 97%]\ntests/test_utils/test_display_utils.py ....                              [ 97%]\ntests/test_utils/test_formatting.py ........                             [ 97%]\ntests/test_utils/test_legend_config.py ....                              [ 97%]\ntests/test_utils/test_math_utils.py ..                                   [ 97%]\ntests/test_viz/test_bokeh_coverage.py .........                          [ 98%]\ntests/test_viz/test_html_backend.py .....                                [ 98%]\ntests/test_viz/test_interactive/test_interactive.py .................... [ 99%]\n                                                                         [ 99%]\ntests/test_viz/test_matplotlib_backend.py ..                             [ 99%]\ntests/test_viz/test_plotly_coverage.py ...........                       [100%]\n\n=============================== warnings summary ===============================\ntests/test_pyfolio/test_tears.py: 11 warnings\n  /Users/yunjinqi/opt/anaconda3/lib/python3.11/site-packages/matplotlib/dates.py:449: DeprecationWarning: parsing timezone aware datetimes is deprecated; this will raise an error in the future\n    d = d.astype('datetime64[us]')\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n\n---------------------------------------------------- benchmark 'import_time': 1 tests ---------------------------------------------------\nName (time in ns)                     Min          Max      Mean    StdDev    Median      IQR  Outliers  OPS (Mops/s)  Rounds  Iterations\n-----------------------------------------------------------------------------------------------------------------------------------------\ntest_import_fincore_benchmark     82.9750  18,790.9754  183.7682  150.1409  166.9978  41.0073    81;284        5.4416  180441           1\n-----------------------------------------------------------------------------------------------------------------------------------------\n\nLegend:\n  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.\n  OPS: Operations Per Second, computed as 1 / Mean\n=== 2264 passed, 14 skipped, 21 deselected, 11 warnings in 111.18s (0:01:51) ===\n",
+      "passed": 2264,
+      "returncode": 0,
+      "selector": "not serial and not slow and not integration",
+      "skipped": 14,
+      "warnings": 11,
+      "write_check": {
+        "added_non_cache_files": [],
+        "changed_non_cache_files": [],
+        "changed_tracked_package_files": [],
+        "removed_non_cache_files": []
+      }
+    },
+    {
+      "collected": 2278,
+      "command": [
+        "/Users/yunjinqi/opt/anaconda3/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--ignore=tests/benchmarks",
+        "-m",
+        "not serial and not slow and not integration",
+        "-n",
+        "auto",
+        "--dist=loadscope"
+      ],
+      "duration_seconds": 128.822,
+      "integrity_ok": true,
+      "label": "non-serial-xdist",
+      "output_tail": "============================= test session starts ==============================\nplatform darwin -- Python 3.11.8, pytest-8.4.2, pluggy-1.6.0\nbenchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)\nrootdir: /private/var/folders/7d/hnmknylj1w91h3cvq6mh3thm0000gn/T/fincore-quality-baseline-k3z0jdxi/fincore\nconfigfile: pyproject.toml\ntestpaths: tests\nplugins: asyncio-0.24.0, cov-6.0.0, Faker-37.5.3, anyio-4.11.0, flask-1.3.0, doctestplus-1.6.0, html-4.1.1, xdist-3.8.0, time-machine-2.16.0, timeout-2.4.0, metadata-3.1.1, rerunfailures-14.0, mysql-3.1.0, playwright-0.7.0, mock-3.14.1, ordering-0.6, sugar-1.1.1, benchmark-5.1.0, allure-pytest-2.15.2, langsmith-0.4.38, base-url-2.1.0, dash-2.18.2, picked-0.5.1, hypothesis-6.148.5, requests-mock-1.12.1, postgresql-7.0.2\nasyncio: mode=Mode.STRICT, default_loop_scope=None\ncreated: 8/8 workers\n8 workers [2278 items]\n\n........................................................................ [  3%]\n........................................................................ [  6%]\n........................................................................ [  9%]\n........................................................................ [ 12%]\n........................................................................ [ 15%]\n........................................................................ [ 18%]\n........................................................................ [ 22%]\n........................................................................ [ 25%]\n........................................................................ [ 28%]\n........................................................................ [ 31%]\n........................................................................ [ 34%]\n......................................ssss.ss...s.s..................... [ 37%]\n........................................................................ [ 41%]\n........................................................................ [ 44%]\n........................................................................ [ 47%]\n........................................................................ [ 50%]\n........................................................................ [ 53%]\n........................................................................ [ 56%]\n........................................................................ [ 60%]\n........................................................................ [ 63%]\n........................................................................ [ 66%]\n........................................................................ [ 69%]\n........................................................................ [ 72%]\n........................................................................ [ 75%]\n........................................................................ [ 79%]\n........................................................................ [ 82%]\n.......................................................ssssss........... [ 85%]\n........................................................................ [ 88%]\n........................................................................ [ 91%]\n........................................................................ [ 94%]\n........................................................................ [ 97%]\n..............................................                           [100%]\n=============================== warnings summary ===============================\ntests/test_pyfolio/test_tears.py: 11 warnings\n  /Users/yunjinqi/opt/anaconda3/lib/python3.11/site-packages/matplotlib/dates.py:449: DeprecationWarning: parsing timezone aware datetimes is deprecated; this will raise an error in the future\n    d = d.astype('datetime64[us]')\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n========== 2264 passed, 14 skipped, 11 warnings in 126.55s (0:02:06) ===========\n/Users/yunjinqi/opt/anaconda3/lib/python3.11/site-packages/pytest_benchmark/logger.py:39: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.\n  warner(PytestBenchmarkWarning(text))\n",
+      "passed": 2264,
+      "returncode": 0,
+      "selector": "not serial and not slow and not integration",
+      "skipped": 14,
+      "warnings": 11,
+      "write_check": {
+        "added_non_cache_files": [],
+        "changed_non_cache_files": [],
+        "changed_tracked_package_files": [],
+        "removed_non_cache_files": []
+      }
+    },
+    {
+      "branch_coverage_percent": 94.0,
+      "collected": 2284,
+      "command": [
+        "/Users/yunjinqi/opt/anaconda3/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--ignore=tests/benchmarks",
+        "-m",
+        "not slow and not integration",
+        "--cov=fincore",
+        "--cov-branch",
+        "--cov-report=term-missing"
+      ],
+      "duration_seconds": 156.727,
+      "integrity_ok": true,
+      "label": "branch-coverage",
+      "output_tail": "5->218, 378->381\nfincore/metrics/ratios.py                     410      9    154      9    97%   174->176, 182->184, 199->201, 241->243, 254->256, 349, 405-411, 589, 645\nfincore/metrics/returns.py                     72      3     34      1    96%   103-106\nfincore/metrics/risk.py                       257     10    102     16    92%   96-101, 118->120, 168->170, 174-179, 196->198, 225, 255, 336->338, 492->496, 504->506, 519->523, 534->538, 638->650, 640->650, 657->659, 735->739\nfincore/metrics/rolling.py                    203      5     82      6    96%   257, 303, 364, 411-412, 581->585\nfincore/metrics/round_trips.py                169      8     62      3    95%   96-99, 124-127, 265->278\nfincore/metrics/stats.py                      270      0     94      3    99%   359->362, 617->615, 625->623\nfincore/metrics/timing.py                      93      0     14      0   100%\nfincore/metrics/transactions.py               110      0     16      3    98%   105->108, 155->158, 314->317\nfincore/metrics/yearly.py                     105      2     36      3    96%   113, 368->371, 372\nfincore/optimization/_utils.py                 24      0      8      0   100%\nfincore/optimization/frontier.py               64      0     16      0   100%\nfincore/optimization/objectives.py             63      0     30      1    99%   101->99\nfincore/optimization/risk_parity.py            56      0     24      0   100%\nfincore/plugin/registry.py                     59      0     12      1    99%   212->214\nfincore/pyfolio.py                            261      0      4      2    99%   48->55, 895->897\nfincore/report/compute.py                     318     12     68     19    92%   48, 50, 56, 58, 126-129, 131-134, 234->237, 237->243, 250->252, 282->286, 286->302, 291->296, 296->302, 302->308, 310->313, 313->315, 340->342, 356->358, 369->371\nfincore/report/format.py                       69      0     32      0   100%\nfincore/report/render_html.py                 367      0    112     23    95%   66->64, 112->117, 117->exit, 132->135, 135->exit, 146->149, 149->152, 152->exit, 190->193, 329->331, 346->348, 362->364, 364->366, 384->391, 386->391, 391->393, 751->766, 766->exit, 808->819, 819->exit, 846->857, 857->868, 868->exit\nfincore/report/render_pdf.py                   58      0      6      0   100%\nfincore/risk/evt.py                           134      1     38      1    99%   142\nfincore/risk/garch.py                         160      0     30      0   100%\nfincore/simulation/base.py                     53      0     10      0   100%\nfincore/simulation/bootstrap.py                56      0     20      0   100%\nfincore/simulation/monte_carlo.py              51      0      6      1    98%   193->201\nfincore/simulation/paths.py                    48      0     18      1    98%   216->219\nfincore/simulation/scenarios.py                63      0     20      1    99%   71->70\nfincore/tearsheets/bayesian.py                109      0     34      8    94%   64->68, 68->75, 76->78, 78->81, 81->84, 84->88, 88->93, 211->214\nfincore/tearsheets/capacity.py                 61      0     20      1    99%   81->84\nfincore/tearsheets/perf_attrib.py              70      0     20      2    98%   58->61, 68->71\nfincore/tearsheets/positions.py               111      1     24      2    98%   56, 262->265\nfincore/tearsheets/returns.py                 308      0    104      8    98%   401->404, 459->462, 658->661, 664->666, 771->775, 796->802, 817->821, 832->834\nfincore/tearsheets/risk.py                     95      0     24      0   100%\nfincore/tearsheets/round_trips.py              64      0     10      1    99%   140->exit\nfincore/tearsheets/sheets.py                  491      3    128      7    98%   161->216, 171->200, 302->334, 324->334, 532->538, 716, 988->991, 1025->1038, 1067, 1133\nfincore/tearsheets/transactions.py             94      1     18      1    98%   68\nfincore/tearsheets/utils.py                    13      0      6      0   100%\nfincore/utils/common_utils.py                 304      1     86      4    99%   305, 347->349, 365->368, 910->917\nfincore/utils/data_utils.py                    60      0     26      0   100%\nfincore/utils/date_utils.py                     8      0      0      0   100%\nfincore/utils/math_utils.py                    30      0      2      0   100%\nfincore/validation.py                          85     85     50      0     0%   6-256\nfincore/viz/base.py                            24      0      8      0   100%\nfincore/viz/html_backend.py                    88      0     18      1    99%   145->148\nfincore/viz/interactive/bokeh_backend.py      129      0     20      2    99%   345->348, 471->482\nfincore/viz/interactive/plotly_backend.py     105      0     20      2    98%   442->458, 458->473\nfincore/viz/matplotlib_backend.py              75      0     20      5    95%   39->41, 58->60, 79->81, 92->94, 110->112\n---------------------------------------------------------------------------------------\nTOTAL                                        8675    350   2420    180    94%\n\n\n--------------------------------------------------- benchmark 'import_time': 1 tests ---------------------------------------------------\nName (time in ns)                     Min          Max      Mean    StdDev    Median     IQR  Outliers  OPS (Mops/s)  Rounds  Iterations\n----------------------------------------------------------------------------------------------------------------------------------------\ntest_import_fincore_benchmark     82.9750  58,332.9820  178.1811  231.1313  166.9978  0.0291  75;65202        5.6123  169034           1\n----------------------------------------------------------------------------------------------------------------------------------------\n\nLegend:\n  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.\n  OPS: Operations Per Second, computed as 1 / Mean\n=== 2270 passed, 14 skipped, 15 deselected, 11 warnings in 152.70s (0:02:32) ===\n",
+      "passed": 2270,
+      "returncode": 0,
+      "selector": "not slow and not integration",
+      "skipped": 14,
+      "warnings": 11,
+      "write_check": {
+        "added_non_cache_files": [],
+        "changed_non_cache_files": [],
+        "changed_tracked_package_files": [],
+        "removed_non_cache_files": []
+      }
+    }
+  ],
+  "source": {
+    "commit": "257b7fe67aa8a0f3e435b470f7609de8278bd9e1",
+    "dirty": true
+  }
+}

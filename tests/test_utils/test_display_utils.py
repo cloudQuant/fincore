@@ -66,31 +66,13 @@ class TestPrintTable:
         html = captured["obj"]
         assert "<table" in html
 
-    def test_print_table_run_flask_app_uses_temp_static_dir(self, monkeypatch, tmp_path):
-        """Test print_table with run_flask_app uses temp static dir."""
-        captured = {"excel_path": None}
+    def test_print_table_run_flask_app_does_not_implicitly_export(self, monkeypatch):
+        """Test Flask-display mode preserves HTML output without an implicit export."""
 
-        def fake_to_excel(self, path, index=True):
-            captured["excel_path"] = str(path)
+        def forbidden_export(*_args, **_kwargs):
+            pytest.fail("run_flask_app attempted an implicit XLSX export")
 
-        monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel, raising=True)
-        monkeypatch.setattr(cu, "__file__", str(tmp_path / "common_utils.py"), raising=False)
-        monkeypatch.setattr(cu, "display", lambda *_args, **_kwargs: None)
-        monkeypatch.setattr(cu, "HTML", lambda s: s)
-
-        df = pd.DataFrame({"a": [1, 2]})
-        cu.print_table(df, name="X", run_flask_app=True)
-        assert captured["excel_path"] is not None
-        assert str(tmp_path / "static") in captured["excel_path"]
-
-    def test_print_table_run_flask_app_logs_warning_when_to_excel_fails(self, monkeypatch, tmp_path):
-        """Test print_table logs warning when to_excel fails."""
-
-        def fake_to_excel(self, path, index=True):
-            raise OSError("boom")
-
-        monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel, raising=True)
-        monkeypatch.setattr(cu, "__file__", str(tmp_path / "common_utils.py"), raising=False)
+        monkeypatch.setattr(pd.DataFrame, "to_excel", forbidden_export, raising=True)
         monkeypatch.setattr(cu, "display", lambda *_args, **_kwargs: None)
         monkeypatch.setattr(cu, "HTML", lambda s: s)
 
