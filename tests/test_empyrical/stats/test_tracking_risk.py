@@ -205,7 +205,9 @@ class TestTrackingRisk(BaseTestCase):
             (mixed_returns, mixed_returns, 0.0, DAILY, 1.913592537319458),  # Beta is 1
             (positive_returns, mixed_returns, 0.0, DAILY, 9382.016570787557),
             (mixed_returns, simple_benchmark, 0.01, DAILY, np.nan),  # Beta is negative
-            (weekly_returns, simple_benchmark, 0.0, WEEKLY, 0.13215767793298694),
+            # Shared labels are [Jan 30, Feb 6] with identical [0, .01]
+            # values, so the independent closed form is 1.01**26 - 1.
+            (weekly_returns, simple_benchmark, 0.0, WEEKLY, 0.29525631496740634),
             (monthly_returns, simple_benchmark, 0.0, MONTHLY, np.nan),  # Beta might be negative or zero
         ]
     )
@@ -220,9 +222,6 @@ class TestTrackingRisk(BaseTestCase):
             period=period,
         )
         assert_almost_equal(result, direct_result, DECIMAL_PLACES)
-        if period == WEEKLY:
-            # Enhanced binary metrics use the shared inner-label policy.
-            return
         if np.isnan(expected):
             assert np.isnan(result), f"Expected NaN but got {result}"
         else:
@@ -288,8 +287,11 @@ class TestTrackingRisk(BaseTestCase):
             (mixed_returns, simple_benchmark, DAILY, -0.13425938751982391),
             (mixed_returns, mixed_returns, DAILY, 0.0),
             (positive_returns, mixed_returns, DAILY, 13.259480083900217),
-            (weekly_returns, simple_benchmark, WEEKLY, -0.005935602500302561),
-            (monthly_returns, simple_benchmark, MONTHLY, -0.001167416484335826),
+            # Weekly common returns and benchmark are identical.
+            (weekly_returns, simple_benchmark, WEEKLY, 0.0),
+            # The sole monthly common label has 0% versus 1%; independent
+            # annualization gives -(1.01**12 - 1).
+            (monthly_returns, simple_benchmark, MONTHLY, -0.12682503013196977),
         ]
     )
     @pytest.mark.p1  # High: important active return metric
@@ -302,9 +304,6 @@ class TestTrackingRisk(BaseTestCase):
             period=period,
         )
         assert_almost_equal(result, direct_result, DECIMAL_PLACES)
-        if period in {WEEKLY, MONTHLY}:
-            # Preserve period annualization while using the enhanced inner labels.
-            return
         assert_almost_equal(result, expected, DECIMAL_PLACES)
 
     # ========================================================================

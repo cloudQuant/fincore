@@ -42,6 +42,12 @@ boundaries.
   family retains the pinned independent/filtering semantics rather than being
   blanket-prealigned. Strict rolling capture also preserves the exact pinned
   unknown-keyword error text.
+- The final-review follow-up extends the same keyword-only contract across the
+  14 manually defined `Empyrical` class/instance convenience methods that are
+  not replaced by registry descriptors. Both explicit class calls and
+  stored-state instance calls forward the policy exactly once. In particular,
+  `regression_annual_return` forwards the selected policy independently to its
+  nested alpha and beta calculations without changing the frozen strict module.
 - Strict weekly aggregation keeps calendar year plus ISO week. The enhanced
   `week_year="iso"` option uses ISO year plus ISO week; the intentional
   divergence is recorded in `docs/compatibility/empyrical-0.6.0.md`.
@@ -127,7 +133,7 @@ central policy/routing, seven module families, dependent callers, strict
 differentials, and legacy shim: 54 failed, 2 passed
 ```
 
-The final alignment module contains 132 passing cases. It parameterizes all 33
+The initial alignment module contained 132 passing cases. It parameterizes all 33
 direct sites for the public signature, duplicate-label routing, and rejection
 of mixed positional/labelled inputs. Central cases additionally cover
 partial/disjoint `strict`/`inner`/`outer_dropna`, successful strict ordering,
@@ -135,6 +141,24 @@ timezone rejection and UTC normalization, invalid timezone options, ndarray
 length/identity, immutability, seven representative module families, nested
 policy forwarding, pinned strict numeric constants, and the unchanged legacy
 outer-join shim.
+
+Independent final review found two P1 gaps: 14 manual `Empyrical`
+class/instance methods did not yet expose the enhanced keywords, and two old
+tracking-risk tests bypassed their weekly/monthly frozen expectations after
+checking only the same in-repository implementation. Tests were strengthened
+before the follow-up production edit; the exact RED was:
+
+```text
+14 convenience signatures + class/instance strict and UTC forwarding +
+regression nested forwarding: 19 failed, 187 passed
+```
+
+The focused follow-up is now `206 passed`, including a 151-case enhanced
+alignment module. The formerly skipped numeric cases now retain both the
+class-to-direct projection check and independent constants derived from the
+closed forms: weekly Treynor is `1.01**26 - 1 = 0.29525631496740634`, weekly
+active return is `0.0`, and monthly active return is
+`-(1.01**12 - 1) = -0.12682503013196977`.
 
 ### Intentional enhanced behavior changes
 
@@ -145,11 +169,12 @@ outer-join shim.
 | `metrics.basic.aligned_series` | Existing outer join with NaN rows | Existing shim behavior | Unchanged |
 
 Accordingly, old enhanced weekly/monthly tracking, Treynor, and annual-active
-tests now compare the convenience API with the corresponding direct enhanced
-kernel under the same period instead of freezing obsolete positional/outer
-numbers. Old annual alpha/beta no-overlap tests now assert empty output. Tests
-that mocked a removed private alignment alias were replaced with observable
-disjoint/common-year behavior; no strict façade expectation was migrated.
+tests compare the convenience API with the corresponding direct enhanced
+kernel under the same period and retain independent hard-coded expected
+values for the intentional inner-label results. Old annual alpha/beta
+no-overlap tests now assert empty output. Tests that mocked a removed private
+alignment alias were replaced with observable disjoint/common-year behavior;
+no strict façade expectation was migrated.
 
 ## Provenance and manifest evidence
 
@@ -175,7 +200,7 @@ The expanded Task 4 context-impact gate is green:
 
 ```text
 five Task 4 compatibility modules + complete context suite:
-272 passed, 3 strict-pinned warnings
+291 passed, 3 strict-pinned warnings
 ```
 
 The broad Task 4 brief impact gate, excluding only the Task 5-owned positions
@@ -183,7 +208,7 @@ implementation from this change, is green:
 
 ```text
 tests/compat/empyrical + tests/test_empyrical/stats + tests/test_metrics:
-1278 passed, 3 strict-pinned warnings
+1297 passed, 3 strict-pinned warnings
 ```
 
 The independently reviewed Task 3 strict surface remains green:
@@ -235,5 +260,5 @@ adapter/registry changes needed to protect the frozen surface, the new
 compatibility matrix, six explicitly migrated obsolete enhanced tests, the
 ledger, and this report. No Task 5-owned pyfolio, portfolio,
 positions/transactions, sheets, generator, manifest, fixture, or compatibility
-test path is changed. Implementation is complete and awaiting independent
-review; this report does not mark Task 4 finally accepted.
+test path is changed. The final-review follow-up is complete and awaiting a
+second independent review; this report does not mark Task 4 finally accepted.

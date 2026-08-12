@@ -33,7 +33,7 @@ from __future__ import annotations
 import functools
 import importlib
 import inspect
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -46,6 +46,9 @@ from fincore._registry import (
     STATIC_METHODS,
     MetricSpec,
 )
+
+if TYPE_CHECKING:
+    from fincore.contracts.time_series import AlignmentPolicy
 
 DAILY = "daily"
 WEEKLY = "weekly"
@@ -603,43 +606,113 @@ class Empyrical:
     # ==================================================================
 
     @_dual_method
-    def r_cubed(self, returns=None, factor_returns=None):
+    def r_cubed(
+        self,
+        returns=None,
+        factor_returns=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute the R^3 metric."""
-        return _resolve_module("_stats").r_cubed(self._get_returns(returns), self._get_factor_returns(factor_returns))
+        return _resolve_module("_stats").r_cubed(
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            alignment=alignment,
+            normalize_tz=normalize_tz,
+        )
 
     @_dual_method
-    def relative_win_rate(self, returns=None, factor_returns=None):
+    def relative_win_rate(
+        self,
+        returns=None,
+        factor_returns=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute relative win rate."""
         return _resolve_module("_stats").relative_win_rate(
-            self._get_returns(returns), self._get_factor_returns(factor_returns)
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def capm_r_squared(self, returns=None, factor_returns=None):
+    def capm_r_squared(
+        self,
+        returns=None,
+        factor_returns=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute CAPM R^2."""
         return _resolve_module("_stats").capm_r_squared(
-            self._get_returns(returns), self._get_factor_returns(factor_returns)
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def up_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def up_capture_return(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute up-capture return."""
         return _resolve_module("_ratios").up_capture_return(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def down_capture_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def down_capture_return(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute down-capture return."""
         return _resolve_module("_ratios").down_capture_return(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def tracking_difference(self, returns=None, factor_returns=None):
+    def tracking_difference(
+        self,
+        returns=None,
+        factor_returns=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute tracking difference."""
         return _resolve_module("_stats").tracking_difference(
-            self._get_returns(returns), self._get_factor_returns(factor_returns)
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
@@ -657,24 +730,72 @@ class Empyrical:
         )
 
     @_dual_method
-    def treynor_ratio(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def treynor_ratio(
+        self,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute the Treynor ratio."""
         return _resolve_module("_ratios").treynor_ratio(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            risk_free=risk_free,
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def m_squared(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def m_squared(
+        self,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute the M^2 measure."""
         return _resolve_module("_ratios").m_squared(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            risk_free=risk_free,
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def residual_risk(self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None):
+    def residual_risk(
+        self,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute residual risk."""
         return _resolve_module("_risk").residual_risk(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), risk_free, period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            risk_free=risk_free,
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     # ---- rolling (returns + factor_returns) ----
@@ -743,31 +864,87 @@ class Empyrical:
     # ---- yearly (returns + factor_returns) ----
 
     @_dual_method
-    def annual_active_return(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_return(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute annual active return."""
         return _resolve_module("_yearly").annual_active_return(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def annual_active_risk(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_risk(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute annual active risk (tracking error)."""
         return _resolve_module("_risk").tracking_error(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def annual_active_return_by_year(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def annual_active_return_by_year(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute annual active return by year."""
         return _resolve_module("_yearly").annual_active_return_by_year(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     @_dual_method
-    def information_ratio_by_year(self, returns=None, factor_returns=None, period=DAILY, annualization=None):
+    def information_ratio_by_year(
+        self,
+        returns=None,
+        factor_returns=None,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
+    ):
         """Compute information ratio by year."""
         return _resolve_module("_yearly").information_ratio_by_year(
-            self._get_returns(returns), self._get_factor_returns(factor_returns), period, annualization
+            self._get_returns(returns),
+            self._get_factor_returns(factor_returns),
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
         )
 
     # ==================================================================
@@ -800,15 +977,39 @@ class Empyrical:
 
     @_dual_method
     def regression_annual_return(
-        self, returns=None, factor_returns=None, risk_free=0.0, period=DAILY, annualization=None
+        self,
+        returns=None,
+        factor_returns=None,
+        risk_free=0.0,
+        period=DAILY,
+        annualization=None,
+        *,
+        alignment: AlignmentPolicy = "inner",
+        normalize_tz: str | None = None,
     ):
         """Compute regression-based annual return."""
         returns = self._get_returns(returns)
         factor_returns = self._get_factor_returns(factor_returns)
         _ab = _resolve_module("_alpha_beta")
         _yr = _resolve_module("_yearly")
-        alpha_val = _ab.alpha(returns, factor_returns, risk_free, period, annualization)
-        beta_val = _ab.beta(returns, factor_returns, risk_free, period, annualization)
+        alpha_val = _ab.alpha(
+            returns,
+            factor_returns,
+            risk_free=risk_free,
+            period=period,
+            annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
+        )
+        beta_val = _ab.beta(
+            returns,
+            factor_returns,
+            risk_free=risk_free,
+            _period=period,
+            _annualization=annualization,
+            alignment=alignment,
+            normalize_tz=normalize_tz,
+        )
         if np.isnan(alpha_val) or np.isnan(beta_val):
             return np.nan
         benchmark_annual = _yr.annual_return(factor_returns, period, annualization)

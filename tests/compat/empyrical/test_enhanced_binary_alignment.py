@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 
 import fincore.empyrical as ep
+import fincore.metrics.alpha_beta as alpha_beta_metrics
 import fincore.metrics.ratios as ratios_metrics
 import fincore.metrics.timing as timing_metrics
 from fincore.exceptions import DataAlignmentError
@@ -95,6 +96,23 @@ DEPENDENT_BINARY_METRICS: tuple[Callable[..., object], ...] = (
     annual_active_return_by_year,
 )
 
+EMPYRICAL_DUAL_BINARY_METHODS: tuple[str, ...] = (
+    "r_cubed",
+    "relative_win_rate",
+    "capm_r_squared",
+    "up_capture_return",
+    "down_capture_return",
+    "tracking_difference",
+    "treynor_ratio",
+    "m_squared",
+    "residual_risk",
+    "annual_active_return",
+    "annual_active_risk",
+    "annual_active_return_by_year",
+    "information_ratio_by_year",
+    "regression_annual_return",
+)
+
 
 @pytest.mark.parametrize("function", ENHANCED_BINARY_METRICS, ids=lambda function: function.__name__)
 def test_enhanced_binary_metric_exposes_keyword_only_alignment_contract(function: Callable[..., object]) -> None:
@@ -107,6 +125,106 @@ def test_enhanced_binary_metric_exposes_keyword_only_alignment_contract(function
     assert alignment.default == "inner"
     assert normalize_tz.kind is inspect.Parameter.KEYWORD_ONLY
     assert normalize_tz.default is None
+
+
+@pytest.mark.parametrize("name", EMPYRICAL_DUAL_BINARY_METHODS)
+def test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance(name: str) -> None:
+    for surface in (ep.Empyrical, ep.Empyrical()):
+        signature = inspect.signature(getattr(surface, name))
+        alignment = signature.parameters["alignment"]
+        normalize_tz = signature.parameters["normalize_tz"]
+
+        assert alignment.kind is inspect.Parameter.KEYWORD_ONLY
+        assert alignment.default == "inner"
+        assert normalize_tz.kind is inspect.Parameter.KEYWORD_ONLY
+        assert normalize_tz.default is None
+
+
+@pytest.mark.parametrize("surface", ["class", "stored_instance"])
+def test_empyrical_dual_binary_method_forwards_strict_alignment(surface: str) -> None:
+    left, right = _partial_series_pair()
+
+    with pytest.raises(DataAlignmentError, match="strict"):
+        if surface == "class":
+            ep.Empyrical.r_cubed(left, right, alignment="strict")
+        else:
+            ep.Empyrical(left, factor_returns=right).r_cubed(alignment="strict")
+
+
+@pytest.mark.parametrize("surface", ["class", "stored_instance"])
+def test_empyrical_dual_binary_method_forwards_timezone_policy(surface: str) -> None:
+    utc_index = pd.date_range("2024-01-01", periods=3, tz="UTC")
+    returns = pd.Series([0.03, 0.01, 0.02], index=utc_index.tz_localize(None))
+    factor_returns = pd.Series([0.02, 0.015, 0.025], index=utc_index.tz_convert("Asia/Shanghai"))
+    instance = ep.Empyrical(returns, factor_returns=factor_returns)
+    if surface == "class":
+        with pytest.raises(DataAlignmentError, match="timezone"):
+            ep.Empyrical.relative_win_rate(returns, factor_returns)
+        result = ep.Empyrical.relative_win_rate(
+            returns,
+            factor_returns,
+            alignment="strict",
+            normalize_tz="UTC",
+        )
+    else:
+        with pytest.raises(DataAlignmentError, match="timezone"):
+            instance.relative_win_rate()
+        result = instance.relative_win_rate(alignment="strict", normalize_tz="UTC")
+    assert result == pytest.approx(1 / 3)
+
+
+def test_regression_annual_return_forwards_policy_once_to_alpha_and_beta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    returns = np.array([0.01, 0.02, 0.03])
+    factor_returns = np.array([0.005, 0.01, 0.015])
+    observed: list[tuple[str, str, str | None]] = []
+
+    def fake_alpha(
+        returns_arg: np.ndarray,
+        factor_arg: np.ndarray,
+        risk_free: float,
+        period: str,
+        annualization: float | None,
+        *,
+        alignment: str,
+        normalize_tz: str | None,
+    ) -> float:
+        assert returns_arg is returns
+        assert factor_arg is factor_returns
+        observed.append(("alpha", alignment, normalize_tz))
+        return 0.1
+
+    def fake_beta(
+        returns_arg: np.ndarray,
+        factor_arg: np.ndarray,
+        risk_free: float,
+        _period: str,
+        _annualization: float | None,
+        *,
+        alignment: str,
+        normalize_tz: str | None,
+    ) -> float:
+        assert returns_arg is returns
+        assert factor_arg is factor_returns
+        observed.append(("beta", alignment, normalize_tz))
+        return 0.5
+
+    monkeypatch.setattr(alpha_beta_metrics, "alpha", fake_alpha)
+    monkeypatch.setattr(alpha_beta_metrics, "beta", fake_beta)
+
+    result = ep.Empyrical.regression_annual_return(
+        returns,
+        factor_returns,
+        alignment="outer_dropna",
+        normalize_tz="UTC",
+    )
+
+    assert np.isfinite(result)
+    assert observed == [
+        ("alpha", "outer_dropna", "UTC"),
+        ("beta", "outer_dropna", "UTC"),
+    ]
 
 
 @pytest.mark.parametrize("function", ENHANCED_BINARY_METRICS, ids=lambda function: function.__name__)
