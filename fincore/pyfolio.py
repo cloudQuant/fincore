@@ -15,10 +15,12 @@ import matplotlib.pyplot as plt
 
 from fincore.constants import (
     APPROX_BDAYS_PER_MONTH,
+    CAP_BUCKETS,
     CAPACITY_SWEEP_MAX_PV,
     CAPACITY_SWEEP_MIN_PV,
     CAPACITY_SWEEP_STEP,
     FACTOR_PARTITIONS,
+    SECTORS,
 )
 from fincore.utils.common_utils import customize
 
@@ -369,6 +371,31 @@ class Pyfolio(Empyrical):
         """
         # Avoid Python name-mangling for ``__name`` identifiers inside classes.
         return _plot_bayes_cone_internal(self, returns_train, returns_test, preds, plot_train_len=plot_train_len, ax=ax)
+
+    def compute_sector_exposures(self, positions, sectors, sector_dict=None):
+        """Project the named sector bundle to pyfolio's ordered 4-tuple."""
+
+        from fincore.metrics.positions import compute_sector_exposures
+
+        bundle = compute_sector_exposures(positions, sectors, sector_dict=sector_dict)
+        category_order = list(SECTORS.values()) if sector_dict is None else list(sector_dict.values())
+        return bundle.as_legacy_tuple(category_order)
+
+    def compute_cap_exposures(self, positions, caps):
+        """Project the named cap bundle to pyfolio's ordered 4-tuple."""
+
+        from fincore.metrics.positions import compute_cap_exposures
+
+        bundle = compute_cap_exposures(positions, caps)
+        return bundle.as_legacy_tuple(CAP_BUCKETS)
+
+    def compute_volume_exposures(self, shares_held, volumes, percentile):
+        """Project the named volume bundle to pyfolio's ordered 3-tuple."""
+
+        from fincore.metrics.positions import compute_volume_exposures
+
+        bundle = compute_volume_exposures(shares_held, volumes, percentile)
+        return bundle.as_legacy_tuple()
 
     def plot_bayes_cone(self, returns_train, returns_test, ppc, plot_train_len=50, ax=None):
         """

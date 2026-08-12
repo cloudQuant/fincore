@@ -50,15 +50,39 @@ def test_extract_pos_pivots_values_and_joins_cash():
     assert out.loc[idx[1], "A"] == 11.0
 
 
-def test_get_long_short_pos_drops_cash_and_computes_sums():
+def test_get_long_short_pos_returns_normalized_long_short_and_net_exposure():
+    idx = pd.date_range("2024-01-01", periods=3, freq="B", tz="UTC")
+    positions = pd.DataFrame(
+        {
+            "A": [60.0, -30.0, 0.0],
+            "B": [-20.0, 10.0, 0.0],
+            "cash": [60.0, 120.0, 100.0],
+        },
+        index=idx,
+    )
+    result = pm.get_long_short_pos(positions)
+    expected = pd.DataFrame(
+        {
+            "long": [0.6, 0.1, 0.0],
+            "short": [-0.2, -0.3, 0.0],
+            "net exposure": [0.4, -0.2, 0.0],
+        },
+        index=idx,
+    )
+    pd.testing.assert_frame_equal(result, expected)
+
+
+def test_get_long_short_notional_keeps_the_previous_amount_summary():
     idx = pd.date_range("2024-01-01", periods=3, freq="B", tz="UTC")
     positions = pd.DataFrame({"A": [10, -5, 0], "B": [0, -2, 3], "cash": [100, 100, 100]}, index=idx)
-    longs, shorts = pm.get_long_short_pos(positions)
-    assert list(longs) == [10, 0, 3]
-    assert list(shorts) == [0, 7, 0]
+
+    longs, shorts = pm.get_long_short_notional(positions)
+
+    pd.testing.assert_series_equal(longs, pd.Series([10, 0, 3], index=idx))
+    pd.testing.assert_series_equal(shorts, pd.Series([0, 7, 0], index=idx))
 
 
-def test_compute_style_factor_exposures_aligns_on_index_and_sums():
+def test_compute_style_factor_exposures_aligns_and_normalizes_by_gross():
     idx_p = pd.date_range("2024-01-01", periods=3, freq="B", tz="UTC")
     idx_r = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC")
     positions = pd.DataFrame({"A": [10, 10, 10], "B": [0, 5, 0]}, index=idx_p)
@@ -66,41 +90,41 @@ def test_compute_style_factor_exposures_aligns_on_index_and_sums():
 
     out = pm.compute_style_factor_exposures(positions, risk)
     assert out.index.equals(idx_r)
-    assert np.allclose(out.values, [10 * 0.1 + 5 * 1.0, 10 * 0.2 + 0 * 1.0])
+    assert np.allclose(out.values, [(10 * 0.1 + 5 * 1.0) / 15, (10 * 0.2 + 0 * 1.0) / 10])
 
 
-def test_compute_sector_exposures_with_and_without_sector_dict():
+def test_compute_sector_exposures_returns_named_normalized_bundle():
     idx = pd.date_range("2024-01-01", periods=2, freq="B", tz="UTC")
-    positions = pd.DataFrame({"A": [10, 11], "B": [1, 2], "C": [0, 3]}, index=idx)
-    sectors = ["tech", "fin"]
-    sector_dict = {"A": "tech", "B": "fin"}
+    positions = pd.DataFrame({"A": [10, 11], "B": [-1, -2], "C": [0, 3], "cash": [5, 5]}, index=idx)
+    sectors = pd.DataFrame({"A": [1, 1], "B": [2, 2], "C": [1, 1]}, index=idx)
+    out = pm.compute_sector_exposures(positions, sectors, sector_dict={1: "tech", 2: "fin"})
 
-    out1 = pm.compute_sector_exposures(positions, sectors, sector_dict=None)
-    assert list(out1.columns) == sectors
-    assert np.allclose(out1.values, 0.0)
-
-    out2 = pm.compute_sector_exposures(positions, sectors, sector_dict=sector_dict)
-    assert list(out2.columns) == sectors
-    assert np.allclose(out2["tech"].values, [10, 11])
-    assert np.allclose(out2["fin"].values, [1, 2])
+    assert list(out.long.columns) == ["tech", "fin"]
+    assert np.allclose(out.long["tech"].values, 1.0)
+    assert np.allclose(out.short["fin"].values, -1.0)
+    assert np.allclose(out.gross["tech"].values, [10 / 11, 14 / 16])
+    assert np.allclose(out.net["fin"].values, 1.0)
 
 
-def test_compute_cap_exposures_sums_by_bucket():
+def test_compute_cap_exposures_returns_frozen_bucket_order():
     idx = pd.date_range("2024-01-01", periods=2, freq="B", tz="UTC")
-    positions = pd.DataFrame({"A": [10, 11], "B": [1, 2], "C": [0, 3]}, index=idx)
-    caps = {"large": ["A"], "small": ["B", "C"]}
+    positions = pd.DataFrame({"A": [10, 11], "B": [-1, -2], "C": [0, 3], "cash": [5, 5]}, index=idx)
+    caps = pd.DataFrame({"A": [1e11, 1e11], "B": [1e9, 1e9], "C": [5e9, 5e9]}, index=idx)
     out = pm.compute_cap_exposures(positions, caps)
-    assert set(out.columns) == {"large", "small"}
-    assert np.allclose(out["large"].values, [10, 11])
-    assert np.allclose(out["small"].values, [1, 5])
+    assert list(out.long.columns) == list(pm.CAP_BUCKETS)
+    assert np.allclose(out.long["Large"].values, [1.0, 11 / 14])
+    assert np.allclose(out.short["Small"].values, -1.0)
+    assert np.allclose(out.gross["Mid"].values, [0.0, 3 / 16])
 
 
-def test_compute_volume_exposures_counts_days_over_threshold():
+def test_compute_volume_exposures_returns_named_percentile_series():
     idx = pd.date_range("2024-01-01", periods=2, freq="B", tz="UTC")
     shares = pd.DataFrame({"A": [100, 10], "B": [0, 50]}, index=idx)
     vols = pd.DataFrame({"A": [10, 10], "B": [100, 10]}, index=idx)
-    out = pm.compute_volume_exposures(shares, vols, percentile=5.0)
-    assert list(out) == [1, 0]
+    out = pm.compute_volume_exposures(shares, vols, percentile=0.5)
+    assert np.allclose(out.long.values, [1000.0, 300.0])
+    assert out.short.isna().all()
+    assert np.allclose(out.gross.values, [1000.0, 300.0])
 
 
 def test_get_sector_exposures_warns_on_unmapped_symbols_and_keeps_cash():

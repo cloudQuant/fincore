@@ -1,0 +1,206 @@
+{
+  "category_order": {
+    "cap_buckets": [
+      "Micro",
+      "Small",
+      "Mid",
+      "Large",
+      "Mega"
+    ],
+    "sectors": [
+      "Basic Materials",
+      "Consumer Cyclical",
+      "Financial Services",
+      "Real Estate",
+      "Consumer Defensive",
+      "Healthcare",
+      "Utilities",
+      "Communication Services",
+      "Energy",
+      "Industrials",
+      "Technology"
+    ]
+  },
+  "commit": "724bbd7dbed9a88bb47e1057f2ca29b3409d8e7a",
+  "constants": {
+    "CAP_BUCKETS": [
+      [
+        "Micro",
+        [
+          50000000,
+          300000000
+        ]
+      ],
+      [
+        "Small",
+        [
+          300000000,
+          2000000000
+        ]
+      ],
+      [
+        "Mid",
+        [
+          2000000000,
+          10000000000
+        ]
+      ],
+      [
+        "Large",
+        [
+          10000000000,
+          200000000000
+        ]
+      ],
+      [
+        "Mega",
+        [
+          200000000000,
+          "Infinity"
+        ]
+      ]
+    ],
+    "SECTORS": [
+      [
+        101,
+        "Basic Materials"
+      ],
+      [
+        102,
+        "Consumer Cyclical"
+      ],
+      [
+        103,
+        "Financial Services"
+      ],
+      [
+        104,
+        "Real Estate"
+      ],
+      [
+        205,
+        "Consumer Defensive"
+      ],
+      [
+        206,
+        "Healthcare"
+      ],
+      [
+        207,
+        "Utilities"
+      ],
+      [
+        308,
+        "Communication Services"
+      ],
+      [
+        309,
+        "Energy"
+      ],
+      [
+        310,
+        "Industrials"
+      ],
+      [
+        311,
+        "Technology"
+      ]
+    ]
+  },
+  "fixture_source": {
+    "generator": "scripts/generate_compat_manifest.py",
+    "mode": "static_ast_from_pinned_git_blob_with_independent_test_oracles",
+    "root": "external Git object database supplied with --pyfolio-root"
+  },
+  "golden_cases": {
+    "cap_exposures": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "compute_cap_exposures"
+    },
+    "long_short_positions": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "get_long_short_pos"
+    },
+    "sector_exposures": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "compute_sector_exposures"
+    },
+    "style_factor": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "compute_style_factor_exposures"
+    },
+    "transactions": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "make_transaction_frame"
+    },
+    "volume_exposures": {
+      "evidence": "independent regression oracle in tests/compat/pyfolio",
+      "reviewed": false,
+      "source_symbol": "compute_volume_exposures"
+    }
+  },
+  "oracle_verification": {
+    "reviewed": false,
+    "status": "not_run"
+  },
+  "project": "pyfolio",
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "risk.py",
+      "sha256": "aed4a2b58dcdbf6823dacda8c97fe6429511ef9bad95b2def450418aebb7b937"
+    },
+    {
+      "path": "pos.py",
+      "sha256": "8c836b40c01ab0d4c2bd9624bc4ddd014a8a2ea79db6920af24f86d5b011f5c1"
+    },
+    {
+      "path": "txn.py",
+      "sha256": "83c746b2d432cd686e8f8ae6562d8e67628f69e492e3830c70156f527fe68c1a"
+    }
+  ],
+  "source_symbols": {
+    "cap_exposures": {
+      "line": 287,
+      "path": "risk.py",
+      "sha256": "aed4a2b58dcdbf6823dacda8c97fe6429511ef9bad95b2def450418aebb7b937",
+      "symbol": "compute_cap_exposures"
+    },
+    "long_short_positions": {
+      "line": 211,
+      "path": "pos.py",
+      "sha256": "8c836b40c01ab0d4c2bd9624bc4ddd014a8a2ea79db6920af24f86d5b011f5c1",
+      "symbol": "get_long_short_pos"
+    },
+    "sector_exposures": {
+      "line": 123,
+      "path": "risk.py",
+      "sha256": "aed4a2b58dcdbf6823dacda8c97fe6429511ef9bad95b2def450418aebb7b937",
+      "symbol": "compute_sector_exposures"
+    },
+    "style_factor": {
+      "line": 48,
+      "path": "risk.py",
+      "sha256": "aed4a2b58dcdbf6823dacda8c97fe6429511ef9bad95b2def450418aebb7b937",
+      "symbol": "compute_style_factor_exposures"
+    },
+    "transactions": {
+      "line": 53,
+      "path": "txn.py",
+      "sha256": "83c746b2d432cd686e8f8ae6562d8e67628f69e492e3830c70156f527fe68c1a",
+      "symbol": "make_transaction_frame"
+    },
+    "volume_exposures": {
+      "line": 418,
+      "path": "risk.py",
+      "sha256": "aed4a2b58dcdbf6823dacda8c97fe6429511ef9bad95b2def450418aebb7b937",
+      "symbol": "compute_volume_exposures"
+    }
+  },
+  "version": "0.9.6"
+}

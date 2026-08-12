@@ -48,6 +48,7 @@ from fincore.constants import (
     TRADE_DAILY_VOL_LIMIT,
 )
 from fincore.empyrical import Empyrical
+from fincore.exceptions import ValidationError
 from fincore.utils import (
     check_intraday,
     clip_returns_to_benchmark,
@@ -959,6 +960,12 @@ def create_risk_tear_sheet(
     """
     positions = check_intraday(estimate_intraday, returns, positions, transactions)
 
+    if volumes is not None and shares_held is None:
+        raise ValidationError(
+            "volume exposure requires shares_held; dollar positions are not a substitute",
+            param_name="shares_held",
+        )
+
     # Align inputs on the overlapping time index. Most upstream implementations
     # expect these inputs to be time-indexed.
     idx = positions.index
@@ -1052,7 +1059,7 @@ def create_risk_tear_sheet(
         ax_vol_longshort = fig.add_subplot(gs[row : row + 2, :], sharex=sharex_ax)
         ax_vol_gross = fig.add_subplot(gs[row + 2, :], sharex=sharex_ax or ax_vol_longshort)
         longed_threshold, shorted_threshold, grossed_threshold = pyfolio_instance.compute_volume_exposures(
-            positions, volumes, percentile
+            shares_held, volumes, percentile
         )
         pyfolio_instance.plot_volume_exposures_longshort(
             longed_threshold, shorted_threshold, percentile, ax_vol_longshort

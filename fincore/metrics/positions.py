@@ -18,10 +18,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+
+from fincore.constants import CAP_BUCKETS, SECTORS
+from fincore.contracts.portfolio import ExposureBundle, VolumeExposureBundle
+from fincore.contracts.time_series import align_time_series
+from fincore.exceptions import ValidationError
 
 __all__ = [
     "compute_cap_exposures",
@@ -29,6 +34,7 @@ __all__ = [
     "compute_style_factor_exposures",
     "compute_volume_exposures",
     "extract_pos",
+    "get_long_short_notional",
     "get_long_short_pos",
     "get_max_median_position_concentration",
     "get_percent_alloc",
@@ -197,8 +203,8 @@ def get_sector_exposures(
     return sector_exp
 
 
-def get_long_short_pos(positions: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
-    """Determine the long and short allocations in a portfolio.
+def get_long_short_notional(positions: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+    """Determine the long and short notionals in a portfolio.
 
     Parameters
     ----------
@@ -208,7 +214,7 @@ def get_long_short_pos(positions: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     Returns
     -------
     tuple of pd.Series
-        (longs, shorts) - Long and short position sums.
+        Positive long notional and absolute short notional.
     """
     positions = positions.copy()
 
@@ -219,6 +225,54 @@ def get_long_short_pos(positions: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     shorts = positions.where(positions < 0, 0).abs().sum(axis=1)
 
     return longs, shorts
+
+
+def get_long_short_pos(positions: pd.DataFrame) -> pd.DataFrame:
+    """Return pyfolio-compatible long, short, and net portfolio exposure.
+
+    Exposures are normalized by net liquidation value. Short exposure retains
+    its negative sign, and the cash column participates only in the
+    denominator. Zero liquidation rows return finite zero exposures.
+    """
+
+    values = positions.copy()
+    assets = values.drop(columns="cash", errors="ignore")
+    longs = assets.where(assets > 0).sum(axis="columns").fillna(0.0)
+    shorts = assets.where(assets < 0).sum(axis="columns").fillna(0.0)
+    cash = values["cash"] if "cash" in values else pd.Series(0.0, index=values.index)
+    net_liquidation = longs + shorts + cash
+    denominator = net_liquidation.replace(0, np.nan)
+
+    result = pd.DataFrame(
+        {
+            "long": longs.divide(denominator),
+            "short": shorts.divide(denominator),
+        },
+        index=values.index,
+    ).fillna(0.0)
+    result["net exposure"] = result["long"] + result["short"]
+    return result
+
+
+def _align_portfolio_panels(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    *,
+    left_name: str,
+    right_name: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Validate asset labels and align two portfolio panels by date."""
+
+    for name, panel in ((left_name, left), (right_name, right)):
+        if not panel.columns.is_unique:
+            duplicates = panel.columns[panel.columns.duplicated()].tolist()
+            raise ValidationError(
+                "duplicate asset columns are ambiguous",
+                param_name=name,
+                value=duplicates,
+            )
+    aligned = align_time_series(left, right, policy="inner")
+    return cast("pd.DataFrame", aligned[0]), cast("pd.DataFrame", aligned[1])
 
 
 def compute_style_factor_exposures(
@@ -239,82 +293,142 @@ def compute_style_factor_exposures(
     pd.Series
         Total style factor exposure over time.
     """
-    positions = positions.copy()
+    positions, risk_factor = _align_portfolio_panels(
+        positions,
+        risk_factor,
+        left_name="positions",
+        right_name="risk_factor",
+    )
+    assets = positions.drop(columns="cash", errors="ignore")
+    factors = risk_factor.drop(columns="cash", errors="ignore")
+    common_columns = assets.columns.intersection(factors.columns, sort=False)
+    assets = assets.loc[:, common_columns]
+    factors = factors.loc[:, common_columns]
 
-    aligned = positions.align(risk_factor, axis=0, join="inner")[0]
-    risk_factor_aligned = risk_factor.loc[aligned.index]
-
-    return aligned.mul(risk_factor_aligned, axis=0).sum(axis=1)
+    gross = assets.abs().sum(axis="columns").replace(0, np.nan)
+    exposure = assets.multiply(factors).sum(axis="columns", skipna=True).divide(gross)
+    return exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
 
 def compute_sector_exposures(
     positions: pd.DataFrame,
-    sectors: list[str],
+    sectors: pd.DataFrame,
     sector_dict: dict[Any, str] | None = None,
-) -> pd.DataFrame:
+) -> ExposureBundle:
     """Return sector exposures of an algorithm's positions.
 
     Parameters
     ----------
     positions : pd.DataFrame
         Daily equity positions of algorithm, in dollars.
-    sectors : list
-        List of sector names or codes.
+    sectors : pd.DataFrame
+        Daily sector identifiers per asset.
     sector_dict : dict, optional
         Dictionary mapping security identifiers to sectors.
 
     Returns
     -------
-    pd.DataFrame
-        Sector exposures over time.
+    ExposureBundle
+        Named exposure tables in the frozen sector order.
     """
-    positions = positions.copy()
+    sector_map = dict(SECTORS if sector_dict is None else sector_dict)
+    positions, sector_panel = _align_portfolio_panels(
+        positions,
+        sectors,
+        left_name="positions",
+        right_name="sectors",
+    )
+    assets = positions.drop(columns="cash", errors="ignore")
+    common_columns = assets.columns.intersection(sector_panel.columns, sort=False)
+    assets = assets.loc[:, common_columns]
+    sector_panel = sector_panel.loc[:, common_columns]
 
-    if sector_dict is None:
-        sector_dict = {}
+    total_long = assets.where(assets > 0).sum(axis="columns").replace(0, np.nan)
+    total_short = assets.where(assets < 0).abs().sum(axis="columns").replace(0, np.nan)
+    total_gross = assets.abs().sum(axis="columns").replace(0, np.nan)
 
-    exposures = {}
-    for sector in sectors:
-        sector_stocks = [s for s, sec in sector_dict.items() if sec == sector]
-        sector_pos = positions[[c for c in positions.columns if c in sector_stocks]]
-        exposures[sector] = sector_pos.sum(axis=1)
+    long: dict[str, pd.Series] = {}
+    short: dict[str, pd.Series] = {}
+    gross: dict[str, pd.Series] = {}
+    net: dict[str, pd.Series] = {}
+    for sector_id, sector_name in sector_map.items():
+        in_sector = assets.where(sector_panel == sector_id)
+        long[sector_name] = in_sector.where(in_sector > 0).sum(axis="columns").divide(total_long)
+        short[sector_name] = in_sector.where(in_sector < 0).sum(axis="columns").divide(total_short)
+        gross[sector_name] = in_sector.abs().sum(axis="columns").divide(total_gross)
+        net[sector_name] = long[sector_name] - short[sector_name]
 
-    return pd.DataFrame(exposures)
+    def frame(values: dict[str, pd.Series]) -> pd.DataFrame:
+        return pd.DataFrame(values, index=assets.index).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+    return ExposureBundle(
+        long=frame(long),
+        short=frame(short),
+        gross=frame(gross),
+        net=frame(net),
+    )
 
 
 def compute_cap_exposures(
     positions: pd.DataFrame,
-    caps: dict[str, list[Any]],
-) -> pd.DataFrame:
+    caps: pd.DataFrame,
+) -> ExposureBundle:
     """Compute market capitalization exposures.
 
     Parameters
     ----------
     positions : pd.DataFrame
         Daily equity positions of algorithm, in dollars.
-    caps : dict
-        Dictionary mapping cap categories to lists of securities.
+    caps : pd.DataFrame
+        Daily market capitalization per asset.
 
     Returns
     -------
-    pd.DataFrame
-        Market cap exposures over time.
+    ExposureBundle
+        Named exposure tables in the frozen cap-bucket order.
     """
-    positions = positions.copy()
+    positions, cap_panel = _align_portfolio_panels(
+        positions,
+        caps,
+        left_name="positions",
+        right_name="caps",
+    )
+    assets = positions.drop(columns="cash", errors="ignore")
+    common_columns = assets.columns.intersection(cap_panel.columns, sort=False)
+    assets = assets.loc[:, common_columns]
+    cap_panel = cap_panel.loc[:, common_columns]
 
-    exposures = {}
-    for cap_category, cap_stocks in caps.items():
-        cap_pos = positions[[c for c in positions.columns if c in cap_stocks]]
-        exposures[cap_category] = cap_pos.sum(axis=1)
+    total_long = assets.where(assets > 0).sum(axis="columns").replace(0, np.nan)
+    total_short = assets.where(assets < 0).abs().sum(axis="columns").replace(0, np.nan)
+    total_gross = assets.abs().sum(axis="columns").replace(0, np.nan)
 
-    return pd.DataFrame(exposures)
+    long: dict[str, pd.Series] = {}
+    short: dict[str, pd.Series] = {}
+    gross: dict[str, pd.Series] = {}
+    net: dict[str, pd.Series] = {}
+    for bucket_name, (lower, upper) in CAP_BUCKETS.items():
+        in_bucket = assets.where((cap_panel >= lower) & (cap_panel <= upper))
+        long[bucket_name] = in_bucket.where(in_bucket > 0).sum(axis="columns").divide(total_long)
+        short[bucket_name] = in_bucket.where(in_bucket < 0).sum(axis="columns").divide(total_short)
+        gross[bucket_name] = in_bucket.abs().sum(axis="columns").divide(total_gross)
+        net[bucket_name] = long[bucket_name] - short[bucket_name]
+
+    def frame(values: dict[str, pd.Series]) -> pd.DataFrame:
+        return pd.DataFrame(values, index=assets.index).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+    return ExposureBundle(
+        long=frame(long),
+        short=frame(short),
+        gross=frame(gross),
+        net=frame(net),
+    )
 
 
 def compute_volume_exposures(
     shares_held: pd.DataFrame,
     volumes: pd.DataFrame,
     percentile: float,
-) -> pd.Series:
+) -> VolumeExposureBundle:
     """Compute volume-based liquidity exposures.
 
     Parameters
@@ -328,12 +442,30 @@ def compute_volume_exposures(
 
     Returns
     -------
-    pd.Series
-        Count of positions exceeding the liquidity threshold.
+    VolumeExposureBundle
+        Long, short, and gross percentile exposure series.
     """
-    days_to_liquidate = shares_held.abs() / volumes
+    shares, aligned_volumes = _align_portfolio_panels(
+        shares_held,
+        volumes,
+        left_name="shares_held",
+        right_name="volumes",
+    )
+    common_columns = shares.columns.intersection(aligned_volumes.columns, sort=False)
+    shares = shares.loc[:, common_columns].replace(0, np.nan)
+    aligned_volumes = aligned_volumes.loc[:, common_columns].replace(0, np.nan)
 
-    return (days_to_liquidate > percentile).sum(axis=1)
+    def percentile_exposure(values: pd.DataFrame) -> pd.Series:
+        if values.empty:
+            return pd.Series(index=values.index, dtype=float)
+        fraction = values.divide(aligned_volumes)
+        result = 100.0 * fraction.quantile(percentile, axis="columns")
+        return result.replace([np.inf, -np.inf], np.nan)
+
+    long = percentile_exposure(shares.where(shares > 0))
+    short = percentile_exposure(-shares.where(shares < 0))
+    gross = percentile_exposure(shares.abs())
+    return VolumeExposureBundle(long=long, short=short, gross=gross)
 
 
 def gross_lev(positions: pd.DataFrame) -> pd.Series:

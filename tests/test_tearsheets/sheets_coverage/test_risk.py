@@ -22,6 +22,7 @@ def test_create_risk_tear_sheet_handles_optional_panels(monkeypatch) -> None:
     positions = pd.DataFrame({"AAA": 1.0, "cash": 0.0}, index=idx)
     sectors = pd.DataFrame({"AAA": ["Tech"] * len(idx)}, index=idx)
     caps = pd.DataFrame({"AAA": [1e9] * len(idx)}, index=idx)
+    shares_held = pd.DataFrame({"AAA": [1.0] * len(idx)}, index=idx)
     volumes = pd.DataFrame({"AAA": [1000] * len(idx)}, index=idx)
     style_panel = {"Momentum": pd.DataFrame({"AAA": 0.1}, index=idx)}
 
@@ -32,6 +33,7 @@ def test_create_risk_tear_sheet_handles_optional_panels(monkeypatch) -> None:
         style_factor_panel=style_panel,
         sectors=sectors,
         caps=caps,
+        shares_held=shares_held,
         volumes=volumes,
         percentile=None,
         returns=None,

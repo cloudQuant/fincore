@@ -445,6 +445,52 @@ def _literal_assignment(tree: ast.Module, name: str) -> Any:
     raise ValueError(f"static assignment {name!r} was not found")
 
 
+def _portable_ordered_dict_assignment(tree: ast.Module, name: str) -> list[list[Any]]:
+    """Extract a bounded ``OrderedDict([...])`` without importing its module.
+
+    Pyfolio's market-cap buckets use ``np.inf`` for the final upper bound.
+    The manifest represents that one non-JSON value with the portable string
+    ``"Infinity"`` rather than emitting implementation-dependent JSON.
+    """
+
+    def portable(node: ast.expr) -> Any:
+        if isinstance(node, ast.Constant) and _bounded_json_scalar(node.value):
+            return node.value
+        if isinstance(node, (ast.List, ast.Tuple)):
+            if len(node.elts) > MAX_CONTAINER_ITEMS:
+                raise ValueError(f"{name} exceeds the portable container limit")
+            return [portable(item) for item in node.elts]
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "np"
+            and node.attr == "inf"
+        ):
+            return "Infinity"
+        raise ValueError(f"unsupported value in {name}: {ast.unparse(node)}")
+
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        if not any(isinstance(target, ast.Name) and target.id == name for target in targets):
+            continue
+        value = node.value
+        if not (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Name)
+            and value.func.id == "OrderedDict"
+            and len(value.args) == 1
+            and not value.keywords
+        ):
+            raise ValueError(f"{name} is not a static OrderedDict literal")
+        result = portable(value.args[0])
+        if not isinstance(result, list) or not all(isinstance(item, list) and len(item) == 2 for item in result):
+            raise ValueError(f"{name} does not contain key/value pairs")
+        return result
+    raise ValueError(f"static assignment {name!r} was not found")
+
+
 def _relative_module(node: ast.ImportFrom, alias: ast.alias) -> str | None:
     if not node.level:
         return None
@@ -790,6 +836,69 @@ def _generate_pyfolio(root: Path) -> dict[str, Any]:
     }
 
 
+def _generate_pyfolio_portfolio_contracts(root: Path) -> dict[str, Any]:
+    """Freeze Task 5 portfolio contracts from the pinned upstream blobs."""
+
+    source = PinnedGitSource(root, PYFOLIO_COMMIT)
+    _require_head(source, PYFOLIO_COMMIT, "pyfolio")
+    modules = ("risk", "pos", "txn")
+    trees = _package_trees(source, "pyfolio", modules)
+    sectors = _portable_ordered_dict_assignment(trees["risk"], "SECTORS")
+    cap_buckets = _portable_ordered_dict_assignment(trees["risk"], "CAP_BUCKETS")
+    definitions = {module: _definitions(tree) for module, tree in trees.items()}
+    source_files = [_source_record(source, "pyfolio", f"{module}.py") for module in modules]
+    source_by_path = {entry["path"]: entry for entry in source_files}
+    contract_symbols = {
+        "style_factor": ("risk", "compute_style_factor_exposures"),
+        "sector_exposures": ("risk", "compute_sector_exposures"),
+        "cap_exposures": ("risk", "compute_cap_exposures"),
+        "volume_exposures": ("risk", "compute_volume_exposures"),
+        "long_short_positions": ("pos", "get_long_short_pos"),
+        "transactions": ("txn", "make_transaction_frame"),
+    }
+    source_symbols = {}
+    golden_cases = {}
+    for contract, (module, symbol) in contract_symbols.items():
+        node = definitions[module].get(symbol)
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            raise ValueError(f"pinned pyfolio symbol {module}.{symbol} was not found")
+        source_symbols[contract] = {
+            "path": f"{module}.py",
+            "sha256": source_by_path[f"{module}.py"]["sha256"],
+            "line": node.lineno,
+            "symbol": symbol,
+        }
+        golden_cases[contract] = {
+            "evidence": "independent regression oracle in tests/compat/pyfolio",
+            "reviewed": False,
+            "source_symbol": symbol,
+        }
+
+    return {
+        "schema_version": 1,
+        "project": "pyfolio",
+        "version": "0.9.6",
+        "commit": source.commit,
+        "fixture_source": {
+            "mode": "static_ast_from_pinned_git_blob_with_independent_test_oracles",
+            "generator": "scripts/generate_compat_manifest.py",
+            "root": "external Git object database supplied with --pyfolio-root",
+        },
+        "oracle_verification": {"status": "not_run", "reviewed": False},
+        "source_files": source_files,
+        "source_symbols": source_symbols,
+        "constants": {
+            "SECTORS": sectors,
+            "CAP_BUCKETS": cap_buckets,
+        },
+        "category_order": {
+            "sectors": [item[1] for item in sectors],
+            "cap_buckets": [item[0] for item in cap_buckets],
+        },
+        "golden_cases": golden_cases,
+    }
+
+
 def _require_head(source: PinnedGitSource, expected: str, project: str) -> None:
     actual = _run_process(
         ["git", "rev-parse", "HEAD"],
@@ -978,8 +1087,10 @@ def main() -> None:
     args = parse_args()
     empyrical_path = args.output / "empyrical-0.6.0-api.json"
     pyfolio_path = args.output / "pyfolio-0.9.6-api.json"
+    portfolio_contract_path = args.output / "pyfolio-0.9.6-portfolio-contracts.json"
     empyrical = _generate_empyrical(args.empyrical_root.resolve())
     pyfolio = _generate_pyfolio(args.pyfolio_root.resolve())
+    portfolio_contracts = _generate_pyfolio_portfolio_contracts(args.pyfolio_root.resolve())
     if args.oracle_python is not None:
         empyrical["oracle_verification"] = _run_oracle(
             args.oracle_python,
@@ -1005,6 +1116,7 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     _write_json(empyrical_path, empyrical)
     _write_json(pyfolio_path, pyfolio)
+    _write_json(portfolio_contract_path, portfolio_contracts)
     _write_json(args.output / "fincore-flat-api-migrations.json", _generate_flat_migrations(repo_root))
 
 

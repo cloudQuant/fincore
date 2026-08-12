@@ -18,7 +18,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+from numbers import Real
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -35,6 +37,25 @@ __all__ = [
     "make_transaction_frame",
     "map_transaction",
 ]
+
+TRANSACTION_COLUMNS = [
+    "dt",
+    "sid",
+    "symbol",
+    "amount",
+    "price",
+    "order_id",
+    "commission",
+    "txn_dollars",
+]
+REQUIRED_TRANSACTION_FIELDS = {
+    "dt",
+    "sid",
+    "amount",
+    "price",
+    "order_id",
+    "commission",
+}
 
 
 def daily_txns_with_bar_data(
@@ -281,17 +302,52 @@ def map_transaction(txn: dict[str, Any]) -> dict[str, Any]:
     dict
         Standardized transaction dictionary.
     """
+    from fincore.exceptions import ValidationError
+
+    missing = sorted(REQUIRED_TRANSACTION_FIELDS.difference(txn))
+    if missing:
+        raise ValidationError(
+            f"transaction is missing required fields: {', '.join(missing)}",
+            param_name=missing[0],
+        )
+
+    nested_sid = txn["sid"]
+    if isinstance(nested_sid, dict):
+        if "sid" not in nested_sid or "symbol" not in nested_sid:
+            raise ValidationError(
+                "nested sid requires both sid and symbol",
+                param_name="sid",
+                value=nested_sid,
+            )
+        sid = nested_sid["sid"]
+        symbol = nested_sid["symbol"]
+    else:
+        sid = nested_sid
+        symbol = txn.get("symbol", sid)
+
+    amount = txn["amount"]
+    price = txn["price"]
+    for field, value in (("amount", amount), ("price", price)):
+        if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
+            raise ValidationError(
+                f"transaction {field} must be numeric",
+                param_name=field,
+                value=value,
+            )
     return {
-        "amount": txn.get("amount", 0),
-        "price": txn.get("price", 0),
-        "sid": txn.get("sid"),
-        "symbol": txn.get("symbol", ""),
-        "dt": txn.get("dt"),
+        "dt": pd.Timestamp(txn["dt"]),
+        "sid": sid,
+        "symbol": symbol,
+        "amount": amount,
+        "price": price,
+        "order_id": txn["order_id"],
+        "commission": txn["commission"],
+        "txn_dollars": -amount * price,
     }
 
 
 def make_transaction_frame(
-    transactions: list[dict[str, Any]] | pd.DataFrame,
+    transactions: list[dict[str, Any]] | Mapping[Any, Any] | pd.DataFrame | pd.Series,
 ) -> pd.DataFrame:
     """Convert transactions to a DataFrame.
 
@@ -305,16 +361,45 @@ def make_transaction_frame(
     pd.DataFrame
         DataFrame with transaction data indexed by datetime.
     """
+    from fincore.exceptions import ValidationError
+
     if isinstance(transactions, pd.DataFrame):
-        return transactions
+        source = transactions.copy(deep=True)
+        missing = sorted(REQUIRED_TRANSACTION_FIELDS.difference(source.columns))
+        if missing:
+            raise ValidationError(
+                f"transaction frame is missing required fields: {', '.join(missing)}",
+                param_name=missing[0],
+            )
+        records: list[dict[str, Any]] = [cast("dict[str, Any]", record) for record in source.to_dict(orient="records")]
+    else:
+        records = []
+        values = transactions.values() if isinstance(transactions, Mapping) else transactions
+        for value in values:
+            if isinstance(value, Mapping):
+                records.append(dict(value))
+            elif isinstance(value, (list, tuple)):
+                for transaction in value:
+                    if not isinstance(transaction, Mapping):
+                        raise ValidationError(
+                            "date-to-list transactions must contain mappings",
+                            param_name="transactions",
+                            value=type(transaction).__name__,
+                        )
+                    records.append(dict(transaction))
+            else:
+                raise ValidationError(
+                    "transactions must contain mappings or date-to-list values",
+                    param_name="transactions",
+                    value=type(value).__name__,
+                )
 
-    txns = [map_transaction(t) for t in transactions]
-    df = pd.DataFrame(txns)
-
-    if "dt" in df.columns:
-        df = df.set_index("dt")
-
-    return df
+    mapped = [map_transaction(transaction) for transaction in records]
+    frame = pd.DataFrame(mapped, columns=TRANSACTION_COLUMNS)
+    if not frame.empty:
+        frame = frame.sort_values("dt", kind="stable")
+    frame.index = pd.DatetimeIndex(frame["dt"] if not frame.empty else [], name=None)
+    return frame
 
 
 def get_txn_vol(transactions: pd.DataFrame) -> pd.DataFrame:

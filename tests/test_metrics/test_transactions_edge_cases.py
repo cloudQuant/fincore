@@ -57,17 +57,30 @@ class TestTransactionsEdgeCases:
         # Create a DataFrame directly with datetime index
         df_txn = pd.DataFrame(
             {
+                "dt": pd.date_range("2020-01-01", periods=3),
                 "sid": [1, 2, 3],
                 "amount": [100, 200, 150],
                 "price": [10.0, 20.0, 15.0],
                 "symbol": ["A", "B", "C"],
+                "order_id": ["order-1", "order-2", "order-3"],
+                "commission": [1.0, 2.0, 1.5],
             },
             index=pd.date_range("2020-01-01", periods=3),
         )
 
         result = transactions.make_transaction_frame(df_txn)
-        # Should return the same DataFrame when input is DataFrame
         assert isinstance(result, pd.DataFrame)
+        assert result is not df_txn
+        assert result.columns.tolist() == [
+            "dt",
+            "sid",
+            "symbol",
+            "amount",
+            "price",
+            "order_id",
+            "commission",
+            "txn_dollars",
+        ]
 
     def test_get_turnover_invalid_denominator(self):
         """Test get_turnover with invalid denominator parameter (line 391)."""

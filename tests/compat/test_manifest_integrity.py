@@ -493,6 +493,7 @@ def test_full_generator_is_byte_idempotent_when_pinned_roots_are_available(
         "empyrical-0.6.0-api.json",
         "fincore-flat-api-migrations.json",
         "pyfolio-0.9.6-api.json",
+        "pyfolio-0.9.6-portfolio-contracts.json",
     }
     for name, contents in first.items():
         assert contents == (FIXTURES / name).read_bytes()

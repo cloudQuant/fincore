@@ -21,6 +21,7 @@ class TransactionsMissingCoverageTestCase(unittest.TestCase):
             "amount": 100,
             "price": 10.0,
             "dt": pd.Timestamp("2020-01-01"),
+            "order_id": "order-1",
             "commission": 1.0,
         }
 
@@ -28,17 +29,38 @@ class TransactionsMissingCoverageTestCase(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result["sid"], 1)
         self.assertEqual(result["amount"], 100)
+        self.assertEqual(result["order_id"], "order-1")
+        self.assertEqual(result["commission"], 1.0)
+        self.assertEqual(result["txn_dollars"], -1000.0)
 
     def test_make_transaction_frame_from_dict(self):
         """Test make_transaction_frame from list of dicts."""
         txns = [
-            {"sid": 1, "amount": 100, "price": 10.0, "dt": pd.Timestamp("2020-01-01")},
-            {"sid": 2, "amount": -50, "price": 20.0, "dt": pd.Timestamp("2020-01-02")},
+            {
+                "sid": 1,
+                "amount": 100,
+                "price": 10.0,
+                "dt": pd.Timestamp("2020-01-01"),
+                "order_id": "order-1",
+                "commission": 1.0,
+            },
+            {
+                "sid": 2,
+                "amount": -50,
+                "price": 20.0,
+                "dt": pd.Timestamp("2020-01-02"),
+                "order_id": "order-2",
+                "commission": 2.0,
+            },
         ]
 
         result = transactions.make_transaction_frame(txns)
         self.assertEqual(len(result), 2)
         self.assertIsInstance(result.index, pd.DatetimeIndex)
+        self.assertEqual(
+            result.columns.tolist(),
+            ["dt", "sid", "symbol", "amount", "price", "order_id", "commission", "txn_dollars"],
+        )
 
     def test_adjust_returns_for_slippage_with_positions(self):
         """Test adjust_returns_for_slippage with proper inputs."""
