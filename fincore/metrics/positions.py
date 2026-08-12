@@ -436,7 +436,8 @@ def compute_volume_exposures(
     shares_held : pd.DataFrame
         Number of shares held per security.
     volumes : pd.DataFrame
-        Daily trading volumes per security.
+        Daily trading volumes per security. Every nonzero held share must have
+        a matching finite, positive volume observation.
     percentile : float
         Threshold percentile for days-to-liquidate.
 
@@ -451,9 +452,26 @@ def compute_volume_exposures(
         left_name="shares_held",
         right_name="volumes",
     )
+
+    active = shares_held.notna() & shares_held.ne(0)
+    volume_lookup = volumes.reindex(index=shares_held.index, columns=shares_held.columns)
+    numeric_lookup = volume_lookup.apply(pd.to_numeric, errors="coerce")
+    valid_volume = numeric_lookup.notna() & numeric_lookup.gt(0) & np.isfinite(numeric_lookup)
+    invalid = active & ~valid_volume
+    if invalid.to_numpy().any():
+        rows, columns = np.where(invalid.to_numpy())
+        locations = [
+            (shares_held.index[row], shares_held.columns[column]) for row, column in zip(rows, columns, strict=True)
+        ]
+        raise ValidationError(
+            "active nonzero shares require matching finite positive volume observations",
+            param_name="volumes",
+            value=locations,
+        )
+
     common_columns = shares.columns.intersection(aligned_volumes.columns, sort=False)
     shares = shares.loc[:, common_columns].replace(0, np.nan)
-    aligned_volumes = aligned_volumes.loc[:, common_columns].replace(0, np.nan)
+    aligned_volumes = aligned_volumes.loc[:, common_columns].apply(pd.to_numeric, errors="coerce").replace(0, np.nan)
 
     def percentile_exposure(values: pd.DataFrame) -> pd.Series:
         if values.empty:

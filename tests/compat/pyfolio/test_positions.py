@@ -301,7 +301,9 @@ def test_style_factor_boundaries_are_finite_and_preserve_index(case: str) -> Non
 def test_volume_compute_aligns_dates_and_columns_without_mutating_inputs() -> None:
     dates = pd.date_range("2024-04-01", periods=3, freq="B", tz="UTC")
     shares = pd.DataFrame(
-        {"AAA": [100.0, 20.0, 40.0], "BBB": [-10.0, -50.0, -20.0]},
+        # The date absent from volumes is inactive; active missing dates are
+        # rejected by the volume-integrity contract.
+        {"AAA": [0.0, 20.0, 40.0], "BBB": [0.0, -50.0, -20.0]},
         index=dates,
     )
     volumes = pd.DataFrame(

@@ -38,6 +38,11 @@ while keeping the enhanced internal API explicit.
   with fakes. Sheet alignment uses the shared label/timezone policy and only
   includes panels consumed by active sections, so an unused disjoint shares
   panel cannot suppress a sector-only sheet.
+- Volume exposure validates the original shares date/asset grid before inner
+  projection: every active nonzero long or short holding requires a matching
+  finite positive volume. Missing labels or dates and NaN, infinite, zero, or
+  negative active volumes raise `ValidationError`; extra volume assets and
+  inactive zero-share/no-asset rows remain harmless finite-zero cases.
 
 `fincore/tearsheets/risk.py` required no production edit: its plotting
 functions already accept the ordered facade projections. The fix belongs at
@@ -93,6 +98,28 @@ After implementation, the 27-test matrix plus the fixture assertion is green:
 28 passed
 ```
 
+The second independent re-review identified one P1 in volume integrity. The
+new focused matrix first proved the defect against the committed implementation:
+
+```text
+13 failed, 2 passed
+```
+
+All ten mixed GOOD/BAD active-volume combinations failed as expected across
+NaN, positive/negative infinity, zero, and negative values for both long and
+short holdings. Both shares-only BAD versus volumes-only GOOD label cases and
+the active missing-date case also failed. The two controls were already green:
+invalid extra volume assets were ignored and an inactive zero-share asset did
+not require volume. After pre-projection validation, the same matrix is green:
+
+```text
+15 passed, 27 deselected
+```
+
+One prior legal inner-alignment test was migrated to use zero holdings on its
+volume-missing date. Active holdings on a missing date are now separately and
+explicitly rejected by the P1 regression.
+
 ## Provenance and generated contract fixture
 
 `scripts/generate_compat_manifest.py` now generates
@@ -120,17 +147,25 @@ tests/compat/test_manifest_integrity.py: 26 passed
 
 ## Regression gates
 
-The final plan-specified Task 5 domain gate, including the migrated old risk,
-positions, transactions, common-Zipline, and review-follow-up tests, is green:
+The first review-follow-up Task 5 domain gate, including the migrated old risk,
+positions, transactions, common-Zipline, and review-follow-up tests, was green:
 
 ```text
 118 passed in 1.93s
 ```
 
-The manifest plus Task 5 combined authoritative gate is green:
+The corresponding manifest plus Task 5 combined gate was green:
 
 ```text
 144 passed in 5.42s
+```
+
+After the volume P1 regressions and old-test migration, the expanded positions
+slice and the complete manifest-plus-Task-5 selector are green:
+
+```text
+positions slice: 88 passed in 1.44s
+manifest + Task 5: 159 passed in 5.85s
 ```
 
 The existing Task 4 context-impact gate remains green at `140 passed` with

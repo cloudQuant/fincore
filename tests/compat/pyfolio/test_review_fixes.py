@@ -159,6 +159,66 @@ def test_volume_zero_share_and_no_asset_rows_are_finite_zero(case: str) -> None:
         assert_series_equal(component, pd.Series([0.0, 0.0], index=index), check_names=False)
 
 
+@pytest.mark.parametrize("held", [10.0, -10.0], ids=["long", "short"])
+@pytest.mark.parametrize(
+    "bad_volume",
+    [np.nan, np.inf, -np.inf, 0.0, -1.0],
+    ids=["nan", "positive-infinity", "negative-infinity", "zero", "negative"],
+)
+def test_volume_active_holdings_require_finite_positive_volume(held: float, bad_volume: float) -> None:
+    index = pd.date_range("2024-08-01", periods=1, tz="UTC")
+    shares = pd.DataFrame({"GOOD": [held], "BAD": [held]}, index=index)
+    volumes = pd.DataFrame({"GOOD": [100.0], "BAD": [bad_volume]}, index=index)
+
+    with pytest.raises(ValidationError, match="volume"):
+        compute_volume_exposures(shares, volumes, 0.5)
+
+
+@pytest.mark.parametrize("held", [10.0, -10.0], ids=["long", "short"])
+def test_volume_active_share_only_asset_is_not_intersected_away(held: float) -> None:
+    index = pd.date_range("2024-08-01", periods=1, tz="UTC")
+    shares = pd.DataFrame({"BAD": [held]}, index=index)
+    volumes = pd.DataFrame({"GOOD": [100.0]}, index=index)
+
+    with pytest.raises(ValidationError, match="volume"):
+        compute_volume_exposures(shares, volumes, 0.5)
+
+
+def test_volume_active_share_only_date_is_not_intersected_away() -> None:
+    index = pd.date_range("2024-08-01", periods=2, tz="UTC")
+    shares = pd.DataFrame({"GOOD": [10.0, 0.0], "BAD": [0.0, -10.0]}, index=index)
+    volumes = pd.DataFrame(
+        {"GOOD": [100.0], "BAD": [100.0]},
+        index=pd.DatetimeIndex([index[0]]),
+    )
+
+    with pytest.raises(ValidationError, match="volume"):
+        compute_volume_exposures(shares, volumes, 0.5)
+
+
+def test_volume_extra_assets_are_harmless_even_with_invalid_values() -> None:
+    index = pd.date_range("2024-08-01", periods=2, tz="UTC")
+    shares = pd.DataFrame({"GOOD": [10.0, -10.0]}, index=index)
+    volumes = pd.DataFrame({"GOOD": [100.0, 200.0], "EXTRA": [np.nan, -np.inf]}, index=index)
+
+    result = compute_volume_exposures(shares, volumes, 0.5)
+
+    assert_series_equal(result.long, pd.Series([10.0, 0.0], index=index), check_names=False)
+    assert_series_equal(result.short, pd.Series([0.0, 5.0], index=index), check_names=False)
+    assert_series_equal(result.gross, pd.Series([10.0, 5.0], index=index), check_names=False)
+
+
+def test_volume_inactive_zero_share_asset_does_not_require_volume() -> None:
+    index = pd.date_range("2024-08-01", periods=2, tz="UTC")
+    shares = pd.DataFrame({"ZERO": [0.0, 0.0]}, index=index)
+    volumes = pd.DataFrame({"EXTRA": [np.nan, -np.inf]}, index=index)
+
+    result = compute_volume_exposures(shares, volumes, 0.5)
+
+    for component in (result.long, result.short, result.gross):
+        assert_series_equal(component, pd.Series([0.0, 0.0], index=index), check_names=False)
+
+
 def test_risk_sheet_ignores_unused_disjoint_shares_panel(pyfolio_risk_inputs: Any) -> None:
     unused_shares = pyfolio_risk_inputs.shares_held.copy()
     unused_shares.index = unused_shares.index + pd.DateOffset(years=10)
