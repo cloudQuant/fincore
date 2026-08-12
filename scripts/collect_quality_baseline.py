@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -41,14 +42,6 @@ def _is_excluded(relative: Path, excluded_paths: set[Path] | None = None) -> boo
         or any(part in CACHE_PARTS for part in relative.parts)
         or relative.name.startswith(".coverage")
     )
-
-
-def _copy_ignore(source_root: Path, excluded_paths: set[Path]):
-    def ignore(directory: str, names: list[str]) -> set[str]:
-        parent = Path(directory)
-        return {name for name in names if _is_excluded(parent.joinpath(name).relative_to(source_root), excluded_paths)}
-
-    return ignore
 
 
 def _sha256(path: Path) -> str:
@@ -90,6 +83,30 @@ def _git_lines(source_root: Path, *args: str) -> list[str]:
         timeout=30,
     )
     return [line for line in result.stdout.splitlines() if line]
+
+
+def _source_file_manifest(source_root: Path, excluded_paths: set[Path]) -> dict[str, str]:
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        timeout=30,
+    )
+    paths = (Path(os.fsdecode(item)) for item in result.stdout.split(b"\0") if item)
+    return {
+        relative.as_posix(): _sha256(source_root / relative)
+        for relative in paths
+        if (source_root / relative).is_file() and not _is_excluded(relative, excluded_paths)
+    }
+
+
+def _copy_source_tree(source_root: Path, copy_root: Path, manifest: dict[str, str]) -> None:
+    for relative_name in manifest:
+        source = source_root / relative_name
+        destination = copy_root / relative_name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
 
 
 def _parse_count(output: str, name: str) -> int:
@@ -136,6 +153,15 @@ def _parse_branch_coverage(output: str) -> float | None:
     return float(matches[-1]) if matches else None
 
 
+def _timeout_output(error: subprocess.TimeoutExpired) -> str:
+    def as_text(value: bytes | str | None) -> str:
+        if value is None:
+            return ""
+        return value.decode(errors="replace") if isinstance(value, bytes) else value
+
+    return as_text(error.stdout) + as_text(error.stderr)
+
+
 def _run_checked(
     copy_root: Path,
     tracked_package_files: list[str],
@@ -158,7 +184,7 @@ def _run_checked(
             timeout=COMMAND_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired as exc:
-        output = (exc.stdout or "") + (exc.stderr or "")
+        output = _timeout_output(exc)
         result = subprocess.CompletedProcess(command, 124, output, "baseline command timed out")
     duration_seconds = time.perf_counter() - started
     package_after = _tracked_package_snapshot(copy_root, tracked_package_files)
@@ -259,17 +285,58 @@ def _render_markdown(data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _stage_artifact(path: Path, content: str) -> Path:
+    with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding="utf-8") as stream:
+        stream.write(content)
+        return Path(stream.name)
+
+
+def _backup_artifact(path: Path) -> Path | None:
+    if not path.exists():
+        return None
+    with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as stream:
+        backup_path = Path(stream.name)
+    shutil.copy2(path, backup_path)
+    return backup_path
+
+
+def _replace_file(source: Path, destination: Path) -> None:
+    source.replace(destination)
+
+
+def _restore_artifact(path: Path, backup: Path | None) -> None:
+    if backup is None:
+        path.unlink(missing_ok=True)
+    else:
+        _replace_file(backup, path)
+
+
 def _write_artifacts(data: dict[str, Any], json_path: Path, markdown_path: Path) -> None:
+    """Replace the paired artifacts with rollback if either replacement fails.
+
+    Cross-file filesystem atomicity is not available, so this stages both files
+    and restores both prior versions if the second replacement raises.
+    """
     json_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
-    for path, content in (
-        (json_path, json.dumps(data, indent=2, sort_keys=True) + "\n"),
-        (markdown_path, _render_markdown(data)),
-    ):
-        with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding="utf-8") as stream:
-            stream.write(content)
-            temporary_path = Path(stream.name)
-        temporary_path.replace(path)
+    json_stage = _stage_artifact(json_path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+    markdown_stage = _stage_artifact(markdown_path, _render_markdown(data))
+    json_backup = _backup_artifact(json_path)
+    markdown_backup = _backup_artifact(markdown_path)
+    try:
+        _replace_file(json_stage, json_path)
+        _replace_file(markdown_stage, markdown_path)
+    except Exception:
+        _restore_artifact(json_path, json_backup)
+        _restore_artifact(markdown_path, markdown_backup)
+        raise
+    else:
+        for backup in (json_backup, markdown_backup):
+            if backup is not None:
+                backup.unlink(missing_ok=True)
+    finally:
+        json_stage.unlink(missing_ok=True)
+        markdown_stage.unlink(missing_ok=True)
 
 
 def _append_failure_run(data: dict[str, Any], error: PackageWriteError) -> None:
@@ -299,7 +366,8 @@ def main() -> int:
     output_paths = {
         path.relative_to(source_root) for path in (json_path, markdown_path) if path.is_relative_to(source_root)
     }
-    tracked_package_files = _git_lines(source_root, "ls-files", "fincore")
+    included_manifest = _source_file_manifest(source_root, output_paths)
+    tracked_package_files = [name for name in included_manifest if name.startswith("fincore/")]
     dirty_provenance = _dirty_provenance(source_root)
     data: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -308,14 +376,18 @@ def main() -> int:
             **dirty_provenance,
         },
         "copy_manifest_sha256": "",
+        "tested_tree": {
+            "included_file_manifest": included_manifest,
+            "included_file_manifest_sha256": _copy_manifest_sha256(included_manifest),
+        },
         "environment": _dependency_versions(),
         "runs": [],
     }
     failure: str | None = None
     with tempfile.TemporaryDirectory(prefix="fincore-quality-baseline-") as temp_dir:
         copy_root = Path(temp_dir) / "fincore"
-        shutil.copytree(source_root, copy_root, ignore=_copy_ignore(source_root, output_paths))
-        data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root, output_paths))
+        _copy_source_tree(source_root, copy_root, included_manifest)
+        data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root))
         specifications = [
             ("trusted-baseline", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR]),
             ("serial", "serial", [BENCHMARKS_IGNORE, "-m", "serial"]),

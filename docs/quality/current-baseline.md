@@ -1,14 +1,14 @@
 # Current Quality Baseline
 
-Generated: `2026-08-12T15:53:56.625864+00:00`
+Generated: `2026-08-12T16:13:45.424101+00:00`
 
 ## Provenance
 
-- Source commit: `60a13272ad399f22e2eee3371beb44690cc118b5`
+- Source commit: `53af92151f69b990415d865d5d1f3885f6ac3d8e`
 - Dirty state: `True`
-- Tracked diff SHA256: `2f35ccad7c79426f8ef2ede4754309a2d0f3a24fdce2ade97f48a5d172cf94d2`
-- Untracked manifest SHA256: `3cb8edc269156acf718fe34e40dcd722d2b11a4df3af8765e3d0e22cc0c66deb`
-- Disposable-copy manifest SHA256: `40850410a386d6ed6e85f19b41d9e849f17f14b780db6831b0a39234b4dbb165`
+- Tracked diff SHA256: `333e01b958e76384e55a2c558641f819c44e75d66ede39528a4c124d42e5e575`
+- Untracked manifest SHA256: `44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a`
+- Disposable-copy manifest SHA256: `aaae7a6629a493f12f96286b3523115f855f5cd6ccc64e0ff49433ca0934dc15`
 - Manifest exclusions: `docs/quality/current-baseline.json, docs/quality/current-baseline.md`
 
 ## Environment
@@ -23,11 +23,11 @@ Generated: `2026-08-12T15:53:56.625864+00:00`
 
 | Run | Selector | Discovered | Selected | Passed | Skipped | Warnings | Duration | Exit |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| trusted-baseline | `not slow and not integration` | 2305 | 2290 | 2276 | 14 | 11 | 95.316s | 0 |
-| serial | `serial` | 2305 | 6 | 6 | 0 | 0 | 7.101s | 0 |
-| non-serial-single | `not serial and not slow and not integration` | 2305 | 2284 | 2270 | 14 | 11 | 161.509s | 0 |
-| non-serial-xdist | `not serial and not slow and not integration` | 2305 | 2284 | 2270 | 14 | 11 | 129.154s | 0 |
-| branch-coverage | `not slow and not integration` | 2305 | 2290 | 2276 | 14 | 11 | 176.920s | 0 |
+| trusted-baseline | `not slow and not integration` | 2308 | 2293 | 2279 | 14 | 11 | 125.885s | 0 |
+| serial | `serial` | 2308 | 6 | 6 | 0 | 0 | 8.102s | 0 |
+| non-serial-single | `not serial and not slow and not integration` | 2308 | 2287 | 2273 | 14 | 11 | 117.125s | 0 |
+| non-serial-xdist | `not serial and not slow and not integration` | 2308 | 2287 | 2273 | 14 | 11 | 108.924s | 0 |
+| branch-coverage | `not slow and not integration` | 2308 | 2293 | 2279 | 14 | 11 | 139.318s | 0 |
 
 ## Branch Coverage
 

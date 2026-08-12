@@ -3,6 +3,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+SUBPROCESS_TIMEOUT_SECONDS = 60
+
 
 def test_import_benchmark_does_not_break_later_monkeypatches() -> None:
     result = subprocess.run(
@@ -20,5 +22,6 @@ def test_import_benchmark_does_not_break_later_monkeypatches() -> None:
         capture_output=True,
         text=True,
         check=False,
+        timeout=SUBPROCESS_TIMEOUT_SECONDS,
     )
     assert result.returncode == 0, result.stdout + result.stderr

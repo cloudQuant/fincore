@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 from pathlib import Path
+
+import pytest
 
 
 def _collector_module():
@@ -121,3 +124,69 @@ def test_nonserial_xdist_inherits_discovery_count_with_explicit_source() -> None
     assert collector._normalize_nonserial_counts(single, xdist) is True
     assert xdist["discovered"] == 2299
     assert xdist["collection_source"] == "non-serial-single pytest collection"
+
+
+def test_git_inclusion_manifest_and_copy_exclude_ignored_files(tmp_path) -> None:
+    collector = _collector_module()
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".gitignore").write_text(".superpowers/\n")
+    (tmp_path / "tracked.py").write_text("tracked = True\n")
+    subprocess.run(["git", "add", ".gitignore", "tracked.py"], cwd=tmp_path, check=True)
+    (tmp_path / "untracked.py").write_text("untracked = True\n")
+    ignored = tmp_path / ".superpowers" / "sdd" / "artifact.md"
+    ignored.parent.mkdir(parents=True)
+    ignored.write_text("ignored first\n")
+    outputs = {Path("output.json")}
+
+    first = collector._source_file_manifest(tmp_path, outputs)
+    ignored.write_text("ignored second\n")
+    second = collector._source_file_manifest(tmp_path, outputs)
+    copy_root = tmp_path / "copy"
+    collector._copy_source_tree(tmp_path, copy_root, second)
+
+    assert first == second
+    assert ".superpowers/sdd/artifact.md" not in second
+    assert (copy_root / "tracked.py").is_file()
+    assert (copy_root / "untracked.py").is_file()
+    assert not (copy_root / ".superpowers" / "sdd" / "artifact.md").exists()
+
+
+def test_artifact_transaction_rolls_back_first_replace_when_second_fails(tmp_path, monkeypatch) -> None:
+    collector = _collector_module()
+    json_path = tmp_path / "baseline.json"
+    markdown_path = tmp_path / "baseline.md"
+    json_path.write_text('{"outcome": "pass"}\n')
+    markdown_path.write_text("# Current Quality Baseline\n\npass\n")
+    failure = {
+        "generated_at": "2026-08-12T00:00:00+00:00",
+        "source": {"commit": "abc", "dirty": True},
+        "copy_manifest_sha256": "manifest",
+        "environment": {"python": "test"},
+        "outcome": "fail",
+        "failure": "copy write detected",
+        "runs": [],
+    }
+    original_replace = collector._replace_file
+    calls = 0
+
+    def fail_second_replace(source: Path, destination: Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("second replace failed")
+        original_replace(source, destination)
+
+    monkeypatch.setattr(collector, "_replace_file", fail_second_replace)
+
+    with pytest.raises(OSError, match="second replace failed"):
+        collector._write_artifacts(failure, json_path, markdown_path)
+
+    assert json_path.read_text() == '{"outcome": "pass"}\n'
+    assert markdown_path.read_text() == "# Current Quality Baseline\n\npass\n"
+
+
+def test_timeout_output_normalizes_bytes() -> None:
+    collector = _collector_module()
+    error = subprocess.TimeoutExpired(["pytest"], 1, output=b"partial stdout", stderr=b"partial stderr")
+
+    assert collector._timeout_output(error) == "partial stdoutpartial stderr"

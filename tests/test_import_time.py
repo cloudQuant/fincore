@@ -13,6 +13,8 @@ import time
 
 import pytest
 
+SUBPROCESS_TIMEOUT_SECONDS = 60
+
 
 @pytest.mark.p2
 @pytest.mark.benchmark(group="import_time")
@@ -132,6 +134,7 @@ def _cold_import_elapsed(import_statement: str) -> float:
         capture_output=True,
         text=True,
         check=False,
+        timeout=SUBPROCESS_TIMEOUT_SECONDS,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     return float(result.stdout.strip())
