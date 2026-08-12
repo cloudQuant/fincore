@@ -4,7 +4,11 @@ import inspect
 
 import pytest
 
-from .conftest import load_pyfolio_profile, run_isolated_import_probe
+from .conftest import (
+    load_pyfolio_profile,
+    run_isolated_import_probe,
+    run_isolated_workflow_dependency_probe,
+)
 
 
 @pytest.mark.parametrize("entry", load_pyfolio_profile(), ids=lambda entry: entry["name"])
@@ -108,3 +112,50 @@ def test_common_utils_display_contract_remains_lazy_and_usable(monkeypatch: pyte
 def test_common_utils_import_does_not_eagerly_load_ipython() -> None:
     result = run_isolated_import_probe("fincore.utils.common_utils")
     assert not [name for name in result.eager_optional_modules if name.startswith("IPython")]
+
+
+def _missing_module(name: str) -> ModuleNotFoundError:
+    return ModuleNotFoundError(f"No module named {name!r}", name=name)
+
+
+def test_import_time_visual_dependency_error_names_the_viz_extra() -> None:
+    result = run_isolated_workflow_dependency_probe(
+        "create_returns_tear_sheet",
+        "matplotlib",
+    )
+
+    assert result.error_type == "ImportError"
+    assert "pip install fincore[viz]" in result.message
+    assert "fincore[pyfolio]" not in result.message
+
+
+def test_call_time_bayesian_dependency_error_names_both_extras() -> None:
+    result = run_isolated_workflow_dependency_probe(
+        "create_bayesian_tear_sheet",
+        "pymc",
+    )
+
+    assert result.error_type == "ImportError"
+    assert "pip install fincore[viz,bayesian]" in result.message
+
+
+def test_unrelated_call_time_module_error_is_not_relabelled(monkeypatch: pytest.MonkeyPatch) -> None:
+    from fincore.contracts import workflows
+
+    spec = workflows.get_workflow_spec("pyfolio_module", "create_returns_tear_sheet", "strict-0.9.6")
+    original = _missing_module("fincore.internal_missing")
+
+    def broken_workflow(_public_name: str, _arguments: dict[str, object]) -> object:
+        raise original
+
+    def fake_resolve(reference: str):
+        if reference == spec.workflow_ref:
+            return broken_workflow
+        return workflows.strict_pyfolio_adapter
+
+    monkeypatch.setattr(workflows, "resolve_ref", fake_resolve)
+
+    with pytest.raises(ModuleNotFoundError) as caught:
+        workflows.invoke_workflow(spec, {})
+
+    assert caught.value is original

@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from fincore.metrics.drawdown import gen_drawdown_table
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 
 def test_drawdown_table_preserves_padded_compatibility_shape(short_drawdown_returns: pd.Series) -> None:
@@ -31,4 +28,23 @@ def test_drawdown_plot_skips_padding_rows(short_drawdown_returns: pd.Series) -> 
     assert len(ax.collections) == 1
     assert short_drawdown_returns.index.equals(original_index)
     assert all(getattr(value, "tz", None) is None for value in ax.lines[0].get_xdata())
+    plt.close(figure)
+
+
+def test_drawdown_plot_preserves_exact_instants_across_nonexistent_dst_midnight() -> None:
+    from fincore.pyfolio import Pyfolio
+
+    index = pd.date_range("2018-11-04 02:00", periods=4, freq="h", tz="UTC").tz_convert("America/Sao_Paulo")
+    returns = pd.Series([0.01, 0.02, -0.20, 0.25], index=index, name="returns")
+    original = returns.copy()
+
+    figure, ax = plt.subplots()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = Pyfolio().plot_drawdown_periods(returns, top=10, ax=ax)
+
+    assert result is ax
+    assert len(ax.collections) == 1
+    assert caught == []
+    pd.testing.assert_series_equal(returns, original)
     plt.close(figure)

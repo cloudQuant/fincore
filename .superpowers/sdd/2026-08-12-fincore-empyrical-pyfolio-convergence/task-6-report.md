@@ -117,6 +117,39 @@ The nine remaining warnings are the explicit Pyfolio business warning for
 returns that do not overlap a named interesting period.  The real Task 6 full
 chain uses overlapping data and emits none of those warnings.
 
+### Independent-review follow-up
+
+The first independent review found two P1 boundary defects.  Regression tests
+were added before either production fix; the exact review RED was:
+
+```text
+DST drawdown + optional-dependency boundary: 3 failed, 1 passed
+```
+
+The DST case uses exact `America/Sao_Paulo` timestamps spanning the skipped
+midnight on 2018-11-04.  Reconstructing the date-only compatibility table
+value raised a nonexistent-time `ValueError`.  Drawdown shading now consumes
+the exact peak/valley/recovery timestamps from `get_top_drawdowns`, converts
+those instants to a UTC-naive plotting copy, preserves unrecovered-period
+fallback and color cardinality, and leaves the ten-row table unchanged.
+
+The optional-dependency case proved both resolution-time and call-time
+failures.  `invoke_workflow` now translates recognized `ModuleNotFoundError`
+instances across the complete resolve-and-call boundary.  Real isolated
+subprocess blockers verify implementation-import failure for `matplotlib` and
+Bayesian call-time failure for `pymc`; the actionable installation commands
+are the actual published extras `fincore[viz]` and
+`fincore[viz,bayesian]`.  An unrelated internal missing module remains the
+original `ModuleNotFoundError` object.
+
+Review-focused and final impact results are:
+
+```text
+four review cases after minimal fixes: 4 passed
+isolated dependency + public/drawdown + legacy dummy: 36 passed
+Task 6 impact selector: 888 passed, 9 expected business warnings
+```
+
 ## Regression and migration gates
 
 The Task 6 impact selector includes all Pyfolio compatibility tests, the full
@@ -144,5 +177,5 @@ The implementation includes the planned workflow, attribution, drawdown, and
 public/private façade files; the approved lazy display boundary; the approved
 stored-state plot dispatch in attribution and transaction tear sheets; and
 the directly affected legacy and compatibility tests.  Task 4 and Task 5
-contracts were not changed.  Task 6 is ready for independent review and is
-committed only after controller approval.
+contracts were not changed.  Task 6 is awaiting independent re-review after
+the first-review follow-up.

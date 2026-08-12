@@ -145,16 +145,17 @@ def invoke_workflow(spec: WorkflowSpec, arguments: dict[str, Any]) -> Any:
     try:
         workflow = resolve_ref(spec.workflow_ref)
         adapter = resolve_ref(spec.adapter_ref)
+        return adapter(workflow, spec, arguments)
     except ModuleNotFoundError as exc:
-        optional_roots = {"IPython", "matplotlib", "scipy", "seaborn", "statsmodels"}
+        optional_roots = {"IPython", "matplotlib", "pymc", "scipy", "seaborn", "statsmodels"}
         missing_root = (exc.name or "").split(".", 1)[0]
         if missing_root not in optional_roots:
             raise
+        extras = "viz,bayesian" if missing_root == "pymc" else "viz"
         raise ImportError(
             f"{spec.public_name} requires the Pyfolio plotting dependencies; "
-            "install them with `pip install fincore[pyfolio]`."
+            f"install them with `pip install fincore[{extras}]`."
         ) from exc
-    return adapter(workflow, spec, arguments)
 
 
 def get_workflow_spec(surface: WorkflowSurface, public_name: str, variant: str) -> WorkflowSpec:

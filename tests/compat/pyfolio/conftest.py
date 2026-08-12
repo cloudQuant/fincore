@@ -33,6 +33,13 @@ class ImportProbe:
         return self.backend_before == self.backend_after
 
 
+@dataclass(frozen=True)
+class DependencyProbe:
+    error_type: str
+    message: str
+    missing_name: str | None
+
+
 def load_pyfolio_profile() -> list[dict[str, Any]]:
     data = json.loads(PYFOLIO_MANIFEST.read_text(encoding="utf-8"))
     return [dict(entry, name=name) for name, entry in data["compatibility_profile"].items()]
@@ -88,6 +95,60 @@ print(json.dumps({
         backend_after=payload["backend_after"],
         eager_optional_modules=tuple(payload["eager_optional_modules"]),
         private_implementation_loaded=payload["private_implementation_loaded"],
+    )
+
+
+def run_isolated_workflow_dependency_probe(public_name: str, blocked_module: str) -> DependencyProbe:
+    script = r"""
+import builtins
+import json
+
+import pandas as pd
+
+from fincore import pyfolio
+
+real_import = builtins.__import__
+
+def blocking_import(name, globals=None, locals=None, fromlist=(), level=0):
+    if name == "BLOCKED_MODULE" or name.startswith("BLOCKED_MODULE."):
+        raise ModuleNotFoundError("No module named 'BLOCKED_MODULE'", name="BLOCKED_MODULE")
+    return real_import(name, globals, locals, fromlist, level)
+
+builtins.__import__ = blocking_import
+index = pd.date_range("2024-01-02", periods=8, freq="B", tz="UTC")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.003, 0.001, 0.002, 0.003], index=index)
+
+try:
+    if "PUBLIC_NAME" == "create_bayesian_tear_sheet":
+        pyfolio.create_bayesian_tear_sheet(
+            returns,
+            live_start_date=index[4],
+            samples=1,
+            progressbar=False,
+        )
+    else:
+        pyfolio.create_returns_tear_sheet(returns)
+except BaseException as exc:
+    print(json.dumps({
+        "error_type": type(exc).__name__,
+        "message": str(exc),
+        "missing_name": getattr(exc, "name", None),
+    }))
+else:
+    print(json.dumps({"error_type": "", "message": "", "missing_name": None}))
+""".replace("PUBLIC_NAME", public_name).replace("BLOCKED_MODULE", blocked_module)
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PACKAGE_ROOT.parent,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(completed.stdout.strip().splitlines()[-1])
+    return DependencyProbe(
+        error_type=payload["error_type"],
+        message=payload["message"],
+        missing_name=payload["missing_name"],
     )
 
 

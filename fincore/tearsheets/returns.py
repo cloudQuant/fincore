@@ -515,23 +515,19 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
-    df_drawdowns = empyrical_instance.gen_drawdown_table(returns, top=top)
+    drawdown_periods = empyrical_instance.get_top_drawdowns(returns, top=top)
 
-    # ``gen_drawdown_table`` stores dates without timezone information, while
-    # an unrecovered drawdown falls back to the (possibly timezone-aware)
-    # returns index.  Matplotlib rejects that mixed representation on shared
-    # date axes.  Plot a copy in one representation and leave caller data
+    # Preserve the exact instants returned by ``get_top_drawdowns``.  The
+    # compatibility table deliberately stores date-only values, which cannot
+    # be localized back to a timezone when midnight was skipped by DST.
+    # Matplotlib receives one UTC-naive representation and caller data remains
     # untouched.
-    source_tz = getattr(returns.index, "tz", None)
     plot_cum_rets = df_cum_rets.copy()
     if isinstance(plot_cum_rets.index, pd.DatetimeIndex) and plot_cum_rets.index.tz is not None:
         plot_cum_rets.index = plot_cum_rets.index.tz_convert("UTC").tz_localize(None)
 
     def _as_plot_timestamp(value):
         timestamp = pd.Timestamp(value)
-        if source_tz is not None:
-            timestamp = timestamp.tz_localize(source_tz) if timestamp.tz is None else timestamp.tz_convert(source_tz)
-            return timestamp.tz_convert("UTC").tz_localize(None)
         if timestamp.tz is not None:
             return timestamp.tz_convert("UTC").tz_localize(None)
         return timestamp
@@ -539,13 +535,8 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
     plot_cum_rets.plot(ax=ax, **kwargs)
 
     lim = ax.get_ylim()
-    real_drawdowns = df_drawdowns[df_drawdowns["Peak date"].notna()]
-    colors = sns.cubehelix_palette(len(real_drawdowns))[::-1]
-    for color, (_i, (peak, recovery)) in zip(
-        colors,
-        real_drawdowns[["Peak date", "Recovery date"]].iterrows(),
-        strict=False,
-    ):
+    colors = sns.cubehelix_palette(len(drawdown_periods))[::-1]
+    for color, (peak, _valley, recovery) in zip(colors, drawdown_periods, strict=False):
         if pd.isnull(recovery):
             recovery = returns.index[-1]
         peak = _as_plot_timestamp(peak)

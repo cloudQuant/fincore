@@ -43,6 +43,9 @@ class _DummyEmpyrical:
             index=range(1),
         )
 
+    def get_top_drawdowns(self, returns: pd.Series, top: int = 10):
+        return [(returns.index[0], returns.index[1], pd.NaT)]
+
     def perf_stats(self, *_args, **_kwargs) -> pd.Series:
         return pd.Series(
             {
