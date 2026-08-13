@@ -9,7 +9,7 @@
 ### 1. 智能数据根目录检测
 
 ```python
-def get_data_root(default_path='tests/test_data', custom_path=None):
+def get_data_root(default_path="tests/test_data", custom_path=None):
     """
     自动检测数据根目录：
     - 默认：tests/test_data (相对于项目根目录)
