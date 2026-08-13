@@ -78,9 +78,10 @@ does not assert that a target suite has been copied, collected, executed, or
 approved. When those target tasks begin, the migration checker will reject
 direct or dynamic upstream/source-test imports, sibling-upstream absolute
 paths assembled for a finite set of AST-visible `runpy`/builtins execution
-APIs (including bounded named first-operand forms), and `sys.path`
-mutation. These are bounded execution-provenance safeguards, not evidence of a
-legal review.
+APIs (including bounded named first-operand forms), direct assignment aliases
+of those recognized module namespaces, imported `os.path.join` aliases, and
+`sys.path` mutation. These are bounded execution-provenance safeguards, not
+evidence of a legal review.
 
 That review has not occurred in this task. Consequently no optional notice file
 is generated and no legal conclusion is implied.

@@ -637,6 +637,111 @@ def test_target_ast_rejects_builtins_and_getattr_dynamic_imports(tmp_path: Path,
 
 
 @pytest.mark.parametrize(
+    ("imports", "message"),
+    [
+        (
+            """
+            import builtins
+            import pytest
+
+            b = builtins
+            loaded_upstream = b.__import__('alphalens')
+            """,
+            "dynamically imports upstream source",
+        ),
+        (
+            """
+            import importlib
+            import pytest
+
+            il = importlib
+            loaded_upstream = il.import_module('alphalens')
+            """,
+            "dynamically imports upstream source",
+        ),
+        (
+            """
+            import runpy
+            from pathlib import Path
+
+            import pytest
+
+            r = runpy
+            upstream_source = Path('/Users/example/new_projects') / 'alphalens/tests/test_utils.py'
+            r.run_path(upstream_source)
+            """,
+            "upstream/source path",
+        ),
+    ],
+)
+def test_target_ast_rejects_assigned_dangerous_module_aliases(
+    tmp_path: Path, imports: str, message: str
+) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports=imports,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match=message):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_target_ast_rejects_imported_os_path_join_for_upstream_execution(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        from os.path import join
+        import runpy
+
+        import pytest
+
+        upstream_source = join('/Users/example/new_projects', 'alphalens/tests/test_utils.py')
+        runpy.run_path(upstream_source)
+        """,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="upstream/source path"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_target_ast_allows_safe_module_alias_and_imported_join(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        import importlib
+        from os.path import join
+        from pathlib import Path
+        import runpy
+
+        import pytest
+
+        il = importlib
+        r = runpy
+        stdlib_module = il.import_module('json')
+        local_path = Path(join('tests', 'local_target.py'))
+        r.run_path(local_path)
+        """,
+    )
+    checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+@pytest.mark.parametrize(
     ("imports", "expression"),
     [
         (
@@ -798,9 +903,12 @@ def test_target_ast_rejects_static_upstream_string_join_when_executed(tmp_path: 
         checker["_validate_target_ast"](selected_inventory, selected_map)
 
 
-@pytest.mark.parametrize("normalizer", ["resolve", "absolute"])
-def test_target_ast_rejects_static_upstream_path_after_noarg_normalization(
-    tmp_path: Path, normalizer: str
+@pytest.mark.parametrize(
+    "path_expression",
+    ["upstream_source.resolve()", "upstream_source.resolve(strict=False)", "upstream_source.absolute()"],
+)
+def test_target_ast_rejects_static_upstream_path_after_static_normalization(
+    tmp_path: Path, path_expression: str
 ) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_utils.py"
@@ -817,7 +925,7 @@ def test_target_ast_rejects_static_upstream_path_after_noarg_normalization(
         import pytest
 
         upstream_source = Path('/Users/example/new_projects') / 'alphalens/tests/test_utils.py'
-        runpy.run_path(upstream_source.{normalizer}())
+        runpy.run_path({path_expression})
         """,
     )
     with pytest.raises(checker["MigrationAuditError"], match="upstream/source path"):
@@ -902,6 +1010,73 @@ def test_c4_target_ast_rejects_evidence_hidden_in_short_circuited_boolop(
             close_figure(figure),
             assert_artifact_ownership({{"primary": figure}}),
         )
+        assert True
+        """,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="C4"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        """
+        [
+            (
+                assert_figure_axes(figure),
+                figure.show(),
+                close_figure(figure),
+                assert_artifact_ownership({"primary": figure}),
+            )
+            for figure in ()
+        ]
+        """,
+        """
+        (
+            (
+                assert_figure_axes(figure),
+                figure.show(),
+                close_figure(figure),
+                assert_artifact_ownership({"primary": figure}),
+            )
+            for figure in (1,)
+        )
+        """,
+    ],
+)
+def test_c4_target_ast_rejects_evidence_in_comprehension_or_unconsumed_generator(
+    tmp_path: Path, expression: str
+) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_tears.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        textwrap.dedent(expression).strip() + "\nassert True",
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="C4"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+@pytest.mark.parametrize("literal_range", ["range(0)", "range(1, 1)", "range(0, 4, -1)"])
+def test_c4_target_ast_rejects_evidence_hidden_in_empty_literal_range(
+    tmp_path: Path, literal_range: str
+) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_tears.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        f"""
+        for figure in {literal_range}:
+            assert_figure_axes(figure)
+            figure.show()
+            close_figure(figure)
+            assert_artifact_ownership({{"primary": figure}})
         assert True
         """,
     )

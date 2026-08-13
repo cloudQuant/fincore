@@ -119,6 +119,7 @@ class _ProvenanceSymbols:
     runpy_modules: set[str] = field(default_factory=set)
     pathlib_modules: set[str] = field(default_factory=set)
     os_modules: set[str] = field(default_factory=set)
+    os_path_join_functions: set[str] = field(default_factory=set)
     path_constructors: set[str] = field(default_factory=lambda: set(PATH_CONSTRUCTOR_NAMES))
     getattr_functions: set[str] = field(default_factory=lambda: {"getattr"})
     callable_aliases: dict[str, str] = field(default_factory=dict)
@@ -445,6 +446,28 @@ def _callable_kind(node: ast.AST, symbols: _ProvenanceSymbols) -> str | None:
     return None
 
 
+def _propagate_module_assignment_alias(name: str, value: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Propagate direct assignment aliases for the finite namespaces used by this audit."""
+    if not isinstance(value, ast.Name):
+        return False
+    changed = False
+    for aliases in (
+        symbols.sys_modules,
+        symbols.importlib_modules,
+        symbols.builtins_modules,
+        symbols.runpy_modules,
+        symbols.pathlib_modules,
+        symbols.os_modules,
+    ):
+        if value.id in aliases and name not in aliases:
+            aliases.add(name)
+            changed = True
+    if value.id in symbols.os_path_join_functions and name not in symbols.os_path_join_functions:
+        symbols.os_path_join_functions.add(name)
+        changed = True
+    return changed
+
+
 def _provenance_symbols(tree: ast.Module) -> _ProvenanceSymbols:
     """Collect only direct aliases that can expose known upstream import or execution APIs."""
     symbols = _ProvenanceSymbols()
@@ -489,11 +512,17 @@ def _provenance_symbols(tree: ast.Module) -> _ProvenanceSymbols:
                 symbols.path_constructors.update(
                     alias.asname or alias.name for alias in node.names if alias.name in PATH_CONSTRUCTOR_NAMES
                 )
+            elif node.module == "os.path":
+                symbols.os_path_join_functions.update(
+                    alias.asname or alias.name for alias in node.names if alias.name == "join"
+                )
 
     bindings = _assignment_bindings(tree)
     for _ in range(len(bindings) + 1):
         changed = False
         for name, value in bindings.items():
+            if _propagate_module_assignment_alias(name, value, symbols):
+                changed = True
             kind = _callable_kind(value, symbols)
             if kind is not None and symbols.callable_aliases.get(name) != kind:
                 symbols.callable_aliases[name] = kind
@@ -549,12 +578,31 @@ def _is_path_constructor(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
 
 def _is_os_path_join(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
     """Recognize direct ``os.path.join`` aliases for literal-only string path folding."""
+    if isinstance(node, ast.Name):
+        return node.id in symbols.os_path_join_functions
     return (
         isinstance(node, ast.Attribute)
         and node.attr == "join"
         and isinstance(node.value, ast.Attribute)
         and node.value.attr == "path"
         and _is_module_alias(node.value.value, symbols.os_modules)
+    )
+
+
+def _is_static_path_normalizer(node: ast.Call) -> bool:
+    """Recognize only no-argument ``absolute`` and literal ``resolve(strict=False)`` propagation."""
+    if not isinstance(node.func, ast.Attribute) or node.args:
+        return False
+    if node.func.attr == "absolute":
+        return not node.keywords
+    if node.func.attr != "resolve":
+        return False
+    if not node.keywords:
+        return True
+    return (
+        len(node.keywords) == 1
+        and node.keywords[0].arg == "strict"
+        and _static_literal(node.keywords[0].value) is False
     )
 
 
@@ -610,12 +658,8 @@ def _static_path_value(
             assert value is not None
             result = _join_static_path(result, value)
         return result
-    if (
-        isinstance(node.func, ast.Attribute)
-        and node.func.attr in {"resolve", "absolute"}
-        and not node.args
-        and not node.keywords
-    ):
+    if _is_static_path_normalizer(node):
+        assert isinstance(node.func, ast.Attribute)
         return _static_path_value(node.func.value, bindings, symbols, seen)
     if isinstance(node.func, ast.Attribute) and node.func.attr == "joinpath":
         result = _static_path_value(node.func.value, bindings, symbols, seen)
@@ -889,6 +933,19 @@ def _static_truth_value(node: ast.AST) -> bool | None:
 
 def _literal_iterable_truth(node: ast.AST) -> bool | None:
     """Return emptiness for literal iterable forms only; all dynamic iterables remain unknown."""
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "range":
+        if node.keywords or not 1 <= len(node.args) <= 3:
+            return None
+        values: list[int] = []
+        for argument in node.args:
+            value = _static_literal(argument)
+            if not isinstance(value, int) or isinstance(value, bool):
+                return None
+            values.append(value)
+        try:
+            return bool(range(*values))
+        except ValueError:
+            return None
     literal = _static_literal(node)
     if literal is _STATIC_UNKNOWN:
         return None
@@ -900,6 +957,8 @@ def _literal_iterable_truth(node: ast.AST) -> bool | None:
 def _walk_reachable_node(node: ast.AST, visit: Callable[[ast.AST], None]) -> None:
     """Visit C4-relevant nodes while excluding statically unreachable branches and nested definitions."""
     if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Lambda)):
+        return
+    if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
         return
     if isinstance(node, ast.BoolOp):
         for value in node.values:

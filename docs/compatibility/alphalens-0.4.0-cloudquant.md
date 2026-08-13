@@ -126,19 +126,22 @@ failure evidence.
 The deferred target AST audit also rejects direct or dynamic imports of
 `alphalens` and the three upstream test modules, `sys.path` mutation, and
 absolute sibling-upstream/source-test paths. Dynamic coverage includes direct
-or aliased `builtins.__import__`/`__builtins__.__import__`, `importlib`,
-literal `getattr` or `builtins.__dict__` access to those import APIs, and known
-`runpy`/`exec`/`eval` execution calls. For those known sinks only, it examines
-their positional first operand or the bounded named forms `name`, `mod_name`,
-`path_name`, or `source`. It resolves a literal relative
-`importlib.import_module` name only with a literal `package` context. It folds
-literal `Path`, no-argument `resolve()`/`absolute()`, `joinpath`,
-`os.path.join`, and string joins only when they are fed to one of those sinks.
-These are deliberately finite AST patterns, not a general dynamic-execution
-detector. They permit ordinary relative or fincore-local imports, including
-other repository test packages that are not one of the three pinned upstream
-source modules (`test_utils`, `test_performance`, and `test_tears`, with their
-`tests.*` aliases).
+or imported-name aliases of `builtins.__import__`/`__builtins__.__import__`
+and `importlib`, literal `getattr` or `builtins.__dict__` access to those import
+APIs, and known `runpy`/`exec`/`eval` execution calls. It additionally follows
+direct assignment aliases of already recognized `builtins`, `importlib`,
+`runpy`, `pathlib`, `os`, and `sys` module names; this is not a general alias
+or data-flow analysis. For those known sinks only, it examines their positional
+first operand or the bounded named forms `name`, `mod_name`, `path_name`, or
+`source`. It resolves a literal relative `importlib.import_module` name only
+with a literal `package` context. It folds literal `Path`, `resolve()` or
+`resolve(strict=False)`, `absolute()`, `joinpath`, `os.path.join`, direct
+`from os.path import join` aliases, and string joins only when they are fed to
+one of those sinks. These are deliberately finite AST patterns, not a general
+dynamic-execution detector. They permit ordinary relative or fincore-local
+imports, including other repository test packages that are not one of the
+three pinned upstream source modules (`test_utils`, `test_performance`, and
+`test_tears`, with their `tests.*` aliases).
 
 Every Task 8 C4 invocation target must present all of these statically
 auditable signals in its own test function:
@@ -165,10 +168,13 @@ unreached side of literal short-circuit Boolean expressions (`False and …`,
 nonempty literal `for` whose body unconditionally returns/raises. When a
 helper or method exposes a concrete receiver/argument, the Figure/Axes,
 show/close, and ownership signals must bind to the same resource; global pyplot
-state is the limited recognized exception. This is a deliberately bounded AST
-rule, not a claim of full symbolic execution. The checker then requires the
-exact mapped nodeids, literal marker IDs, allowed provenance, the required
-target assertion contract, and all-attempt-passed results.
+state is the limited recognized exception. Comprehensions and generator
+expressions never contribute C4 evidence, and the literal-iterable check also
+recognizes empty numeric `range(...)` forms such as `range(0)` and
+`range(1, 1)`. This is a deliberately bounded AST rule, not a claim of full
+symbolic execution. The checker then requires the exact mapped nodeids, literal
+marker IDs, allowed provenance, the required target assertion contract, and
+all-attempt-passed results.
 
 To reproduce the static inventory or its map audit locally, use:
 
