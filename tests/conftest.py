@@ -19,6 +19,10 @@ from pathlib import Path
 
 import pytest
 
+_UPSTREAM_RESULT_PHASES = ("setup", "call", "teardown")
+_UPSTREAM_RERUN_MARKERS = ("flaky", "rerun", "reruns", "rerunfailures")
+_UPSTREAM_RESULTS_SCHEMA = "alphalens-upstream-case-results-v2"
+
 # ==============================================================================
 # Priority Markers - Apply to test classes and methods
 # ==============================================================================
@@ -79,6 +83,63 @@ def _result_path(config: pytest.Config) -> Path | None:
     return path
 
 
+def _global_reruns_requested(config: pytest.Config) -> bool:
+    """Return whether the rerun plugin was asked to retry tests in this run."""
+    reruns = getattr(config.option, "reruns", None)
+    if reruns is None:
+        return False
+    try:
+        return int(reruns) > 0
+    except (TypeError, ValueError):
+        return bool(reruns)
+
+
+def _new_upstream_attempt() -> dict[str, object]:
+    """Create one append-only per-attempt phase record for marker proof output."""
+    return {"outcomes": dict.fromkeys(_UPSTREAM_RESULT_PHASES, "not-run")}
+
+
+def _record_upstream_phase(record: dict[str, object], phase: str, outcome: str) -> None:
+    """Append an attempt phase without allowing later reruns to erase prior truth."""
+    attempts = record["attempts"]
+    assert isinstance(attempts, list)
+    if not attempts:
+        attempts.append(_new_upstream_attempt())
+    current = attempts[-1]
+    assert isinstance(current, dict)
+    current_outcomes = current["outcomes"]
+    assert isinstance(current_outcomes, dict)
+    if current_outcomes.get(phase) != "not-run":
+        current = _new_upstream_attempt()
+        attempts.append(current)
+        current_outcomes = current["outcomes"]
+        assert isinstance(current_outcomes, dict)
+    current_outcomes[phase] = outcome
+
+    aggregate = record["outcomes"]
+    assert isinstance(aggregate, dict)
+    prior = aggregate.get(phase)
+    if prior == "not-run" or (prior == "passed" and outcome != "passed"):
+        aggregate[phase] = outcome
+
+
+def _has_nonpassing_upstream_attempt(results: dict[str, dict[str, object]]) -> bool:
+    """Return whether a marked item ever emitted an actual non-passing phase."""
+    for record in results.values():
+        attempts = record.get("attempts")
+        if not isinstance(attempts, list):
+            continue
+        for attempt in attempts:
+            if not isinstance(attempt, dict):
+                return True
+            outcomes = attempt.get("outcomes")
+            if not isinstance(outcomes, dict):
+                return True
+            if any(outcomes.get(phase) != "passed" for phase in _UPSTREAM_RESULT_PHASES):
+                return True
+    return False
+
+
 def pytest_configure(config: pytest.Config) -> None:
     """Configure custom pytest markers.
 
@@ -132,6 +193,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     automatically if not already marked.
     """
     marker_errors: list[str] = []
+    reruns_requested = _global_reruns_requested(config)
     for item in items:
         markers = list(item.iter_markers(name="alphalens_upstream_case"))
         if not markers:
@@ -139,15 +201,25 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if len(markers) != 1 or len(markers[0].args) != 1 or not isinstance(markers[0].args[0], str):
             marker_errors.append(f"{item.nodeid}: alphalens_upstream_case requires exactly one string case ID")
             continue
+        if reruns_requested:
+            marker_errors.append(f"{item.nodeid}: upstream case cannot enable reruns via --reruns")
+            continue
         blocked = [name for name in ("skip", "skipif", "xfail") if item.get_closest_marker(name) is not None]
         if blocked:
             marker_errors.append(f"{item.nodeid}: upstream case cannot carry {', '.join(blocked)}")
+            continue
+        rerun_markers = [
+            name for name in _UPSTREAM_RERUN_MARKERS if item.get_closest_marker(name) is not None
+        ]
+        if rerun_markers:
+            marker_errors.append(f"{item.nodeid}: upstream case cannot carry {', '.join(rerun_markers)}")
             continue
         results: dict[str, dict[str, object]] = config._alphalens_upstream_results  # type: ignore[attr-defined]
         results[item.nodeid] = {
             "nodeid": item.nodeid,
             "case_id": markers[0].args[0],
-            "outcomes": {"setup": "not-run", "call": "not-run", "teardown": "not-run"},
+            "outcomes": dict.fromkeys(_UPSTREAM_RESULT_PHASES, "not-run"),
+            "attempts": [],
         }
     if marker_errors:
         raise pytest.UsageError("invalid alphalens upstream-case markers:\n  " + "\n  ".join(marker_errors))
@@ -177,10 +249,8 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[object]):
     record = results.get(item.nodeid)
     if record is None:
         return
-    outcomes = record["outcomes"]
-    assert isinstance(outcomes, dict)
     actual_outcome = "xfailed" if getattr(report, "wasxfail", None) else report.outcome
-    outcomes[report.when] = actual_outcome
+    _record_upstream_phase(record, report.when, actual_outcome)
     if actual_outcome == "passed":
         return
     report.outcome = "failed"
@@ -194,15 +264,19 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[object]):
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     """Write the non-xdist marked-case proof consumed only by the migration checker."""
     config = session.config
+    results: dict[str, dict[str, object]] = config._alphalens_upstream_results  # type: ignore[attr-defined]
+    final_exitstatus = exitstatus
+    if _has_nonpassing_upstream_attempt(results) and exitstatus == pytest.ExitCode.OK:
+        final_exitstatus = pytest.ExitCode.TESTS_FAILED
+        session.exitstatus = final_exitstatus
     path: Path | None = config._alphalens_upstream_result_path  # type: ignore[attr-defined]
     if path is None:
         return
-    results: dict[str, dict[str, object]] = config._alphalens_upstream_results  # type: ignore[attr-defined]
     path.parent.mkdir(parents=True, exist_ok=True)
     document = {
-        "schema_version": "alphalens-upstream-case-results-v1",
+        "schema_version": _UPSTREAM_RESULTS_SCHEMA,
         "xdist": False,
-        "pytest_exitstatus": exitstatus,
+        "pytest_exitstatus": final_exitstatus,
         "results": [results[nodeid] for nodeid in sorted(results)],
     }
     path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")

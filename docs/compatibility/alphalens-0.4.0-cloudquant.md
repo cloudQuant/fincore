@@ -114,11 +114,36 @@ claim that any future target node was collected or passed. Once Tasks 3, 4,
 and 8 create those tests, run the checker with a `pytest --collect-only -q`
 transcript and a non-xdist result file written by
 `--alphalens-upstream-result-json`. The dynamic
-`alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, and
-`xfail` at collection, turns every non-passing setup/call/teardown phase into
-a failure, and records all three phase outcomes. The checker then requires
-the exact mapped nodeids, literal marker IDs, allowed source imports, target
-assertions, and all-passed results.
+`alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, `xfail`,
+global `--reruns`, and per-item `flaky`/`rerun` markers at collection. It
+records append-only setup/call/teardown attempts in the version-2 result JSON:
+a non-passing phase in any attempt forces the pytest session to fail even if a
+later rerun reports passed. The checker requires every phase in every recorded
+attempt to be passed, so a later plugin ordering cannot replace earlier
+failure evidence.
+
+The deferred target AST audit also rejects direct or dynamic imports of
+`alphalens` and the three upstream test modules, `sys.path` mutation, and
+absolute sibling-upstream/source-test paths. It permits ordinary relative or
+fincore-local imports. Every Task 8 C4 invocation target must present all of
+these statically auditable signals in its own test function:
+
+- Figure/Axes return or inspection, through `fig`/`figure`/`ax`/`axes`, a
+  Figure/Axes property, `gca`/`gcf`, or one of
+  `assert_figure_axes`, `assert_figure_artifacts`, `assert_axes_artifacts`,
+  `assert_rendered_figure`, or `assert_tear_sheet_figures`.
+- Both show and close handling, through `.show()`/`.close()` or the recognized
+  `show_figure`, `show_owned_figures`, `assert_show_called`, `close_figure`,
+  `close_owned_figures`, `assert_figures_closed`, or
+  `assert_no_open_figures` helpers.
+- Artifact/resource ownership or cleanup, through
+  `assert_artifact_ownership`, `assert_owned_artifacts`,
+  `assert_figure_ownership`, `assert_no_figure_leaks`,
+  `assert_no_open_figures`, or `close_owned_figures`.
+
+A bare `assert True` or numeric-only assertion cannot satisfy C4. The checker
+then requires the exact mapped nodeids, literal marker IDs, allowed provenance,
+the required target assertion contract, and all-attempt-passed results.
 
 To reproduce the static inventory or its map audit locally, use:
 

@@ -52,6 +52,68 @@ def _load(path: Path) -> dict[str, object]:
         return json.load(handle)
 
 
+def _single_target_context(
+    tmp_path: Path, source_path: str
+) -> tuple[dict[str, object], dict[str, object], dict[str, object], str, Path, str]:
+    """Build one deferred target AST context without creating a repository target test."""
+    inventory = _load(INVENTORY_PATH)
+    migration = _load(MIGRATION_PATH)
+    cases = inventory["cases"]
+    mapped_cases = migration["cases"]
+    assert isinstance(cases, list)
+    assert isinstance(mapped_cases, dict)
+    case = next(item for item in cases if item["source_path"] == source_path)
+    case_id = case["source_case_id"]
+    assert isinstance(case_id, str)
+    record = mapped_cases[case_id]
+    assert isinstance(record, dict)
+
+    if source_path == "tests/test_tears.py":
+        invocation_ids = case["invocation_ids"]
+        invocation_targets = record["invocation_targets"]
+        assert isinstance(invocation_ids, list) and isinstance(invocation_targets, dict)
+        marker_id = invocation_ids[0]
+        selector = invocation_targets[marker_id]
+    else:
+        marker_id = case_id
+        selectors = record["target_selectors"]
+        assert isinstance(selectors, list)
+        selector = selectors[0]
+    assert isinstance(marker_id, str) and isinstance(selector, str)
+
+    relative, _, selected_name = selector.partition("::")
+    function_name = selected_name.split("[", 1)[0]
+    target_path = tmp_path / relative
+    target_path.parent.mkdir(parents=True)
+    checker = runpy.run_path(str(CHECKER))
+    checker["_validate_target_ast"].__globals__["REPO_ROOT"] = tmp_path
+    return checker, {case_id: case}, {case_id: record}, marker_id, target_path, function_name
+
+
+def _write_marked_target(
+    target_path: Path, function_name: str, marker_id: str, body: str, *, imports: str = "import pytest"
+) -> None:
+    """Write a parse-only deferred target fixture carrying the exact marker protocol."""
+    body_block = textwrap.indent(textwrap.dedent(body).strip(), "    ")
+    import_block = textwrap.dedent(imports).strip()
+    target_path.write_text(
+        f"{import_block}\n\n"
+        "@pytest.mark.parametrize(\n"
+        "    \"source_case_id\",\n"
+        "    [\n"
+        "        pytest.param(\n"
+        f"            {marker_id!r},\n"
+        f"            id={marker_id!r},\n"
+        f"            marks=pytest.mark.alphalens_upstream_case({marker_id!r}),\n"
+        "        ),\n"
+        "    ],\n"
+        ")\n"
+        f"def {function_name}(source_case_id):\n"
+        f"{body_block}\n",
+        encoding="utf-8",
+    )
+
+
 def test_pinned_upstream_test_inventory_and_migration_map_are_complete() -> None:
     inventory = _load(INVENTORY_PATH)
     migration = _load(MIGRATION_PATH)
@@ -275,11 +337,22 @@ def test_inventory_generator_is_byte_idempotent_from_the_pinned_git_tree_when_av
     assert first.read_bytes() == second.read_bytes() == INVENTORY_PATH.read_bytes()
 
 
-@pytest.mark.parametrize("marker", ("skip", "skipif", "xfail"))
-def test_upstream_marker_rejects_collection_weakeners(pytester: pytest.Pytester, marker: str) -> None:
+@pytest.mark.parametrize(
+    ("marker", "marker_arguments"),
+    [
+        ("skip", 'reason="not allowed"'),
+        ("skipif", 'True, reason="not allowed"'),
+        ("xfail", 'reason="not allowed"'),
+        ("flaky", "reruns=1"),
+        ("rerun", "1"),
+        ("reruns", "1"),
+    ],
+)
+def test_upstream_marker_rejects_collection_weakeners(
+    pytester: pytest.Pytester, marker: str, marker_arguments: str
+) -> None:
     conftest = (ROOT / "tests" / "conftest.py").read_text(encoding="utf-8")
     pytester.makeconftest(conftest)
-    marker_arguments = "True, reason=\"not allowed\"" if marker == "skipif" else "reason=\"not allowed\""
     pytester.makepyfile(
         f"""
         import pytest
@@ -291,7 +364,7 @@ def test_upstream_marker_rejects_collection_weakeners(pytester: pytest.Pytester,
         """
     )
     collection = pytester.runpytest("-q")
-    assert collection.ret != 0
+    assert collection.ret == pytest.ExitCode.USAGE_ERROR
     collection.stderr.fnmatch_lines([f"*upstream case cannot carry {marker}*"])
 
 
@@ -321,11 +394,249 @@ def test_upstream_marker_records_runtime_nonpassing_phase_as_a_failure(
     result = pytester.runpytest("-q", "--alphalens-upstream-result-json", "build/upstream-results.json")
     assert result.ret == pytest.ExitCode.TESTS_FAILED
     document = json.loads((pytester.path / "build" / "upstream-results.json").read_text(encoding="utf-8"))
+    assert document["schema_version"] == "alphalens-upstream-case-results-v2"
     assert document["xdist"] is False
     assert document["results"] == [
         {
             "case_id": case_id,
             "nodeid": "test_upstream_marker_records_runtime_nonpassing_phase_as_a_failure.py::test_runtime_nonpass",
             "outcomes": {"call": expected_outcome, "setup": "passed", "teardown": "passed"},
+            "attempts": [
+                {
+                    "outcomes": {"call": expected_outcome, "setup": "passed", "teardown": "passed"},
+                }
+            ],
         }
     ]
+
+
+def test_upstream_marker_rerun_is_never_accepted_after_an_earlier_failure(
+    pytester: pytest.Pytester,
+) -> None:
+    """Exercise the installed rerun plugin in a real subprocess, not a hook mock."""
+    pytest.importorskip("pytest_rerunfailures")
+    pytester.makeconftest((ROOT / "tests" / "conftest.py").read_text(encoding="utf-8"))
+    pytester.makepyfile(
+        """
+        from pathlib import Path
+
+        import pytest
+
+        @pytest.mark.alphalens_upstream_case("rerun-case")
+        def test_fails_once_then_passes():
+            attempt_path = Path("attempt-count.txt")
+            attempt = int(attempt_path.read_text()) if attempt_path.exists() else 0
+            attempt_path.write_text(str(attempt + 1))
+            assert attempt == 1
+        """
+    )
+    result = pytester.runpytest_subprocess(
+        "-q",
+        "--reruns",
+        "1",
+        "--alphalens-upstream-result-json",
+        "build/upstream-results.json",
+    )
+    assert result.ret == pytest.ExitCode.USAGE_ERROR
+    result.stderr.fnmatch_lines(["*upstream case cannot enable reruns via --reruns*"])
+
+
+def test_upstream_marker_history_forces_failure_if_a_late_plugin_enables_reruns(
+    pytester: pytest.Pytester,
+) -> None:
+    """Keep the session non-accepted if a future plugin enables retries after collection."""
+    pytest.importorskip("pytest_rerunfailures")
+    pytester.makeconftest((ROOT / "tests" / "conftest.py").read_text(encoding="utf-8"))
+    pytester.makepyfile(
+        late_rerun_plugin="""
+        import pytest
+
+        @pytest.hookimpl(trylast=True)
+        def pytest_collection_modifyitems(config, items):
+            config.option.reruns = 1
+        """,
+        test_rerun_history="""
+        from pathlib import Path
+
+        import pytest
+
+        @pytest.mark.alphalens_upstream_case("rerun-history-case")
+        def test_fails_once_then_passes():
+            attempt_path = Path("attempt-count.txt")
+            attempt = int(attempt_path.read_text()) if attempt_path.exists() else 0
+            attempt_path.write_text(str(attempt + 1))
+            assert attempt == 1
+        """,
+    )
+    result = pytester.runpytest_subprocess(
+        "-q",
+        "-p",
+        "late_rerun_plugin",
+        "--alphalens-upstream-result-json",
+        "build/upstream-results.json",
+    )
+    assert result.ret == pytest.ExitCode.TESTS_FAILED
+    document = json.loads((pytester.path / "build" / "upstream-results.json").read_text(encoding="utf-8"))
+    assert document["pytest_exitstatus"] == pytest.ExitCode.TESTS_FAILED
+    assert document["results"][0]["outcomes"]["call"] == "failed"
+    assert [attempt["outcomes"]["call"] for attempt in document["results"][0]["attempts"]] == [
+        "failed",
+        "passed",
+    ]
+
+
+def test_result_checker_rejects_a_nonpassing_rerun_attempt_even_if_terminal_outcomes_pass(
+    tmp_path: Path,
+) -> None:
+    """A later plugin ordering must not erase a failed first attempt from proof JSON."""
+    checker = runpy.run_path(str(CHECKER))
+    proof = tmp_path / "upstream-results.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "schema_version": "alphalens-upstream-case-results-v2",
+                "xdist": False,
+                "pytest_exitstatus": 0,
+                "results": [
+                    {
+                        "case_id": "rerun-case",
+                        "nodeid": "tests/compat/alphalens/test_target.py::test_target[rerun-case]",
+                        "outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"},
+                        "attempts": [
+                            {
+                                "outcomes": {"setup": "passed", "call": "failed", "teardown": "passed"},
+                            },
+                            {
+                                "outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"},
+                            },
+                        ],
+                    }
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="attempt"):
+        checker["_validate_results"](
+            proof,
+            {"rerun-case": "tests/compat/alphalens/test_target.py::test_target[rerun-case]"},
+        )
+
+
+def test_target_ast_rejects_dynamic_upstream_import_and_sibling_source_path(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        import importlib
+        import sys
+        import pytest
+
+        sys.path.insert(0, "/Users/example/new_projects/alphalens/tests")
+        upstream = importlib.import_module("alphalens")
+        """,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="upstream|source path|sys.path"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_target_ast_rejects_from_tests_source_fixture_import(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        from tests import test_utils
+
+        import pytest
+        """,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="source-side test module"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_target_ast_rejects_builtin_dynamic_source_test_import(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        import pytest
+
+        source_test = __import__("tests.test_utils")
+        """,
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="dynamically imports upstream source"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_target_ast_allows_safe_local_imports(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        "assert source_case_id == " + repr(marker_id),
+        imports="""
+        from . import local_helpers
+        from fincore import metrics
+
+        import pytest
+        """,
+    )
+    checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_c4_target_ast_rejects_bare_true_assertion(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_tears.py"
+    )
+    _write_marked_target(target_path, function_name, marker_id, "assert True")
+    with pytest.raises(checker["MigrationAuditError"], match="C4"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_c4_target_ast_rejects_pure_numeric_assertion(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_tears.py"
+    )
+    _write_marked_target(target_path, function_name, marker_id, "assert 1 == 1")
+    with pytest.raises(checker["MigrationAuditError"], match="C4"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+def test_c4_target_ast_accepts_figure_show_close_and_owned_artifact_evidence(tmp_path: Path) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_tears.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        """
+        figure = build_figure()
+        assert_figure_axes(figure)
+        figure.show()
+        close_figure(figure)
+        assert_artifact_ownership({"primary": figure})
+        """,
+    )
+    checker["_validate_target_ast"](selected_inventory, selected_map)

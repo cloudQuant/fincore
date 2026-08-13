@@ -15,7 +15,7 @@ import json
 import re
 import sys
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -64,7 +64,33 @@ GROUP_PATHS = {
 }
 GROUP_GRADES = {"utils": {"C2", "C3"}, "performance": {"C2", "C3"}, "tears": {"C4"}}
 RESULT_OUTCOMES = ("setup", "call", "teardown")
+RESULT_SCHEMA_VERSION = "alphalens-upstream-case-results-v2"
 SUMMARY_LINE = re.compile(r"^\d+(?:/\d+)? tests? collected")
+SOURCE_TEST_MODULES = frozenset({"test_utils", "test_performance", "test_tears"})
+SYS_PATH_MUTATION_METHODS = frozenset({"append", "extend", "insert", "remove", "pop", "clear"})
+C4_FIGURE_HELPERS = frozenset(
+    {
+        "assert_figure_axes",
+        "assert_figure_artifacts",
+        "assert_axes_artifacts",
+        "assert_rendered_figure",
+        "assert_tear_sheet_figures",
+    }
+)
+C4_SHOW_HELPERS = frozenset({"show_figure", "show_owned_figures", "assert_show_called"})
+C4_CLOSE_HELPERS = frozenset(
+    {"close_figure", "close_owned_figures", "assert_figures_closed", "assert_no_open_figures"}
+)
+C4_OWNERSHIP_HELPERS = frozenset(
+    {
+        "assert_artifact_ownership",
+        "assert_owned_artifacts",
+        "assert_figure_ownership",
+        "assert_no_figure_leaks",
+        "assert_no_open_figures",
+        "close_owned_figures",
+    }
+)
 
 
 class MigrationAuditError(RuntimeError):
@@ -269,6 +295,200 @@ def _is_testing_call(call: ast.Call) -> bool:
     return isinstance(owner, ast.Attribute) and owner.attr == "testing"
 
 
+def _call_name(call: ast.Call) -> str | None:
+    """Return the terminal callable name without resolving or importing source code."""
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return None
+
+
+def _is_upstream_module(module: str) -> bool:
+    """Recognize the pinned Alphalens package name or a source-side test module."""
+    return module == "alphalens" or module.startswith("alphalens.") or _is_source_test_module(module)
+
+
+def _is_source_test_module(module: str) -> bool:
+    """Recognize the three frozen upstream test modules without banning local tests."""
+    parts = module.split(".")
+    return (
+        module in SOURCE_TEST_MODULES
+        or module.startswith("tests.test_")
+        or (len(parts) >= 2 and parts[-2] == "tests" and parts[-1] in SOURCE_TEST_MODULES)
+    )
+
+
+def _import_aliases(tree: ast.Module) -> tuple[set[str], set[str], set[str], set[str]]:
+    """Collect AST-visible aliases for sys.path and importlib dynamic imports."""
+    sys_modules: set[str] = set()
+    sys_paths: set[str] = set()
+    importlib_modules: set[str] = set()
+    import_module_functions: set[str] = {"__import__"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "sys":
+                    sys_modules.add(alias.asname or "sys")
+                elif alias.name == "importlib":
+                    importlib_modules.add(alias.asname or "importlib")
+        elif isinstance(node, ast.ImportFrom):
+            if node.module == "sys":
+                sys_paths.update(alias.asname or alias.name for alias in node.names if alias.name == "path")
+            elif node.module == "importlib":
+                import_module_functions.update(
+                    alias.asname or alias.name for alias in node.names if alias.name == "import_module"
+                )
+    return sys_modules, sys_paths, importlib_modules, import_module_functions
+
+
+def _literal_string(node: ast.AST | None) -> str | None:
+    """Return a statically visible string literal, if one is present."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return None
+
+
+def _is_forbidden_absolute_source_path(value: str) -> bool:
+    """Reject absolute sibling Alphalens/test-source paths while allowing normal relative paths."""
+    for path_type in (PurePosixPath, PureWindowsPath):
+        candidate = path_type(value)
+        if not candidate.is_absolute():
+            continue
+        parts = tuple(part.lower() for part in candidate.parts)
+        for index, part in enumerate(parts):
+            if part == "alphalens" and (index == 0 or parts[index - 1] != "fincore"):
+                return True
+        if parts and parts[-1] in {f"{module}.py" for module in SOURCE_TEST_MODULES} and "alphalens" in parts:
+            return True
+    return False
+
+
+def _is_sys_path_reference(node: ast.AST, sys_modules: set[str], sys_paths: set[str]) -> bool:
+    """Return whether an expression denotes ``sys.path`` or a directly imported alias."""
+    if isinstance(node, ast.Name):
+        return node.id in sys_paths
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "path"
+        and isinstance(node.value, ast.Name)
+        and node.value.id in sys_modules
+    )
+
+
+def _is_sys_path_mutation(call: ast.Call, sys_modules: set[str], sys_paths: set[str]) -> bool:
+    """Return whether a call mutates a sys.path alias, which target tests may not do."""
+    function = call.func
+    return (
+        isinstance(function, ast.Attribute)
+        and function.attr in SYS_PATH_MUTATION_METHODS
+        and _is_sys_path_reference(function.value, sys_modules, sys_paths)
+    )
+
+
+def _assignment_mutates_sys_path(node: ast.AST, sys_modules: set[str], sys_paths: set[str]) -> bool:
+    """Detect assignment and slice-assignment variants in addition to mutation method calls."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+    elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+        targets = [node.target]
+    else:
+        return False
+    for target in targets:
+        reference = target.value if isinstance(target, ast.Subscript) else target
+        if _is_sys_path_reference(reference, sys_modules, sys_paths):
+            return True
+    return False
+
+
+def _is_forbidden_dynamic_import(
+    call: ast.Call, importlib_modules: set[str], import_module_functions: set[str]
+) -> bool:
+    """Detect literal importlib/__import__ access to frozen upstream source modules."""
+    function = call.func
+    uses_import_module = isinstance(function, ast.Name) and function.id in import_module_functions
+    uses_import_module = uses_import_module or (
+        isinstance(function, ast.Attribute)
+        and function.attr == "import_module"
+        and isinstance(function.value, ast.Name)
+        and function.value.id in importlib_modules
+    )
+    if not uses_import_module:
+        return False
+    return bool(call.args and (module := _literal_string(call.args[0])) and _is_upstream_module(module))
+
+
+def _validate_target_provenance(tree: ast.Module, relative: str) -> None:
+    """Reject static paths and imports that could execute the pinned upstream test package."""
+    sys_modules, sys_paths, importlib_modules, import_module_functions = _import_aliases(tree)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "alphalens" or alias.name.startswith("alphalens."):
+                    raise MigrationAuditError(f"mapped target imports upstream alphalens: {relative}")
+                if _is_source_test_module(alias.name):
+                    raise MigrationAuditError(f"mapped target imports upstream source-side test module: {relative}")
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if module == "alphalens" or module.startswith("alphalens."):
+                raise MigrationAuditError(f"mapped target imports upstream alphalens: {relative}")
+            if _is_source_test_module(module) or (
+                module == "tests" and any(alias.name in SOURCE_TEST_MODULES for alias in node.names)
+            ):
+                raise MigrationAuditError(f"mapped target imports upstream source-side test module: {relative}")
+        elif isinstance(node, ast.Call):
+            if _is_sys_path_mutation(node, sys_modules, sys_paths):
+                raise MigrationAuditError(f"mapped target mutates sys.path: {relative}")
+            if _is_forbidden_dynamic_import(node, importlib_modules, import_module_functions):
+                raise MigrationAuditError(f"mapped target dynamically imports upstream source: {relative}")
+        elif _assignment_mutates_sys_path(node, sys_modules, sys_paths):
+            raise MigrationAuditError(f"mapped target mutates sys.path: {relative}")
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _is_forbidden_absolute_source_path(node.value):
+            raise MigrationAuditError(f"mapped target contains an absolute upstream/source path: {relative}")
+
+
+def _c4_evidence(function: ast.FunctionDef) -> dict[str, bool]:
+    """Collect explicit Task-8 C4 figure lifecycle and artifact ownership signals."""
+    figure = False
+    show = False
+    close = False
+    ownership = False
+    for node in ast.walk(function):
+        if isinstance(node, ast.Name) and node.id.lower() in {"fig", "figure", "ax", "axes"}:
+            figure = True
+        if isinstance(node, ast.Attribute) and node.attr.lower() in {"axes", "figure", "get_axes", "get_figure"}:
+            figure = True
+        if not isinstance(node, ast.Call):
+            continue
+        name = _call_name(node)
+        if name is None:
+            continue
+        lowered = name.lower()
+        if name in C4_FIGURE_HELPERS or lowered in {"gca", "gcf"}:
+            figure = True
+        if name in C4_SHOW_HELPERS or lowered == "show":
+            show = True
+        if name in C4_CLOSE_HELPERS or lowered in {"close", "close_all"}:
+            close = True
+        if name in C4_OWNERSHIP_HELPERS:
+            ownership = True
+    return {"figure_or_axes": figure, "show": show, "close": close, "ownership": ownership}
+
+
+def _validate_c4_evidence(function: ast.FunctionDef, selector: str) -> None:
+    """Require each C4 target to prove rendered figures, lifecycle, and owned cleanup."""
+    evidence = _c4_evidence(function)
+    missing: list[str] = []
+    if not evidence["figure_or_axes"]:
+        missing.append("Figure/Axes return or inspection")
+    if not evidence["show"] or not evidence["close"]:
+        missing.append("show and close handling")
+    if not evidence["ownership"]:
+        missing.append("artifact/resource ownership or cleanup")
+    if missing:
+        raise MigrationAuditError(f"C4 target lacks {', '.join(missing)}: {selector}")
+
+
 def _is_pytest_upstream_marker(call: ast.Call) -> bool:
     """Return whether a call is the concrete ``pytest.mark`` migration marker."""
     function = call.func
@@ -334,15 +554,7 @@ def _validate_target_ast(
         parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
         if any(_call_is_bare_equals(call, parents) for call in ast.walk(tree) if isinstance(call, ast.Call)):
             raise MigrationAuditError(f"mapped target contains discarded .equals(): {relative}")
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import) and any(alias.name == "alphalens" or alias.name.startswith("alphalens.") for alias in node.names):
-                raise MigrationAuditError(f"mapped target imports upstream alphalens: {relative}")
-            if isinstance(node, ast.ImportFrom):
-                module = node.module or ""
-                if module == "alphalens" or module.startswith("alphalens."):
-                    raise MigrationAuditError(f"mapped target imports upstream alphalens: {relative}")
-                if module in {"test_utils", "test_performance", "test_tears"} or module.startswith("tests.test_"):
-                    raise MigrationAuditError(f"mapped target imports upstream source-side test module: {relative}")
+        _validate_target_provenance(tree, relative)
         functions.update({(relative, name): value for name, value in _target_definitions(tree).items()})
     for source_case_id, case in selected_inventory.items():
         record = selected_map[source_case_id]
@@ -361,6 +573,9 @@ def _validate_target_ast(
             function, marker_ids = target
             if case_id not in marker_ids:
                 raise MigrationAuditError(f"mapped target lacks a bound alphalens_upstream_case marker: {case_id}")
+            if _group(case) == "tears":
+                _validate_c4_evidence(function, selector)
+                continue
             has_assertion = any(isinstance(node, ast.Assert) for node in ast.walk(function)) or any(
                 _is_testing_call(node) for node in ast.walk(function) if isinstance(node, ast.Call)
             )
@@ -395,10 +610,16 @@ def _validate_nodeids(
 
 
 def _validate_results(path: Path, expected: dict[str, str]) -> None:
-    """Validate non-xdist per-phase pass results written by the shared marker hook."""
+    """Validate non-xdist all-attempt pass results written by the shared marker hook."""
     result_document = _load_json(path, "--results")
-    if result_document.get("xdist"):
+    if result_document.get("schema_version") != RESULT_SCHEMA_VERSION:
+        raise MigrationAuditError(
+            f"--results schema must be {RESULT_SCHEMA_VERSION}: {result_document.get('schema_version')!r}"
+        )
+    if result_document.get("xdist") is not False:
         raise MigrationAuditError("--results was produced under xdist; non-xdist proof is required")
+    if result_document.get("pytest_exitstatus") != 0:
+        raise MigrationAuditError(f"--results pytest session did not pass: {result_document.get('pytest_exitstatus')!r}")
     entries = result_document.get("results")
     if not isinstance(entries, list):
         raise MigrationAuditError("--results requires a results list")
@@ -419,6 +640,17 @@ def _validate_results(path: Path, expected: dict[str, str]) -> None:
         outcomes = entry.get("outcomes")
         if not isinstance(outcomes, dict) or any(outcomes.get(phase) != "passed" for phase in RESULT_OUTCOMES):
             raise MigrationAuditError(f"--results is not all-passed for {nodeid}: {outcomes!r}")
+        attempts = entry.get("attempts")
+        if not isinstance(attempts, list) or not attempts:
+            raise MigrationAuditError(f"--results lacks append-only attempt history for {nodeid}")
+        for attempt_number, attempt in enumerate(attempts, start=1):
+            attempt_outcomes = attempt.get("outcomes") if isinstance(attempt, dict) else None
+            if not isinstance(attempt_outcomes, dict) or any(
+                attempt_outcomes.get(phase) != "passed" for phase in RESULT_OUTCOMES
+            ):
+                raise MigrationAuditError(
+                    f"--results has a non-passing attempt {attempt_number} for {nodeid}: {attempt_outcomes!r}"
+                )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
