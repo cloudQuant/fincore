@@ -139,11 +139,11 @@ class FamaFrenchModel:
         # Prepare data — when a multi-column DataFrame is passed, use the
         # first column as the dependent variable (single-asset regression).
         if isinstance(returns, pd.DataFrame) and returns.shape[1] > 1:
-            y = returns.iloc[:, 0].values.ravel()
+            y = returns.iloc[:, 0].to_numpy(dtype=float).ravel()
         elif isinstance(returns, pd.DataFrame):
-            y = returns.values.ravel()
+            y = returns.to_numpy(dtype=float).ravel()
         else:
-            y = np.asarray(returns).ravel()
+            y = np.asarray(returns, dtype=float).ravel()
         X = factor_data[self.factors].values
 
         # Add constant for intercept  — shape (N, K+1)
@@ -481,13 +481,13 @@ def calculate_idiosyncratic_risk(
         model.fit(returns.iloc[:, 0], factor_data)
 
     # Calculate systematic and specific returns
-    market_returns = factor_data["MKT"].values
+    market_returns = factor_data["MKT"].to_numpy(dtype=float)
     rf = model.risk_free_rate
 
     specific_volatilities = []
 
     for i in range(n_assets):
-        asset_returns = returns.iloc[:, i].values
+        asset_returns = returns.iloc[:, i].to_numpy(dtype=float)
 
         if model._betas is not None:
             beta = model._betas.get("MKT", 1.0)  # Default to market beta

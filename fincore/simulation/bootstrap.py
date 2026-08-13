@@ -208,10 +208,14 @@ def bootstrap_summary(
     """
     result = {}
 
+    # Statistic functions take ndarrays; coerce once so pandas Series is
+    # converted without changing any statistic values.
+    returns_arr = np.asarray(returns, dtype=float)
+
     for stat_name in ["mean", "std", "sharpe", "sortino"]:
         boot_dist = bootstrap(returns, n_samples=n_samples, statistic=stat_name, seed=seed)
         result[stat_name] = {
-            "value": float(_get_statistic_fn(stat_name)(returns)),
+            "value": float(_get_statistic_fn(stat_name)(returns_arr)),
             "se": float(np.std(boot_dist, ddof=1)),  # Standard error
             "ci_lower": float(np.percentile(boot_dist, alpha / 2 * 100)),
             "ci_upper": float(np.percentile(boot_dist, (1 - alpha / 2) * 100)),

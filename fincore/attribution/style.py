@@ -9,8 +9,13 @@ Analyzes portfolio returns by style characteristics:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable
 
 __all__ = [
     "StyleResult",
@@ -76,7 +81,9 @@ class StyleResult:
                         elif "return" in val.columns:
                             scalar = val["return"].iloc[0]
                         else:
-                            scalar = val.iloc[0, 0]
+                            # Cell is expected to be numeric; the final float()
+                            # conversion below handles the actual value.
+                            scalar = cast("float", val.iloc[0, 0])
                     elif isinstance(val, pd.Series):
                         if len(val) == 0:
                             scalar = 0.0
@@ -156,7 +163,7 @@ def style_analysis(
     _n_periods, n_assets = returns.shape
 
     # exposures_data maps style_name -> {asset -> weight}
-    exposures_data: dict[str, dict[str, float]] = {}
+    exposures_data: dict[str, dict[Hashable, float]] = {}
     assets = list(returns.columns)
 
     def _add_style(style: str, raw: pd.Series) -> None:

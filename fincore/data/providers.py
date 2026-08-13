@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
@@ -278,7 +278,8 @@ class YahooFinanceProvider(DataProvider):
         if self._session:
             kwargs["session"] = self._session
 
-        data = ticker.history(**kwargs)
+        # yfinance has no type stubs; history() is documented to return a DataFrame.
+        data = cast("pd.DataFrame", ticker.history(**kwargs))
 
         if data.empty:
             raise ValueError(f"No data found for symbol {symbol}")
@@ -588,11 +589,15 @@ class TushareProvider(DataProvider):
         # Adjust parameter: '' (no adjustment), 'qfq' (forward), 'hfq' (backward)
         adj = "qfq" if adjust else ""
 
-        data = pro.daily(
-            ts_code=ts_code,
-            start_date=start_dt.strftime("%Y%m%d"),
-            end_date=end_dt.strftime("%Y%m%d"),
-            adj=adj,
+        # tushare has no type stubs; pro.daily() is documented to return a DataFrame.
+        data = cast(
+            "pd.DataFrame",
+            pro.daily(
+                ts_code=ts_code,
+                start_date=start_dt.strftime("%Y%m%d"),
+                end_date=end_dt.strftime("%Y%m%d"),
+                adj=adj,
+            ),
         )
 
         if data.empty:
@@ -727,12 +732,16 @@ class AkShareProvider(DataProvider):
 
         # AkShare uses different API functions
         # For individual stocks: stock_zh_a_hist
-        data = self._ak.stock_zh_a_hist(
-            symbol=symbol,
-            period="daily",
-            start_date=start_dt.strftime("%Y%m%d"),
-            end_date=end_dt.strftime("%Y%m%d"),
-            adjust=adjust,
+        # akshare has no type stubs; stock_zh_a_hist() is documented to return a DataFrame.
+        data = cast(
+            "pd.DataFrame",
+            self._ak.stock_zh_a_hist(
+                symbol=symbol,
+                period="daily",
+                start_date=start_dt.strftime("%Y%m%d"),
+                end_date=end_dt.strftime("%Y%m%d"),
+                adjust=adjust,
+            ),
         )
 
         if data.empty:
@@ -851,7 +860,7 @@ def get_provider(
     """
     name = name.lower().strip()
 
-    providers = {
+    providers: dict[str, type[DataProvider]] = {
         "yahoo": YahooFinanceProvider,
         "yfinance": YahooFinanceProvider,
         "alphavantage": AlphaVantageProvider,
@@ -866,7 +875,7 @@ def get_provider(
     if name not in providers:
         raise ValueError(f"Unknown provider {name!r}. Available: {sorted(set(providers.keys()))}")
 
-    return providers[name](**kwargs)  # type: ignore[return-value]
+    return providers[name](**kwargs)
 
 
 def fetch_price_data(

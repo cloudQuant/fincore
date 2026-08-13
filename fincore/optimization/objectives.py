@@ -85,8 +85,8 @@ def optimize(
     if sector_constraints is not None and sector_map is None:
         raise ValueError("sector_map is required when sector_constraints is provided.")
 
-    mu = returns.mean().values * 252
-    cov = returns.cov().values * 252
+    mu = returns.mean().to_numpy(dtype=float) * 252
+    cov = returns.cov().to_numpy(dtype=float) * 252
     n = len(mu)
     asset_names = list(returns.columns)
 

@@ -330,10 +330,10 @@ class BrinsonAttribution:
 
         for t in range(returns.shape[0]):
             attr = brinson_attribution(
-                returns.iloc[t].values,
-                benchmark_returns.iloc[t].values,
-                weights.iloc[t].values,
-                benchmark_weights.iloc[t].values,
+                returns.iloc[t].to_numpy(dtype=float),
+                benchmark_returns.iloc[t].to_numpy(dtype=float),
+                weights.iloc[t].to_numpy(dtype=float),
+                benchmark_weights.iloc[t].to_numpy(dtype=float),
             )
 
             results.append(

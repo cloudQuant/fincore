@@ -66,20 +66,20 @@ def hill_estimator(
     >>> xi, excesses = hill_estimator(returns, tail="lower")
     >>> print(f"Tail index: {xi:.3f}")
     """
-    data = np.asarray(data).flatten()
-    data = data[~np.isnan(data)]
+    data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
+    data_arr = data_arr[~np.isnan(data_arr)]
 
     # Select tail based on sign
     if tail == "upper":
-        tail_data = data[data > 0]
+        tail_data = data_arr[data_arr > 0]
     elif tail == "lower":
-        tail_data = -data[data < 0]  # Convert losses to positive
+        tail_data = -data_arr[data_arr < 0]  # Convert losses to positive
     else:
         raise ValueError("tail must be 'upper' or 'lower'")
 
     # Set threshold if not provided
     if threshold is None:
-        threshold = np.percentile(tail_data, 90)
+        threshold = float(np.percentile(tail_data, 90))
 
     # Get exceedances
     excesses = tail_data[tail_data > threshold] - threshold
@@ -93,7 +93,7 @@ def hill_estimator(
 
     # Hill estimator
     k = len(log_excess)
-    xi = 1 / k * np.sum(log_excess - log_excess[0])
+    xi = float(1.0 / k * np.sum(log_excess - log_excess[0]))
 
     return xi, excesses + threshold
 
@@ -132,18 +132,18 @@ def gpd_fit(
     >>> params = gpd_fit(returns, tail="lower")
     >>> print(f"xi={params['xi']:.3f}, beta={params['beta']:.3f}")
     """
-    data = np.asarray(data).flatten()
-    data = data[~np.isnan(data)]
+    data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
+    data_arr = data_arr[~np.isnan(data_arr)]
 
     # Use losses (positive tail of negative returns)
-    tail_data = -data[data < 0]
+    tail_data = -data_arr[data_arr < 0]
 
     if len(tail_data) == 0:
         raise ValueError("No negative returns in data; need at least some losses for GPD fitting")
 
     # Set threshold
     if threshold is None:
-        threshold = np.percentile(tail_data, 90)
+        threshold = float(np.percentile(tail_data, 90))
 
     # Get exceedances
     excesses = tail_data[tail_data > threshold] - threshold
@@ -241,17 +241,17 @@ def gev_fit(
     >>> params = gev_fit(returns, block_size=252)  # Annual maxima
     >>> print(f"xi={params['xi']:.3f}")
     """
-    data = np.asarray(data).flatten()
-    data = data[~np.isnan(data)]
+    data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
+    data_arr = data_arr[~np.isnan(data_arr)]
 
-    n = len(data)
+    n = len(data_arr)
 
     if block_size is None:
         block_size = int(np.sqrt(n))
 
     # Split into blocks and get maxima
     n_blocks = n // block_size
-    trimmed_data = data[: n_blocks * block_size]
+    trimmed_data = data_arr[: n_blocks * block_size]
     block_maxima = trimmed_data.reshape(-1, block_size)
 
     # For risk analysis, we want minimum (most negative) returns
@@ -487,7 +487,7 @@ def extreme_risk(
     >>> risk = extreme_risk(returns, alpha=0.05)
     >>> print(risk)
     """
-    data = returns.values
+    data = returns.to_numpy(dtype=float)
 
     # Fit model
     if model == "gpd":

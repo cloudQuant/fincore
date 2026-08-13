@@ -150,13 +150,6 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
-[[tool.mypy.overrides]]
-module = [
-    "fincore.data.*",
-]
-disallow_untyped_defs = false
-warn_return_any = false
-
 [tool.ruff]
 target-version = "py311"
 line-length = 120

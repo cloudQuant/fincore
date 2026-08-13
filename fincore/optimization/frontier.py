@@ -68,8 +68,8 @@ def efficient_frontier(
     if not np.isfinite(returns.values).all():
         raise ValueError("returns contains NaN or infinite values.")
 
-    mu = returns.mean().values * 252  # annualised
-    cov = returns.cov().values * 252
+    mu = returns.mean().to_numpy(dtype=float) * 252  # annualised
+    cov = returns.cov().to_numpy(dtype=float) * 252
     n = len(mu)
     asset_names = list(returns.columns)
 
