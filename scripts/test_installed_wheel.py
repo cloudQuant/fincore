@@ -315,7 +315,10 @@ def main() -> int:
     args = parser.parse_args()
 
     version = _pyproject_version()
-    wheels = sorted(Path(args.dist).glob(f"fincore-{version}-*.whl"))
+    # Resolve once: the per-profile pip installs run from temporary cwd's,
+    # where a relative --dist path would no longer point at the wheel.
+    dist = Path(args.dist).resolve()
+    wheels = sorted(dist.glob(f"fincore-{version}-*.whl"))
     if not wheels:
         print(f"no wheel matching fincore-{version}-*.whl in {args.dist}", file=sys.stderr)
         return 1
