@@ -402,7 +402,11 @@ jobs:
           cache: 'pip'
 
       - name: Install build tools
-        run: pip install build twine pytest
+        run: |
+          pip install build twine pytest
+          # Runtime deps for the packaging contract tests (they import the
+          # checkout and run core-only consumer subprocesses).
+          pip install -e .
 
       - name: Build sdist and wheel
         run: python -m build
