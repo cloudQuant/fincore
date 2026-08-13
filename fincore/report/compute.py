@@ -12,7 +12,9 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
-__all__ = ["compute_sections"]
+from fincore.report.model import ReportModel
+
+__all__ = ["ReportModel", "compute_sections"]
 
 
 # Module-level logger
@@ -424,8 +426,9 @@ def compute_sections(
 
     Returns
     -------
-    dict
-        A sections dictionary consumed by the HTML/PDF renderers.
+    ReportModel
+        A dict-compatible, structured model consumed by the HTML/PDF and
+        other renderers.  Compute once here, render many times there.
     """
     from fincore import Empyrical
     from fincore.core.context import AnalysisContext
@@ -496,4 +499,4 @@ def compute_sections(
     # ------ Summary text ------
     sections["summary_text"] = _compute_summary_text(perf, benchmark_rets)
 
-    return sections
+    return ReportModel(sections)

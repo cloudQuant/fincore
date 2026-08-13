@@ -133,9 +133,16 @@ def create_full_tear_sheet(
     pos_in_dollars=True,
     header_rows=None,
     factor_partitions=FACTOR_PARTITIONS,
+    *,
+    return_result=False,
 ):
     """
     Generate a number of tear sheets that are useful for analyzing a strategy's performance.
+
+    ``return_result`` is part of the enhanced interface only.  When True, the
+    figures created during the run are returned on a
+    :class:`~fincore.report.artifacts.ReportArtifacts` whose ``close()``
+    releases them.  The default (``None``) return is unchanged.
     """
     if (unadjusted_returns is None) and (slippage is not None) and (transactions is not None):
         unadjusted_returns = returns.copy()
@@ -219,6 +226,15 @@ def create_full_tear_sheet(
         pyfolio_instance.create_bayesian_tear_sheet(
             returns, live_start_date=live_start_date, benchmark_rets=benchmark_rets, set_context=set_context
         )
+
+    if return_result:
+        # Enhanced interface: hand ownership of every figure created during
+        # this run to the caller via the common ReportArtifacts lifecycle.
+        from fincore.report.artifacts import ReportArtifacts
+
+        figures = [plt.figure(num) for num in plt.get_fignums()]
+        return ReportArtifacts(backend="matplotlib", figures=figures)
+    return None
 
 
 # # Simple tear sheet

@@ -73,7 +73,7 @@ all = ["fincore[viz,bayesian,datareader]"]
 Homepage = "https://github.com/cloudQuant/fincore"
 
 [tool.setuptools.package-data]
-fincore = ["py.typed"]
+fincore = ["py.typed", "report/assets/*.js"]
 
 [tool.setuptools.packages.find]
 include = ["fincore*"]

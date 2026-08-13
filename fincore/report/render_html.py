@@ -1,15 +1,19 @@
 """HTML report renderer — assembles body sections + ECharts JavaScript.
 
 Uses:
-- ``compute.compute_sections`` for statistics
+- ``compute.compute_sections`` for statistics (or a precomputed
+  :class:`~fincore.report.model.ReportModel` passed via ``model=``)
 - ``format.*`` for CSS / HTML helpers
+- the vendored, version-pinned ECharts asset for fully offline rendering
 """
 
 from __future__ import annotations
 
+import functools
 import json
 from collections import OrderedDict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -25,7 +29,21 @@ from fincore.report.format import (
     safe_list,
 )
 
-__all__ = ["generate_html"]
+if TYPE_CHECKING:
+    from fincore.report.model import ReportModel
+
+__all__ = ["generate_html", "load_echarts_js"]
+
+
+@functools.lru_cache(maxsize=1)
+def load_echarts_js() -> str:
+    """Read the vendored, version-pinned ECharts library asset (offline).
+
+    Cached after first read so generating many reports pays the ~1 MB read
+    only once per process.
+    """
+    asset = Path(__file__).parent / "assets" / "echarts.min.js"
+    return asset.read_text(encoding="utf-8")
 
 
 def _histogram_data(values, bins, decimals=2):
@@ -203,9 +221,23 @@ def generate_html(
     output,
     rolling_window,
     period="daily",
+    *,
+    model: ReportModel | None = None,
 ):
-    """Generate an interactive HTML report (ECharts + sidebar navigation)."""
-    s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window, period=period)
+    """Generate an interactive HTML report (ECharts + sidebar navigation).
+
+    Parameters
+    ----------
+    model : ReportModel, optional
+        A precomputed report model.  When given, the renderer never computes
+        statistics itself (compute-once, render-many); raw inputs are only
+        used when ``model`` is ``None``.
+    """
+    if model is not None:
+        # Shallow copy: rendering never mutates a caller-owned model.
+        s: dict = dict(model)
+    else:
+        s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window, period=period)
     s["_title"] = title
 
     # ---- chart data ----
@@ -247,9 +279,7 @@ def generate_html(
         f"<title>{title}</title>\n"
         f"{HTML_CSS}\n</head>\n<body>\n"
         f"{sidebar}\n<main class='content'>\n{body_html}\n</main>\n"
-        f'<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>\n'
-        f"<script>window.echarts||document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js\"><\\/script>')</script>\n"
-        f"<script>window.echarts||document.write('<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js\"><\\/script>')</script>\n"
+        f"<script>\n{load_echarts_js()}\n</script>\n"
         f"<script>\nvar D={chart_json};\n{_alias_js}\n"
         f"var _charts=[];\n"
         f"function C(id,o){{\n"

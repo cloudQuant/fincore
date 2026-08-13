@@ -1,10 +1,13 @@
 """Common utilities for display, data handling, and formatting."""
 
 import importlib
+import importlib.util
 import warnings
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import wraps
 from itertools import cycle
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -20,6 +23,7 @@ __all__ = [
     "HAS_IPYTHON",
     "SETTINGS",
     "DisplayFunc",
+    "ExportConfig",
     "HTMLFunc",
     "analyze_dataframe_differences",
     "analyze_series_differences",
@@ -381,7 +385,26 @@ def extract_rets_pos_txn_from_zipline(backtest):
     return returns, positions, transactions
 
 
-def print_table(table, name=None, float_format=None, formatters=None, header_rows=None, run_flask_app=False):
+@dataclass(frozen=True)
+class ExportConfig:
+    """Explicit export destination for table outputs (enhanced interface).
+
+    ``print_table`` writes a file only when ``export`` is supplied; the
+    destination directory is always caller-owned and never the source tree.
+    """
+
+    output_dir: Path
+    filename: str | None = None
+
+    def resolve_path(self, name: str | None) -> Path:
+        """Resolve the export file path for a table name."""
+        safe_name = str(name or "table")
+        return Path(self.output_dir) / (self.filename or f"strategy_performance_{safe_name}.xlsx")
+
+
+def print_table(
+    table, name=None, float_format=None, formatters=None, header_rows=None, run_flask_app=False, *, export=None
+):
     """
     Pretty print a pandas DataFrame.
 
@@ -405,6 +428,19 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
         Extra rows to display at the top of the table.
     run_flask_app : bool, optional, default False
         Whether to run Flask app for displaying table in a web browser.
+        Retained for pinned legacy callers; rendering remains display-only
+        and never writes files implicitly.
+    export : ExportConfig, optional
+        Enhanced interface only.  Explicit caller-owned destination for an
+        XLSX export.  When provided, the file path is recorded on the
+        returned :class:`~fincore.report.artifacts.ReportArtifacts`.
+
+    Returns
+    -------
+    None
+        Default behavior: display only.
+    ReportArtifacts
+        When ``export`` is provided: the owned export file and HTML content.
     """
 
     if isinstance(table, pd.Series):
@@ -432,6 +468,18 @@ def print_table(table, name=None, float_format=None, formatters=None, header_row
     # ``run_flask_app`` is retained for legacy callers.  Rendering remains
     # display-only; callers must request an explicit export destination.
     display(HTML(html))
+
+    if export is None:
+        return None
+
+    target = export.resolve_path(name)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    table.to_excel(target, index=True)
+
+    # Lazy import keeps plain ``fincore.utils`` imports side-effect free.
+    from fincore.report.artifacts import ReportArtifacts
+
+    return ReportArtifacts(backend="excel", files=[target], html=str(html))
 
 
 def standardize_data(x):

@@ -37,12 +37,15 @@ Modular structure
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from fincore.report.artifacts import ReportArtifacts
 
 if TYPE_CHECKING:
     import pandas as pd
+
+    from fincore.report.model import ReportModel
 
 
 def create_strategy_report(
@@ -56,7 +59,8 @@ def create_strategy_report(
     output: str = "report.html",
     rolling_window: int = 63,
     period: str = "daily",
-) -> str:
+    return_result: bool = False,
+) -> str | ReportArtifacts:
     """Generate a strategy report (HTML or PDF) based on the inputs you provide.
 
     Parameters
@@ -80,16 +84,37 @@ def create_strategy_report(
         Rolling window size (trading days). Default is 63 (about 3 months).
     period : str
         Returns period. Default is "daily".
+    return_result : bool, default False
+        Enhanced interface only.  When True, compute the report model once
+        and return a :class:`ReportArtifacts` (owned files, HTML content, and
+        the precomputed model) instead of just the output path.  The default
+        path-based return behavior is unchanged.
 
     Returns
     -------
     str
-        The path to the generated report.
+        The path to the generated report (``return_result=False``).
+    ReportArtifacts
+        The generated file plus the computed model (``return_result=True``).
     """
+    model: ReportModel | None = None
+    if return_result:
+        from fincore.report.compute import compute_sections
+
+        model = compute_sections(
+            returns,
+            benchmark_rets,
+            positions,
+            transactions,
+            trades,
+            rolling_window,
+            period=period,
+        )
+
     if output.lower().endswith(".pdf"):
         from fincore.report.render_pdf import generate_pdf
 
-        return cast(
+        path = cast(
             "str",
             generate_pdf(
                 returns,
@@ -101,24 +126,35 @@ def create_strategy_report(
                 output=output,
                 rolling_window=rolling_window,
                 period=period,
+                model=model,
             ),
         )
-    from fincore.report.render_html import generate_html
+        backend = "pdf"
+        html: str | None = None
+    else:
+        from fincore.report.render_html import generate_html
 
-    return cast(
-        "str",
-        generate_html(
-            returns,
-            benchmark_rets=benchmark_rets,
-            positions=positions,
-            transactions=transactions,
-            trades=trades,
-            title=title,
-            output=output,
-            rolling_window=rolling_window,
-            period=period,
-        ),
-    )
+        path = cast(
+            "str",
+            generate_html(
+                returns,
+                benchmark_rets=benchmark_rets,
+                positions=positions,
+                transactions=transactions,
+                trades=trades,
+                title=title,
+                output=output,
+                rolling_window=rolling_window,
+                period=period,
+                model=model,
+            ),
+        )
+        backend = "html"
+        html = Path(path).read_text(encoding="utf-8")
+
+    if return_result:
+        return ReportArtifacts(backend=backend, files=[Path(path)], html=html, model=model)
+    return path
 
 
 __all__ = ["ReportArtifacts", "create_strategy_report"]

@@ -2,13 +2,20 @@
 
 Uses Playwright (headless Chromium) to render the HTML report to PDF,
 then optionally adds bookmarks via PyPDF2.
+
+All temporary files (intermediate HTML and the pre-bookmark PDF) live inside
+a ``tempfile.TemporaryDirectory`` and are removed by the context manager on
+every path, including failures.
 """
 
 from __future__ import annotations
 
-import contextlib
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fincore.report.model import ReportModel
 
 __all__ = ["generate_pdf"]
 
@@ -23,102 +30,106 @@ def generate_pdf(
     output,
     rolling_window,
     period="daily",
+    *,
+    model: ReportModel | None = None,
 ):
-    """Generate a PDF report by rendering the HTML report via Playwright."""
+    """Generate a PDF report by rendering the HTML report via Playwright.
+
+    Parameters
+    ----------
+    model : ReportModel, optional
+        A precomputed report model.  When given, no statistics are computed
+        here (compute-once, render-many).
+    """
     from fincore.report.render_html import generate_html
 
-    # 1) Generate a temporary HTML file.
-    out_dir = Path(output).resolve().parent if output else Path()
-    with tempfile.NamedTemporaryFile(suffix=".html", delete=False, dir=out_dir) as tmp:
-        tmp_html = tmp.name
+    with tempfile.TemporaryDirectory(prefix="fincore-report-") as tmpdir:
+        tmp_root = Path(tmpdir)
+        tmp_html = tmp_root / "report.html"
 
-    generate_html(
-        returns,
-        benchmark_rets=benchmark_rets,
-        positions=positions,
-        transactions=transactions,
-        trades=trades,
-        title=title,
-        output=tmp_html,
-        rolling_window=rolling_window,
-        period=period,
-    )
-
-    # 2) Render HTML to PDF via Playwright.
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError as e:
-        raise ImportError(
-            "PDF generation requires Playwright:\n  pip install playwright && python -m playwright install chromium"
-        ) from e
-
-    # Temporary PDF path (we add bookmarks before writing the final output).
-    tmp_pdf = output + ".tmp.pdf"
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page(viewport={"width": 1200, "height": 900})
-        page.goto(Path(tmp_html).resolve().as_uri(), wait_until="networkidle", timeout=60000)
-
-        # Wait for all ECharts instances to finish rendering.
-        page.evaluate("""() => {
-            return new Promise((resolve) => {
-                let attempts = 0;
-                const check = () => {
-                    attempts++;
-                    const containers = document.querySelectorAll('[id^="c-"]');
-                    let allReady = true;
-                    containers.forEach(el => {
-                        const canvas = el.querySelector('canvas');
-                        if (!canvas) allReady = false;
-                    });
-                    if (allReady || attempts > 30) resolve();
-                    else setTimeout(check, 200);
-                };
-                setTimeout(check, 500);
-            });
-        }""")
-        # Extra wait to let chart animations settle.
-        page.wait_for_timeout(1500)
-
-        # Collect section titles and positions for PDF bookmarks.
-        section_info = page.evaluate("""() => {
-            const sections = document.querySelectorAll('.sec');
-            const results = [];
-            sections.forEach(sec => {
-                const titleEl = sec.querySelector('.sec-title');
-                if (titleEl) {
-                    const rect = sec.getBoundingClientRect();
-                    results.push({
-                        id: sec.id,
-                        title: titleEl.textContent.trim(),
-                        top: rect.top + window.scrollY
-                    });
-                }
-            });
-            // Total document height (CSS px).
-            const totalHeight = document.documentElement.scrollHeight;
-            return { sections: results, totalHeight: totalHeight };
-        }""")
-
-        page.pdf(
-            path=tmp_pdf,
-            format="A4",
-            print_background=True,
-            margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+        # 1) Generate the temporary HTML file (inside the temp directory).
+        generate_html(
+            returns,
+            benchmark_rets=benchmark_rets,
+            positions=positions,
+            transactions=transactions,
+            trades=trades,
+            title=title,
+            output=str(tmp_html),
+            rolling_window=rolling_window,
+            period=period,
+            model=model,
         )
-        browser.close()
 
-    # 3) Cleanup temporary HTML.
-    with contextlib.suppress(OSError):
-        Path(tmp_html).unlink(missing_ok=True)
+        # 2) Render HTML to PDF via Playwright.
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as e:
+            raise ImportError(
+                "PDF generation requires Playwright:\n  pip install playwright && python -m playwright install chromium"
+            ) from e
 
-    # 4) Add PDF bookmarks (clickable outline).
-    _add_pdf_bookmarks(tmp_pdf, output, section_info, title)
+        # Temporary PDF path (bookmarks are added before writing final output).
+        tmp_pdf = tmp_root / "report.tmp.pdf"
 
-    # Cleanup temporary PDF.
-    with contextlib.suppress(OSError):
-        Path(tmp_pdf).unlink(missing_ok=True)
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page(viewport={"width": 1200, "height": 900})
+                page.goto(tmp_html.resolve().as_uri(), wait_until="networkidle", timeout=60000)
+
+                # Wait for all ECharts instances to finish rendering.
+                page.evaluate("""() => {
+                    return new Promise((resolve) => {
+                        let attempts = 0;
+                        const check = () => {
+                            attempts++;
+                            const containers = document.querySelectorAll('[id^="c-"]');
+                            let allReady = true;
+                            containers.forEach(el => {
+                                const canvas = el.querySelector('canvas');
+                                if (!canvas) allReady = false;
+                            });
+                            if (allReady || attempts > 30) resolve();
+                            else setTimeout(check, 200);
+                        };
+                        setTimeout(check, 500);
+                    });
+                }""")
+                # Extra wait to let chart animations settle.
+                page.wait_for_timeout(1500)
+
+                # Collect section titles and positions for PDF bookmarks.
+                section_info = page.evaluate("""() => {
+                    const sections = document.querySelectorAll('.sec');
+                    const results = [];
+                    sections.forEach(sec => {
+                        const titleEl = sec.querySelector('.sec-title');
+                        if (titleEl) {
+                            const rect = sec.getBoundingClientRect();
+                            results.push({
+                                id: sec.id,
+                                title: titleEl.textContent.trim(),
+                                top: rect.top + window.scrollY
+                            });
+                        }
+                    });
+                    // Total document height (CSS px).
+                    const totalHeight = document.documentElement.scrollHeight;
+                    return { sections: results, totalHeight: totalHeight };
+                }""")
+
+                page.pdf(
+                    path=str(tmp_pdf),
+                    format="A4",
+                    print_background=True,
+                    margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+                )
+            finally:
+                browser.close()
+
+        # 3) Add PDF bookmarks (clickable outline).
+        _add_pdf_bookmarks(tmp_pdf, Path(output), section_info, title)
 
     return output
 
@@ -134,7 +145,7 @@ def _add_pdf_bookmarks(input_pdf, output_pdf, section_info, report_title):
         shutil.copy2(input_pdf, output_pdf)
         return
 
-    reader = PdfReader(input_pdf)
+    reader = PdfReader(str(input_pdf))
     writer = PdfWriter()
 
     # Copy all pages.

@@ -491,10 +491,17 @@ class Pyfolio(Empyrical):
         pos_in_dollars=True,
         header_rows=None,
         factor_partitions=FACTOR_PARTITIONS,
+        *,
+        return_result=False,
     ):
         """
         Generate full tear sheet.
         See fincore.tearsheets.sheets.create_full_tear_sheet for full documentation.
+
+        ``return_result`` is part of the enhanced interface only.  When True,
+        the figures created during the run are returned on a
+        :class:`~fincore.report.artifacts.ReportArtifacts` whose ``close()``
+        releases them.  The default (``None``) return is unchanged.
         """
         return _create_full_tear_sheet(
             self,
@@ -526,6 +533,7 @@ class Pyfolio(Empyrical):
             pos_in_dollars=pos_in_dollars,
             header_rows=header_rows,
             factor_partitions=factor_partitions,
+            return_result=return_result,
         )
 
     @customize

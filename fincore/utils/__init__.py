@@ -22,6 +22,7 @@ This package contains helper functions refactored from the original
 
 from .common_utils import (
     SETTINGS,
+    ExportConfig,
     _1_bday_ago,
     analyze_dataframe_differences,
     analyze_series_differences,
@@ -64,6 +65,7 @@ from .math_utils import (
 
 __all__ = [
     "SETTINGS",
+    "ExportConfig",
     "_1_bday_ago",
     "analyze_dataframe_differences",
     "analyze_series_differences",

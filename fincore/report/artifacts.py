@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from fincore.report.model import ReportModel
+
 __all__ = ["ReportArtifacts"]
 
 
@@ -16,13 +18,16 @@ class ReportArtifacts:
     """Rendered in-memory objects and explicitly exported files.
 
     Task 7 establishes the common lifecycle boundary.  Task 8 extends the
-    same object for the full report model/render pipeline.
+    same object for the full report model/render pipeline: ``model`` carries
+    the computed-once :class:`~fincore.report.model.ReportModel` when a
+    renderer consumed a precomputed model instead of computing its own.
     """
 
     backend: str
     figures: list[Any] = field(default_factory=list)
     files: list[Path] = field(default_factory=list)
     html: str | None = None
+    model: ReportModel | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     _closed_resource_ids: set[int] = field(default_factory=set, init=False, repr=False)
 
