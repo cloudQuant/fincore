@@ -365,7 +365,7 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             introspection_signature=_signature_from_static_text(introspection_text or source_text),
             implementation="deferred_task_2_kernel",
             profile="legacy_alphalens_cloudquant_0_4_0",
-            optional_extra="pyfolio" if module in {"plotting", "tears"} else None,
+            optional_extra="alphalens" if module in {"plotting", "tears"} else None,
             adapter=adapter,
             result_projection="not_implemented_until_task_3_4_or_8",
         )

@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import json
+import typing
 from dataclasses import FrozenInstanceError
 from typing import Any
 
 import pandas as pd
 import pytest
 
+from . import conftest as fixture_contract
 from .conftest import manifest_entries
 
 
@@ -73,6 +76,56 @@ def test_static_contract_registry_keeps_source_and_introspection_facts_separate(
         quantize.module = "changed"  # type: ignore[misc]
 
 
+def test_factor_contract_annotations_resolve_at_runtime() -> None:
+    """Public frozen contract annotations are usable through runtime reflection."""
+
+    from fincore.contracts.factor_analysis import FactorFunctionSpec
+    from fincore.contracts.factor_workflows import FactorWorkflowSpec
+
+    function_hints = typing.get_type_hints(FactorFunctionSpec)
+    workflow_hints = typing.get_type_hints(FactorWorkflowSpec)
+
+    assert function_hints["source_signature"] is inspect.Signature
+    assert workflow_hints["source_signature"] is inspect.Signature
+
+
+def test_workflow_specs_match_the_pinned_tear_sheet_manifest() -> None:
+    """The seven lifecycle contracts retain the exact frozen public workflow shape."""
+
+    from fincore.contracts.factor_workflows import ALPHALENS_WORKFLOW_SPECS
+
+    entries = tuple(entry for entry in manifest_entries() if entry["module"] == "tears" and entry["kind"] == "function")
+    expected_names = tuple(str(entry["symbol"]) for entry in entries)
+
+    assert tuple(ALPHALENS_WORKFLOW_SPECS) == expected_names
+    for entry in entries:
+        name = str(entry["symbol"])
+        spec = ALPHALENS_WORKFLOW_SPECS[name]
+        assert str(spec.source_signature) == entry["source_signature"]
+        assert str(spec.introspection_signature) == entry["introspection_signature"]
+        assert spec.model_ref == f"fincore.factor_analysis.tears:{name}"
+        assert spec.renderer_ref == f"fincore.factor_analysis.render_matplotlib:{name}"
+        assert spec.optional_extra == "alphalens"
+        expected_variants = (
+            ("by_group=False:show-close", "by_group=True:show-close")
+            if "by_group" in spec.source_signature.parameters
+            else ()
+        )
+        assert spec.by_group_variants == expected_variants
+
+
+def test_optional_extras_are_named_for_the_alphalens_surface() -> None:
+    """Strict plotting/tear contracts point at their own optional-extra boundary."""
+
+    from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS
+    from fincore.contracts.factor_workflows import ALPHALENS_WORKFLOW_SPECS
+
+    for spec in ALPHALENS_FUNCTION_SPECS.values():
+        expected_extra = "alphalens" if spec.module in {"plotting", "tears"} else None
+        assert spec.optional_extra == expected_extra
+    assert {spec.optional_extra for spec in ALPHALENS_WORKFLOW_SPECS.values()} == {"alphalens"}
+
+
 def test_grid_figure_and_legacy_exceptions_resolve() -> None:
     """The non-function C0 names have stable, import-safe definitions."""
 
@@ -95,7 +148,10 @@ def test_shared_synthetic_fixture_contract(
     assert raw_factor.name == "factor"
     assert raw_factor.index.names == ["date", "asset"]
     assert len(raw_factor) == 120 * 10
-    assert raw_factor.index.get_level_values("date").unique().equals(pd.bdate_range("2024-01-02", periods=120))
+    pd.testing.assert_index_equal(
+        raw_factor.index.get_level_values("date").unique(),
+        pd.bdate_range("2024-01-02", periods=120, name="date"),
+    )
     assert prices.shape == (120, 12)
     assert prices.index.tz is None
     assert tz_aware_prices.shape == prices.shape
@@ -105,6 +161,58 @@ def test_shared_synthetic_fixture_contract(
     assert groups.to_dict() == {
         f"asset_{ordinal:02d}": "sector_a" if ordinal % 2 == 0 else "sector_b" for ordinal in range(10)
     }
+
+
+@pytest.mark.parametrize("fixture_name", ("raw_factor", "prices", "tz_aware_prices", "groups"))
+def test_shared_fixture_tables_round_trip_through_portable_json(
+    request: pytest.FixtureRequest, fixture_name: str
+) -> None:
+    """Every shared input survives a JSON-safe table/metadata round trip exactly."""
+
+    original = request.getfixturevalue(fixture_name)
+    payload = fixture_contract.serialize_factor_fixture_table(original)
+    restored = fixture_contract.deserialize_factor_fixture_table(
+        json.loads(json.dumps(payload, allow_nan=False, sort_keys=True))
+    )
+
+    assert payload["schema_version"] == "fincore-factor-fixture-table-v1"
+    assert payload["kind"] in {"series", "dataframe"}
+    assert "index" in payload
+    assert "data" in payload
+    if isinstance(original, pd.Series):
+        assert isinstance(restored, pd.Series)
+        pd.testing.assert_series_equal(original, restored)
+    else:
+        assert isinstance(original, pd.DataFrame)
+        assert isinstance(restored, pd.DataFrame)
+        pd.testing.assert_frame_equal(original, restored)
+
+
+def test_shared_fixture_table_round_trip_preserves_explicit_nan_mask(raw_factor: pd.Series) -> None:
+    """Missing values use a portable mask instead of non-standard JSON NaN values."""
+
+    original = raw_factor.copy()
+    original.iloc[0] = float("nan")
+    payload = fixture_contract.serialize_factor_fixture_table(original)
+    restored = fixture_contract.deserialize_factor_fixture_table(json.loads(json.dumps(payload, allow_nan=False)))
+
+    assert payload["data"]["nan_mask"][0] is True
+    assert isinstance(restored, pd.Series)
+    pd.testing.assert_series_equal(original, restored)
+
+
+def test_enhanced_fixture_conftest_reexports_portable_table_helpers(raw_factor: pd.Series) -> None:
+    """Future enhanced tests consume the exact same portable fixture contract."""
+
+    from tests.test_factor_analysis import conftest as enhanced_conftest
+
+    payload = enhanced_conftest.serialize_factor_fixture_table(raw_factor)
+    restored = enhanced_conftest.deserialize_factor_fixture_table(json.loads(json.dumps(payload, allow_nan=False)))
+
+    assert callable(enhanced_conftest.serialize_factor_fixture_table)
+    assert callable(enhanced_conftest.deserialize_factor_fixture_table)
+    assert isinstance(restored, pd.Series)
+    pd.testing.assert_series_equal(raw_factor, restored)
 
 
 def test_clean_factor_data_fixture_is_an_explicit_task_3_boundary(request: pytest.FixtureRequest) -> None:

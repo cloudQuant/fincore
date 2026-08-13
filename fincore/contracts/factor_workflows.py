@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Literal, Mapping
+from typing import Literal, Mapping
 
 from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS
-
-if TYPE_CHECKING:
-    import inspect
 
 
 @dataclass(frozen=True)
@@ -40,6 +38,8 @@ _TEAR_SHEET_NAMES = (
 def _workflow_variants(source_signature: inspect.Signature) -> tuple[str, ...]:
     """Freeze only source-visible by-group branches for Task 8 to implement."""
 
+    if not isinstance(source_signature, inspect.Signature):
+        raise TypeError("Alphalens workflow source_signature must be inspect.Signature")
     if "by_group" not in source_signature.parameters:
         return ()
     return ("by_group=False:show-close", "by_group=True:show-close")
@@ -55,7 +55,7 @@ def _make_workflow_specs() -> Mapping[str, FactorWorkflowSpec]:
             source_signature=function_spec.source_signature,
             model_ref=f"fincore.factor_analysis.tears:{name}",
             renderer_ref=f"fincore.factor_analysis.render_matplotlib:{name}",
-            optional_extra="pyfolio",
+            optional_extra="alphalens",
             by_group_variants=_workflow_variants(function_spec.source_signature),
         )
     if len(specs) != 7:
