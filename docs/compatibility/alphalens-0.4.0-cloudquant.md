@@ -79,6 +79,63 @@ and a separate NaN mask using `fincore-compat-json-table-v1`. The inputs have
 received a schema-only review. They intentionally contain no expected output
 or numerical golden result, so they cannot be mistaken for a reviewed oracle.
 
+## Pinned upstream-test migration inventory
+
+[`alphalens-0.4.0-cloudquant-upstream-test-inventory.json`](../../tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json)
+is a static AST-only inventory of the three pinned upstream test blobs. Its
+separate, human-reviewable handoff map is
+[`alphalens-0.4.0-cloudquant-upstream-test-migration.json`](../../tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json).
+Neither file imports or executes Alphalens, `parameterized`, Matplotlib, or a
+source-side test module.
+
+| Frozen upstream test source | Git blob | SHA256 |
+| --- | --- | --- |
+| `tests/test_utils.py` | `22480c305a07b8ccd83e15ed7b6d1b06be08307e` | `0f476933684b1eae8f86c3ce9dcf3806b840cc69a1005e19f43a52d4bdf31334` |
+| `tests/test_performance.py` | `5f38d92b936f3b7f0afb0b4d63a84edd347766a1` | `278ecc858a228e686edd6e8aa4ef30d42fe7258a9af5da14263de61607474917` |
+| `tests/test_tears.py` | `8c1b74705e89ae3fe090049120c06d34fe7f13fd` | `227d23e8eebb3585b29f5f953e67f817517d802148f3e72c0cf8b27087853b86` |
+
+The inventory has 117 declared active source rows across 22 methods; one
+Performance row is explicitly marked
+`shadowed_by_generated_method_name`, leaving 116 diagnostic-collectible rows.
+The otherwise commented `TearsTestCase` is parsed only after removing the
+comment prefix inside that class block: it contributes 24 dormant rows, seven
+workflows, and 96 individually named internal invocations. Its source outcome
+is `smoke_only`; it is not treated as an exception from migration.
+
+The mapping covers all 141 source row IDs. Utils and Performance entries point
+to the future Task 3/4 target suites with C2/C3 target assertions. Tear rows
+point to the future Task 8 C4 suites, and each of their 96 invocation IDs has
+one unique exact future pytest nodeid. The map records the upstream discarded
+`.equals()` assertions as source evidence, not as an accepted target
+assertion.
+
+Task 1.5 freezes this contract but does not create placeholder target tests or
+claim that any future target node was collected or passed. Once Tasks 3, 4,
+and 8 create those tests, run the checker with a `pytest --collect-only -q`
+transcript and a non-xdist result file written by
+`--alphalens-upstream-result-json`. The dynamic
+`alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, and
+`xfail` at collection, turns every non-passing setup/call/teardown phase into
+a failure, and records all three phase outcomes. The checker then requires
+the exact mapped nodeids, literal marker IDs, allowed source imports, target
+assertions, and all-passed results.
+
+To reproduce the static inventory or its map audit locally, use:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/generate_alphalens_upstream_test_inventory.py \
+  --source /Users/yunjinqi/Documents/new_projects/alphalens \
+  --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
+  --check tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope all
+```
+
 ## Oracle boundary
 
 The checked-in tuple is executable on the captured Darwin/arm64 platform:

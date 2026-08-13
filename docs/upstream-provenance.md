@@ -28,6 +28,9 @@ determination.
 | Alphalens cloudQuant local | same | root `README.md` | `397ec98f88157234e6a425b21657f74db711e4ee6aa246d11bed9d21665ac621` | project README advertises Apache-2.0 |
 | Alphalens cloudQuant local | same | `setup.py` | `9a0192f4d1189524f568fd1d0a076e5c77cdd0b6bf12621724f76095bc0a0a81` | static fallback version `1.0.0+dev` |
 | Alphalens cloudQuant local | same | `alphalens/_version.py` | `485407a5fb66fd94a9e8e4ff6a86c7c3346182b484ce16cdca11b931af1cf0dc` | Versioneer source embeds `v0.4.0` and older revision `77084f1...` |
+| Alphalens cloudQuant local | same | `tests/test_utils.py` | `0f476933684b1eae8f86c3ce9dcf3806b840cc69a1005e19f43a52d4bdf31334` | upstream test source, Git blob `22480c305a07b8ccd83e15ed7b6d1b06be08307e` |
+| Alphalens cloudQuant local | same | `tests/test_performance.py` | `278ecc858a228e686edd6e8aa4ef30d42fe7258a9af5da14263de61607474917` | upstream test source, Git blob `5f38d92b936f3b7f0afb0b4d63a84edd347766a1`; one parameterized row is source-shadowed |
+| Alphalens cloudQuant local | same | `tests/test_tears.py` | `227d23e8eebb3585b29f5f953e67f817517d802148f3e72c0cf8b27087853b86` | commented upstream tear workflows, Git blob `8c1b74705e89ae3fe090049120c06d34fe7f13fd` |
 
 Paths above are checkout-relative. Manifest source bytes and hashes come from
 the pinned Git blobs, not potentially dirty worktree files. Absolute sibling
@@ -47,6 +50,7 @@ release notice is finalized.
 | pyfolio portfolio helpers | `fincore/metrics/{positions,transactions,round_trips}.py` | Engineering provenance recorded; line-level/license review pending |
 | Alphalens `performance.py`, `utils.py` | planned `fincore/alphalens/{performance,utils}.py`, `fincore/factor_analysis/{data,performance,portfolio}.py` | Snapshot only; no destination implementation or license decision in this task |
 | Alphalens `plotting.py`, `tears.py` | planned `fincore/alphalens/{plotting,tears}.py`, `fincore/factor_analysis/{render_matplotlib,tears}.py` | Snapshot only; no destination implementation or license decision in this task |
+| Alphalens upstream test sources | planned Task 3/4/8 tests recorded in `tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json` | Static source-to-target review map only; no target execution, copy, adaptation, or license decision in this task |
 
 Several fincore metric files retain Quantopian and Apache-2.0 headers. Other
 candidate destination files do not carry equivalent per-file headers, so the
@@ -66,6 +70,12 @@ For Alphalens specifically, the reviewer must also resolve the root-MIT versus
 file-level-Quantopian-Apache notices, inspect the historical `ff4d582` commit
 message indicating a copy from the official site, and decide which headers or
 notices apply to any future clean-room reimplementation versus adaptation.
+
+The pinned upstream test inventory is engineering evidence, not a legal
+conclusion about test text, derived fixtures, or target rewrites. Its 141-row
+migration map is intentionally a deferred handoff to future test tasks; it
+does not assert that a target suite has been copied, collected, executed, or
+approved.
 
 That review has not occurred in this task. Consequently no optional notice file
 is generated and no legal conclusion is implied.
