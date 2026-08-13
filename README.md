@@ -121,9 +121,16 @@ pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
 
 **RollingEngine** (batch rolling metrics):
 ```python
+import numpy as np
+
 from fincore.core.engine import RollingEngine
 
-engine = RollingEngine(returns, factor_returns=benchmark, window=60)
+rng = np.random.default_rng(7)
+index = pd.date_range("2024-01-02", periods=60, freq="B")
+returns = pd.Series(rng.normal(0.001, 0.02, 60), index=index)
+benchmark = pd.Series(rng.normal(0.0005, 0.015, 60), index=index)
+
+engine = RollingEngine(returns, factor_returns=benchmark, window=30)
 results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```
 
@@ -131,12 +138,19 @@ results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```python
 from fincore.optimization import efficient_frontier, risk_parity, optimize
 
-ef = efficient_frontier(returns_df, n_points=50)
+returns_df = pd.DataFrame(
+    {
+        "asset_a": [0.01, -0.005, 0.004, 0.002],
+        "asset_b": [0.003, 0.002, -0.001, 0.005],
+    }
+)
+ef = efficient_frontier(returns_df, n_points=5)
 rp = risk_parity(returns_df)
 w = optimize(returns_df, objective="max_sharpe")
 ```
 
-Every code block above runs as a real test in [`tests/docs/test_examples.py`](tests/docs/test_examples.py).
+Every Python code block above is executed with the same data and arguments
+by a matching test in [`tests/docs/test_examples.py`](tests/docs/test_examples.py).
 
 ### Architecture
 
@@ -291,9 +305,16 @@ pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
 
 **RollingEngine**（批量滚动指标）：
 ```python
+import numpy as np
+
 from fincore.core.engine import RollingEngine
 
-engine = RollingEngine(returns, factor_returns=benchmark, window=60)
+rng = np.random.default_rng(7)
+index = pd.date_range("2024-01-02", periods=60, freq="B")
+returns = pd.Series(rng.normal(0.001, 0.02, 60), index=index)
+benchmark = pd.Series(rng.normal(0.0005, 0.015, 60), index=index)
+
+engine = RollingEngine(returns, factor_returns=benchmark, window=30)
 results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```
 
@@ -301,12 +322,19 @@ results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```python
 from fincore.optimization import efficient_frontier, risk_parity, optimize
 
-ef = efficient_frontier(returns_df, n_points=50)
+returns_df = pd.DataFrame(
+    {
+        "asset_a": [0.01, -0.005, 0.004, 0.002],
+        "asset_b": [0.003, 0.002, -0.001, 0.005],
+    }
+)
+ef = efficient_frontier(returns_df, n_points=5)
 rp = risk_parity(returns_df)
 w = optimize(returns_df, objective="max_sharpe")
 ```
 
-以上每个代码块都作为真实测试运行于 [`tests/docs/test_examples.py`](tests/docs/test_examples.py)。
+以上每个 Python 代码块都以相同的数据和参数被
+[`tests/docs/test_examples.py`](tests/docs/test_examples.py) 中对应的测试执行。
 
 ### 质量
 

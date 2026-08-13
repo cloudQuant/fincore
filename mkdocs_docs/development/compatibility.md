@@ -88,13 +88,14 @@ pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
 
 The enhanced surfaces (`fincore.metrics`, flat API, `AnalysisContext`) may
 differ from the pinned legacy semantics **by design**. Every registered
-divergence has an executable test in `tests/compat/`:
+divergence has an executable test — in `tests/compat/` unless noted in the
+table:
 
 | Divergence | Legacy (strict façade) | Enhanced (opt-in) |
 | --- | --- | --- |
 | Weekly aggregation | `aggregate_returns(..., "weekly")` keeps the pinned calendar-year + ISO-week grouping (two groups across the 2019/2020 ISO boundary) | `week_year="iso"` uses ISO year + ISO week (one group) |
 | CVaR quantile ties | Fixed tail-count order-statistic policy | Threshold-inclusive expected shortfall |
-| `print_table` export | Display-only; `run_flask_app` accepted but never writes files implicitly | Keyword-only `export=` with a caller-owned XLSX destination recorded on `ReportArtifacts` |
+| `print_table` export | Display-only; `run_flask_app` accepted but never writes files implicitly | Keyword-only `export=` with a caller-owned XLSX destination recorded on `ReportArtifacts` (test: `tests/test_utils/test_export_destination.py`) |
 | `run_flask_app` | Retained for pinned legacy callers; rendering stays display-only | — |
 | Timezone/alignment policy | Pinned legacy alignment and exception surfaces | Strict identical-label alignment, mixed naive/aware rejected by default, explicit `normalize_tz` opt-in |
 | Input validation | Legacy NaN tolerance where pinned | `ValidationError` / `NumericalError` / `DataAlignmentError` fail fast |

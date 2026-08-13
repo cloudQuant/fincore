@@ -40,7 +40,8 @@ print(f"Max DD: {ctx.max_drawdown:.4f}")
 ctx.to_html(path="report.html")
 ```
 
-Every example in these docs runs as a real test in `tests/docs/test_examples.py`.
+The quick example above is executed with the same data and arguments by a
+matching test in `tests/docs/test_examples.py`.
 
 ## Installation
 

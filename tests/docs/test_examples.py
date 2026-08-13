@@ -235,19 +235,21 @@ def test_rolling_engine_example() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _pyfolio_inputs() -> tuple[pd.Series, pd.Series]:
-    rng = np.random.default_rng(42)
-    index = pd.bdate_range("2024-01-02", periods=252)
-    returns = pd.Series(rng.normal(0.001, 0.02, 252), index=index)
-    benchmark = pd.Series(rng.normal(0.0005, 0.015, 252), index=index)
+def _pyfolio_block_data() -> tuple[pd.Series, pd.Series]:
+    # The exact data of the README "Pyfolio main chain" block (which reuses
+    # the AnalysisContext block's series above it).
+    index = pd.date_range("2024-01-02", periods=5, freq="B")
+    returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
+    benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
     return returns, benchmark
 
 
 def test_pyfolio_class_main_chain() -> None:
+    # README block, executed as written:
     # from fincore import Pyfolio  # requires fincore[pyfolio]
     from fincore import Pyfolio
 
-    returns, benchmark = _pyfolio_inputs()
+    returns, benchmark = _pyfolio_block_data()
 
     pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
     pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
@@ -256,7 +258,7 @@ def test_pyfolio_class_main_chain() -> None:
 def test_pyfolio_functional_facade_main_chain() -> None:
     import fincore.pyfolio as pyfolio
 
-    returns, benchmark = _pyfolio_inputs()
+    returns, benchmark = _pyfolio_block_data()
 
     pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
 
@@ -267,22 +269,22 @@ def test_pyfolio_functional_facade_main_chain() -> None:
 
 
 def test_portfolio_optimization_examples() -> None:
+    # README block, executed as written (variable names and arguments match).
     from fincore.optimization import efficient_frontier, optimize, risk_parity
 
-    asset_returns = pd.DataFrame(
+    returns_df = pd.DataFrame(
         {
             "asset_a": [0.01, -0.005, 0.004, 0.002],
             "asset_b": [0.003, 0.002, -0.001, 0.005],
         }
     )
+    ef = efficient_frontier(returns_df, n_points=5)
+    rp = risk_parity(returns_df)
+    w = optimize(returns_df, objective="max_sharpe")
 
-    frontier = efficient_frontier(asset_returns, n_points=5)
-    parity = risk_parity(asset_returns)
-    maximum_sharpe = optimize(asset_returns, objective="max_sharpe")
-
-    assert isinstance(frontier, dict)
-    assert isinstance(parity, dict)
-    assert isinstance(maximum_sharpe, dict)
+    assert isinstance(ef, dict)
+    assert isinstance(rp, dict)
+    assert isinstance(w, dict)
 
 
 # ---------------------------------------------------------------------------

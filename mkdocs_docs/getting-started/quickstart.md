@@ -1,7 +1,8 @@
 # Quick Start
 
-Every code block below is executed verbatim by `tests/docs/test_examples.py`.
-Define inputs in each block; later blocks do not inherit earlier variables.
+The call forms in every block below are executed by matching tests in
+`tests/docs/test_examples.py` (with equivalent inputs). Each block defines its
+own inputs; later blocks do not inherit earlier variables.
 
 ## AnalysisContext (Recommended)
 
