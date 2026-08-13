@@ -4,6 +4,7 @@ Includes charts such as monthly return heatmaps, annual returns, rolling metrics
 and drawdown visualizations.
 """
 
+import warnings
 from collections import OrderedDict
 
 import matplotlib
@@ -70,17 +71,28 @@ def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs)
     monthly_ret_table = call_explicit_metric(empyrical_instance, "aggregate_returns", returns, "monthly")
     monthly_ret_table = monthly_ret_table.unstack().round(3)
 
-    sns.heatmap(
-        monthly_ret_table.fillna(0) * 100.0,
-        annot=True,
-        annot_kws={"size": 9},
-        alpha=1.0,
-        center=0.0,
-        cbar=False,
-        cmap=matplotlib.cm.RdYlGn,
-        ax=ax,
-        **kwargs,
-    )
+    with warnings.catch_warnings():
+        # seaborn 0.13.x unconditionally calls Colormap.set_bad on the
+        # center=0.0 diverging path, which matplotlib >= 3.11 deprecates.
+        # The deprecation is upstream-only; there is no alternative that
+        # preserves the centered-diverging visuals, so silence exactly
+        # this message and let every other warning propagate.
+        warnings.filterwarnings(
+            "ignore",
+            message="The set_bad function will be deprecated",
+            category=PendingDeprecationWarning,
+        )
+        sns.heatmap(
+            monthly_ret_table.fillna(0) * 100.0,
+            annot=True,
+            annot_kws={"size": 9},
+            alpha=1.0,
+            center=0.0,
+            cbar=False,
+            cmap=matplotlib.cm.RdYlGn,
+            ax=ax,
+            **kwargs,
+        )
     ax.set_ylabel("Year")
     ax.set_xlabel("Month")
     ax.set_title("Monthly returns (%)")
