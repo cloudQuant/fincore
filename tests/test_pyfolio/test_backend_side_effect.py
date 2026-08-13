@@ -69,6 +69,40 @@ def test_enhanced_full_tear_sheet_return_result_owns_figures() -> None:
         matplotlib.use("svg")
 
 
+def test_return_result_does_not_close_caller_owned_figures() -> None:
+    """``close()`` must only release figures created during this run."""
+    matplotlib.use("Agg", force=True)
+    try:
+        import matplotlib.pyplot as plt
+
+        from fincore.pyfolio import Pyfolio
+
+        caller_fig = plt.figure()
+        caller_num = caller_fig.number
+
+        idx = pd.date_range("2024-01-01", periods=60, freq="B", tz="UTC")
+        returns = pd.Series([0.001 if i % 2 == 0 else -0.0006 for i in range(len(idx))], index=idx)
+
+        result = Pyfolio().create_full_tear_sheet(returns, return_result=True)
+
+        # The result must not claim the caller's pre-existing figure.
+        assert caller_num in plt.get_fignums()
+        assert len(result.figures) > 0
+        assert all(f.number != caller_num for f in result.figures)
+
+        result.close()
+
+        # The caller's figure survives; only this run's figures were closed.
+        assert caller_num in plt.get_fignums()
+        assert result.closed
+        assert all(f.number not in plt.get_fignums() for f in result.figures)
+    finally:
+        import matplotlib.pyplot as plt
+
+        plt.close("all")
+        matplotlib.use("svg")
+
+
 def test_full_tear_sheet_default_return_is_none() -> None:
     """The default enhanced tear-sheet return stays None (no API drift)."""
     matplotlib.use("Agg", force=True)

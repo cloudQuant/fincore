@@ -134,3 +134,38 @@ import-time backend call, and Task 6's lazy-import guard keeps passing.
   doing runtime `isinstance(artifacts.model, ReportModel)` must import the
   model module themselves (it is exported from `fincore.report.compute` and
   `fincore.report.model`).
+
+## Fix round 1: ownership of figures in return_result
+
+Review finding (Important): `create_full_tear_sheet` collected
+`plt.get_fignums()` at the end of the run, claiming ALL open process figures —
+including caller-owned ones that existed before the run — so
+`result.close()` silently closed them.
+
+Fix: `create_full_tear_sheet` snapshots `frozenset(plt.get_fignums())` at the
+start of the run (only when `return_result=True`, so the default path pays
+nothing) and collects only figure numbers that appear after the run:
+
+```python
+figures_before = frozenset(plt.get_fignums()) if return_result else frozenset()
+...
+figures = [plt.figure(num) for num in plt.get_fignums() if num not in figures_before]
+return ReportArtifacts(backend="matplotlib", figures=figures)
+```
+
+New regression test
+`tests/test_pyfolio/test_backend_side_effect.py::test_return_result_does_not_close_caller_owned_figures`
+creates a caller-owned figure before the run, asserts the result does not
+claim it, closes the result, and asserts the caller's figure is still open
+while every returned (run-created) figure is closed. It was RED against the
+old implementation (the result's `figures` included the caller's figure
+number) and is GREEN after the fix.
+
+Gates after the fix:
+
+```text
+tests/test_report tests/test_pyfolio tests/test_tearsheets tests/test_utils:  327 passed, 0 failures
+focused RED -> GREEN:  1 failed -> 1 passed
+ruff check / ruff format --check on sheets.py + the new test:  clean
+git diff --check:  clean
+```

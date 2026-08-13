@@ -144,6 +144,10 @@ def create_full_tear_sheet(
     :class:`~fincore.report.artifacts.ReportArtifacts` whose ``close()``
     releases them.  The default (``None``) return is unchanged.
     """
+    # Snapshot pre-existing figure numbers so ownership tracking only hands
+    # back figures this run created (never caller-owned ones).
+    figures_before: frozenset[int] = frozenset(plt.get_fignums()) if return_result else frozenset()
+
     if (unadjusted_returns is None) and (slippage is not None) and (transactions is not None):
         unadjusted_returns = returns.copy()
         returns = pyfolio_instance.adjust_returns_for_slippage(returns, positions, transactions, slippage)
@@ -228,11 +232,12 @@ def create_full_tear_sheet(
         )
 
     if return_result:
-        # Enhanced interface: hand ownership of every figure created during
-        # this run to the caller via the common ReportArtifacts lifecycle.
+        # Enhanced interface: hand ownership of only the figures created
+        # during this run to the caller via the common ReportArtifacts
+        # lifecycle.  Pre-existing (caller-owned) figures are never claimed.
         from fincore.report.artifacts import ReportArtifacts
 
-        figures = [plt.figure(num) for num in plt.get_fignums()]
+        figures = [plt.figure(num) for num in plt.get_fignums() if num not in figures_before]
         return ReportArtifacts(backend="matplotlib", figures=figures)
     return None
 
