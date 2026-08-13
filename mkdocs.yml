@@ -85,5 +85,6 @@ nav:
   - Development:
     - Contributing: development/contributing.md
     - Development Guide: development/guide.md
+    - Compatibility: development/compatibility.md
     - API Stability: development/api-stability.md
     - Changelog: development/changelog.md

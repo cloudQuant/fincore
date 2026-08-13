@@ -7,6 +7,9 @@ on:
       - "mkdocs_docs/**"
       - "mkdocs.yml"
       - "fincore/**"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "pyproject.toml"
   workflow_dispatch:
 
 permissions:

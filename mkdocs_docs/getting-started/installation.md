@@ -19,14 +19,29 @@ cd fincore
 pip install -U .
 ```
 
-## Optional Dependencies
+## Optional Extras
 
 ```bash
-# Visualization (matplotlib, seaborn)
-pip install "fincore[viz]"
+# Pyfolio tear sheets (matplotlib, seaborn, ipython)
+pip install "fincore[pyfolio]"
+
+# Interactive backends (plotly, bokeh)
+pip install "fincore[interactive]"
+
+# PDF report rendering
+pip install "fincore[report-pdf]"
+
+# XLSX report export
+pip install "fincore[report-xlsx]"
 
 # Bayesian analysis (pymc)
 pip install "fincore[bayesian]"
+
+# Data providers
+pip install "fincore[data-yahoo]"
+pip install "fincore[data-alphavantage]"
+pip install "fincore[data-pandas-datareader]"
+pip install "fincore[data-cn]"
 
 # Everything
 pip install "fincore[all]"
@@ -35,9 +50,15 @@ pip install "fincore[all]"
 pip install "fincore[dev]"
 ```
 
+`viz` and `datareader` are 0.3.x compatibility aliases.
+
 ## Requirements
 
-- Python >= 3.11
-- numpy >= 1.17.0
-- pandas >= 0.25.0
+Core dependencies (`pyproject.toml` is the single source of truth):
+
+- Python >= 3.11 (a documented breaking change relative to empyrical)
+- numpy >= 1.24.0
+- pandas >= 1.5.0
 - scipy >= 1.3.0
+- pytz >= 2023.3
+- packaging >= 21.0

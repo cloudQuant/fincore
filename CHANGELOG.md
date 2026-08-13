@@ -7,29 +7,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-The package metadata currently reports version **0.3.0**. No 1.0.0 release is
-recorded here.
+Nothing yet.
 
-### Current changes
+## [0.3.0] - unreleased (release candidate)
 
-- Pinned static API/signature manifests for empyrical 0.6.0 and a bounded
-  pyfolio 0.9.6 compatibility profile.
-- Hardened those manifests to read pinned Git blobs, resolve safe constant
-  defaults, preserve aliases/star exports, bind optional oracle evidence to the
-  pinned checkout, and invalidate human review attestations on evidence drift.
-- Bounded static constant parsing by depth, node visits, container/scalar size,
-  and numeric magnitude; all Git/oracle subprocesses are now noninteractive
-  and time-limited with operation-specific failures.
-- Added explicit compatibility matrices and upstream provenance review notes.
-- Corrected migration and README claims that previously implied certified
-  drop-in compatibility, no breaking changes, or 100% coverage.
+Current version, release candidate pending final acceptance. Package maturity:
+**Beta** (classifier `Development Status :: 4 - Beta`).
+No claim of "Stable" or "100% coverage" is made anywhere in this project.
 
-### Historical 1.0 planning snapshot (not release evidence)
+### Added
 
-The material below was previously labeled `1.0.0 - 2025-02-18`. It is retained
-as a historical completion/planning snapshot only. Its counts and completion
-claims are not current acceptance evidence and must be revalidated before any
-future release.
+- **Strict empyrical compatibility layer** — `fincore.empyrical` pins the frozen
+  empyrical 0.6.0 surface (commit `74655e9`): 54/54 public symbols reach C0,
+  49/49 callables reach C1 (signature), and the core callables are numerically
+  verified (C3). Enforced by `tests/compat/fixtures/` manifests and the
+  `tests/compat/` gates (CI job `compat`).
+- **Pyfolio functional façade** — `fincore.pyfolio` implements the pinned
+  pyfolio 0.9.6 profile of 11 tear-sheet workflows (commit `724bbd7`); all
+  entries reach C1 and the risk/returns/perf-attrib/full-sheet main chains
+  reach C4 end-to-end. The `Pyfolio` class is the enhanced OO convenience on
+  the same workflows and requires the `pyfolio` extra.
+- **Functional extras** — `pyfolio`, `interactive`, `report-pdf`,
+  `report-xlsx`, `bayesian`, `data-yahoo`, `data-alphavantage`,
+  `data-pandas-datareader`, `data-cn`, plus 0.3.x aliases `datareader` and
+  `viz`.
+- **Enhanced validation exceptions** — `ValidationError`, `NumericalError`,
+  `DataAlignmentError`, `DependencyError`, `InvalidPeriodError` on the
+  enhanced surfaces.
+- **AnalysisContext snapshot semantics** — `replace_data()` atomically swaps
+  inputs and invalidates every cached metric; caller-side mutation of the
+  original inputs cannot stale the cached snapshot.
+- **Machine-generated quality baseline** — `docs/quality/current-baseline.*`
+  produced by `scripts/collect_quality_baseline.py`; README quality claims
+  refer only to this snapshot.
+- **Release gates** — CI jobs `marker-audit`, `coverage-branch` (baseline plus
+  changed-lines gate), `compare-nonserial` (JUnit single vs xdist),
+  `integration-offline`, wheel-consumer full-profile matrix in `build`.
+- **Single version source** — `pyproject.toml` is authoritative; runtime
+  resolution prefers installed distribution metadata.
+
+### Changed
+
+- **Python 3.11+ is now required** — a documented breaking change relative to
+  empyrical.
+- Flat API (`from fincore import ...`) remains bound to enhanced
+  `fincore.metrics` semantics throughout 0.3.x; no deprecation is scheduled.
+- `fincore.empyrical` strict façade keeps pinned legacy semantics (e.g.
+  calendar-year weekly grouping, legacy CVaR tail policy) while the enhanced
+  surfaces expose documented divergences (`week_year="iso"`, inclusive
+  expected shortfall).
+- Compatibility workflows never write into the installed package directory;
+  legacy `run_flask_app` parameters remain accepted but display-only.
+- `from fincore import Pyfolio` raises `DependencyError` naming
+  `pip install fincore[pyfolio]` when the extra is absent.
+
+### Fixed
+
+- Drawdown tear sheets with fewer drawdowns than the top-N no longer raise
+  `NaT ConversionError`.
+- Wide and stacked perf-attrib inputs are equivalent; date gaps do not crash
+  and the attribution identity holds.
+- Legacy/canonical transaction inputs normalize losslessly; duplicate
+  transaction timestamps are retained in stable order.
+- Importing `fincore` or `Pyfolio` no longer changes the Matplotlib backend.
+- Tests and compatibility workflows no longer write into site-packages or the
+  source tree.
+
+### Removed
+
+- None.
+
+## [0.1.0] - 2024-XX-XX
+
+### Added
+- Initial release
+- Core financial metrics from empyrical
+- Basic tearsheet functionality
+
+---
+
+## Historical snapshots (not release evidence)
+
+### 1.0 planning snapshot (previously labeled `1.0.0 - 2025-02-18`)
+
+The material below is retained as a historical completion/planning snapshot
+only. Its counts and completion claims are **not** current acceptance evidence
+and must be revalidated before any future release. The repository has no
+1.0.0 release.
 
 #### Reported as added in the historical snapshot
 - **100% test coverage** - 8177 lines of code with 1800 passing tests
@@ -68,10 +132,3 @@ future release.
 
 #### Reported security status in the historical snapshot
 - None
-
-## [0.1.0] - 2024-XX-XX
-
-### Added
-- Initial release
-- Core financial metrics from empyrical
-- Basic tearsheet functionality

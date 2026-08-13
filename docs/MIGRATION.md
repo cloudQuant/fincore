@@ -4,30 +4,75 @@ Fincore's current package version is **0.3.0**. Do not add
 `fincore>=1.0.0`: that release does not exist in the repository's current
 version history.
 
-## Compatibility status
+> **Breaking change:** fincore requires **Python 3.11+**. empyrical supports
+> older interpreters; upgrading an application to fincore may force an
+> interpreter upgrade as well.
 
-Migration is currently symbol-by-symbol, not a certified drop-in replacement.
-The empyrical 0.6.0 target contains 54 public symbols (49 callables), while the
-pyfolio 0.9.6 target is a bounded profile of 11 tear-sheet workflows. Task 2
-freezes their upstream source and signatures; it does not prove that fincore
-implements C0–C4 compatibility.
+## The three API surfaces
+
+Migration decisions depend on which surface a call uses. Equal function names
+do not imply equal semantics across surfaces:
+
+1. **Strict compatibility** — `fincore.empyrical` is the frozen empyrical
+   0.6.0 surface (54 public symbols, 49 callables). All symbols reach **C0**,
+   all callables reach **C1** (signature), and the core callables are
+   numerically verified (**C3**). The class `Empyrical` exposes the same
+   metrics as class methods (explicit `returns` argument) and instance methods
+   (state-bound).
+2. **pyfolio façade** — `fincore.pyfolio` implements the frozen pyfolio 0.9.6
+   profile of 11 tear-sheet workflows. All entries reach **C1**; the
+   risk/returns/perf-attrib/full-sheet main chains reach **C4** end-to-end.
+   The `Pyfolio` class is enhanced OO convenience over the same workflows and
+   requires the `pyfolio` extra.
+3. **Enhanced semantics** — `fincore.metrics`, the flat API, and
+   `AnalysisContext` are fincore's own interfaces with documented divergences
+   (see below). They are the recommended API for new code, but they are not
+   evidence of empyrical/pyfolio compatibility.
+
+References:
 
 - [Empyrical 0.6.0 matrix](compatibility/empyrical-0.6.0.md)
 - [Pyfolio 0.9.6 profile](compatibility/pyfolio-0.9.6.md)
 - [Upstream provenance and license-review register](upstream-provenance.md)
 
+## Compatibility levels
+
 Compatibility levels are C0 (public path), C1 (signature), C2 (structural and
 exception behavior), C3 (numeric behavior), and C4 (cross-layer workflows).
-Every frozen entry currently says `not-verified` for implementation levels;
-constants use `not-applicable` for C1.
+The verified status of each frozen entry is enforced by the executable gates
+in `tests/compat/` (CI job `compat`); the frozen manifests are in
+`tests/compat/fixtures/`.
+
+Verified for the empyrical surface:
+
+| Level | Status |
+| --- | --- |
+| C0 | 54/54 public symbols resolve in `fincore.empyrical` |
+| C1 | 49/49 callable signatures match the frozen manifest (constants: not applicable) |
+| C2 | Covered for the callables exercised by the structural contract suites |
+| C3 | Core callables verified numerically (CVaR, annual_volatility, cum_returns, rolling family, alignment, `out` buffers, perf-attrib) |
+| C4 | Workflow level covered by the pyfolio façade chains |
+
+Verified for the pyfolio profile:
+
+| Level | Status |
+| --- | --- |
+| C0/C1 | All 11 frozen workflows resolve with the frozen signatures |
+| C4 | risk, returns, perf-attrib, and full-sheet main chains run compute-plot-sheet end-to-end |
+
+A C2/C3 result exists only for the callables the contract suites exercise; it
+is not a blanket certification of every symbol. Check the matrix for your
+symbols before migrating a production call.
 
 ## Installation
 
 ```bash
 pip install fincore
 
-# Optional visualization dependencies
-pip install "fincore[viz]"
+# Optional capability extras
+pip install "fincore[pyfolio]"     # Pyfolio tear sheets
+pip install "fincore[interactive]" # Plotly/Bokeh backends
+pip install "fincore[report-pdf]"  # PDF rendering
 ```
 
 For repository development, install the checked-out 0.3.0 source:
@@ -53,12 +98,14 @@ explicit deprecation period first.
 
 1. Pin your current empyrical version and record the symbols you use.
 2. Find each symbol in the empyrical compatibility matrix and frozen JSON.
-3. Do not migrate a production call until its required C-level has executable
-   evidence (normally C3 for a metric and C4 for a report workflow).
-4. Run differential tests on your own NaN, Inf, timezone, empty-input, and
+3. Prefer `fincore.empyrical` imports for empyrical-shaped calls; prefer
+   `AnalysisContext`/`fincore.metrics` for new code.
+4. Verify the matrix row for each production call: normally C3 for a metric
+   and C4 for a report workflow.
+5. Run differential tests on your own NaN, Inf, timezone, empty-input, and
    alignment cases.
-5. Keep enhanced fincore APIs explicit; do not assume that an equal function
-   name means equal signature or behavior.
+6. Do not assume that an equal function name means equal signature or behavior
+   across the strict and enhanced surfaces.
 
 For code that intentionally uses the current enhanced flat API, this example
 executes on fincore 0.3.0:
@@ -82,6 +129,9 @@ destinations, but they are not evidence of empyrical or pyfolio compatibility.
 
 `AnalysisContext` groups a return series, optional benchmark, positions, and
 transactions. Metrics are computed lazily and reused by export/render methods.
+Inputs are defensively snapshotted, so mutating the caller's series does not
+stale cached results; `replace_data()` atomically swaps inputs and invalidates
+every cache entry.
 
 ```python
 import pandas as pd
@@ -96,11 +146,24 @@ ctx = fincore.analyze(returns, factor_returns=benchmark)
 print(ctx.sharpe_ratio)
 print(ctx.max_drawdown)
 json_text = ctx.to_json()
+ctx.to_json(path="report.json")        # write a file
+ctx.replace_data(returns=returns + 0.001)
 ```
 
 `ctx.to_html(path="report.html")` and `ctx.plot(backend="matplotlib")` are
-enhanced output operations. Install `fincore[viz]` before using visualization
-backends.
+enhanced output operations; `ctx.plot()` returns `ReportArtifacts`. Install
+`fincore[viz]` before using visualization backends.
+
+### Strict module access
+
+`fincore.empyrical` is importable as a plain module and carries the frozen
+0.6.0 surface:
+
+```python
+from fincore import empyrical
+
+print(empyrical.sharpe_ratio(returns))
+```
 
 ### RollingEngine
 
@@ -113,6 +176,15 @@ rolling = engine.compute(["sharpe", "volatility", "max_drawdown", "beta"])
 
 The metric names and result dictionary are fincore contracts, not legacy
 empyrical rolling signatures.
+
+### Pyfolio main chain
+
+```python
+from fincore import Pyfolio  # requires fincore[pyfolio]
+
+pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
+pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
+```
 
 ### Data providers
 
@@ -159,12 +231,37 @@ figure_or_document = ctx.plot(backend="matplotlib")
 Backend output types are fincore contracts and are not part of the pinned
 pyfolio profile.
 
+## Documented enhanced divergences
+
+The enhanced surfaces intentionally differ from the pinned legacy semantics.
+Each divergence has an executable registration in `tests/compat/`:
+
+- **Weekly aggregation** — `fincore.metrics` offers `week_year="iso"`
+  (ISO year + ISO week, one group across the 2019/2020 boundary). The strict
+  `fincore.empyrical.aggregate_returns` keeps the pinned calendar-year plus
+  ISO-week grouping.
+- **CVaR ties** — the legacy façade keeps the pinned fixed-tail-count
+  order-statistic policy; the enhanced CVaR keeps the threshold-inclusive
+  expected shortfall.
+- **Validation exceptions** — enhanced surfaces raise
+  `ValidationError`/`NumericalError`/`DataAlignmentError` instead of silently
+  tolerating invalid input.
+- **Alignment/timezone policy** — enhanced binary metrics default to strict
+  label alignment, reject mixed naive/aware indices, and support explicit
+  `normalize_tz`; the strict façade keeps pinned legacy alignment and
+  exception surfaces.
+- **`print_table`/`run_flask_app`** — legacy `run_flask_app` parameters are
+  accepted but display-only and never write files implicitly; the enhanced
+  `export=` keyword requires a caller-owned destination.
+
 ## Frequently asked questions
 
 ### Is fincore 0.3.0 a drop-in replacement for empyrical?
 
-No certification is claimed. Migrate symbol by symbol after the corresponding
-matrix row has the required executable C-level evidence.
+The frozen surface is verified at C0/C1 for every symbol, with C3 numeric
+verification for the core callables, and the pyfolio main chains at C4. That
+is strong evidence for the verified callables, but C2/C3 is not claimed for
+every symbol. Migrate symbol by symbol after checking the matrix row.
 
 ### Can empyrical and fincore be installed together?
 
@@ -184,8 +281,9 @@ C0, C1, C2, C3, or C4.
 
 ## Known migration boundaries
 
-- `fincore.empyrical` is the strict-compatibility target surface, but Task 2
-  does not certify its symbols or signatures. Follow later matrix updates.
+- `fincore.empyrical` is the strict-compatibility surface; nine rolling
+  callables created by upstream factories carry `needs_dynamic_review=true`
+  until an isolated oracle run is reviewed by a person.
 - `fincore.metrics` and the 0.3.x flat API are enhanced surfaces with
   semver-managed differences.
 - The pyfolio profile covers only the 11 listed functional workflows, not the

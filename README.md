@@ -2,14 +2,14 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/version-0.3.0-blueviolet.svg" alt="Version 0.3.0"/>
-    <img src="https://img.shields.io/badge/compatibility-pinned%20manifests-blue.svg" alt="Pinned compatibility manifests"/>
+    <img src="https://img.shields.io/badge/status-Beta-orange.svg" alt="Status: Beta"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Platforms"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions"/>
     <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
 </p>
 
 <p align="center">
-    <a href="#english">English</a> · <a href="#中文">中文</a> · <a href="https://fincore.readthedocs.io/en/latest/">Documentation</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/MIGRATION.md">Migration Guide</a>
+    <a href="#english">English</a> · <a href="#中文">中文</a> · <a href="https://cloudquant.github.io/fincore/">Documentation</a> · <a href="CONTRIBUTING.md">Contributing</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/MIGRATION.md">Migration Guide</a>
 </p>
 
 ---
@@ -19,6 +19,20 @@
 ## Overview
 
 **fincore** is a Python library for quantitative finance analytics — 150+ financial metrics, portfolio optimization, Monte Carlo simulation, and performance attribution. It continues the **empyrical** stack under active maintenance by [cloudQuant](https://github.com/cloudQuant).
+
+Current version: **0.3.0** (Beta). Python **3.11+** is required; this is a documented breaking change relative to empyrical, which supports older interpreters.
+
+### Three API surfaces
+
+fincore 0.3.0 exposes three clearly separated surfaces. One name does not silently switch semantics between them:
+
+| Surface | What it is | Guarantee |
+|---------|------------|-----------|
+| **Strict compatibility** — `fincore.empyrical` | Frozen empyrical 0.6.0 surface: 54/54 public symbols (C0), 49/49 callables (C1), core callables numerically verified (C3) | Pinned by `tests/compat/fixtures/` manifests and enforced by the `tests/compat/` gates |
+| **pyfolio façade** — `fincore.pyfolio` | Frozen pyfolio 0.9.6 profile of 11 tear-sheet workflows: all entries C1, risk/returns/perf-attrib/full-sheet main chains C4 | Requires the `fincore[pyfolio]` extra |
+| **Enhanced semantics** — `fincore.metrics`, flat API, `AnalysisContext` | fincore's own, documented divergences (e.g. `week_year="iso"`, explicit validation exceptions) | Recommended API; enhanced, not empyrical-identical |
+
+See the [compatibility matrix](https://cloudquant.github.io/fincore/development/compatibility/), [empyrical matrix](docs/compatibility/empyrical-0.6.0.md), and [pyfolio profile](docs/compatibility/pyfolio-0.9.6.md).
 
 ### Highlights
 
@@ -37,11 +51,21 @@
 ### Installation
 
 ```bash
-pip install fincore                  # Core
-pip install "fincore[viz]"           # + matplotlib, seaborn
-pip install "fincore[all]"           # Everything
-pip install "fincore[dev]"           # Development tools
+pip install fincore                       # Core metrics
+pip install "fincore[pyfolio]"            # + Pyfolio tear sheets (matplotlib, seaborn, ipython)
+pip install "fincore[interactive]"        # + Plotly, Bokeh backends
+pip install "fincore[report-pdf]"         # + Playwright PDF rendering
+pip install "fincore[report-xlsx]"        # + XLSX report export
+pip install "fincore[bayesian]"           # + Bayesian tear sheets (pymc)
+pip install "fincore[data-yahoo]"         # + Yahoo Finance provider
+pip install "fincore[data-pandas-datareader]"  # + pandas-datareader provider
+pip install "fincore[data-alphavantage]"  # + Alpha Vantage provider
+pip install "fincore[data-cn]"            # + Tushare, AkShare providers
+pip install "fincore[all]"                # Everything above
+pip install "fincore[dev]"                # Development tools
 ```
+
+`datareader` and `viz` are 0.3.x compatibility aliases for the functional extras above.
 
 **From source:**
 ```bash
@@ -63,11 +87,37 @@ print(f"Sharpe: {fincore.sharpe_ratio(returns):.4f}")
 print(f"Max DD: {fincore.max_drawdown(returns):.4f}")
 ```
 
-**Compatibility status:** empyrical 0.6.0 and the bounded pyfolio 0.9.6
-profile are pinned as targets, but fincore 0.3.0 is not yet certified as a
-drop-in replacement. See the [empyrical matrix](docs/compatibility/empyrical-0.6.0.md),
-[pyfolio profile](docs/compatibility/pyfolio-0.9.6.md), and
-[migration guide](docs/MIGRATION.md).
+The strict empyrical module is available directly:
+
+```python
+from fincore import empyrical
+
+print(empyrical.sharpe_ratio(returns))
+print(empyrical.max_drawdown(returns))
+```
+
+**AnalysisContext** (recommended stateful API — lazy, cached, exportable):
+
+```python
+index = pd.date_range("2024-01-02", periods=5, freq="B")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
+benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
+
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+print(ctx.sharpe_ratio, ctx.max_drawdown)
+ctx.to_json(path="report.json")      # write files
+ctx.to_html(path="report.html")
+ctx.plot(backend="matplotlib")       # -> ReportArtifacts
+```
+
+**Pyfolio main chain** (`from fincore import Pyfolio` requires the `pyfolio` extra):
+
+```python
+from fincore import Pyfolio
+
+pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
+pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
+```
 
 **RollingEngine** (batch rolling metrics):
 ```python
@@ -86,12 +136,15 @@ rp = risk_parity(returns_df)
 w = optimize(returns_df, objective="max_sharpe")
 ```
 
+Every code block above runs as a real test in [`tests/docs/test_examples.py`](tests/docs/test_examples.py).
+
 ### Architecture
 
 ```
 fincore/
 ├── __init__.py          # Lazy exports (Empyrical, Pyfolio, analyze)
-├── empyrical.py         # Empyrical facade (150+ methods)
+├── empyrical.py         # Strict empyrical 0.6.0 compatibility facade
+├── pyfolio.py           # Pyfolio 0.9.6-profile workflow facade
 ├── core/
 │   ├── context.py       # AnalysisContext — lazy cached metrics
 │   └── engine.py        # RollingEngine — batch rolling metrics
@@ -106,12 +159,21 @@ fincore/
 └── utils/               # Shared helpers
 ```
 
+### Quality
+
+Quality numbers are machine-generated, never hand-written into this README.
+The current snapshot is [`docs/quality/current-baseline.md`](docs/quality/current-baseline.md)
+(JSON: [`docs/quality/current-baseline.json`](docs/quality/current-baseline.json)),
+regenerated by `scripts/collect_quality_baseline.py` on each release-gate run.
+The release-candidate checklist is [`docs/quality/release-candidate-checklist.md`](docs/quality/release-candidate-checklist.md).
+
 ### Testing
 
 ```bash
-pytest tests/ -n 4                   # Parallel
-pytest tests/ --cov=fincore          # With coverage
-pytest tests/test_core/              # AnalysisContext, RollingEngine, Viz
+pytest tests/                         # Default selector, parallel via xdist
+pytest -o addopts='' tests/compat -q  # Empyrical/pyfolio compatibility gates
+pytest -o addopts='' tests/docs -q    # Executable documentation examples
+pytest tests/ --cov=fincore           # With coverage
 ```
 
 ### License
@@ -127,6 +189,20 @@ in [docs/upstream-provenance.md](docs/upstream-provenance.md).
 ## 概述
 
 **fincore** 是面向量化金融的 Python 分析库 — 150+ 金融指标、组合优化、蒙特卡洛模拟和绩效归因。它延续 **empyrical** 分析栈，由 [cloudQuant](https://github.com/cloudQuant) 持续维护。
+
+当前版本 **0.3.0**（Beta）。要求 **Python 3.11+**；这是相对 empyrical（支持更老解释器）的明确 breaking change。
+
+### 三层 API
+
+fincore 0.3.0 暴露三个严格分离的界面，同名函数不会在界面之间静默切换语义：
+
+| 界面 | 内容 | 保证 |
+|------|------|------|
+| **严格兼容** — `fincore.empyrical` | 冻结的 empyrical 0.6.0 表面：54/54 公共符号（C0）、49/49 callable（C1）、核心 callable 数值级验证（C3） | 由 `tests/compat/fixtures/` 清单固定，`tests/compat/` 门禁强制执行 |
+| **pyfolio 门面** — `fincore.pyfolio` | 冻结的 pyfolio 0.9.6 profile（11 个 tear-sheet 工作流）：全部 C1，risk/returns/perf-attrib/full-sheet 主链 C4 | 需要 `fincore[pyfolio]` extra |
+| **增强语义** — `fincore.metrics`、flat API、`AnalysisContext` | fincore 自有、已文档化的分歧（如 `week_year="iso"`、显式校验异常） | 推荐 API；是增强语义，不承诺与 empyrical 完全一致 |
+
+参见[兼容矩阵](https://cloudquant.github.io/fincore/development/compatibility/)、[empyrical 矩阵](docs/compatibility/empyrical-0.6.0.md)与 [pyfolio profile](docs/compatibility/pyfolio-0.9.6.md)。
 
 ### 核心特性
 
@@ -145,11 +221,21 @@ in [docs/upstream-provenance.md](docs/upstream-provenance.md).
 ### 安装
 
 ```bash
-pip install fincore                  # 核心
-pip install "fincore[viz]"           # + matplotlib, seaborn
-pip install "fincore[all]"           # 全部依赖
-pip install "fincore[dev]"           # 开发工具
+pip install fincore                       # 核心指标
+pip install "fincore[pyfolio]"            # + Pyfolio tear sheets（matplotlib、seaborn、ipython）
+pip install "fincore[interactive]"        # + Plotly、Bokeh 后端
+pip install "fincore[report-pdf]"         # + Playwright PDF 渲染
+pip install "fincore[report-xlsx]"        # + XLSX 报告导出
+pip install "fincore[bayesian]"           # + Bayesian tear sheets（pymc）
+pip install "fincore[data-yahoo]"         # + Yahoo Finance 数据源
+pip install "fincore[data-pandas-datareader]"  # + pandas-datareader 数据源
+pip install "fincore[data-alphavantage]"  # + Alpha Vantage 数据源
+pip install "fincore[data-cn]"            # + Tushare、AkShare 数据源
+pip install "fincore[all]"                # 以上全部
+pip install "fincore[dev]"                # 开发工具
 ```
+
+`datareader` 与 `viz` 是 0.3.x 的兼容别名，指向上述功能性 extras。
 
 **从源码安装：**
 ```bash
@@ -171,11 +257,37 @@ print(f"夏普比率: {fincore.sharpe_ratio(returns):.4f}")
 print(f"最大回撤: {fincore.max_drawdown(returns):.4f}")
 ```
 
-**兼容状态：** empyrical 0.6.0 与限定的 pyfolio 0.9.6 profile 已冻结为
-目标，但 fincore 0.3.0 尚未被认证为可直接替换。请参阅
-[empyrical 矩阵](docs/compatibility/empyrical-0.6.0.md)、
-[pyfolio profile](docs/compatibility/pyfolio-0.9.6.md) 与
-[迁移指南](docs/MIGRATION.md)。
+严格兼容的 empyrical 模块可直接导入：
+
+```python
+from fincore import empyrical
+
+print(empyrical.sharpe_ratio(returns))
+print(empyrical.max_drawdown(returns))
+```
+
+**AnalysisContext**（推荐的有状态 API — 惰性、缓存、可导出）：
+
+```python
+index = pd.date_range("2024-01-02", periods=5, freq="B")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
+benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
+
+ctx = fincore.analyze(returns, factor_returns=benchmark)
+print(ctx.sharpe_ratio, ctx.max_drawdown)
+ctx.to_json(path="report.json")      # 写入文件
+ctx.to_html(path="report.html")
+ctx.plot(backend="matplotlib")       # -> ReportArtifacts
+```
+
+**Pyfolio 主链**（`from fincore import Pyfolio` 需要 `pyfolio` extra）：
+
+```python
+from fincore import Pyfolio
+
+pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
+pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
+```
 
 **RollingEngine**（批量滚动指标）：
 ```python
@@ -194,26 +306,23 @@ rp = risk_parity(returns_df)
 w = optimize(returns_df, objective="max_sharpe")
 ```
 
-### 指标概览
+以上每个代码块都作为真实测试运行于 [`tests/docs/test_examples.py`](tests/docs/test_examples.py)。
 
-| 类别 | 主要指标 |
-|------|---------|
-| **收益** | `simple_returns`, `cum_returns`, `annual_return`, `cagr`, `aggregate_returns` |
-| **风险** | `max_drawdown`, `annual_volatility`, `downside_risk`, `value_at_risk`, `conditional_value_at_risk` |
-| **风险调整** | `sharpe_ratio`, `sortino_ratio`, `calmar_ratio`, `omega_ratio`, `information_ratio` |
-| **市场关系** | `alpha`, `beta`, `up_capture`, `down_capture`, `treynor_ratio` |
-| **滚动** | `roll_sharpe_ratio`, `roll_max_drawdown`, `roll_beta`, `roll_alpha` 等 |
-| **择时** | `treynor_mazuy_timing`, `henriksson_merton_timing`, `market_timing_return` |
-| **连续统计** | `max_consecutive_up_days`, `max_consecutive_down_days`, `max_single_day_gain` |
+### 质量
 
-> 完整指标列表见 [API 文档](docs/api文档/README.md)
+质量数字由机器生成，绝不手写进本 README。当前快照见
+[`docs/quality/current-baseline.md`](docs/quality/current-baseline.md)
+（JSON: [`docs/quality/current-baseline.json`](docs/quality/current-baseline.json)），
+由 `scripts/collect_quality_baseline.py` 在每次发布门禁运行时重新生成。
+发布候选清单见 [`docs/quality/release-candidate-checklist.md`](docs/quality/release-candidate-checklist.md)。
 
 ### 测试
 
 ```bash
-pytest tests/ -n 4                   # 并行运行
-pytest tests/ --cov=fincore          # 含覆盖率
-pytest tests/test_core/              # AnalysisContext、RollingEngine、可视化
+pytest tests/                         # 默认选择器，xdist 并行
+pytest -o addopts='' tests/compat -q  # empyrical/pyfolio 兼容门禁
+pytest -o addopts='' tests/docs -q    # 可执行文档示例
+pytest tests/ --cov=fincore           # 含覆盖率
 ```
 
 ### 贡献

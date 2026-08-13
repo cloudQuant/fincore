@@ -1,23 +1,52 @@
 # API Stability Policy
 
-This document describes the API stability guarantees for fincore.
+This document describes the API stability guarantees for fincore 0.3.0.
 
-## Stable APIs
+Stability is claimed **only** for surfaces whose compatibility level (C0-C4)
+has been verified by the executable gates in `tests/compat/`. A surface not
+listed below, or listed with a partial level, carries no broader guarantee.
 
-The following APIs are considered **stable** and will follow [Semantic Versioning](https://semver.org/):
+## Stable surfaces
 
-### Top-Level Imports
+### Top-level imports
+
 ```python
 from fincore import (
     Empyrical,
-    Pyfolio,
+    Pyfolio,                # requires the pyfolio extra
     analyze,
     create_strategy_report,
 )
 ```
 
-### Flat API Functions
-All functions in `fincore.__all__` are stable:
+`from fincore import Pyfolio` raises `DependencyError` naming
+`pip install fincore[pyfolio]` when the extra is absent.
+
+### Strict compatibility module — `fincore.empyrical`
+
+The frozen empyrical 0.6.0 surface is stable at the verified levels:
+
+- C0: all 54 public symbols;
+- C1: all 49 callable signatures (constants: not applicable);
+- C3: the core callables covered by the numeric contract suites.
+
+The nine rolling callables created by upstream factories remain flagged
+`needs_dynamic_review=true` in the frozen manifest until an isolated oracle
+run is reviewed by a person. C2/C3 is not claimed for symbols the contract
+suites do not exercise.
+
+### pyfolio façade — `fincore.pyfolio`
+
+The frozen pyfolio 0.9.6 profile of 11 workflows is stable at C1 for every
+entry and C4 for the risk/returns/perf-attrib/full-sheet main chains. The
+`Pyfolio` class is enhanced OO convenience over the same workflows; its
+workflow methods keep the frozen signatures.
+
+### Flat API functions
+
+The flat API (`from fincore import ...`) is stable within 0.3.x **as an
+enhanced surface** — bound to `fincore.metrics` implementations, not to
+empyrical equality:
 
 ```python
 from fincore import (
@@ -44,7 +73,12 @@ from fincore import (
 )
 ```
 
+The complete generated mapping (including `current_target`,
+`recommended_target`, `deprecate_in`, `remove_or_switch_in`) lives in
+`tests/compat/fixtures/fincore-flat-api-migrations.json`.
+
 ### AnalysisContext
+
 The `AnalysisContext` class and its public methods are stable:
 
 ```python
@@ -55,11 +89,15 @@ ctx.sharpe_ratio
 ctx.max_drawdown
 ctx.perf_stats()
 ctx.to_dict()
-ctx.to_json()
-ctx.to_html()
+ctx.to_json()                 # text payload
+ctx.to_json(path="report.json")
+ctx.to_html(path="report.html")
+ctx.plot(backend="matplotlib")  # -> ReportArtifacts
+ctx.replace_data(returns=new_returns)  # atomic swap + cache invalidation
 ```
 
 ### RollingEngine
+
 The `RollingEngine` class is stable:
 
 ```python
@@ -69,15 +107,17 @@ engine = RollingEngine(returns, factor_returns=benchmark, window=60)
 engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```
 
-## Internal APIs
+## Not covered by this policy
 
-Modules and functions prefixed with `_` (underscore) are **internal** and may change
-without notice between versions:
-
-```python
-from fincore import _registry  # Internal, may change
-from fincore.metrics import _basic  # Internal, may change
-```
+- `Empyrical`/`Pyfolio` methods beyond the frozen verified surface;
+- equality between enhanced `fincore.metrics` behavior and empyrical behavior
+  (documented divergences exist by design);
+- modules and functions prefixed with `_` (internal, may change without
+  notice):
+  ```python
+  from fincore import _registry  # Internal, may change
+  from fincore.metrics import _basic  # Internal, may change
+  ```
 
 ## Versioning Policy
 
@@ -96,7 +136,9 @@ If a stable API needs to be changed:
 
 ## Python Version Support
 
-fincore supports the following Python versions:
+fincore requires **Python 3.11+** — a documented breaking change relative to
+empyrical. Currently exercised versions:
+
 - Python 3.11
 - Python 3.12
 - Python 3.13
@@ -105,11 +147,14 @@ Unsupported Python versions may be removed in a major version update.
 
 ## Third-Party Dependencies
 
-Third-party dependencies are considered part of the stable API. Changes to required
-dependencies will only occur in minor or major versions, not patch versions.
+Third-party dependencies are considered part of the stable API. Changes to
+required dependencies will only occur in minor or major versions, not patch
+versions.
 
-Optional dependencies (viz, bayesian, datareader) may have their version requirements
-updated in patch versions.
+Optional dependencies (the functional extras: `pyfolio`, `interactive`,
+`report-pdf`, `report-xlsx`, `bayesian`, `data-*`) may have their version
+requirements updated in patch versions. The 0.3.x aliases `viz` and
+`datareader` are retained for at least one documented minor cycle.
 
 ## Feedback
 
