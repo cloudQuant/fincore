@@ -6,6 +6,7 @@ import importlib
 import inspect
 import json
 import typing
+from copy import deepcopy
 from dataclasses import FrozenInstanceError
 from typing import Any
 
@@ -13,7 +14,7 @@ import pandas as pd
 import pytest
 
 from . import conftest as fixture_contract
-from .conftest import manifest_entries
+from .conftest import load_pinned_manifest, manifest_entries
 
 
 def _entry_id(entry: dict[str, Any]) -> str:
@@ -121,9 +122,34 @@ def test_optional_extras_are_named_for_the_alphalens_surface() -> None:
     from fincore.contracts.factor_workflows import ALPHALENS_WORKFLOW_SPECS
 
     for spec in ALPHALENS_FUNCTION_SPECS.values():
-        expected_extra = "alphalens" if spec.module in {"plotting", "tears"} else None
+        expected_extra = (
+            "factor-analysis"
+            if (spec.module, spec.public_name) == ("performance", "factor_alpha_beta")
+            else "alphalens"
+            if spec.module in {"plotting", "tears"}
+            else None
+        )
         assert spec.optional_extra == expected_extra
     assert {spec.optional_extra for spec in ALPHALENS_WORKFLOW_SPECS.values()} == {"alphalens"}
+
+
+def test_manifest_helpers_do_not_share_mutable_cached_entries() -> None:
+    """Nested manifest mutation cannot corrupt later C0/C1 expectations."""
+
+    first_manifest = load_pinned_manifest()
+    first_entries = manifest_entries()
+    first_manifest["counts"]["functions"] = -1
+    first_entries[0]["parameters"][0]["name"] = "corrupted_parameter"
+    case_entry = next(entry for entry in first_entries if entry["accepted_call_cases"])
+    case_entry["accepted_call_cases"][0]["hidden_kwargs"]["synthetic_hidden_key"] = "corrupted_hidden_value"
+
+    second_manifest = load_pinned_manifest()
+    second_entries = manifest_entries()
+    second_case_entry = next(entry for entry in second_entries if entry["symbol"] == case_entry["symbol"])
+
+    assert second_manifest["counts"]["functions"] == 61
+    assert second_entries[0]["parameters"][0]["name"] == "factor_data"
+    assert second_case_entry["accepted_call_cases"][0]["hidden_kwargs"] == {}
 
 
 def test_grid_figure_and_legacy_exceptions_resolve() -> None:
@@ -199,6 +225,76 @@ def test_shared_fixture_table_round_trip_preserves_explicit_nan_mask(raw_factor:
     assert payload["data"]["nan_mask"][0] is True
     assert isinstance(restored, pd.Series)
     pd.testing.assert_series_equal(original, restored)
+
+
+@pytest.mark.parametrize(
+    "original",
+    (
+        pd.Series(
+            [float("nan"), float("inf"), float("-inf")],
+            index=pd.Index([float("nan"), float("inf"), float("-inf")], name="numeric_index"),
+            name="nonfinite_series",
+        ),
+        pd.DataFrame(
+            {
+                "left": [float("nan"), float("inf"), float("-inf")],
+                "right": [float("inf"), float("-inf"), float("nan")],
+            },
+            index=pd.Index(["nan", "positive", "negative"], name="row"),
+        ),
+        pd.Series(
+            [float("nan"), float("inf"), float("-inf")],
+            index=pd.MultiIndex.from_tuples(
+                [(float("nan"), "nan"), (float("inf"), "positive"), (float("-inf"), "negative")],
+                names=("numeric_level", "label"),
+            ),
+            name="nonfinite_multiindex_series",
+        ),
+    ),
+    ids=("series", "dataframe", "multiindex"),
+)
+def test_shared_fixture_table_round_trip_preserves_nonfinite_values(
+    original: pd.Series | pd.DataFrame,
+) -> None:
+    """NaN, positive infinity, and negative infinity have distinct portable encodings."""
+
+    payload = fixture_contract.serialize_factor_fixture_table(original)
+    restored = fixture_contract.deserialize_factor_fixture_table(json.loads(json.dumps(payload, allow_nan=False)))
+
+    assert "nonfinite" in payload["data"]
+    if isinstance(original, pd.Series):
+        assert isinstance(restored, pd.Series)
+        assert payload["data"]["nonfinite"] == [None, "positive_infinity", "negative_infinity"]
+        pd.testing.assert_series_equal(original, restored)
+    else:
+        assert isinstance(restored, pd.DataFrame)
+        assert payload["data"]["nonfinite"] == [
+            [None, "positive_infinity"],
+            ["positive_infinity", "negative_infinity"],
+            ["negative_infinity", None],
+        ]
+        pd.testing.assert_frame_equal(original, restored)
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    (
+        lambda payload: payload["data"].__setitem__("nonfinite", ["positive_infinity"]),
+        lambda payload: payload["data"]["nonfinite"].__setitem__(1, "unknown_nonfinite_tag"),
+        lambda payload: payload["data"]["nan_mask"].__setitem__(1, True),
+        lambda payload: payload["data"]["values"].__setitem__(1, 1.0),
+    ),
+    ids=("wrong_length", "unknown_tag", "nan_and_nonfinite", "tagged_value_present"),
+)
+def test_shared_fixture_table_rejects_malformed_nonfinite_metadata(mutate: Any) -> None:
+    """The v1 decoder fails closed for nonfinite metadata corruption."""
+
+    original = pd.Series([0.0, float("inf"), 1.0], name="nonfinite_validation")
+    payload = deepcopy(fixture_contract.serialize_factor_fixture_table(original))
+    mutate(payload)
+
+    with pytest.raises(ValueError, match="nonfinite"):
+        fixture_contract.deserialize_factor_fixture_table(payload)
 
 
 def test_enhanced_fixture_conftest_reexports_portable_table_helpers(raw_factor: pd.Series) -> None:

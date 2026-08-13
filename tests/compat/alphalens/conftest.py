@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -16,13 +17,20 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _MANIFEST_PATH = _REPOSITORY_ROOT / "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json"
 _ASSETS = tuple(f"asset_{ordinal:02d}" for ordinal in range(10))
 _FIXTURE_TABLE_SCHEMA_VERSION = "fincore-factor-fixture-table-v1"
+_NONFINITE_TAGS = frozenset(("positive_infinity", "negative_infinity"))
 
 
 @lru_cache(maxsize=1)
-def load_pinned_manifest() -> dict[str, Any]:
-    """Load the development-only pinned API manifest for compatibility assertions."""
+def _load_pinned_manifest_text() -> str:
+    """Cache immutable manifest text while callers receive fresh decoded objects."""
 
-    return json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
+    return _MANIFEST_PATH.read_text(encoding="utf-8")
+
+
+def load_pinned_manifest() -> dict[str, Any]:
+    """Load an independent development-only manifest object for each caller."""
+
+    return json.loads(_load_pinned_manifest_text())
 
 
 def manifest_entries() -> tuple[dict[str, Any], ...]:
@@ -56,25 +64,53 @@ def _json_scalar(value: object) -> Any:
     """Convert supported fixture scalars to standards-compliant JSON values."""
 
     if isinstance(value, np.generic):
-        return value.item()
+        return _json_scalar(value.item())
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
     if isinstance(value, pd.Timedelta):
         return value.isoformat()
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("nonfinite fixture scalars require an explicit nonfinite tag")
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     raise TypeError(f"fixture table serialization does not support scalar {value!r} ({type(value).__name__})")
 
 
+def _nonfinite_tag(value: object) -> str | None:
+    """Return the portable JSON tag for one signed infinite scalar, if present."""
+
+    if isinstance(value, np.generic):
+        value = value.item()
+    if isinstance(value, float) and math.isinf(value):
+        return "positive_infinity" if value > 0 else "negative_infinity"
+    return None
+
+
 def _serialize_vector(values: list[object]) -> dict[str, list[Any]]:
-    """Encode scalar values and a parallel missing-value mask without JSON NaN."""
+    """Encode scalar values with separate missing and signed-infinity metadata."""
 
     nan_mask = [_is_missing(value) for value in values]
+    nonfinite = [
+        None if is_missing else _nonfinite_tag(value) for value, is_missing in zip(values, nan_mask, strict=True)
+    ]
     return {
         "values": [
-            None if is_missing else _json_scalar(value) for value, is_missing in zip(values, nan_mask, strict=True)
+            None if is_missing or tag is not None else _json_scalar(value)
+            for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
         ],
         "nan_mask": nan_mask,
+        "nonfinite": nonfinite,
+    }
+
+
+def _serialize_matrix(rows: list[list[object]]) -> dict[str, list[list[Any]]]:
+    """Encode a rectangular table with the same scalar protocol as vectors."""
+
+    encoded_rows = [_serialize_vector(row) for row in rows]
+    return {
+        "values": [encoded["values"] for encoded in encoded_rows],
+        "nan_mask": [encoded["nan_mask"] for encoded in encoded_rows],
+        "nonfinite": [encoded["nonfinite"] for encoded in encoded_rows],
     }
 
 
@@ -116,11 +152,13 @@ def _serialize_index(index: pd.Index) -> dict[str, Any]:
 def serialize_factor_fixture_table(value: pd.Series | pd.DataFrame) -> dict[str, Any]:
     """Return a portable v1 JSON-table envelope for a shared factor fixture.
 
-    The envelope contains a row/column table, an explicit ``nan_mask`` (never
-    a non-standard JSON ``NaN`` token), and enough index/column metadata to
-    restore MultiIndex levels, dtype, timezone, frequency, names, and Series
-    names exactly.  It intentionally avoids pandas ``to_json``/``read_json``
-    because those default pathways discard MultiIndex structure.
+    The envelope contains a row/column table, an explicit ``nan_mask`` for
+    NaN/NaT, and a separate ``nonfinite`` tag vector for signed infinities;
+    it therefore never emits a non-standard JSON ``NaN``/``Infinity`` token.
+    It also includes enough index/column metadata to restore MultiIndex
+    levels, dtype, timezone, frequency, names, and Series names exactly.
+    It intentionally avoids pandas ``to_json``/``read_json`` because those
+    default pathways discard MultiIndex structure.
     """
 
     if isinstance(value, pd.Series):
@@ -140,10 +178,7 @@ def serialize_factor_fixture_table(value: pd.Series | pd.DataFrame) -> dict[str,
             "index": _serialize_index(value.index),
             "columns": _serialize_index(value.columns),
             "dtypes": [str(dtype) for dtype in value.dtypes],
-            "data": {
-                "values": [[None if _is_missing(cell) else _json_scalar(cell) for cell in row] for row in rows],
-                "nan_mask": [[_is_missing(cell) for cell in row] for row in rows],
-            },
+            "data": _serialize_matrix(rows),
         }
     raise TypeError(f"expected pandas Series or DataFrame, got {type(value).__name__}")
 
@@ -156,33 +191,83 @@ def _require_mapping(value: object, context: str) -> Mapping[str, Any]:
     return value
 
 
-def _decode_vector(payload: Mapping[str, Any]) -> tuple[list[Any], list[bool]]:
-    """Validate and decode one JSON vector plus its explicit missing-value mask."""
+def _validate_encoded_scalar(value: Any, is_missing: bool, nonfinite: object) -> str | None:
+    """Fail closed unless a scalar's missing/nonfinite representation is unambiguous."""
+
+    if nonfinite is not None and (not isinstance(nonfinite, str) or nonfinite not in _NONFINITE_TAGS):
+        raise ValueError("fixture table nonfinite entries must be null or a supported signed-infinity tag")
+    if is_missing and nonfinite is not None:
+        raise ValueError("fixture table nonfinite entries cannot accompany a nan_mask value")
+    if (is_missing or nonfinite is not None) and value is not None:
+        raise ValueError("fixture table nonfinite or nan_mask values must use a null scalar slot")
+    if not is_missing and nonfinite is None and value is None:
+        raise ValueError("fixture table nonfinite metadata must disambiguate an otherwise null scalar")
+    if isinstance(value, (float, np.floating)) and not math.isfinite(float(value)):
+        raise ValueError("fixture table nonfinite values must use an explicit nonfinite tag")
+    return nonfinite if isinstance(nonfinite, str) else None
+
+
+def _decode_vector(payload: Mapping[str, Any]) -> tuple[list[Any], list[bool], list[str | None]]:
+    """Validate and decode one JSON vector with missing and nonfinite metadata."""
 
     values = payload.get("values")
     nan_mask = payload.get("nan_mask")
-    if not isinstance(values, list) or not isinstance(nan_mask, list) or len(values) != len(nan_mask):
-        raise ValueError("fixture table vector must contain equally sized values and nan_mask lists")
-    if not all(isinstance(is_missing, bool) for is_missing in nan_mask):
-        raise ValueError("fixture table nan_mask entries must be booleans")
-    return values, nan_mask
+    nonfinite = payload.get("nonfinite")
+    if (
+        not isinstance(values, list)
+        or not isinstance(nan_mask, list)
+        or not isinstance(nonfinite, list)
+        or len(values) != len(nan_mask)
+        or len(values) != len(nonfinite)
+    ):
+        raise ValueError("fixture table vector must contain equally sized values, nan_mask, and nonfinite lists")
+
+    decoded_mask: list[bool] = []
+    decoded_nonfinite: list[str | None] = []
+    for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True):
+        if not isinstance(is_missing, bool):
+            raise ValueError("fixture table nan_mask entries must be booleans")
+        decoded_mask.append(is_missing)
+        decoded_nonfinite.append(_validate_encoded_scalar(value, is_missing, tag))
+    return values, decoded_mask, decoded_nonfinite
 
 
-def _decode_matrix(payload: Mapping[str, Any]) -> tuple[list[list[Any]], list[list[bool]]]:
-    """Validate a two-dimensional table plus its row/column missing-value mask."""
+def _decode_matrix(payload: Mapping[str, Any]) -> tuple[list[list[Any]], list[list[bool]], list[list[str | None]]]:
+    """Validate a two-dimensional table with missing and nonfinite metadata."""
 
     values = payload.get("values")
     nan_mask = payload.get("nan_mask")
-    if not isinstance(values, list) or not isinstance(nan_mask, list) or len(values) != len(nan_mask):
-        raise ValueError("fixture table matrix must contain equally sized values and nan_mask row lists")
+    nonfinite = payload.get("nonfinite")
+    if (
+        not isinstance(values, list)
+        or not isinstance(nan_mask, list)
+        or not isinstance(nonfinite, list)
+        or len(values) != len(nan_mask)
+        or len(values) != len(nonfinite)
+    ):
+        raise ValueError("fixture table matrix must contain equally sized values, nan_mask, and nonfinite row lists")
     if any(not isinstance(row, list) for row in values):
         raise ValueError("fixture table value rows must be lists")
-    if any(
-        not isinstance(row, list) or not all(is_missing is True or is_missing is False for is_missing in row)
-        for row in nan_mask
-    ):
-        raise ValueError("fixture table nan_mask rows must contain booleans")
-    return values, nan_mask
+    if any(not isinstance(row, list) for row in nan_mask):
+        raise ValueError("fixture table nan_mask rows must be lists")
+    if any(not isinstance(row, list) for row in nonfinite):
+        raise ValueError("fixture table nonfinite rows must be lists")
+
+    decoded_mask: list[list[bool]] = []
+    decoded_nonfinite: list[list[str | None]] = []
+    for value_row, mask_row, tag_row in zip(values, nan_mask, nonfinite, strict=True):
+        if len(value_row) != len(mask_row) or len(value_row) != len(tag_row):
+            raise ValueError("fixture table nonfinite rows must align with values and nan_mask")
+        decoded_mask_row: list[bool] = []
+        decoded_tag_row: list[str | None] = []
+        for value, is_missing, tag in zip(value_row, mask_row, tag_row, strict=True):
+            if not isinstance(is_missing, bool):
+                raise ValueError("fixture table nan_mask rows must contain booleans")
+            decoded_mask_row.append(is_missing)
+            decoded_tag_row.append(_validate_encoded_scalar(value, is_missing, tag))
+        decoded_mask.append(decoded_mask_row)
+        decoded_nonfinite.append(decoded_tag_row)
+    return values, decoded_mask, decoded_nonfinite
 
 
 def _deserialize_index(payload: object) -> pd.Index:
@@ -203,9 +288,11 @@ def _deserialize_index(payload: object) -> pd.Index:
             verify_integrity=True,
         )
 
-    values, nan_mask = _decode_vector(data)
+    values, nan_mask, nonfinite = _decode_vector(data)
     name = data.get("name")
     if kind == "datetimeindex":
+        if any(tag is not None for tag in nonfinite):
+            raise ValueError("datetimeindex does not support nonfinite metadata")
         restored_values = [
             pd.NaT if is_missing else pd.Timestamp(value) for value, is_missing in zip(values, nan_mask, strict=True)
         ]
@@ -224,6 +311,8 @@ def _deserialize_index(payload: object) -> pd.Index:
             index = pd.DatetimeIndex(index, name=name, freq=frequency)
         return index
     if kind == "timedeltaindex":
+        if any(tag is not None for tag in nonfinite):
+            raise ValueError("timedeltaindex does not support nonfinite metadata")
         restored_values = [
             pd.NaT if is_missing else pd.Timedelta(value) for value, is_missing in zip(values, nan_mask, strict=True)
         ]
@@ -238,20 +327,41 @@ def _deserialize_index(payload: object) -> pd.Index:
         dtype = data.get("dtype")
         if not isinstance(dtype, str):
             raise ValueError("index dtype must be a string")
-        restored_values = [np.nan if is_missing else value for value, is_missing in zip(values, nan_mask, strict=True)]
+        restored_values = [
+            _restore_scalar(value, is_missing, tag)
+            for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
+        ]
         return pd.Index(restored_values, dtype=dtype, name=name)
     raise ValueError(f"unsupported fixture table index kind {kind!r}")
 
 
-def _restore_array(values: list[Any], nan_mask: list[bool], dtype: str) -> Any:
+def _restore_scalar(value: Any, is_missing: bool, nonfinite: str | None) -> Any:
+    """Restore one explicitly encoded missing or signed-infinite scalar."""
+
+    if is_missing:
+        return np.nan
+    if nonfinite == "positive_infinity":
+        return float("inf")
+    if nonfinite == "negative_infinity":
+        return float("-inf")
+    return value
+
+
+def _restore_array(values: list[Any], nan_mask: list[bool], nonfinite: list[str | None], dtype: str) -> Any:
     """Rebuild one typed data vector while retaining portable missing-value semantics."""
 
-    restored_values = [np.nan if is_missing else value for value, is_missing in zip(values, nan_mask, strict=True)]
+    restored_values = [
+        _restore_scalar(value, is_missing, tag)
+        for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
+    ]
     try:
         return pd.array(restored_values, dtype=dtype)
     except (TypeError, ValueError):
         return pd.array(
-            [pd.NA if is_missing else value for value, is_missing in zip(values, nan_mask, strict=True)],
+            [
+                pd.NA if is_missing else _restore_scalar(value, False, tag)
+                for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
+            ],
             dtype=dtype,
         )
 
@@ -269,28 +379,31 @@ def deserialize_factor_fixture_table(payload: object) -> pd.Series | pd.DataFram
         dtype = data.get("dtype")
         if not isinstance(dtype, str):
             raise ValueError("series dtype must be a string")
-        values, nan_mask = _decode_vector(table_data)
+        values, nan_mask, nonfinite = _decode_vector(table_data)
         if len(values) != len(index):
             raise ValueError("series data length does not match index length")
-        return pd.Series(_restore_array(values, nan_mask, dtype), index=index, name=data.get("name"))
+        return pd.Series(_restore_array(values, nan_mask, nonfinite, dtype), index=index, name=data.get("name"))
     if kind == "dataframe":
         columns = _deserialize_index(data.get("columns"))
         dtypes = data.get("dtypes")
-        values, nan_mask = _decode_matrix(table_data)
+        values, nan_mask, nonfinite = _decode_matrix(table_data)
         if not isinstance(dtypes, list) or not all(isinstance(dtype, str) for dtype in dtypes):
             raise ValueError("dataframe dtypes must be a list of strings")
         if len(columns) != len(dtypes):
             raise ValueError("dataframe dtype count does not match columns")
-        if len(values) != len(index) or len(nan_mask) != len(index):
+        if len(values) != len(index) or len(nan_mask) != len(index) or len(nonfinite) != len(index):
             raise ValueError("dataframe row count does not match index length")
         if any(not isinstance(row, list) or len(row) != len(columns) for row in values):
             raise ValueError("dataframe value rows must match the column count")
         if any(not isinstance(row, list) or len(row) != len(columns) for row in nan_mask):
             raise ValueError("dataframe nan_mask rows must match the column count")
+        if any(not isinstance(row, list) or len(row) != len(columns) for row in nonfinite):
+            raise ValueError("dataframe nonfinite rows must match the column count")
         restored_columns = {
             ordinal: _restore_array(
                 [row[ordinal] for row in values],
                 [row[ordinal] for row in nan_mask],
+                [row[ordinal] for row in nonfinite],
                 dtype,
             )
             for ordinal, dtype in enumerate(dtypes)
