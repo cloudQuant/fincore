@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import datetime as datetime_module
 import hashlib
 import json
 import math
@@ -1157,8 +1158,112 @@ def _alphalens_evidence_key(manifest: dict[str, Any]) -> str:
     return hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def _merge_alphalens_oracle_attestation(generated: dict[str, Any], previous: dict[str, Any] | None) -> dict[str, Any]:
-    """Retain a reviewed oracle only when every static evidence bit still matches."""
+def _alphalens_json_digest(value: dict[str, Any]) -> str:
+    """Hash a review-relevant JSON document without its circular attestation."""
+    normalized = deepcopy(value)
+    normalized.pop("oracle_verification", None)
+    normalized.pop("evidence_key", None)
+    return hashlib.sha256(json.dumps(normalized, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _alphalens_review_evidence_key(
+    manifest: dict[str, Any],
+    companions: dict[str, Any],
+    *,
+    candidate_digest: str,
+    environment_digest: str,
+) -> str:
+    """Bind an approved review to every source, lock, and candidate digest.
+
+    The candidate itself is deliberately not checked in: a reviewer records its
+    digest in all three attestations after inspecting its transient output.  The
+    key makes a subsequent fixture, environment, or lock change impossible to
+    retain as reviewed without a new review record.
+    """
+    cases = companions.get("cases")
+    environment = companions.get("environment")
+    explicit_lock_sha256 = companions.get("explicit_lock_sha256")
+    requirements_sha256 = companions.get("requirements_sha256")
+    if not isinstance(cases, dict) or not isinstance(environment, dict):
+        raise ValueError("Alphalens reviewed oracle attestation requires case and environment JSON")
+    evidence = {
+        "api": {
+            "commit": manifest["commit"],
+            "source_files": manifest["source_files"],
+            "evidence_files": manifest["evidence_files"],
+            "reported_versions": manifest["reported_versions"],
+            "entries": manifest["entries"],
+        },
+        "cases_digest": _alphalens_json_digest(cases),
+        "environment_digest": environment_digest,
+        "explicit_lock_sha256": explicit_lock_sha256,
+        "requirements_sha256": requirements_sha256,
+        "candidate_output_digest": candidate_digest,
+    }
+    return hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _is_sha256(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _is_review_date(value: object) -> bool:
+    if not isinstance(value, str) or len(value) != 10:
+        return False
+    try:
+        return datetime_module.date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
+def _valid_alphalens_review_attestation(
+    attestation: object,
+    manifest: dict[str, Any],
+    companions: dict[str, Any] | None,
+) -> bool:
+    """Accept review only if all immutable evidence has a matching record."""
+    if not isinstance(attestation, dict) or companions is None:
+        return False
+    cases = companions.get("cases")
+    environment = companions.get("environment")
+    if not isinstance(cases, dict) or not isinstance(environment, dict):
+        return False
+    case_attestation = cases.get("oracle_verification")
+    environment_attestation = environment.get("oracle_verification")
+    if not isinstance(case_attestation, dict) or not isinstance(environment_attestation, dict):
+        return False
+    if attestation != case_attestation or attestation != environment_attestation:
+        return False
+    candidate_digest = attestation.get("candidate_digest")
+    environment_digest = attestation.get("environment_digest")
+    if not (
+        attestation.get("reviewed") is True
+        and attestation.get("status") in {"captured-reviewed", "approved"}
+        and isinstance(attestation.get("reviewer"), str)
+        and bool(attestation["reviewer"].strip())
+        and _is_review_date(attestation.get("reviewed_at"))
+        and _is_sha256(candidate_digest)
+        and _is_sha256(environment_digest)
+        and _is_sha256(attestation.get("evidence_key"))
+        and _is_sha256(companions.get("explicit_lock_sha256"))
+        and _is_sha256(companions.get("requirements_sha256"))
+    ):
+        return False
+    if environment_digest != _alphalens_json_digest(environment):
+        return False
+    expected_key = _alphalens_review_evidence_key(
+        manifest,
+        companions,
+        candidate_digest=candidate_digest,
+        environment_digest=environment_digest,
+    )
+    return attestation["evidence_key"] == expected_key
+
+
+def _merge_alphalens_oracle_attestation(
+    generated: dict[str, Any], previous: dict[str, Any] | None, companions: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Retain reviewed Alphalens evidence only with a complete matching tuple."""
     result = deepcopy(generated)
     evidence_key = _alphalens_evidence_key(result)
     result["evidence_key"] = evidence_key
@@ -1168,8 +1273,9 @@ def _merge_alphalens_oracle_attestation(generated: dict[str, Any], previous: dic
         "status": "not-run",
     }
     previous_oracle = previous.get("oracle_verification", {}) if previous is not None else {}
-    if previous_oracle.get("reviewed") is True and previous_oracle.get("evidence_key") == evidence_key:
+    if _valid_alphalens_review_attestation(previous_oracle, result, companions):
         result["oracle_verification"] = deepcopy(previous_oracle)
+        result["evidence_key"] = previous_oracle["evidence_key"]
     else:
         result["oracle_verification"] = default_oracle
     return result
@@ -1504,6 +1610,35 @@ def _load_existing(path: Path) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _load_alphalens_oracle_companions(output: Path) -> dict[str, Any] | None:
+    """Read immutable Alphalens review sidecars when the target owns them.
+
+    A standalone generation directory intentionally has no review sidecars;
+    that output remains unreviewed rather than inheriting an unattested status.
+    """
+    cases_path = output / "alphalens-0.4.0-cloudquant-cases.json"
+    oracle_directory = output.parent / "oracle"
+    environment_path = oracle_directory / "alphalens-0.4.0-cloudquant-environment.json"
+    explicit_lock_path = oracle_directory / "alphalens-0.4.0-cloudquant-conda-explicit.txt"
+    requirements_path = oracle_directory / "requirements-alphalens-0.4.0-cloudquant.txt"
+    paths = (cases_path, environment_path, explicit_lock_path, requirements_path)
+    if not all(path.is_file() for path in paths):
+        return None
+    try:
+        cases = _load_existing(cases_path)
+        environment = _load_existing(environment_path)
+        if cases is None or environment is None:
+            return None
+        return {
+            "cases": cases,
+            "environment": environment,
+            "explicit_lock_sha256": hashlib.sha256(explicit_lock_path.read_bytes()).hexdigest(),
+            "requirements_sha256": hashlib.sha256(requirements_path.read_bytes()).hexdigest(),
+        }
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1611,7 +1746,14 @@ def _selected_targets_main(args: argparse.Namespace) -> None:
             root = _target_root(args.alphalens_root, "--alphalens-root", target)
             path = args.output / "alphalens-0.4.0-cloudquant-api.json"
             generated = _generate_alphalens(root)
-            _write_json(path, _merge_alphalens_oracle_attestation(generated, _load_existing(path)))
+            _write_json(
+                path,
+                _merge_alphalens_oracle_attestation(
+                    generated,
+                    _load_existing(path),
+                    _load_alphalens_oracle_companions(args.output),
+                ),
+            )
         else:  # pragma: no cover - argparse choices make this unreachable.
             raise ValueError(f"unsupported compatibility-manifest target {target!r}")
 

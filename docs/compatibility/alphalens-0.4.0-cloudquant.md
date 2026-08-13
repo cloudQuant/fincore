@@ -81,25 +81,34 @@ or numerical golden result, so they cannot be mistaken for a reviewed oracle.
 
 ## Oracle boundary
 
-The checked-in Conda explicit lock is an exact, hash-bearing observation of
-the current Darwin/arm64 base environment. It is **not** an executable oracle:
-the observed environment includes PyPI-installed dependencies with no reviewed
-wheel hashes, including `alphalens`, `empyrical`, and `pandas-datareader`.
-The corresponding pip requirements file is intentionally comment-only rather
-than pretending to support `pip --require-hashes`.
+The checked-in tuple is executable on the captured Darwin/arm64 platform:
 
-`scripts/generate_alphalens_oracle.py` validates a supplied source checkout's
-clean state, exact HEAD, pinned Git blobs, fixture schema, environment/lock
-digests, and (when approved) portable runtime fingerprint. It never checks out
-source, creates an environment, installs packages, or imports the sibling
-package. With the current metadata it must refuse to create a candidate because
-the environment is explicitly `unreviewed-current-base-observation`.
+- the Conda explicit lock has 19 exact package URLs with MD5 fragments;
+- the pip lock has 41 exact requirements and wheel SHA256 values under
+  `--require-hashes`; and
+- the environment record stores all 59 Conda/pip distribution name, version,
+  build, channel, and platform records plus raw and normalized runtime facts.
 
-A future review may mark an isolated execution tuple reviewed only after it
-has a complete Conda lock, a complete pip `--require-hashes` lock, matching
-source blobs/fingerprint, and separately reviewed candidate output digest.
-Changing the manifest's static evidence invalidates the retained oracle review
-attestation.
+`scripts/generate_alphalens_oracle.py` creates a temporary prefix from those
+locks, installs only the hashed pip tuple, clones a clean detached checkout of
+the pinned commit, and executes the cases with that prefix. It removes inherited
+`CONDA_*`, virtual-environment, and Python-path variables before executing the
+prefix interpreter. It rejects dirty sources, commit/blob/lock mismatches and
+raw or normalized runtime-fingerprint mismatches; it never installs into the
+Anaconda base environment.
+
+Darwin is retained in `runtime.raw.platform.system`; the corresponding portable
+name is `macOS` in `runtime.normalized.platform.os`, with `raw_system=Darwin`
+to make that translation auditable. The BLAS record is deliberately semantic
+(name/version/configuration), avoiding captured filesystem build paths.
+
+The tuple is still **unreviewed**. Running the command writes a transient
+candidate marked `reviewed=false`; it does not copy a candidate result into the
+fixture. A human may mark the three matching review attestations reviewed only
+after inspecting the candidate output and recording reviewer, date, candidate
+digest, environment digest, and the combined evidence key. Any source/API,
+case, environment, Conda lock, pip lock, candidate digest, or environment
+digest change invalidates that attestation.
 
 ## Reproduction
 
@@ -117,6 +126,20 @@ Pyfolio fixture bytes are not opened or rewritten.
 The integrity test also regenerates into a temporary directory twice and
 checks byte idempotence. It does not import Alphalens and can remain an
 offline, static CI check once the frozen fixture is committed.
+
+To create an unreviewed candidate from the complete tuple, use the plan's
+command with an output outside the source checkout, for example:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/generate_alphalens_oracle.py \
+  --source "$ALPHALENS_ROOT" \
+  --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
+  --environment tests/compat/oracle/alphalens-0.4.0-cloudquant-environment.json \
+  --explicit-lock tests/compat/oracle/alphalens-0.4.0-cloudquant-conda-explicit.txt \
+  --cases tests/compat/fixtures/alphalens-0.4.0-cloudquant-cases.json \
+  --output /tmp/alphalens-oracle-candidate.json
+```
 
 ## Provenance and license boundary
 

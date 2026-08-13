@@ -1,169 +1,205 @@
 {
-  "schema_version": 1,
-  "profile": "cloudquant-local-3fa17ad",
-  "execution_status": "unreviewed-current-base-observation",
-  "source": {
-    "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
-    "identity": "pinned-git-commit",
-    "worktree_required_clean": true,
-    "source_files": [
-      {
-        "git_blob": "339757d6d8027b680e89d3dc180e297ce38dd16d",
-        "path": "alphalens/__init__.py",
-        "sha256": "4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07"
-      },
-      {
-        "git_blob": "048b72a25ea891060f924ae03c52dc94f94687a2",
-        "path": "alphalens/performance.py",
-        "sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"
-      },
-      {
-        "git_blob": "85e8f312848a1cca6e07808f2d433d0c116364c4",
-        "path": "alphalens/plotting.py",
-        "sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"
-      },
-      {
-        "git_blob": "01664911c254f100ff272dd4a277dc2d1ba32753",
-        "path": "alphalens/tears.py",
-        "sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"
-      },
-      {
-        "git_blob": "8aca231a6b1c40764c9dae5f2e8ad9d22839b6dc",
-        "path": "alphalens/utils.py",
-        "sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"
-      }
-    ]
-  },
   "captured_on": "2026-08-13",
-  "runtime": {
-    "python": {
-      "implementation": "CPython",
-      "version": "3.11.8",
-      "build": "packaged by conda-forge; Clang 16.0.6",
-      "soabi": "cpython-311-darwin"
-    },
-    "platform": {
-      "os": "macOS",
-      "release": "26.5.1",
-      "machine": "arm64",
-      "processor": "arm",
-      "byteorder": "little"
-    },
-    "locale": "C/C.UTF-8/C/C/C/C",
-    "timezone": {
-      "TZ": null,
-      "tzname": [
-        "CST",
-        "CST"
-      ]
-    },
-    "blas": {
-      "implementation": "openblas64",
-      "version": "0.3.23.dev",
-      "configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SANDYBRIDGE MAX_THREADS=3"
-    }
-  },
   "distribution_inventory": {
     "manager": "conda list --json",
-    "observed_distribution_count": 1501,
-    "sha256": "529e84b123411bd14f00a895fe411e9519fad46fc8e63ca806d6a255a5b8040f",
-    "important_distributions": [
-      {
-        "build": "pypi_0",
-        "name": "alphalens",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "0.4.0"
-      },
-      {
-        "build": "pypi_0",
-        "name": "empyrical",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "0.5.6"
-      },
-      {
-        "build": "pypi_0",
-        "name": "pandas-datareader",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "0.10.0"
-      },
-      {
-        "build": "pypi_0",
-        "name": "numpy",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "1.26.4"
-      },
-      {
-        "build": "pypi_0",
-        "name": "pandas",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "3.0.3"
-      },
-      {
-        "build": "pypi_0",
-        "name": "scipy",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "1.17.1"
-      },
-      {
-        "build": "pypi_0",
-        "name": "matplotlib",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "3.10.9"
-      },
-      {
-        "build": "pypi_0",
-        "name": "seaborn",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "0.13.2"
-      },
-      {
-        "build": "pypi_0",
-        "name": "statsmodels",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "0.14.6"
-      },
-      {
-        "build": "pypi_0",
-        "name": "ipython",
-        "source": "pypi-observed-without-wheel-hash",
-        "version": "9.8.0"
-      }
-    ]
+    "records": [
+      {"build": "pypi_0", "channel": "pypi", "name": "asttokens", "platform": "pypi", "version": "3.0.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "bottleneck", "platform": "pypi", "version": "1.6.0"},
+      {"build": "h80987f9_6", "channel": "pkgs/main", "name": "bzip2", "platform": "osx-arm64", "version": "1.0.8"},
+      {"build": "hca03da5_0", "channel": "pkgs/main", "name": "ca-certificates", "platform": "osx-arm64", "version": "2026.7.16"},
+      {"build": "pypi_0", "channel": "pypi", "name": "certifi", "platform": "pypi", "version": "2026.7.22"},
+      {"build": "pypi_0", "channel": "pypi", "name": "charset-normalizer", "platform": "pypi", "version": "3.5.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "contourpy", "platform": "pypi", "version": "1.3.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "cycler", "platform": "pypi", "version": "0.12.1"},
+      {"build": "pypi_0", "channel": "pypi", "name": "decorator", "platform": "pypi", "version": "5.3.1"},
+      {"build": "pypi_0", "channel": "pypi", "name": "empyrical", "platform": "pypi", "version": "0.4.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "executing", "platform": "pypi", "version": "2.2.1"},
+      {"build": "pypi_0", "channel": "pypi", "name": "fonttools", "platform": "pypi", "version": "4.63.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "idna", "platform": "pypi", "version": "3.18"},
+      {"build": "pypi_0", "channel": "pypi", "name": "ipython", "platform": "pypi", "version": "8.18.1"},
+      {"build": "pypi_0", "channel": "pypi", "name": "jedi", "platform": "pypi", "version": "0.20.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "kiwisolver", "platform": "pypi", "version": "1.5.0"},
+      {"build": "hf894667_0", "channel": "pkgs/main", "name": "libcxx", "platform": "osx-arm64", "version": "22.1.2"},
+      {"build": "h50f4ffc_1", "channel": "pkgs/main", "name": "libexpat", "platform": "osx-arm64", "version": "2.8.2"},
+      {"build": "h4a3ca97_3", "channel": "pkgs/main", "name": "libffi", "platform": "osx-arm64", "version": "3.4.8"},
+      {"build": "hb4cf58c_0", "channel": "pkgs/main", "name": "libzlib", "platform": "osx-arm64", "version": "1.3.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "lxml", "platform": "pypi", "version": "6.1.1"},
+      {"build": "pypi_0", "channel": "pypi", "name": "matplotlib", "platform": "pypi", "version": "3.7.5"},
+      {"build": "pypi_0", "channel": "pypi", "name": "matplotlib-inline", "platform": "pypi", "version": "0.2.2"},
+      {"build": "hee39554_0", "channel": "pkgs/main", "name": "ncurses", "platform": "osx-arm64", "version": "6.5"},
+      {"build": "pypi_0", "channel": "pypi", "name": "numpy", "platform": "pypi", "version": "1.26.4"},
+      {"build": "ha0b305a_0", "channel": "pkgs/main", "name": "openssl", "platform": "osx-arm64", "version": "3.5.7"},
+      {"build": "pypi_0", "channel": "pypi", "name": "packaging", "platform": "pypi", "version": "26.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pandas", "platform": "pypi", "version": "1.5.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pandas-datareader", "platform": "pypi", "version": "0.10.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "parso", "platform": "pypi", "version": "0.8.7"},
+      {"build": "pypi_0", "channel": "pypi", "name": "patsy", "platform": "pypi", "version": "1.0.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pexpect", "platform": "pypi", "version": "4.9.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pillow", "platform": "pypi", "version": "12.3.0"},
+      {"build": "pyhc872135_0", "channel": "pkgs/main", "name": "pip", "platform": "noarch", "version": "26.1.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "prompt-toolkit", "platform": "pypi", "version": "3.0.53"},
+      {"build": "pypi_0", "channel": "pypi", "name": "ptyprocess", "platform": "pypi", "version": "0.7.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pure-eval", "platform": "pypi", "version": "0.2.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pygments", "platform": "pypi", "version": "2.20.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pyparsing", "platform": "pypi", "version": "3.3.2"},
+      {"build": "h478e877_1", "channel": "pkgs/main", "name": "python", "platform": "osx-arm64", "version": "3.11.15"},
+      {"build": "pypi_0", "channel": "pypi", "name": "python-dateutil", "platform": "pypi", "version": "2.9.0.post0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "pytz", "platform": "pypi", "version": "2026.3.post1"},
+      {"build": "h0b18652_0", "channel": "pkgs/main", "name": "readline", "platform": "osx-arm64", "version": "8.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "requests", "platform": "pypi", "version": "2.34.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "scipy", "platform": "pypi", "version": "1.11.4"},
+      {"build": "pypi_0", "channel": "pypi", "name": "seaborn", "platform": "pypi", "version": "0.12.2"},
+      {"build": "py311hca03da5_0", "channel": "pkgs/main", "name": "setuptools", "platform": "osx-arm64", "version": "83.0.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "six", "platform": "pypi", "version": "1.17.0"},
+      {"build": "h1cce5ff_0", "channel": "pkgs/main", "name": "sqlite", "platform": "osx-arm64", "version": "3.53.2"},
+      {"build": "pypi_0", "channel": "pypi", "name": "stack-data", "platform": "pypi", "version": "0.6.3"},
+      {"build": "pypi_0", "channel": "pypi", "name": "statsmodels", "platform": "pypi", "version": "0.14.1"},
+      {"build": "hcd8a7d5_0", "channel": "pkgs/main", "name": "tk", "platform": "osx-arm64", "version": "8.6.15"},
+      {"build": "pypi_0", "channel": "pypi", "name": "traitlets", "platform": "pypi", "version": "5.16.1"},
+      {"build": "he532380_0", "channel": "pkgs/main", "name": "tzdata", "platform": "noarch", "version": "2026c"},
+      {"build": "pypi_0", "channel": "pypi", "name": "urllib3", "platform": "pypi", "version": "2.7.0"},
+      {"build": "pypi_0", "channel": "pypi", "name": "wcwidth", "platform": "pypi", "version": "0.8.2"},
+      {"build": "py311hca03da5_0", "channel": "pkgs/main", "name": "wheel", "platform": "osx-arm64", "version": "0.47.0"},
+      {"build": "h8bbcb1d_0", "channel": "pkgs/main", "name": "xz", "platform": "osx-arm64", "version": "5.8.2"},
+      {"build": "hb4cf58c_0", "channel": "pkgs/main", "name": "zlib", "platform": "osx-arm64", "version": "1.3.2"}
+    ],
+    "sha256": "c6f1d34b0e3a387f055795deb00a729f67d3999ba73ae07c3c7fbcab4a58bb9d"
   },
+  "execution_status": "executable-unreviewed-tuple",
   "explicit_lock": {
     "format": "conda-explicit-with-md5-fragments",
+    "line_count": 24,
+    "package_url_count": 19,
     "path": "tests/compat/oracle/alphalens-0.4.0-cloudquant-conda-explicit.txt",
-    "sha256": "ee7d70abff70abc8e070f930b736cfbe8a6530df78e054514b984458e340605b",
-    "line_count": 437,
-    "package_url_count": 432,
-    "status": "complete-for-observed-conda-packages-only"
+    "platform": "osx-arm64",
+    "sha256": "6e4ec20b70f15bbfe253ae96ea8b5323c41a900cc529b2ef4abbbc26da5216fb",
+    "status": "complete-executable-conda-packages"
   },
-  "requirements": {
-    "format": "pip-requirements-requires-hashes-when-populated",
-    "path": "tests/compat/oracle/requirements-alphalens-0.4.0-cloudquant.txt",
-    "sha256": "fc57e6a775f17e1b644360331da6bdfc5ab18d14ec7305a1a85536632addbb4e",
-    "status": "intentionally-empty-no-reviewed-pip-hashes"
-  },
-  "serializer": {
-    "schema": "fincore-compat-json-table-v1",
-    "required_fields": [
-      "index",
-      "index_names",
-      "timezone",
-      "columns",
-      "dtypes",
-      "values",
-      "nan_mask"
-    ]
-  },
+  "known_constraints": [
+    "The tuple is executable but its numerical candidate remains unreviewed; no golden output is checked into the case fixture.",
+    "The reviewed identity is the pinned Git commit, not the ambiguous Versioneer/setup.py version strings.",
+    "The pip wheel tuple is intentionally macOS arm64 and CPython 3.11 specific because those are the captured execution facts."
+  ],
   "oracle_verification": {
     "reviewed": false,
     "status": "not-run"
   },
-  "known_constraints": [
-    "This is an observation of the current base environment, not an executable isolated oracle tuple.",
-    "The required PyPI wheel hashes are not available in the checked-in evidence, so the pip lock is intentionally empty rather than falsely unhashed.",
-    "The pinned source imports empyrical, whose observed 0.5.6 dependency path reaches pandas-datareader 0.10.0 and fails under observed pandas 3.0.3 during collection.",
-    "No generated numerical result or golden output is asserted by this metadata."
-  ]
+  "profile": "cloudquant-local-3fa17ad",
+  "requirements": {
+    "format": "pip-requirements-require-hashes",
+    "package_count": 41,
+    "path": "tests/compat/oracle/requirements-alphalens-0.4.0-cloudquant.txt",
+    "sha256": "3ffbeb59b2f5e8d406480fd05de9e4f48ba70659ae26634e8a1dd51b96e5347e",
+    "status": "complete-executable-pip-hash-lock"
+  },
+  "runtime": {
+    "normalized": {
+      "blas": {
+        "configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SANDYBRIDGE MAX_THREADS=3",
+        "found": true,
+        "name": "openblas64",
+        "version": "0.3.23.dev"
+      },
+      "locale": "C/C.UTF-8/C/C/C/C",
+      "platform": {
+        "byteorder": "little",
+        "machine": "arm64",
+        "os": "macOS",
+        "processor": "arm",
+        "raw_system": "Darwin",
+        "release": "25.5.0"
+      },
+      "python": {
+        "implementation": "CPython",
+        "soabi": "cpython-311-darwin",
+        "version": "3.11.15"
+      },
+      "timezone": {"TZ": null, "tzname": ["CST", "CST"]}
+    },
+    "raw": {
+      "blas": {
+        "configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SANDYBRIDGE MAX_THREADS=3",
+        "found": true,
+        "name": "openblas64",
+        "version": "0.3.23.dev"
+      },
+      "distributions": {
+        "Bottleneck": "1.6.0",
+        "Pygments": "2.20.0",
+        "asttokens": "3.0.2",
+        "certifi": "2026.7.22",
+        "charset-normalizer": "3.5.0",
+        "contourpy": "1.3.3",
+        "cycler": "0.12.1",
+        "decorator": "5.3.1",
+        "empyrical": "0.4.2",
+        "executing": "2.2.1",
+        "fonttools": "4.63.0",
+        "idna": "3.18",
+        "ipython": "8.18.1",
+        "jedi": "0.20.0",
+        "kiwisolver": "1.5.0",
+        "lxml": "6.1.1",
+        "matplotlib": "3.7.5",
+        "matplotlib-inline": "0.2.2",
+        "numpy": "1.26.4",
+        "packaging": "26.3",
+        "pandas": "1.5.3",
+        "pandas-datareader": "0.10.0",
+        "parso": "0.8.7",
+        "patsy": "1.0.2",
+        "pexpect": "4.9.0",
+        "pillow": "12.3.0",
+        "pip": "26.1.2",
+        "prompt_toolkit": "3.0.53",
+        "ptyprocess": "0.7.0",
+        "pure_eval": "0.2.3",
+        "pyparsing": "3.3.2",
+        "python-dateutil": "2.9.0.post0",
+        "pytz": "2026.3.post1",
+        "requests": "2.34.2",
+        "scipy": "1.11.4",
+        "seaborn": "0.12.2",
+        "setuptools": "83.0.0",
+        "six": "1.17.0",
+        "stack-data": "0.6.3",
+        "statsmodels": "0.14.1",
+        "traitlets": "5.16.1",
+        "urllib3": "2.7.0",
+        "wcwidth": "0.8.2",
+        "wheel": "0.47.0"
+      },
+      "locale": "C/C.UTF-8/C/C/C/C",
+      "platform": {
+        "byteorder": "little",
+        "machine": "arm64",
+        "processor": "arm",
+        "release": "25.5.0",
+        "system": "Darwin"
+      },
+      "python": {
+        "implementation": "CPython",
+        "soabi": "cpython-311-darwin",
+        "version": "3.11.15"
+      },
+      "timezone": {"TZ": null, "tzname": ["CST", "CST"]}
+    }
+  },
+  "schema_version": 2,
+  "serializer": {
+    "required_fields": ["index", "index_names", "timezone", "columns", "dtypes", "values", "nan_mask"],
+    "schema": "fincore-compat-json-table-v1"
+  },
+  "source": {
+    "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+    "identity": "pinned-git-commit",
+    "source_files": [
+      {"git_blob": "339757d6d8027b680e89d3dc180e297ce38dd16d", "path": "alphalens/__init__.py", "sha256": "4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07"},
+      {"git_blob": "048b72a25ea891060f924ae03c52dc94f94687a2", "path": "alphalens/performance.py", "sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"},
+      {"git_blob": "85e8f312848a1cca6e07808f2d433d0c116364c4", "path": "alphalens/plotting.py", "sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"},
+      {"git_blob": "01664911c254f100ff272dd4a277dc2d1ba32753", "path": "alphalens/tears.py", "sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"},
+      {"git_blob": "8aca231a6b1c40764c9dae5f2e8ad9d22839b6dc", "path": "alphalens/utils.py", "sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"}
+    ],
+    "worktree_required_clean": true
+  }
 }

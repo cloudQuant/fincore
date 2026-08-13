@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import hashlib
 import importlib.util
 import inspect
@@ -15,6 +16,7 @@ import pytest
 FIXTURES = Path(__file__).parent / "fixtures"
 ROOT = Path(__file__).parents[2]
 GENERATOR = ROOT / "scripts" / "generate_compat_manifest.py"
+ALPHALENS_ORACLE = ROOT / "scripts" / "generate_alphalens_oracle.py"
 ALPHALENS_ROOT = ROOT.parent / "alphalens"
 _EXISTING_FIXTURES = (
     "empyrical-0.6.0-api.json",
@@ -55,6 +57,15 @@ def _load_generator() -> Any:
     return module
 
 
+def _load_alphalens_oracle() -> Any:
+    spec = importlib.util.spec_from_file_location("alphalens_oracle_generator", ALPHALENS_ORACLE)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def _by_symbol(entries: list[dict[str, Any]], symbol: str) -> dict[str, Any]:
     return next(entry for entry in entries if entry["symbol"] == symbol)
 
@@ -81,6 +92,54 @@ def _assert_reconstructable_signature(signature: str) -> None:
     namespace: dict[str, Any] = {}
     exec(f"def _f{signature}:\n    pass\n", {"__builtins__": {}}, namespace)
     assert str(inspect.signature(namespace["_f"])) == signature
+
+
+def _reviewable_alphalens_evidence(generator: Any) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Return one small independent review tuple for attestation regression tests."""
+    generated = {
+        "commit": "a" * 40,
+        "source_files": [{"path": "alphalens/utils.py", "sha256": "1" * 64}],
+        "evidence_files": [{"path": "LICENSE", "sha256": "2" * 64}],
+        "reported_versions": {"versioneer": "0.4.0", "setup_fallback": "1.0.0+dev"},
+        "entries": [{"module": "utils", "symbol": "quantize_factor", "source_sha256": "1" * 64}],
+        "oracle_verification": {"status": "not-run", "reviewed": False},
+    }
+    companions = {
+        "cases": {
+            "commit": "a" * 40,
+            "serializer": {"name": "fincore-compat-json-table-v1"},
+            "cases": [{"case_id": "small", "value": 1}],
+            "oracle_verification": {"status": "not-run", "reviewed": False},
+        },
+        "environment": {
+            "source": {"commit": "a" * 40},
+            "runtime": {"fingerprint": {"platform": {"os": "macOS"}}},
+            "oracle_verification": {"status": "not-run", "reviewed": False},
+        },
+        "explicit_lock_sha256": "4" * 64,
+        "requirements_sha256": "5" * 64,
+    }
+    initial = generator._merge_alphalens_oracle_attestation(generated, None, companions)
+    environment_digest = generator._alphalens_json_digest(companions["environment"])
+    attestation = {
+        "candidate_digest": "6" * 64,
+        "environment_digest": environment_digest,
+        "evidence_key": generator._alphalens_review_evidence_key(
+            generated,
+            companions,
+            candidate_digest="6" * 64,
+            environment_digest=environment_digest,
+        ),
+        "reviewed": True,
+        "reviewed_at": "2026-08-13",
+        "reviewer": "compat-reviewer@example.test",
+        "status": "captured-reviewed",
+    }
+    reviewed = copy.deepcopy(initial)
+    reviewed["oracle_verification"] = copy.deepcopy(attestation)
+    companions["cases"]["oracle_verification"] = copy.deepcopy(attestation)
+    companions["environment"]["oracle_verification"] = copy.deepcopy(attestation)
+    return generated, reviewed, companions
 
 
 def test_alphalens_manifest_is_pinned_and_complete() -> None:
@@ -214,19 +273,44 @@ def test_alphalens_oracle_metadata_is_truthful_unreviewed_observation() -> None:
     requirements = environment_path.with_name("requirements-alphalens-0.4.0-cloudquant.txt")
     assert environment["profile"] == ALPHALENS_PROFILE
     assert environment["source"]["commit"] == ALPHALENS_COMMIT
-    assert environment["oracle_verification"] == {
-        "reviewed": False,
-        "status": "not-run",
-    }
-    assert environment["execution_status"] == "unreviewed-current-base-observation"
+    assert environment["oracle_verification"] == {"reviewed": False, "status": "not-run"}
+    assert environment["execution_status"] == "executable-unreviewed-tuple"
     assert environment["explicit_lock"]["sha256"] == hashlib.sha256(explicit_lock.read_bytes()).hexdigest()
     assert environment["requirements"]["sha256"] == hashlib.sha256(requirements.read_bytes()).hexdigest()
     assert "@EXPLICIT" in explicit_lock.read_text(encoding="utf-8")
-    assert all(
-        line.startswith("#") or line == "@EXPLICIT" or not line.strip()
+    explicit_packages = [
+        line
+        for line in explicit_lock.read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#") and line != "@EXPLICIT"
+    ]
+    requirements_packages = [
+        line
         for line in requirements.read_text(encoding="utf-8").splitlines()
-    )
-    assert "/Users/" not in json.dumps(environment, sort_keys=True)
+        if line and not line.startswith("#") and not line.startswith("--")
+    ]
+    assert len(explicit_packages) == environment["explicit_lock"]["package_url_count"]
+    assert all("#" in line for line in explicit_packages)
+    assert environment["requirements"]["package_count"] == len(requirements_packages)
+    assert "--require-hashes" in requirements.read_text(encoding="utf-8")
+    assert all(" --hash=sha256:" in line for line in requirements_packages)
+    records = environment["distribution_inventory"]["records"]
+    generator = _load_alphalens_oracle()
+    assert len(records) == 59
+    assert environment["distribution_inventory"]["sha256"] == generator._json_digest({"records": records})
+    assert all({"name", "version", "build", "channel", "platform"} <= set(record) for record in records)
+    assert environment["runtime"]["raw"]["platform"]["system"] == "Darwin"
+    assert environment["runtime"]["normalized"]["platform"] == {
+        "byteorder": "little",
+        "machine": "arm64",
+        "os": "macOS",
+        "processor": "arm",
+        "raw_system": "Darwin",
+        "release": "25.5.0",
+    }
+    serialized = json.dumps(environment, sort_keys=True)
+    assert "/Users/" not in serialized
+    assert "\\Users\\" not in serialized
+    assert "/private/" not in serialized
     _assert_portable_provenance({"source_files": environment["source"]["source_files"]})
 
 
@@ -265,9 +349,14 @@ def test_alphalens_manifest_hashes_are_read_from_pinned_git_blobs() -> None:
         assert source.blob_id(entry["path"]) == entry["git_blob"]
 
 
-def test_alphalens_oracle_refuses_unreviewed_environment_without_writing_output(tmp_path: Path) -> None:
+def test_alphalens_oracle_refuses_nonexecutable_environment_without_writing_output(tmp_path: Path) -> None:
     if not ALPHALENS_ROOT.is_dir():
         pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    environment_path = Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json"
+    environment = json.loads(environment_path.read_text(encoding="utf-8"))
+    environment["execution_status"] = "unreviewed-current-base-observation"
+    invalid_environment = tmp_path / "environment.json"
+    invalid_environment.write_text(json.dumps(environment), encoding="utf-8")
     output = tmp_path / "candidate.json"
     result = subprocess.run(
         [
@@ -278,7 +367,7 @@ def test_alphalens_oracle_refuses_unreviewed_environment_without_writing_output(
             "--commit",
             ALPHALENS_COMMIT,
             "--environment",
-            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json").as_posix(),
+            invalid_environment.as_posix(),
             "--explicit-lock",
             (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-conda-explicit.txt").as_posix(),
             "--cases",
@@ -290,7 +379,7 @@ def test_alphalens_oracle_refuses_unreviewed_environment_without_writing_output(
         text=True,
     )
     assert result.returncode != 0
-    assert "unreviewed" in f"{result.stdout}\n{result.stderr}".lower()
+    assert "executable isolated tuple" in f"{result.stdout}\n{result.stderr}".lower()
     assert not output.exists()
 
 
@@ -357,32 +446,82 @@ def test_alphalens_oracle_refuses_to_write_inside_the_source_checkout() -> None:
     assert not output.exists()
 
 
-def test_alphalens_oracle_review_is_preserved_only_for_identical_evidence() -> None:
+def test_alphalens_oracle_review_attestation_invalidates_for_every_review_relevant_digest() -> None:
     generator = _load_generator()
-    generated = {
-        "commit": "a" * 40,
-        "source_files": [{"path": "alphalens/utils.py", "sha256": "1" * 64}],
-        "evidence_files": [{"path": "LICENSE", "sha256": "2" * 64}],
-        "reported_versions": {"versioneer": "0.4.0", "setup_fallback": "1.0.0+dev"},
-        "entries": [{"module": "utils", "symbol": "quantize_factor", "source_sha256": "1" * 64}],
-        "oracle_verification": {"status": "not-run", "reviewed": False},
-    }
-    first = generator._merge_alphalens_oracle_attestation(generated, None)
-    reviewed = json.loads(json.dumps(first))
-    reviewed["oracle_verification"] = {
-        "candidate_digest": "3" * 64,
-        "evidence_key": first["oracle_verification"]["evidence_key"],
-        "reviewed": True,
-        "status": "captured-reviewed",
-    }
-    preserved = generator._merge_alphalens_oracle_attestation(generated, reviewed)
+    generated, reviewed, companions = _reviewable_alphalens_evidence(generator)
+    preserved = generator._merge_alphalens_oracle_attestation(generated, reviewed, companions)
     assert preserved["oracle_verification"] == reviewed["oracle_verification"]
 
-    drifted = json.loads(json.dumps(generated))
-    drifted["source_files"][0]["sha256"] = "4" * 64
-    invalidated = generator._merge_alphalens_oracle_attestation(drifted, reviewed)
+    mutations = {
+        "api-source": lambda api, evidence: api["source_files"][0].__setitem__("sha256", "7" * 64),
+        "api-evidence": lambda api, evidence: api["evidence_files"][0].__setitem__("sha256", "8" * 64),
+        "cases": lambda api, evidence: evidence["cases"]["cases"][0].__setitem__("value", 2),
+        "environment": lambda api, evidence: evidence["environment"]["runtime"]["fingerprint"].__setitem__(
+            "schema", "changed"
+        ),
+        "conda-explicit-lock": lambda api, evidence: evidence.__setitem__("explicit_lock_sha256", "9" * 64),
+        "pip-requirements-lock": lambda api, evidence: evidence.__setitem__("requirements_sha256", "a" * 64),
+        "candidate-output-digest": lambda api, evidence: evidence["cases"]["oracle_verification"].__setitem__(
+            "candidate_digest", "b" * 64
+        ),
+        "candidate-environment-digest": lambda api, evidence: evidence["environment"][
+            "oracle_verification"
+        ].__setitem__("environment_digest", "c" * 64),
+    }
+    for name, mutate in mutations.items():
+        drifted_api = copy.deepcopy(generated)
+        drifted_companions = copy.deepcopy(companions)
+        mutate(drifted_api, drifted_companions)
+        invalidated = generator._merge_alphalens_oracle_attestation(drifted_api, reviewed, drifted_companions)
+        assert invalidated["oracle_verification"]["reviewed"] is False, name
+        assert invalidated["oracle_verification"]["status"] == "not-run", name
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("reviewer", ""),
+        ("reviewed_at", "not-a-date"),
+        ("candidate_digest", None),
+        ("environment_digest", None),
+    ],
+)
+def test_alphalens_reviewed_attestation_requires_reviewer_date_and_matching_digests(field: str, value: Any) -> None:
+    generator = _load_generator()
+    generated, reviewed, companions = _reviewable_alphalens_evidence(generator)
+    reviewed["oracle_verification"][field] = value
+    for sidecar in (companions["cases"], companions["environment"]):
+        sidecar["oracle_verification"][field] = value
+
+    invalidated = generator._merge_alphalens_oracle_attestation(generated, reviewed, companions)
     assert invalidated["oracle_verification"]["reviewed"] is False
     assert invalidated["oracle_verification"]["status"] == "not-run"
+
+
+def test_alphalens_oracle_approved_tuple_validates_darwin_as_macos() -> None:
+    oracle = _load_alphalens_oracle()
+    raw_runtime = {
+        "python": {"implementation": "CPython", "version": "3.11.8", "soabi": "cpython-311-darwin"},
+        "platform": {
+            "system": "Darwin",
+            "release": "26.5.1",
+            "machine": "arm64",
+            "processor": "arm",
+            "byteorder": "little",
+        },
+        "locale": "C/C.UTF-8/C/C/C/C",
+        "timezone": {"TZ": None, "tzname": ["CST", "CST"]},
+        "blas": {"configuration": "known", "found": True, "name": "openblas", "version": "1"},
+        "distributions": {},
+    }
+    normalized_runtime = oracle._normalize_runtime_fingerprint(raw_runtime)
+    assert normalized_runtime["platform"]["os"] == "macOS"
+    assert normalized_runtime["platform"]["raw_system"] == "Darwin"
+    environment = {
+        "runtime": {"raw": raw_runtime, "normalized": normalized_runtime},
+        "execution_status": "reviewed-executable-tuple",
+    }
+    assert oracle._validate_isolated_runtime(environment, raw_runtime) == normalized_runtime
 
 
 def test_empyrical_manifest_is_pinned_and_complete() -> None:

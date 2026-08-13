@@ -86,13 +86,13 @@
         },
         "prices": {
           "kind": "dataframe",
-          "index": ["2020-01-02", "2020-01-03", "2020-01-06", "2020-01-09"],
+          "index": ["2020-01-02", "2020-01-03", "2020-01-06", "2020-01-07", "2020-01-08", "2020-01-09", "2020-01-10"],
           "index_names": ["date"],
           "timezone": null,
           "columns": ["A", "B"],
           "dtypes": {"A": "float64", "B": "float64"},
-          "values": [[100.0, 50.0], [102.0, 49.0], [104.0, 51.0], [105.0, 52.0]],
-          "nan_mask": [[false, false], [false, false], [false, false], [false, false]]
+          "values": [[100.0, 50.0], [102.0, 49.0], [104.0, 51.0], [105.0, 52.0], [107.0, 53.0], [109.0, 54.0], [110.0, 55.0]],
+          "nan_mask": [[false, false], [false, false], [false, false], [false, false], [false, false], [false, false], [false, false]]
         }
       }
     },
@@ -105,23 +105,23 @@
       "tables": {
         "factor": {
           "kind": "series",
-          "index": [["2020-07-02", "A"], ["2020-07-06", "A"]],
+          "index": [["2020-07-02", "A"], ["2020-07-02", "B"], ["2020-07-06", "A"], ["2020-07-06", "B"]],
           "index_names": ["date", "asset"],
           "timezone": null,
           "columns": ["factor"],
           "dtypes": {"factor": "float64"},
-          "values": [[1.0], [2.0]],
-          "nan_mask": [[false], [false]]
+          "values": [[1.0], [-1.0], [2.0], [-2.0]],
+          "nan_mask": [[false], [false], [false], [false]]
         },
         "prices": {
           "kind": "dataframe",
-          "index": ["2020-07-02", "2020-07-06", "2020-07-07", "2020-07-08"],
+          "index": ["2020-07-02", "2020-07-06", "2020-07-07", "2020-07-08", "2020-07-09", "2020-07-10"],
           "index_names": ["date"],
           "timezone": null,
-          "columns": ["A"],
-          "dtypes": {"A": "float64"},
-          "values": [[100.0], [101.0], [103.0], [102.0]],
-          "nan_mask": [[false], [false], [false], [false]]
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[100.0, 50.0], [101.0, 49.0], [103.0, 50.0], [102.0, 51.0], [104.0, 52.0], [105.0, 53.0]],
+          "nan_mask": [[false, false], [false, false], [false, false], [false, false], [false, false], [false, false]]
         }
       }
     },
@@ -129,28 +129,28 @@
       "case_id": "intraday-four-hour-v1",
       "category": "intraday",
       "serializer": "fincore-compat-json-table-v1",
-      "purpose": "intraday forward-return labels retain time-of-day",
+      "purpose": "intraday timestamps retain their 09:30 time-of-day across business dates",
       "parameters": {"periods": [1]},
       "tables": {
         "factor": {
           "kind": "series",
-          "index": [["2020-01-02T09:30:00", "A"], ["2020-01-02T13:30:00", "A"]],
+          "index": [["2020-01-02T09:30:00", "A"], ["2020-01-02T09:30:00", "B"], ["2020-01-03T09:30:00", "A"], ["2020-01-03T09:30:00", "B"]],
           "index_names": ["date", "asset"],
           "timezone": null,
           "columns": ["factor"],
           "dtypes": {"factor": "float64"},
-          "values": [[0.25], [0.75]],
-          "nan_mask": [[false], [false]]
+          "values": [[0.25], [-0.25], [0.75], [-0.75]],
+          "nan_mask": [[false], [false], [false], [false]]
         },
         "prices": {
           "kind": "dataframe",
-          "index": ["2020-01-02T09:30:00", "2020-01-02T13:30:00", "2020-01-02T15:30:00"],
+          "index": ["2020-01-02T09:30:00", "2020-01-03T09:30:00", "2020-01-06T09:30:00"],
           "index_names": ["date"],
           "timezone": null,
-          "columns": ["A"],
-          "dtypes": {"A": "float64"},
-          "values": [[10.0], [10.4], [10.2]],
-          "nan_mask": [[false], [false], [false]]
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[10.0, 20.0], [10.4, 19.5], [10.2, 20.5]],
+          "nan_mask": [[false, false], [false, false], [false, false]]
         }
       }
     },
@@ -163,23 +163,23 @@
       "tables": {
         "factor": {
           "kind": "series",
-          "index": [["2020-01-02T00:00:00+00:00", "A"], ["2020-01-03T00:00:00+00:00", "A"]],
+          "index": [["2020-01-02T00:00:00+00:00", "A"], ["2020-01-02T00:00:00+00:00", "B"], ["2020-01-03T00:00:00+00:00", "A"], ["2020-01-03T00:00:00+00:00", "B"]],
           "index_names": ["date", "asset"],
           "timezone": "UTC",
           "columns": ["factor"],
           "dtypes": {"factor": "float64"},
-          "values": [[1.0], [-1.0]],
-          "nan_mask": [[false], [false]]
+          "values": [[1.0], [-1.0], [0.5], [-0.5]],
+          "nan_mask": [[false], [false], [false], [false]]
         },
         "prices": {
           "kind": "dataframe",
           "index": ["2020-01-02T00:00:00+00:00", "2020-01-03T00:00:00+00:00", "2020-01-06T00:00:00+00:00"],
           "index_names": ["date"],
           "timezone": "UTC",
-          "columns": ["A"],
-          "dtypes": {"A": "float64"},
-          "values": [[100.0], [99.0], [101.0]],
-          "nan_mask": [[false], [false], [false]]
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[100.0, 50.0], [99.0, 51.0], [101.0, 50.0]],
+          "nan_mask": [[false, false], [false, false], [false, false]]
         }
       }
     },
