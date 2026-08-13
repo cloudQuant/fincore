@@ -338,6 +338,7 @@ jobs:
 
       - name: Run rolling benchmarks
         run: |
+          mkdir -p .benchmarks
           python scripts/run_rolling_benchmarks.py \
             --sizes 2520 25200 --windows 21 63 252 504 \
             --repeats 3 --output .benchmarks/rolling-candidate.json

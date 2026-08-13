@@ -72,6 +72,8 @@ def _build_wheel(out_dir: Path) -> Path:
             break
         if "No module named build" in proc.stderr:
             continue  # `build` package not installed; try the pip fallback
+        if "Cannot import 'setuptools.build_meta'" in proc.stderr:
+            continue  # build backend absent without isolation; tooling unavailable
         raise AssertionError(f"wheel build failed: {' '.join(cmd)}\n{proc.stdout}\n{proc.stderr}")
     else:
         pytest.skip("cannot build a wheel: `build` and `pip wheel` are both unavailable")

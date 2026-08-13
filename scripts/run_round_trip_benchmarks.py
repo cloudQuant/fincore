@@ -150,6 +150,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"{case['wall_seconds']:.4f}s rss_delta={case['rss_delta_bytes']} "
                     f"round_trips={case['round_trip_count']}"
                 )
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     with Path(args.output).open("w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2)
     print(f"wrote {len(cases)} cases to {args.output}")
