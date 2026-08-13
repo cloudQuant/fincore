@@ -133,7 +133,13 @@ def strict_pyfolio_adapter(
 ) -> Any:
     """Invoke a strict workflow and apply its pinned return projection."""
 
-    result = workflow(spec.public_name, arguments)
+    from fincore._dispatch import _raw_kernel_execution
+
+    # Pyfolio workflows compose many metric modules.  Keep that complete
+    # nested call on the frozen compatibility path rather than allowing an
+    # enhanced module wrapper reached deep in the tear sheet to validate it.
+    with _raw_kernel_execution():
+        result = workflow(spec.public_name, arguments)
     if spec.result_projection == "legacy_none":
         return None
     return result

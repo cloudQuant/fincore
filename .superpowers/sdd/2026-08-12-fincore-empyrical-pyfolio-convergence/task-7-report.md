@@ -81,6 +81,29 @@ The stale drawdown-composition assertion also failed against the renamed raw
 `_cum_returns` reference, then passed after the test was migrated to prove the
 actual raw callable rather than a removed private name.
 
+### Independent-review strict Pyfolio follow-up
+
+The first independent review found one P1 compatibility leak: the strict
+Pyfolio wrapper selected a `legacy_pyfolio` workflow spec, but nested tear-sheet
+calls reached enhanced metric-module wrappers after workflow resolution. A
+NaN-containing returns series that the pinned workflow tolerates therefore
+raised `NumericalError`. The two real workflow regressions were written first:
+
+```text
+strict NaN oracle + forbidden enhanced validator: 2 failed
+```
+
+`strict_pyfolio_adapter` now enters the same context-local raw execution guard
+for the complete nested workflow call. The boundary is limited to strict
+registry entries using that adapter; enhanced report/artifact entry points are
+unchanged, and the adapter still applies the pinned result projection after a
+successful call without catching workflow exceptions. The focused result is:
+
+```text
+strict NaN oracle + returns/full validator isolation: 2 passed, 1 expected warning
+full e2e + strict workflow public boundary: 38 passed, 1 expected warning
+```
+
 ## Fresh acceptance evidence
 
 Final Task 7 and cross-task gates on the staged implementation are:
@@ -91,12 +114,14 @@ tests/contracts + tests/test_core + tests/test_report: 351 passed
 Task 3 strict public/signature/state/out selector: 203 passed
 Task 4 five compatibility modules: 260 passed, 3 pinned Pandas warnings
 Task 5 domain plus manifest selector: 114 passed
-Task 6 exact Pyfolio selector: 354 passed, 9 expected business warnings
+Task 6 exact Pyfolio selector after review fix: 356 passed, 10 expected business warnings
+Task 7 contracts + strict Empyrical selector: 435 passed
 ```
 
-The three Task 4 warnings are the frozen outer-concat behavior. The nine
-Task 6 warnings are the existing named-interesting-period warning for
-non-overlapping synthetic returns.
+The three Task 4 warnings are the frozen outer-concat behavior. The ten Task 6
+warnings are the existing named-interesting-period warning for non-overlapping
+synthetic returns; one is emitted by the new real full-workflow isolation
+regression.
 
 Static gates for all Task 7-owned Python paths are clean:
 

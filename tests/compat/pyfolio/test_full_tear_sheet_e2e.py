@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytest
 
 
 def _html_text(value: object) -> str:
@@ -38,6 +39,43 @@ def test_returns_workflow_returns_figure_with_expected_axes_and_tables(
     ]
     assert matplotlib.get_backend() == backend
     plt.close(figure)
+
+
+def test_strict_returns_workflow_keeps_pinned_nan_tolerance(workflow_returns: pd.Series, monkeypatch) -> None:
+    from fincore import pyfolio
+    from fincore.utils import common_utils
+
+    returns_with_nan = workflow_returns.copy()
+    returns_with_nan.iloc[7] = np.nan
+    monkeypatch.setattr(common_utils, "display", lambda _value: None)
+
+    figure = pyfolio.create_returns_tear_sheet(returns_with_nan, run_flask_app=True)
+
+    assert isinstance(figure, matplotlib.figure.Figure)
+    assert len(figure.axes) == 12
+    plt.close(figure)
+
+
+def test_strict_returns_and_full_workflows_never_enter_enhanced_validation(
+    workflow_returns: pd.Series, monkeypatch
+) -> None:
+    import fincore.contracts.validation as validation
+    from fincore import pyfolio
+    from fincore.utils import common_utils
+
+    def forbidden(*_args, **_kwargs):
+        pytest.fail("strict Pyfolio workflow reached enhanced metric validation")
+
+    monkeypatch.setattr(validation, "validate_metric_arguments", forbidden)
+    monkeypatch.setattr(common_utils, "display", lambda _value: None)
+    plt.close("all")
+
+    returns_figure = pyfolio.create_returns_tear_sheet(workflow_returns, run_flask_app=True)
+    full_result = pyfolio.create_full_tear_sheet(workflow_returns, set_context=False)
+
+    assert isinstance(returns_figure, matplotlib.figure.Figure)
+    assert full_result is None
+    plt.close("all")
 
 
 def test_strict_full_workflow_runs_real_subsheets_and_preserves_none_projection(
