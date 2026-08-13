@@ -6,7 +6,7 @@ Provides a concrete :class:`MatplotlibBackend` implementing the
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -114,10 +114,11 @@ class MatplotlibBackend:
         monthly_returns: pd.DataFrame
         if isinstance(returns, pd.Series):
             monthly = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+            idx = cast("pd.DatetimeIndex", monthly.index)
             monthly_df = pd.DataFrame(
                 {
-                    "year": monthly.index.year,
-                    "month": monthly.index.month,
+                    "year": idx.year,
+                    "month": idx.month,
                     "return": monthly.values,
                 }
             )

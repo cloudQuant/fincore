@@ -5,7 +5,7 @@ Includes capacity sweep and cone plots.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import matplotlib.pyplot as plt
 from matplotlib import figure
@@ -75,7 +75,10 @@ def plot_capacity_sweep(
         sharpe = empyrical_instance.sharpe_ratio(adj_ret)
         if sharpe < -1:
             break
-        captial_base_sweep.loc[start_pv] = sharpe
+        # pandas-stubs exclude bare int labels from _LocIndexerSeries
+        # __setitem__; runtime .loc accepts a new scalar int label, so cast
+        # to preserve the exact runtime behaviour.
+        cast("Any", captial_base_sweep.loc)[start_pv] = sharpe
     captial_base_sweep.index = captial_base_sweep.index / MM_DISPLAY_UNIT
 
     if ax is None:

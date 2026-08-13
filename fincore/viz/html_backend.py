@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import html as _html
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -153,13 +153,14 @@ tr:nth-child(even) { background: #f9fafb; }
         monthly_returns: pd.DataFrame
         if isinstance(returns, pd.Series):
             monthly = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
-            monthly_df = pd.DataFrame(
-                {"year": monthly.index.year, "month": monthly.index.month, "return": monthly.values}
-            )
+            idx = cast("pd.DatetimeIndex", monthly.index)
+            monthly_df = pd.DataFrame({"year": idx.year, "month": idx.month, "return": monthly.values})
             monthly_returns = monthly_df.pivot(index="year", columns="month", values="return")
         else:
             monthly_returns = returns
-        self.add_html(monthly_returns.to_html(classes="monthly", float_format="%.2f%%"))
+        # pandas accepts a format string for float_format at runtime, but
+        # pandas-stubs only allow a callable; cast keeps runtime behaviour.
+        self.add_html(monthly_returns.to_html(classes="monthly", float_format=cast("Any", "%.2f%%")))
         return self
 
     # ------------------------------------------------------------------

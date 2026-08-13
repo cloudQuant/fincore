@@ -6,7 +6,7 @@ exposures.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,7 +60,8 @@ def plot_style_factor_exposures(
         ax = plt.gca()
 
     if factor_name is None:
-        factor_name = tot_style_factor_exposure.name
+        # Series.name is typed as Hashable; the plot title uses it as a label.
+        factor_name = cast("str", tot_style_factor_exposure.name)
 
     ax.plot(tot_style_factor_exposure.index, tot_style_factor_exposure, label=factor_name)
     avg = tot_style_factor_exposure.mean()

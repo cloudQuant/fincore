@@ -6,7 +6,7 @@ and export capabilities using Plotly.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
@@ -344,10 +344,11 @@ class PlotlyBackend(VizBackend):
             monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
 
             # Create pivot table (year x month)
+            idx = cast("pd.DatetimeIndex", monthly_returns.index)
             monthly_returns_df = pd.DataFrame(
                 {
-                    "year": monthly_returns.index.year,
-                    "month": monthly_returns.index.month,
+                    "year": idx.year,
+                    "month": idx.month,
                     "return": monthly_returns.values,
                 }
             )
@@ -366,9 +367,10 @@ class PlotlyBackend(VizBackend):
             [1.0, "#388E3C"],  # Dark green (best)
         ]
 
+        cols = list(pivot.columns)
         fig.add_heatmap(
             z=pivot.values,
-            x=list(range(1, 13)) if list(pivot.columns) == list(range(1, 13)) else list(pivot.columns),
+            x=list(range(1, 13)) if cols == list(range(1, 13)) else cols,
             y=pivot.index,
             colorscale=colorscale,
             colorbar=dict(

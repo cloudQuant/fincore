@@ -384,10 +384,11 @@ class BokehBackend(VizBackend):
         pivot: pd.DataFrame
         if isinstance(returns, pd.Series):
             monthly_returns = returns.resample("ME").apply(lambda x: (1 + x).prod() - 1) * 100
+            idx = cast("pd.DatetimeIndex", monthly_returns.index)
             monthly_returns_df = pd.DataFrame(
                 {
-                    "year": monthly_returns.index.year,
-                    "month": monthly_returns.index.month,
+                    "year": idx.year,
+                    "month": idx.month,
                     "return": monthly_returns.values,
                 }
             )
@@ -400,8 +401,10 @@ class BokehBackend(VizBackend):
 
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-        # Prepare data for Bokeh (flatten to dict format)
-        data: dict[str, list[object]] = {
+        # Prepare data for Bokeh (flatten to dict format).  ColumnDataSource
+        # accepts a dict whose values are any Sequence; the per-key lists are
+        # heterogeneous across keys, so value types are widened to Any here.
+        data: dict[str, Any] = {
             "year": [],
             "month": [],
             "value": [],

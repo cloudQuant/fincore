@@ -152,7 +152,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "fincore.plugin.*",
     "fincore.data.*",
 ]
 disallow_untyped_defs = false
