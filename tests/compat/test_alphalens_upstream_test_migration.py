@@ -21,6 +21,7 @@ INVENTORY_PATH = FIXTURES / "alphalens-0.4.0-cloudquant-upstream-test-inventory.
 MIGRATION_PATH = FIXTURES / "alphalens-0.4.0-cloudquant-upstream-test-migration.json"
 CHECKER = ROOT / "scripts" / "check_alphalens_upstream_test_migration.py"
 GENERATOR = ROOT / "scripts" / "generate_alphalens_upstream_test_inventory.py"
+PLAN = ROOT / "docs" / "plans" / "2026-08-13-fincore-alphalens-integration.md"
 
 PINNED_COMMIT = "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
 EXPECTED_COUNTS = {
@@ -50,6 +51,32 @@ EXPECTED_SOURCE_FILES = {
 def _load(path: Path) -> dict[str, object]:
     with path.open(encoding="utf-8") as handle:
         return json.load(handle)
+
+
+def _run_static_checker(
+    tmp_path: Path, inventory: dict[str, object], migration: dict[str, object]
+) -> subprocess.CompletedProcess[str]:
+    """Run the real static checker against isolated JSON mutations."""
+    inventory_path = tmp_path / "inventory.json"
+    migration_path = tmp_path / "migration.json"
+    inventory_path.write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    migration_path.write_text(json.dumps(migration, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return subprocess.run(
+        [
+            sys.executable,
+            str(CHECKER),
+            "--inventory",
+            str(inventory_path),
+            "--migration",
+            str(migration_path),
+            "--scope",
+            "all",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def _single_target_context(
@@ -308,6 +335,110 @@ def test_static_checker_fails_closed_for_missing_or_malformed_top_level_evidence
     assert "FAIL:" in result.stderr
 
 
+@pytest.mark.parametrize(
+    ("mutation", "value"),
+    [
+        ("remove-source_path", None),
+        ("change-source_path", "tests/not-pinned.py"),
+        ("change-source_class", "OtherCase"),
+        ("remove-source_method", None),
+        ("change-source_method", "test_other_method"),
+        ("remove-source_line", None),
+        ("change-source_line", 999_999),
+        ("remove-parameter_ordinal", None),
+        ("change-parameter_ordinal", "#99"),
+        ("remove-source_git_blob", None),
+        ("change-source_git_blob", "0" * 40),
+        ("remove-source_sha256", None),
+        ("change-source_sha256", "0" * 64),
+        ("change-source_collection_state", "commented_out"),
+        ("change-assertion_quality", "smoke_only"),
+        ("add-unexpected-record-field", True),
+    ],
+)
+def test_static_checker_fails_closed_for_every_critical_inventory_record_field(
+    tmp_path: Path, mutation: str, value: object
+) -> None:
+    inventory = _load(INVENTORY_PATH)
+    migration = _load(MIGRATION_PATH)
+    cases = inventory["cases"]
+    assert isinstance(cases, list)
+    record = next(case for case in cases if case["source_path"] == "tests/test_utils.py")
+    if mutation.startswith("remove-"):
+        record.pop(mutation.removeprefix("remove-"))
+    elif mutation.startswith("change-"):
+        record[mutation.removeprefix("change-")] = value
+    elif mutation == "add-unexpected-record-field":
+        record["unexpected_record_field"] = value
+    else:  # pragma: no cover - parametrization is the contract under test.
+        raise AssertionError(f"unknown mutation: {mutation}")
+
+    result = _run_static_checker(tmp_path, inventory, migration)
+
+    assert result.returncode == 1
+    assert "FAIL:" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "shadow-missing-generated-name",
+        "shadow-wrong-generated-name",
+        "shadow-wrong-state",
+        "tear-missing-invocation-ids",
+        "tear-missing-invocation-calls",
+        "tear-mismatched-invocation-call-key",
+        "tear-wrong-call-name",
+        "tear-wrong-state",
+    ],
+)
+def test_static_checker_fails_closed_for_shadow_and_dormant_tear_record_semantics(
+    tmp_path: Path, mutation: str
+) -> None:
+    inventory = _load(INVENTORY_PATH)
+    migration = _load(MIGRATION_PATH)
+    cases = inventory["cases"]
+    assert isinstance(cases, list)
+    shadow = next(case for case in cases if case["source_collection_state"] == "shadowed_by_generated_method_name")
+    tear = next(case for case in cases if case["source_path"] == "tests/test_tears.py")
+    if mutation == "shadow-missing-generated-name":
+        shadow.pop("shadowed_generated_method_name")
+    elif mutation == "shadow-wrong-generated-name":
+        shadow["shadowed_generated_method_name"] = "test_not_the_generated_method"
+    elif mutation == "shadow-wrong-state":
+        shadow["source_collection_state"] = "active_declared"
+    elif mutation == "tear-missing-invocation-ids":
+        tear.pop("invocation_ids")
+    elif mutation == "tear-missing-invocation-calls":
+        tear.pop("invocation_calls")
+    elif mutation == "tear-mismatched-invocation-call-key":
+        calls = tear["invocation_calls"]
+        assert isinstance(calls, dict)
+        calls.pop(next(iter(calls)))
+    elif mutation == "tear-wrong-call-name":
+        calls = tear["invocation_calls"]
+        assert isinstance(calls, dict)
+        calls[next(iter(calls))] = "create_not_a_pinned_tear_sheet"
+    elif mutation == "tear-wrong-state":
+        tear["source_collection_state"] = "active_declared"
+    else:  # pragma: no cover - parametrization is the contract under test.
+        raise AssertionError(f"unknown mutation: {mutation}")
+
+    result = _run_static_checker(tmp_path, inventory, migration)
+
+    assert result.returncode == 1
+    assert "FAIL:" in result.stderr
+
+
+def test_plan_uses_controlled_collection_proofs_not_obsolete_nodeid_transcripts() -> None:
+    plan = PLAN.read_text(encoding="utf-8")
+    assert "--nodeids" not in plan
+    for scope in ("utils", "performance", "tears", "all"):
+        proof = f"build/alphalens-{scope}-upstream-collection.json"
+        assert f"--write-collection-proof {proof}" in plan
+        assert f"--collection-proof {proof}" in plan
+
+
 def _collection_proof(
     checker: dict[str, object], *, exitstatus: int = 0, errors: list[str] | None = None
 ) -> dict[str, object]:
@@ -426,11 +557,14 @@ def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
         calls.append((command, kwargs))
         return Completed()
 
-    monkeypatch.setattr(checker["_write_collection_proof"].__globals__["subprocess"], "run", fake_run)
-    proof_path = tmp_path / "controlled-proof.json"
+    writer_globals = checker["_write_collection_proof"].__globals__
+    monkeypatch.setitem(writer_globals, "REPO_ROOT", tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(writer_globals["subprocess"], "run", fake_run)
+    proof_path = Path("build/controlled-proof.json")
     checker["_write_collection_proof"](proof_path, "utils")
 
-    proof = _load(proof_path)
+    proof = _load(tmp_path / proof_path)
     assert proof["command_identity"] == "fincore.alphalens-upstream-collect-v1"
     assert proof["scope"] == "utils"
     assert proof["target_paths"] == sorted(checker["GROUP_PATHS"]["utils"])
@@ -440,9 +574,50 @@ def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
     assert calls == [
         (
             proof["command"],
-            {"cwd": ROOT, "capture_output": True, "text": True, "check": False},
+            {"cwd": tmp_path, "capture_output": True, "text": True, "check": False},
         )
     ]
+
+
+@pytest.mark.parametrize(
+    "proof_path",
+    [
+        Path("/tmp/alphalens-upstream-collection.json"),
+        Path("../alphalens-upstream-collection.json"),
+        Path("outside/alphalens-upstream-collection.json"),
+        Path("build/../alphalens-upstream-collection.json"),
+    ],
+)
+def test_collection_proof_writer_rejects_any_output_outside_relative_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, proof_path: Path
+) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    writer_globals = checker["_write_collection_proof"].__globals__
+    monkeypatch.setitem(writer_globals, "REPO_ROOT", tmp_path)
+    with pytest.raises(checker["MigrationAuditError"], match="relative path inside repository build/"):
+        checker["_collection_proof_output_path"](proof_path)
+
+
+@pytest.mark.parametrize(
+    "proof_path",
+    [Path("/tmp/alphalens-upstream-collection.json"), Path("../outside.json"), Path("outside/proof.json")],
+)
+def test_collection_proof_writer_rejects_unsafe_path_before_launching_collector(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, proof_path: Path
+) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    writer_globals = checker["_write_collection_proof"].__globals__
+    calls: list[object] = []
+
+    def fake_run(*args: object, **kwargs: object) -> object:
+        calls.append((args, kwargs))
+        raise AssertionError("unsafe write path must fail before collector launch")
+
+    monkeypatch.setitem(writer_globals, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(writer_globals["subprocess"], "run", fake_run)
+    with pytest.raises(checker["MigrationAuditError"], match="relative path inside repository build/"):
+        checker["_write_collection_proof"](proof_path, "utils")
+    assert calls == []
 
 
 def test_checker_rejects_plain_nodeid_transcripts_and_accepts_structured_proof_cli() -> None:

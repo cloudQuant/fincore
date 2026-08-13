@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import re
 import subprocess
@@ -51,6 +52,60 @@ INVENTORY_ENVELOPE_FIELDS = frozenset(
 MIGRATION_ENVELOPE_FIELDS = frozenset({"schema_version", "profile", "commit", "review", "cases"})
 COLLECTION_PROOF_SCHEMA_VERSION = "alphalens-upstream-collection-proof-v1"
 COLLECTION_PROOF_COMMAND_IDENTITY = "fincore.alphalens-upstream-collect-v1"
+EXPECTED_INVENTORY_CASES_SHA256 = "090b70d56e813ecdb691258730a563f80b5e639c2accff3e40e6e68951c4c495"
+INVENTORY_RECORD_BASE_FIELDS = frozenset(
+    {
+        "source_case_id",
+        "source_path",
+        "source_class",
+        "source_method",
+        "source_line",
+        "parameter_ordinal",
+        "source_collection_state",
+        "assertion_quality",
+        "source_git_blob",
+        "source_sha256",
+    }
+)
+SHADOWED_GENERATED_METHOD_FIELD = "shadowed_generated_method_name"
+TEAR_INVOCATION_FIELDS = frozenset({"invocation_ids", "invocation_calls"})
+EXPECTED_ROWS_BY_SOURCE = {
+    "tests/test_utils.py": 36,
+    "tests/test_performance.py": 81,
+    "tests/test_tears.py": 24,
+}
+EXPECTED_SOURCE_RECORD_CONTRACTS = {
+    "tests/test_utils.py": {
+        "source_class": "UtilsTestCase",
+        "assertion_quality": "pandas_assertion",
+        "source_collection_states": {"active_declared"},
+    },
+    "tests/test_performance.py": {
+        "source_class": "PerformanceTestCase",
+        "assertion_quality": "discarded_equals",
+        "source_collection_states": {"active_declared", "shadowed_by_generated_method_name"},
+    },
+    "tests/test_tears.py": {
+        "source_class": "TearsTestCase",
+        "assertion_quality": "smoke_only",
+        "source_collection_states": {"commented_out"},
+    },
+}
+EXPECTED_SHADOWED_CASE_ID = (
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#02"
+)
+EXPECTED_SHADOWED_GENERATED_METHOD_NAME = "test_average_cumulative_return_by_quantile_2"
+EXPECTED_TEAR_WORKFLOW_METHODS = frozenset(
+    {
+        "test_create_returns_tear_sheet",
+        "test_create_information_tear_sheet",
+        "test_create_turnover_tear_sheet",
+        "test_create_summary_tear_sheet",
+        "test_create_full_tear_sheet",
+        "test_create_event_returns_tear_sheet",
+        "test_create_event_study_tear_sheet",
+    }
+)
 EXPECTED_SOURCE_FILES = {
     "tests/test_utils.py": {
         "git_blob": "22480c305a07b8ccd83e15ed7b6d1b06be08307e",
@@ -237,6 +292,139 @@ def _validate_fixture_envelopes(inventory: dict[str, Any], migration: dict[str, 
     _require_fixture_field(migration, "migration", "cases", dict)
 
 
+def _canonical_cases_sha256(cases: list[dict[str, Any]]) -> str:
+    """Hash the full frozen v1 record sequence so valid-looking substitutions still fail closed."""
+    try:
+        rendered = json.dumps(cases, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise MigrationAuditError(f"inventory cases are not canonical JSON evidence: {exc}") from exc
+    return hashlib.sha256(rendered.encode("utf-8")).hexdigest()
+
+
+def _record_error(index: int, detail: str) -> MigrationAuditError:
+    """Format one precise, source-order-stable inventory record failure."""
+    return MigrationAuditError(f"inventory.cases[{index}] {detail}")
+
+
+def _validate_inventory_case_records(cases: list[Any], source_files: dict[str, Any]) -> None:
+    """Validate every frozen source row before the migration map can rely on it.
+
+    The v1 inventory is tied to three pinned Git blobs, so this checker rejects
+    both malformed records and semantically plausible substitutions.  The
+    explicit field/state rules make the contract reviewable; the canonical
+    digest binds source line/ordinal and every remaining record value exactly.
+    """
+    source_rows: Counter[str] = Counter()
+    source_case_ids: set[str] = set()
+    shadowed: list[dict[str, Any]] = []
+    tear_records: list[dict[str, Any]] = []
+    invocation_ids: list[str] = []
+
+    for index, raw_record in enumerate(cases):
+        if not isinstance(raw_record, dict):
+            raise _record_error(index, "must be an object")
+        record = raw_record
+        source_path = record.get("source_path")
+        if not isinstance(source_path, str) or source_path not in EXPECTED_SOURCE_RECORD_CONTRACTS:
+            raise _record_error(index, f"has an unpinned source_path: {source_path!r}")
+        contract = EXPECTED_SOURCE_RECORD_CONTRACTS[source_path]
+        state = record.get("source_collection_state")
+        expected_fields = INVENTORY_RECORD_BASE_FIELDS
+        if state == "shadowed_by_generated_method_name":
+            expected_fields = expected_fields | {SHADOWED_GENERATED_METHOD_FIELD}
+        elif source_path == "tests/test_tears.py":
+            expected_fields = expected_fields | TEAR_INVOCATION_FIELDS
+        if set(record) != expected_fields:
+            missing = sorted(expected_fields - set(record))
+            extra = sorted(set(record) - expected_fields)
+            raise _record_error(index, f"has an unsupported shape: missing={missing} extra={extra}")
+
+        source_class = record["source_class"]
+        if source_class != contract["source_class"]:
+            raise _record_error(index, f"source_class must be {contract['source_class']!r}: {source_class!r}")
+        source_method = record["source_method"]
+        if not isinstance(source_method, str) or re.fullmatch(r"test_[A-Za-z0-9_]+", source_method) is None:
+            raise _record_error(index, f"has an invalid source_method: {source_method!r}")
+        source_line = record["source_line"]
+        if type(source_line) is not int or source_line <= 0:
+            raise _record_error(index, f"has an invalid source_line: {source_line!r}")
+        ordinal = record["parameter_ordinal"]
+        if not isinstance(ordinal, str) or re.fullmatch(r"#\d{2}", ordinal) is None:
+            raise _record_error(index, f"has an invalid parameter_ordinal: {ordinal!r}")
+        source_case_id = record["source_case_id"]
+        expected_case_id = f"{source_path}::{source_class}::{source_method}{ordinal}"
+        if source_case_id != expected_case_id:
+            raise _record_error(index, f"source_case_id does not bind its source fields: {source_case_id!r}")
+        if source_case_id in source_case_ids:
+            raise _record_error(index, f"duplicates source_case_id: {source_case_id}")
+        source_case_ids.add(source_case_id)
+
+        if state not in contract["source_collection_states"]:
+            raise _record_error(index, f"has an invalid source_collection_state for {source_path}: {state!r}")
+        assertion_quality = record["assertion_quality"]
+        if assertion_quality != contract["assertion_quality"]:
+            raise _record_error(index, f"has an invalid assertion_quality for {source_path}: {assertion_quality!r}")
+
+        source_evidence = source_files.get(source_path)
+        if not isinstance(source_evidence, dict):
+            raise _record_error(index, f"has no source_files evidence for {source_path}")
+        if record["source_git_blob"] != source_evidence.get("git_blob"):
+            raise _record_error(index, "source_git_blob does not match source_files evidence")
+        if record["source_sha256"] != source_evidence.get("sha256"):
+            raise _record_error(index, "source_sha256 does not match source_files evidence")
+        source_rows[source_path] += 1
+
+        if state == "shadowed_by_generated_method_name":
+            if source_path != "tests/test_performance.py":
+                raise _record_error(index, "shadowed state is only permitted for the pinned performance row")
+            if source_case_id != EXPECTED_SHADOWED_CASE_ID:
+                raise _record_error(index, f"is not the one pinned shadowed case: {source_case_id}")
+            if record[SHADOWED_GENERATED_METHOD_FIELD] != EXPECTED_SHADOWED_GENERATED_METHOD_NAME:
+                raise _record_error(index, "has an unexpected shadowed generated method name")
+            shadowed.append(record)
+        elif SHADOWED_GENERATED_METHOD_FIELD in record:
+            raise _record_error(index, "carries a shadowed generated method field without shadowed state")
+
+        if source_path != "tests/test_tears.py":
+            continue
+        tear_records.append(record)
+        ids = record["invocation_ids"]
+        calls = record["invocation_calls"]
+        if not isinstance(ids, list) or not ids or not all(isinstance(invocation_id, str) for invocation_id in ids):
+            raise _record_error(index, "requires a non-empty string invocation_ids list")
+        if len(ids) != len(set(ids)):
+            raise _record_error(index, "duplicates invocation_ids within one tear record")
+        if not isinstance(calls, dict) or not all(
+            isinstance(invocation_id, str) and isinstance(call_name, str) for invocation_id, call_name in calls.items()
+        ):
+            raise _record_error(index, "requires a string-to-string invocation_calls object")
+        if set(calls) != set(ids):
+            raise _record_error(index, "invocation_calls keys do not equal invocation_ids")
+        expected_call_name = source_method.removeprefix("test_")
+        invocation_pattern = re.compile(re.escape(source_case_id) + r"/input-\d{2}/call-\d{2}\Z")
+        for invocation_id in ids:
+            if invocation_pattern.fullmatch(invocation_id) is None:
+                raise _record_error(index, f"has an invalid invocation ID: {invocation_id!r}")
+            if calls[invocation_id] != expected_call_name:
+                raise _record_error(index, f"has an invalid invocation call for {invocation_id}")
+        invocation_ids.extend(ids)
+
+    if source_rows != EXPECTED_ROWS_BY_SOURCE:
+        raise MigrationAuditError(f"inventory source row counts differ from the frozen contract: {dict(source_rows)!r}")
+    if len(shadowed) != 1:
+        raise MigrationAuditError(f"inventory requires one pinned shadowed performance row, found {len(shadowed)}")
+    if len(tear_records) != EXPECTED_COUNTS["dormant_tear_rows"]:
+        raise MigrationAuditError(f"inventory dormant tear row count is invalid: {len(tear_records)}")
+    if {record["source_method"] for record in tear_records} != EXPECTED_TEAR_WORKFLOW_METHODS:
+        raise MigrationAuditError("inventory dormant tear workflow methods differ from the pinned contract")
+    if len(invocation_ids) != EXPECTED_COUNTS["dormant_tear_invocations"] or len(set(invocation_ids)) != len(
+        invocation_ids
+    ):
+        raise MigrationAuditError("inventory dormant tear invocation IDs/count differ from the pinned contract")
+    if _canonical_cases_sha256(cases) != EXPECTED_INVENTORY_CASES_SHA256:
+        raise MigrationAuditError("inventory case records differ from the canonical pinned source evidence")
+
+
 def _validate_static(
     inventory: dict[str, Any], migration: dict[str, Any], groups: set[str]
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
@@ -256,6 +444,7 @@ def _validate_static(
         raise MigrationAuditError(f"inventory must contain {EXPECTED_CASE_COUNT} source rows, found {len(cases)}")
     if inventory.get("source_files") != EXPECTED_SOURCE_FILES:
         raise MigrationAuditError("inventory source blobs or SHA256 values differ from the pinned evidence")
+    _validate_inventory_case_records(cases, inventory["source_files"])
     inventory_by_id: dict[str, dict[str, Any]] = {}
     for case in cases:
         if not isinstance(case, dict) or not isinstance(case.get("source_case_id"), str):
@@ -361,6 +550,29 @@ def _collection_error_lines(output: str) -> list[str]:
     ]
 
 
+def _collection_proof_output_path(path: Path) -> Path:
+    """Resolve one write target only when it is a non-traversing file below ``build/``.
+
+    The collector is permitted to create one review artifact, not arbitrary
+    directories or files selected by an invocation from another working tree.
+    Resolving against ``REPO_ROOT`` also rejects an existing ``build`` symlink
+    that escapes the repository before any directory is created or data is
+    written.
+    """
+    if path.is_absolute() or not path.parts or path.parts[0] != "build" or ".." in path.parts:
+        raise MigrationAuditError("--write-collection-proof must be a relative path inside repository build/")
+    repository_root = REPO_ROOT.resolve()
+    build_root = repository_root / "build"
+    candidate = (repository_root / path).resolve()
+    try:
+        relative = candidate.relative_to(build_root)
+    except ValueError as exc:
+        raise MigrationAuditError("--write-collection-proof must be a relative path inside repository build/") from exc
+    if not relative.parts:
+        raise MigrationAuditError("--write-collection-proof must name a file inside repository build/")
+    return candidate
+
+
 def _write_collection_proof(path: Path, scope: str) -> None:
     """Run the exact future-target collector and persist its structured proof envelope.
 
@@ -369,6 +581,7 @@ def _write_collection_proof(path: Path, scope: str) -> None:
     written as evidence, but the wrapper exits nonzero and the checker will
     never accept that proof.
     """
+    output_path = _collection_proof_output_path(path)
     target_paths = _collection_target_paths(scope)
     command = [
         sys.executable,
@@ -403,10 +616,10 @@ def _write_collection_proof(path: Path, scope: str) -> None:
         "collection_errors": errors,
     }
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     except OSError as exc:
-        raise MigrationAuditError(f"cannot write --write-collection-proof {path}: {exc}") from exc
+        raise MigrationAuditError(f"cannot write --write-collection-proof {output_path}: {exc}") from exc
     if completed.returncode != 0 or errors:
         raise MigrationAuditError(
             f"controlled collection proof is non-passing: exitstatus={completed.returncode} errors={len(errors)}"

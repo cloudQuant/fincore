@@ -810,11 +810,11 @@ def test_quantize_factor_upstream_case(
 
 **Step 5: 实现 collection audit 工具并冻结交接边界**
 
-`scripts/check_alphalens_upstream_test_migration.py` 接收 `--inventory`、`--migration`、`--nodeids`、`--results` 和 `--scope {utils,performance,tears,all}`。`--results` 只在对应 target tests 已实现并完成非-xdist实际运行时必填；Task 1.5 的 source/map 静态验证不传它。它必须：
+`scripts/check_alphalens_upstream_test_migration.py` 接收 `--inventory`、`--migration`、`--write-collection-proof PATH`、`--collection-proof PATH`、`--results` 和 `--scope {utils,performance,tears,all}`。Task 1.5 的 source/map 静态验证不传 proof 或 results；对应 target tests 已实现并完成非-xdist实际运行后，先用 `--write-collection-proof build/...json` 生成受控 collection proof，再将该 proof 和 `--results` 一并传回 checker。`--write-collection-proof` 只接受仓库 `build/` 下的相对文件路径，禁止手工 transcript。
 
 - 验证 inventory 与 map 的 case-ID 集合一对一相等；
 - 验证目标 selector 只指向 Task 3/4/8 的 fincore tests，且 assertion grade 与 source group 相容；
-- 从 `pytest --collect-only -q` 输出读取 nodeid，确认 utils/performance 的每个 complete source case ID 和 tears 的每个 complete invocation ID 恰好出现一次；对 tears，同步校验 inventory invocation ID、map `invocation_targets` key、exact target nodeid 和 collect nodeid 三方全等；
+- 只从 versioned `--collection-proof` JSON 读取 nodeid；该 proof 必须由受控 `--write-collection-proof` collector 为相同 scope 生成，具有固定 command identity/target paths、`exitstatus=0`、空 collection errors。确认 utils/performance 的每个 complete source case ID 和 tears 的每个 complete invocation ID 恰好出现一次；对 tears，同步校验 inventory invocation ID、map `invocation_targets` key、exact target nodeid 和 collect nodeid 三方全等；
 - 对 target test AST 拒绝裸 `.equals()` 和没有 `assert`/`pd.testing`/`np.testing`/C4 artifact assertion 的目标函数；
 - 拒绝 target tests 中 `import alphalens`、从 sibling 的绝对路径导入或把 source-side test module 当作 fixture；
 - 读取 `--results` 的 result JSON，要求每个 mapped nodeid 的 setup/call/teardown 均为 passed；不把 collection error、xfailed item、runtime skip 或 source-side shadow 当成已迁移。
@@ -1189,17 +1189,18 @@ MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
   -q --tb=short --maxfail=0 \
   --alphalens-upstream-result-json build/alphalens-utils-upstream-results.json
 
-MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
-  python -m pytest -o addopts='' --collect-only -q \
-  tests/compat/alphalens/test_forward_returns.py \
-  tests/compat/alphalens/test_factor_cleaning.py \
-  > build/alphalens-utils-upstream-nodeids.txt
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope utils \
+  --write-collection-proof build/alphalens-utils-upstream-collection.json
 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
   scripts/check_alphalens_upstream_test_migration.py \
   --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
   --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
-  --nodeids build/alphalens-utils-upstream-nodeids.txt \
+  --collection-proof build/alphalens-utils-upstream-collection.json \
   --results build/alphalens-utils-upstream-results.json \
   --scope utils
 ```
@@ -1336,20 +1337,18 @@ MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
   -q --tb=short --maxfail=0 \
   --alphalens-upstream-result-json build/alphalens-performance-upstream-results.json
 
-MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
-  python -m pytest -o addopts='' --collect-only -q \
-  tests/compat/alphalens/test_performance.py \
-  tests/test_factor_analysis/test_information.py \
-  tests/test_factor_analysis/test_weights_returns.py \
-  tests/test_factor_analysis/test_turnover.py \
-  tests/test_factor_analysis/test_events.py \
-  > build/alphalens-performance-upstream-nodeids.txt
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope performance \
+  --write-collection-proof build/alphalens-performance-upstream-collection.json
 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
   scripts/check_alphalens_upstream_test_migration.py \
   --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
   --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
-  --nodeids build/alphalens-performance-upstream-nodeids.txt \
+  --collection-proof build/alphalens-performance-upstream-collection.json \
   --results build/alphalens-performance-upstream-results.json \
   --scope performance
 ```
@@ -1881,17 +1880,18 @@ MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
   -q --tb=short --maxfail=0 \
   --alphalens-upstream-result-json build/alphalens-tears-upstream-results.json
 
-MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
-  python -m pytest -o addopts='' --collect-only -q \
-  tests/compat/alphalens/test_tearsheets_e2e.py \
-  tests/test_factor_analysis/test_tears.py \
-  > build/alphalens-tears-upstream-nodeids.txt
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope tears \
+  --write-collection-proof build/alphalens-tears-upstream-collection.json
 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
   scripts/check_alphalens_upstream_test_migration.py \
   --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
   --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
-  --nodeids build/alphalens-tears-upstream-nodeids.txt \
+  --collection-proof build/alphalens-tears-upstream-collection.json \
   --results build/alphalens-tears-upstream-results.json \
   --scope tears
 ```
@@ -2308,16 +2308,18 @@ mkdir -p build
   --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
   --check tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json
 
-MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
-  python -m pytest -o addopts='' --collect-only -q \
-  tests/compat/alphalens tests/test_factor_analysis \
-  > build/alphalens-upstream-migration-nodeids.txt
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope all \
+  --write-collection-proof build/alphalens-all-upstream-collection.json
 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
   scripts/check_alphalens_upstream_test_migration.py \
   --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
   --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
-  --nodeids build/alphalens-upstream-migration-nodeids.txt \
+  --collection-proof build/alphalens-all-upstream-collection.json \
   --results build/alphalens-upstream-migration-results.json \
   --scope all
 ```

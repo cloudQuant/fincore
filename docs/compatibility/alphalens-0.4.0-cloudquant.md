@@ -118,10 +118,15 @@ versioned JSON envelope containing its command identity, scope, target paths,
 exit status, nodeids, and collection errors. Pass that envelope back with
 `--collection-proof PATH` and the non-xdist result file written by
 `--alphalens-upstream-result-json`; a plain collection transcript is not
-accepted. The checker accepts only the frozen `inventory-v1` and `migration-v1`
+accepted. The writer accepts only a non-traversing relative `build/...` output
+path and resolves it against the repository before creating a directory or
+writing proof bytes. The checker accepts only the frozen `inventory-v1` and `migration-v1`
 schemas, `cloudquant-local-3fa17ad` profile, exact static Git-blob extraction
 record, and deferred-review envelope. Unknown, missing, or malformed envelope
-fields fail closed. The dynamic
+fields fail closed. Each v1 inventory row also has an exact path-specific
+shape and source class/state/assertion contract, per-row blob/SHA binding, and
+canonical record-sequence digest; source method, line, ordinal, shadow, and
+dormant tear invocation substitutions therefore fail closed. The dynamic
 `alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, `xfail`,
 global `--reruns`, and per-item `flaky`/`rerun`/`rerunfailures` markers at
 collection. It

@@ -83,7 +83,8 @@ of those recognized module namespaces, imported `os.path.join` aliases, and
 `sys.path` mutation. Its later collection gate accepts only the checker's
 versioned controlled-collector proof (scope, command identity, zero exit
 status, exact target paths/nodeids, and no collection errors), never a plain
-`pytest --collect-only` transcript. Its C2/C3/C4 target checks use bounded
+`pytest --collect-only` transcript; its writer is restricted to a relative,
+non-traversing file under the repository `build/` directory. Its C2/C3/C4 target checks use bounded
 reachable-AST evidence rather than treating a nested or demonstrably dead
 assertion as proof. These are bounded engineering safeguards, not evidence of
 a legal review.
