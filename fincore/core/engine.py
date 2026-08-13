@@ -157,13 +157,30 @@ _BUILTIN_MOMENT_METRICS: dict[str, Callable[[RollingMoments, float, float], pd.S
     "beta": beta_from_moments,
 }
 
+
+def _registered_target(fn: Callable) -> Callable:
+    """Resolve the function object ``register_metric`` stored in the registry.
+
+    ``register_metric`` registers the undecorated function and binds a
+    ``functools.wraps`` wrapper to the module name, so the registry holds
+    the original while the module attribute is the wrapper.  Identity
+    comparisons against registry entries must use the original, otherwise
+    the shared-moments fast path never fires (``compute`` would rebuild
+    the moments once per metric).
+    """
+    return getattr(fn, "__wrapped__", fn)
+
+
 _BUILTIN_TARGETS: dict[str, Callable] = {
-    "sharpe": _rolling_sharpe,
-    "volatility": _rolling_volatility,
-    "sortino": _rolling_sortino,
-    "mean_return": _rolling_mean_return,
-    "beta": _rolling_beta,
-    "max_drawdown": _rolling_max_drawdown,
+    name: _registered_target(fn)
+    for name, fn in {
+        "sharpe": _rolling_sharpe,
+        "volatility": _rolling_volatility,
+        "sortino": _rolling_sortino,
+        "mean_return": _rolling_mean_return,
+        "beta": _rolling_beta,
+        "max_drawdown": _rolling_max_drawdown,
+    }.items()
 }
 
 
@@ -243,6 +260,8 @@ class RollingEngine:
                 raise ValueError(f"Unknown metric {name!r}. Available: {sorted(self.available_metrics)}")
             moment_impl = _BUILTIN_MOMENT_METRICS.get(name)
             if moment_impl is not None and entry.target is _BUILTIN_TARGETS[name]:
+                if name == "beta" and self._factor_returns is None:
+                    raise ValueError("factor_returns required to compute 'beta'")
                 # Builtin moment-based metric: share one moment build
                 # across the whole requested metric set.
                 if moments is None:
