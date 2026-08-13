@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.exceptions import NumericalError
 from fincore.metrics.ratios import mar_ratio
 from fincore.metrics.yearly import annual_active_return
 
@@ -18,11 +19,11 @@ class TestRatiosYearlyLineCoverage:
     """Test ratios and yearly edge cases for exact line coverage."""
 
     def test_mar_ratio_line_417(self):
-        """ratios.py line 417: return np.nan when returns_clean is empty."""
-        # All NaN values -> returns_clean is empty
+        """ratios.py line 417: all-NaN returns are rejected before any cleaning."""
+        # All NaN values are rejected by the enhanced metrics surface.
         returns = pd.Series([np.nan, np.nan, np.nan])
-        result = mar_ratio(returns)
-        assert np.isnan(result)
+        with pytest.raises(NumericalError, match="finite"):
+            mar_ratio(returns)
 
     def test_annual_active_return_line_236(self):
         """yearly.py line 236: return np.nan when either annual return is NaN."""

@@ -23,20 +23,31 @@ class TestEmpyricalZiplineImport:
         mock_zip_assets.Equity = mock_equity
         mock_zip_assets.Future = mock_future
 
-        with patch("importlib.import_module", return_value=mock_zip_assets):
-            # Force re-import by modifying the module's import logic
-            import importlib
+        # Snapshot the module state so the reload does not leak a fresh
+        # Empyrical class into the rest of the session: importlib.reload
+        # re-executes the same module object in place, and other modules
+        # (e.g. fincore._pyfolio_impl) hold references to the original class.
+        # A leaked class breaks isinstance checks in call_explicit_metric
+        # (stateful binding TypeError downstream).
+        import fincore.empyrical
 
-            import fincore.empyrical
+        snapshot = dict(vars(fincore.empyrical))
+        try:
+            with patch("importlib.import_module", return_value=mock_zip_assets):
+                # Force re-import by modifying the module's import logic
+                import importlib
 
-            # Reload the module to trigger the import block
-            importlib.reload(fincore.empyrical)
+                # Reload the module to trigger the import block
+                importlib.reload(fincore.empyrical)
 
-            # Verify ZIPLINE is set to True
-            assert fincore.empyrical.ZIPLINE is True
-            # Verify Equity and Future are set from zipline
-            assert fincore.empyrical.Equity is mock_equity
-            assert fincore.empyrical.Future is mock_future
+                # Verify ZIPLINE is set to True
+                assert fincore.empyrical.ZIPLINE is True
+                # Verify Equity and Future are set from zipline
+                assert fincore.empyrical.Equity is mock_equity
+                assert fincore.empyrical.Future is mock_future
+        finally:
+            vars(fincore.empyrical).clear()
+            vars(fincore.empyrical).update(snapshot)
 
 
 class TestEmpyricalInitContextError:

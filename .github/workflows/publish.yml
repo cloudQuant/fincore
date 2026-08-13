@@ -5,8 +5,109 @@ on:
     types: [published]
 
 jobs:
+  # Release gate: every blocking check (tests, lint, type, security,
+  # coverage, docs, wheel consumers) must pass before the PyPI publish job
+  # can run.  The verify job mirrors the release gates of ci.yml so a
+  # release can never ship from a tree that failed any of them.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,viz]"
+          pip install -r requirements-test.txt
+          pip install build twine mkdocs-material "mkdocstrings[python]" mkdocs-gen-files mkdocs-literate-nav
+
+      - name: Lint
+        run: |
+          ruff check fincore/ tests/ scripts/ examples/ benchmarks/
+          ruff format --check fincore/ tests/ scripts/ examples/ benchmarks/
+
+      - name: Type check (full package)
+        run: |
+          python -m mypy fincore --ignore-missing-imports
+          python -m compileall -q fincore
+
+      - name: Security scan
+        run: bandit -r fincore/ -c pyproject.toml
+
+      - name: Marker audit
+        run: python scripts/audit_test_markers.py
+
+      - name: Fast suite
+        run: |
+          pytest -o addopts='' tests/ -q --tb=short --maxfail=0 \
+            -m "not slow and not integration and not serial" --ignore=tests/benchmarks
+
+      - name: Serial suite
+        run: |
+          pytest -o addopts='' tests/ -q --tb=short --maxfail=0 \
+            -m "serial and not slow and not integration" --ignore=tests/benchmarks
+
+      - name: Non-serial single-process and xdist (comparable)
+        run: |
+          pytest -o addopts='' tests/ -q --tb=short --maxfail=0 \
+            -m "not serial and not slow and not integration" --ignore=tests/benchmarks \
+            --junitxml=nonserial-single.xml
+          pytest -o addopts='' tests/ -q --tb=short --maxfail=0 \
+            -m "not serial and not slow and not integration" --ignore=tests/benchmarks \
+            --junitxml=nonserial-parallel.xml -n auto --dist=loadscope
+          python scripts/audit_test_markers.py --compare-junit nonserial-single.xml nonserial-parallel.xml
+
+      - name: Compatibility manifest suite
+        run: pytest -o addopts='' tests/compat -q --tb=short --maxfail=0
+
+      - name: Offline integration suite
+        run: pytest -o addopts='' tests/ -q --tb=short --maxfail=0 -m integration_offline
+
+      - name: Branch coverage gate
+        run: |
+          pytest -o addopts='' tests/ -q --tb=short --maxfail=0 \
+            -m "not slow and not integration" --ignore=tests/benchmarks \
+            --cov=fincore --cov-branch --cov-report=json:coverage.json
+          python scripts/check_coverage_baseline.py \
+            --coverage-json coverage.json \
+            --baseline docs/quality/current-baseline.json \
+            --changed-lines-min 95
+
+      - name: Docs build (strict)
+        run: python -m mkdocs build --strict
+
+      - name: Build sdist and wheel
+        run: python -m build --outdir dist/
+
+      - name: Check dist
+        run: twine check dist/*
+
+      - name: Verify release consistency
+        run: python scripts/check_release_consistency.py --dist dist/
+
+      - name: Wheel consumer smoke (full profile matrix)
+        run: python scripts/test_installed_wheel.py --dist dist/ --profiles core pyfolio interactive bayesian report-pdf all
+
+      - name: Packaging contract tests
+        run: pytest -o addopts='' tests/packaging -q --maxfail=0
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
   publish:
     runs-on: ubuntu-latest
+    needs: [verify]
     environment:
       name: pypi
     permissions:
@@ -15,38 +116,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Download verified dist artifacts
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.11"
-
-      - name: Install build tools
-        run: pip install build
-
-      - name: Build sdist and wheel
-        run: python -m build
-
-      - name: Check dist
-        run: |
-          pip install "twine>=6.0"
-          twine check dist/*
-
-      # Release gates before publishing: version/tag/CHANGELOG/metadata
-      # agreement, the full installed-wheel consumer matrix, and the
-      # packaging contract tests.
-      - name: Verify release consistency
-        run: python scripts/check_release_consistency.py --dist dist/
-
-      - name: Wheel consumer smoke (full profile matrix)
-        run: python scripts/test_installed_wheel.py --dist dist/ --profiles core pyfolio interactive bayesian report-pdf all
-
-      - name: Packaging contract tests
-        run: |
-          pip install pytest
-          pytest -o addopts='' tests/packaging -q --maxfail=0
+          name: dist
+          path: dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
         # Uses trusted publishing (OIDC) — no API token needed
         # Configure at: https://pypi.org/manage/project/fincore/settings/publishing/
         # Add GitHub Actions as a trusted publisher with:

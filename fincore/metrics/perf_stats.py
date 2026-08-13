@@ -214,14 +214,11 @@ def calc_bootstrap(func, returns, *args, **kwargs):
         returns a single summary value.
     returns : pd.Series
         Daily returns of the strategy, noncumulative.
-    n_samples : int, optional
-        Number of bootstrap samples to draw. Default is 1000.
-    random_seed : int, optional
-        Seed for the pseudorandom number generator to make results
-        reproducible. Default is ``None`` (non-deterministic).
     kwargs : dict, optional
         Additional keyword arguments forwarded to ``func``. For
         factor-based statistics this often includes ``factor_returns``.
+        ``n_samples`` (default 1000) controls the number of bootstrap
+        samples and ``random_seed`` (default ``None``) seeds the generator.
 
     Returns
     -------

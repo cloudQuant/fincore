@@ -14,6 +14,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.exceptions import DataAlignmentError, NumericalError
+
 # ---------------------------------------------------------------------------
 # metrics/stats.py — hurst_exponent edge cases (lines 175, 193, 203)
 # ---------------------------------------------------------------------------
@@ -165,12 +167,12 @@ class TestAnnualAlphaBetaEdgeCases:
 
 class TestCalmarRatioEdgeCases:
     def test_calmar_ratio_all_nan_returns(self):
-        """All NaN returns after cleaning -> NaN."""
+        """All-NaN returns are rejected by the enhanced metrics surface."""
         from fincore.metrics.ratios import calmar_ratio
 
         returns = pd.Series([np.nan, np.nan, np.nan])
-        result = calmar_ratio(returns)
-        assert np.isnan(result)
+        with pytest.raises(NumericalError, match="finite"):
+            calmar_ratio(returns)
 
 
 # ---------------------------------------------------------------------------
@@ -196,16 +198,16 @@ class TestAnnualActiveReturnEdgeCases:
 
 class TestRegressionAnnualReturnEdgeCases:
     def test_regression_annual_return_nan_alpha_beta(self):
-        """When alpha or beta is NaN, regression_annual_return returns NaN (line 714)."""
+        """Empty factor returns are rejected with a DataAlignmentError before alpha/beta."""
         from fincore import Empyrical
 
         dates = pd.date_range("2020-01-01", periods=100, freq="B")
         returns = pd.Series(np.random.normal(0.001, 0.01, 100), index=dates)
         emp = Empyrical(returns=returns, factor_returns=returns)
-        # Empty factor -> NaN alpha/beta
+        # Empty factor -> no common labels
         factor = pd.Series([], dtype=float)
-        result = emp.regression_annual_return(returns, factor)
-        assert np.isnan(result)
+        with pytest.raises(DataAlignmentError, match="no common labels"):
+            emp.regression_annual_return(returns, factor)
 
     def test_regression_annual_return_nan_benchmark_annual(self):
         """When benchmark annual return is NaN but alpha/beta valid -> line 718."""

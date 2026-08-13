@@ -90,6 +90,8 @@ addopts = "--strict-markers --tb=short -q -ra"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
+    "integration_offline: integration tests that run without network access (release-gate selector)",
+    "integration_online: integration tests that require network access (never run in the release gate)",
     "unit: marks tests as unit tests",
     "serial: marks tests that must run without -n (flaky under pytest-xdist)",
     "p0: marks tests as critical priority (core metrics, revenue-critical, security, compliance)",

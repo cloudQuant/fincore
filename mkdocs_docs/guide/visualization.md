@@ -32,6 +32,6 @@ ctx.to_html(path="report.html")
 
 ## API Reference
 
-::: fincore.viz.base.VizBackend
+The backend protocol is documented on the [`viz` API page](../api/viz.md).
 
 ::: fincore.viz.html_backend.HtmlReportBuilder

@@ -227,7 +227,10 @@ def test_context_registry_describes_real_input_binding_and_projection() -> None:
 
 @pytest.mark.parametrize(
     "spec",
-    [spec for spec in METRIC_REGISTRY.values() if spec.surface in {"metrics", "empyrical_class", "fincore_flat"}],
+    sorted(
+        [spec for spec in METRIC_REGISTRY.values() if spec.surface in {"metrics", "empyrical_class", "fincore_flat"}],
+        key=lambda spec: (spec.surface, spec.public_name),
+    ),
     ids=lambda spec: f"{spec.surface}-{spec.public_name}",
 )
 def test_enhanced_out_metadata_matches_the_real_kernel_signature(spec) -> None:
@@ -298,7 +301,10 @@ def test_real_metrics_module_path_uses_the_enhanced_validation_profile() -> None
 
 @pytest.mark.parametrize(
     "spec",
-    [spec for spec in METRIC_REGISTRY.values() if spec.surface == "metrics" and spec.variant == "enhanced"],
+    sorted(
+        [spec for spec in METRIC_REGISTRY.values() if spec.surface == "metrics" and spec.variant == "enhanced"],
+        key=lambda spec: spec.public_name,
+    ),
     ids=lambda spec: spec.public_name,
 )
 def test_every_metrics_registry_entry_is_a_real_signature_preserving_wrapper(spec) -> None:

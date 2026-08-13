@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.exceptions import NumericalError
 from fincore.metrics import alpha_beta, drawdown, ratios, round_trips, stats, yearly
 from fincore.risk.evt import evt_cvar, gpd_fit
 
@@ -95,11 +96,11 @@ class TestMarRatioFinalEdgeCase:
     """Test mar_ratio edge case for line 417."""
 
     def test_mar_ratio_all_nan_after_cleaning(self):
-        """Line 417: len(returns_clean) < 1."""
-        # All NaN values become empty after cleaning
+        """Line 417: all-NaN returns are rejected before any cleaning."""
+        # All NaN values are rejected by the enhanced metrics surface.
         returns = pd.Series([np.nan, np.nan, np.nan])
-        result = ratios.mar_ratio(returns)
-        assert np.isnan(result)
+        with pytest.raises(NumericalError, match="finite"):
+            ratios.mar_ratio(returns)
 
 
 # =============================================================================

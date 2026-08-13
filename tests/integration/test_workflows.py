@@ -76,6 +76,7 @@ def multi_strategy_returns():
 
 
 @pytest.mark.integration
+@pytest.mark.integration_offline
 @pytest.mark.p1
 class TestCompleteAnalysisWorkflow:
     """Test complete analysis workflows from data to insights."""
@@ -150,6 +151,7 @@ class TestCompleteAnalysisWorkflow:
 
 
 @pytest.mark.integration
+@pytest.mark.integration_offline
 @pytest.mark.p1
 class TestReportGenerationWorkflow:
     """Test report generation workflows."""
@@ -209,6 +211,7 @@ class TestReportGenerationWorkflow:
 
 
 @pytest.mark.integration
+@pytest.mark.integration_offline
 @pytest.mark.p2
 class TestAnalysisContextWorkflow:
     """Test AnalysisContext workflow methods."""
@@ -264,6 +267,7 @@ class TestAnalysisContextWorkflow:
 
 
 @pytest.mark.integration
+@pytest.mark.integration_offline
 @pytest.mark.p2
 class TestDataConsistencyWorkflow:
     """Test data consistency across different workflows."""
@@ -313,6 +317,7 @@ class TestDataConsistencyWorkflow:
 
 
 @pytest.mark.integration
+@pytest.mark.integration_offline
 @pytest.mark.p2
 class TestPerformanceUnderLoad:
     """Test performance with larger datasets."""

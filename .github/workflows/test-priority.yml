@@ -1,9 +1,12 @@
 # Priority-based test workflow for fincore
 #
 # This workflow runs different test suites based on priority:
-# - P0 tests: Run on every push (smoke test, ~8 seconds)
-# - P0+P1 tests: Run on pull_request (~15 seconds)
-# - Full tests: Run on push to master/main (~90 seconds)
+# - P0 tests: Run on every push (smoke test)
+# - P0+P1 tests: Run on pull_request
+# - Full tests: Run on push to master/main
+#
+# Counts are intentionally not hardcoded here; scripts/audit_test_markers.py
+# enforces that every release-gate selector still collects tests.
 
 name: Test Priority
 
@@ -37,16 +40,7 @@ jobs:
 
       - name: Run P0 tests
         run: |
-          pytest tests/ -m p0 -v --tb=short -n auto --ignore=tests/benchmarks/
-
-      - name: Upload P0 test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p0-test-results
-          path: |
-            .pytest_cache/
-            test-results/
+          pytest tests/ -m p0 -q --tb=short --maxfail=0 -n auto --ignore=tests/benchmarks/
 
   # P0+P1: Critical + High priority tests - CI gate
   test-p0-p1:
@@ -71,16 +65,7 @@ jobs:
 
       - name: Run P0+P1 tests
         run: |
-          pytest tests/ -m "p0 or p1" -v --tb=short -n auto --ignore=tests/benchmarks/
-
-      - name: Upload P0+P1 test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: p0-p1-test-results
-          path: |
-            .pytest_cache/
-            test-results/
+          pytest tests/ -m "p0 or p1" -q --tb=short --maxfail=0 -n auto --ignore=tests/benchmarks/
 
   # Full test suite - run on main branch
   test-full:
@@ -110,7 +95,7 @@ jobs:
 
       - name: Run all tests with coverage
         run: |
-          pytest tests/ -v --tb=short -n auto --ignore=tests/benchmarks/ --cov=fincore --cov-report=term-missing --cov-report=xml
+          pytest tests/ -q --tb=short --maxfail=0 -n auto --ignore=tests/benchmarks/ --cov=fincore --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
