@@ -11,12 +11,14 @@ never installs into or otherwise mutates the user's base environment.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import locale
 import os
 import platform
 import re
+import signal
 import subprocess
 import sys
 import sysconfig
@@ -32,6 +34,7 @@ GIT_TIMEOUT_SECONDS = 30
 CONDA_TIMEOUT_SECONDS = 600
 PIP_TIMEOUT_SECONDS = 600
 ORACLE_TIMEOUT_SECONDS = 180
+PROCESS_TERMINATION_GRACE_SECONDS = 2
 NONINTERACTIVE_ENV_OVERRIDES = {"GIT_TERMINAL_PROMPT": "0", "GIT_ASKPASS": ""}
 PREFIX_ENVIRONMENT_KEYS = (
     "CONDA_DEFAULT_ENV",
@@ -90,16 +93,23 @@ def scalar(value):
     return str(value)
 
 
+def datetime_index(values, timezone):
+    if timezone is None:
+        return pd.DatetimeIndex(pd.to_datetime(values))
+    parsed = [pd.Timestamp(value) for value in values]
+    if any(value.tzinfo is not None for value in parsed):
+        return pd.DatetimeIndex(pd.to_datetime(values, utc=True)).tz_convert(timezone)
+    return pd.DatetimeIndex(pd.to_datetime(values)).tz_localize(timezone)
+
+
 def table_index(table):
     raw_index = table["index"]
     names = table["index_names"]
     if raw_index and isinstance(raw_index[0], list):
-        tuples = []
-        for row in raw_index:
-            converted = [pd.Timestamp(row[0]), *row[1:]]
-            tuples.append(tuple(converted))
-        return pd.MultiIndex.from_tuples(tuples, names=names)
-    return pd.DatetimeIndex(pd.to_datetime(raw_index), name=names[0])
+        first_level = datetime_index([row[0] for row in raw_index], table["timezone"])
+        remaining_levels = [[row[position] for row in raw_index] for position in range(1, len(raw_index[0]))]
+        return pd.MultiIndex.from_arrays([first_level, *remaining_levels], names=names)
+    return datetime_index(raw_index, table["timezone"]).rename(names[0])
 
 
 def frame(table):
@@ -139,11 +149,14 @@ def serialized_table(value, kind):
             bool(pd.isna(value)) if isinstance(pd.isna(value), (bool, np.bool_)) else False
             for value in row
         ])
+    index_timezone = (
+        getattr(index.levels[0], "tz", None) if isinstance(index, pd.MultiIndex) else getattr(index, "tz", None)
+    )
     return {
         "kind": kind,
         "index": serialized_index,
         "index_names": list(index.names),
-        "timezone": str(index.tz) if getattr(index, "tz", None) is not None else None,
+        "timezone": str(index_timezone) if index_timezone is not None else None,
         "columns": [str(column) for column in frame_value.columns],
         "dtypes": {str(column): str(dtype) for column, dtype in frame_value.dtypes.items()},
         "values": values,
@@ -292,6 +305,11 @@ cases = json.loads(cases_path.read_text(encoding="utf-8"))
 payload = {
     "runtime_raw": runtime_raw(),
     "import_path": module_path.relative_to(checkout).as_posix(),
+    "execution_context": {
+        "cwd": Path.cwd().as_posix(),
+        "isolated": bool(sys.flags.isolated),
+        "prefix": Path(sys.prefix).resolve().as_posix(),
+    },
     "case_results": [
         {"case_id": case["case_id"], "category": case["category"], "result": run_case(case, utils, performance)}
         for case in cases["cases"]
@@ -307,23 +325,13 @@ def _error(message: str) -> ValueError:
 
 def _run_git(root: Path, arguments: list[str], operation: str) -> bytes:
     """Use only bounded, noninteractive Git commands against the supplied source."""
-    environment = os.environ.copy()
-    environment.update(NONINTERACTIVE_ENV_OVERRIDES)
-    try:
-        result = subprocess.run(
-            ["git", *arguments],
-            cwd=root,
-            check=True,
-            capture_output=True,
-            env=environment,
-            stdin=subprocess.DEVNULL,
-            timeout=GIT_TIMEOUT_SECONDS,
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise _error(f"{operation} timed out after {GIT_TIMEOUT_SECONDS}s") from exc
-    except subprocess.CalledProcessError as exc:
-        detail = (exc.stderr or exc.stdout or b"").decode(errors="replace").strip()
-        raise _error(f"{operation} failed: {detail or exc}") from exc
+    result = _run_process(
+        ["git", *arguments],
+        operation,
+        cwd=root,
+        timeout=GIT_TIMEOUT_SECONDS,
+    )
+    assert isinstance(result.stdout, bytes)
     return result.stdout
 
 
@@ -337,31 +345,46 @@ def _run_process(
     timeout: int,
     text: bool = False,
 ) -> subprocess.CompletedProcess[Any]:
-    """Run one bounded subprocess without an interactive prompt."""
+    """Run one bounded subprocess in its own session and reap it on timeout."""
     child_environment = os.environ.copy()
     for key in unset_environment_keys:
         child_environment.pop(key, None)
     child_environment.update(NONINTERACTIVE_ENV_OVERRIDES)
     if environment is not None:
         child_environment.update(environment)
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=child_environment,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=text,
+        start_new_session=True,
+    )
     try:
-        return subprocess.run(
-            command,
-            cwd=cwd,
-            check=True,
-            capture_output=True,
-            env=child_environment,
-            stdin=subprocess.DEVNULL,
-            timeout=timeout,
-            text=text,
-        )
+        stdout, stderr = process.communicate(timeout=timeout)
     except subprocess.TimeoutExpired as exc:
+        _terminate_process_group(process)
         raise _error(f"{operation} timed out after {timeout}s") from exc
-    except subprocess.CalledProcessError as exc:
-        detail = exc.stderr or exc.stdout or ""
+    if process.returncode != 0:
+        detail = stderr or stdout or ""
         if isinstance(detail, bytes):
             detail = detail.decode(errors="replace")
-        raise _error(f"{operation} failed: {detail.strip() or exc}") from exc
+        raise _error(f"{operation} failed: {detail.strip() or process.returncode}")
+    return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
+
+
+def _terminate_process_group(process: subprocess.Popen[Any]) -> None:
+    """Terminate only the session created for this process, then reap its leader."""
+    with contextlib.suppress(ProcessLookupError):
+        os.killpg(process.pid, signal.SIGTERM)
+    try:
+        process.communicate(timeout=PROCESS_TERMINATION_GRACE_SECONDS)
+    except subprocess.TimeoutExpired:
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGKILL)
+        process.communicate()
 
 
 def _read_json(path: Path, label: str) -> dict[str, Any]:
@@ -617,9 +640,11 @@ def _clone_clean_checkout(source: Path, commit: str, temporary_root: Path) -> Pa
 
 
 def _execute_oracle_worker(prefix: Path, checkout: Path, cases: Path) -> dict[str, Any]:
+    cases_path = cases.resolve()
     result = _run_process(
-        [_prefix_python(prefix).as_posix(), "-c", ORACLE_WORKER, checkout.as_posix(), cases.as_posix()],
+        [_prefix_python(prefix).as_posix(), "-I", "-c", ORACLE_WORKER, checkout.as_posix(), cases_path.as_posix()],
         "execute isolated deterministic Alphalens cases",
+        cwd=checkout,
         environment={"MPLBACKEND": "Agg", "PYTHONNOUSERSITE": "1", "PYTHONPATH": ""},
         unset_environment_keys=PREFIX_ENVIRONMENT_KEYS,
         timeout=ORACLE_TIMEOUT_SECONDS,

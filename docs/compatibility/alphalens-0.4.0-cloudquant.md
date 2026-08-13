@@ -93,9 +93,20 @@ The checked-in tuple is executable on the captured Darwin/arm64 platform:
 locks, installs only the hashed pip tuple, clones a clean detached checkout of
 the pinned commit, and executes the cases with that prefix. It removes inherited
 `CONDA_*`, virtual-environment, and Python-path variables before executing the
-prefix interpreter. It rejects dirty sources, commit/blob/lock mismatches and
-raw or normalized runtime-fingerprint mismatches; it never installs into the
-Anaconda base environment.
+prefix interpreter. The worker is launched as prefix Python with `-I`, with the
+clean detached checkout as its working directory; the case path is resolved
+before that directory change. Thus caller CWD, `PYTHONPATH`, and
+`sitecustomize` cannot select an unintended upstream package. Every Conda, pip,
+Git, and worker command has its own process session; on timeout the runner
+terminates and reaps only that session's process group before temporary-prefix
+cleanup. It rejects dirty sources, commit/blob/lock mismatches and raw or
+normalized runtime-fingerprint mismatches; it never installs into the Anaconda
+base environment.
+
+The table serializer restores the stored IANA timezone onto the timestamp level
+of a single or multi-index, preserving named zones and the distinct instants on
+DST transitions. It preserves index names, row order, and non-time indexes;
+timezone is `null` for a non-time index.
 
 Darwin is retained in `runtime.raw.platform.system`; the corresponding portable
 name is `macOS` in `runtime.normalized.platform.os`, with `raw_system=Darwin`
@@ -109,6 +120,15 @@ after inspecting the candidate output and recording reviewer, date, candidate
 digest, environment digest, and the combined evidence key. Any source/API,
 case, environment, Conda lock, pip lock, candidate digest, or environment
 digest change invalidates that attestation.
+
+The true tuple execution is also available as an opt-in integration test (it
+creates a temporary prefix and can take several minutes):
+
+```bash
+FINCORE_RUN_ALPHALENS_ORACLE_E2E=1 \
+  /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/compat/test_manifest_integrity.py::test_alphalens_oracle_executed_tuple_end_to_end -q
+```
 
 ## Reproduction
 

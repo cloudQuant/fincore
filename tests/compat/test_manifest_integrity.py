@@ -6,8 +6,12 @@ import hashlib
 import importlib.util
 import inspect
 import json
+import os
+import signal
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +68,83 @@ def _load_alphalens_oracle() -> Any:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _current_python_prefix() -> Path:
+    prefix = Path(sys.executable).resolve().parent.parent
+    assert (prefix / "bin" / "python").is_file()
+    return prefix
+
+
+def _write_minimal_alphalens_checkout(checkout: Path, *, utils_source: str | None = None) -> Path:
+    package = checkout / "alphalens"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("from . import performance, utils\n", encoding="utf-8")
+    (package / "performance.py").write_text("\n", encoding="utf-8")
+    (package / "utils.py").write_text(
+        utils_source or "def quantize_factor(factor_data, **_kwargs):\n    return factor_data\n",
+        encoding="utf-8",
+    )
+    return checkout
+
+
+def _write_worker_cases(path: Path, table: dict[str, Any]) -> Path:
+    path.write_text(
+        json.dumps(
+            {
+                "cases": [
+                    {
+                        "case_id": "worker-round-trip",
+                        "category": "ties-nan-zero",
+                        "parameters": {},
+                        "tables": {"factor_data": table},
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def _factor_data_table(
+    index: list[list[str]], *, timezone: str | None, index_names: list[str] | None = None
+) -> dict[str, Any]:
+    return {
+        "kind": "dataframe",
+        "index": index,
+        "index_names": index_names or ["date", "asset"],
+        "timezone": timezone,
+        "columns": ["factor"],
+        "dtypes": {"factor": "float64"},
+        "values": [[1.0] for _ in index],
+        "nan_mask": [[False] for _ in index],
+    }
+
+
+def _process_has_exited(pid: int, *, timeout: float = 3.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return True
+        except PermissionError:
+            return False
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+
+
+def _terminate_owned_test_child(pid: int) -> None:
+    """Clean up only the PID written by the bounded test subprocess itself."""
+    if _process_has_exited(pid, timeout=0):
+        return
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    assert _process_has_exited(pid)
 
 
 def _by_symbol(entries: list[dict[str, Any]], symbol: str) -> dict[str, Any]:
@@ -487,6 +568,165 @@ def test_alphalens_oracle_refuses_to_write_inside_the_source_checkout() -> None:
     assert result.returncode != 0
     assert "source checkout" in f"{result.stdout}\n{result.stderr}".lower()
     assert not output.exists()
+
+
+def test_alphalens_worker_isolated_from_poisoned_caller_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    oracle = _load_alphalens_oracle()
+    checkout = _write_minimal_alphalens_checkout(tmp_path / "clean-checkout")
+    poison = tmp_path / "poisoned-caller"
+    poison.mkdir()
+    _write_worker_cases(
+        poison / "cases.json",
+        _factor_data_table([["2020-01-02T09:30:00", "A"]], timezone=None),
+    )
+    marker = poison / "sitecustomize-ran"
+    (poison / "sitecustomize.py").write_text(
+        f"from pathlib import Path\nPath({marker.as_posix()!r}).write_text('poisoned', encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(poison)
+    monkeypatch.setenv("PYTHONPATH", poison.as_posix())
+
+    payload = oracle._execute_oracle_worker(_current_python_prefix(), checkout, Path("cases.json"))
+
+    assert not marker.exists()
+    context = payload["execution_context"]
+    assert context["isolated"] is True
+    assert Path(context["cwd"]).resolve() == checkout.resolve()
+    assert Path(context["prefix"]).resolve() == _current_python_prefix().resolve()
+    assert payload["import_path"] == "alphalens/__init__.py"
+    assert payload["case_results"][0]["result"]["status"] == "ok"
+
+
+def test_alphalens_worker_round_trips_named_zone_dst_multiindex(tmp_path: Path) -> None:
+    oracle = _load_alphalens_oracle()
+    checkout = _write_minimal_alphalens_checkout(tmp_path / "clean-checkout")
+    input_index = [
+        ["2020-11-01T01:30:00-04:00", "A"],
+        ["2020-11-01T01:30:00-05:00", "B"],
+    ]
+    cases = _write_worker_cases(
+        tmp_path / "dst-cases.json",
+        _factor_data_table(input_index, timezone="America/New_York"),
+    )
+
+    payload = oracle._execute_oracle_worker(_current_python_prefix(), checkout, cases)
+
+    value = payload["case_results"][0]["result"]["value"]
+    assert value["timezone"] == "America/New_York"
+    assert value["index_names"] == ["date", "asset"]
+    assert value["index"] == input_index
+
+
+def test_alphalens_worker_serializes_plain_index_without_timezone_attribute(tmp_path: Path) -> None:
+    oracle = _load_alphalens_oracle()
+    checkout = _write_minimal_alphalens_checkout(
+        tmp_path / "clean-checkout",
+        utils_source="def quantize_factor(factor_data, **_kwargs):\n    return factor_data.reset_index(drop=True)\n",
+    )
+    cases = _write_worker_cases(
+        tmp_path / "plain-index-cases.json",
+        _factor_data_table([["2020-01-02T09:30:00", "A"]], timezone=None),
+    )
+
+    payload = oracle._execute_oracle_worker(_current_python_prefix(), checkout, cases)
+
+    value = payload["case_results"][0]["result"]["value"]
+    assert value["timezone"] is None
+    assert value["index_names"] == [None]
+    assert value["index"] == [0]
+
+
+def test_alphalens_oracle_timeout_terminates_owned_process_group_and_cleans_prefix(tmp_path: Path) -> None:
+    oracle = _load_alphalens_oracle()
+    child_pid_path = tmp_path / "child.pid"
+    script = tmp_path / "spawn-child.py"
+    script.write_text(
+        "from pathlib import Path\n"
+        "import subprocess\n"
+        "import sys\n"
+        "import time\n"
+        "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
+        "Path(sys.argv[1]).write_text(str(child.pid), encoding='utf-8')\n"
+        "time.sleep(60)\n",
+        encoding="utf-8",
+    )
+    temporary_prefix: Path | None = None
+    child_pid: int | None = None
+    child_exited = False
+    try:
+        with tempfile.TemporaryDirectory(dir=tmp_path, prefix="oracle-prefix-") as temporary:
+            temporary_prefix = Path(temporary)
+            with pytest.raises(ValueError, match="bounded child.*timed out"):
+                oracle._run_process(
+                    [sys.executable, script.as_posix(), child_pid_path.as_posix()],
+                    "bounded child",
+                    cwd=temporary_prefix,
+                    timeout=1,
+                )
+            assert child_pid_path.is_file()
+            child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+            child_exited = _process_has_exited(child_pid)
+        assert temporary_prefix is not None
+        assert not temporary_prefix.exists()
+        assert child_exited
+    finally:
+        if child_pid is None and child_pid_path.is_file():
+            child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+        if child_pid is not None:
+            _terminate_owned_test_child(child_pid)
+
+
+@pytest.mark.integration
+@pytest.mark.serial
+def test_alphalens_oracle_executed_tuple_end_to_end(tmp_path: Path) -> None:
+    if os.environ.get("FINCORE_RUN_ALPHALENS_ORACLE_E2E") != "1":
+        pytest.skip("set FINCORE_RUN_ALPHALENS_ORACLE_E2E=1 to recreate the pinned external tuple")
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available")
+    environment_path = Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json"
+    explicit_lock = environment_path.with_name("alphalens-0.4.0-cloudquant-conda-explicit.txt")
+    requirements = environment_path.with_name("requirements-alphalens-0.4.0-cloudquant.txt")
+    cases = FIXTURES / "alphalens-0.4.0-cloudquant-cases.json"
+    output = tmp_path / "candidate.json"
+    temporary_root = tmp_path / "temporary-prefix-root"
+    temporary_root.mkdir()
+    environment = os.environ.copy()
+    environment["TMPDIR"] = temporary_root.as_posix()
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            ALPHALENS_ORACLE.as_posix(),
+            "--source",
+            ALPHALENS_ROOT.as_posix(),
+            "--commit",
+            ALPHALENS_COMMIT,
+            "--environment",
+            environment_path.as_posix(),
+            "--explicit-lock",
+            explicit_lock.as_posix(),
+            "--cases",
+            cases.as_posix(),
+            "--output",
+            output.as_posix(),
+        ],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=1500,
+    )
+
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+    candidate = json.loads(output.read_text(encoding="utf-8"))
+    assert candidate["execution"] == "isolated-prefix-clean-checkout-deterministic-case-execution"
+    assert candidate["commit"] == ALPHALENS_COMMIT
+    assert candidate["reviewed"] is False
+    assert len(candidate["case_results"]) == len(_load("alphalens-0.4.0-cloudquant-cases.json")["cases"])
+    assert candidate["environment"]["explicit_lock_sha256"] == hashlib.sha256(explicit_lock.read_bytes()).hexdigest()
+    assert candidate["environment"]["requirements_sha256"] == hashlib.sha256(requirements.read_bytes()).hexdigest()
+    assert not list(temporary_root.glob("fincore-alphalens-oracle-*"))
 
 
 def test_alphalens_oracle_review_attestation_invalidates_for_every_review_relevant_digest() -> None:
