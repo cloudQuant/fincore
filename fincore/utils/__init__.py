@@ -26,6 +26,7 @@ from .common_utils import (
     _1_bday_ago,
     analyze_dataframe_differences,
     analyze_series_differences,
+    call_explicit_metric,
     check_intraday,
     clip_returns_to_benchmark,
     configure_legend,

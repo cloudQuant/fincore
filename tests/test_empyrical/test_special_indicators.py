@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import DataAlignmentError
 
 DECIMAL_PLACES = 4
 
@@ -27,7 +28,8 @@ class TestSpecialIndicators(TestCase):
         index=pd.date_range("2000-1-1", periods=10, freq="D"),
     )
 
-    # Multi-year returns for RAR
+    # Multi-year returns for RAR (seeded so the R-cubed sanity range is deterministic)
+    np.random.seed(7)
     multi_year_returns = pd.Series(np.random.randn(500) / 100, index=pd.date_range("2020-1-1", periods=500, freq="D"))
 
     multi_year_market = pd.Series(
@@ -105,10 +107,10 @@ class TestSpecialIndicators(TestCase):
         assert isinstance(result, (float, np.floating))
 
     def test_regression_annual_return_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected at the alignment boundary."""
         emp = Empyrical()
-        result = emp.regression_annual_return(self.empty_returns, self.multi_year_market)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(DataAlignmentError, "common labels"):
+            emp.regression_annual_return(self.empty_returns, self.multi_year_market)
 
     # Test R-cubed
     def test_r_cubed(self):

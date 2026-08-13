@@ -11,6 +11,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import ValidationError
 from fincore.metrics.risk import conditional_value_at_risk, value_at_risk
 
 DECIMAL_PLACES = 4
@@ -74,9 +75,9 @@ class TestConditionalValueAtRisk(TestCase):
         assert_almost_equal(result, -0.05, DECIMAL_PLACES)
 
     def test_empty_returns_nan(self):
-        """Empty returns should give NaN."""
-        result = conditional_value_at_risk(pd.Series([], dtype=float))
-        assert np.isnan(result)
+        """Empty returns are rejected by the enhanced metrics surface."""
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            conditional_value_at_risk(pd.Series([], dtype=float))
 
     def test_all_same_returns(self):
         """All identical returns: CVaR = that constant value."""

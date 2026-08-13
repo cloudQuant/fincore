@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import DataAlignmentError
 
 DECIMAL_PLACES = 4
 
@@ -97,10 +98,10 @@ class TestTimingModels(TestCase):
         assert isinstance(result, (float, np.floating))
 
     def test_market_timing_return_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected at the alignment boundary."""
         emp = Empyrical()
-        result = emp.market_timing_return(self.empty_returns, self.multi_year_market)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(DataAlignmentError, "alignment"):
+            emp.market_timing_return(self.empty_returns, self.multi_year_market)
 
     # Test with short series
     def test_treynor_mazuy_short_series(self):

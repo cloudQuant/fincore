@@ -10,6 +10,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from fincore.utils import call_explicit_metric as _call_explicit_metric
 from fincore.utils import configure_legend, print_table
 
 __all__ = [
@@ -19,16 +20,6 @@ __all__ = [
     "plot_risk_exposures",
     "show_perf_attrib_stats",
 ]
-
-
-def _call_explicit_metric(empyrical_instance: Any, name: str, *args: Any, **kwargs: Any) -> Any:
-    """Evaluate local plot data without rebinding a stored-state metric."""
-
-    from fincore.empyrical import Empyrical
-
-    owner = type(empyrical_instance) if isinstance(empyrical_instance, Empyrical) else None
-    metric = getattr(owner, name) if owner is not None else getattr(empyrical_instance, name)
-    return metric(*args, **kwargs)
 
 
 def plot_perf_attrib_returns(

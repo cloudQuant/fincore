@@ -103,6 +103,52 @@ def test_return_result_does_not_close_caller_owned_figures() -> None:
         matplotlib.use("svg")
 
 
+def test_stateful_instance_full_tear_sheet_plots_explicit_returns_correctly() -> None:
+    """A stateful ``Pyfolio`` must plot the *explicit* returns it is given.
+
+    Regression for the converged stored-state binding contract: instance
+    metrics bind instance-stored ``returns`` first, so rendering code that
+    already holds explicit local data must call the class-level surface.
+    Routing explicit data through the stateful instance rebinds it onto
+    ``starting_value`` / ``out`` and used to raise the swallowed pandas
+    ``TypeError: 'float' object does not support item assignment`` inside
+    ``cum_returns``, leaving the cumulative-returns plot missing.
+    """
+    matplotlib.use("Agg", force=True)
+    try:
+        import numpy as np
+        from matplotlib.lines import Line2D
+
+        from fincore.empyrical import Empyrical
+        from fincore.pyfolio import Pyfolio
+
+        idx = pd.date_range("2024-01-01", periods=180, freq="B")
+        rng = np.random.default_rng(7)
+        returns = pd.Series(rng.normal(0.0004, 0.008, len(idx)), index=idx)
+
+        result = Pyfolio(returns=returns).create_full_tear_sheet(returns, return_result=True)
+        try:
+            assert len(result.figures) > 0
+
+            expected = np.asarray(Empyrical.cum_returns(returns, 1.0))
+            plotted_series = [
+                np.asarray(line.get_ydata())
+                for fig in result.figures
+                for ax in fig.axes
+                for line in ax.lines
+                if isinstance(line, Line2D)
+            ]
+            assert any(
+                values.shape == expected.shape and np.allclose(values, expected, equal_nan=True)
+                for values in plotted_series
+            ), "no plotted series matches the explicit returns' cumulative curve"
+        finally:
+            result.close()
+            assert result.closed
+    finally:
+        matplotlib.use("svg")
+
+
 def test_full_tear_sheet_default_return_is_none() -> None:
     """The default enhanced tear-sheet return stays None (no API drift)."""
     matplotlib.use("Agg", force=True)

@@ -51,6 +51,9 @@ from fincore.contracts.time_series import align_time_series
 from fincore.empyrical import Empyrical
 from fincore.exceptions import ValidationError
 from fincore.utils import (
+    call_explicit_metric as _call_explicit_metric,
+)
+from fincore.utils import (
     check_intraday,
     clip_returns_to_benchmark,
     format_asset,
@@ -720,10 +723,12 @@ def create_interesting_times_tear_sheet(
     for i, (name, rets_period) in enumerate(rets_interesting.items()):
         ax = fig.add_subplot(gs[int(i / 2.0), i % 2])
 
-        pyfolio_instance.cum_returns(rets_period).plot(ax=ax, color="forestgreen", label="algo", alpha=0.7, lw=2)
+        _call_explicit_metric(pyfolio_instance, "cum_returns", rets_period).plot(
+            ax=ax, color="forestgreen", label="algo", alpha=0.7, lw=2
+        )
 
         if benchmark_rets is not None:
-            pyfolio_instance.cum_returns(bmark_interesting[name]).plot(
+            _call_explicit_metric(pyfolio_instance, "cum_returns", bmark_interesting[name]).plot(
                 ax=ax, color="gray", label="benchmark", alpha=0.6
             )
             ax.legend(["Algo", "benchmark"], loc=legend_loc, frameon=True, framealpha=0.5)

@@ -10,32 +10,28 @@ import pandas as pd
 import pytest
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import NumericalError
 
 
 class TestEmpyricalTreynorRatio:
     """Test treynor_ratio edge cases."""
 
     def test_treynor_ratio_with_nan_beta(self):
-        """Test treynor_ratio when beta is NaN."""
+        """Test treynor_ratio rejects non-finite factor returns."""
         returns = pd.Series([0.01, 0.02, 0.015])
         factor_returns = pd.Series([np.nan, np.nan, np.nan])
 
-        result = Empyrical.treynor_ratio(returns, factor_returns)
-
-        # Should return NaN when beta is NaN
-        assert np.isnan(result)
+        with pytest.raises(NumericalError, match="finite"):
+            Empyrical.treynor_ratio(returns, factor_returns)
 
     def test_treynor_ratio_with_nan_benchmark_return(self):
-        """Test treynor_ratio when benchmark annual return is NaN."""
+        """Test treynor_ratio rejects non-finite factor returns up front."""
         returns = pd.Series([0.01, 0.02, 0.015, -0.01, 0.018])
         factor_returns = pd.Series([np.nan, np.nan, np.nan, np.nan, np.nan])
 
-        result = Empyrical.treynor_ratio(returns, factor_returns)
-
-        # With all-NaN factor returns, alpha/beta would be NaN, so we'd hit line 714-715 first
-        # We need to pass line 714-715 (alpha and beta NOT NaN) but fail at line 717-718
-        # This is difficult because the same factor_returns is used
-        assert isinstance(result, (float, type(np.nan)))
+        # The enhanced surface validates inputs before any alpha/beta work.
+        with pytest.raises(NumericalError, match="finite"):
+            Empyrical.treynor_ratio(returns, factor_returns)
 
     def test_treynor_ratio_impl_acceptance_test(self):
         """Test treynor_ratio general behavior."""
@@ -136,20 +132,16 @@ class TestEmpyricalRatiosAndTiming:
         assert isinstance(result, float)
 
     def test_regression_annual_return_with_nan_benchmark(self):
-        """Test regression_annual_return when benchmark annual return is NaN."""
+        """Test regression_annual_return rejects non-finite factor returns."""
         returns = pd.Series(
             [0.01, 0.02, 0.015, -0.01, 0.018],
             index=pd.date_range("2020-01-01", periods=5, freq="D"),
         )
-        # All NaN factor returns should make benchmark_annual NaN but still compute alpha/beta
         factor_returns = pd.Series(
             [np.nan, np.nan, np.nan, np.nan, np.nan],
             index=returns.index,
         )
 
-        result = Empyrical.regression_annual_return(returns, factor_returns)
-
-        # With all NaN factor returns, alpha/beta would also be NaN, hitting line 714-715
-        # To hit line 718, we need valid alpha/beta but NaN benchmark_annual
-        # This is tricky because benchmark_annual uses the same factor_returns
-        assert result is not None or np.isnan(result)
+        # The enhanced surface validates inputs before alpha/beta computation.
+        with pytest.raises(NumericalError, match="finite"):
+            Empyrical.regression_annual_return(returns, factor_returns)

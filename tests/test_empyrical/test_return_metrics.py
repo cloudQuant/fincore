@@ -9,6 +9,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import ValidationError
 
 DECIMAL_PLACES = 4
 
@@ -61,10 +62,10 @@ class TestReturnMetrics(TestCase):
             assert result < 0, f"Expected negative return, got {result}"
 
     def test_annualized_cumulative_return_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected."""
         emp = Empyrical()
-        result = emp.annualized_cumulative_return(self.empty_returns)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            emp.annualized_cumulative_return(self.empty_returns)
 
     def test_annualized_cumulative_return_vs_cagr(self):
         """Test relationship with CAGR/annual_return."""

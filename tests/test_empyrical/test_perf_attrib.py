@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+from fincore.empyrical import perf_attrib as legacy_perf_attrib
 
 _TEST_DATA = Path(__file__).resolve().parent.parent / "test_data"
 
@@ -186,7 +187,11 @@ class PerfAttribTestCase(unittest.TestCase):
         if intercepts.shape[1] == 1:
             intercepts = intercepts.iloc[:, 0]
 
-        risk_exposures_portfolio, perf_attrib_output = Empyrical.perf_attrib(
+        # The strict legacy surface preserves the pinned empyrical 0.6.0 label
+        # semantics: stacked positions with unnamed MultiIndex levels are
+        # normalized by the legacy adapter, and the regression fixtures carry
+        # the pinned oracle values (specific returns 0, unit exposures).
+        risk_exposures_portfolio, perf_attrib_output = legacy_perf_attrib(
             returns=returns,
             positions=positions,
             factor_returns=factor_returns,

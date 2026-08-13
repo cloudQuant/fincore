@@ -17,6 +17,7 @@ from fincore.constants import (
     CAPACITY_SWEEP_STEP,
     MM_DISPLAY_UNIT,
 )
+from fincore.utils import call_explicit_metric as _call_explicit_metric
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -72,7 +73,7 @@ def plot_capacity_sweep(
     captial_base_sweep = pd.Series(dtype=float)
     for start_pv in range(min_pv, max_pv, step_size):
         adj_ret = empyrical_instance.apply_slippage_penalty(returns, txn_daily_w_bar, start_pv, bt_starting_capital)
-        sharpe = empyrical_instance.sharpe_ratio(adj_ret)
+        sharpe = _call_explicit_metric(empyrical_instance, "sharpe_ratio", adj_ret)
         if sharpe < -1:
             break
         # pandas-stubs exclude bare int labels from _LocIndexerSeries
@@ -144,7 +145,7 @@ def plot_cones(
     else:
         axes = ax
 
-    returns = empyrical_instance.cum_returns(oos_returns, starting_value=1.0)
+    returns = _call_explicit_metric(empyrical_instance, "cum_returns", oos_returns, starting_value=1.0)
     bounds_tmp = bounds.copy()
     returns_tmp = returns.copy()
     cone_start = returns.index[0]

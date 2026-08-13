@@ -17,6 +17,7 @@ from matplotlib.ticker import FuncFormatter
 from fincore.constants import APPROX_BDAYS_PER_MONTH, STAT_FUNCS_PCT
 from fincore.empyrical import Empyrical
 from fincore.utils import (
+    call_explicit_metric,
     get_month_end_freq,
     make_timezone_aware,
     percentage,
@@ -66,7 +67,7 @@ def plot_monthly_returns_heatmap(empyrical_instance, returns, ax=None, **kwargs)
     if ax is None:
         ax = plt.gca()
 
-    monthly_ret_table = empyrical_instance.aggregate_returns(returns, "monthly")
+    monthly_ret_table = call_explicit_metric(empyrical_instance, "aggregate_returns", returns, "monthly")
     monthly_ret_table = monthly_ret_table.unstack().round(3)
 
     sns.heatmap(
@@ -113,7 +114,7 @@ def plot_annual_returns(empyrical_instance, returns, ax=None, **kwargs):
     ax.xaxis.set_major_formatter(FuncFormatter(x_axis_formatter))
     ax.tick_params(axis="x", which="major")
 
-    ann_ret_df = pd.DataFrame(empyrical_instance.aggregate_returns(returns, "yearly"))
+    ann_ret_df = pd.DataFrame(call_explicit_metric(empyrical_instance, "aggregate_returns", returns, "yearly"))
 
     ax.axvline(100 * ann_ret_df.values.mean(), color="steelblue", linestyle="--", lw=4, alpha=0.7)
     plot_df = 100 * ann_ret_df.sort_index(ascending=False)
@@ -158,7 +159,7 @@ def plot_monthly_returns_dist(empyrical_instance, returns, ax=None, **kwargs):
     ax.xaxis.set_major_formatter(FuncFormatter(x_axis_formatter))
     ax.tick_params(axis="x", which="major")
 
-    monthly_ret_table = empyrical_instance.aggregate_returns(returns, "monthly")
+    monthly_ret_table = call_explicit_metric(empyrical_instance, "aggregate_returns", returns, "monthly")
 
     ax.hist(100 * monthly_ret_table, color="orangered", alpha=0.80, bins=20, **kwargs)
 
@@ -279,13 +280,15 @@ def plot_rolling_returns(
         bmark_vol = factor_returns.loc[returns.index].std()
         returns = (returns / returns.std()) * bmark_vol
 
-    cum_rets = empyrical_instance.cum_returns(returns, 1.0)
+    cum_rets = call_explicit_metric(empyrical_instance, "cum_returns", returns, 1.0)
 
     y_axis_formatter = FuncFormatter(two_dec_places)
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
     if factor_returns is not None:
-        cum_factor_returns = empyrical_instance.cum_returns(factor_returns[cum_rets.index], 1.0)
+        cum_factor_returns = call_explicit_metric(
+            empyrical_instance, "cum_returns", factor_returns[cum_rets.index], 1.0
+        )
         cum_factor_returns.plot(lw=2, color="gray", label=factor_returns.name, alpha=0.60, ax=ax, **kwargs)
 
     if live_start_date is not None:
@@ -520,7 +523,7 @@ def plot_drawdown_periods(empyrical_instance, returns, top=10, ax=None, **kwargs
         ax.set_xlabel("")
         return ax
 
-    df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
+    df_cum_rets = call_explicit_metric(empyrical_instance, "cum_returns", returns, starting_value=1.0)
     drawdown_periods = empyrical_instance.get_top_drawdowns(returns, top=top)
 
     # Preserve the exact instants returned by ``get_top_drawdowns``.  The
@@ -586,7 +589,7 @@ def plot_drawdown_underwater(empyrical_instance, returns, ax=None, **kwargs):
     y_axis_formatter = FuncFormatter(percentage)
     ax.yaxis.set_major_formatter(FuncFormatter(y_axis_formatter))
 
-    df_cum_rets = empyrical_instance.cum_returns(returns, starting_value=1.0)
+    df_cum_rets = call_explicit_metric(empyrical_instance, "cum_returns", returns, starting_value=1.0)
     running_max = np.maximum.accumulate(df_cum_rets)
     underwater = -100 * ((running_max - df_cum_rets) / running_max)
     underwater.plot(ax=ax, kind="area", color="coral", alpha=0.7, **kwargs)
@@ -627,8 +630,8 @@ def plot_return_quantiles(empyrical_instance, returns, live_start_date=None, ax=
             live_start_date = pd.to_datetime(live_start_date)
         live_start_date = make_timezone_aware(live_start_date, returns.index[0].tz)
         is_returns = returns.loc[returns.index < live_start_date]
-    is_weekly = empyrical_instance.aggregate_returns(is_returns, "weekly")
-    is_monthly = empyrical_instance.aggregate_returns(is_returns, "monthly")
+    is_weekly = call_explicit_metric(empyrical_instance, "aggregate_returns", is_returns, "weekly")
+    is_monthly = call_explicit_metric(empyrical_instance, "aggregate_returns", is_returns, "monthly")
     data = pd.concat(
         [
             pd.DataFrame({"value": is_returns, "category": "returns"}),
@@ -643,8 +646,8 @@ def plot_return_quantiles(empyrical_instance, returns, live_start_date=None, ax=
 
     if live_start_date is not None:
         oos_returns = returns.loc[returns.index >= live_start_date]
-        oos_weekly = empyrical_instance.aggregate_returns(oos_returns, "weekly")
-        oos_monthly = empyrical_instance.aggregate_returns(oos_returns, "monthly")
+        oos_weekly = call_explicit_metric(empyrical_instance, "aggregate_returns", oos_returns, "weekly")
+        oos_monthly = call_explicit_metric(empyrical_instance, "aggregate_returns", oos_returns, "monthly")
 
         sns.swarmplot(data=[oos_returns, oos_weekly, oos_monthly], ax=ax, color="red", marker="d", **kwargs)
         red_dots = matplotlib.lines.Line2D([], [], color="red", marker="d", label="Out-of-sample data", linestyle="")
@@ -679,7 +682,7 @@ def plot_monthly_returns_timeseries(empyrical_instance, returns, ax=None, **_kwa
 
     def cumulate_returns(x):
         # ``Series[-1]`` is label-based for most indexes; use positional access.
-        return empyrical_instance.cum_returns(x).iloc[-1]
+        return call_explicit_metric(empyrical_instance, "cum_returns", x).iloc[-1]
 
     if ax is None:
         ax = plt.gca()

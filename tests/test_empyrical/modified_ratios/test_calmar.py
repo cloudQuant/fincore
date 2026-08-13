@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 
+from fincore.exceptions import ValidationError
 from fincore.metrics.ratios import calmar_ratio
 
 DECIMAL_PLACES = 4
@@ -49,8 +50,9 @@ class TestCalmarRatioRiskFree:
         assert ratio < 0
 
     def test_empty_returns_nan(self):
-        result = calmar_ratio(pd.Series([], dtype=float))
-        assert np.isnan(result)
+        """Empty returns are rejected by the enhanced metrics surface."""
+        with pytest.raises(ValidationError, match="empty"):
+            calmar_ratio(pd.Series([], dtype=float))
 
     def test_single_positive_return(self):
         """Single return has no drawdown => NaN."""

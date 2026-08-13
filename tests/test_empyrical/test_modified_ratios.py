@@ -14,6 +14,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import ValidationError
 from fincore.metrics.ratios import (
     calmar_ratio,
     conditional_sharpe_ratio,
@@ -59,8 +60,9 @@ class TestCalmarRatioRiskFree(TestCase):
         assert ratio < 0, f"Expected negative ratio with large rf, got {ratio}"
 
     def test_empty_returns_nan(self):
-        result = calmar_ratio(pd.Series([], dtype=float))
-        assert np.isnan(result)
+        """Empty returns are rejected by the enhanced metrics surface."""
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            calmar_ratio(pd.Series([], dtype=float))
 
     def test_single_positive_return(self):
         """Single return has no drawdown => NaN."""
@@ -166,8 +168,9 @@ class TestOmegaRatio(TestCase):
         assert np.isnan(result)
 
     def test_empty_returns_nan(self):
-        result = omega_ratio(pd.Series([], dtype=float))
-        assert np.isnan(result)
+        """Empty returns are rejected by the enhanced metrics surface."""
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            omega_ratio(pd.Series([], dtype=float))
 
     def test_required_return_negative_one(self):
         """required_return <= -1 should return NaN."""

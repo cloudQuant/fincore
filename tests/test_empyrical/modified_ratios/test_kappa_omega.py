@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 
+from fincore.exceptions import ValidationError
 from fincore.metrics.ratios import kappa_three_ratio, omega_ratio
 
 DECIMAL_PLACES = 4
@@ -93,8 +94,9 @@ class TestOmegaRatio:
         assert np.isnan(result)
 
     def test_empty_returns_nan(self):
-        result = omega_ratio(pd.Series([], dtype=float))
-        assert np.isnan(result)
+        """Empty returns are rejected by the enhanced metrics surface."""
+        with pytest.raises(ValidationError, match="empty"):
+            omega_ratio(pd.Series([], dtype=float))
 
     def test_required_return_negative_one(self):
         """required_return <= -1 should return NaN."""

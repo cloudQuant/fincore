@@ -107,14 +107,15 @@ class TestCompleteAnalysisWorkflow:
         # 1. Create Empyrical instance
         emp = Empyrical(returns=strategy_returns, factor_returns=benchmark_returns)
 
-        # 2. Calculate key metrics using class methods (passing returns explicitly)
-        sharpe = emp.sharpe_ratio(strategy_returns)
-        sortino = emp.sortino_ratio(strategy_returns)
-        max_dd = emp.max_drawdown(strategy_returns)
-        annual_ret = emp.annual_return(strategy_returns)
-        annual_vol = emp.annual_volatility(strategy_returns)
-        alpha_val = emp.alpha(strategy_returns, benchmark_returns)
-        beta_val = emp.beta(strategy_returns, benchmark_returns)
+        # 2. Calculate key metrics: instance calls bind the stored state,
+        #    class-level calls take explicit positional data.
+        sharpe = emp.sharpe_ratio()
+        sortino = emp.sortino_ratio()
+        max_dd = emp.max_drawdown()
+        annual_ret = emp.annual_return()
+        annual_vol = emp.annual_volatility()
+        alpha_val = emp.alpha()
+        beta_val = emp.beta()
 
         # 3. Validate all metrics are finite
         assert np.isfinite(sharpe)
@@ -269,9 +270,9 @@ class TestDataConsistencyWorkflow:
 
     def test_empyrical_vs_flat_api(self, strategy_returns):
         """Test that Empyrical class and flat API give same results."""
-        # Using Empyrical class (need to pass returns explicitly)
+        # Instance metric calls bind the stored returns.
         emp = Empyrical(returns=strategy_returns)
-        sharpe_class = emp.sharpe_ratio(strategy_returns)
+        sharpe_class = emp.sharpe_ratio()
 
         # Using flat API
         sharpe_flat = sharpe_ratio(strategy_returns)
@@ -285,9 +286,9 @@ class TestDataConsistencyWorkflow:
         ctx = AnalysisContext(strategy_returns)
         sharpe_ctx = ctx.sharpe_ratio
 
-        # Using Empyrical (need to pass returns explicitly)
+        # Instance metric calls bind the stored returns.
         emp = Empyrical(returns=strategy_returns)
-        sharpe_emp = emp.sharpe_ratio(strategy_returns)
+        sharpe_emp = emp.sharpe_ratio()
 
         # Should be identical or very close
         assert np.isclose(sharpe_ctx, sharpe_emp, rtol=1e-10)

@@ -991,3 +991,21 @@ def default_returns_func(returns):
     It's used by pyfolio for returns processing compatibility.
     """
     return returns
+
+
+def call_explicit_metric(instance: Any, name: str, *args: Any, **kwargs: Any) -> Any:
+    """Evaluate one metric with explicit data, bypassing stored-state binding.
+
+    Enhanced ``Empyrical`` metrics bind instance-stored ``returns`` /
+    ``factor_returns`` when the instance carries state (the pinned Task 3
+    positional-binding contract).  Rendering consumers that already hold
+    explicit local data must therefore call the *class-level* surface; routing
+    those values through a stateful instance would rebind them onto the
+    remaining public parameters (e.g. ``starting_value`` / ``out``) and
+    silently corrupt the result.
+    """
+    from fincore.empyrical import Empyrical
+
+    owner = type(instance) if isinstance(instance, Empyrical) else None
+    metric = getattr(owner, name) if owner is not None else getattr(instance, name)
+    return metric(*args, **kwargs)

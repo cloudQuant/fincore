@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import NumericalError
 
 
 class TestEmpyricalZiplineImport:
@@ -101,7 +102,7 @@ class TestEmpyricalRegressionAnnualReturnNan:
         benchmark = pd.Series([np.nan, np.nan, np.nan, np.nan, np.nan])
 
         emp = Empyrical(returns=returns, factor_returns=benchmark)
-        result = emp.regression_annual_return()
 
-        # Should return NaN
-        assert pd.isna(result)
+        # The enhanced surface rejects the non-finite benchmark up front.
+        with pytest.raises(NumericalError, match="finite"):
+            emp.regression_annual_return()

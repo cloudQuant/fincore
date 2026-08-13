@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fincore.empyrical as legacy
 from fincore import (
     alpha,
     annual_return,
@@ -37,6 +38,7 @@ from fincore import (
     value_at_risk,
 )
 from fincore.constants import DAILY
+from fincore.exceptions import DataAlignmentError, NumericalError, ValidationError
 from fincore.metrics.risk import conditional_value_at_risk
 
 # ==============================================================================
@@ -118,27 +120,27 @@ class TestEmptyReturns:
 
     @pytest.mark.p1
     def test_sharpe_ratio_empty(self, empty_returns):
-        """Sharpe ratio should return NaN for empty data."""
-        result = sharpe_ratio(empty_returns)
-        assert np.isnan(result)
+        """Sharpe ratio rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            sharpe_ratio(empty_returns)
 
     @pytest.mark.p1
     def test_max_drawdown_empty(self, empty_returns):
-        """Max drawdown should return NaN for empty data."""
-        result = max_drawdown(empty_returns)
-        assert np.isnan(result)
+        """Max drawdown rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            max_drawdown(empty_returns)
 
     @pytest.mark.p1
     def test_annual_return_empty(self, empty_returns):
-        """Annual return should return NaN for empty data."""
-        result = annual_return(empty_returns)
-        assert np.isnan(result)
+        """Annual return rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            annual_return(empty_returns)
 
     @pytest.mark.p1
     def test_annual_volatility_empty(self, empty_returns):
-        """Annual volatility should return NaN for empty data."""
-        result = annual_volatility(empty_returns)
-        assert np.isnan(result)
+        """Annual volatility rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            annual_volatility(empty_returns)
 
 
 class TestSingleValue:
@@ -186,29 +188,30 @@ class TestNaNValues:
 
     @pytest.mark.p1
     def test_sharpe_ratio_all_nan(self, all_nan):
-        """Sharpe ratio should return NaN for all NaN data."""
-        result = sharpe_ratio(all_nan)
-        assert np.isnan(result)
+        """Sharpe ratio rejects all-NaN data."""
+        with pytest.raises(NumericalError, match="finite"):
+            sharpe_ratio(all_nan)
 
     @pytest.mark.p1
     def test_sharpe_ratio_mostly_nan(self, mostly_nan):
-        """Sharpe ratio should handle mostly NaN data."""
-        result = sharpe_ratio(mostly_nan)
-        # Should return finite value (using valid data) or NaN
-        assert np.isfinite(result) or np.isnan(result)
+        """Sharpe ratio rejects data containing NaN."""
+        with pytest.raises(NumericalError, match="finite"):
+            sharpe_ratio(mostly_nan)
 
     @pytest.mark.p1
     def test_max_drawdown_all_nan(self, all_nan):
-        """Max drawdown should return NaN or 0 for all NaN data."""
-        result = max_drawdown(all_nan)
-        assert np.isnan(result) or result == 0.0
+        """Max drawdown rejects all-NaN data."""
+        with pytest.raises(NumericalError, match="finite"):
+            max_drawdown(all_nan)
 
     @pytest.mark.p1
     def test_cum_returns_with_nan(self, mostly_nan):
-        """Cumulative returns should handle NaN values."""
-        result = cum_returns(mostly_nan)
-        # Should not crash, may contain NaN
+        """Strict legacy cum_returns keeps the pinned NaN-tolerant kernel."""
+        result = legacy.cum_returns(mostly_nan)
+        # The pinned legacy oracle replaces NaN with 0 and compounds.
+        expected = np.cumprod(1 + mostly_nan.fillna(0).to_numpy()) - 1
         assert isinstance(result, pd.Series)
+        assert np.allclose(result.to_numpy(), expected)
 
 
 class TestZeroVolatility:
@@ -272,22 +275,15 @@ class TestInfiniteValues:
 
     @pytest.mark.p1
     def test_sharpe_ratio_infinite(self, infinite_values):
-        """Sharpe ratio should handle infinite values gracefully."""
-        result = sharpe_ratio(infinite_values)
-        # Should not crash, may return NaN or finite value
-        assert np.isfinite(result) or np.isnan(result)
+        """Sharpe ratio rejects infinite values."""
+        with pytest.raises(NumericalError, match="finite"):
+            sharpe_ratio(infinite_values)
 
     @pytest.mark.p1
     def test_max_drawdown_infinite(self, infinite_values):
-        """Max drawdown should handle infinite values."""
-        # This may raise a warning or return extreme value
-        try:
-            result = max_drawdown(infinite_values)
-            # Should not crash
-            assert result <= 0 or np.isnan(result)
-        except (ValueError, RuntimeWarning):
-            # Acceptable to raise error for infinite values
-            pass
+        """Max drawdown rejects infinite values."""
+        with pytest.raises(NumericalError, match="finite"):
+            max_drawdown(infinite_values)
 
 
 class TestExtremeValues:
@@ -313,10 +309,9 @@ class TestMixedNaNInf:
 
     @pytest.mark.p1
     def test_sharpe_ratio_mixed(self, mixed_nan_inf):
-        """Sharpe ratio should handle mixed edge cases."""
-        result = sharpe_ratio(mixed_nan_inf)
-        # Should not crash
-        assert np.isfinite(result) or np.isnan(result)
+        """Sharpe ratio rejects mixed NaN/Inf data."""
+        with pytest.raises(NumericalError, match="finite"):
+            sharpe_ratio(mixed_nan_inf)
 
 
 # ==============================================================================
@@ -329,9 +324,9 @@ class TestValueAtRiskEdgeCases:
 
     @pytest.mark.p1
     def test_var_empty(self, empty_returns):
-        """VaR should return NaN for empty data."""
-        result = value_at_risk(empty_returns, 0.05)
-        assert np.isnan(result)
+        """VaR rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            value_at_risk(empty_returns, 0.05)
 
     @pytest.mark.p1
     def test_var_single_value(self, single_value):
@@ -342,9 +337,9 @@ class TestValueAtRiskEdgeCases:
 
     @pytest.mark.p1
     def test_var_all_nan(self, all_nan):
-        """VaR should return NaN for all NaN data."""
-        result = value_at_risk(all_nan, 0.05)
-        assert np.isnan(result)
+        """VaR rejects all-NaN data."""
+        with pytest.raises(NumericalError, match="finite"):
+            value_at_risk(all_nan, 0.05)
 
 
 class TestCVaREdgeCases:
@@ -352,15 +347,15 @@ class TestCVaREdgeCases:
 
     @pytest.mark.p1
     def test_cvar_empty(self, empty_returns):
-        """CVaR should return NaN for empty data."""
-        result = conditional_value_at_risk(empty_returns, 0.05)
-        assert np.isnan(result)
+        """CVaR rejects empty data."""
+        with pytest.raises(ValidationError, match="empty"):
+            conditional_value_at_risk(empty_returns, 0.05)
 
     @pytest.mark.p1
     def test_cvar_all_nan(self, all_nan):
-        """CVaR should return NaN for all NaN data."""
-        result = conditional_value_at_risk(all_nan, 0.05)
-        assert np.isnan(result)
+        """CVaR rejects all-NaN data."""
+        with pytest.raises(NumericalError, match="finite"):
+            conditional_value_at_risk(all_nan, 0.05)
 
 
 # ==============================================================================
@@ -373,17 +368,17 @@ class TestAlphaBetaEdgeCases:
 
     @pytest.mark.p1
     def test_alpha_empty(self, empty_returns):
-        """Alpha should return NaN for empty data."""
+        """Alpha rejects empty data at the alignment boundary."""
         factor = pd.Series([0.01] * len(empty_returns))
-        result = alpha(empty_returns, factor)
-        assert np.isnan(result)
+        with pytest.raises(DataAlignmentError, match="common labels"):
+            alpha(empty_returns, factor)
 
     @pytest.mark.p1
     def test_beta_empty(self, empty_returns):
-        """Beta should return NaN for empty data."""
+        """Beta rejects empty data at the alignment boundary."""
         factor = pd.Series([0.01] * len(empty_returns))
-        result = beta(empty_returns, factor)
-        assert np.isnan(result)
+        with pytest.raises(DataAlignmentError, match="common labels"):
+            beta(empty_returns, factor)
 
     @pytest.mark.p1
     def test_alpha_mismatched_length(self):
@@ -418,8 +413,8 @@ class TestCumReturnsEdgeCases:
 
     @pytest.mark.p1
     def test_cum_returns_empty(self, empty_returns):
-        """Cumulative returns should handle empty data."""
-        result = cum_returns(empty_returns)
+        """Strict legacy cum_returns keeps the pinned empty passthrough."""
+        result = legacy.cum_returns(empty_returns)
         assert isinstance(result, pd.Series)
         assert len(result) == 0
 
@@ -434,10 +429,11 @@ class TestCumReturnsEdgeCases:
 
     @pytest.mark.p1
     def test_cum_returns_with_nan(self, mostly_nan):
-        """Cumulative returns should handle NaN."""
-        result = cum_returns(mostly_nan)
+        """Strict legacy cum_returns keeps the pinned NaN-tolerant kernel."""
+        result = legacy.cum_returns(mostly_nan)
+        expected = np.cumprod(1 + mostly_nan.fillna(0).to_numpy()) - 1
         assert isinstance(result, pd.Series)
-        # Should not crash
+        assert np.allclose(result.to_numpy(), expected)
 
 
 # ==============================================================================
@@ -450,12 +446,10 @@ class TestDataFrameEdgeCases:
 
     @pytest.mark.p1
     def test_sharpe_ratio_empty_dataframe(self):
-        """Sharpe ratio should handle empty DataFrame."""
+        """Sharpe ratio rejects an empty DataFrame."""
         df = pd.DataFrame()
-        result = sharpe_ratio(df)
-        # Returns np.ndarray for 2D input (empty array for empty DataFrame)
-        assert isinstance(result, (pd.Series, np.ndarray))
-        assert len(result) == 0
+        with pytest.raises(ValidationError, match="empty"):
+            sharpe_ratio(df)
 
     @pytest.mark.p1
     def test_sharpe_ratio_single_column(self):
@@ -469,7 +463,7 @@ class TestDataFrameEdgeCases:
 
     @pytest.mark.p1
     def test_sharpe_ratio_mixed_columns(self):
-        """Sharpe ratio should handle mixed valid/invalid columns."""
+        """Sharpe ratio rejects a DataFrame containing a non-finite column."""
         np.random.seed(42)
         df = pd.DataFrame(
             {
@@ -478,16 +472,8 @@ class TestDataFrameEdgeCases:
                 "all_nan": [np.nan] * 100,
             }
         )
-        result = sharpe_ratio(df)
-        assert isinstance(result, (pd.Series, np.ndarray))
-        assert len(result) == 3
-        # valid: finite; constant (zero vol): NaN or inf; all_nan: NaN
-        r0 = result["valid"] if isinstance(result, pd.Series) else result[0]
-        r1 = result["constant"] if isinstance(result, pd.Series) else result[1]
-        r2 = result["all_nan"] if isinstance(result, pd.Series) else result[2]
-        assert np.isfinite(r0)
-        assert np.isnan(r1) or np.isinf(r1) or (np.isfinite(r1) and abs(r1) > 1e10)
-        assert np.isnan(r2)
+        with pytest.raises(NumericalError, match="finite"):
+            sharpe_ratio(df)
 
 
 # ==============================================================================
@@ -495,7 +481,7 @@ class TestDataFrameEdgeCases:
 # ==============================================================================
 
 # These edge case tests ensure:
-# 1. No crashes on unusual data
-# 2. Graceful degradation (return NaN instead of error)
-# 3. Correct handling of boundary conditions
-# 4. Robustness for production use
+# 1. Enhanced surfaces fail fast on empty data (ValidationError)
+# 2. Enhanced surfaces fail fast on non-finite data (NumericalError)
+# 3. Binary metrics reject empty inputs at the alignment boundary (DataAlignmentError)
+# 4. The strict legacy surface keeps the pinned NaN-tolerant kernel behavior

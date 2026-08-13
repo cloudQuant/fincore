@@ -7,7 +7,7 @@ This module covers edge cases and branches that were previously uncovered:
 - Various drawdown methods that may have been untested
 - gpd_risk_estimates (line 446)
 - perf_attrib with instance state fallback (lines 693-698)
-- regression_annual_return with NaN handling (line 718)
+- regression_annual_return with non-finite input rejection (line 718)
 """
 
 import unittest
@@ -15,7 +15,9 @@ import unittest
 import numpy as np
 import pandas as pd
 
+from fincore import analyze
 from fincore.empyrical import Empyrical
+from fincore.exceptions import NumericalError
 
 
 class EmpyricalMissingCoverageTestCase(unittest.TestCase):
@@ -94,8 +96,8 @@ class EmpyricalMissingCoverageTestCase(unittest.TestCase):
 
     def test_perf_attrib_with_instance_state(self):
         """Test perf_attrib using instance state fallback (lines 693-698)."""
-        returns = pd.Series([0.01, 0.02, 0.015, -0.005])
-        dts = returns.index
+        dts = pd.date_range("2020-01-01", periods=4)
+        returns = pd.Series([0.01, 0.02, 0.015, -0.005], index=dts)
         tickers = ["stock1", "stock2"]
         styles = ["risk_factor1", "risk_factor2"]
 
@@ -127,35 +129,45 @@ class EmpyricalMissingCoverageTestCase(unittest.TestCase):
         result = emp.perf_attrib()
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 2)  # Returns (exposures, perf_attrib_output)
+        risk_exposures, perf_attrib_output = result
+        self.assertIsInstance(risk_exposures, pd.DataFrame)
+        self.assertIsInstance(perf_attrib_output, pd.DataFrame)
 
     def test_regression_annual_return_with_nan_alpha(self):
-        """Test regression_annual_return with NaN alpha (line 714-715)."""
+        """Test regression_annual_return rejects non-finite returns (line 714-715)."""
         returns = pd.Series([np.nan, np.nan, np.nan])
         factor_returns = pd.Series([0.01, 0.02, 0.015])
 
-        result = Empyrical.regression_annual_return(returns, factor_returns)
-        self.assertTrue(np.isnan(result))
+        with self.assertRaisesRegex(NumericalError, "finite"):
+            Empyrical.regression_annual_return(returns, factor_returns)
 
     def test_regression_annual_return_with_nan_benchmark(self):
-        """Test regression_annual_return with NaN benchmark annual return (line 717-718)."""
+        """Test regression_annual_return rejects non-finite factor returns (line 717-718)."""
         returns = pd.Series([0.01, 0.02, 0.015])
         factor_returns = pd.Series([np.nan, np.nan, np.nan])
 
-        result = Empyrical.regression_annual_return(returns, factor_returns)
-        self.assertTrue(np.isnan(result))
+        with self.assertRaisesRegex(NumericalError, "finite"):
+            Empyrical.regression_annual_return(returns, factor_returns)
 
-    def test_instance_with_returns_creates_context(self):
-        """Test that creating Empyrical with returns creates AnalysisContext."""
-        returns = pd.Series([0.01, 0.02, -0.01, 0.03])
-        factor_returns = pd.Series([0.005, 0.01, -0.005, 0.015])
+    def test_instance_with_returns_binds_stored_state(self):
+        """Test the documented instance contract: stored returns bind metric calls."""
+        index = pd.date_range("2024-01-01", periods=4)
+        returns = pd.Series([0.01, 0.02, -0.01, 0.03], index=index)
+        factor_returns = pd.Series([0.005, 0.01, -0.005, 0.015], index=index)
 
         emp = Empyrical(returns=returns, factor_returns=factor_returns)
-        self.assertIsNotNone(emp._ctx)
+        # Instance metric calls bind the stored state and match explicit class calls.
+        self.assertEqual(emp.sharpe_ratio(), Empyrical.sharpe_ratio(returns))
+        self.assertEqual(emp.beta(), Empyrical.beta(returns, factor_returns))
+        # AnalysisContext remains the recommended stateful API.
+        context = analyze(returns, factor_returns=factor_returns)
+        self.assertIsNotNone(context.perf_stats())
 
-    def test_instance_without_returns_no_context(self):
-        """Test that creating Empyrical without returns doesn't create AnalysisContext."""
+    def test_instance_without_returns_uses_explicit_data(self):
+        """Test that an instance without stored returns accepts explicit data."""
         emp = Empyrical()
-        self.assertIsNone(emp._ctx)
+        returns = pd.Series([0.01, 0.02, -0.01, 0.03])
+        self.assertEqual(emp.sharpe_ratio(returns), Empyrical.sharpe_ratio(returns))
 
     def test_cagr_alias(self):
         """Test cagr alias method."""
