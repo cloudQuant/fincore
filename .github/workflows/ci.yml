@@ -72,6 +72,83 @@ jobs:
       - name: Ruff format (check)
         run: ruff format --check fincore/ tests/ scripts/ examples/ benchmarks/
 
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      # The previous run's results act as the platform-labelled baseline
+      # (cache keyed by runner OS/arch).  On a cold cache the comparison
+      # still enforces the structural gates (superlinearity, window RSS
+      # scaling, round-trip share-amount scaling).
+      - name: Restore previous benchmark baseline
+        uses: actions/cache@v4
+        with:
+          path: .benchmarks/
+          key: perf-baseline-${{ runner.os }}-${{ runner.arch }}
+          restore-keys: |
+            perf-baseline-${{ runner.os }}-${{ runner.arch }}
+          save-always: true
+
+      - name: Run rolling benchmarks
+        run: |
+          python scripts/run_rolling_benchmarks.py \
+            --sizes 2520 25200 --windows 21 63 252 504 \
+            --repeats 3 --output .benchmarks/rolling-candidate.json
+
+      - name: Run round-trip benchmarks
+        run: |
+          python scripts/run_round_trip_benchmarks.py \
+            --amounts 10 10000000 --rows 100 10000 \
+            --repeats 3 --output .benchmarks/round-trips-candidate.json
+
+      # Performance regressions fail CI; no continue-on-error.  A missing
+      # baseline file only downgrades to the structural gates, which still
+      # fail on complexity and memory-scaling regressions.
+      - name: Compare rolling benchmarks against baseline
+        run: |
+          python scripts/compare_benchmarks.py \
+            --baseline .benchmarks/rolling-baseline.json \
+            --candidate .benchmarks/rolling-candidate.json \
+            --max-time-regression 0.25 --max-rss-regression 0.25 \
+            --allow-missing-baseline
+
+      - name: Compare round-trip benchmarks against baseline
+        run: |
+          python scripts/compare_benchmarks.py \
+            --baseline .benchmarks/round-trips-baseline.json \
+            --candidate .benchmarks/round-trips-candidate.json \
+            --max-time-regression 0.25 --max-rss-regression 0.25 \
+            --allow-missing-baseline
+
+      - name: Gate benchmark runner schemas
+        run: |
+          pytest -o addopts='' -q tests/benchmarks/test_rolling_regression.py \
+            tests/benchmarks/test_round_trip_scaling.py
+
+      - name: Store candidate as next baseline
+        run: |
+          cp .benchmarks/rolling-candidate.json .benchmarks/rolling-baseline.json
+          cp .benchmarks/round-trips-candidate.json .benchmarks/round-trips-baseline.json
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-comparison
+          path: .benchmarks/
+
   security:
     runs-on: ubuntu-latest
     steps:

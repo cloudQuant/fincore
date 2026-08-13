@@ -207,6 +207,12 @@ def extract_round_trips(transactions, portfolio_value=None):
     Under the hood, we reconstruct the individual shares in a
     portfolio over time and match round_trips in a FIFO order.
 
+    The FIFO queue stores one node per transaction block (price,
+    quantity, dt) rather than one node per share, so cost scales with
+    the transaction row count, never with the share amount.  This
+    contract is locked by ``tests/benchmarks/test_round_trip_scaling.py``
+    and ``scripts/run_round_trip_benchmarks.py``.
+
     Parameters
     ----------
     transactions : pd.DataFrame

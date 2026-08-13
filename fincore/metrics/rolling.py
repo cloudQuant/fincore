@@ -23,7 +23,7 @@ import pandas as pd
 
 from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
-from fincore.metrics.alpha_beta import alpha_aligned, alpha_beta_aligned
+from fincore.core.rolling_moments import roll_alpha_beta_vectorized, roll_max_drawdown_chunked
 from fincore.metrics.basic import annualization_factor
 from fincore.metrics.ratios import down_capture, sortino_ratio, up_capture
 from fincore.metrics.risk import annual_volatility
@@ -145,16 +145,14 @@ def roll_alpha(
         factor_aligned = pd.Series(factor_aligned)
 
     assert isinstance(returns_aligned, pd.Series) and isinstance(factor_aligned, pd.Series)
-    n = len(returns_aligned) - window + 1
-    out = np.empty(n, dtype=float)
-    ret_arr = np.asanyarray(returns_aligned)
-    fac_arr = np.asanyarray(factor_aligned)
-    for i in range(n):
-        out[i] = alpha_aligned(ret_arr[i : i + window], fac_arr[i : i + window], risk_free, period, annualization)
+    ann_factor = annualization_factor(period, annualization)
+    alpha, _beta = roll_alpha_beta_vectorized(
+        returns_aligned, factor_aligned, window, risk_free=risk_free, ann_factor=ann_factor
+    )
 
     if is_series:
-        return pd.Series(out, index=returns_aligned.index[window - 1 :])
-    return out
+        return pd.Series(alpha, index=returns_aligned.index[window - 1 :])
+    return alpha
 
 
 def roll_beta(
@@ -272,15 +270,10 @@ def roll_alpha_beta(
         factor_aligned = pd.Series(factor_aligned)
 
     assert isinstance(returns_aligned, pd.Series) and isinstance(factor_aligned, pd.Series)
-    n = len(returns_aligned) - window + 1
-    out_alpha = np.empty(n, dtype=float)
-    out_beta = np.empty(n, dtype=float)
-    ret_arr = np.asanyarray(returns_aligned)
-    fac_arr = np.asanyarray(factor_aligned)
-    for i in range(n):
-        ab = alpha_beta_aligned(ret_arr[i : i + window], fac_arr[i : i + window], risk_free, period, annualization)
-        out_alpha[i] = ab[0]
-        out_beta[i] = ab[1]
+    ann_factor = annualization_factor(period, annualization)
+    out_alpha, out_beta = roll_alpha_beta_vectorized(
+        returns_aligned, factor_aligned, window, risk_free=risk_free, ann_factor=ann_factor
+    )
 
     idx = returns_aligned.index[window - 1 :]
     if is_series:
@@ -371,28 +364,11 @@ def roll_max_drawdown(
         return np.array([], dtype=float)
 
     ret_arr = np.asanyarray(returns, dtype=np.float64)
-    n = len(ret_arr) - window + 1
 
-    # --- vectorised path using sliding_window_view ---
-    from numpy.lib.stride_tricks import sliding_window_view
-
-    windows = sliding_window_view(ret_arr, window)  # (n, window) — view, no copy
-
-    # Build cumulative product with starting value 1.0 in a single allocation
-    cum = np.empty((n, window + 1), dtype=np.float64)
-    cum[:, 0] = 1.0
-    np.cumprod(1.0 + windows, axis=1, out=cum[:, 1:])
-
-    # running maximum along each window row
-    run_max = np.maximum.accumulate(cum, axis=1)
-
-    # drawdown at every point inside every window (in-place to reduce allocation)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        cum -= run_max
-        cum /= run_max
-
-    # max drawdown per window (most negative value)
-    out = np.nanmin(cum, axis=1)  # (n,)
+    # Bounded-memory chunked kernel: peak scratch memory is
+    # O(block_rows * window) instead of O(n * window), with results
+    # bit-identical to the legacy full-matrix implementation.
+    out = roll_max_drawdown_chunked(ret_arr, window)
 
     if isinstance(returns, pd.Series):
         return pd.Series(out, index=returns.index[window - 1 :])
