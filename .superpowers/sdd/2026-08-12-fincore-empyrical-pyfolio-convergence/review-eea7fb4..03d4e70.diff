@@ -1,0 +1,778 @@
+# Review package: eea7fb4..03d4e70
+
+## Commits
+03d4e70 fix: close enhanced schema and dispatch refresh gaps
+
+## Files changed
+ .../task-7-report.md                               |  80 ++++++++++
+ fincore/_dispatch.py                               |  73 +++++++--
+ fincore/_registry.py                               |  38 +++++
+ fincore/contracts/validation.py                    |  11 ++
+ tests/contracts/test_metric_surface_profiles.py    | 172 ++++++++++++++++++++-
+ tests/contracts/test_portfolio_schema.py           |  92 +++++++++++
+ 6 files changed, 449 insertions(+), 17 deletions(-)
+
+## Diff
+diff --git a/.superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/task-7-report.md b/.superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/task-7-report.md
+index 161ab26..1f9d7c2 100644
+--- a/.superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/task-7-report.md
++++ b/.superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/task-7-report.md
+@@ -142,10 +142,90 @@ the plan's Task 12 typed batches; the explicitly owned Task 7 scope is zero.
+ The controlled migration fixture changed only its recorded source digest; the
+ entry list, targets, and semantic policies are unchanged. Raw numerical tests
+ under `tests/test_empyrical/stats` and `tests/test_metrics` explicitly declare
+ kernel-oracle ownership, while all enhanced public validation behavior lives
+ under `tests/contracts`. One Pyfolio attribution warning test uses a single
+ explicit raw metric resolver rather than weakening the entire Pyfolio subtree.
+ 
+ Task 8 may build the compute-once report model and offline renderers on the
+ `ReportArtifacts` lifecycle introduced here. Task 12 retains ownership of the
+ full-package type-error baseline and must rerun it after Tasks 8–11.
++
++### Fix round: review follow-up (RED tests in worktree)
++
++The review round added 18 RED contract tests to the worktree (17 failures in
++`tests/contracts/test_metric_surface_profiles.py` additions plus the new
++`tests/contracts/test_portfolio_schema.py` matrix; 18 failed, 210 passed at
++start). Each finding and its fix:
++
++1. **`information_ratio` missing from the class and metrics surfaces.**
++   The frozen empyrical-0.6.0 manifest has no `information_ratio` entry, so it
++   was only registered on `fincore_flat` via `_FLAT_EXTRA_KERNELS`. A new
++   `_CLASS_METRICS_EXTRA_KERNELS` block in `fincore/_registry.py` registers
++   `("empyrical_class", "information_ratio", "stateful-enhanced")` with
++   `binding="returns_factor"` and `("metrics", "information_ratio", "enhanced")`.
++   The strict `empyrical_module` surface intentionally gains nothing (no
++   manifest key exists, and upstream 0.6.0 has no such function). All three
++   surfaces now raise `NumericalError` ("finite") for NaN inputs, raise
++   `DataAlignmentError` ("sorted") for unsorted originals, and the class
++   instance binds stored `returns` + `factor_returns` with public signature
++   `(period, annualization, *, alignment, normalize_tz)`.
++2. **Dispatch-coverage markers (`__fincore_dispatch_spec__`).** The registry
++   entries from finding 1 give the class and metrics surfaces exact spec keys;
++   the existing dispatch wrapper already stamps the marker, and
++   `install_metric_module_surface` wraps `ratios.information_ratio`
++   automatically because its kernel_ref lives in that module.
++3. **Unsorted originals silently reordered by inner alignment.** The enhanced
++   `validate_metric_arguments` now checks `index.is_monotonic_increasing` on
++   both original pandas inputs of every `(returns, factor_returns)` /
++   `(lhs, rhs)` pair before `align_binary_metric_inputs` runs. Alignment can no
++   longer hide a caller's unsorted data behind a sorted intersection. Duplicate
++   and finite-value ordering is unchanged; NaN rows dropped by `alignment="inner"`
++   retention still validate after alignment.
++4. **Stale kernels after `importlib.reload`.** Flat entries cached in
++   `fincore.__dict__`, class wrappers, and instance-bound methods previously
++   closed over the first resolved kernel. `fincore/_dispatch.py` now returns a
++   `_LazyMetricCallable` that resolves the kernel through its registry
++   reference on every invocation (signature cached per kernel identity) and
++   exposes `__wrapped__` as a property returning the currently reachable
++   kernel. Bound-method caching is preserved, so `instance.annual_return` stays
++   `is`-identical while `bound.__wrapped__.__wrapped__` resolves the fresh
++   kernel. Signature, name, doc, annotations, and dispatch-spec markers are
++   carried forward, keeping all signature-preservation and alias tests green.
++5. **Empty portfolio inputs accepted at enhanced boundaries.** 
++   `validate_positions_schema` (Series and DataFrame) and
++   `validate_transactions_schema` now reject zero-row inputs with
++   `ValidationError` ("cannot be empty") before index normalization.
++   `validate_market_data_schema` inherits the rejection through its
++   per-panel positions validation, and both `validate_context_inputs` and
++   `validate_metric_arguments("enhanced", ...)` route empty
++   positions/transactions/market_data into the same error instead of
++   `DataAlignmentError` overlap or silent acceptance.
++
++Files changed (production): `fincore/_registry.py`, `fincore/_dispatch.py`,
++`fincore/contracts/validation.py`. Test files committed as owned by the fix
++round: `tests/contracts/test_metric_surface_profiles.py`,
++`tests/contracts/test_portfolio_schema.py`.
++
++Commands run (all with `conda run -n base python -m pytest -o addopts=''`):
++
++```text
++tests/contracts/test_metric_surface_profiles.py tests/contracts/test_portfolio_schema.py:
++    18 failed, 210 passed  ->  231 passed
++tests/contracts tests/test_core tests/test_report:  376 passed
++tests/compat/empyrical tests/compat/pyfolio:  622 passed, 4 pinned warnings
++scoped mypy --follow-imports=skip (_dispatch, _registry, contracts/validation):  Success
++ruff check / ruff format --check on all changed files:  clean
++git diff --check:  clean
++```
++
++Whole-suite comparison (`pytest tests/` with default parallel config)
++confirms the fix round introduces **zero new failures**: the failure sets
++before and after the change are identical except for the 18 RED contract
++tests, which are now fixed. The remaining whole-suite failures (mostly
++`tests/test_empyrical` NaN/empty-input cases that predate this fix round)
++are the branch's known consequence of the committed enhanced class surface
++and are not owned by Task 7's fix round.
++
++Concerns: none blocking. The lazy kernel resolution adds one
++`importlib.import_module` hit per dispatch call (a dict lookup on an
++already-imported module); benchmarks are unaffected at this scale.
+diff --git a/fincore/_dispatch.py b/fincore/_dispatch.py
+index 241e915..f098f97 100644
+--- a/fincore/_dispatch.py
++++ b/fincore/_dispatch.py
+@@ -209,42 +209,83 @@ def invoke_prevalidated_projections(
+ 
+ def metric_callable(surface: Surface, public_name: str, variant: str):
+     """Return a signature-preserving callable for an exact registry key."""
+ 
+     spec = get_metric_spec(surface, public_name, variant)
+     kernel = _resolve(spec.kernel_ref)
+     adapter = _resolve(spec.adapter_ref)
+     return _metric_callable_for_resolved_contract(spec, kernel, adapter)
+ 
+ 
++class _LazyMetricCallable:
++    """Preserve the public signature while resolving a fresh kernel per call.
++
++    ``importlib.reload`` replaces kernel function objects inside the metric
++    modules.  Wrappers that closed over the first resolved function would pin
++    cached facades — flat API entries and instance-bound methods included —
++    onto stale kernels.  Resolving through the registry reference on each use
++    keeps every cached wrapper consistent with the code the reload left in
++    place, and ``__wrapped__`` exposes the kernel that is current right now.
++    """
++
++    __name__: str
++    __qualname__: str
++    __module__: str
++    __doc__: str | None
++    __annotations__: dict[str, Any]
++    __signature__: inspect.Signature
++    __fincore_dispatch_spec__: tuple[Surface, str, str]
++
++    def __init__(self, spec: MetricSpec, kernel: Any, adapter: Any, signature: inspect.Signature) -> None:
++        self._spec = spec
++        self._adapter = adapter
++        self._kernel = kernel
++        self._signature = signature
++        self.__name__ = spec.public_name
++        self.__qualname__ = spec.public_name
++        self.__module__ = kernel.__module__
++        self.__doc__ = getattr(kernel, "__doc__", None)
++        self.__annotations__ = dict(getattr(kernel, "__annotations__", {}))
++        self.__signature__ = signature
++        self.__fincore_dispatch_spec__ = (spec.surface, spec.public_name, spec.variant)
++
++    @property
++    def __wrapped__(self) -> Any:
++        """The kernel object currently reachable through the registry."""
++
++        return _resolve(self._spec.kernel_ref)
++
++    def _current_contract(self) -> tuple[Any, inspect.Signature]:
++        kernel = _resolve(self._spec.kernel_ref)
++        if kernel is self._kernel:
++            return kernel, self._signature
++        self._kernel = kernel
++        self._signature = inspect.signature(kernel)
++        return kernel, self._signature
++
++    def __call__(self, *args: Any, **kwargs: Any) -> Any:
++        if _RAW_KERNEL_DEPTH.get() > 0:
++            return _resolve(self._spec.kernel_ref)(*args, **kwargs)
++        kernel, signature = self._current_contract()
++        bound = _validated_arguments(self._spec, signature, args, kwargs)
++        with _raw_kernel_execution():
++            result = self._adapter(kernel, bound.arguments)
++        return _apply_projection(self._spec, result)
++
++
+ @functools.cache
+ def _metric_callable_for_resolved_contract(spec: MetricSpec, kernel: Any, adapter: Any):
+     """Cache a wrapper by the resolved callables, including reload identity."""
+ 
+     signature = inspect.signature(kernel)
+     _check_contract(spec, signature)
+-
+-    @functools.wraps(kernel)
+-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+-        if _RAW_KERNEL_DEPTH.get() > 0:
+-            return kernel(*args, **kwargs)
+-        bound = _validated_arguments(spec, signature, args, kwargs)
+-        with _raw_kernel_execution():
+-            result = adapter(kernel, bound.arguments)
+-        return _apply_projection(spec, result)
+-
+-    wrapped: Any = wrapper
+-    wrapped.__signature__ = signature
+-    wrapped.__name__ = spec.public_name
+-    wrapped.__qualname__ = spec.public_name
+-    wrapped.__fincore_dispatch_spec__ = (spec.surface, spec.public_name, spec.variant)
+-    return wrapped
++    return _LazyMetricCallable(spec, kernel, adapter, signature)
+ 
+ 
+ class _ValidatedMetricModule(types.ModuleType):
+     """Expose enhanced wrappers externally while kernels call raw globals."""
+ 
+     def __getattribute__(self, name: str) -> Any:
+         namespace = types.ModuleType.__getattribute__(self, "__dict__")
+         originals = namespace.get("_fincore_metric_originals", {})
+         original = originals.get(name)
+         enhanced = namespace.get("_fincore_metric_enhanced", {})
+diff --git a/fincore/_registry.py b/fincore/_registry.py
+index 9f070ef..4b8b78b 100644
+--- a/fincore/_registry.py
++++ b/fincore/_registry.py
+@@ -619,20 +619,58 @@ for _name, _kernel_ref in _FLAT_EXTRA_KERNELS.items():
+             signature_manifest_key=None,
+             binding="static",
+             validation_profile="enhanced",
+             result_contract_key=f"fincore-0.3.x:{_name}",
+             result_projection=_projection,
+             out_policy=_out_policy,
+         )
+     )
+ 
+ 
++# Enhanced binary metrics that exist on the class and metrics surfaces but are
++# not part of the frozen empyrical-0.6.0 manifest, so they must not appear on
++# the strict empyrical_module surface.
++_CLASS_METRICS_EXTRA_KERNELS = {"information_ratio": "fincore.metrics.ratios:information_ratio"}
++for _name, _kernel_ref in _CLASS_METRICS_EXTRA_KERNELS.items():
++    _projection, _out_policy = _enhanced_out_contract(_name, _kernel_ref)
++    _register(
++        MetricSpec(
++            surface="empyrical_class",
++            public_name=_name,
++            variant="stateful-enhanced",
++            kernel_ref=_kernel_ref,
++            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
++            signature_manifest_key=None,
++            binding="returns_factor",
++            validation_profile="enhanced",
++            result_contract_key=f"fincore-0.3.x:{_name}",
++            result_projection=_projection,
++            out_policy=_out_policy,
++        )
++    )
++    _register(
++        MetricSpec(
++            surface="metrics",
++            public_name=_name,
++            variant="enhanced",
++            kernel_ref=_kernel_ref,
++            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
++            signature_manifest_key=None,
++            binding="static",
++            validation_profile="enhanced",
++            result_contract_key=f"fincore-0.3.x:{_name}",
++            result_projection=_projection,
++            out_policy=_out_policy,
++        )
++    )
++
++
+ _CONTEXT_KERNELS = {
+     "annual_return": "annual_return",
+     "cumulative_returns": "cum_returns_final",
+     "annual_volatility": "annual_volatility",
+     "sharpe_ratio": "sharpe_ratio",
+     "calmar_ratio": "calmar_ratio",
+     "stability": "stability_of_timeseries",
+     "max_drawdown": "max_drawdown",
+     "omega_ratio": "omega_ratio",
+     "sortino_ratio": "sortino_ratio",
+diff --git a/fincore/contracts/validation.py b/fincore/contracts/validation.py
+index 66f4998..79bd8dd 100644
+--- a/fincore/contracts/validation.py
++++ b/fincore/contracts/validation.py
+@@ -174,20 +174,22 @@ def validate_positions_schema(
+     value: Any,
+     *,
+     name: str = "positions",
+     normalize_tz: str | None = None,
+     require_cash: bool = False,
+ ) -> pd.Series | pd.DataFrame:
+     """Validate position values, including the optional net-asset cash convention."""
+ 
+     if not isinstance(value, (pd.Series, pd.DataFrame)):
+         raise _validation_error(f"{name} must be a pandas Series or DataFrame", name, type(value).__name__)
++    if value.empty:
++        raise _validation_error(f"{name} cannot be empty", name)
+     if isinstance(value, pd.DataFrame):
+         if not value.columns.is_unique:
+             raise _validation_error(f"{name} contains duplicate columns", name, list(value.columns))
+         cash_columns = [column for column in value.columns if str(column).lower() == "cash"]
+         if len(cash_columns) > 1:
+             raise _validation_error(f"{name} contains duplicate cash columns", name, cash_columns)
+         if require_cash and cash_columns != ["cash"]:
+             raise _validation_error(f"{name} must contain one lowercase 'cash' column", name, list(value.columns))
+         if any(not is_numeric_dtype(dtype) for dtype in value.dtypes):
+             raise _validation_error(f"{name} must contain numeric values", name, list(value.dtypes))
+@@ -214,20 +216,22 @@ def validate_transactions_schema(
+     normalize_tz: str | None = None,
+ ) -> pd.DataFrame:
+     """Validate the canonical report transaction frame.
+ 
+     Duplicate timestamps are valid because several executions may occur at the
+     same instant; their row order is retained.
+     """
+ 
+     if not isinstance(value, pd.DataFrame):
+         raise _validation_error(f"{name} must be a pandas DataFrame", name, type(value).__name__)
++    if value.empty:
++        raise _validation_error(f"{name} cannot be empty", name)
+     if not value.columns.is_unique:
+         raise _validation_error(f"{name} contains duplicate columns", name, list(value.columns))
+     required = {"amount", "price", "symbol"}
+     missing = sorted(required.difference(value.columns))
+     if missing:
+         raise _validation_error(f"{name} is missing required columns: {missing!r}", name, list(value.columns))
+     for column in ("amount", "price"):
+         if not is_numeric_dtype(value[column].dtype):
+             raise _validation_error(f"{name}.{column} must be numeric", name, str(value[column].dtype))
+         _require_finite(value[column], name=f"{name}.{column}")
+@@ -391,30 +395,37 @@ def validate_metric_arguments(profile: ValidationProfile, arguments: Mapping[str
+     checked = dict(arguments)
+     variadic = checked.get("kwargs")
+     options = variadic if isinstance(variadic, Mapping) else {}
+     alignment = checked.get("alignment", options.get("alignment", "inner"))
+     normalize_tz = checked.get("normalize_tz", options.get("normalize_tz"))
+ 
+     # Alignment errors are more actionable than a finite-value error on rows
+     # that the selected public policy would not retain.  Align binary inputs
+     # before validating the resulting canonical vectors; kernels receive the
+     # same values and may repeat only their inexpensive policy assertion.
++    # Original pandas inputs must already carry a sorted index: silently
++    # reordering them during label intersection would hide a caller defect
++    # behind a computed result.
+     from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+ 
+     alignment_policy = cast("AlignmentPolicy", alignment)
+ 
+     for left_name, right_name in (("returns", "factor_returns"), ("lhs", "rhs")):
+         left = checked.get(left_name)
+         right = checked.get(right_name)
+         if isinstance(left, (pd.Series, pd.DataFrame, np.ndarray)) and isinstance(
+             right, (pd.Series, pd.DataFrame, np.ndarray)
+         ):
++            if isinstance(left, (pd.Series, pd.DataFrame)) and isinstance(right, (pd.Series, pd.DataFrame)):
++                for value, value_name in ((left, left_name), (right, right_name)):
++                    if not value.index.is_monotonic_increasing:
++                        raise DataAlignmentError(f"{value_name} index must be sorted in increasing order")
+             checked[left_name], checked[right_name] = align_binary_metric_inputs(
+                 left,
+                 right,
+                 alignment=alignment_policy,
+                 normalize_tz=normalize_tz,
+             )
+             if isinstance(checked[left_name], (pd.Series, pd.DataFrame)) and checked[left_name].empty:
+                 raise DataAlignmentError(f"{left_name} and {right_name} have no common labels")
+ 
+     for name, value in tuple(checked.items()):
+diff --git a/tests/contracts/test_metric_surface_profiles.py b/tests/contracts/test_metric_surface_profiles.py
+index e05462a..a7bbed9 100644
+--- a/tests/contracts/test_metric_surface_profiles.py
++++ b/tests/contracts/test_metric_surface_profiles.py
+@@ -1,25 +1,26 @@
+ from __future__ import annotations
+ 
+ import importlib
+ import inspect
++import pkgutil
+ 
+ import numpy as np
+ import pandas as pd
+ import pytest
+ 
+ import fincore
+ from fincore import Empyrical
+ from fincore import empyrical as legacy
+ from fincore._registry import METRIC_REGISTRY
+ from fincore.core.context import AnalysisContext
+-from fincore.exceptions import NumericalError
++from fincore.exceptions import DataAlignmentError, NumericalError
+ 
+ CONTEXT_KERNELS = {
+     "annual_return": "annual_return",
+     "cumulative_returns": "cum_returns_final",
+     "annual_volatility": "annual_volatility",
+     "sharpe_ratio": "sharpe_ratio",
+     "calmar_ratio": "calmar_ratio",
+     "stability": "stability_of_timeseries",
+     "max_drawdown": "max_drawdown",
+     "omega_ratio": "omega_ratio",
+@@ -46,20 +47,161 @@ def _returns_with_nan() -> pd.Series:
+         lambda returns: fincore.sharpe_ratio(returns),
+         lambda returns: Empyrical.sharpe_ratio(returns),
+         lambda returns: AnalysisContext(returns).sharpe_ratio,
+     ],
+ )
+ def test_enhanced_surfaces_share_the_same_domain_exception(call) -> None:
+     with pytest.raises(NumericalError, match="finite"):
+         call(_returns_with_nan())
+ 
+ 
++@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
++def test_information_ratio_uses_enhanced_validation_on_every_real_surface(surface: str) -> None:
++    from fincore.metrics import ratios
++
++    returns = _returns_with_nan()
++    factor_returns = pd.Series([0.005, 0.001, -0.004], index=returns.index)
++    calls = {
++        "flat": fincore.information_ratio,
++        "class": Empyrical.information_ratio,
++        "metrics": ratios.information_ratio,
++    }
++
++    with pytest.raises(NumericalError, match="finite"):
++        calls[surface](returns, factor_returns)
++
++
++def test_information_ratio_instance_binds_stored_returns_and_factor() -> None:
++    returns = pd.Series([0.01, -0.005, 0.02], index=pd.date_range("2024-01-01", periods=3))
++    factor_returns = pd.Series([0.004, -0.002, 0.006], index=returns.index)
++    instance = Empyrical(returns=returns, factor_returns=factor_returns)
++
++    assert instance.information_ratio() == Empyrical.information_ratio(returns, factor_returns)
++    assert list(inspect.signature(instance.information_ratio).parameters) == [
++        "period",
++        "annualization",
++        "alignment",
++        "normalize_tz",
++    ]
++
++
++@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
++def test_information_ratio_rejects_original_unsorted_inputs_before_inner_alignment(surface: str) -> None:
++    from fincore.metrics import ratios
++
++    returns = pd.Series(
++        [0.01, 0.02, -0.01],
++        index=pd.to_datetime(["2024-01-03", "2024-01-01", "2024-01-02"]),
++    )
++    factor_returns = pd.Series(
++        [0.004, -0.002, 0.006],
++        index=pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
++    )
++    calls = {
++        "flat": fincore.information_ratio,
++        "class": Empyrical.information_ratio,
++        "metrics": ratios.information_ratio,
++    }
++
++    with pytest.raises(DataAlignmentError, match="sorted"):
++        calls[surface](returns, factor_returns, alignment="inner")
++
++
++@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
++def test_information_ratio_checks_finite_values_after_inner_retention(surface: str) -> None:
++    from fincore.metrics import ratios
++
++    returns = pd.Series(
++        [np.nan, 0.01, 0.02, -0.01],
++        index=pd.date_range("2023-12-31", periods=4),
++    )
++    factor_returns = pd.Series(
++        [0.004, -0.002, 0.006],
++        index=pd.date_range("2024-01-01", periods=3),
++    )
++    calls = {
++        "flat": fincore.information_ratio,
++        "class": Empyrical.information_ratio,
++        "metrics": ratios.information_ratio,
++    }
++
++    assert np.isfinite(calls[surface](returns, factor_returns, alignment="inner"))
++
++
++def test_actual_shared_enhanced_exports_have_complete_dispatch_coverage() -> None:
++    import fincore.metrics as metrics_package
++
++    flat_exports = {
++        name for name in fincore.__all__ if not name.startswith("_") and callable(getattr(fincore, name, None))
++    }
++    class_exports = {
++        name for name in dir(Empyrical) if not name.startswith("_") and callable(getattr(Empyrical, name, None))
++    }
++    module_exports: dict[str, list[object]] = {}
++    for module_info in pkgutil.iter_modules(metrics_package.__path__, f"{metrics_package.__name__}."):
++        module = importlib.import_module(module_info.name)
++        for name in getattr(module, "__all__", ()):
++            public = getattr(module, name, None)
++            if not name.startswith("_") and callable(public):
++                module_exports.setdefault(name, []).append(public)
++
++    shared_exports = flat_exports & class_exports & set(module_exports)
++    assert shared_exports == {
++        "aggregate_returns",
++        "alpha",
++        "alpha_beta",
++        "annual_return",
++        "annual_volatility",
++        "beta",
++        "calmar_ratio",
++        "capture",
++        "cum_returns",
++        "cum_returns_final",
++        "downside_risk",
++        "information_ratio",
++        "max_drawdown",
++        "omega_ratio",
++        "sharpe_ratio",
++        "simple_returns",
++        "sortino_ratio",
++        "stability_of_timeseries",
++        "tail_ratio",
++        "value_at_risk",
++    }
++
++    missing_specs: list[tuple[str, str, str]] = []
++    missing_markers: list[tuple[str, str, object]] = []
++    expected_specs = {
++        "flat": ("fincore_flat", "enhanced-0.3.x"),
++        "class": ("empyrical_class", "stateful-enhanced"),
++        "metrics": ("metrics", "enhanced"),
++    }
++    for name in sorted(shared_exports):
++        public_surfaces = {
++            "flat": [getattr(fincore, name)],
++            "class": [getattr(Empyrical, name)],
++            "metrics": module_exports[name],
++        }
++        for label, callables in public_surfaces.items():
++            surface, variant = expected_specs[label]
++            registry_key = (surface, name, variant)
++            if registry_key not in METRIC_REGISTRY:
++                missing_specs.append(registry_key)
++            expected_marker = registry_key
++            for public in callables:
++                marker = getattr(public, "__fincore_dispatch_spec__", None)
++                if marker != expected_marker:
++                    missing_markers.append((label, name, marker))
++
++    assert (missing_specs, missing_markers) == ([], [])
++
++
+ def test_strict_legacy_surface_bypasses_enhanced_validation() -> None:
+     result = legacy.sharpe_ratio(_returns_with_nan())
+     assert np.isfinite(result)
+ 
+ 
+ def test_context_registry_covers_every_public_cached_output_and_alias() -> None:
+     entries = {
+         name: spec
+         for (surface, name, variant), spec in METRIC_REGISTRY.items()
+         if surface == "context" and variant == "cached-property"
+@@ -189,10 +331,38 @@ def test_metrics_alias_still_uses_enhanced_validation_after_module_reload() -> N
+ 
+     original_kernel = vars(yearly)["annual_return"]
+     reloaded = importlib.reload(yearly)
+ 
+     assert reloaded.cagr.__fincore_dispatch_spec__ == ("metrics", "cagr", "enhanced")
+     assert vars(reloaded)["annual_return"] is not original_kernel
+     assert vars(reloaded)["_fincore_metric_originals"]["cagr"] is vars(reloaded)["annual_return"]
+     assert reloaded.cagr.__wrapped__ is vars(reloaded)["annual_return"]
+     with pytest.raises(NumericalError, match="finite"):
+         reloaded.cagr(_returns_with_nan())
++
++
++def test_cached_flat_metric_refreshes_its_kernel_after_module_reload() -> None:
++    from fincore.metrics import yearly
++
++    cached_flat = fincore.annual_return
++    original_kernel = vars(yearly)["annual_return"]
++    reloaded = importlib.reload(yearly)
++    current_kernel = vars(reloaded)["annual_return"]
++
++    assert current_kernel is not original_kernel
++    assert cached_flat.__wrapped__ is current_kernel
++    assert fincore.annual_return.__wrapped__ is current_kernel
++
++
++def test_already_bound_empyrical_metric_refreshes_its_kernel_after_module_reload() -> None:
++    from fincore.metrics import yearly
++
++    returns = pd.Series([0.01, -0.005, 0.02], index=pd.date_range("2024-01-01", periods=3))
++    instance = Empyrical(returns=returns)
++    bound = instance.annual_return
++    original_kernel = vars(yearly)["annual_return"]
++    reloaded = importlib.reload(yearly)
++    current_kernel = vars(reloaded)["annual_return"]
++
++    assert current_kernel is not original_kernel
++    assert bound.__wrapped__.__wrapped__ is current_kernel
++    assert instance.annual_return is bound
+diff --git a/tests/contracts/test_portfolio_schema.py b/tests/contracts/test_portfolio_schema.py
+index 2471d0f..a0e28f8 100644
+--- a/tests/contracts/test_portfolio_schema.py
++++ b/tests/contracts/test_portfolio_schema.py
+@@ -13,20 +13,36 @@ def _validation_module():
+     return importlib.import_module("fincore.contracts.validation")
+ 
+ 
+ def test_positions_schema_requires_cash_under_the_explicit_net_asset_convention() -> None:
+     positions = pd.DataFrame({"AAA": [100.0]}, index=pd.date_range("2024-01-01", periods=1))
+ 
+     with pytest.raises(ValidationError, match="cash"):
+         _validation_module().validate_positions_schema(positions, require_cash=True)
+ 
+ 
++@pytest.mark.parametrize(
++    "positions",
++    [
++        pd.DataFrame(
++            {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
++            index=pd.DatetimeIndex([], name="date"),
++        ),
++        pd.Series(dtype=float, index=pd.DatetimeIndex([], name="date"), name="AAA"),
++    ],
++    ids=["frame", "series"],
++)
++def test_positions_schema_rejects_empty_rows(positions: pd.Series | pd.DataFrame) -> None:
++    with pytest.raises(ValidationError, match="empty"):
++        _validation_module().validate_positions_schema(positions)
++
++
+ def test_positions_schema_rejects_duplicate_columns_and_non_finite_values() -> None:
+     index = pd.date_range("2024-01-01", periods=1)
+     duplicate = pd.DataFrame([[100.0, 0.0]], columns=["cash", "cash"], index=index)
+     non_finite = pd.DataFrame({"AAA": [np.inf], "cash": [0.0]}, index=index)
+ 
+     with pytest.raises(ValidationError, match="duplicate"):
+         _validation_module().validate_positions_schema(duplicate)
+     with pytest.raises(NumericalError, match="finite"):
+         _validation_module().validate_positions_schema(non_finite)
+ 
+@@ -89,20 +105,34 @@ def test_transactions_schema_preserves_duplicate_timestamps_and_rows() -> None:
+         },
+         index=pd.DatetimeIndex([timestamp, timestamp]),
+     )
+ 
+     actual = _validation_module().validate_transactions_schema(transactions)
+ 
+     assert actual is not transactions
+     pd.testing.assert_frame_equal(actual, transactions)
+ 
+ 
++def test_transactions_schema_rejects_empty_rows_with_canonical_columns() -> None:
++    transactions = pd.DataFrame(
++        {
++            "amount": pd.Series(dtype=float),
++            "price": pd.Series(dtype=float),
++            "symbol": pd.Series(dtype=object),
++        },
++        index=pd.DatetimeIndex([], name="date"),
++    )
++
++    with pytest.raises(ValidationError, match="empty"):
++        _validation_module().validate_transactions_schema(transactions)
++
++
+ def test_transactions_schema_allows_duplicate_timestamps_but_requires_monotonic_order() -> None:
+     index = pd.to_datetime(["2024-01-02 10:00", "2024-01-01 10:00"], utc=True)
+     transactions = pd.DataFrame(
+         {"amount": [2.0, -1.0], "price": [10.0, 11.0], "symbol": ["AAA", "AAA"]},
+         index=index,
+     )
+ 
+     with pytest.raises(DataAlignmentError, match="sorted"):
+         _validation_module().validate_transactions_schema(transactions)
+ 
+@@ -130,20 +160,31 @@ def test_transactions_schema_rejects_non_finite_amount_and_price() -> None:
+ 
+ def test_market_data_schema_requires_matching_price_and_volume_frames() -> None:
+     index = pd.date_range("2024-01-01", periods=2)
+     price = pd.DataFrame({"AAA": [10.0, 11.0]}, index=index)
+     volume = pd.DataFrame({"BBB": [100.0, 110.0]}, index=index)
+ 
+     with pytest.raises(DataAlignmentError, match="columns"):
+         _validation_module().validate_market_data_schema({"price": price, "volume": volume})
+ 
+ 
++def test_market_data_schema_rejects_empty_price_and_volume_rows() -> None:
++    index = pd.DatetimeIndex([], name="date")
++    market_data = {
++        "price": pd.DataFrame({"AAA": pd.Series(dtype=float)}, index=index),
++        "volume": pd.DataFrame({"AAA": pd.Series(dtype=float)}, index=index),
++    }
++
++    with pytest.raises(ValidationError, match="empty"):
++        _validation_module().validate_market_data_schema(market_data)
++
++
+ @pytest.mark.parametrize("defect", ["duplicate_columns", "non_finite", "negative_volume"])
+ def test_market_data_schema_rejects_invalid_panels(defect: str) -> None:
+     index = pd.date_range("2024-01-01", periods=2, tz="UTC")
+     price = pd.DataFrame({"AAA": [10.0, 11.0]}, index=index)
+     volume = pd.DataFrame({"AAA": [100.0, 110.0]}, index=index)
+     if defect == "duplicate_columns":
+         price = pd.DataFrame([[10.0, 11.0], [12.0, 13.0]], columns=["AAA", "AAA"], index=index)
+         volume = pd.DataFrame([[100.0, 110.0], [120.0, 130.0]], columns=["AAA", "AAA"], index=index)
+     elif defect == "non_finite":
+         price.iloc[0, 0] = np.inf
+@@ -193,20 +234,71 @@ def test_context_requires_exact_positions_date_overlap() -> None:
+     )
+     positions = pd.DataFrame(
+         {"AAA": [100.0, 101.0], "cash": [50.0, 49.0]},
+         index=pd.to_datetime(["2024-01-02", "2024-01-04"], utc=True),
+     )
+ 
+     with pytest.raises(DataAlignmentError, match="overlap"):
+         _validation_module().validate_context_inputs(returns=returns, positions=positions)
+ 
+ 
++@pytest.mark.parametrize("auxiliary", ["positions", "transactions"])
++def test_context_rejects_empty_portfolio_inputs_at_the_schema_boundary(auxiliary: str) -> None:
++    returns = pd.Series([0.01], index=pd.date_range("2024-01-01", periods=1, tz="UTC"))
++    empty_index = pd.DatetimeIndex([], tz="UTC", name="date")
++    if auxiliary == "positions":
++        value = pd.DataFrame(
++            {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
++            index=empty_index,
++        )
++    else:
++        value = pd.DataFrame(
++            {
++                "amount": pd.Series(dtype=float),
++                "price": pd.Series(dtype=float),
++                "symbol": pd.Series(dtype=object),
++            },
++            index=empty_index,
++        )
++
++    with pytest.raises(ValidationError, match="empty"):
++        _validation_module().validate_context_inputs(returns=returns, **{auxiliary: value})
++
++
++@pytest.mark.parametrize("argument", ["positions", "transactions", "market_data"])
++def test_enhanced_argument_boundary_rejects_empty_portfolio_inputs(argument: str) -> None:
++    empty_index = pd.DatetimeIndex([], name="date")
++    positions = pd.DataFrame(
++        {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
++        index=empty_index,
++    )
++    transactions = pd.DataFrame(
++        {
++            "amount": pd.Series(dtype=float),
++            "price": pd.Series(dtype=float),
++            "symbol": pd.Series(dtype=object),
++        },
++        index=empty_index,
++    )
++    values = {
++        "positions": positions,
++        "transactions": transactions,
++        "market_data": {
++            "price": positions.drop(columns="cash"),
++            "volume": positions.drop(columns="cash"),
++        },
++    }
++
++    with pytest.raises(ValidationError, match="empty"):
++        _validation_module().validate_metric_arguments("enhanced", {argument: values[argument]})
++
++
+ def test_context_transactions_overlap_returns_by_calendar_day() -> None:
+     returns = pd.Series([0.01], index=pd.to_datetime(["2024-01-01"], utc=True))
+     transactions = pd.DataFrame(
+         {"amount": [1.0], "price": [10.0], "symbol": ["AAA"]},
+         index=pd.to_datetime(["2024-01-01 15:30"], utc=True),
+     )
+ 
+     snapshot = _validation_module().validate_context_inputs(returns=returns, transactions=transactions)
+ 
+     pd.testing.assert_frame_equal(snapshot.transactions, transactions)
