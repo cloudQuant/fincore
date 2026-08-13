@@ -115,7 +115,8 @@ and 8 create those tests, run the checker with a `pytest --collect-only -q`
 transcript and a non-xdist result file written by
 `--alphalens-upstream-result-json`. The dynamic
 `alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, `xfail`,
-global `--reruns`, and per-item `flaky`/`rerun` markers at collection. It
+global `--reruns`, and per-item `flaky`/`rerun`/`rerunfailures` markers at
+collection. It
 records append-only setup/call/teardown attempts in the version-2 result JSON:
 a non-passing phase in any attempt forces the pytest session to fail even if a
 later rerun reports passed. The checker requires every phase in every recorded
@@ -124,12 +125,21 @@ failure evidence.
 
 The deferred target AST audit also rejects direct or dynamic imports of
 `alphalens` and the three upstream test modules, `sys.path` mutation, and
-absolute sibling-upstream/source-test paths. It permits ordinary relative or
-fincore-local imports. Every Task 8 C4 invocation target must present all of
-these statically auditable signals in its own test function:
+absolute sibling-upstream/source-test paths. Dynamic coverage includes direct
+or aliased `builtins.__import__`/`__builtins__.__import__`, `importlib`,
+literal `getattr` access to those import APIs, and known `runpy`/`exec`/`eval`
+execution calls. It folds literal `Path`, `joinpath`, `os.path.join`, and
+string joins only when they are fed to one of those execution primitives. It
+therefore permits ordinary relative or fincore-local imports, including other
+repository test packages that are not one of the three pinned upstream source
+modules (`test_utils`, `test_performance`, and `test_tears`, with their
+`tests.*` aliases).
 
-- Figure/Axes return or inspection, through `fig`/`figure`/`ax`/`axes`, a
-  Figure/Axes property, `gca`/`gcf`, or one of
+Every Task 8 C4 invocation target must present all of these statically
+auditable signals in its own test function:
+
+- Figure/Axes return or inspection, through a Figure/Axes property,
+  `gca`/`gcf`, or one of
   `assert_figure_axes`, `assert_figure_artifacts`, `assert_axes_artifacts`,
   `assert_rendered_figure`, or `assert_tear_sheet_figures`.
 - Both show and close handling, through `.show()`/`.close()` or the recognized
@@ -141,9 +151,16 @@ these statically auditable signals in its own test function:
   `assert_figure_ownership`, `assert_no_figure_leaks`,
   `assert_no_open_figures`, or `close_owned_figures`.
 
-A bare `assert True` or numeric-only assertion cannot satisfy C4. The checker
-then requires the exact mapped nodeids, literal marker IDs, allowed provenance,
-the required target assertion contract, and all-attempt-passed results.
+A bare `assert True` or numeric-only assertion cannot satisfy C4. Signals in
+statically unreachable code (`if False`, literal-false loop/conditional
+branches, after an unconditional return/raise, or after a literal-true loop
+whose body unconditionally returns/raises) do not count. When a helper or
+method exposes a concrete receiver/argument, the Figure/Axes, show/close, and
+ownership signals must bind to the same resource; global pyplot state is the
+limited recognized exception. This is a deliberately bounded AST rule, not a
+claim of full symbolic execution. The checker then requires the exact mapped
+nodeids, literal marker IDs, allowed provenance, the required target assertion
+contract, and all-attempt-passed results.
 
 To reproduce the static inventory or its map audit locally, use:
 

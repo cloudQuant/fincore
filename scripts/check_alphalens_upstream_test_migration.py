@@ -15,8 +15,9 @@ import json
 import re
 import sys
 from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PINNED_COMMIT = "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
@@ -67,7 +68,11 @@ RESULT_OUTCOMES = ("setup", "call", "teardown")
 RESULT_SCHEMA_VERSION = "alphalens-upstream-case-results-v2"
 SUMMARY_LINE = re.compile(r"^\d+(?:/\d+)? tests? collected")
 SOURCE_TEST_MODULES = frozenset({"test_utils", "test_performance", "test_tears"})
+SOURCE_TEST_IDENTITIES = SOURCE_TEST_MODULES | frozenset(f"tests.{name}" for name in SOURCE_TEST_MODULES)
 SYS_PATH_MUTATION_METHODS = frozenset({"append", "extend", "insert", "remove", "pop", "clear"})
+PATH_CONSTRUCTOR_NAMES = frozenset({"Path", "PurePath", "PurePosixPath", "PureWindowsPath"})
+PATH_READ_METHODS = frozenset({"read_bytes", "read_text"})
+C4_GLOBAL_RESOURCE = "<global-figure-state>"
 C4_FIGURE_HELPERS = frozenset(
     {
         "assert_figure_axes",
@@ -95,6 +100,22 @@ C4_OWNERSHIP_HELPERS = frozenset(
 
 class MigrationAuditError(RuntimeError):
     """Raised when an inventory, map, collection, or result proof is invalid."""
+
+
+@dataclass
+class _ProvenanceSymbols:
+    """AST-visible aliases used only to identify known upstream execution primitives."""
+
+    sys_modules: set[str] = field(default_factory=set)
+    sys_paths: set[str] = field(default_factory=set)
+    importlib_modules: set[str] = field(default_factory=set)
+    builtins_modules: set[str] = field(default_factory=set)
+    runpy_modules: set[str] = field(default_factory=set)
+    pathlib_modules: set[str] = field(default_factory=set)
+    os_modules: set[str] = field(default_factory=set)
+    path_constructors: set[str] = field(default_factory=lambda: set(PATH_CONSTRUCTOR_NAMES))
+    getattr_functions: set[str] = field(default_factory=lambda: {"getattr"})
+    callable_aliases: dict[str, str] = field(default_factory=dict)
 
 
 def _load_json(path: Path, label: str) -> dict[str, Any]:
@@ -311,41 +332,253 @@ def _is_upstream_module(module: str) -> bool:
 
 def _is_source_test_module(module: str) -> bool:
     """Recognize the three frozen upstream test modules without banning local tests."""
-    parts = module.split(".")
-    return (
-        module in SOURCE_TEST_MODULES
-        or module.startswith("tests.test_")
-        or (len(parts) >= 2 and parts[-2] == "tests" and parts[-1] in SOURCE_TEST_MODULES)
-    )
+    return module in SOURCE_TEST_IDENTITIES
 
 
-def _import_aliases(tree: ast.Module) -> tuple[set[str], set[str], set[str], set[str]]:
-    """Collect AST-visible aliases for sys.path and importlib dynamic imports."""
-    sys_modules: set[str] = set()
-    sys_paths: set[str] = set()
-    importlib_modules: set[str] = set()
-    import_module_functions: set[str] = {"__import__"}
+def _assignment_names(node: ast.AST) -> list[str]:
+    """Return simple names bound by an assignment without resolving arbitrary target expressions."""
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+    elif isinstance(node, (ast.AnnAssign, ast.AugAssign, ast.NamedExpr)):
+        targets = [node.target]
+    else:
+        return []
+    return [target.id for target in targets if isinstance(target, ast.Name)]
+
+
+def _assignment_bindings(tree: ast.Module) -> dict[str, ast.AST]:
+    """Collect static candidate values for later literal-only path folding."""
+    bindings: dict[str, ast.AST] = {}
+    for node in ast.walk(tree):
+        value = getattr(node, "value", None)
+        if value is None or not isinstance(value, ast.AST):
+            continue
+        for name in _assignment_names(node):
+            bindings[name] = value
+    return bindings
+
+
+def _is_builtins_object(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Return whether an expression is the real builtins namespace in a safe AST-visible form."""
+    return isinstance(node, ast.Name) and (node.id == "__builtins__" or node.id in symbols.builtins_modules)
+
+
+def _is_module_alias(node: ast.AST, aliases: set[str]) -> bool:
+    """Return whether a direct name is one of the imported module aliases."""
+    return isinstance(node, ast.Name) and node.id in aliases
+
+
+def _is_getattr_callable(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Recognize direct or aliased builtins ``getattr`` without evaluating arbitrary functions."""
+    if isinstance(node, ast.Name):
+        return node.id in symbols.getattr_functions
+    return isinstance(node, ast.Attribute) and node.attr == "getattr" and _is_builtins_object(node.value, symbols)
+
+
+def _getattr_target(node: ast.AST, symbols: _ProvenanceSymbols) -> tuple[ast.AST, str] | None:
+    """Extract literal ``getattr(namespace, attribute)`` targets without evaluating code."""
+    if not (
+        isinstance(node, ast.Call)
+        and _is_getattr_callable(node.func, symbols)
+        and len(node.args) >= 2
+    ):
+        return None
+    attribute = _literal_string(node.args[1])
+    if attribute is None:
+        return None
+    return node.args[0], attribute
+
+
+def _callable_kind(node: ast.AST, symbols: _ProvenanceSymbols) -> str | None:
+    """Classify known import/execution callables, including direct aliases and literal getattr calls."""
+    if isinstance(node, ast.Name):
+        if node.id in symbols.callable_aliases:
+            return symbols.callable_aliases[node.id]
+        if node.id == "__import__":
+            return "import"
+        if node.id in {"exec", "eval"}:
+            return "source-execution"
+        return None
+    if isinstance(node, ast.Attribute):
+        owner = node.value
+        attribute = node.attr
+    else:
+        getattr_target = _getattr_target(node, symbols)
+        if getattr_target is None:
+            return None
+        owner, attribute = getattr_target
+    if _is_builtins_object(owner, symbols):
+        if attribute == "__import__":
+            return "import"
+        if attribute in {"exec", "eval"}:
+            return "source-execution"
+    if _is_module_alias(owner, symbols.importlib_modules) and attribute == "import_module":
+        return "import"
+    if _is_module_alias(owner, symbols.runpy_modules):
+        if attribute == "run_path":
+            return "path-execution"
+        if attribute == "run_module":
+            return "module-execution"
+    return None
+
+
+def _provenance_symbols(tree: ast.Module) -> _ProvenanceSymbols:
+    """Collect only direct aliases that can expose known upstream import or execution APIs."""
+    symbols = _ProvenanceSymbols()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
+                local = alias.asname or alias.name
                 if alias.name == "sys":
-                    sys_modules.add(alias.asname or "sys")
+                    symbols.sys_modules.add(local)
                 elif alias.name == "importlib":
-                    importlib_modules.add(alias.asname or "importlib")
+                    symbols.importlib_modules.add(local)
+                elif alias.name == "builtins":
+                    symbols.builtins_modules.add(local)
+                elif alias.name == "runpy":
+                    symbols.runpy_modules.add(local)
+                elif alias.name == "pathlib":
+                    symbols.pathlib_modules.add(local)
+                elif alias.name == "os":
+                    symbols.os_modules.add(local)
         elif isinstance(node, ast.ImportFrom):
             if node.module == "sys":
-                sys_paths.update(alias.asname or alias.name for alias in node.names if alias.name == "path")
+                symbols.sys_paths.update(alias.asname or alias.name for alias in node.names if alias.name == "path")
             elif node.module == "importlib":
-                import_module_functions.update(
-                    alias.asname or alias.name for alias in node.names if alias.name == "import_module"
+                for alias in node.names:
+                    if alias.name == "import_module":
+                        symbols.callable_aliases[alias.asname or alias.name] = "import"
+            elif node.module == "builtins":
+                for alias in node.names:
+                    if alias.name == "__import__":
+                        symbols.callable_aliases[alias.asname or alias.name] = "import"
+                    elif alias.name in {"exec", "eval"}:
+                        symbols.callable_aliases[alias.asname or alias.name] = "source-execution"
+                    elif alias.name == "getattr":
+                        symbols.getattr_functions.add(alias.asname or alias.name)
+            elif node.module == "runpy":
+                for alias in node.names:
+                    if alias.name == "run_path":
+                        symbols.callable_aliases[alias.asname or alias.name] = "path-execution"
+                    elif alias.name == "run_module":
+                        symbols.callable_aliases[alias.asname or alias.name] = "module-execution"
+            elif node.module == "pathlib":
+                symbols.path_constructors.update(
+                    alias.asname or alias.name for alias in node.names if alias.name in PATH_CONSTRUCTOR_NAMES
                 )
-    return sys_modules, sys_paths, importlib_modules, import_module_functions
+
+    bindings = _assignment_bindings(tree)
+    for _ in range(len(bindings) + 1):
+        changed = False
+        for name, value in bindings.items():
+            kind = _callable_kind(value, symbols)
+            if kind is not None and symbols.callable_aliases.get(name) != kind:
+                symbols.callable_aliases[name] = kind
+                changed = True
+            if _is_getattr_callable(value, symbols) and name not in symbols.getattr_functions:
+                symbols.getattr_functions.add(name)
+                changed = True
+        if not changed:
+            break
+    return symbols
 
 
 def _literal_string(node: ast.AST | None) -> str | None:
     """Return a statically visible string literal, if one is present."""
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    return None
+
+
+def _join_static_path(left: str, right: str) -> str:
+    """Join two literal path pieces without touching the filesystem."""
+    path_type = PureWindowsPath if "\\" in left else PurePosixPath
+    return str(path_type(left) / right)
+
+
+def _is_path_constructor(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Recognize direct pathlib constructor aliases without importing pathlib."""
+    if isinstance(node, ast.Name):
+        return node.id in symbols.path_constructors
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr in PATH_CONSTRUCTOR_NAMES
+        and _is_module_alias(node.value, symbols.pathlib_modules)
+    )
+
+
+def _is_os_path_join(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Recognize direct ``os.path.join`` aliases for literal-only string path folding."""
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "join"
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "path"
+        and _is_module_alias(node.value.value, symbols.os_modules)
+    )
+
+
+def _static_path_value(
+    node: ast.AST, bindings: dict[str, ast.AST], symbols: _ProvenanceSymbols, seen: set[str] | None = None
+) -> str | None:
+    """Fold static strings and pathlib/string joins without evaluating target code."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name):
+        if node.id not in bindings:
+            return None
+        seen = set() if seen is None else seen
+        if node.id in seen:
+            return None
+        return _static_path_value(bindings[node.id], bindings, symbols, seen | {node.id})
+    if isinstance(node, ast.JoinedStr):
+        pieces: list[str] = []
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                pieces.append(value.value)
+            elif isinstance(value, ast.FormattedValue):
+                formatted = _static_path_value(value.value, bindings, symbols, seen)
+                if formatted is None:
+                    return None
+                pieces.append(formatted)
+            else:
+                return None
+        return "".join(pieces)
+    if isinstance(node, ast.BinOp):
+        left = _static_path_value(node.left, bindings, symbols, seen)
+        right = _static_path_value(node.right, bindings, symbols, seen)
+        if left is None or right is None:
+            return None
+        if isinstance(node.op, ast.Add):
+            return left + right
+        if isinstance(node.op, ast.Div):
+            return _join_static_path(left, right)
+        return None
+    if not isinstance(node, ast.Call):
+        return None
+    if isinstance(node.func, ast.Name) and node.func.id == "str" and node.args:
+        return _static_path_value(node.args[0], bindings, symbols, seen)
+    if _is_path_constructor(node.func, symbols):
+        return _static_path_value(node.args[0], bindings, symbols, seen) if node.args else None
+    if _is_os_path_join(node.func, symbols):
+        values = [_static_path_value(argument, bindings, symbols, seen) for argument in node.args]
+        if not values or any(value is None for value in values):
+            return None
+        result = values[0]
+        assert result is not None
+        for value in values[1:]:
+            assert value is not None
+            result = _join_static_path(result, value)
+        return result
+    if isinstance(node.func, ast.Attribute) and node.func.attr == "joinpath":
+        result = _static_path_value(node.func.value, bindings, symbols, seen)
+        values = [_static_path_value(argument, bindings, symbols, seen) for argument in node.args]
+        if result is None or any(value is None for value in values):
+            return None
+        for value in values:
+            assert value is not None
+            result = _join_static_path(result, value)
+        return result
     return None
 
 
@@ -364,29 +597,29 @@ def _is_forbidden_absolute_source_path(value: str) -> bool:
     return False
 
 
-def _is_sys_path_reference(node: ast.AST, sys_modules: set[str], sys_paths: set[str]) -> bool:
+def _is_sys_path_reference(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
     """Return whether an expression denotes ``sys.path`` or a directly imported alias."""
     if isinstance(node, ast.Name):
-        return node.id in sys_paths
+        return node.id in symbols.sys_paths
     return (
         isinstance(node, ast.Attribute)
         and node.attr == "path"
         and isinstance(node.value, ast.Name)
-        and node.value.id in sys_modules
+        and node.value.id in symbols.sys_modules
     )
 
 
-def _is_sys_path_mutation(call: ast.Call, sys_modules: set[str], sys_paths: set[str]) -> bool:
+def _is_sys_path_mutation(call: ast.Call, symbols: _ProvenanceSymbols) -> bool:
     """Return whether a call mutates a sys.path alias, which target tests may not do."""
     function = call.func
     return (
         isinstance(function, ast.Attribute)
         and function.attr in SYS_PATH_MUTATION_METHODS
-        and _is_sys_path_reference(function.value, sys_modules, sys_paths)
+        and _is_sys_path_reference(function.value, symbols)
     )
 
 
-def _assignment_mutates_sys_path(node: ast.AST, sys_modules: set[str], sys_paths: set[str]) -> bool:
+def _assignment_mutates_sys_path(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
     """Detect assignment and slice-assignment variants in addition to mutation method calls."""
     if isinstance(node, ast.Assign):
         targets = node.targets
@@ -396,31 +629,64 @@ def _assignment_mutates_sys_path(node: ast.AST, sys_modules: set[str], sys_paths
         return False
     for target in targets:
         reference = target.value if isinstance(target, ast.Subscript) else target
-        if _is_sys_path_reference(reference, sys_modules, sys_paths):
+        if _is_sys_path_reference(reference, symbols):
             return True
     return False
 
 
-def _is_forbidden_dynamic_import(
-    call: ast.Call, importlib_modules: set[str], import_module_functions: set[str]
-) -> bool:
-    """Detect literal importlib/__import__ access to frozen upstream source modules."""
-    function = call.func
-    uses_import_module = isinstance(function, ast.Name) and function.id in import_module_functions
-    uses_import_module = uses_import_module or (
-        isinstance(function, ast.Attribute)
-        and function.attr == "import_module"
-        and isinstance(function.value, ast.Name)
-        and function.value.id in importlib_modules
-    )
-    if not uses_import_module:
-        return False
-    return bool(call.args and (module := _literal_string(call.args[0])) and _is_upstream_module(module))
+def _is_open_call(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
+    """Recognize direct builtins ``open`` forms used as an execution-source reader."""
+    if isinstance(node, ast.Name):
+        return node.id == "open"
+    return isinstance(node, ast.Attribute) and node.attr == "open" and _is_builtins_object(node.value, symbols)
+
+
+def _source_path_from_expression(
+    node: ast.AST, bindings: dict[str, ast.AST], symbols: _ProvenanceSymbols
+) -> str | None:
+    """Recover a statically assembled file path passed through known source-reading shapes."""
+    direct = _static_path_value(node, bindings, symbols)
+    if direct is not None:
+        return direct
+    if not isinstance(node, ast.Call):
+        return None
+    function = node.func
+    if isinstance(function, ast.Attribute):
+        if function.attr in PATH_READ_METHODS:
+            return _static_path_value(function.value, bindings, symbols)
+        if function.attr == "read" and isinstance(function.value, ast.Call):
+            reader = function.value
+            if _is_open_call(reader.func, symbols) and reader.args:
+                return _static_path_value(reader.args[0], bindings, symbols)
+    getattr_target = _getattr_target(function, symbols)
+    if getattr_target is not None and getattr_target[1] in PATH_READ_METHODS:
+        return _static_path_value(getattr_target[0], bindings, symbols)
+    if isinstance(function, ast.Name) and function.id == "compile" and node.args:
+        return _source_path_from_expression(node.args[0], bindings, symbols)
+    return None
+
+
+def _validate_execution_call(
+    call: ast.Call, symbols: _ProvenanceSymbols, bindings: dict[str, ast.AST], relative: str
+) -> None:
+    """Reject known import/runpy/exec forms only when their static target is frozen upstream source."""
+    kind = _callable_kind(call.func, symbols)
+    if kind is None or not call.args:
+        return
+    if kind in {"import", "module-execution"}:
+        module = _static_path_value(call.args[0], bindings, symbols)
+        if module is not None and _is_upstream_module(module):
+            raise MigrationAuditError(f"mapped target dynamically imports upstream source: {relative}")
+        return
+    source_path = _source_path_from_expression(call.args[0], bindings, symbols)
+    if source_path is not None and _is_forbidden_absolute_source_path(source_path):
+        raise MigrationAuditError(f"mapped target executes an absolute upstream/source path: {relative}")
 
 
 def _validate_target_provenance(tree: ast.Module, relative: str) -> None:
     """Reject static paths and imports that could execute the pinned upstream test package."""
-    sys_modules, sys_paths, importlib_modules, import_module_functions = _import_aliases(tree)
+    symbols = _provenance_symbols(tree)
+    bindings = _assignment_bindings(tree)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -437,46 +703,230 @@ def _validate_target_provenance(tree: ast.Module, relative: str) -> None:
             ):
                 raise MigrationAuditError(f"mapped target imports upstream source-side test module: {relative}")
         elif isinstance(node, ast.Call):
-            if _is_sys_path_mutation(node, sys_modules, sys_paths):
+            if _is_sys_path_mutation(node, symbols):
                 raise MigrationAuditError(f"mapped target mutates sys.path: {relative}")
-            if _is_forbidden_dynamic_import(node, importlib_modules, import_module_functions):
-                raise MigrationAuditError(f"mapped target dynamically imports upstream source: {relative}")
-        elif _assignment_mutates_sys_path(node, sys_modules, sys_paths):
+            _validate_execution_call(node, symbols, bindings, relative)
+        elif _assignment_mutates_sys_path(node, symbols):
             raise MigrationAuditError(f"mapped target mutates sys.path: {relative}")
         elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _is_forbidden_absolute_source_path(node.value):
             raise MigrationAuditError(f"mapped target contains an absolute upstream/source path: {relative}")
 
 
-def _c4_evidence(function: ast.FunctionDef) -> dict[str, bool]:
-    """Collect explicit Task-8 C4 figure lifecycle and artifact ownership signals."""
-    figure = False
-    show = False
-    close = False
-    ownership = False
-    for node in ast.walk(function):
-        if isinstance(node, ast.Name) and node.id.lower() in {"fig", "figure", "ax", "axes"}:
-            figure = True
+_STATIC_UNKNOWN = object()
+
+
+def _static_literal(node: ast.AST) -> object:
+    """Return a literal-only value for branch reachability, without evaluating names or calls."""
+    try:
+        return ast.literal_eval(node)
+    except (MemoryError, RecursionError, TypeError, ValueError):
+        return _STATIC_UNKNOWN
+
+
+def _compare_static_values(left: object, operator: ast.cmpop, right: object) -> bool | None:
+    """Evaluate one literal comparison used in a branch guard, or leave it unknown."""
+    if isinstance(operator, ast.Eq):
+        return left == right
+    if isinstance(operator, ast.NotEq):
+        return left != right
+    if isinstance(operator, ast.Is):
+        return left is right
+    if isinstance(operator, ast.IsNot):
+        return left is not right
+    if isinstance(operator, ast.In):
+        try:
+            return left in right  # type: ignore[operator]
+        except TypeError:
+            return None
+    if isinstance(operator, ast.NotIn):
+        try:
+            return left not in right  # type: ignore[operator]
+        except TypeError:
+            return None
+    try:
+        if isinstance(operator, ast.Lt):
+            return left < right  # type: ignore[operator]
+        if isinstance(operator, ast.LtE):
+            return left <= right  # type: ignore[operator]
+        if isinstance(operator, ast.Gt):
+            return left > right  # type: ignore[operator]
+        if isinstance(operator, ast.GtE):
+            return left >= right  # type: ignore[operator]
+    except TypeError:
+        return None
+    return None
+
+
+def _static_truth_value(node: ast.AST) -> bool | None:
+    """Return a provable truth value for simple literal branch guards; otherwise ``None``."""
+    literal = _static_literal(node)
+    if literal is not _STATIC_UNKNOWN:
+        return bool(literal)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        value = _static_truth_value(node.operand)
+        return None if value is None else not value
+    if isinstance(node, ast.BoolOp):
+        values = [_static_truth_value(value) for value in node.values]
+        if isinstance(node.op, ast.And):
+            if False in values:
+                return False
+            return True if values and all(value is True for value in values) else None
+        if True in values:
+            return True
+        return False if values and all(value is False for value in values) else None
+    if not isinstance(node, ast.Compare):
+        return None
+    left = _static_literal(node.left)
+    if left is _STATIC_UNKNOWN:
+        return None
+    for operator, comparator in zip(node.ops, node.comparators, strict=True):
+        right = _static_literal(comparator)
+        if right is _STATIC_UNKNOWN:
+            return None
+        result = _compare_static_values(left, operator, right)
+        if result is None:
+            return None
+        if not result:
+            return False
+        left = right
+    return True
+
+
+def _walk_reachable_node(node: ast.AST, visit: Callable[[ast.AST], None]) -> None:
+    """Visit C4-relevant nodes while excluding statically unreachable branches and nested definitions."""
+    if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Lambda)):
+        return
+    if isinstance(node, ast.If):
+        _walk_reachable_node(node.test, visit)
+        truth = _static_truth_value(node.test)
+        if truth is not False:
+            _walk_reachable_statements(node.body, visit)
+        if truth is not True:
+            _walk_reachable_statements(node.orelse, visit)
+        return
+    if isinstance(node, ast.While):
+        _walk_reachable_node(node.test, visit)
+        truth = _static_truth_value(node.test)
+        if truth is not False:
+            _walk_reachable_statements(node.body, visit)
+        if truth is not True:
+            _walk_reachable_statements(node.orelse, visit)
+        return
+    if isinstance(node, ast.IfExp):
+        _walk_reachable_node(node.test, visit)
+        truth = _static_truth_value(node.test)
+        if truth is not False:
+            _walk_reachable_node(node.body, visit)
+        if truth is not True:
+            _walk_reachable_node(node.orelse, visit)
+        return
+    visit(node)
+    for child in ast.iter_child_nodes(node):
+        _walk_reachable_node(child, visit)
+
+
+def _statements_unconditionally_return_or_raise(statements: list[ast.stmt]) -> bool:
+    """Return whether one simple literal-controlled block always leaves its function."""
+    if not statements:
+        return False
+    statement = statements[-1]
+    if isinstance(statement, (ast.Raise, ast.Return)):
+        return True
+    if isinstance(statement, ast.If):
+        truth = _static_truth_value(statement.test)
+        if truth is True:
+            return _statements_unconditionally_return_or_raise(statement.body)
+        if truth is False:
+            return _statements_unconditionally_return_or_raise(statement.orelse)
+        return _statements_unconditionally_return_or_raise(
+            statement.body
+        ) and _statements_unconditionally_return_or_raise(statement.orelse)
+    return False
+
+
+def _statements_unconditionally_terminate(statements: list[ast.stmt]) -> bool:
+    """Return whether a simple literal-controlled block cannot fall through to following code."""
+    if not statements:
+        return False
+    statement = statements[-1]
+    if isinstance(statement, (ast.Break, ast.Continue, ast.Raise, ast.Return)):
+        return True
+    if isinstance(statement, ast.While):
+        return _static_truth_value(statement.test) is True and _statements_unconditionally_return_or_raise(statement.body)
+    if not isinstance(statement, ast.If):
+        return False
+    truth = _static_truth_value(statement.test)
+    if truth is True:
+        return _statements_unconditionally_terminate(statement.body)
+    if truth is False:
+        return _statements_unconditionally_terminate(statement.orelse)
+    return _statements_unconditionally_terminate(statement.body) and _statements_unconditionally_terminate(statement.orelse)
+
+
+def _walk_reachable_statements(statements: list[ast.stmt], visit: Callable[[ast.AST], None]) -> None:
+    """Walk one statement block and stop after an unconditional control-flow terminator."""
+    for statement in statements:
+        _walk_reachable_node(statement, visit)
+        if _statements_unconditionally_terminate([statement]):
+            break
+
+
+def _reachable_c4_nodes(function: ast.FunctionDef) -> list[ast.AST]:
+    """Return statically reachable test-body nodes for the deliberately bounded C4 audit."""
+    nodes: list[ast.AST] = []
+    _walk_reachable_statements(function.body, nodes.append)
+    return nodes
+
+
+def _expression_resources(node: ast.AST) -> set[str]:
+    """Return direct name anchors for a Figure/Axes expression, or global plot state when absent."""
+    names = {name.id for name in ast.walk(node) if isinstance(name, ast.Name) and isinstance(name.ctx, ast.Load)}
+    names.difference_update({"plt", "pyplot", "matplotlib"})
+    return names or {C4_GLOBAL_RESOURCE}
+
+
+def _call_resources(call: ast.Call) -> set[str]:
+    """Bind a C4 helper or method signal to its receiver/arguments where statically visible."""
+    if isinstance(call.func, ast.Attribute) and call.func.attr in {"close", "show", "close_all"}:
+        receiver_resources = _expression_resources(call.func.value)
+        if receiver_resources != {C4_GLOBAL_RESOURCE}:
+            return receiver_resources
+        argument_resources: set[str] = set()
+        for argument in [*call.args, *(keyword.value for keyword in call.keywords)]:
+            argument_resources.update(_expression_resources(argument))
+        return argument_resources or receiver_resources
+    resources: set[str] = set()
+    for value in [*call.args, *(keyword.value for keyword in call.keywords)]:
+        resources.update(_expression_resources(value))
+    return resources or {C4_GLOBAL_RESOURCE}
+
+
+def _c4_evidence(function: ast.FunctionDef) -> dict[str, set[str]]:
+    """Collect reachable, resource-bound Task-8 C4 figure lifecycle and ownership signals."""
+    evidence = {"figure_or_axes": set(), "show": set(), "close": set(), "ownership": set()}
+    for node in _reachable_c4_nodes(function):
         if isinstance(node, ast.Attribute) and node.attr.lower() in {"axes", "figure", "get_axes", "get_figure"}:
-            figure = True
+            evidence["figure_or_axes"].update(_expression_resources(node.value))
         if not isinstance(node, ast.Call):
             continue
         name = _call_name(node)
         if name is None:
             continue
         lowered = name.lower()
+        resources = _call_resources(node)
         if name in C4_FIGURE_HELPERS or lowered in {"gca", "gcf"}:
-            figure = True
+            evidence["figure_or_axes"].update(resources)
         if name in C4_SHOW_HELPERS or lowered == "show":
-            show = True
+            evidence["show"].update(resources)
         if name in C4_CLOSE_HELPERS or lowered in {"close", "close_all"}:
-            close = True
+            evidence["close"].update(resources)
         if name in C4_OWNERSHIP_HELPERS:
-            ownership = True
-    return {"figure_or_axes": figure, "show": show, "close": close, "ownership": ownership}
+            evidence["ownership"].update(resources)
+    return evidence
 
 
 def _validate_c4_evidence(function: ast.FunctionDef, selector: str) -> None:
-    """Require each C4 target to prove rendered figures, lifecycle, and owned cleanup."""
+    """Require each C4 target to prove reachable, bound figures, lifecycle, and owned cleanup."""
     evidence = _c4_evidence(function)
     missing: list[str] = []
     if not evidence["figure_or_axes"]:
@@ -487,6 +937,13 @@ def _validate_c4_evidence(function: ast.FunctionDef, selector: str) -> None:
         missing.append("artifact/resource ownership or cleanup")
     if missing:
         raise MigrationAuditError(f"C4 target lacks {', '.join(missing)}: {selector}")
+    anchors = set(evidence["figure_or_axes"])
+    for dimension in ("show", "close", "ownership"):
+        concrete_resources = evidence[dimension] - {C4_GLOBAL_RESOURCE}
+        if concrete_resources:
+            anchors.intersection_update(concrete_resources)
+    if not anchors:
+        raise MigrationAuditError(f"C4 target signals are not bound to one reachable figure/resource: {selector}")
 
 
 def _is_pytest_upstream_marker(call: ast.Call) -> bool:
