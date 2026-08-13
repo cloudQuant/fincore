@@ -111,9 +111,17 @@ assertion.
 
 Task 1.5 freezes this contract but does not create placeholder target tests or
 claim that any future target node was collected or passed. Once Tasks 3, 4,
-and 8 create those tests, run the checker with a `pytest --collect-only -q`
-transcript and a non-xdist result file written by
-`--alphalens-upstream-result-json`. The dynamic
+and 8 create those tests, first use the checker's
+`--write-collection-proof PATH` wrapper for the selected scope. It runs the
+exact scope-owned `pytest -o addopts= --collect-only -q` command and writes a
+versioned JSON envelope containing its command identity, scope, target paths,
+exit status, nodeids, and collection errors. Pass that envelope back with
+`--collection-proof PATH` and the non-xdist result file written by
+`--alphalens-upstream-result-json`; a plain collection transcript is not
+accepted. The checker accepts only the frozen `inventory-v1` and `migration-v1`
+schemas, `cloudquant-local-3fa17ad` profile, exact static Git-blob extraction
+record, and deferred-review envelope. Unknown, missing, or malformed envelope
+fields fail closed. The dynamic
 `alphalens_upstream_case(case_id)` marker rejects `skip`, `skipif`, `xfail`,
 global `--reruns`, and per-item `flaky`/`rerun`/`rerunfailures` markers at
 collection. It
@@ -142,6 +150,17 @@ dynamic-execution detector. They permit ordinary relative or fincore-local
 imports, including other repository test packages that are not one of the
 three pinned upstream source modules (`test_utils`, `test_performance`, and
 `test_tears`, with their `tests.*` aliases).
+
+Every Task 3/4 C2/C3 target must expose a direct `assert` or recognized
+`pandas.testing`/`numpy.testing` assertion call in its reachable outer test
+body. The same deliberately bounded walker used for C4 ignores nested
+functions, classes, lambdas, comprehensions, and generator expressions; literal
+false branches; code after an unconditional return/raise; unreachable sides of
+literal short-circuit Boolean expressions; empty literal `for` bodies; and code
+following a definitely nonempty literal `for` whose body unconditionally
+returns/raises. This prevents an ordinary target from satisfying its assertion
+contract only through demonstrably dead code; it is not a claim of full control
+flow or symbolic analysis.
 
 Every Task 8 C4 invocation target must present all of these statically
 auditable signals in its own test function:
@@ -190,6 +209,29 @@ To reproduce the static inventory or its map audit locally, use:
   --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
   --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
   --scope all
+```
+
+After the deferred target files exist, create collection evidence only through
+the controlled wrapper, then use that same scope's passing marker-hook result:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope all \
+  --write-collection-proof build/alphalens-upstream-collection.json
+
+# Run the same scope's future target tests non-xdist with
+# --alphalens-upstream-result-json build/alphalens-upstream-results.json.
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope all \
+  --collection-proof build/alphalens-upstream-collection.json \
+  --results build/alphalens-upstream-results.json
 ```
 
 ## Oracle boundary

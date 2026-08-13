@@ -3,8 +3,9 @@
 
 Task 1.5 intentionally runs this tool in static mode: inventory and migration
 map are checked without inventing future Task 3/4/8 target tests.  Passing
-``--nodeids`` activates the deferred target source, collection, marker, and
-non-xdist result audit once those tests exist.
+``--collection-proof`` activates the deferred target source, collection,
+marker, and non-xdist result audit once those tests exist.  Plain collection
+transcripts are deliberately not accepted as proof.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import argparse
 import ast
 import json
 import re
+import subprocess
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
@@ -30,6 +32,25 @@ EXPECTED_COUNTS = {
     "dormant_tear_invocations": 96,
 }
 EXPECTED_CASE_COUNT = 141
+INVENTORY_SCHEMA_VERSION = "alphalens-upstream-test-inventory-v1"
+MIGRATION_SCHEMA_VERSION = "alphalens-upstream-test-migration-v1"
+EXPECTED_PROFILE = "cloudquant-local-3fa17ad"
+EXPECTED_EXTRACTION = {
+    "mode": "static-ast-only",
+    "source_bytes": "git-show-pinned-blobs",
+    "upstream_executed": False,
+    "upstream_imported": False,
+}
+EXPECTED_MIGRATION_REVIEW = {
+    "note": "Human-reviewable source-to-future-target map; Task 1.5 does not claim target execution or acceptance.",
+    "state": "static-map-pending-target-implementation",
+}
+INVENTORY_ENVELOPE_FIELDS = frozenset(
+    {"schema_version", "profile", "commit", "counts", "extraction", "source_files", "cases"}
+)
+MIGRATION_ENVELOPE_FIELDS = frozenset({"schema_version", "profile", "commit", "review", "cases"})
+COLLECTION_PROOF_SCHEMA_VERSION = "alphalens-upstream-collection-proof-v1"
+COLLECTION_PROOF_COMMAND_IDENTITY = "fincore.alphalens-upstream-collect-v1"
 EXPECTED_SOURCE_FILES = {
     "tests/test_utils.py": {
         "git_blob": "22480c305a07b8ccd83e15ed7b6d1b06be08307e",
@@ -89,9 +110,7 @@ C4_FIGURE_HELPERS = frozenset(
     }
 )
 C4_SHOW_HELPERS = frozenset({"show_figure", "show_owned_figures", "assert_show_called"})
-C4_CLOSE_HELPERS = frozenset(
-    {"close_figure", "close_owned_figures", "assert_figures_closed", "assert_no_open_figures"}
-)
+C4_CLOSE_HELPERS = frozenset({"close_figure", "close_owned_figures", "assert_figures_closed", "assert_no_open_figures"})
 C4_OWNERSHIP_HELPERS = frozenset(
     {
         "assert_artifact_ownership",
@@ -169,10 +188,60 @@ def _selector_function(selector: str) -> str:
     return remainder.split("[", 1)[0]
 
 
+def _require_fixture_field(document: dict[str, Any], label: str, field: str, expected_type: type[Any]) -> Any:
+    """Read a mandatory top-level fixture field without silently defaulting it."""
+    if field not in document:
+        raise MigrationAuditError(f"{label}.{field} is required")
+    value = document[field]
+    if not isinstance(value, expected_type):
+        raise MigrationAuditError(f"{label}.{field} must be a {expected_type.__name__}")
+    return value
+
+
+def _validate_fixture_envelopes(inventory: dict[str, Any], migration: dict[str, Any]) -> None:
+    """Fail closed on the versioned fixture envelopes before inspecting records."""
+    for label, document, expected_fields in (
+        ("inventory", inventory, INVENTORY_ENVELOPE_FIELDS),
+        ("migration", migration, MIGRATION_ENVELOPE_FIELDS),
+    ):
+        if set(document) != expected_fields:
+            missing = sorted(expected_fields - set(document))
+            extra = sorted(set(document) - expected_fields)
+            raise MigrationAuditError(f"{label} has an unsupported envelope shape: missing={missing} extra={extra}")
+    inventory_schema = _require_fixture_field(inventory, "inventory", "schema_version", str)
+    if inventory_schema != INVENTORY_SCHEMA_VERSION:
+        raise MigrationAuditError(
+            f"inventory.schema_version must be {INVENTORY_SCHEMA_VERSION!r}: {inventory_schema!r}"
+        )
+    migration_schema = _require_fixture_field(migration, "migration", "schema_version", str)
+    if migration_schema != MIGRATION_SCHEMA_VERSION:
+        raise MigrationAuditError(
+            f"migration.schema_version must be {MIGRATION_SCHEMA_VERSION!r}: {migration_schema!r}"
+        )
+    for label, document in (("inventory", inventory), ("migration", migration)):
+        profile = _require_fixture_field(document, label, "profile", str)
+        if profile != EXPECTED_PROFILE:
+            raise MigrationAuditError(f"{label}.profile must be {EXPECTED_PROFILE!r}: {profile!r}")
+        _require_fixture_field(document, label, "commit", str)
+
+    extraction = _require_fixture_field(inventory, "inventory", "extraction", dict)
+    if extraction != EXPECTED_EXTRACTION:
+        raise MigrationAuditError("inventory.extraction differs from the frozen static Git-blob evidence")
+    _require_fixture_field(inventory, "inventory", "counts", dict)
+    _require_fixture_field(inventory, "inventory", "source_files", dict)
+    _require_fixture_field(inventory, "inventory", "cases", list)
+
+    review = _require_fixture_field(migration, "migration", "review", dict)
+    if review != EXPECTED_MIGRATION_REVIEW:
+        raise MigrationAuditError("migration.review differs from the deferred static-map review contract")
+    _require_fixture_field(migration, "migration", "cases", dict)
+
+
 def _validate_static(
     inventory: dict[str, Any], migration: dict[str, Any], groups: set[str]
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     """Validate the complete map, returning only records selected by scope."""
+    _validate_fixture_envelopes(inventory, migration)
     cases = inventory.get("cases")
     mapped = migration.get("cases")
     if not isinstance(cases, list):
@@ -269,33 +338,132 @@ def _validate_static(
         raise MigrationAuditError(f"expected 96 unique tear invocation targets, found {len(all_invocation_targets)}")
 
     selected_inventory = {
-        source_case_id: case
-        for source_case_id, case in inventory_by_id.items()
-        if _group(case) in groups
+        source_case_id: case for source_case_id, case in inventory_by_id.items() if _group(case) in groups
     }
     selected_map = {source_case_id: mapped[source_case_id] for source_case_id in selected_inventory}
     return selected_inventory, selected_map
 
 
-def _read_nodeids(path: Path) -> list[str]:
-    """Extract exact nodeids from a ``pytest --collect-only -q`` transcript."""
+def _collection_target_paths(scope: str) -> list[str]:
+    """Return the complete, deterministic future target file set for one audit scope."""
+    return sorted({path for group in _scope_groups(scope) for path in GROUP_PATHS[group]})
+
+
+def _nodeids_from_collection_output(output: str) -> list[str]:
+    """Read pytest nodeids only from the controlled collector's captured stdout."""
+    return [line.strip() for line in output.splitlines() if "::" in line and not SUMMARY_LINE.match(line.strip())]
+
+
+def _collection_error_lines(output: str) -> list[str]:
+    """Record the bounded pytest collection diagnostics needed for a fail-closed proof."""
+    return [
+        line.strip() for line in output.splitlines() if "ERROR collecting" in line or line.lstrip().startswith("ERROR ")
+    ]
+
+
+def _write_collection_proof(path: Path, scope: str) -> None:
+    """Run the exact future-target collector and persist its structured proof envelope.
+
+    This is intentionally a controlled wrapper rather than an audit of a
+    user-supplied ``--collect-only`` transcript.  A failed collection is still
+    written as evidence, but the wrapper exits nonzero and the checker will
+    never accept that proof.
+    """
+    target_paths = _collection_target_paths(scope)
+    command = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "--collect-only",
+        "-q",
+        *target_paths,
+    ]
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        completed = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
     except OSError as exc:
-        raise MigrationAuditError(f"cannot read --nodeids file {path}: {exc}") from exc
-    nodeids = [line.strip() for line in lines if "::" in line and not SUMMARY_LINE.match(line.strip())]
-    if not nodeids:
-        raise MigrationAuditError(f"--nodeids contains no pytest nodeids: {path}")
+        raise MigrationAuditError(f"cannot launch controlled pytest collector: {exc}") from exc
+    combined_output = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
+    errors = _collection_error_lines(combined_output)
+    proof = {
+        "schema_version": COLLECTION_PROOF_SCHEMA_VERSION,
+        "command_identity": COLLECTION_PROOF_COMMAND_IDENTITY,
+        "scope": scope,
+        "command": command,
+        "target_paths": target_paths,
+        "exitstatus": completed.returncode,
+        "nodeids": _nodeids_from_collection_output(completed.stdout),
+        "collection_errors": errors,
+    }
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    except OSError as exc:
+        raise MigrationAuditError(f"cannot write --write-collection-proof {path}: {exc}") from exc
+    if completed.returncode != 0 or errors:
+        raise MigrationAuditError(
+            f"controlled collection proof is non-passing: exitstatus={completed.returncode} errors={len(errors)}"
+        )
+
+
+def _read_collection_proof(path: Path, scope: str) -> list[str]:
+    """Validate the complete controlled-collector envelope and return its nodeids."""
+    proof = _load_json(path, "--collection-proof")
+    required_fields = {
+        "schema_version",
+        "command_identity",
+        "scope",
+        "command",
+        "target_paths",
+        "exitstatus",
+        "nodeids",
+        "collection_errors",
+    }
+    if set(proof) != required_fields:
+        missing = sorted(required_fields - set(proof))
+        extra = sorted(set(proof) - required_fields)
+        raise MigrationAuditError(f"collection proof has an unsupported shape: missing={missing} extra={extra}")
+    if proof["schema_version"] != COLLECTION_PROOF_SCHEMA_VERSION:
+        raise MigrationAuditError(
+            f"collection proof schema_version must be {COLLECTION_PROOF_SCHEMA_VERSION!r}: {proof['schema_version']!r}"
+        )
+    if proof["command_identity"] != COLLECTION_PROOF_COMMAND_IDENTITY:
+        raise MigrationAuditError("collection proof was not emitted by the controlled collector")
+    if proof["scope"] != scope:
+        raise MigrationAuditError(f"collection proof scope mismatch: {proof['scope']!r} != {scope!r}")
+    target_paths = _collection_target_paths(scope)
+    if proof["target_paths"] != target_paths:
+        raise MigrationAuditError("collection proof target_paths do not match the requested scope")
+    command = proof["command"]
+    expected_command_tail = ["-m", "pytest", "-o", "addopts=", "--collect-only", "-q", *target_paths]
+    if (
+        not isinstance(command, list)
+        or not command
+        or not all(isinstance(item, str) for item in command)
+        or command[1:] != expected_command_tail
+    ):
+        raise MigrationAuditError("collection proof command is not the controlled pytest --collect-only command")
+    if type(proof["exitstatus"]) is not int or proof["exitstatus"] != 0:
+        raise MigrationAuditError(f"collection proof is not passing: exitstatus={proof['exitstatus']!r}")
+    errors = proof["collection_errors"]
+    if not isinstance(errors, list) or not all(isinstance(error, str) for error in errors) or errors:
+        raise MigrationAuditError(f"collection proof contains collection_errors: {errors!r}")
+    nodeids = proof["nodeids"]
+    if not isinstance(nodeids, list) or not nodeids or not all(isinstance(nodeid, str) for nodeid in nodeids):
+        raise MigrationAuditError("collection proof requires a non-empty string nodeids list")
     return nodeids
 
 
 def _target_files(selected_map: dict[str, dict[str, Any]]) -> set[str]:
     """Get every mapped target file implied by the selected source scope."""
-    paths = {
-        _selector_path(selector)
-        for record in selected_map.values()
-        for selector in record["target_selectors"]
-    }
+    paths = {_selector_path(selector) for record in selected_map.values() for selector in record["target_selectors"]}
     paths.update(
         _selector_path(selector)
         for record in selected_map.values()
@@ -384,11 +552,7 @@ def _is_getattr_callable(node: ast.AST, symbols: _ProvenanceSymbols) -> bool:
 
 def _getattr_target(node: ast.AST, symbols: _ProvenanceSymbols) -> tuple[ast.AST, str] | None:
     """Extract literal ``getattr(namespace, attribute)`` targets without evaluating code."""
-    if not (
-        isinstance(node, ast.Call)
-        and _is_getattr_callable(node.func, symbols)
-        and len(node.args) >= 2
-    ):
+    if not (isinstance(node, ast.Call) and _is_getattr_callable(node.func, symbols) and len(node.args) >= 2):
         return None
     attribute = _literal_string(node.args[1])
     if attribute is None:
@@ -847,7 +1011,11 @@ def _validate_target_provenance(tree: ast.Module, relative: str) -> None:
             _validate_execution_call(node, symbols, bindings, relative)
         elif _assignment_mutates_sys_path(node, symbols):
             raise MigrationAuditError(f"mapped target mutates sys.path: {relative}")
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and _is_forbidden_absolute_source_path(node.value):
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and _is_forbidden_absolute_source_path(node.value)
+        ):
             raise MigrationAuditError(f"mapped target contains an absolute upstream/source path: {relative}")
 
 
@@ -955,7 +1123,7 @@ def _literal_iterable_truth(node: ast.AST) -> bool | None:
 
 
 def _walk_reachable_node(node: ast.AST, visit: Callable[[ast.AST], None]) -> None:
-    """Visit C4-relevant nodes while excluding statically unreachable branches and nested definitions."""
+    """Visit reachable test-body nodes, excluding bounded dead code and nested definitions."""
     if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Lambda)):
         return
     if isinstance(node, (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
@@ -1035,7 +1203,9 @@ def _statements_unconditionally_terminate(statements: list[ast.stmt]) -> bool:
     if isinstance(statement, (ast.Break, ast.Continue, ast.Raise, ast.Return)):
         return True
     if isinstance(statement, ast.While):
-        return _static_truth_value(statement.test) is True and _statements_unconditionally_return_or_raise(statement.body)
+        return _static_truth_value(statement.test) is True and _statements_unconditionally_return_or_raise(
+            statement.body
+        )
     if isinstance(statement, ast.For):
         return _literal_iterable_truth(statement.iter) is True and _statements_unconditionally_return_or_raise(
             statement.body
@@ -1047,7 +1217,9 @@ def _statements_unconditionally_terminate(statements: list[ast.stmt]) -> bool:
         return _statements_unconditionally_terminate(statement.body)
     if truth is False:
         return _statements_unconditionally_terminate(statement.orelse)
-    return _statements_unconditionally_terminate(statement.body) and _statements_unconditionally_terminate(statement.orelse)
+    return _statements_unconditionally_terminate(statement.body) and _statements_unconditionally_terminate(
+        statement.orelse
+    )
 
 
 def _walk_reachable_statements(statements: list[ast.stmt], visit: Callable[[ast.AST], None]) -> None:
@@ -1058,11 +1230,24 @@ def _walk_reachable_statements(statements: list[ast.stmt], visit: Callable[[ast.
             break
 
 
-def _reachable_c4_nodes(function: ast.FunctionDef) -> list[ast.AST]:
-    """Return statically reachable test-body nodes for the deliberately bounded C4 audit."""
+def _reachable_test_nodes(function: ast.FunctionDef) -> list[ast.AST]:
+    """Return bounded statically reachable outer-test nodes without claiming full CFG analysis."""
     nodes: list[ast.AST] = []
     _walk_reachable_statements(function.body, nodes.append)
     return nodes
+
+
+def _reachable_c4_nodes(function: ast.FunctionDef) -> list[ast.AST]:
+    """Return the shared bounded reachable-node view used by the C4 evidence audit."""
+    return _reachable_test_nodes(function)
+
+
+def _has_reachable_ordinary_assertion(function: ast.FunctionDef) -> bool:
+    """Require a C2/C3 assertion shape in reachable outer-test code only."""
+    return any(
+        isinstance(node, ast.Assert) or (isinstance(node, ast.Call) and _is_testing_call(node))
+        for node in _reachable_test_nodes(function)
+    )
 
 
 def _expression_resources(node: ast.AST) -> set[str]:
@@ -1220,11 +1405,8 @@ def _validate_target_ast(
             if _group(case) == "tears":
                 _validate_c4_evidence(function, selector)
                 continue
-            has_assertion = any(isinstance(node, ast.Assert) for node in ast.walk(function)) or any(
-                _is_testing_call(node) for node in ast.walk(function) if isinstance(node, ast.Call)
-            )
-            if not has_assertion:
-                raise MigrationAuditError(f"mapped target has no assertion or testing call: {selector}")
+            if not _has_reachable_ordinary_assertion(function):
+                raise MigrationAuditError(f"mapped target has no reachable assertion or testing call: {selector}")
 
 
 def _validate_nodeids(
@@ -1247,7 +1429,9 @@ def _validate_nodeids(
             raise MigrationAuditError(
                 f"collection does not contain exactly the mapped nodeid for {case_id}: {matching_ids} != {[expected_nodeid]}"
             )
-    duplicate_nodeids = [nodeid for nodeid, count in Counter(nodeids).items() if count > 1 and nodeid in expected.values()]
+    duplicate_nodeids = [
+        nodeid for nodeid, count in Counter(nodeids).items() if count > 1 and nodeid in expected.values()
+    ]
     if duplicate_nodeids:
         raise MigrationAuditError(f"collection repeats mapped nodeids: {duplicate_nodeids[:3]}")
     return expected
@@ -1263,7 +1447,9 @@ def _validate_results(path: Path, expected: dict[str, str]) -> None:
     if result_document.get("xdist") is not False:
         raise MigrationAuditError("--results was produced under xdist; non-xdist proof is required")
     if result_document.get("pytest_exitstatus") != 0:
-        raise MigrationAuditError(f"--results pytest session did not pass: {result_document.get('pytest_exitstatus')!r}")
+        raise MigrationAuditError(
+            f"--results pytest session did not pass: {result_document.get('pytest_exitstatus')!r}"
+        )
     entries = result_document.get("results")
     if not isinstance(entries, list):
         raise MigrationAuditError("--results requires a results list")
@@ -1302,14 +1488,27 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--migration", type=Path, required=True)
-    parser.add_argument("--nodeids", type=Path, help="pytest --collect-only -q output from later target tests")
+    parser.add_argument(
+        "--collection-proof",
+        type=Path,
+        help="structured proof emitted by --write-collection-proof after later target tests exist",
+    )
+    parser.add_argument(
+        "--write-collection-proof",
+        type=Path,
+        help="run the controlled pytest --collect-only wrapper and write its structured proof",
+    )
     parser.add_argument("--results", type=Path, help="non-xdist marker-hook result JSON from later target tests")
     parser.add_argument("--scope", choices=("utils", "performance", "tears", "all"), default="all")
     arguments = parser.parse_args(argv)
-    if arguments.results is not None and arguments.nodeids is None:
-        parser.error("--results requires --nodeids")
-    if arguments.nodeids is not None and arguments.results is None:
-        parser.error("--nodeids requires non-xdist --results proof")
+    if arguments.results is not None and arguments.collection_proof is None:
+        parser.error("--results requires --collection-proof")
+    if arguments.collection_proof is not None and arguments.results is None:
+        parser.error("--collection-proof requires non-xdist --results proof")
+    if arguments.write_collection_proof is not None and (
+        arguments.collection_proof is not None or arguments.results is not None
+    ):
+        parser.error("--write-collection-proof cannot be combined with --collection-proof or --results")
     return arguments
 
 
@@ -1320,14 +1519,18 @@ def main(argv: list[str] | None = None) -> int:
         inventory = _load_json(arguments.inventory, "inventory")
         migration = _load_json(arguments.migration, "migration")
         selected_inventory, selected_map = _validate_static(inventory, migration, _scope_groups(arguments.scope))
-        if arguments.nodeids is None:
+        if arguments.write_collection_proof is not None:
+            _write_collection_proof(arguments.write_collection_proof, arguments.scope)
+            print(f"controlled collection proof written: {arguments.write_collection_proof}")
+            return 0
+        if arguments.collection_proof is None:
             print(
                 "static migration audit OK: "
                 f"scope={arguments.scope} cases={len(selected_inventory)} "
                 "(target collection/results deferred until Tasks 3/4/8)"
             )
             return 0
-        nodeids = _read_nodeids(arguments.nodeids)
+        nodeids = _read_collection_proof(arguments.collection_proof, arguments.scope)
         _validate_target_ast(selected_inventory, selected_map)
         expected = _validate_nodeids(nodeids, selected_inventory, selected_map)
         assert arguments.results is not None

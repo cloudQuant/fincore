@@ -99,7 +99,7 @@ def _write_marked_target(
     target_path.write_text(
         f"{import_block}\n\n"
         "@pytest.mark.parametrize(\n"
-        "    \"source_case_id\",\n"
+        '    "source_case_id",\n'
         "    [\n"
         "        pytest.param(\n"
         f"            {marker_id!r},\n"
@@ -132,8 +132,7 @@ def test_pinned_upstream_test_inventory_and_migration_map_are_complete() -> None
     assert isinstance(mapped_cases, dict)
     assert set(mapped_cases) == source_ids
     assert all(
-        item["disposition"]
-        in {"rewritten_strict", "rewritten_invariant", "rebuilt_c4"}
+        item["disposition"] in {"rewritten_strict", "rewritten_invariant", "rebuilt_c4"}
         for item in mapped_cases.values()
     )
     assert all(item["target_selectors"] and item["assertion_grade"] for item in mapped_cases.values())
@@ -142,11 +141,7 @@ def test_pinned_upstream_test_inventory_and_migration_map_are_complete() -> None
     assert len(tear_cases) == 24
     assert all(case["source_collection_state"] == "commented_out" for case in tear_cases)
     assert sum(len(case["invocation_ids"]) for case in tear_cases) == 96
-    invocation_ids = {
-        invocation_id
-        for case in tear_cases
-        for invocation_id in case["invocation_ids"]
-    }
+    invocation_ids = {invocation_id for case in tear_cases for invocation_id in case["invocation_ids"]}
     invocation_targets = {
         invocation_id: nodeid
         for item in mapped_cases.values()
@@ -179,11 +174,7 @@ def test_inventory_cases_have_stable_source_and_provenance_fields() -> None:
         assert case["source_sha256"] == source_files[case["source_path"]]["sha256"]
         assert case["source_case_id"].endswith(case["parameter_ordinal"])
 
-    shadowed = [
-        case
-        for case in cases
-        if case["source_collection_state"] == "shadowed_by_generated_method_name"
-    ]
+    shadowed = [case for case in cases if case["source_collection_state"] == "shadowed_by_generated_method_name"]
     assert len(shadowed) == 1
     assert shadowed[0]["source_path"] == "tests/test_performance.py"
 
@@ -207,6 +198,283 @@ def test_migration_map_is_staticly_auditable_before_target_tests_exist() -> None
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "static migration audit OK" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "schema_version"),
+    [
+        ("inventory", "alphalens-upstream-test-inventory-v999"),
+        ("migration", "alphalens-upstream-test-migration-v999"),
+        ("inventory", 1),
+        ("migration", None),
+    ],
+)
+def test_static_checker_fails_closed_for_unknown_or_nonstring_schema_versions(
+    tmp_path: Path, fixture_name: str, schema_version: object
+) -> None:
+    inventory = _load(INVENTORY_PATH)
+    migration = _load(MIGRATION_PATH)
+    document = inventory if fixture_name == "inventory" else migration
+    document["schema_version"] = schema_version
+    inventory_path = tmp_path / "inventory.json"
+    migration_path = tmp_path / "migration.json"
+    inventory_path.write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    migration_path.write_text(json.dumps(migration, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CHECKER),
+            "--inventory",
+            str(inventory_path),
+            "--migration",
+            str(migration_path),
+            "--scope",
+            "all",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "schema_version" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "inventory-missing-extraction",
+        "inventory-malformed-extraction",
+        "inventory-wrong-profile",
+        "inventory-malformed-cases",
+        "inventory-extra-envelope-field",
+        "migration-missing-review",
+        "migration-malformed-review",
+        "migration-wrong-profile",
+        "migration-malformed-cases",
+        "migration-extra-envelope-field",
+    ],
+)
+def test_static_checker_fails_closed_for_missing_or_malformed_top_level_evidence(tmp_path: Path, mutation: str) -> None:
+    inventory = _load(INVENTORY_PATH)
+    migration = _load(MIGRATION_PATH)
+    if mutation == "inventory-missing-extraction":
+        inventory.pop("extraction")
+    elif mutation == "inventory-malformed-extraction":
+        inventory["extraction"] = []
+    elif mutation == "inventory-wrong-profile":
+        inventory["profile"] = "other-profile"
+    elif mutation == "inventory-malformed-cases":
+        inventory["cases"] = {}
+    elif mutation == "inventory-extra-envelope-field":
+        inventory["unrecognized_evidence"] = True
+    elif mutation == "migration-missing-review":
+        migration.pop("review")
+    elif mutation == "migration-malformed-review":
+        migration["review"] = []
+    elif mutation == "migration-wrong-profile":
+        migration["profile"] = "other-profile"
+    elif mutation == "migration-malformed-cases":
+        migration["cases"] = []
+    elif mutation == "migration-extra-envelope-field":
+        migration["unrecognized_evidence"] = True
+    else:  # pragma: no cover - parametrization is the contract under test.
+        raise AssertionError(f"unknown mutation: {mutation}")
+    inventory_path = tmp_path / "inventory.json"
+    migration_path = tmp_path / "migration.json"
+    inventory_path.write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    migration_path.write_text(json.dumps(migration, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CHECKER),
+            "--inventory",
+            str(inventory_path),
+            "--migration",
+            str(migration_path),
+            "--scope",
+            "all",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "FAIL:" in result.stderr
+
+
+def _collection_proof(
+    checker: dict[str, object], *, exitstatus: int = 0, errors: list[str] | None = None
+) -> dict[str, object]:
+    target_paths = sorted(checker["GROUP_PATHS"]["utils"])
+    return {
+        "schema_version": "alphalens-upstream-collection-proof-v1",
+        "command_identity": "fincore.alphalens-upstream-collect-v1",
+        "scope": "utils",
+        "command": [sys.executable, "-m", "pytest", "-o", "addopts=", "--collect-only", "-q", *target_paths],
+        "target_paths": target_paths,
+        "exitstatus": exitstatus,
+        "nodeids": [
+            "tests/compat/alphalens/test_forward_returns.py::test_forward_returns["
+            "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00]"
+        ],
+        "collection_errors": [] if errors is None else errors,
+    }
+
+
+def test_collection_proof_rejects_nonzero_or_error_even_with_a_correct_nodeid(tmp_path: Path) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    for exitstatus, errors in ((1, []), (0, ["ERROR collecting target test"])):
+        proof_path = tmp_path / f"proof-{exitstatus}-{bool(errors)}.json"
+        proof_path.write_text(
+            json.dumps(_collection_proof(checker, exitstatus=exitstatus, errors=errors), indent=2, sort_keys=True)
+            + "\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(checker["MigrationAuditError"], match="collection proof"):
+            checker["_read_collection_proof"](proof_path, "utils")
+
+
+@pytest.mark.parametrize(("exitstatus", "errors"), [(1, []), (0, ["ERROR collecting target test"])])
+def test_checker_cli_rejects_malicious_collection_proof_before_target_audit(
+    tmp_path: Path, exitstatus: int, errors: list[str]
+) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    proof_path = tmp_path / "malicious-proof.json"
+    proof_path.write_text(
+        json.dumps(_collection_proof(checker, exitstatus=exitstatus, errors=errors), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    result_path = tmp_path / "unused-results.json"
+    result_path.write_text("{}\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(CHECKER),
+            "--inventory",
+            str(INVENTORY_PATH),
+            "--migration",
+            str(MIGRATION_PATH),
+            "--scope",
+            "utils",
+            "--collection-proof",
+            str(proof_path),
+            "--results",
+            str(result_path),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "collection proof" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "match"),
+    [
+        ("schema_version", "alphalens-upstream-collection-proof-v999", "schema_version"),
+        ("command_identity", "manual-transcript", "controlled collector"),
+        ("scope", "performance", "scope mismatch"),
+        ("nodeids", [], "nodeids"),
+    ],
+)
+def test_collection_proof_requires_the_complete_controlled_envelope(
+    tmp_path: Path, field: str, value: object, match: str
+) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    proof = _collection_proof(checker)
+    proof[field] = value
+    proof_path = tmp_path / f"invalid-{field}.json"
+    proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with pytest.raises(checker["MigrationAuditError"], match=match):
+        checker["_read_collection_proof"](proof_path, "utils")
+
+
+def test_collection_proof_accepts_a_passing_controlled_envelope(tmp_path: Path) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    proof = _collection_proof(checker)
+    proof_path = tmp_path / "passing-proof.json"
+    proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    assert checker["_read_collection_proof"](proof_path, "utils") == proof["nodeids"]
+
+
+def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checker = runpy.run_path(str(CHECKER))
+    nodeid = (
+        "tests/compat/alphalens/test_forward_returns.py::test_forward_returns["
+        "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00]"
+    )
+    calls: list[tuple[list[str], dict[str, object]]] = []
+
+    class Completed:
+        returncode = 0
+        stdout = f"{nodeid}\n1 test collected\n"
+        stderr = ""
+
+    def fake_run(command: list[str], **kwargs: object) -> Completed:
+        calls.append((command, kwargs))
+        return Completed()
+
+    monkeypatch.setattr(checker["_write_collection_proof"].__globals__["subprocess"], "run", fake_run)
+    proof_path = tmp_path / "controlled-proof.json"
+    checker["_write_collection_proof"](proof_path, "utils")
+
+    proof = _load(proof_path)
+    assert proof["command_identity"] == "fincore.alphalens-upstream-collect-v1"
+    assert proof["scope"] == "utils"
+    assert proof["target_paths"] == sorted(checker["GROUP_PATHS"]["utils"])
+    assert proof["exitstatus"] == 0
+    assert proof["nodeids"] == [nodeid]
+    assert proof["collection_errors"] == []
+    assert calls == [
+        (
+            proof["command"],
+            {"cwd": ROOT, "capture_output": True, "text": True, "check": False},
+        )
+    ]
+
+
+def test_checker_rejects_plain_nodeid_transcripts_and_accepts_structured_proof_cli() -> None:
+    checker = runpy.run_path(str(CHECKER))
+    with pytest.raises(SystemExit) as plain_nodeids:
+        checker["parse_args"](
+            [
+                "--inventory",
+                str(INVENTORY_PATH),
+                "--migration",
+                str(MIGRATION_PATH),
+                "--nodeids",
+                "legacy-nodeids.txt",
+                "--results",
+                "results.json",
+            ]
+        )
+    assert plain_nodeids.value.code == 2
+
+    arguments = checker["parse_args"](
+        [
+            "--inventory",
+            str(INVENTORY_PATH),
+            "--migration",
+            str(MIGRATION_PATH),
+            "--collection-proof",
+            "collection-proof.json",
+            "--results",
+            "results.json",
+        ]
+    )
+    assert arguments.collection_proof == Path("collection-proof.json")
 
 
 @pytest.mark.parametrize(
@@ -674,9 +942,7 @@ def test_target_ast_rejects_builtins_and_getattr_dynamic_imports(tmp_path: Path,
         ),
     ],
 )
-def test_target_ast_rejects_assigned_dangerous_module_aliases(
-    tmp_path: Path, imports: str, message: str
-) -> None:
+def test_target_ast_rejects_assigned_dangerous_module_aliases(tmp_path: Path, imports: str, message: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_utils.py"
     )
@@ -770,9 +1036,7 @@ def test_target_ast_allows_safe_module_alias_and_imported_join(tmp_path: Path) -
         ),
     ],
 )
-def test_target_ast_rejects_keyworded_upstream_module_execution(
-    tmp_path: Path, imports: str, expression: str
-) -> None:
+def test_target_ast_rejects_keyworded_upstream_module_execution(tmp_path: Path, imports: str, expression: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_utils.py"
     )
@@ -823,9 +1087,7 @@ def test_target_ast_allows_keyworded_stdlib_import(tmp_path: Path) -> None:
         ),
     ],
 )
-def test_target_ast_rejects_keyworded_upstream_path_execution(
-    tmp_path: Path, imports: str, executor: str
-) -> None:
+def test_target_ast_rejects_keyworded_upstream_path_execution(tmp_path: Path, imports: str, executor: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_utils.py"
     )
@@ -854,9 +1116,7 @@ def test_target_ast_rejects_keyworded_upstream_path_execution(
         "builtins.getattr(builtins, 'exec')(upstream_source.read_text())",
     ],
 )
-def test_target_ast_rejects_static_upstream_path_assembly_when_executed(
-    tmp_path: Path, executor: str
-) -> None:
+def test_target_ast_rejects_static_upstream_path_assembly_when_executed(tmp_path: Path, executor: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_utils.py"
     )
@@ -952,6 +1212,80 @@ def test_target_ast_allows_safe_local_imports(tmp_path: Path) -> None:
     checker["_validate_target_ast"](selected_inventory, selected_map)
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        """
+        if False:
+            assert source_case_id == "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00"
+        pass
+        """,
+        """
+        return
+        assert source_case_id == "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00"
+        """,
+        """
+        def helper():
+            assert source_case_id == "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00"
+        pass
+        """,
+        """
+        class Helper:
+            def check(self):
+                assert source_case_id == "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00"
+        pass
+        """,
+        """
+        check = lambda: np.testing.assert_array_equal([1], [1])
+        pass
+        """,
+        """
+        [np.testing.assert_array_equal([1], [1]) for _ in ()]
+        pass
+        """,
+        """
+        (np.testing.assert_array_equal([1], [1]) for _ in (1,))
+        pass
+        """,
+    ],
+)
+def test_ordinary_target_ast_rejects_assertions_in_bounded_unreachable_regions(tmp_path: Path, body: str) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        body,
+        imports="import numpy as np\nimport pytest",
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="no reachable assertion"):
+        checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "assert source_case_id == 'tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00'",
+        "pd.testing.assert_series_equal(actual, expected)",
+        "np.testing.assert_array_equal(actual, expected)",
+    ],
+)
+def test_ordinary_target_ast_accepts_reachable_assertion_shapes(tmp_path: Path, body: str) -> None:
+    checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
+        tmp_path, "tests/test_utils.py"
+    )
+    _write_marked_target(
+        target_path,
+        function_name,
+        marker_id,
+        body,
+        imports="import numpy as np\nimport pandas as pd\nimport pytest",
+    )
+    checker["_validate_target_ast"](selected_inventory, selected_map)
+
+
 def test_c4_target_ast_rejects_bare_true_assertion(tmp_path: Path) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_tears.py"
@@ -993,9 +1327,7 @@ def test_c4_target_ast_rejects_evidence_hidden_in_a_statically_false_branch(tmp_
 
 
 @pytest.mark.parametrize("short_circuit", ["False and", "True or"])
-def test_c4_target_ast_rejects_evidence_hidden_in_short_circuited_boolop(
-    tmp_path: Path, short_circuit: str
-) -> None:
+def test_c4_target_ast_rejects_evidence_hidden_in_short_circuited_boolop(tmp_path: Path, short_circuit: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_tears.py"
     )
@@ -1061,9 +1393,7 @@ def test_c4_target_ast_rejects_evidence_in_comprehension_or_unconsumed_generator
 
 
 @pytest.mark.parametrize("literal_range", ["range(0)", "range(1, 1)", "range(0, 4, -1)"])
-def test_c4_target_ast_rejects_evidence_hidden_in_empty_literal_range(
-    tmp_path: Path, literal_range: str
-) -> None:
+def test_c4_target_ast_rejects_evidence_hidden_in_empty_literal_range(tmp_path: Path, literal_range: str) -> None:
     checker, selected_inventory, selected_map, marker_id, target_path, function_name = _single_target_context(
         tmp_path, "tests/test_tears.py"
     )
