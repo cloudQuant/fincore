@@ -23,7 +23,11 @@ if TYPE_CHECKING:
 
 def _signature_from_text(signature_text: str) -> inspect.Signature:
     namespace: dict[str, Any] = {}
-    exec(f"def _workflow{signature_text}:\n    pass", {"__builtins__": {}}, namespace)
+    exec(  # nosec B102 # frozen repo-owned manifest text (never user input); empty-builtins sandbox, stub def only
+        f"def _workflow{signature_text}:\n    pass",
+        {"__builtins__": {}},
+        namespace,
+    )
     return inspect.signature(namespace["_workflow"])
 
 
