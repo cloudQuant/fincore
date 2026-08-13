@@ -678,6 +678,7 @@ def test_alphalens_oracle_timeout_terminates_owned_process_group_and_cleans_pref
 
 
 @pytest.mark.integration
+@pytest.mark.integration_online
 @pytest.mark.serial
 def test_alphalens_oracle_executed_tuple_end_to_end(tmp_path: Path) -> None:
     if os.environ.get("FINCORE_RUN_ALPHALENS_ORACLE_E2E") != "1":
