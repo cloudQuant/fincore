@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "profile": "cloudquant-local-3fa17ad",
+  "execution_status": "unreviewed-current-base-observation",
+  "source": {
+    "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+    "identity": "pinned-git-commit",
+    "worktree_required_clean": true,
+    "source_files": [
+      {
+        "git_blob": "339757d6d8027b680e89d3dc180e297ce38dd16d",
+        "path": "alphalens/__init__.py",
+        "sha256": "4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07"
+      },
+      {
+        "git_blob": "048b72a25ea891060f924ae03c52dc94f94687a2",
+        "path": "alphalens/performance.py",
+        "sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"
+      },
+      {
+        "git_blob": "85e8f312848a1cca6e07808f2d433d0c116364c4",
+        "path": "alphalens/plotting.py",
+        "sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"
+      },
+      {
+        "git_blob": "01664911c254f100ff272dd4a277dc2d1ba32753",
+        "path": "alphalens/tears.py",
+        "sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"
+      },
+      {
+        "git_blob": "8aca231a6b1c40764c9dae5f2e8ad9d22839b6dc",
+        "path": "alphalens/utils.py",
+        "sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"
+      }
+    ]
+  },
+  "captured_on": "2026-08-13",
+  "runtime": {
+    "python": {
+      "implementation": "CPython",
+      "version": "3.11.8",
+      "build": "packaged by conda-forge; Clang 16.0.6",
+      "soabi": "cpython-311-darwin"
+    },
+    "platform": {
+      "os": "macOS",
+      "release": "26.5.1",
+      "machine": "arm64",
+      "processor": "arm",
+      "byteorder": "little"
+    },
+    "locale": "C/C.UTF-8/C/C/C/C",
+    "timezone": {
+      "TZ": null,
+      "tzname": [
+        "CST",
+        "CST"
+      ]
+    },
+    "blas": {
+      "implementation": "openblas64",
+      "version": "0.3.23.dev",
+      "configuration": "USE_64BITINT=1 DYNAMIC_ARCH=1 DYNAMIC_OLDER= NO_CBLAS= NO_LAPACK= NO_LAPACKE= NO_AFFINITY=1 USE_OPENMP= SANDYBRIDGE MAX_THREADS=3"
+    }
+  },
+  "distribution_inventory": {
+    "manager": "conda list --json",
+    "observed_distribution_count": 1501,
+    "sha256": "529e84b123411bd14f00a895fe411e9519fad46fc8e63ca806d6a255a5b8040f",
+    "important_distributions": [
+      {
+        "build": "pypi_0",
+        "name": "alphalens",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "0.4.0"
+      },
+      {
+        "build": "pypi_0",
+        "name": "empyrical",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "0.5.6"
+      },
+      {
+        "build": "pypi_0",
+        "name": "pandas-datareader",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "0.10.0"
+      },
+      {
+        "build": "pypi_0",
+        "name": "numpy",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "1.26.4"
+      },
+      {
+        "build": "pypi_0",
+        "name": "pandas",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "3.0.3"
+      },
+      {
+        "build": "pypi_0",
+        "name": "scipy",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "1.17.1"
+      },
+      {
+        "build": "pypi_0",
+        "name": "matplotlib",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "3.10.9"
+      },
+      {
+        "build": "pypi_0",
+        "name": "seaborn",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "0.13.2"
+      },
+      {
+        "build": "pypi_0",
+        "name": "statsmodels",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "0.14.6"
+      },
+      {
+        "build": "pypi_0",
+        "name": "ipython",
+        "source": "pypi-observed-without-wheel-hash",
+        "version": "9.8.0"
+      }
+    ]
+  },
+  "explicit_lock": {
+    "format": "conda-explicit-with-md5-fragments",
+    "path": "tests/compat/oracle/alphalens-0.4.0-cloudquant-conda-explicit.txt",
+    "sha256": "ee7d70abff70abc8e070f930b736cfbe8a6530df78e054514b984458e340605b",
+    "line_count": 437,
+    "package_url_count": 432,
+    "status": "complete-for-observed-conda-packages-only"
+  },
+  "requirements": {
+    "format": "pip-requirements-requires-hashes-when-populated",
+    "path": "tests/compat/oracle/requirements-alphalens-0.4.0-cloudquant.txt",
+    "sha256": "fc57e6a775f17e1b644360331da6bdfc5ab18d14ec7305a1a85536632addbb4e",
+    "status": "intentionally-empty-no-reviewed-pip-hashes"
+  },
+  "serializer": {
+    "schema": "fincore-compat-json-table-v1",
+    "required_fields": [
+      "index",
+      "index_names",
+      "timezone",
+      "columns",
+      "dtypes",
+      "values",
+      "nan_mask"
+    ]
+  },
+  "oracle_verification": {
+    "reviewed": false,
+    "status": "not-run"
+  },
+  "known_constraints": [
+    "This is an observation of the current base environment, not an executable isolated oracle tuple.",
+    "The required PyPI wheel hashes are not available in the checked-in evidence, so the pip lock is intentionally empty rather than falsely unhashed.",
+    "The pinned source imports empyrical, whose observed 0.5.6 dependency path reaches pandas-datareader 0.10.0 and fails under observed pandas 3.0.3 during collection.",
+    "No generated numerical result or golden output is asserted by this metadata."
+  ]
+}

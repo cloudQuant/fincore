@@ -1,0 +1,4432 @@
+{
+  "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+  "counts": {
+    "classes": 3,
+    "definitions": 64,
+    "functions": 61
+  },
+  "entries": [
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, returns, periods_before=10, periods_after=15, demeaned=True, group_adjust=False, by_group=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 10,
+          "default_expression": "10",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "periods_before",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 15,
+          "default_expression": "15",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "periods_after",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demeaned",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 906,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, returns, periods_before=10, periods_after=15, demeaned=True, group_adjust=False, by_group=False)",
+      "symbol": "average_cumulative_return_by_quantile"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor, returns, before, after, cumulative=False, mean_by_date=False, demean_by=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "before",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "after",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cumulative",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_by_date",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demean_by",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 728,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor, returns, before, after, cumulative=False, mean_by_date=False, demean_by=None)",
+      "symbol": "common_start_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(mean_returns, upper_quant, lower_quant, std_err=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "upper_quant",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "lower_quant",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "std_err",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 606,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(mean_returns, upper_quant, lower_quant, std_err=None)",
+      "symbol": "compute_mean_returns_spread"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, period, capital=None, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None, benchmark_period='1D')",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "capital",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groups",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": "1D",
+          "default_expression": "'1D'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "benchmark_period",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 1184,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, period, capital=None, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None, benchmark_period='1D')",
+      "symbol": "create_pyfolio_input"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(returns)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 419,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(returns)",
+      "symbol": "cumulative_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, returns=None, demeaned=True, group_adjust=False, equal_weight=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demeaned",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 344,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, returns=None, demeaned=True, group_adjust=False, equal_weight=False)",
+      "symbol": "factor_alpha_beta"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groups",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 1042,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+      "symbol": "factor_cumulative_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, group_adjust=False, by_group=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 28,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, group_adjust=False, by_group=False)",
+      "symbol": "factor_information_coefficient"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groups",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 1112,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)",
+      "symbol": "factor_positions"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, period=1)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1,
+          "default_expression": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 687,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, period=1)",
+      "symbol": "factor_rank_autocorrelation"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, demeaned=True, group_adjust=False, equal_weight=False, by_asset=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demeaned",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_asset",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 292,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, demeaned=True, group_adjust=False, equal_weight=False, by_asset=False)",
+      "symbol": "factor_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, demeaned=True, group_adjust=False, equal_weight=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demeaned",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "equal_weight",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 213,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, demeaned=True, group_adjust=False, equal_weight=False)",
+      "symbol": "factor_weights"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, group_adjust=False, by_group=False, by_time=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_time",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 77,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, group_adjust=False, by_group=False, by_time=None)",
+      "symbol": "mean_information_coefficient"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, by_date=False, by_group=False, demeaned=True, group_adjust=False)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_date",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "demeaned",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_adjust",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 539,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(factor_data, by_date=False, by_group=False, demeaned=True, group_adjust=False)",
+      "symbol": "mean_return_by_quantile"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(weights, period, freq=None)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "weights",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "freq",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 441,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(weights, period, freq=None)",
+      "symbol": "positions"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(quantile_factor, quantile, period=1)",
+      "kind": "function",
+      "module": "performance",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantile_factor",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantile",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1,
+          "default_expression": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 654,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac",
+      "source_signature": "(quantile_factor, quantile, period=1)",
+      "symbol": "quantile_turnover"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(style='darkgrid', rc=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": "darkgrid",
+          "default_expression": "'darkgrid'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "style",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rc",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 95,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(style='darkgrid', rc=None)",
+      "symbol": "axes_style"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(func)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "func",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 34,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(func)",
+      "symbol": "customize"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_returns, period, freq=None, title=None, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "freq",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "title",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 738,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(factor_returns, period, freq=None, title=None, ax=None)",
+      "symbol": "plot_cumulative_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(quantile_returns, period, freq=None, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantile_returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "freq",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 785,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(quantile_returns, period, freq=None, ax=None)",
+      "symbol": "plot_cumulative_returns_by_quantile"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(events, num_bars=50, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "events",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 50,
+          "default_expression": "50",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "num_bars",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 927,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(events, num_bars=50, ax=None)",
+      "symbol": "plot_events_distribution"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_autocorrelation, period=1, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_autocorrelation",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1,
+          "default_expression": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 608,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(factor_autocorrelation, period=1, ax=None)",
+      "symbol": "plot_factor_rank_auto_correlation"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(ic_group, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ic_group",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 581,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(ic_group, ax=None)",
+      "symbol": "plot_ic_by_group"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(ic, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ic",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 262,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(ic, ax=None)",
+      "symbol": "plot_ic_hist"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": null,
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": true,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ic",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "stats.norm",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "theoretical_dist",
+          "required": false,
+          "resolved": false,
+          "unresolved_reason": "unknown name plotting.stats"
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 310,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(ic, theoretical_dist=stats.norm, ax=None)",
+      "symbol": "plot_ic_qq"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(ic, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ic",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 204,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(ic, ax=None)",
+      "symbol": "plot_ic_ts"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(ic_data)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ic_data",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 172,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(ic_data)",
+      "symbol": "plot_information_table"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(mean_returns_spread, std_err=None, bandwidth=1, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_returns_spread",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "std_err",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1,
+          "default_expression": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bandwidth",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 492,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(mean_returns_spread, std_err=None, bandwidth=1, ax=None)",
+      "symbol": "plot_mean_quantile_returns_spread_time_series"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(mean_monthly_ic, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_monthly_ic",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 679,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(mean_monthly_ic, ax=None)",
+      "symbol": "plot_monthly_ic_heatmap"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(avg_cumulative_returns, by_quantile=False, std_bar=False, title=None, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "avg_cumulative_returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_quantile",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "std_bar",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "title",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 839,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(avg_cumulative_returns, by_quantile=False, std_bar=False, title=None, ax=None)",
+      "symbol": "plot_quantile_average_cumulative_return"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(mean_ret_by_q, by_group=False, ylim_percentiles=None, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_ret_by_q",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ylim_percentiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 361,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(mean_ret_by_q, by_group=False, ylim_percentiles=None, ax=None)",
+      "symbol": "plot_quantile_returns_bar"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(return_by_q, ylim_percentiles=None, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "return_by_q",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ylim_percentiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 432,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(return_by_q, ylim_percentiles=None, ax=None)",
+      "symbol": "plot_quantile_returns_violin"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 188,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(factor_data)",
+      "symbol": "plot_quantile_statistics_table"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(alpha_beta, mean_ret_quantile, mean_ret_spread_quantile)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "alpha_beta",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_ret_quantile",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "mean_ret_spread_quantile",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 134,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(alpha_beta, mean_ret_quantile, mean_ret_spread_quantile)",
+      "symbol": "plot_returns_table"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(quantile_turnover, period=1, ax=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantile_turnover",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1,
+          "default_expression": "1",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "ax",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 646,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(quantile_turnover, period=1, ax=None)",
+      "symbol": "plot_top_bottom_quantile_turnover"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(autocorrelation_data, quantile_turnover)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "autocorrelation_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantile_turnover",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 152,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(autocorrelation_data, quantile_turnover)",
+      "symbol": "plot_turnover_table"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(context='notebook', font_scale=1.5, rc=None)",
+      "kind": "function",
+      "module": "plotting",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": "notebook",
+          "default_expression": "'notebook'",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "context",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 1.5,
+          "default_expression": "1.5",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "font_scale",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rc",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 51,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15",
+      "source_signature": "(context='notebook', font_scale=1.5, rc=None)",
+      "symbol": "plotting_context"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "constructor-signature",
+          "case_id": "constructor",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(rows, cols)",
+      "kind": "class",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "self",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rows",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cols",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 26,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(self, rows, cols)",
+      "symbol": "GridFigure"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, returns, avgretplot=(5, 15), long_short=True, group_neutral=False, std_bar=True, by_group=False)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": [
+            5,
+            15
+          ],
+          "default_expression": "(5, 15)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "avgretplot",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "std_bar",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 538,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, returns, avgretplot=(5, 15), long_short=True, group_neutral=False, std_bar=True, by_group=False)",
+      "symbol": "create_event_returns_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, returns, avgretplot=(5, 15), rate_of_ret=True, n_bars=50)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": [
+            5,
+            15
+          ],
+          "default_expression": "(5, 15)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "avgretplot",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "rate_of_ret",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 50,
+          "default_expression": "50",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "n_bars",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 644,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, returns, avgretplot=(5, 15), rate_of_ret=True, n_bars=50)",
+      "symbol": "create_event_study_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, long_short=True, group_neutral=False, by_group=False)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 498,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, long_short=True, group_neutral=False, by_group=False)",
+      "symbol": "create_full_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, group_neutral=False, by_group=False)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 353,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, group_neutral=False, by_group=False)",
+      "symbol": "create_information_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, long_short=True, group_neutral=False, by_group=False)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 179,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, long_short=True, group_neutral=False, by_group=False)",
+      "symbol": "create_returns_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, long_short=True, group_neutral=False)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "long_short",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "group_neutral",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 62,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, long_short=True, group_neutral=False)",
+      "symbol": "create_summary_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-true",
+          "hidden_kwargs": {
+            "set_context": true
+          }
+        },
+        {
+          "binding": "source-signature-plus-hidden-keyword",
+          "case_id": "customize-set-context-false",
+          "hidden_kwargs": {
+            "set_context": false
+          }
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "plotting.customize",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, turnover_periods=None)",
+      "kind": "function",
+      "module": "tears",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "turnover_periods",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 415,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05",
+      "source_signature": "(factor_data, turnover_periods=None)",
+      "symbol": "create_turnover_tear_sheet"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "constructor-signature",
+          "case_id": "constructor",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": null,
+      "kind": "class",
+      "module": "utils",
+      "needs_dynamic_review": true,
+      "parameters": [],
+      "source_line": 30,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": null,
+      "symbol": "MaxLossExceededError"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "constructor-signature",
+          "case_id": "constructor",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": null,
+      "kind": "class",
+      "module": "utils",
+      "needs_dynamic_review": true,
+      "parameters": [],
+      "source_line": 26,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": null,
+      "symbol": "NonMatchingTimezoneError"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(input, timedelta, freq)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "input",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "timedelta",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "freq",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 973,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(input, timedelta, freq)",
+      "symbol": "add_custom_calendar_timedelta"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(series, N)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "series",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "N",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 351,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(series, N)",
+      "symbol": "backshift_returns_series"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor, prices, periods=(1, 5, 10), filter_zscore=None, cumulative_returns=True)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "prices",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": [
+            1,
+            5,
+            10
+          ],
+          "default_expression": "(1, 5, 10)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "periods",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "filter_zscore",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cumulative_returns",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 220,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor, prices, periods=(1, 5, 10), filter_zscore=None, cumulative_returns=True)",
+      "symbol": "compute_forward_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_data, grouper=None)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "grouper",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 384,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor_data, grouper=None)",
+      "symbol": "demean_forward_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(start, end, freq)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "start",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "end",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "freq",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 996,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(start, end, freq)",
+      "symbol": "diff_custom_calendar_timedeltas"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor, forward_returns, groupby=None, binning_by_group=False, quantiles=5, bins=None, groupby_labels=None, max_loss=0.35, zero_aware=False)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "forward_returns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groupby",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "binning_by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 5,
+          "default_expression": "5",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bins",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groupby_labels",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 0.35,
+          "default_expression": "0.35",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "max_loss",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "zero_aware",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 458,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor, forward_returns, groupby=None, binning_by_group=False, quantiles=5, bins=None, groupby_labels=None, max_loss=0.35, zero_aware=False)",
+      "symbol": "get_clean_factor"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor, prices, groupby=None, binning_by_group=False, quantiles=5, bins=None, periods=(1, 5, 10), filter_zscore=20, groupby_labels=None, max_loss=0.35, zero_aware=False, cumulative_returns=True)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "prices",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groupby",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "binning_by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 5,
+          "default_expression": "5",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bins",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": [
+            1,
+            5,
+            10
+          ],
+          "default_expression": "(1, 5, 10)",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "periods",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 20,
+          "default_expression": "20",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "filter_zscore",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "groupby_labels",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 0.35,
+          "default_expression": "0.35",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "max_loss",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "zero_aware",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": true,
+          "default_expression": "True",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "cumulative_returns",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 671,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor, prices, groupby=None, binning_by_group=False, quantiles=5, bins=None, periods=(1, 5, 10), filter_zscore=20, groupby_labels=None, max_loss=0.35, zero_aware=False, cumulative_returns=True)",
+      "symbol": "get_clean_factor_and_forward_returns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(columns, require_exact_day_multiple=False)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "columns",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "require_exact_day_multiple",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 903,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(columns, require_exact_day_multiple=False)",
+      "symbol": "get_forward_returns_columns"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(factor_idx, prices_idx)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_idx",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "prices_idx",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 177,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor_idx, prices_idx)",
+      "symbol": "infer_trading_calendar"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(func)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "func",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 49,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(func)",
+      "symbol": "non_unique_bin_edges_error"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(table, name=None, fmt=None)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "table",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "name",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "fmt",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 424,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(table, name=None, fmt=None)",
+      "symbol": "print_table"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": "non_unique_bin_edges_error",
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(*args, **kwargs)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "factor_data",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": 5,
+          "default_expression": "5",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "quantiles",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": "None",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "bins",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "by_group",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "no_raise",
+          "required": false,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": false,
+          "default_expression": "False",
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "zero_aware",
+          "required": false,
+          "resolved": true
+        }
+      ],
+      "source_line": 86,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(factor_data, quantiles=5, bins=None, by_group=False, no_raise=False, zero_aware=False)",
+      "symbol": "quantize_factor"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(period_ret, base_period)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period_ret",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "base_period",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 849,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(period_ret, base_period)",
+      "symbol": "rate_of_return"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(exception, additional_message)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "exception",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "additional_message",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 34,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(exception, additional_message)",
+      "symbol": "rethrow"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(period_std, base_period)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "period_std",
+          "required": true,
+          "resolved": true
+        },
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "base_period",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 877,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(period_std, base_period)",
+      "symbol": "std_conversion"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(sequence)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "sequence",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 956,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(sequence)",
+      "symbol": "timedelta_strings_to_integers"
+    },
+    {
+      "C0": "not-verified",
+      "C1": "not-verified",
+      "C2": "not-verified",
+      "C3": "not-verified",
+      "C4": "not-verified",
+      "accepted_call_cases": [
+        {
+          "binding": "source-signature",
+          "case_id": "source-visible",
+          "hidden_kwargs": {}
+        }
+      ],
+      "compatibility": {
+        "C0": "not-verified",
+        "C1": "not-verified",
+        "C2": "not-verified",
+        "C3": "not-verified",
+        "C4": "not-verified"
+      },
+      "decorator": null,
+      "extraction": "static_ast_from_pinned_git_blob",
+      "introspection_signature": "(timedelta)",
+      "kind": "function",
+      "module": "utils",
+      "needs_dynamic_review": false,
+      "parameters": [
+        {
+          "annotation": null,
+          "default": null,
+          "default_expression": null,
+          "kind": "POSITIONAL_OR_KEYWORD",
+          "name": "timedelta",
+          "required": true,
+          "resolved": true
+        }
+      ],
+      "source_line": 923,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871",
+      "source_signature": "(timedelta)",
+      "symbol": "timedelta_to_string"
+    }
+  ],
+  "evidence_files": [
+    {
+      "git_blob": "ec3106b24f702103fb3a11aee97746d4f4ac8a15",
+      "path": "LICENSE",
+      "sha256": "c880f680840331b0c9b2b8968cd08faf26914b6efcd1a7a4afaba105248718d6"
+    },
+    {
+      "git_blob": "6f747c6bcc1092423b603f487801fcd016b2a7b2",
+      "path": "README.md",
+      "sha256": "397ec98f88157234e6a425b21657f74db711e4ee6aa246d11bed9d21665ac621"
+    },
+    {
+      "git_blob": "de40f3e5352e38aee4ae2c87703fd3e664e18b19",
+      "path": "setup.py",
+      "sha256": "9a0192f4d1189524f568fd1d0a076e5c77cdd0b6bf12621724f76095bc0a0a81"
+    },
+    {
+      "git_blob": "2ed997633233991021d5ee99d22a32d4c67e89d1",
+      "path": "alphalens/_version.py",
+      "sha256": "485407a5fb66fd94a9e8e4ff6a86c7c3346182b484ce16cdca11b931af1cf0dc"
+    }
+  ],
+  "evidence_key": "cf8153ccaa01933c2c69c90fb1a392d3becfa494918cab205687570ff4d021d3",
+  "fixture_source": {
+    "generator": "scripts/generate_compat_manifest.py",
+    "mode": "static_ast_from_pinned_git_blob",
+    "root": "external Git object database supplied with --alphalens-root"
+  },
+  "identity": {
+    "kind": "pinned-git-commit",
+    "value": "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
+  },
+  "modules": {
+    "performance": {
+      "classes": 0,
+      "functions": 16,
+      "source_path": "alphalens/performance.py",
+      "source_sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"
+    },
+    "plotting": {
+      "classes": 0,
+      "functions": 21,
+      "source_path": "alphalens/plotting.py",
+      "source_sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"
+    },
+    "tears": {
+      "classes": 1,
+      "functions": 7,
+      "source_path": "alphalens/tears.py",
+      "source_sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"
+    },
+    "utils": {
+      "classes": 2,
+      "functions": 17,
+      "source_path": "alphalens/utils.py",
+      "source_sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"
+    }
+  },
+  "oracle_verification": {
+    "evidence_key": "cf8153ccaa01933c2c69c90fb1a392d3becfa494918cab205687570ff4d021d3",
+    "reviewed": false,
+    "status": "not-run"
+  },
+  "profile": "cloudquant-local-3fa17ad",
+  "project": "alphalens",
+  "provenance_review": {
+    "status": "human/license review pending"
+  },
+  "reported_version_evidence": {
+    "setup_fallback": {
+      "ast_location": "get_version static fallback return",
+      "git_blob": "de40f3e5352e38aee4ae2c87703fd3e664e18b19",
+      "path": "setup.py",
+      "sha256": "9a0192f4d1189524f568fd1d0a076e5c77cdd0b6bf12621724f76095bc0a0a81"
+    },
+    "versioneer": {
+      "ast_location": "get_keywords git_refnames tag",
+      "git_blob": "2ed997633233991021d5ee99d22a32d4c67e89d1",
+      "path": "alphalens/_version.py",
+      "sha256": "485407a5fb66fd94a9e8e4ff6a86c7c3346182b484ce16cdca11b931af1cf0dc"
+    }
+  },
+  "reported_versions": {
+    "setup_fallback": "1.0.0+dev",
+    "versioneer": "0.4.0"
+  },
+  "schema_version": 1,
+  "source_files": [
+    {
+      "git_blob": "339757d6d8027b680e89d3dc180e297ce38dd16d",
+      "path": "alphalens/__init__.py",
+      "sha256": "4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07"
+    },
+    {
+      "git_blob": "048b72a25ea891060f924ae03c52dc94f94687a2",
+      "path": "alphalens/performance.py",
+      "sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"
+    },
+    {
+      "git_blob": "85e8f312848a1cca6e07808f2d433d0c116364c4",
+      "path": "alphalens/plotting.py",
+      "sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"
+    },
+    {
+      "git_blob": "01664911c254f100ff272dd4a277dc2d1ba32753",
+      "path": "alphalens/tears.py",
+      "sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"
+    },
+    {
+      "git_blob": "8aca231a6b1c40764c9dae5f2e8ad9d22839b6dc",
+      "path": "alphalens/utils.py",
+      "sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"
+    }
+  ],
+  "tear_sheets": [
+    "create_event_returns_tear_sheet",
+    "create_event_study_tear_sheet",
+    "create_full_tear_sheet",
+    "create_information_tear_sheet",
+    "create_returns_tear_sheet",
+    "create_summary_tear_sheet",
+    "create_turnover_tear_sheet"
+  ],
+  "version_ambiguity": {
+    "authoritative_identity": "commit",
+    "reason": "The pinned commit is authoritative; Versioneer's embedded tag and setup.py fallback are frozen source facts, not a release identity.",
+    "status": "ambiguous-version-strings"
+  }
+}

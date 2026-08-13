@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import importlib.util
 import inspect
 import json
@@ -12,7 +13,17 @@ from typing import Any
 import pytest
 
 FIXTURES = Path(__file__).parent / "fixtures"
-GENERATOR = Path(__file__).parents[2] / "scripts" / "generate_compat_manifest.py"
+ROOT = Path(__file__).parents[2]
+GENERATOR = ROOT / "scripts" / "generate_compat_manifest.py"
+ALPHALENS_ROOT = ROOT.parent / "alphalens"
+_EXISTING_FIXTURES = (
+    "empyrical-0.6.0-api.json",
+    "fincore-flat-api-migrations.json",
+    "pyfolio-0.9.6-api.json",
+    "pyfolio-0.9.6-portfolio-contracts.json",
+)
+ALPHALENS_COMMIT = "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
+ALPHALENS_PROFILE = "cloudquant-local-3fa17ad"
 FACTOR_PARTITIONS = {
     "style": ["momentum", "size", "value", "reversal_short_term", "volatility"],
     "sector": [
@@ -72,6 +83,308 @@ def _assert_reconstructable_signature(signature: str) -> None:
     assert str(inspect.signature(namespace["_f"])) == signature
 
 
+def test_alphalens_manifest_is_pinned_and_complete() -> None:
+    data = _load("alphalens-0.4.0-cloudquant-api.json")
+    assert data["profile"] == ALPHALENS_PROFILE
+    assert data["commit"] == ALPHALENS_COMMIT
+    assert data["reported_versions"] == {
+        "setup_fallback": "1.0.0+dev",
+        "versioneer": "0.4.0",
+    }
+    assert data["counts"] == {"classes": 3, "definitions": 64, "functions": 61}
+    assert set(data["modules"]) == {"performance", "plotting", "tears", "utils"}
+    assert {entry["path"] for entry in data["source_files"]} == {
+        "alphalens/__init__.py",
+        "alphalens/performance.py",
+        "alphalens/plotting.py",
+        "alphalens/tears.py",
+        "alphalens/utils.py",
+    }
+    assert {entry["path"] for entry in data["evidence_files"]} == {
+        "LICENSE",
+        "README.md",
+        "alphalens/_version.py",
+        "setup.py",
+    }
+    _assert_portable_provenance(data)
+    for file_entry in [*data["source_files"], *data["evidence_files"]]:
+        assert len(file_entry["git_blob"]) == 40
+        assert len(file_entry["sha256"]) == 64
+
+    entries = data["entries"]
+    assert len(entries) == 64
+    assert len({(entry["module"], entry["symbol"]) for entry in entries}) == 64
+    source_hashes = {entry["path"]: entry["sha256"] for entry in data["source_files"]}
+    for entry in entries:
+        assert {
+            "module",
+            "symbol",
+            "kind",
+            "source_signature",
+            "introspection_signature",
+            "accepted_call_cases",
+            "source_line",
+            "source_sha256",
+            "C0",
+            "C1",
+            "C2",
+            "C3",
+            "C4",
+        } <= set(entry)
+        assert entry["module"] in data["modules"]
+        assert entry["source_sha256"] == source_hashes[f"alphalens/{entry['module']}.py"]
+        assert isinstance(entry["accepted_call_cases"], list)
+        assert entry["C0"] == "not-verified"
+        assert entry["C1"] == "not-verified"
+        assert entry["C2"] == "not-verified"
+        assert entry["C3"] == "not-verified"
+        assert entry["C4"] == "not-verified"
+
+
+def test_alphalens_manifest_freezes_wrapper_signatures_and_tear_sheet_grammar() -> None:
+    data = _load("alphalens-0.4.0-cloudquant-api.json")
+    entries = {(entry["module"], entry["symbol"]): entry for entry in data["entries"]}
+    quantize_factor = entries[("utils", "quantize_factor")]
+    assert quantize_factor["source_signature"] == (
+        "(factor_data, quantiles=5, bins=None, by_group=False, no_raise=False, zero_aware=False)"
+    )
+    assert quantize_factor["introspection_signature"] == "(*args, **kwargs)"
+    assert quantize_factor["decorator"] == "non_unique_bin_edges_error"
+
+    expected_tear_sheets = {
+        "create_summary_tear_sheet",
+        "create_returns_tear_sheet",
+        "create_information_tear_sheet",
+        "create_turnover_tear_sheet",
+        "create_full_tear_sheet",
+        "create_event_returns_tear_sheet",
+        "create_event_study_tear_sheet",
+    }
+    assert set(data["tear_sheets"]) == expected_tear_sheets
+    for symbol in expected_tear_sheets:
+        entry = entries[("tears", symbol)]
+        assert entry["decorator"] == "plotting.customize"
+        assert entry["source_signature"] == entry["introspection_signature"]
+        cases = {case["case_id"]: case for case in entry["accepted_call_cases"]}
+        assert {"source-visible", "customize-set-context-true", "customize-set-context-false"} <= set(cases)
+        assert cases["customize-set-context-true"]["hidden_kwargs"] == {"set_context": True}
+        assert cases["customize-set-context-false"]["hidden_kwargs"] == {"set_context": False}
+
+
+def test_alphalens_dynamic_defaults_do_not_claim_a_runtime_introspection_signature() -> None:
+    data = _load("alphalens-0.4.0-cloudquant-api.json")
+    entry = next(item for item in data["entries"] if item["module"] == "plotting" and item["symbol"] == "plot_ic_qq")
+    assert entry["source_signature"] == "(ic, theoretical_dist=stats.norm, ax=None)"
+    assert entry["needs_dynamic_review"] is True
+    assert entry["introspection_signature"] is None
+
+
+def test_alphalens_case_fixture_is_portable_and_unreviewed() -> None:
+    data = _load("alphalens-0.4.0-cloudquant-cases.json")
+    assert data["profile"] == ALPHALENS_PROFILE
+    assert data["commit"] == ALPHALENS_COMMIT
+    assert data["oracle_verification"] == {
+        "reviewed": False,
+        "status": "not-run",
+    }
+    expected_categories = {
+        "daily",
+        "business-day",
+        "intraday",
+        "tz-aware",
+        "ties-nan-zero",
+        "group-neutral",
+        "bins-quantiles",
+        "max-loss-boundary",
+        "pre-cleaned-performance",
+        "event-window",
+        "pyfolio-input",
+    }
+    assert expected_categories <= {case["category"] for case in data["cases"]}
+    assert len({case["case_id"] for case in data["cases"]}) == len(data["cases"])
+    assert all(case["serializer"] == "fincore-compat-json-table-v1" for case in data["cases"])
+    assert all("expected_output" not in case for case in data["cases"])
+    _assert_portable_provenance(data)
+
+
+def test_alphalens_oracle_metadata_is_truthful_unreviewed_observation() -> None:
+    environment_path = Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json"
+    environment = json.loads(environment_path.read_text(encoding="utf-8"))
+    explicit_lock = environment_path.with_name("alphalens-0.4.0-cloudquant-conda-explicit.txt")
+    requirements = environment_path.with_name("requirements-alphalens-0.4.0-cloudquant.txt")
+    assert environment["profile"] == ALPHALENS_PROFILE
+    assert environment["source"]["commit"] == ALPHALENS_COMMIT
+    assert environment["oracle_verification"] == {
+        "reviewed": False,
+        "status": "not-run",
+    }
+    assert environment["execution_status"] == "unreviewed-current-base-observation"
+    assert environment["explicit_lock"]["sha256"] == hashlib.sha256(explicit_lock.read_bytes()).hexdigest()
+    assert environment["requirements"]["sha256"] == hashlib.sha256(requirements.read_bytes()).hexdigest()
+    assert "@EXPLICIT" in explicit_lock.read_text(encoding="utf-8")
+    assert all(
+        line.startswith("#") or line == "@EXPLICIT" or not line.strip()
+        for line in requirements.read_text(encoding="utf-8").splitlines()
+    )
+    assert "/Users/" not in json.dumps(environment, sort_keys=True)
+    _assert_portable_provenance({"source_files": environment["source"]["source_files"]})
+
+
+def test_alphalens_generation_does_not_rewrite_existing_manifests(tmp_path: Path) -> None:
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    pinned = {name: (FIXTURES / name).read_bytes() for name in _EXISTING_FIXTURES}
+    command = [
+        sys.executable,
+        GENERATOR.as_posix(),
+        "--alphalens-root",
+        ALPHALENS_ROOT.as_posix(),
+        "--target",
+        "alphalens",
+        "--output",
+        tmp_path.as_posix(),
+    ]
+    subprocess.run(command, check=True)
+    assert {name: (FIXTURES / name).read_bytes() for name in _EXISTING_FIXTURES} == pinned
+    generated = tmp_path / "alphalens-0.4.0-cloudquant-api.json"
+    assert generated.read_bytes()
+    first = generated.read_bytes()
+    subprocess.run(command, check=True)
+    assert generated.read_bytes() == first
+    assert generated.read_bytes() == (FIXTURES / generated.name).read_bytes()
+
+
+def test_alphalens_manifest_hashes_are_read_from_pinned_git_blobs() -> None:
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    data = _load("alphalens-0.4.0-cloudquant-api.json")
+    generator = _load_generator()
+    source = generator.PinnedGitSource(ALPHALENS_ROOT, ALPHALENS_COMMIT)
+    for entry in [*data["source_files"], *data["evidence_files"]]:
+        assert source.sha256(entry["path"]) == entry["sha256"]
+        assert source.blob_id(entry["path"]) == entry["git_blob"]
+
+
+def test_alphalens_oracle_refuses_unreviewed_environment_without_writing_output(tmp_path: Path) -> None:
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    output = tmp_path / "candidate.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            (ROOT / "scripts" / "generate_alphalens_oracle.py").as_posix(),
+            "--source",
+            ALPHALENS_ROOT.as_posix(),
+            "--commit",
+            ALPHALENS_COMMIT,
+            "--environment",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json").as_posix(),
+            "--explicit-lock",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-conda-explicit.txt").as_posix(),
+            "--cases",
+            (FIXTURES / "alphalens-0.4.0-cloudquant-cases.json").as_posix(),
+            "--output",
+            output.as_posix(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "unreviewed" in f"{result.stdout}\n{result.stderr}".lower()
+    assert not output.exists()
+
+
+def test_alphalens_oracle_rejects_a_dirty_pinned_checkout_without_writing_output(tmp_path: Path) -> None:
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    source = tmp_path / "alphalens"
+    subprocess.run(["git", "clone", "--quiet", ALPHALENS_ROOT.as_posix(), source.as_posix()], check=True)
+    subprocess.run(["git", "checkout", "--quiet", ALPHALENS_COMMIT], cwd=source, check=True)
+    (source / "untracked-oracle-marker").write_text("dirty\n", encoding="utf-8")
+    output = tmp_path / "candidate.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            (ROOT / "scripts" / "generate_alphalens_oracle.py").as_posix(),
+            "--source",
+            source.as_posix(),
+            "--commit",
+            ALPHALENS_COMMIT,
+            "--environment",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json").as_posix(),
+            "--explicit-lock",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-conda-explicit.txt").as_posix(),
+            "--cases",
+            (FIXTURES / "alphalens-0.4.0-cloudquant-cases.json").as_posix(),
+            "--output",
+            output.as_posix(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "dirty" in f"{result.stdout}\n{result.stderr}".lower()
+    assert not output.exists()
+
+
+def test_alphalens_oracle_refuses_to_write_inside_the_source_checkout() -> None:
+    if not ALPHALENS_ROOT.is_dir():
+        pytest.skip("pinned Alphalens sibling root is not available; frozen fixture remains CI input")
+    output = ALPHALENS_ROOT / "oracle-candidate-must-not-exist.json"
+    assert not output.exists()
+    result = subprocess.run(
+        [
+            sys.executable,
+            (ROOT / "scripts" / "generate_alphalens_oracle.py").as_posix(),
+            "--source",
+            ALPHALENS_ROOT.as_posix(),
+            "--commit",
+            ALPHALENS_COMMIT,
+            "--environment",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json").as_posix(),
+            "--explicit-lock",
+            (Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-conda-explicit.txt").as_posix(),
+            "--cases",
+            (FIXTURES / "alphalens-0.4.0-cloudquant-cases.json").as_posix(),
+            "--output",
+            output.as_posix(),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "source checkout" in f"{result.stdout}\n{result.stderr}".lower()
+    assert not output.exists()
+
+
+def test_alphalens_oracle_review_is_preserved_only_for_identical_evidence() -> None:
+    generator = _load_generator()
+    generated = {
+        "commit": "a" * 40,
+        "source_files": [{"path": "alphalens/utils.py", "sha256": "1" * 64}],
+        "evidence_files": [{"path": "LICENSE", "sha256": "2" * 64}],
+        "reported_versions": {"versioneer": "0.4.0", "setup_fallback": "1.0.0+dev"},
+        "entries": [{"module": "utils", "symbol": "quantize_factor", "source_sha256": "1" * 64}],
+        "oracle_verification": {"status": "not-run", "reviewed": False},
+    }
+    first = generator._merge_alphalens_oracle_attestation(generated, None)
+    reviewed = json.loads(json.dumps(first))
+    reviewed["oracle_verification"] = {
+        "candidate_digest": "3" * 64,
+        "evidence_key": first["oracle_verification"]["evidence_key"],
+        "reviewed": True,
+        "status": "captured-reviewed",
+    }
+    preserved = generator._merge_alphalens_oracle_attestation(generated, reviewed)
+    assert preserved["oracle_verification"] == reviewed["oracle_verification"]
+
+    drifted = json.loads(json.dumps(generated))
+    drifted["source_files"][0]["sha256"] = "4" * 64
+    invalidated = generator._merge_alphalens_oracle_attestation(drifted, reviewed)
+    assert invalidated["oracle_verification"]["reviewed"] is False
+    assert invalidated["oracle_verification"]["status"] == "not-run"
+
+
 def test_empyrical_manifest_is_pinned_and_complete() -> None:
     data = _load("empyrical-0.6.0-api.json")
     assert data["version"] == "0.6.0"
@@ -99,7 +412,7 @@ def test_empyrical_manifest_includes_pinned_utils_blob() -> None:
     expected_hash = "aff1a9d686b576ad971e7985b22a24f0460100a90e4cb2ab6c7b7f8ca6dc76d9"
     assert source_hashes["utils.py"] == expected_hash
 
-    empyrical_root = Path(__file__).parents[4] / "empyrical"
+    empyrical_root = ROOT.parent / "empyrical"
     if empyrical_root.is_dir():
         generator = _load_generator()
         pinned = generator.PinnedGitSource(empyrical_root, data["commit"])
@@ -469,7 +782,7 @@ def test_oracle_rejects_same_named_installed_package_outside_pin(tmp_path: Path)
 def test_full_generator_is_byte_idempotent_when_pinned_roots_are_available(
     tmp_path: Path,
 ) -> None:
-    project_root = Path(__file__).parents[4]
+    project_root = Path(__file__).parents[3]
     empyrical_root = project_root / "empyrical"
     pyfolio_root = project_root / "pyfolio"
     if not (empyrical_root.is_dir() and pyfolio_root.is_dir()):

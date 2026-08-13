@@ -1,0 +1,12 @@
+# This file intentionally contains no installable requirements yet.
+#
+# The corresponding Conda explicit file records every Conda package URL/build
+# observed in the current base environment. That observation contains local
+# PyPI-installed distributions (including alphalens and empyrical) for which
+# this checkout has no reviewed wheel hashes. Emitting unhashed requirements
+# would look reproducible while violating pip --require-hashes semantics.
+#
+# Do not run `pip install -r` against this file as an oracle setup step. A
+# future reviewed oracle must replace this comment-only placeholder with every
+# pip-only requirement pinned by version and all acceptable --hash=sha256:...
+# values, then update the environment metadata and pass the oracle gate.
