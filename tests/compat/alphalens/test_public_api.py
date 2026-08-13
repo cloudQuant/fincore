@@ -297,6 +297,47 @@ def test_shared_fixture_table_rejects_malformed_nonfinite_metadata(mutate: Any) 
         fixture_contract.deserialize_factor_fixture_table(payload)
 
 
+def test_shared_fixture_table_rejects_nonfinite_tag_coerced_to_string_series() -> None:
+    """A signed-infinity tag cannot silently become a string extension scalar."""
+
+    payload = deepcopy(fixture_contract.serialize_factor_fixture_table(pd.Series(["finite", "text"], dtype="string")))
+    payload["data"]["values"][0] = None
+    payload["data"]["nonfinite"][0] = "positive_infinity"
+
+    with pytest.raises(ValueError, match="nonfinite.*numeric"):
+        fixture_contract.deserialize_factor_fixture_table(payload)
+
+
+def test_shared_fixture_table_rejects_nonfinite_tag_coerced_to_string_dataframe() -> None:
+    """Matrix restoration applies the same signed-infinity dtype validation."""
+
+    payload = deepcopy(
+        fixture_contract.serialize_factor_fixture_table(
+            pd.DataFrame({"label": pd.Series(["finite", "text"], dtype="string")})
+        )
+    )
+    payload["data"]["values"][0][0] = None
+    payload["data"]["nonfinite"][0][0] = "negative_infinity"
+
+    with pytest.raises(ValueError, match="nonfinite.*numeric"):
+        fixture_contract.deserialize_factor_fixture_table(payload)
+
+
+def test_shared_fixture_table_rejects_nonfinite_tag_coerced_to_string_index() -> None:
+    """Index reconstruction rejects a tag that a string dtype would rewrite."""
+
+    payload = deepcopy(
+        fixture_contract.serialize_factor_fixture_table(
+            pd.Series([1.0, 2.0], index=pd.Index(["first", "second"], dtype="string", name="labels"))
+        )
+    )
+    payload["index"]["values"][0] = None
+    payload["index"]["nonfinite"][0] = "positive_infinity"
+
+    with pytest.raises(ValueError, match="nonfinite.*numeric"):
+        fixture_contract.deserialize_factor_fixture_table(payload)
+
+
 def test_enhanced_fixture_conftest_reexports_portable_table_helpers(raw_factor: pd.Series) -> None:
     """Future enhanced tests consume the exact same portable fixture contract."""
 

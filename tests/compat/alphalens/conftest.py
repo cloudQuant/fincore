@@ -6,6 +6,7 @@ import json
 import math
 from collections.abc import Mapping
 from functools import lru_cache
+from numbers import Real
 from pathlib import Path
 from typing import Any
 
@@ -331,7 +332,9 @@ def _deserialize_index(payload: object) -> pd.Index:
             _restore_scalar(value, is_missing, tag)
             for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
         ]
-        return pd.Index(restored_values, dtype=dtype, name=name)
+        index = pd.Index(restored_values, dtype=dtype, name=name)
+        _validate_restored_nonfinite_slots(index, nonfinite, f"fixture table index dtype {dtype!r}")
+        return index
     raise ValueError(f"unsupported fixture table index kind {kind!r}")
 
 
@@ -347,6 +350,29 @@ def _restore_scalar(value: Any, is_missing: bool, nonfinite: str | None) -> Any:
     return value
 
 
+def _validate_restored_nonfinite_slots(restored_values: Any, nonfinite: list[str | None], context: str) -> None:
+    """Reject a tag whose target dtype rewrote it to a non-numeric value."""
+
+    if len(restored_values) != len(nonfinite):
+        raise ValueError(f"fixture table nonfinite metadata does not align with {context}")
+    for ordinal, tag in enumerate(nonfinite):
+        if tag is None:
+            continue
+        restored = restored_values[ordinal]
+        if isinstance(restored, np.generic):
+            restored = restored.item()
+        if isinstance(restored, (bool, np.bool_)) or not isinstance(restored, Real):
+            raise ValueError(f"fixture table nonfinite tag at {context}[{ordinal}] must restore to a numeric infinity")
+        restored_float = float(restored)
+        has_expected_sign = (tag == "positive_infinity" and restored_float > 0) or (
+            tag == "negative_infinity" and restored_float < 0
+        )
+        if not math.isinf(restored_float) or not has_expected_sign:
+            raise ValueError(
+                f"fixture table nonfinite tag at {context}[{ordinal}] must restore to matching signed numeric infinity"
+            )
+
+
 def _restore_array(values: list[Any], nan_mask: list[bool], nonfinite: list[str | None], dtype: str) -> Any:
     """Rebuild one typed data vector while retaining portable missing-value semantics."""
 
@@ -355,15 +381,17 @@ def _restore_array(values: list[Any], nan_mask: list[bool], nonfinite: list[str 
         for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
     ]
     try:
-        return pd.array(restored_values, dtype=dtype)
+        restored_array = pd.array(restored_values, dtype=dtype)
     except (TypeError, ValueError):
-        return pd.array(
+        restored_array = pd.array(
             [
                 pd.NA if is_missing else _restore_scalar(value, False, tag)
                 for value, is_missing, tag in zip(values, nan_mask, nonfinite, strict=True)
             ],
             dtype=dtype,
         )
+    _validate_restored_nonfinite_slots(restored_array, nonfinite, f"fixture table dtype {dtype!r}")
+    return restored_array
 
 
 def deserialize_factor_fixture_table(payload: object) -> pd.Series | pd.DataFrame:
