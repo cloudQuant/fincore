@@ -13,7 +13,8 @@ authors = [
     {name = "cloudQuant", email = "yunjinqi@gmail.com"},
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    # Beta until the compatibility gates (empyrical/pyfolio manifests) pass.
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
@@ -34,40 +35,42 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Functional extras — one per installable capability.
+pyfolio = ["matplotlib>=3.3", "seaborn>=0.11", "ipython>=7"]
+interactive = ["plotly>=5", "bokeh>=3"]
+report-pdf = ["playwright>=1.40", "PyPDF2>=3"]
+report-xlsx = ["openpyxl>=3"]
+bayesian = ["pymc>=5"]
+data-yahoo = ["yfinance>=0.2"]
+data-alphavantage = ["requests>=2.31"]
+data-pandas-datareader = ["pandas-datareader>=0.8"]
+data-cn = ["tushare>=1", "akshare>=1"]
+
+# 0.3.x compatibility aliases: keep for at least one documented minor cycle.
+datareader = ["pandas-datareader>=0.8"]
 viz = [
-    "matplotlib>=3.3",
-    "seaborn>=0.11",
-    "ipython>=7.0",
-    "PyPDF2>=3.0",
-    "bokeh>=3.0",
-    "plotly>=5.0",
+  "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7",
+  "PyPDF2>=3", "bokeh>=3", "plotly>=5",
 ]
-bayesian = ["pymc>=5.0"]
-datareader = ["pandas-datareader>=0.8.0"]
+
+# Preserve the existing contributor installation contract.
 dev = [
-    "pytest>=6.0",
-    "pytest-xdist>=2.0",
-    "pytest-cov>=2.10",
-    "pytest-benchmark>=3.2",
-    "pytest-sugar>=0.9",
-    "parameterized>=0.7",
-    "ruff>=0.4.0",
-    "mypy>=1.5",
-    "types-requests>=2.25",
-    "yfinance>=0.2",
-    "requests>=2.25",
-    # Viz deps for pyfolio, tearsheets, report tests (also in viz extra)
-    "matplotlib>=3.3",
-    "seaborn>=0.11",
-    "PyPDF2>=3.0",
-    "bokeh>=3.0",
-    "plotly>=5.0",
-    "playwright>=1.40",
-    "openpyxl>=3.0",
-    "pre-commit>=3.0",
-    "bandit[toml]>=1.7",
+  "pytest>=6", "pytest-xdist>=2", "pytest-cov>=2.10",
+  "pytest-benchmark>=3.2", "pytest-sugar>=0.9", "parameterized>=0.7",
+  "ruff>=0.4", "mypy>=1.5", "types-requests>=2.25",
+  "yfinance>=0.2", "requests>=2.25",
+  "matplotlib>=3.3", "seaborn>=0.11", "PyPDF2>=3",
+  "bokeh>=3", "plotly>=5", "playwright>=1.40", "openpyxl>=3",
+  "pre-commit>=3", "bandit[toml]>=1.7",
 ]
-all = ["fincore[viz,bayesian,datareader]"]
+
+# Exact normalized union of functional extras above; excludes dev and aliases.
+all = [
+  "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7",
+  "plotly>=5", "bokeh>=3", "playwright>=1.40", "PyPDF2>=3",
+  "openpyxl>=3", "pymc>=5", "yfinance>=0.2", "requests>=2.31",
+  "pandas-datareader>=0.8", "tushare>=1", "akshare>=1",
+]
 
 [project.urls]
 Homepage = "https://github.com/cloudQuant/fincore"

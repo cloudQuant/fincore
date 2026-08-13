@@ -12,6 +12,11 @@ env/
 build/
 develop-eggs/
 dist/
+# Release artifacts must never be committed: build into /tmp (e.g.
+# /tmp/fincore-dist) or CI temp dirs.  Anchored root entries as a guard.
+/dist/
+/build/
+/fincore.egg-info/
 downloads/
 eggs/
 .eggs/

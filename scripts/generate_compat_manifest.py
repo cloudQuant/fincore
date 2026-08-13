@@ -917,6 +917,13 @@ def _require_head(source: PinnedGitSource, expected: str, project: str) -> None:
 
 def _generate_flat_migrations(repo_root: Path) -> dict[str, Any]:
     init_path = repo_root / "fincore" / "__init__.py"
+    # fincore.__version__ is resolved at runtime (importlib.metadata with a
+    # pyproject.toml fallback), so the version fact comes from the single
+    # metadata source instead of a static assignment.
+    import tomllib
+
+    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding="utf-8"))
+    fincore_version = str(pyproject["project"]["version"])
     tree = _read_ast(init_path.read_text(encoding="utf-8"), init_path.as_posix())
     entries = []
     for symbol, target in _literal_assignment(tree, "_FLAT_API").items():
@@ -935,7 +942,7 @@ def _generate_flat_migrations(repo_root: Path) -> dict[str, Any]:
         )
     return {
         "schema_version": 2,
-        "fincore_version": _literal_assignment(tree, "__version__"),
+        "fincore_version": fincore_version,
         "policy": "preserve-0.3.x-flat-api",
         "source": {"path": "fincore/__init__.py", "sha256": hashlib.sha256(init_path.read_bytes()).hexdigest()},
         "entries": entries,

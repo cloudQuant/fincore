@@ -2,18 +2,74 @@
 
 Lazy-loading facade: Empyrical, Pyfolio, analyze(), create_strategy_report(),
 and flat API functions (sharpe_ratio, max_drawdown, etc.) load on first access.
+
+``Pyfolio`` is intentionally excluded from ``__all__``: it requires the
+optional ``pyfolio`` extra, so star imports must stay core-only.  The
+explicit access ``from fincore import Pyfolio`` remains supported and raises
+:class:`~fincore.exceptions.DependencyError` naming
+``pip install fincore[pyfolio]`` when the extra is absent.
 """
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+from typing import Any, NoReturn
+
 from fincore._registry import METRIC_REGISTRY
 
-__version__ = "0.3.0"
+# ---------------------------------------------------------------------------
+# Single version source: pyproject.toml is authoritative.  Runtime resolution
+# prefers the installed distribution metadata (wheel/editable); bare source
+# checkouts fall back to reading pyproject.toml (tested).
+# ---------------------------------------------------------------------------
+
+
+def _version_from_pyproject() -> str:
+    """Return the source-tree version from pyproject.toml (single source)."""
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    if not pyproject.is_file():
+        raise RuntimeError(
+            "fincore is neither installed (no distribution metadata) nor a "
+            "checkout (no pyproject.toml next to the package); cannot resolve version"
+        )
+    with pyproject.open("rb") as fh:
+        data = tomllib.load(fh)
+    return str(data["project"]["version"])
+
+
+def _resolve_version() -> str:
+    """Resolve the runtime version from installed metadata with a source-tree fallback."""
+    import importlib.metadata as _md
+
+    try:
+        return _md.version("fincore")
+    except _md.PackageNotFoundError:
+        return _version_from_pyproject()
+
+
+__version__ = _resolve_version()
+
+#: Import roots whose absence means the ``pyfolio`` extra is missing.
+_PYFOLIO_EXTRA_ROOTS = frozenset({"matplotlib", "seaborn", "IPython"})
+
+
+def _raise_pyfolio_dependency_error(exc: ModuleNotFoundError) -> NoReturn:
+    """Convert a missing optional dependency into an actionable DependencyError."""
+    missing_root = (exc.name or "").split(".", 1)[0]
+    if missing_root not in _PYFOLIO_EXTRA_ROOTS:
+        raise exc
+    from fincore.exceptions import DependencyError
+
+    raise DependencyError(
+        "Pyfolio requires the optional 'pyfolio' extra. Install it with:\n    pip install fincore[pyfolio]",
+        dependency=missing_root or "pyfolio-extra",
+    ) from exc
+
 
 __all__ = [
-    # Core classes
+    # Core classes (Pyfolio excluded: it requires the optional pyfolio extra)
     "Empyrical",
-    "Pyfolio",
     "aggregate_returns",
     "alpha",
     "alpha_beta",
@@ -75,7 +131,7 @@ _FLAT_REGISTRY = {
 assert set(_FLAT_REGISTRY) == set(_FLAT_API)
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "empyrical":
         import importlib
 
@@ -88,8 +144,10 @@ def __getattr__(name: str):
         globals()["Empyrical"] = Empyrical
         return Empyrical
     if name == "Pyfolio":
-        from .pyfolio import Pyfolio
-
+        try:
+            from .pyfolio import Pyfolio
+        except ModuleNotFoundError as exc:
+            _raise_pyfolio_dependency_error(exc)
         globals()["Pyfolio"] = Pyfolio
         return Pyfolio
     if name == "analyze":

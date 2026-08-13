@@ -86,7 +86,12 @@ def _lazy_html(string: str) -> Any:
 
 # Looking up a dotted spec imports its parent package.  Probe the top-level
 # distribution so merely importing this utility module stays side-effect free.
-HAS_IPYTHON = importlib.util.find_spec("IPython") is not None
+# Meta-path hooks may raise ModuleNotFoundError from find_spec; treat that
+# exactly like an absent package (core-only installs).
+try:
+    HAS_IPYTHON = importlib.util.find_spec("IPython") is not None
+except ModuleNotFoundError:  # pragma: no cover
+    HAS_IPYTHON = False
 display: DisplayFunc = _lazy_display
 HTML: HTMLFunc = _lazy_html
 

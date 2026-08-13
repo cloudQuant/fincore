@@ -203,13 +203,28 @@ jobs:
           cache: 'pip'
 
       - name: Install build tools
-        run: pip install build twine
+        run: pip install build twine pytest
 
       - name: Build sdist and wheel
         run: python -m build
 
       - name: Check dist
         run: twine check dist/*
+
+      - name: Verify release consistency
+        run: python scripts/check_release_consistency.py --dist dist/
+
+      # Wheel-consumer smoke: pip --target installs the wheel (plus extras)
+      # into isolated targets and fresh ``-S -E`` subprocesses assert package
+      # provenance, star-import safety, and DependencyError gates.  The full
+      # profile matrix (incl. bayesian/report-pdf/all) runs in publish.yml;
+      # Playwright browser binaries + real PDF rendering are a separate
+      # two-stage job.
+      - name: Wheel consumer smoke (core, pyfolio)
+        run: python scripts/test_installed_wheel.py --dist dist/ --profiles core pyfolio
+
+      - name: Packaging contract tests
+        run: pytest -o addopts='' tests/packaging -q --maxfail=0
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4

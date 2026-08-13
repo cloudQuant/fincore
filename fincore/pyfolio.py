@@ -63,8 +63,12 @@ for (_surface, _public_name, _variant), _spec in WORKFLOW_REGISTRY.items():
 
 def __getattr__(name: str) -> Any:
     if name == "Pyfolio":
-        from fincore._pyfolio_impl import Pyfolio
+        try:
+            from fincore._pyfolio_impl import Pyfolio
+        except ModuleNotFoundError as exc:
+            from fincore import _raise_pyfolio_dependency_error
 
+            _raise_pyfolio_dependency_error(exc)
         globals()["Pyfolio"] = Pyfolio
         return Pyfolio
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
