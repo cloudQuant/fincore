@@ -127,12 +127,17 @@ The deferred target AST audit also rejects direct or dynamic imports of
 `alphalens` and the three upstream test modules, `sys.path` mutation, and
 absolute sibling-upstream/source-test paths. Dynamic coverage includes direct
 or aliased `builtins.__import__`/`__builtins__.__import__`, `importlib`,
-literal `getattr` access to those import APIs, and known `runpy`/`exec`/`eval`
-execution calls. It folds literal `Path`, `joinpath`, `os.path.join`, and
-string joins only when they are fed to one of those execution primitives. It
-therefore permits ordinary relative or fincore-local imports, including other
-repository test packages that are not one of the three pinned upstream source
-modules (`test_utils`, `test_performance`, and `test_tears`, with their
+literal `getattr` or `builtins.__dict__` access to those import APIs, and known
+`runpy`/`exec`/`eval` execution calls. For those known sinks only, it examines
+their positional first operand or the bounded named forms `name`, `mod_name`,
+`path_name`, or `source`. It resolves a literal relative
+`importlib.import_module` name only with a literal `package` context. It folds
+literal `Path`, no-argument `resolve()`/`absolute()`, `joinpath`,
+`os.path.join`, and string joins only when they are fed to one of those sinks.
+These are deliberately finite AST patterns, not a general dynamic-execution
+detector. They permit ordinary relative or fincore-local imports, including
+other repository test packages that are not one of the three pinned upstream
+source modules (`test_utils`, `test_performance`, and `test_tears`, with their
 `tests.*` aliases).
 
 Every Task 8 C4 invocation target must present all of these statically
@@ -154,13 +159,16 @@ auditable signals in its own test function:
 A bare `assert True` or numeric-only assertion cannot satisfy C4. Signals in
 statically unreachable code (`if False`, literal-false loop/conditional
 branches, after an unconditional return/raise, or after a literal-true loop
-whose body unconditionally returns/raises) do not count. When a helper or
-method exposes a concrete receiver/argument, the Figure/Axes, show/close, and
-ownership signals must bind to the same resource; global pyplot state is the
-limited recognized exception. This is a deliberately bounded AST rule, not a
-claim of full symbolic execution. The checker then requires the exact mapped
-nodeids, literal marker IDs, allowed provenance, the required target assertion
-contract, and all-attempt-passed results.
+whose body unconditionally returns/raises) do not count. It also excludes the
+unreached side of literal short-circuit Boolean expressions (`False and …`,
+`True or …`), empty literal `for` bodies, and code following a definitely
+nonempty literal `for` whose body unconditionally returns/raises. When a
+helper or method exposes a concrete receiver/argument, the Figure/Axes,
+show/close, and ownership signals must bind to the same resource; global pyplot
+state is the limited recognized exception. This is a deliberately bounded AST
+rule, not a claim of full symbolic execution. The checker then requires the
+exact mapped nodeids, literal marker IDs, allowed provenance, the required
+target assertion contract, and all-attempt-passed results.
 
 To reproduce the static inventory or its map audit locally, use:
 

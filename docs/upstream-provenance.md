@@ -77,7 +77,8 @@ migration map is intentionally a deferred handoff to future test tasks; it
 does not assert that a target suite has been copied, collected, executed, or
 approved. When those target tasks begin, the migration checker will reject
 direct or dynamic upstream/source-test imports, sibling-upstream absolute
-paths assembled for known `runpy`/builtins execution APIs, and `sys.path`
+paths assembled for a finite set of AST-visible `runpy`/builtins execution
+APIs (including bounded named first-operand forms), and `sys.path`
 mutation. These are bounded execution-provenance safeguards, not evidence of a
 legal review.
 

@@ -72,6 +72,12 @@ SOURCE_TEST_IDENTITIES = SOURCE_TEST_MODULES | frozenset(f"tests.{name}" for nam
 SYS_PATH_MUTATION_METHODS = frozenset({"append", "extend", "insert", "remove", "pop", "clear"})
 PATH_CONSTRUCTOR_NAMES = frozenset({"Path", "PurePath", "PurePosixPath", "PureWindowsPath"})
 PATH_READ_METHODS = frozenset({"read_bytes", "read_text"})
+EXECUTION_PRIMARY_KEYWORDS = {
+    "import": ("name",),
+    "module-execution": ("mod_name",),
+    "path-execution": ("path_name",),
+    "source-execution": ("source",),
+}
 C4_GLOBAL_RESOURCE = "<global-figure-state>"
 C4_FIGURE_HELPERS = frozenset(
     {
@@ -389,6 +395,21 @@ def _getattr_target(node: ast.AST, symbols: _ProvenanceSymbols) -> tuple[ast.AST
     return node.args[0], attribute
 
 
+def _builtins_dict_target(node: ast.AST, symbols: _ProvenanceSymbols) -> tuple[ast.AST, str] | None:
+    """Extract literal ``builtins.__dict__[name]`` lookups without evaluating mappings."""
+    if not (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "__dict__"
+        and _is_builtins_object(node.value.value, symbols)
+    ):
+        return None
+    attribute = _literal_string(node.slice)
+    if attribute is None:
+        return None
+    return node.value.value, attribute
+
+
 def _callable_kind(node: ast.AST, symbols: _ProvenanceSymbols) -> str | None:
     """Classify known import/execution callables, including direct aliases and literal getattr calls."""
     if isinstance(node, ast.Name):
@@ -404,9 +425,11 @@ def _callable_kind(node: ast.AST, symbols: _ProvenanceSymbols) -> str | None:
         attribute = node.attr
     else:
         getattr_target = _getattr_target(node, symbols)
-        if getattr_target is None:
+        dict_target = _builtins_dict_target(node, symbols)
+        target = getattr_target or dict_target
+        if target is None:
             return None
-        owner, attribute = getattr_target
+        owner, attribute = target
     if _is_builtins_object(owner, symbols):
         if attribute == "__import__":
             return "import"
@@ -484,9 +507,26 @@ def _provenance_symbols(tree: ast.Module) -> _ProvenanceSymbols:
 
 
 def _literal_string(node: ast.AST | None) -> str | None:
-    """Return a statically visible string literal, if one is present."""
+    """Return a literal-only string, including conservative literal concatenation."""
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = _literal_string(node.left)
+        right = _literal_string(node.right)
+        return left + right if left is not None and right is not None else None
+    if isinstance(node, ast.JoinedStr):
+        pieces: list[str] = []
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                pieces.append(value.value)
+            elif isinstance(value, ast.FormattedValue):
+                formatted = _literal_string(value.value)
+                if formatted is None:
+                    return None
+                pieces.append(formatted)
+            else:
+                return None
+        return "".join(pieces)
     return None
 
 
@@ -570,6 +610,13 @@ def _static_path_value(
             assert value is not None
             result = _join_static_path(result, value)
         return result
+    if (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr in {"resolve", "absolute"}
+        and not node.args
+        and not node.keywords
+    ):
+        return _static_path_value(node.func.value, bindings, symbols, seen)
     if isinstance(node.func, ast.Attribute) and node.func.attr == "joinpath":
         result = _static_path_value(node.func.value, bindings, symbols, seen)
         values = [_static_path_value(argument, bindings, symbols, seen) for argument in node.args]
@@ -666,19 +713,67 @@ def _source_path_from_expression(
     return None
 
 
+def _keyword_value(call: ast.Call, names: tuple[str, ...]) -> ast.AST | None:
+    """Return one explicitly named AST argument without expanding dynamic ``**kwargs``."""
+    for keyword in call.keywords:
+        if keyword.arg in names:
+            return keyword.value
+    return None
+
+
+def _execution_primary_operand(call: ast.Call, kind: str) -> ast.AST | None:
+    """Read a known execution sink's first operand from position or documented keyword."""
+    if call.args:
+        return call.args[0]
+    return _keyword_value(call, EXECUTION_PRIMARY_KEYWORDS[kind])
+
+
+def _resolve_relative_import_name(name: str, package: str | None) -> str | None:
+    """Resolve a literal relative import name only when its literal package is available."""
+    if not name.startswith("."):
+        return name
+    if not package:
+        return None
+    level = len(name) - len(name.lstrip("."))
+    package_parts = package.split(".")
+    if level > len(package_parts):
+        return None
+    base = package.rsplit(".", level - 1)[0]
+    remainder = name[level:]
+    return f"{base}.{remainder}" if remainder else base
+
+
+def _execution_module_name(
+    call: ast.Call, kind: str, bindings: dict[str, ast.AST], symbols: _ProvenanceSymbols
+) -> str | None:
+    """Recover a static module target, resolving the literal importlib package context if needed."""
+    operand = _execution_primary_operand(call, kind)
+    if operand is None:
+        return None
+    name = _static_path_value(operand, bindings, symbols)
+    if name is None or kind != "import":
+        return name
+    package_node = call.args[1] if len(call.args) >= 2 else _keyword_value(call, ("package",))
+    package = _static_path_value(package_node, bindings, symbols) if package_node is not None else None
+    return _resolve_relative_import_name(name, package)
+
+
 def _validate_execution_call(
     call: ast.Call, symbols: _ProvenanceSymbols, bindings: dict[str, ast.AST], relative: str
 ) -> None:
     """Reject known import/runpy/exec forms only when their static target is frozen upstream source."""
     kind = _callable_kind(call.func, symbols)
-    if kind is None or not call.args:
+    if kind is None:
         return
     if kind in {"import", "module-execution"}:
-        module = _static_path_value(call.args[0], bindings, symbols)
+        module = _execution_module_name(call, kind, bindings, symbols)
         if module is not None and _is_upstream_module(module):
             raise MigrationAuditError(f"mapped target dynamically imports upstream source: {relative}")
         return
-    source_path = _source_path_from_expression(call.args[0], bindings, symbols)
+    operand = _execution_primary_operand(call, kind)
+    if operand is None:
+        return
+    source_path = _source_path_from_expression(operand, bindings, symbols)
     if source_path is not None and _is_forbidden_absolute_source_path(source_path):
         raise MigrationAuditError(f"mapped target executes an absolute upstream/source path: {relative}")
 
@@ -792,9 +887,28 @@ def _static_truth_value(node: ast.AST) -> bool | None:
     return True
 
 
+def _literal_iterable_truth(node: ast.AST) -> bool | None:
+    """Return emptiness for literal iterable forms only; all dynamic iterables remain unknown."""
+    literal = _static_literal(node)
+    if literal is _STATIC_UNKNOWN:
+        return None
+    if isinstance(literal, (bytes, str, tuple, list, set, frozenset, dict)):
+        return bool(literal)
+    return None
+
+
 def _walk_reachable_node(node: ast.AST, visit: Callable[[ast.AST], None]) -> None:
     """Visit C4-relevant nodes while excluding statically unreachable branches and nested definitions."""
     if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Lambda)):
+        return
+    if isinstance(node, ast.BoolOp):
+        for value in node.values:
+            _walk_reachable_node(value, visit)
+            truth = _static_truth_value(value)
+            if isinstance(node.op, ast.And) and truth is False:
+                break
+            if isinstance(node.op, ast.Or) and truth is True:
+                break
         return
     if isinstance(node, ast.If):
         _walk_reachable_node(node.test, visit)
@@ -810,6 +924,16 @@ def _walk_reachable_node(node: ast.AST, visit: Callable[[ast.AST], None]) -> Non
         if truth is not False:
             _walk_reachable_statements(node.body, visit)
         if truth is not True:
+            _walk_reachable_statements(node.orelse, visit)
+        return
+    if isinstance(node, ast.For):
+        _walk_reachable_node(node.iter, visit)
+        has_items = _literal_iterable_truth(node.iter)
+        if has_items is False:
+            _walk_reachable_statements(node.orelse, visit)
+            return
+        _walk_reachable_statements(node.body, visit)
+        if has_items is not True or not _statements_unconditionally_return_or_raise(node.body):
             _walk_reachable_statements(node.orelse, visit)
         return
     if isinstance(node, ast.IfExp):
@@ -853,6 +977,10 @@ def _statements_unconditionally_terminate(statements: list[ast.stmt]) -> bool:
         return True
     if isinstance(statement, ast.While):
         return _static_truth_value(statement.test) is True and _statements_unconditionally_return_or_raise(statement.body)
+    if isinstance(statement, ast.For):
+        return _literal_iterable_truth(statement.iter) is True and _statements_unconditionally_return_or_raise(
+            statement.body
+        )
     if not isinstance(statement, ast.If):
         return False
     truth = _static_truth_value(statement.test)
