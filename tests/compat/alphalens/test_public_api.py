@@ -352,8 +352,17 @@ def test_enhanced_fixture_conftest_reexports_portable_table_helpers(raw_factor: 
     pd.testing.assert_series_equal(raw_factor, restored)
 
 
-def test_clean_factor_data_fixture_is_an_explicit_task_3_boundary(request: pytest.FixtureRequest) -> None:
-    """Task 2 does not pretend to have a cleaned factor-data implementation."""
+def test_clean_factor_data_fixture_is_real_and_copy_isolated(request: pytest.FixtureRequest) -> None:
+    """Task 3 supplies real cached preparation output without leaking mutation."""
 
-    with pytest.raises(RuntimeError, match="deferred until Task 3"):
-        request.getfixturevalue("clean_factor_data")
+    first = request.getfixturevalue("clean_factor_data")
+    assert isinstance(first, pd.DataFrame)
+    assert first.index.names == ["date", "asset"]
+    assert {"1D", "5D", "factor", "factor_quantile"} <= set(first.columns)
+
+    original = first.iloc[0, 0]
+    first.iloc[0, 0] = -999.0
+    from tests.compat.alphalens.conftest import _shared_clean_factor_data
+
+    fresh = _shared_clean_factor_data().copy(deep=True)
+    assert fresh.iloc[0, 0] == original

@@ -358,12 +358,25 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
         key = (module, name)
         if key in specs:
             raise RuntimeError(f"duplicate Alphalens compatibility entry: {module}.{name}")
+        task_3_utility = key in {
+            ("utils", "add_custom_calendar_timedelta"),
+            ("utils", "backshift_returns_series"),
+            ("utils", "compute_forward_returns"),
+            ("utils", "diff_custom_calendar_timedeltas"),
+            ("utils", "get_clean_factor"),
+            ("utils", "get_clean_factor_and_forward_returns"),
+            ("utils", "get_forward_returns_columns"),
+            ("utils", "infer_trading_calendar"),
+            ("utils", "quantize_factor"),
+            ("utils", "timedelta_strings_to_integers"),
+            ("utils", "timedelta_to_string"),
+        }
         specs[key] = FactorFunctionSpec(
             module=module,
             public_name=name,
             source_signature=_signature_from_static_text(source_text),
             introspection_signature=_signature_from_static_text(introspection_text or source_text),
-            implementation="deferred_task_2_kernel",
+            implementation="factor_analysis_task_3_kernel" if task_3_utility else "deferred_task_2_kernel",
             profile="legacy_alphalens_cloudquant_0_4_0",
             optional_extra=(
                 "factor-analysis"
@@ -373,7 +386,9 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
                 else None
             ),
             adapter=adapter,
-            result_projection="not_implemented_until_task_3_4_or_8",
+            result_projection=(
+                "strict_alphalens_data_projection" if task_3_utility else "not_implemented_until_task_3_4_or_8"
+            ),
         )
     if len(specs) != 61:
         raise RuntimeError(f"expected 61 pinned Alphalens functions, found {len(specs)}")

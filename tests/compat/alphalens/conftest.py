@@ -493,11 +493,25 @@ def groups() -> pd.Series:
     return _shared_inputs()[3].copy()
 
 
-@pytest.fixture(scope="session")
-def clean_factor_data() -> pd.DataFrame:
-    """Reserve the real cleaned-data fixture for Task 3 rather than fabricate it."""
+@lru_cache(maxsize=1)
+def _shared_clean_factor_data() -> pd.DataFrame:
+    """Compute the real Task 3 cleaned table once from immutable synthetic inputs."""
 
-    raise RuntimeError(
-        "clean_factor_data is deferred until Task 3 provides prepare_factor_data; "
-        "Task 2 deliberately does not fabricate cleaned factor output."
+    from fincore.factor_analysis.data import prepare_factor_data
+
+    factor, price_frame, _, group_series = _shared_inputs()
+    prepared = prepare_factor_data(
+        factor,
+        price_frame,
+        groupby=group_series,
+        periods=(1, 5, 10),
+        max_loss=1,
     )
+    return prepared.data.copy(deep=True)
+
+
+@pytest.fixture
+def clean_factor_data() -> pd.DataFrame:
+    """Return a fresh copy of a session-cached real cleaned factor-data table."""
+
+    return _shared_clean_factor_data().copy(deep=True)

@@ -1,0 +1,172 @@
+"""Trading-calendar primitives for the standalone factor-analysis kernel.
+
+The implementation intentionally stays on public pandas APIs.  In
+particular, it does not use the removed ``MultiIndex.labels`` or mutate index
+internals, both of which would make the compatibility surface fragile across
+pandas releases.
+"""
+
+from __future__ import annotations
+
+import re
+import warnings
+from typing import TYPE_CHECKING, Any, cast
+
+import numpy as np
+import pandas as pd
+from pandas.tseries.offsets import BusinessDay, CustomBusinessDay, Day
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+_FORWARD_RETURN_RE = re.compile(r"^(?:\d+(?:D|h|m|s|ms|us|ns))+$", re.IGNORECASE)
+_EXACT_DAY_RE = re.compile(r"^(?:\d+D)+$", re.IGNORECASE)
+
+
+def _require_calendar_offset(freq: Any) -> Day | BusinessDay | CustomBusinessDay:
+    if not isinstance(freq, (Day, BusinessDay, CustomBusinessDay)):
+        raise ValueError("freq must be Day, BDay or CustomBusinessDay")
+    return freq
+
+
+def infer_trading_calendar(factor_idx: Iterable[object], prices_idx: Iterable[object]) -> CustomBusinessDay:
+    """Infer active weekdays and missing-session holidays from two date indexes.
+
+    Both inputs are copied into a normalized ``DatetimeIndex`` first, so the
+    function has no side effect on caller-owned index frequency metadata.
+    """
+
+    factor_dates = pd.DatetimeIndex(list(factor_idx))
+    price_dates = pd.DatetimeIndex(list(prices_idx))
+    full_idx = factor_dates.union(price_dates).sort_values()
+    if full_idx.empty:
+        raise ValueError("cannot infer a trading calendar from empty indexes")
+
+    traded_weekdays: list[str] = []
+    holidays: list[object] = []
+    weekday_names = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    for weekday, weekday_name in enumerate(weekday_names):
+        used = full_idx[full_idx.dayofweek == weekday].normalize().unique()
+        if len(used) == 0:
+            continue
+        traded_weekdays.append(weekday_name)
+        potential = pd.date_range(
+            full_idx.min().normalize(),
+            full_idx.max().normalize(),
+            freq=CustomBusinessDay(weekmask=weekday_name),  # type: ignore[call-arg]
+        )
+        holidays.extend(timestamp.date() for timestamp in potential.difference(used))
+    return CustomBusinessDay(weekmask=" ".join(traded_weekdays), holidays=holidays)  # type: ignore[call-arg]
+
+
+def add_custom_calendar_timedelta(
+    input: pd.Timestamp | pd.DatetimeIndex, timedelta: pd.Timedelta | object, freq: Any
+) -> pd.Timestamp | pd.DatetimeIndex:
+    """Add a timedelta while counting whole days through a trading calendar."""
+
+    offset = _require_calendar_offset(freq)
+    delta = pd.Timedelta(cast("Any", timedelta))
+    whole_days = delta.components.days
+    remainder = delta - pd.Timedelta(days=whole_days)
+    return input + offset * whole_days + remainder
+
+
+def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd.Timedelta:
+    """Return ``end - start`` with whole-day components measured by ``freq``."""
+
+    offset = _require_calendar_offset(freq)
+    start_timestamp = pd.Timestamp(cast("Any", start))
+    end_timestamp = pd.Timestamp(cast("Any", end))
+    timediff = end_timestamp - start_timestamp
+    if timediff == pd.Timedelta(0):
+        return timediff
+
+    # This is deliberately public-API based.  ``date_range`` also handles
+    # CustomBusinessDay holidays and preserves the source convention that the
+    # start day counts only when it is a valid session.
+    if end_timestamp >= start_timestamp:
+        sessions = pd.date_range(start_timestamp.normalize(), end_timestamp.normalize(), freq=offset)
+        actual_days = len(sessions) - 1
+        if not offset.is_on_offset(start_timestamp):
+            actual_days -= 1
+    else:
+        sessions = pd.date_range(end_timestamp.normalize(), start_timestamp.normalize(), freq=offset)
+        actual_days = -(len(sessions) - 1)
+        if not offset.is_on_offset(end_timestamp):
+            actual_days += 1
+    calendar_days = timediff.components.days
+    return timediff - pd.Timedelta(days=calendar_days - actual_days)
+
+
+def timedelta_to_string(timedelta: pd.Timedelta | object) -> str:
+    """Format a ``Timedelta`` using the pinned forward-return label grammar."""
+
+    delta = pd.Timedelta(cast("Any", timedelta))
+    components = delta.components
+    pieces: list[str] = []
+    if components.days:
+        pieces.append(f"{components.days}D")
+    for attribute, suffix in (
+        ("hours", "h"),
+        ("minutes", "m"),
+        ("seconds", "s"),
+        ("milliseconds", "ms"),
+        ("microseconds", "us"),
+        ("nanoseconds", "ns"),
+    ):
+        value = getattr(components, attribute)
+        if value:
+            pieces.append(f"{value}{suffix}")
+    return "".join(pieces) or "0D"
+
+
+def timedelta_strings_to_integers(sequence: Iterable[str]) -> list[int]:
+    """Return the whole-day portion of each forward-return label."""
+
+    return [pd.Timedelta(value).days for value in sequence]
+
+
+def get_forward_returns_columns(columns: pd.Index, require_exact_day_multiple: bool = False) -> pd.Index:
+    """Return columns matching the pinned forward-return timedelta grammar."""
+
+    if not isinstance(columns, pd.Index):
+        columns = pd.Index(columns)
+    pattern = _EXACT_DAY_RE if require_exact_day_multiple else _FORWARD_RETURN_RE
+    valid: list[bool] = []
+    for column in columns:
+        is_valid = isinstance(column, str) and pattern.fullmatch(column) is not None
+        valid.append(is_valid)
+    if require_exact_day_multiple and any(not item for item in valid):
+        warnings.warn("Skipping return periods that aren't exact multiples of days.", stacklevel=2)
+    return columns[np.asarray(valid, dtype=bool)]
+
+
+def backshift_returns_series(series: pd.Series, N: int) -> pd.Series:
+    """Move a backward-looking MultiIndex return series ``N`` sessions earlier."""
+
+    if not isinstance(series, pd.Series) or not isinstance(series.index, pd.MultiIndex) or series.index.nlevels != 2:
+        raise ValueError("series must use a two-level MultiIndex")
+    if not isinstance(N, int) or N <= 0:
+        raise ValueError("N must be a positive integer")
+    dates = pd.DatetimeIndex(series.index.get_level_values(0).unique()).sort_values()
+    if len(dates) <= N:
+        return series.iloc[0:0].copy()
+    mapping = {date: dates[position - N] for position, date in enumerate(dates) if position >= N}
+    frame: pd.DataFrame = series.to_frame(name="_value").reset_index()
+    date_name, asset_name = series.index.names
+    frame = frame[frame[date_name].isin(mapping)].copy()
+    frame[date_name] = frame[date_name].map(mapping)
+    shifted = cast("pd.Series", frame.set_index([date_name, asset_name])["_value"])
+    shifted.name = series.name
+    return shifted
+
+
+__all__ = [
+    "add_custom_calendar_timedelta",
+    "backshift_returns_series",
+    "diff_custom_calendar_timedeltas",
+    "get_forward_returns_columns",
+    "infer_trading_calendar",
+    "timedelta_strings_to_integers",
+    "timedelta_to_string",
+]
