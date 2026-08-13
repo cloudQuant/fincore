@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -326,7 +326,7 @@ def compute_consistency_score(
 
     cum_preds = np.cumprod(preds + 1, axis=1)
 
-    return (cum_preds < returns_arr[np.newaxis, :]).mean(axis=0).tolist()
+    return cast("list[float]", (cum_preds < returns_arr[np.newaxis, :]).mean(axis=0).tolist())
 
 
 def run_model(
@@ -365,13 +365,19 @@ def run_model(
         Posterior trace.
     """
     if model == "alpha_beta":
-        model_obj, trace = model_returns_t_alpha_beta(returns_train, bmark, samples=samples, progressbar=progressbar)
+        # Callers must provide a benchmark for benchmark-dependent models;
+        # a missing bmark raises inside the model function itself.
+        model_obj, trace = model_returns_t_alpha_beta(
+            returns_train, cast("pd.Series", bmark), samples=samples, progressbar=progressbar
+        )
     elif model == "t":
         model_obj, trace = model_returns_t(returns_train, samples=samples, progressbar=progressbar)
     elif model == "normal":
         model_obj, trace = model_returns_normal(returns_train, samples=samples, progressbar=progressbar)
     elif model == "best":
-        model_obj, trace = model_best(returns_train, bmark, samples=samples, progressbar=progressbar)
+        model_obj, trace = model_best(
+            returns_train, cast("pd.Series | np.ndarray", bmark), samples=samples, progressbar=progressbar
+        )
     else:
         raise NotImplementedError(f"Model {model} not implemented.")
 
@@ -407,7 +413,7 @@ def simulate_paths(
     rng = np.random.RandomState(seed=random_seed)
     is_values = np.asarray(is_returns)
     indices = rng.randint(0, len(is_values), size=(num_samples, num_days))
-    return is_values[indices]
+    return cast("np.ndarray", is_values[indices])
 
 
 def summarize_paths(

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
+from typing import cast
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def treynor_mazuy_timing(
     try:
         design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, factor_squared])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
-        return coeffs[2]  # gamma coefficient
+        return cast("float", coeffs[2])  # gamma coefficient
     except (np.linalg.LinAlgError, ValueError, FloatingPointError) as e:
         logger.debug("treynor_mazuy_timing failed: %s", e)
         return np.nan
@@ -144,7 +145,7 @@ def henriksson_merton_timing(
     try:
         design_matrix = np.column_stack([np.ones(len(excess_factor)), excess_factor, down_market])
         coeffs = np.linalg.lstsq(design_matrix, excess_returns, rcond=None)[0]
-        return coeffs[2]  # gamma coefficient
+        return cast("float", coeffs[2])  # gamma coefficient
     except (np.linalg.LinAlgError, ValueError, FloatingPointError) as e:
         logger.debug("henriksson_merton_timing failed: %s", e)
         return np.nan
@@ -183,8 +184,11 @@ def market_timing_return(
     )
 
     gamma = treynor_mazuy_timing(
-        returns_aligned,
-        factor_aligned,
+        # align_binary_metric_inputs preserves the Series | ndarray input
+        # kinds; the aligned containers must flow through unchanged so the
+        # strict policy and normalized labels reach the timing kernel.
+        cast("pd.Series | np.ndarray", returns_aligned),
+        cast("pd.Series | np.ndarray", factor_aligned),
         risk_free,
         alignment="strict",
     )

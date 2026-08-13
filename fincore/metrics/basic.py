@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -63,7 +64,9 @@ def ensure_datetime_index_series(
     if isinstance(data, pd.Series) and isinstance(data.index, pd.DatetimeIndex):
         return data
 
-    values = data.values if isinstance(data, pd.Series) else np.asarray(data)
+    # Series.values may expose an ExtensionArray per the pandas stubs; a
+    # numpy-backed values array is guaranteed for the metrics computed here.
+    values = cast("np.ndarray", data.values) if isinstance(data, pd.Series) else np.asarray(data)
 
     if values.size == 0:
         return pd.Series(values)
@@ -87,7 +90,7 @@ def flatten(arr: pd.Series | np.ndarray) -> np.ndarray:
         If the input is a Series, returns its underlying values as a
         NumPy array; otherwise returns the input unchanged.
     """
-    return arr if not isinstance(arr, pd.Series) else arr.values
+    return arr if not isinstance(arr, pd.Series) else cast("np.ndarray", arr.values)
 
 
 def adjust_returns(

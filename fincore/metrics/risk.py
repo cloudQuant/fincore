@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 from sys import float_info
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -167,17 +168,17 @@ def downside_risk(
     if len(returns) < 1:
         out[()] = np.nan
         if returns_1d:
-            out = out.item()
-        return out  # type: ignore[return-value]
+            return cast("float | np.ndarray | pd.Series", out.item())
+        return out
     # Reject scalar required_return that is nan/inf (array required_return may have NaN per-period)
     req_arr = np.asarray(required_return)
     if req_arr.ndim == 0 and not np.isfinite(req_arr.item()):
         out[()] = np.nan
         if returns_1d:
-            out = out.item()
-        elif isinstance(returns, pd.DataFrame):
-            out = pd.Series(out, index=returns.columns)
-        return out  # type: ignore[return-value]
+            return cast("float | np.ndarray | pd.Series", out.item())
+        if isinstance(returns, pd.DataFrame):
+            return pd.Series(out, index=returns.columns)
+        return out
 
     ann_factor = annualization_factor(period, annualization)
 
@@ -193,9 +194,9 @@ def downside_risk(
     np.multiply(out, np.sqrt(ann_factor), out=out)
 
     if returns_1d:
-        out = out.item()
-    elif isinstance(returns, pd.DataFrame):
-        out = pd.Series(out, index=returns.columns)
+        return cast("float | np.ndarray | pd.Series", out.item())
+    if isinstance(returns, pd.DataFrame):
+        return pd.Series(out, index=returns.columns)
     return out
 
 
@@ -258,7 +259,7 @@ def conditional_value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0
     if not np.all(np.isfinite(arr)):
         return np.nan
     cutoff_index = value_at_risk(returns, cutoff=cutoff)
-    return np.mean(returns[returns <= cutoff_index])
+    return float(np.mean(returns[returns <= cutoff_index]))
 
 
 def tail_ratio(returns: pd.Series | np.ndarray) -> float:
@@ -288,7 +289,7 @@ def tail_ratio(returns: pd.Series | np.ndarray) -> float:
     left_tail = np.abs(np.percentile(returns, 5))
     if left_tail == 0:
         return np.nan
-    return np.abs(np.percentile(returns, 95)) / left_tail
+    return float(np.abs(np.percentile(returns, 95)) / left_tail)
 
 
 def tracking_error(
@@ -422,7 +423,7 @@ def residual_risk(
     residuals = excess_returns - predicted_returns
 
     ann_factor = annualization_factor(period, annualization)
-    return np.std(residuals, ddof=1) * np.sqrt(ann_factor)
+    return float(np.std(residuals, ddof=1)) * float(np.sqrt(ann_factor))
 
 
 def var_excess_return(
@@ -584,8 +585,8 @@ def trading_value_at_risk(
     if len(returns) < 2:
         return np.nan
 
-    mean_ret = np.mean(returns)
-    std_ret = np.std(returns, ddof=1)
+    mean_ret = float(np.mean(returns))
+    std_ret = float(np.std(returns, ddof=1))
 
     return mean_ret - sigma * std_ret
 
@@ -615,6 +616,7 @@ def gpd_risk_estimates(
     """
     from scipy import optimize
 
+    result: np.ndarray | pd.Series
     if len(returns) < 3:
         result = np.zeros(5)
         if isinstance(returns, pd.Series):
@@ -625,10 +627,12 @@ def gpd_risk_estimates(
     default_threshold = 0.2
     minimum_threshold = 0.000000001
 
+    returns_array: np.ndarray
     try:
         returns_array = pd.Series(returns).to_numpy()
     except AttributeError:
-        returns_array = pd.Series(returns).values
+        # Fallback for very old pandas versions lacking Series.to_numpy.
+        returns_array = cast("np.ndarray", pd.Series(returns).values)
 
     flipped_returns = -1 * returns_array
     losses = flipped_returns[flipped_returns > 0]
@@ -707,7 +711,9 @@ def beta_fragility_heuristic(
     returns_aligned, factor_aligned = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
-    return _beta_fragility_heuristic_aligned(returns_aligned, factor_aligned)
+    # The aligned helper converts array-likes internally; the conversion here
+    # is a static no-op narrowing.
+    return _beta_fragility_heuristic_aligned(np.asanyarray(returns_aligned), np.asanyarray(factor_aligned))
 
 
 def _beta_fragility_heuristic_aligned(
@@ -758,7 +764,7 @@ def _beta_fragility_heuristic_aligned(
         start_returns_weight = (mid_factor_returns - start_factor_returns) / factor_returns_range
         end_returns_weight = (end_factor_returns - mid_factor_returns) / factor_returns_range
 
-    return (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns
+    return cast("float", (start_returns_weight * start_returns) + (end_returns_weight * end_returns) - mid_returns)
 
 
 def beta_fragility_heuristic_aligned(

@@ -58,7 +58,7 @@ def get_percent_alloc(values: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Positions and their allocations.
     """
-    result = values.divide(values.sum(axis="columns"), axis="rows")
+    result = values.divide(values.sum(axis="columns"), axis="index")
     return result.replace([np.inf, -np.inf], np.nan)
 
 
@@ -304,7 +304,7 @@ def compute_style_factor_exposures(
 
     gross = assets.abs().sum(axis="columns").replace(0, np.nan)
     exposure = assets.multiply(factors).sum(axis="columns", skipna=True).divide(gross)
-    return exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    return cast("pd.Series", exposure.replace([np.inf, -np.inf], np.nan).fillna(0.0))
 
 
 def compute_sector_exposures(
@@ -528,7 +528,7 @@ def stack_positions(
     if "cash" in positions.columns:
         positions = positions.drop("cash", axis=1)
 
-    stacked = positions.stack()
+    stacked = cast("pd.Series", positions.stack())
     stacked.index.names = ["dt", "ticker"]
 
     return stacked

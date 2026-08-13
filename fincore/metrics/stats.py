@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -50,7 +51,7 @@ __all__ = [
 ]
 
 
-def _safe_correlation(x, y):
+def _safe_correlation(x: pd.Series | np.ndarray, y: pd.Series | np.ndarray) -> float:
     """Compute Pearson correlation safely without emitting runtime warnings.
 
     Returns ``NaN`` for insufficient data or constant series.
@@ -95,7 +96,7 @@ def skewness(returns: pd.Series | np.ndarray) -> float:
 
     if len(returns) < 3:
         return np.nan
-    return _stats.skew(returns, nan_policy="omit")
+    return cast("float", _stats.skew(returns, nan_policy="omit"))
 
 
 def kurtosis(returns: pd.Series | np.ndarray) -> float:
@@ -119,7 +120,7 @@ def kurtosis(returns: pd.Series | np.ndarray) -> float:
 
     if len(returns) < 4:
         return np.nan
-    return _stats.kurtosis(returns, nan_policy="omit")
+    return cast("float", _stats.kurtosis(returns, nan_policy="omit"))
 
 
 def hurst_exponent(returns: pd.Series | np.ndarray) -> float:
@@ -281,11 +282,11 @@ def stutzer_index(returns: pd.Series | np.ndarray, target_return: float = 0.0) -
             result = minimize_scalar(neg_ip, bounds=(1e-10, 50), method="bounded")
 
         if result.success:
-            ip = -result.fun
+            ip = float(-result.fun)
             if ip < 0:
                 ip = 0.0
             sign = 1.0 if mean_excess > 0 else -1.0
-            return sign * np.sqrt(2 * ip)
+            return sign * float(np.sqrt(2 * ip))
         return np.nan
     except (ValueError, FloatingPointError, ZeroDivisionError, RuntimeError) as e:
         logger.debug("stutzer_index failed: %s", e)
@@ -335,7 +336,10 @@ def serial_correlation(returns: pd.Series | np.ndarray, lag: int = 1) -> float:
     return _safe_correlation(arr_lagged, arr_early)
 
 
-def _market_correlation(returns, benchmark_returns):
+def _market_correlation(
+    returns: pd.Series | np.ndarray,
+    benchmark_returns: pd.Series | np.ndarray,
+) -> float:
     """Compute Pearson correlation between strategy and benchmark returns.
 
     Shared implementation for stock/bond/futures market correlation.
@@ -611,7 +615,7 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
 
     from scipy import stats as _stats
 
-    slope, _, _, _, _ = _stats.linregress(t[mask], nav_arr[mask])
+    slope = cast("float", _stats.linregress(t[mask], nav_arr[mask])[0])
     rar = slope * ann_factor
 
     if isinstance(returns, pd.Series) and hasattr(returns.index, "year"):
@@ -626,13 +630,14 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
 
     from fincore.metrics.drawdown import max_drawdown
 
-    max_dds = []
+    max_dds: list[float] = []
     if isinstance(returns, pd.Series) and hasattr(returns.index, "year"):
         for yr in years:
             yr_returns = returns[returns.index.year == yr]
             if len(yr_returns) > 0:
                 dd = max_drawdown(yr_returns)
-                max_dds.append(abs(dd))
+                # Scalar drawdown per year; the cast is a static narrowing.
+                max_dds.append(cast("float", abs(dd)))
     else:
         returns_arr = np.asanyarray(returns)
         chunk_size = max(1, int(ann_factor))
@@ -640,12 +645,12 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
             chunk = returns_arr[i : i + chunk_size]
             if len(chunk) > 0:
                 dd = max_drawdown(pd.Series(chunk))
-                max_dds.append(abs(dd))
+                max_dds.append(cast("float", abs(dd)))
 
     if len(max_dds) == 0:
         return np.nan
 
-    avg_max_dd = np.mean(max_dds)
+    avg_max_dd = float(np.mean(max_dds))
     if avg_max_dd < 1e-15:
         return np.inf if rar > 0 else np.nan
 
@@ -811,4 +816,6 @@ def normalize(returns: pd.Series | np.ndarray, starting_value: float = 1) -> pd.
     """
     from fincore.metrics.returns import normalize as _normalize
 
-    return _normalize(returns, starting_value=starting_value)
+    # The delegate operates on Series (label-aware normalization); the
+    # Series | ndarray annotation here mirrors the historical public API.
+    return _normalize(cast("pd.Series", returns), starting_value=starting_value)

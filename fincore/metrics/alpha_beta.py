@@ -196,7 +196,9 @@ def alpha_aligned(
         _beta = beta_aligned(returns, factor_returns, risk_free)
 
     adj_returns = adjust_returns(returns, risk_free)
-    adj_factor_returns = adjust_returns(factor_returns, risk_free)
+    # The array conversion is a no-op here: ``returns``/``factor_returns`` were
+    # already converted above; it only narrows the static union for mypy.
+    adj_factor_returns = np.asanyarray(adjust_returns(factor_returns, risk_free))
     # Ensure adj_factor_returns broadcasts correctly with _beta
     if adj_factor_returns.ndim == 1 and hasattr(_beta, "ndim") and _beta.ndim > 0:
         adj_factor_returns = adj_factor_returns[:, np.newaxis]
@@ -208,11 +210,13 @@ def alpha_aligned(
         out=out,
     )
 
-    if allocated_output and was_dataframe:
-        out = pd.Series(out)
-
     if returns.ndim == 1:
-        out = out.item()  # type: ignore[union-attr]
+        # 1-D input implies ``was_dataframe`` is False, so a scalar is
+        # returned exactly as before.
+        return cast("float | np.ndarray | pd.Series", out.item())
+
+    if allocated_output and was_dataframe:
+        return pd.Series(out)
 
     return out
 
@@ -320,7 +324,14 @@ def beta(
         normalize_tz=normalize_tz,
     )
 
-    return beta_aligned(returns, factor_returns, risk_free=risk_free, out=out)
+    # The aligned kernel performs label-agnostic array operations and accepts
+    # pandas containers at runtime; the kernel boundary is typed as ndarray.
+    return beta_aligned(
+        cast("np.ndarray", returns),
+        cast("np.ndarray", factor_returns),
+        risk_free=risk_free,
+        out=out,
+    )
 
 
 def alpha(
@@ -376,8 +387,16 @@ def alpha(
         normalize_tz=normalize_tz,
     )
 
+    # The aligned kernel performs label-agnostic array operations and accepts
+    # pandas containers at runtime; the kernel boundary is typed as ndarray.
     return alpha_aligned(
-        returns, factor_returns, risk_free=risk_free, period=period, annualization=annualization, out=out, _beta=_beta
+        cast("np.ndarray", returns),
+        cast("np.ndarray", factor_returns),
+        risk_free=risk_free,
+        period=period,
+        annualization=annualization,
+        out=out,
+        _beta=_beta,
     )
 
 
@@ -431,14 +450,21 @@ def alpha_beta(
         normalize_tz=normalize_tz,
     )
 
+    # The aligned kernel performs label-agnostic array operations and accepts
+    # pandas containers at runtime; the kernel boundary is typed as ndarray.
     return alpha_beta_aligned(
-        returns, factor_returns, risk_free=risk_free, period=period, annualization=annualization, out=out
+        cast("np.ndarray", returns),
+        cast("np.ndarray", factor_returns),
+        risk_free=risk_free,
+        period=period,
+        annualization=annualization,
+        out=out,
     )
 
 
 def _conditional_alpha_beta(
-    returns: pd.Series | np.ndarray,
-    factor_returns: pd.Series | np.ndarray,
+    returns: ReturnOrDataFrame,
+    factor_returns: ReturnOrDataFrame,
     condition_func: Callable[[np.ndarray], np.ndarray],
     risk_free: float = 0.0,
     period: str = DAILY,
@@ -666,25 +692,36 @@ def annual_alpha(
     pd.Series
         Annual alpha by calendar year.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns,
         factor_returns,
         alignment=alignment,
         normalize_tz=normalize_tz,
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     if len(returns) < 1 or not isinstance(returns.index, pd.DatetimeIndex):
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
-    factor_grouped = factor_returns.groupby(factor_returns.index.year)
+    factor_grouped = factor_returns.groupby(cast("pd.DatetimeIndex", factor_returns.index).year)
 
     annual_alphas = []
     for year in grouped.groups:
         if year in factor_grouped.groups:
             returns_for_year = grouped.get_group(year)
             factor_for_year = factor_grouped.get_group(year)
-            alpha_val = alpha_aligned(returns_for_year, factor_for_year, risk_free, period, annualization)
+            alpha_val = alpha_aligned(
+                # The aligned kernel converts Series input internally; the
+                # conversion here is a static no-op narrowing.
+                np.asanyarray(returns_for_year),
+                np.asanyarray(factor_for_year),
+                risk_free,
+                period,
+                annualization,
+            )
             annual_alphas.append((year, alpha_val))
 
     if not annual_alphas:
@@ -728,25 +765,34 @@ def annual_beta(
     pd.Series
         Annual beta by calendar year.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns,
         factor_returns,
         alignment=alignment,
         normalize_tz=normalize_tz,
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     if len(returns) < 1 or not isinstance(returns.index, pd.DatetimeIndex):
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
-    factor_grouped = factor_returns.groupby(factor_returns.index.year)
+    factor_grouped = factor_returns.groupby(cast("pd.DatetimeIndex", factor_returns.index).year)
 
     annual_betas = []
     for year in grouped.groups:
         if year in factor_grouped.groups:
             year_returns = grouped.get_group(year)
             year_factor = factor_grouped.get_group(year)
-            beta_val = beta_aligned(year_returns, year_factor, risk_free)
+            beta_val = beta_aligned(
+                # The aligned kernel converts Series input internally; the
+                # conversion here is a static no-op narrowing.
+                np.asanyarray(year_returns),
+                np.asanyarray(year_factor),
+                risk_free,
+            )
             annual_betas.append((year, beta_val))
 
     if not annual_betas:

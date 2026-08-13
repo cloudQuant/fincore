@@ -18,6 +18,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pandas as pd
 
@@ -84,7 +86,7 @@ def max_drawdown(
         assert out is not None  # for type checking
         out[()] = np.nan  # type: ignore[index]
         if returns_1d:
-            out = out.item()  # type: ignore[attr-defined]
+            return cast("float | np.ndarray | pd.Series", out.item())
         return out
 
     returns_array = np.asanyarray(returns)
@@ -101,9 +103,9 @@ def max_drawdown(
     nanmin((cumulative - max_return) / max_return, axis=0, out=out)
     assert out is not None  # for type checking
     if returns_1d:
-        out = out.item()  # type: ignore[attr-defined]
-    elif allocated_output and isinstance(returns, pd.DataFrame):
-        out = pd.Series(out)
+        return cast("float | np.ndarray | pd.Series", out.item())
+    if allocated_output and isinstance(returns, pd.DataFrame):
+        return pd.Series(out)
 
     return out
 
@@ -282,14 +284,14 @@ def get_max_drawdown_underwater(
     """
     positions = _get_max_drawdown_positions(underwater)
     if positions is None:
-        return pd.NaT, pd.NaT, pd.NaT
+        return cast("tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]", (pd.NaT, pd.NaT, pd.NaT))
 
     peak_position, valley_position, recovery_position = positions
     peak = underwater.index[peak_position]
     valley = underwater.index[valley_position]
     recovery = pd.NaT if recovery_position is None else underwater.index[recovery_position]
 
-    return peak, valley, recovery
+    return cast("tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]", (peak, valley, recovery))
 
 
 def get_top_drawdowns(
@@ -338,7 +340,7 @@ def get_top_drawdowns(
             # the drawdown has not ended yet
             underwater = underwater.iloc[: peak_position + 1]
 
-        drawdowns.append((peak, valley, recovery))
+        drawdowns.append(cast("tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]", (peak, valley, recovery)))
         if (len(returns) == 0) or (len(underwater) == 0):
             break
 
@@ -429,10 +431,12 @@ def get_max_drawdown_period(
     # Find the end date of maximum drawdown
     end_date = drawdown.idxmin()
 
-    # Find the start date of maximum drawdown (previous peak)
-    start_date = cum_ret.loc[:end_date].idxmax()  # type: ignore[union-attr]
+    # Find the start date of maximum drawdown (previous peak).
+    # pandas-stubs restrict .loc slices to integer bounds; datetime label
+    # slices are valid at runtime.
+    start_date = cum_ret.loc[:end_date].idxmax()  # type: ignore[misc]
 
-    return start_date, end_date
+    return cast("tuple[pd.Timestamp | None, pd.Timestamp | None]", (start_date, end_date))
 
 
 def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
@@ -455,18 +459,22 @@ def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     if not isinstance(returns, pd.Series):
         returns = pd.Series(returns)
 
-    cum_ret = _cum_returns(returns, starting_value=100)
+    cum_ret = cast("pd.Series", _cum_returns(returns, starting_value=100))
     rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
 
     drawdown = cum_ret / rolling_max - 1
     end_idx = drawdown.idxmin()
-    start_idx = cum_ret.loc[:end_idx].idxmax()  # type: ignore[union-attr]
+    # pandas-stubs restrict .loc slices to integer bounds; label slices are
+    # valid at runtime.
+    start_idx = cum_ret.loc[:end_idx].idxmax()  # type: ignore[misc]
 
     if isinstance(returns.index, pd.DatetimeIndex):
-        return (end_idx - start_idx).days  # type: ignore[union-attr]
-    start_pos = returns.index.get_loc(start_idx)
-    end_pos = returns.index.get_loc(end_idx)
-    return end_pos - start_pos  # type: ignore[return-value]
+        end_ts = cast("pd.Timestamp", end_idx)
+        start_ts = cast("pd.Timestamp", start_idx)
+        return (end_ts - start_ts).days
+    start_pos = cast("int", returns.index.get_loc(start_idx))
+    end_pos = cast("int", returns.index.get_loc(end_idx))
+    return end_pos - start_pos
 
 
 def max_drawdown_weeks(returns: pd.Series | np.ndarray) -> float:
@@ -538,16 +546,20 @@ def max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
     rolling_max = cum_ret.expanding().max()
     drawdown = cum_ret / rolling_max - 1
 
-    max_dd_date = drawdown.idxmin()
-    post_dd_data = cum_ret.loc[max_dd_date:]
+    max_dd_date = cast("pd.Timestamp", drawdown.idxmin())
+    # pandas-stubs restrict .loc slices to integer bounds; label slices are
+    # valid at runtime.
+    post_dd_data = cum_ret.loc[max_dd_date:]  # type: ignore[misc]
     recovery_level = rolling_max.loc[max_dd_date]
 
     recovery_mask = post_dd_data >= recovery_level
     if recovery_mask.any():
-        recovery_date = post_dd_data[recovery_mask].index[0]
-        if hasattr(recovery_date - max_dd_date, "days"):
-            return (recovery_date - max_dd_date).days
-        return int(recovery_date - max_dd_date)
+        recovery_date = cast("pd.Timestamp", post_dd_data[recovery_mask].index[0])
+        elapsed = recovery_date - max_dd_date
+        if hasattr(elapsed, "days"):
+            return elapsed.days
+        # Non-datetime indexes produce plain integer label differences.
+        return int(cast("int", elapsed))
     return np.nan
 
 
@@ -614,7 +626,7 @@ def second_max_drawdown(returns: pd.Series | np.ndarray) -> float:
         return np.nan
 
     sorted_drawdowns = np.sort(drawdown_periods)
-    return sorted_drawdowns[1]
+    return cast("float", sorted_drawdowns[1])
 
 
 def third_max_drawdown(returns: pd.Series | np.ndarray) -> float:
@@ -640,7 +652,7 @@ def third_max_drawdown(returns: pd.Series | np.ndarray) -> float:
         return np.nan
 
     sorted_drawdowns = np.sort(drawdown_periods)
-    return sorted_drawdowns[2]
+    return cast("float", sorted_drawdowns[2])
 
 
 def second_max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
@@ -664,7 +676,7 @@ def second_max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
         return np.nan
 
     sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
-    return sorted_drawdowns[1]["duration"]
+    return cast("int | float", sorted_drawdowns[1]["duration"])
 
 
 def second_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
@@ -713,7 +725,7 @@ def third_max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
         return np.nan
 
     sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
-    return sorted_drawdowns[2]["duration"]
+    return cast("int | float", sorted_drawdowns[2]["duration"])
 
 
 def third_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:

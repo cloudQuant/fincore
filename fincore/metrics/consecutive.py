@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 
@@ -48,6 +48,11 @@ __all__ = [
     "max_single_day_loss",
     "max_single_day_loss_date",
 ]
+
+
+def _resample_apply_final(ret: pd.Series) -> float:
+    """Adapt ``cum_returns_final`` to the Series-callable contract of ``Resampler.apply``."""
+    return cast("float", cum_returns_final(ret))
 
 
 def _max_consecutive_run(
@@ -89,8 +94,8 @@ def consecutive_stats(returns: pd.Series) -> dict[str, float | int]:
         }
 
     # Resample once
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
 
     def up(s):
         """Check if a value is positive.
@@ -213,7 +218,7 @@ def max_consecutive_gain(returns: pd.Series) -> float:
     groups = (up_days != up_days.shift(1)).cumsum()
     consecutive_gains = returns.where(up_days, 0).groupby(groups).sum()
 
-    return consecutive_gains.max()
+    return cast("float", consecutive_gains.max())
 
 
 def max_consecutive_loss(returns: pd.Series) -> float:
@@ -242,7 +247,7 @@ def max_consecutive_loss(returns: pd.Series) -> float:
     groups = (down_days != down_days.shift(1)).cumsum()
     consecutive_losses = returns.where(down_days, 0).groupby(groups).sum()
 
-    return consecutive_losses.min()
+    return cast("float", consecutive_losses.min())
 
 
 def max_consecutive_up_weeks(returns: pd.Series) -> float | int:
@@ -261,7 +266,7 @@ def max_consecutive_up_weeks(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
     return _max_consecutive_run(weekly_returns, lambda s: s > 0)
 
 
@@ -281,7 +286,7 @@ def max_consecutive_down_weeks(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(cum_returns_final)
+    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
     return _max_consecutive_run(weekly_returns, lambda s: s < 0)
 
 
@@ -301,7 +306,7 @@ def max_consecutive_up_months(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
     return _max_consecutive_run(monthly_returns, lambda s: s > 0)
 
 
@@ -321,7 +326,7 @@ def max_consecutive_down_months(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(cum_returns_final)
+    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
     return _max_consecutive_run(monthly_returns, lambda s: s < 0)
 
 
@@ -340,7 +345,7 @@ def max_single_day_gain(returns: pd.Series) -> float:
     """
     if len(returns) < 1:
         return np.nan
-    return returns.max()
+    return cast("float", returns.max())
 
 
 def max_single_day_loss(returns: pd.Series) -> float:
@@ -358,7 +363,7 @@ def max_single_day_loss(returns: pd.Series) -> float:
     """
     if len(returns) < 1:
         return np.nan
-    return returns.min()
+    return cast("float", returns.min())
 
 
 def max_single_day_gain_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -376,7 +381,7 @@ def max_single_day_gain_date(returns: pd.Series) -> pd.Timestamp | None:
     """
     if len(returns) < 1:
         return None
-    return returns.idxmax()
+    return cast("pd.Timestamp | None", returns.idxmax())
 
 
 def max_single_day_loss_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -394,7 +399,7 @@ def max_single_day_loss_date(returns: pd.Series) -> pd.Timestamp | None:
     """
     if len(returns) < 1:
         return None
-    return returns.idxmin()
+    return cast("pd.Timestamp | None", returns.idxmin())
 
 
 def max_consecutive_up_start_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -425,7 +430,7 @@ def max_consecutive_up_start_date(returns: pd.Series) -> pd.Timestamp | None:
     max_group = consecutive_counts.idxmax()
 
     group_mask = groups == max_group
-    return returns[group_mask & up_days].index[0]
+    return cast("pd.Timestamp | None", returns[group_mask & up_days].index[0])
 
 
 def max_consecutive_up_end_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -456,7 +461,7 @@ def max_consecutive_up_end_date(returns: pd.Series) -> pd.Timestamp | None:
     max_group = consecutive_counts.idxmax()
 
     group_mask = groups == max_group
-    return returns[group_mask & up_days].index[-1]
+    return cast("pd.Timestamp | None", returns[group_mask & up_days].index[-1])
 
 
 def max_consecutive_down_start_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -487,7 +492,7 @@ def max_consecutive_down_start_date(returns: pd.Series) -> pd.Timestamp | None:
     max_group = consecutive_counts.idxmax()
 
     group_mask = groups == max_group
-    return returns[group_mask & down_days].index[0]
+    return cast("pd.Timestamp | None", returns[group_mask & down_days].index[0])
 
 
 def max_consecutive_down_end_date(returns: pd.Series) -> pd.Timestamp | None:
@@ -518,4 +523,4 @@ def max_consecutive_down_end_date(returns: pd.Series) -> pd.Timestamp | None:
     max_group = consecutive_counts.idxmax()
 
     group_mask = groups == max_group
-    return returns[group_mask & down_days].index[-1]
+    return cast("pd.Timestamp | None", returns[group_mask & down_days].index[-1])

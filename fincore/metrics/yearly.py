@@ -18,6 +18,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pandas as pd
 
@@ -84,7 +86,9 @@ def annual_return(
         return result
     if ending_value <= 0:
         return -1.0
-    return ending_value ** (1 / num_years) - 1
+    # float() is a no-op on the scalar np value; it only pins the static
+    # type because mypy types ``float ** float`` as Any.
+    return float(ending_value ** (1 / num_years)) - 1
 
 
 def annual_return_by_year(
@@ -118,11 +122,12 @@ def annual_return_by_year(
 
     returns = ensure_datetime_index_series(returns, period=period)
 
-    annual_returns = returns.groupby(returns.index.year).apply(
+    # ensure_datetime_index_series guarantees a DatetimeIndex.
+    annual_returns = returns.groupby(cast("pd.DatetimeIndex", returns.index).year).apply(
         lambda ret: annual_return(ret, period=period, annualization=annualization)
     )
 
-    return annual_returns.values if return_as_array else annual_returns
+    return np.asarray(annual_returns) if return_as_array else annual_returns
 
 
 def sharpe_ratio_by_year(
@@ -157,11 +162,12 @@ def sharpe_ratio_by_year(
 
     returns = ensure_datetime_index_series(returns, period=period)
 
-    sharpe_by_year = returns.groupby(returns.index.year).apply(
+    # ensure_datetime_index_series guarantees a DatetimeIndex.
+    sharpe_by_year = returns.groupby(cast("pd.DatetimeIndex", returns.index).year).apply(
         lambda ret: sharpe_ratio(ret, risk_free=risk_free, period=period, annualization=annualization)
     )
 
-    return sharpe_by_year.values if return_as_array else sharpe_by_year
+    return np.asarray(sharpe_by_year) if return_as_array else sharpe_by_year
 
 
 def max_drawdown_by_year(returns: pd.Series | np.ndarray) -> pd.Series | np.ndarray:
@@ -185,8 +191,9 @@ def max_drawdown_by_year(returns: pd.Series | np.ndarray) -> pd.Series | np.ndar
 
     returns = ensure_datetime_index_series(returns, period=DAILY)
 
-    max_dd_by_year = returns.groupby(returns.index.year).apply(lambda ret: max_drawdown(ret))
-    return max_dd_by_year.values if return_as_array else max_dd_by_year
+    # ensure_datetime_index_series guarantees a DatetimeIndex.
+    max_dd_by_year = returns.groupby(cast("pd.DatetimeIndex", returns.index).year).apply(lambda ret: max_drawdown(ret))
+    return np.asarray(max_dd_by_year) if return_as_array else max_dd_by_year
 
 
 def annual_volatility_by_year(
@@ -218,11 +225,12 @@ def annual_volatility_by_year(
 
     returns = ensure_datetime_index_series(returns, period=period)
 
-    annual_vol_by_year = returns.groupby(returns.index.year).apply(
+    # ensure_datetime_index_series guarantees a DatetimeIndex.
+    annual_vol_by_year = returns.groupby(cast("pd.DatetimeIndex", returns.index).year).apply(
         lambda ret: annual_volatility(ret, period=period, annualization=annualization)
     )
 
-    return annual_vol_by_year.values if return_as_array else annual_vol_by_year
+    return np.asarray(annual_vol_by_year) if return_as_array else annual_vol_by_year
 
 
 def annual_active_return(
@@ -294,9 +302,12 @@ def annual_active_return_by_year(
     pd.Series
         Annual active return for each calendar year.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
     if len(returns) < 1:
         return pd.Series([], dtype=float)
 
@@ -304,7 +315,7 @@ def annual_active_return_by_year(
         return pd.Series([], dtype=float)
 
     grouped = returns.groupby(returns.index.year)
-    factor_grouped = factor_returns.groupby(factor_returns.index.year)
+    factor_grouped = factor_returns.groupby(cast("pd.DatetimeIndex", factor_returns.index).year)
 
     annual_active_returns = []
     for year in grouped.groups:
@@ -357,9 +368,12 @@ def information_ratio_by_year(
     from fincore.metrics.ratios import information_ratio as calc_ir
 
     return_as_array = isinstance(returns, np.ndarray)
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves the Series | ndarray input kinds.
+    returns = cast("pd.Series | np.ndarray", aligned_returns)
+    factor_returns = cast("pd.Series | np.ndarray", aligned_factor)
     if len(returns) < 1:
         return np.array([]) if return_as_array else pd.Series(dtype="float64")
 
@@ -380,21 +394,16 @@ def information_ratio_by_year(
             Information Ratio for the year.
         """
         factor_group = factor_returns.loc[returns_group.index]
-        return calc_ir(
-            returns_group,
-            factor_group,
-            period,
-            annualization,
-            alignment="strict",
-        )
+        return cast("float", calc_ir(returns_group, factor_group, period, annualization, alignment="strict"))
 
-    information_ratios = returns.groupby(returns.index.year).apply(calc_ir_for_year)
+    # ensure_datetime_index_series guarantees a DatetimeIndex.
+    information_ratios = returns.groupby(cast("pd.DatetimeIndex", returns.index).year).apply(calc_ir_for_year)
 
     if hasattr(information_ratios, "name"):
         information_ratios.name = None
 
     if return_as_array:
-        return information_ratios.values
+        return np.asarray(information_ratios)
     return information_ratios
 
 

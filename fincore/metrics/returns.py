@@ -26,6 +26,7 @@ This module provides core functions for return analytics, including:
 from __future__ import annotations
 
 import math
+from typing import Callable, cast
 
 import numpy as np
 import pandas as pd
@@ -41,7 +42,7 @@ __all__ = [
 ]
 
 
-def _get_annual_return():
+def _get_annual_return() -> Callable[..., float | np.ndarray | pd.Series]:
     """Lazily import ``annual_return`` to avoid circular dependencies.
 
     Returns
@@ -97,13 +98,14 @@ def simple_returns(
         inputs, the index is preserved (excluding the first element).
     """
     if isinstance(prices, (pd.DataFrame, pd.Series)):
-        out = prices.pct_change().iloc[1:]
+        out: pd.Series | pd.DataFrame | np.ndarray = prices.pct_change().iloc[1:]
     else:
         # Assume np.ndarray
-        out = np.diff(prices, axis=0)
+        out_array = np.diff(prices, axis=0)
         # Avoid division by zero warning
         with np.errstate(divide="ignore", invalid="ignore"):
-            np.divide(out, prices[:-1], out=out)
+            np.divide(out_array, prices[:-1], out=out_array)
+        out = out_array
 
     return out
 
@@ -159,9 +161,9 @@ def cum_returns(
 
     if allocated_output:
         if returns.ndim == 1 and isinstance(returns, pd.Series):
-            out = pd.Series(out, index=returns.index)  # type: ignore[union-attr]
-        elif isinstance(returns, pd.DataFrame):
-            out = pd.DataFrame(
+            return pd.Series(out, index=returns.index)
+        if isinstance(returns, pd.DataFrame):
+            return pd.DataFrame(
                 out,
                 index=returns.index,
                 columns=returns.columns,
@@ -250,7 +252,8 @@ def aggregate_returns(
         float
             The last value of the cumulative returns series.
         """
-        return cum_returns(ret).iloc[-1]  # type: ignore[union-attr]
+        cumulative = cast("pd.Series", cum_returns(ret))
+        return cast("float", cumulative.iloc[-1])
 
     if not isinstance(returns.index, pd.DatetimeIndex):
         raise ValueError(
@@ -312,7 +315,7 @@ def normalize(
     if len(returns) < 1:
         return returns.copy()
 
-    first_value = returns.iloc[0]
+    first_value = cast("float", returns.iloc[0])
     if first_value == 0:
         import warnings
 

@@ -23,6 +23,7 @@ Function groups: (1) Basic ratios, (2) Drawdown ratios, (3) Downside-risk ratios
 from __future__ import annotations
 
 import warnings
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -196,9 +197,9 @@ def sortino_ratio(
     with np.errstate(divide="ignore", invalid="ignore"):
         np.divide(average_annual_return, annualized_downside_risk, out=out)
     if return_1d:
-        out = out.item()
-    elif allocated_output and isinstance(returns, pd.DataFrame):
-        out = pd.Series(out)
+        return cast("float | np.ndarray | pd.Series", out.item())
+    if allocated_output and isinstance(returns, pd.DataFrame):
+        return pd.Series(out)
     return out
 
 
@@ -357,13 +358,13 @@ def conditional_sharpe_ratio(
     if len(conditional_returns) < 2:
         return np.nan
 
-    mean_ret = np.mean(conditional_returns) - risk_free
-    std_ret = np.std(conditional_returns, ddof=1)
+    mean_ret = float(np.mean(conditional_returns)) - risk_free
+    std_ret = float(np.std(conditional_returns, ddof=1))
 
     if std_ret == 0 or not np.isfinite(mean_ret) or not np.isfinite(std_ret):
         return np.nan
 
-    return mean_ret / std_ret * np.sqrt(ann_factor)
+    return mean_ret / std_ret * float(np.sqrt(ann_factor))
 
 
 def calmar_ratio(
@@ -413,7 +414,9 @@ def calmar_ratio(
 
     if max_dd < 0:
         ann_return = annual_return(returns, period=period, annualization=annualization)
-        temp = (ann_return - risk_free) / abs(max_dd)
+        # ``max_dd`` is a scalar here (Series/DataFrame outputs are handled
+        # in the branch above); the casts are static narrowings only.
+        temp = cast("float | pd.Series", (ann_return - risk_free) / cast("float", abs(max_dd)))
     else:
         return np.nan
 
@@ -465,8 +468,9 @@ def mar_ratio(
     if len(returns_clean) < 1:
         return np.nan
 
-    ann_mean_return = np.mean(returns_clean) * ann_factor
-    result = ann_mean_return / abs(max_dd)
+    ann_mean_return = float(np.mean(returns_clean)) * ann_factor
+    # ``max_dd`` is a scalar here; the cast is a static narrowing only.
+    result = ann_mean_return / cast("float", abs(max_dd))
 
     if np.isinf(result):
         return np.nan
@@ -536,8 +540,8 @@ def omega_ratio(
     threshold = risk_free + return_threshold
     returns_less_thresh = returns - threshold
 
-    numer = np.nansum(returns_less_thresh[returns_less_thresh > 0.0])
-    denom = -1.0 * np.nansum(returns_less_thresh[returns_less_thresh < 0.0])
+    numer = float(np.nansum(returns_less_thresh[returns_less_thresh > 0.0]))
+    denom = -1.0 * float(np.nansum(returns_less_thresh[returns_less_thresh < 0.0]))
 
     if denom > 0.0:
         return numer / denom
@@ -577,9 +581,12 @@ def information_ratio(
     float or pd.Series
         Information ratio of the strategy versus the benchmark.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves pandas containers for pandas inputs.
+    returns = cast("pd.Series | pd.DataFrame", aligned_returns)
+    factor_returns = cast("pd.Series | pd.DataFrame", aligned_factor)
     super_returns = returns - factor_returns
 
     if len(super_returns) < 2:
@@ -592,7 +599,8 @@ def information_ratio(
         ir = (mean_excess_return * ann_factor) / (std_excess_return * np.sqrt(ann_factor))
     # Explicitly return NaN when tracking error is zero (avoids inf)
     if hasattr(ir, "where"):
-        return ir.where(np.isfinite(ir), np.nan)
+        # A Series carries the per-period information ratios.
+        return cast("pd.Series", ir.where(np.isfinite(ir), np.nan))
     return np.nan if not np.isfinite(ir) else float(ir)
 
 
@@ -662,7 +670,13 @@ def cal_treynor_ratio(
     ann_return = _annual_return(returns, period=period, annualization=annualization)
     ann_excess_return = ann_return - risk_free
 
-    b = beta_aligned(returns, factor_returns, risk_free)
+    b = beta_aligned(
+        # The aligned kernel performs label-agnostic array operations and
+        # accepts pandas containers at runtime; typed as ndarray here.
+        cast("np.ndarray", returns),
+        cast("np.ndarray", factor_returns),
+        risk_free,
+    )
 
     if returns_1d:
         if b == 0 or b < 0 or np.isnan(b):
@@ -686,7 +700,7 @@ def cal_treynor_ratio(
             out[:] = ann_excess_return / b
 
     if allocated_output and isinstance(returns, pd.DataFrame):
-        out = pd.Series(out, index=returns.columns)
+        return pd.Series(out, index=returns.columns)
 
     return out
 
@@ -803,7 +817,11 @@ def m_squared(
     return excess_return * risk_ratio + risk_free  # type: ignore[return-value]
 
 
-def _compute_annualized_return(returns, period, annualization):
+def _compute_annualized_return(
+    returns: pd.Series | np.ndarray,
+    period: str,
+    annualization: float | None,
+) -> float | np.ndarray | pd.Series:
     """Compute annualized return from non-cumulative returns.
 
     Shared helper used by sterling_ratio, burke_ratio, kappa_three_ratio, etc.
@@ -871,7 +889,8 @@ def sterling_ratio(
     if avg_drawdown == 0 or avg_drawdown < 1e-10:
         return np.inf if ann_ret - risk_free > 0 else np.nan
 
-    return (ann_ret - risk_free) / avg_drawdown  # type: ignore[return-value]
+    # annual_return yields a scalar for these 1-D inputs.
+    return cast("float", (ann_ret - risk_free) / avg_drawdown)
 
 
 def burke_ratio(
@@ -931,7 +950,8 @@ def burke_ratio(
     if burke_risk == 0 or burke_risk < 1e-10:
         return np.inf if ann_ret - risk_free > 0 else np.nan
 
-    return (ann_ret - risk_free) / burke_risk
+    # annual_return yields a scalar for these 1-D inputs.
+    return cast("float", (ann_ret - risk_free) / burke_risk)
 
 
 def kappa_three_ratio(
@@ -992,14 +1012,16 @@ def kappa_three_ratio(
         return np.nan
 
     downside_deviations = np.maximum(0, mar - returns_clean)
-    lpm3 = np.mean(downside_deviations**3)
+    lpm3 = float(np.mean(downside_deviations**3))
 
-    mu = np.mean(returns_clean)
+    mu = float(np.mean(returns_clean))
 
     if lpm3 < 1e-30:
         return np.inf if mu > mar else np.nan
 
-    return (mu - mar) / (lpm3 ** (1.0 / 3.0))
+    # float() is a no-op on the scalar np value; it only pins the static
+    # type because mypy types ``float ** float`` as Any.
+    return (mu - mar) / float(lpm3 ** (1.0 / 3.0))
 
 
 def deflated_sharpe_ratio(
@@ -1202,12 +1224,16 @@ def stability_of_timeseries(returns: pd.Series | np.ndarray) -> float:
     from scipy import stats as _stats
 
     cum_log_returns = np.log1p(returns).cumsum()
-    rhat = _stats.linregress(np.arange(len(cum_log_returns)), cum_log_returns)[2]
+    rhat = cast("float", _stats.linregress(np.arange(len(cum_log_returns)), cum_log_returns)[2])
 
     return rhat**2
 
 
-def _capture_aligned(returns, factor_returns, period=DAILY):
+def _capture_aligned(
+    returns: pd.Series | np.ndarray,
+    factor_returns: pd.Series | np.ndarray,
+    period: str = DAILY,
+) -> float:
     """Compute capture ratio on pre-aligned data (no alignment step)."""
     from fincore.metrics.yearly import annual_return
 
@@ -1220,7 +1246,8 @@ def _capture_aligned(returns, factor_returns, period=DAILY):
     if benchmark_ann_return == 0:
         return np.nan
 
-    return strategy_ann_return / benchmark_ann_return
+    # annual_return yields a scalar for these 1-D inputs.
+    return cast("float", strategy_ann_return / benchmark_ann_return)
 
 
 def capture(
@@ -1253,9 +1280,12 @@ def capture(
         annualized return). Returns ``NaN`` if there are insufficient
         observations or the benchmark annualized return is zero.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     if len(returns) < 1:
         return np.nan
@@ -1291,9 +1321,12 @@ def up_capture(
         Up-capture ratio of the strategy relative to the benchmark.
         Returns ``NaN`` if there are no positive benchmark periods.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1335,9 +1368,12 @@ def down_capture(
         Down-capture ratio of the strategy relative to the benchmark.
         Returns ``NaN`` if there are no negative benchmark periods.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1379,9 +1415,12 @@ def up_down_capture(
         Ratio of up-capture to down-capture. Returns ``NaN`` if either
         capture is ``NaN`` or if the down-capture is zero.
     """
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
 
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
@@ -1436,9 +1475,13 @@ def up_capture_return(
     """
     from fincore.metrics.yearly import annual_return
 
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
+
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
 
@@ -1483,9 +1526,13 @@ def down_capture_return(
     """
     from fincore.metrics.yearly import annual_return
 
-    returns, factor_returns = align_binary_metric_inputs(
+    aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
+    # align_binary_metric_inputs preserves Series containers for Series inputs.
+    returns = cast("pd.Series", aligned_returns)
+    factor_returns = cast("pd.Series", aligned_factor)
+
     returns = pd.Series(returns) if not isinstance(returns, pd.Series) else returns
     factor_returns = pd.Series(factor_returns) if not isinstance(factor_returns, pd.Series) else factor_returns
 

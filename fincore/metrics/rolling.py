@@ -18,6 +18,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pandas as pd
 
@@ -216,7 +218,7 @@ def roll_beta(
 
     if is_series:
         return result
-    return result.values
+    return result.to_numpy()
 
 
 def roll_alpha_beta(
@@ -322,7 +324,7 @@ def roll_sharpe_ratio(
 
     assert isinstance(returns, pd.Series)
     ann_factor = annualization_factor(period, annualization)
-    sqrt_ann = np.sqrt(ann_factor)
+    sqrt_ann = float(np.sqrt(ann_factor))
 
     ret_adj = returns - risk_free
     rolling_mean = ret_adj.rolling(window, min_periods=1).mean()
@@ -335,7 +337,7 @@ def roll_sharpe_ratio(
 
     if is_series:
         return result
-    return result.values
+    return result.to_numpy()
 
 
 def roll_max_drawdown(
@@ -547,7 +549,8 @@ def rolling_volatility(
         Rolling volatility, annualized.
     """
     ann_factor = annualization_factor(period, annualization)
-    return returns.rolling(window=rolling_vol_window).std() * np.sqrt(ann_factor)
+    sqrt_ann = float(np.sqrt(ann_factor))
+    return returns.rolling(window=rolling_vol_window).std() * sqrt_ann
 
 
 def rolling_sharpe(
@@ -579,7 +582,7 @@ def rolling_sharpe(
     rolling_std = returns.rolling(window=rolling_sharpe_window).std()
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        return rolling_mean / rolling_std * np.sqrt(ann_factor)
+        return rolling_mean / rolling_std * float(np.sqrt(ann_factor))
 
 
 def rolling_beta(
@@ -603,10 +606,13 @@ def rolling_beta(
     pd.Series
         Rolling beta.
     """
-    from functools import partial
-
     if factor_returns.ndim > 1:
-        return factor_returns.apply(partial(rolling_beta, returns), rolling_window=rolling_window)
+
+        def column_beta(factor_col: pd.Series, rolling_window: int = rolling_window) -> pd.Series:
+            # A single factor column always produces a Series beta curve.
+            return cast("pd.Series", rolling_beta(returns, factor_col, rolling_window))
+
+        return factor_returns.apply(column_beta, rolling_window=rolling_window)
     returns_aligned, factor_aligned = returns.align(factor_returns, join="inner")
     rolling_cov = returns_aligned.rolling(rolling_window).cov(factor_aligned)
     rolling_var = factor_aligned.rolling(rolling_window).var()

@@ -427,7 +427,8 @@ def get_txn_vol(transactions: pd.DataFrame) -> pd.DataFrame:
         Daily transaction volume and number of shares.
     """
     txn_norm = transactions.copy()
-    txn_norm.index = txn_norm.index.normalize()
+    # Transaction frames carry a DatetimeIndex (see make_transaction_frame).
+    txn_norm.index = cast("pd.DatetimeIndex", txn_norm.index).normalize()
     amounts = txn_norm.amount.abs()
     prices = txn_norm.price
     values = amounts * prices
@@ -518,7 +519,8 @@ def get_turnover(
             " or 'portfolio_value'."
         )
 
-    denom.index = denom.index.normalize()
+    # Position data carries a DatetimeIndex.
+    denom.index = cast("pd.DatetimeIndex", denom.index).normalize()
     turnover = traded_value.div(denom, axis="index")
     # Sanitize inf values to avoid downstream plotting/rendering errors.
     with warnings.catch_warnings():

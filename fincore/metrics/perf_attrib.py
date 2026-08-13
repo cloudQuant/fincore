@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -241,7 +242,7 @@ def compute_exposures_internal(
         raise ValueError("Either provide positions or set positions data")
     if factor_loadings is None:
         raise ValueError("Either provide factor_loadings or set factor_loadings data")
-    risk_exposures = factor_loadings.multiply(positions, axis="rows")
+    risk_exposures = factor_loadings.multiply(positions, axis="index")
     return risk_exposures.groupby(level="dt").sum(min_count=1)
 
 
@@ -291,7 +292,11 @@ def perf_attrib(
         _normalize_attribution_index(value, normalize_tz)
         for value in (returns, positions, factor_returns, factor_loadings)
     )
-    returns, positions, factor_returns, factor_loadings = normalized
+    # _normalize_attribution_index preserves each input's container type.
+    returns = cast("pd.Series", normalized[0])
+    positions = cast("pd.Series | pd.DataFrame", normalized[1])
+    factor_returns = cast("pd.DataFrame", normalized[2])
+    factor_loadings = cast("pd.DataFrame", normalized[3])
     factor_returns, factor_loadings = _align_factor_columns(
         factor_returns,
         factor_loadings,
@@ -340,7 +345,8 @@ def perf_attrib(
     returns = returns.loc[returns.index.intersection(usable_dates, sort=False)]
     factor_returns = factor_returns.loc[factor_returns.index.intersection(usable_dates, sort=False)]
     positions = _select_attribution_dates(positions, usable_dates)
-    factor_loadings = _select_attribution_dates(factor_loadings, usable_dates)
+    # _select_attribution_dates preserves DataFrame containers for DataFrames.
+    factor_loadings = cast("pd.DataFrame", _select_attribution_dates(factor_loadings, usable_dates))
 
     risk_exposures, perf_attrib_data = perf_attrib_core(returns, positions, factor_returns, factor_loadings)
 
@@ -379,7 +385,7 @@ def normalize_and_stack_positions(
     if "cash" in positions.columns:
         positions = positions.drop("cash", axis=1)
 
-    stacked = positions.stack()
+    stacked = cast("pd.Series", positions.stack())
     stacked.index = stacked.index.set_names(["dt", "ticker"])
 
     return stacked
@@ -455,7 +461,7 @@ def create_perf_attrib_stats(
     summary["Cumulative Common Return"] = cum_returns_final(common_returns)
     summary["Total Returns"] = cum_returns_final(total_returns)
 
-    summary = pd.Series(summary, name="")
+    summary_series = pd.Series(summary, name="")
 
     annualized_returns_by_factor = [annual_return(perf_attrib_[c]) for c in risk_exposures.columns]
     cumulative_returns_by_factor = [cum_returns_final(perf_attrib_[c]) for c in risk_exposures.columns]
@@ -463,7 +469,7 @@ def create_perf_attrib_stats(
     risk_exposure_summary = pd.DataFrame(
         data=OrderedDict(
             [
-                ("Average Risk Factor Exposure", risk_exposures.mean(axis="rows")),
+                ("Average Risk Factor Exposure", risk_exposures.mean(axis="index")),
                 ("Annualized Return", annualized_returns_by_factor),
                 ("Cumulative Return", cumulative_returns_by_factor),
             ]
@@ -471,7 +477,7 @@ def create_perf_attrib_stats(
         index=risk_exposures.columns,
     )
 
-    return summary, risk_exposure_summary
+    return summary_series, risk_exposure_summary
 
 
 def align_and_warn(
@@ -542,12 +548,15 @@ def align_and_warn(
             avg_allocation_msg = "missing assets"
 
         # Calculate average allocation for warning message
+        avg_alloc: float | pd.Series
         if isinstance(positions, pd.Series):
             # missing_stocks is guaranteed non-empty here, so the sample set is also non-empty.
             sample_stocks = missing_stocks[:5].union(missing_stocks[[-1]])
-            avg_alloc = positions[positions.index.get_level_values(1).isin(sample_stocks)].mean()
+            avg_alloc = cast(
+                "float | pd.Series", positions[positions.index.get_level_values(1).isin(sample_stocks)].mean()
+            )
         else:
-            avg_alloc = positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean()
+            avg_alloc = cast("float | pd.Series", positions[missing_stocks[:5].union(missing_stocks[[-1]])].mean())
 
         missing_stocks_warning_msg = (
             "Could not determine risk exposures for some of this algorithm's "
@@ -599,7 +608,9 @@ def align_and_warn(
     if transactions is not None and pos_in_dollars:
         from fincore.metrics.transactions import get_turnover
 
-        turnover = get_turnover(positions, transactions).mean()
+        # get_turnover expects an unstacked DataFrame; Series inputs fail the
+        # same way at runtime either way (preexisting contract).
+        turnover = get_turnover(cast("pd.DataFrame", positions), transactions).mean()
         if turnover > PERF_ATTRIB_TURNOVER_THRESHOLD:
             warning_msg = (
                 "This algorithm has relatively high turnover of its "
@@ -638,8 +649,9 @@ def cumulative_returns_less_costs(
     from fincore.metrics.returns import cum_returns
 
     if costs is None:
-        return cum_returns(returns)
-    return cum_returns(returns - costs)
+        # cum_returns mirrors the input container type for Series inputs.
+        return cast("pd.Series", cum_returns(returns))
+    return cast("pd.Series", cum_returns(returns - costs))
 
 
 from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
