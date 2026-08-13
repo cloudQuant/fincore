@@ -20,7 +20,7 @@ from fincore.factor_analysis.calendar import (
     infer_trading_calendar,
     timedelta_to_string,
 )
-from fincore.factor_analysis.exceptions import FactorLossExceededError, NonMatchingTimezoneError
+from fincore.factor_analysis.exceptions import EnhancedNonMatchingTimezoneError, FactorLossExceededError
 
 
 @dataclass(frozen=True)
@@ -139,7 +139,7 @@ def compute_forward_returns(
     prices_copy = _require_prices(prices, pd.Index(factor_copy.index.get_level_values("asset")))
     prices_index = pd.DatetimeIndex(prices_copy.index)
     if factor_dates.tz != prices_index.tz:
-        raise NonMatchingTimezoneError(
+        raise EnhancedNonMatchingTimezoneError(
             "The timezone of 'factor' is not the same as the timezone of 'prices'. "
             "See the pandas methods tz_localize and tz_convert."
         )

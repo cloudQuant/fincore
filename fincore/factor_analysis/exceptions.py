@@ -1,8 +1,8 @@
-"""Exceptions owned by the standalone factor-analysis kernel.
+"""Separate enhanced-kernel and strict-compatibility exception identities.
 
-The compatibility facade re-exports the two legacy exception identities from
-this module.  Keeping the types here lets enhanced callers retain structured
-diagnostics without importing the facade.
+The enhanced kernel exposes ``ValueError``-derived validation errors.  The
+pinned Alphalens facade, however, deliberately preserves its two direct
+``Exception`` subclasses at the adapter boundary.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ class FactorDataError(ValueError):
     """Base class for invalid factor-analysis inputs."""
 
 
-class NonMatchingTimezoneError(FactorDataError):
+class EnhancedNonMatchingTimezoneError(FactorDataError):
     """Factor and price timestamps use different timezone conventions."""
 
 
@@ -29,11 +29,20 @@ class FactorLossExceededError(FactorDataError):
         self.report = report
 
 
-class MaxLossExceededError(FactorLossExceededError):
-    """Legacy-compatible identity for a rejected cleaning-loss budget."""
+class MaxLossExceededError(Exception):
+    """Pinned strict identity for a rejected cleaning-loss budget."""
+
+    def __init__(self, message: str = "", report: FactorLossReport | None = None) -> None:
+        super().__init__(message)
+        self.report = report
+
+
+class NonMatchingTimezoneError(Exception):
+    """Pinned strict identity for a factor/prices timezone mismatch."""
 
 
 __all__ = [
+    "EnhancedNonMatchingTimezoneError",
     "FactorDataError",
     "FactorLossExceededError",
     "MaxLossExceededError",

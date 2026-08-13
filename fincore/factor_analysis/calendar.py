@@ -77,25 +77,26 @@ def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd
     offset = _require_calendar_offset(freq)
     start_timestamp = pd.Timestamp(cast("Any", start))
     end_timestamp = pd.Timestamp(cast("Any", end))
-    timediff = end_timestamp - start_timestamp
-    if timediff == pd.Timedelta(0):
-        return timediff
+    weekmask = getattr(offset, "weekmask", None)
+    holidays = getattr(offset, "holidays", None)
+    if weekmask is None and holidays is None:
+        if isinstance(offset, Day):
+            weekmask, holidays = "Mon Tue Wed Thu Fri Sat Sun", []
+        else:
+            weekmask, holidays = "Mon Tue Wed Thu Fri", []
 
-    # This is deliberately public-API based.  ``date_range`` also handles
-    # CustomBusinessDay holidays and preserves the source convention that the
-    # start day counts only when it is a valid session.
-    if end_timestamp >= start_timestamp:
-        sessions = pd.date_range(start_timestamp.normalize(), end_timestamp.normalize(), freq=offset)
-        actual_days = len(sessions) - 1
-        if not offset.is_on_offset(start_timestamp):
-            actual_days -= 1
-    else:
-        sessions = pd.date_range(end_timestamp.normalize(), start_timestamp.normalize(), freq=offset)
-        actual_days = -(len(sessions) - 1)
-        if not offset.is_on_offset(end_timestamp):
-            actual_days += 1
-    calendar_days = timediff.components.days
-    return timediff - pd.Timedelta(days=calendar_days - actual_days)
+    # ``busday_count`` is the public NumPy implementation used by the pinned
+    # source.  Its [start, end) treatment is significant for off-session
+    # endpoints (for example Saturday -> Monday), and unlike date_range does
+    # not accidentally count a closed endpoint as a session.
+    actual_days = np.busday_count(
+        start_timestamp.to_datetime64().astype("datetime64[D]"),
+        end_timestamp.to_datetime64().astype("datetime64[D]"),
+        weekmask=cast("str", weekmask),
+        holidays=cast("Any", holidays),
+    )
+    timediff = end_timestamp - start_timestamp
+    return timediff - pd.Timedelta(days=timediff.components.days - actual_days)
 
 
 def timedelta_to_string(timedelta: pd.Timedelta | object) -> str:
@@ -117,7 +118,7 @@ def timedelta_to_string(timedelta: pd.Timedelta | object) -> str:
         value = getattr(components, attribute)
         if value:
             pieces.append(f"{value}{suffix}")
-    return "".join(pieces) or "0D"
+    return "".join(pieces)
 
 
 def timedelta_strings_to_integers(sequence: Iterable[str]) -> list[int]:

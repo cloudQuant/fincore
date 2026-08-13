@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from numbers import Real
+from typing import TYPE_CHECKING, Any, NoReturn, cast
+
+import numpy as np
+import pandas as pd
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-
-    import pandas as pd
 
 from fincore.alphalens._compat import export_deferred_functions
 from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
 from fincore.factor_analysis import calendar as _calendar
 from fincore.factor_analysis import data as _data
 from fincore.factor_analysis.exceptions import (
+    EnhancedNonMatchingTimezoneError,
     FactorLossExceededError,
     MaxLossExceededError,
     NonMatchingTimezoneError,
@@ -77,6 +80,66 @@ def _legacy_loss_line(report: _data.FactorLossReport) -> str:
     )
 
 
+def _raise_legacy_bin_edge_error(error: ValueError) -> NoReturn:
+    """Apply the pinned decorator's error projection at every strict entrypoint."""
+
+    if "Bin edges must be unique" in str(error):
+        raise ValueError(f"{error}{_NON_UNIQUE_BIN_EDGES_MESSAGE}") from None
+    raise error
+
+
+def _strict_all_nan_factor(factor: object) -> bool:
+    """Recognize only the numeric all-NaN adapter case; leave core validation intact."""
+
+    if not isinstance(factor, pd.Series) or not isinstance(factor.index, pd.MultiIndex) or factor.empty:
+        return False
+    try:
+        values = factor.to_numpy(dtype=float, copy=False)
+    except (TypeError, ValueError):
+        return False
+    return not bool(np.isfinite(values).any())
+
+
+def _strict_empty_factor_projection(
+    factor: pd.Series,
+    forward_returns: pd.DataFrame,
+    *,
+    groupby: Mapping[object, object] | pd.Series | None,
+    max_loss: float,
+) -> pd.DataFrame | None:
+    """Project the pinned all-NaN clean-factor result without changing the kernel."""
+
+    if not _strict_all_nan_factor(factor):
+        return None
+    if not isinstance(forward_returns, pd.DataFrame) or not isinstance(forward_returns.index, pd.MultiIndex):
+        return None
+    if not isinstance(max_loss, Real) or not 0 <= float(max_loss) <= 1:
+        return None
+
+    report = _data.FactorLossReport(
+        input_count=len(factor),
+        finite_factor_count=0,
+        forward_returns_count=0,
+        binning_count=0,
+        factor_input_loss=1.0,
+        forward_returns_loss=0.0,
+        binning_loss=0.0,
+        total_loss=1.0,
+    )
+    print(_legacy_loss_line(report))
+    if report.total_loss > float(max_loss):
+        message = f"max_loss ({float(max_loss) * 100:.1f}%) exceeded 100.0%, consider increasing it."
+        raise MaxLossExceededError(message, report)
+
+    result = forward_returns.copy(deep=True).iloc[0:0]
+    result["factor"] = pd.Series(index=result.index, dtype=float)
+    if groupby is not None:
+        result["group"] = pd.Series(pd.Categorical([]), index=result.index)
+    result["factor_quantile"] = pd.Series(index=result.index, dtype=float)
+    print(f"max_loss is {float(max_loss) * 100:.1f}%, not exceeded: OK!")
+    return result
+
+
 def add_custom_calendar_timedelta(input: object, timedelta: object, freq: object) -> pd.Timestamp | pd.DatetimeIndex:
     _reject_opaque("add_custom_calendar_timedelta", input, timedelta, freq)
     return _calendar.add_custom_calendar_timedelta(input, timedelta, freq)  # type: ignore[arg-type]
@@ -95,13 +158,16 @@ def compute_forward_returns(
     cumulative_returns: bool = True,
 ) -> pd.DataFrame:
     _reject_opaque("compute_forward_returns", factor, prices)
-    return _data.compute_forward_returns(
-        factor,
-        prices,
-        periods=periods,
-        filter_zscore=filter_zscore,
-        cumulative_returns=cumulative_returns,
-    )
+    try:
+        return _data.compute_forward_returns(
+            factor,
+            prices,
+            periods=periods,
+            filter_zscore=filter_zscore,
+            cumulative_returns=cumulative_returns,
+        )
+    except EnhancedNonMatchingTimezoneError as error:
+        raise NonMatchingTimezoneError(str(error)) from None
 
 
 def diff_custom_calendar_timedeltas(start: object, end: object, freq: object) -> pd.Timedelta:
@@ -121,6 +187,14 @@ def get_clean_factor(
     zero_aware: bool = False,
 ) -> pd.DataFrame:
     _reject_opaque("get_clean_factor", factor, forward_returns)
+    strict_empty = _strict_empty_factor_projection(
+        factor,
+        forward_returns,
+        groupby=groupby,
+        max_loss=max_loss,
+    )
+    if strict_empty is not None:
+        return strict_empty
     try:
         prepared = _data.prepare_factor_data_from_forward_returns(
             factor,
@@ -137,6 +211,8 @@ def get_clean_factor(
         assert error.report is not None
         print(_legacy_loss_line(error.report))
         raise MaxLossExceededError(str(error), error.report) from None
+    except ValueError as error:
+        _raise_legacy_bin_edge_error(error)
     print(_legacy_loss_line(prepared.loss_report))
     print(f"max_loss is {float(max_loss) * 100:.1f}%, not exceeded: OK!")
     return prepared.data
@@ -157,28 +233,24 @@ def get_clean_factor_and_forward_returns(
     cumulative_returns: bool = True,
 ) -> pd.DataFrame:
     _reject_opaque("get_clean_factor_and_forward_returns", factor, prices)
-    try:
-        prepared = _data.prepare_factor_data(
-            factor,
-            prices,
-            groupby=groupby,
-            binning_by_group=binning_by_group,
-            quantiles=quantiles,
-            bins=bins,
-            periods=periods,
-            filter_zscore=filter_zscore,
-            groupby_labels=groupby_labels,
-            max_loss=max_loss,
-            zero_aware=zero_aware,
-            cumulative_returns=cumulative_returns,
-        )
-    except FactorLossExceededError as error:
-        assert error.report is not None
-        print(_legacy_loss_line(error.report))
-        raise MaxLossExceededError(str(error), error.report) from None
-    print(_legacy_loss_line(prepared.loss_report))
-    print(f"max_loss is {float(max_loss) * 100:.1f}%, not exceeded: OK!")
-    return prepared.data
+    forward_returns = compute_forward_returns(
+        factor,
+        prices,
+        periods=periods,
+        filter_zscore=filter_zscore,
+        cumulative_returns=cumulative_returns,
+    )
+    return get_clean_factor(
+        factor,
+        forward_returns,
+        groupby=groupby,
+        binning_by_group=binning_by_group,
+        quantiles=quantiles,
+        bins=bins,
+        groupby_labels=groupby_labels,
+        max_loss=max_loss,
+        zero_aware=zero_aware,
+    )
 
 
 def get_forward_returns_columns(columns: pd.Index, require_exact_day_multiple: bool = False) -> pd.Index:
@@ -200,9 +272,7 @@ def quantize_factor(*args: Any, **kwargs: Any) -> pd.Series:
     try:
         return _data.quantize_factor(**bound.arguments)
     except ValueError as error:
-        if "Bin edges must be unique" in str(error):
-            raise ValueError(f"{error}{_NON_UNIQUE_BIN_EDGES_MESSAGE}") from None
-        raise
+        _raise_legacy_bin_edge_error(error)
 
 
 _quantize_factor_compat = cast("Any", quantize_factor)

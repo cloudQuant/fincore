@@ -22,6 +22,7 @@ from fincore.factor_analysis.data import (
     quantize_factor,
 )
 from fincore.factor_analysis.exceptions import (
+    EnhancedNonMatchingTimezoneError,
     FactorDataError,
     FactorLossExceededError,
     MaxLossExceededError,
@@ -29,6 +30,7 @@ from fincore.factor_analysis.exceptions import (
 )
 
 __all__ = [
+    "EnhancedNonMatchingTimezoneError",
     "FactorDataError",
     "FactorFunctionSpec",
     "FactorLossExceededError",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import inspect
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -65,3 +66,99 @@ def test_clean_factor_fixture_is_real_and_returns_mutation_isolated(clean_factor
     from tests.compat.alphalens.conftest import _shared_clean_factor_data
 
     assert _shared_clean_factor_data().iloc[0, 0] == original
+
+
+def _all_nan_factor_inputs() -> tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
+    """Frozen all-NaN case observed from pinned commit 3fa17ad."""
+
+    index = pd.MultiIndex.from_product(
+        (pd.date_range("2024-01-02", periods=2, name="date"), ("A", "B")), names=("date", "asset")
+    )
+    factor = pd.Series(np.nan, index=index, name="factor")
+    forward_returns = pd.DataFrame({"1D": (0.1, 0.2, 0.3, 0.4)}, index=index)
+    prices = pd.DataFrame(
+        {"A": (10.0, 11.0, 12.0, 13.0), "B": (20.0, 19.0, 18.0, 17.0)},
+        index=pd.date_range("2024-01-02", periods=4, name="date"),
+    )
+    return factor, forward_returns, prices
+
+
+_PINNED_ALL_NAN_STDOUT = (
+    "Dropped 100.0% entries from factor data: 100.0% in forward returns computation and 0.0% in binning phase "
+    "(set max_loss=0 to see potentially suppressed Exceptions).\n"
+    "max_loss is 100.0%, not exceeded: OK!\n"
+)
+
+
+def test_strict_get_clean_factor_projects_pinned_all_nan_empty_frame(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The strict adapter preserves the pinned empty-frame projection, not enhanced validation."""
+
+    from fincore.alphalens import utils
+
+    factor, forward_returns, _ = _all_nan_factor_inputs()
+    result = utils.get_clean_factor(factor, forward_returns, max_loss=1)
+
+    expected = pd.DataFrame(index=forward_returns.index[:0], columns=("1D", "factor", "factor_quantile"), dtype=float)
+    pd.testing.assert_frame_equal(result, expected)
+    assert capsys.readouterr().out == _PINNED_ALL_NAN_STDOUT
+
+
+def test_strict_get_clean_factor_and_forward_returns_projects_pinned_all_nan_empty_frame(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The price-derived strict path has the same pinned all-NaN behavior."""
+
+    from fincore.alphalens import utils
+
+    factor, _, prices = _all_nan_factor_inputs()
+    result = utils.get_clean_factor_and_forward_returns(factor, prices, periods=(1,), max_loss=1)
+
+    expected = pd.DataFrame(index=factor.index[:0], columns=("1D", "factor", "factor_quantile"), dtype=float)
+    pd.testing.assert_frame_equal(result, expected)
+    assert capsys.readouterr().out == _PINNED_ALL_NAN_STDOUT
+
+
+def test_strict_non_unique_bin_edges_projection_is_identical_for_each_entrypoint(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """All strict entrypoints apply the pinned decorator's complete error text."""
+
+    from fincore.alphalens import utils
+
+    index = pd.MultiIndex.from_product(
+        (pd.date_range("2024-01-02", periods=2, name="date"), ("A", "B")), names=("date", "asset")
+    )
+    factor = pd.Series(1.0, index=index, name="factor")
+    factor_data = pd.DataFrame({"factor": factor})
+    forward_returns = pd.DataFrame({"1D": (0.1, 0.2, 0.3, 0.4)}, index=index)
+    prices = pd.DataFrame(
+        {"A": (10.0, 11.0, 12.0), "B": (20.0, 19.0, 18.0)},
+        index=pd.date_range("2024-01-02", periods=3, name="date"),
+    )
+
+    with pytest.raises(ValueError) as direct_error:
+        utils.quantize_factor(factor_data, quantiles=2)
+    with pytest.raises(ValueError) as clean_error:
+        utils.get_clean_factor(factor, forward_returns, quantiles=2, max_loss=0)
+    with pytest.raises(ValueError) as prices_error:
+        utils.get_clean_factor_and_forward_returns(factor, prices, periods=(1,), quantiles=2, max_loss=0)
+
+    expected = str(direct_error.value)
+    assert expected.startswith("Bin edges must be unique")
+    assert "An error occurred while computing bins/quantiles" in expected
+    assert str(clean_error.value) == expected
+    assert str(prices_error.value) == expected
+    assert capsys.readouterr().out == ""
+
+
+def test_strict_exception_identities_do_not_inherit_value_error() -> None:
+    """Pinned public exception classes are direct Exception identities at the facade."""
+
+    from fincore.alphalens import utils
+
+    assert issubclass(utils.MaxLossExceededError, Exception)
+    assert issubclass(utils.NonMatchingTimezoneError, Exception)
+    assert not issubclass(utils.MaxLossExceededError, ValueError)
+    assert not issubclass(utils.NonMatchingTimezoneError, ValueError)
