@@ -120,6 +120,107 @@ def test_strict_get_clean_factor_and_forward_returns_projects_pinned_all_nan_emp
     assert capsys.readouterr().out == _PINNED_ALL_NAN_STDOUT
 
 
+def _all_nan_groupby(kind: str, index: pd.MultiIndex) -> pd.Series | dict[str, str]:
+    """Return a fresh pinned-groupby input for each strict projection case."""
+
+    values = ("one", "two", "one", "two")
+    if kind == "series":
+        return pd.Series(values, index=index, name="group")
+    if kind == "categorical":
+        return pd.Series(
+            pd.Categorical(values, categories=("two", "one", "unused"), ordered=True), index=index, name="group"
+        )
+    if kind == "dict":
+        return {"A": "one", "B": "two"}
+    raise AssertionError(f"unknown all-NaN groupby kind: {kind}")
+
+
+def _pinned_empty_group_frame(index: pd.MultiIndex, categories: tuple[str, ...], *, ordered: bool) -> pd.DataFrame:
+    """Frozen DataFrame projection observed from pinned 3fa17ad source bytes."""
+
+    expected = pd.DataFrame(index=index[:0], columns=("1D", "factor"), dtype=float)
+    category_index = pd.Index(categories, dtype="str")
+    expected["group"] = pd.Series(pd.Categorical([], categories=category_index, ordered=ordered), index=expected.index)
+    expected["factor_quantile"] = pd.Series(index=expected.index, dtype=float)
+    return expected
+
+
+@pytest.mark.parametrize(
+    ("groupby_kind", "groupby_labels", "categories", "ordered"),
+    (
+        pytest.param("series", None, ("one", "two"), False, id="series"),
+        pytest.param("categorical", None, ("two", "one", "unused"), True, id="categorical-series"),
+        pytest.param("dict", None, (), False, id="dict"),
+        pytest.param("series", {"one": "One", "two": "Two"}, ("One", "Two"), False, id="series-labels"),
+        pytest.param("categorical", {"one": "One", "two": "Two"}, ("One", "Two"), False, id="categorical-labels"),
+        pytest.param("dict", {"one": "One", "two": "Two"}, (), False, id="dict-labels"),
+    ),
+)
+@pytest.mark.parametrize("entrypoint", ("direct", "prices"))
+def test_strict_all_nan_groupby_projection_matches_frozen_pinned_frame(
+    entrypoint: str,
+    groupby_kind: str,
+    groupby_labels: dict[str, str] | None,
+    categories: tuple[str, ...],
+    ordered: bool,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Series/category/dict metadata survives the adapter-only empty projection."""
+
+    from fincore.alphalens import utils
+
+    factor, forward_returns, prices = _all_nan_factor_inputs()
+    groupby = _all_nan_groupby(groupby_kind, factor.index)
+    if entrypoint == "direct":
+        result = utils.get_clean_factor(
+            factor, forward_returns, groupby=groupby, groupby_labels=groupby_labels, max_loss=1
+        )
+        expected_index = forward_returns.index
+    else:
+        result = utils.get_clean_factor_and_forward_returns(
+            factor, prices, groupby=groupby, groupby_labels=groupby_labels, periods=(1,), max_loss=1
+        )
+        expected_index = factor.index
+
+    expected = _pinned_empty_group_frame(expected_index, categories, ordered=ordered)
+    pd.testing.assert_frame_equal(result, expected)
+    assert result["group"].dtype.name == "category"
+    assert tuple(result["group"].cat.categories) == categories
+    assert result["group"].cat.ordered is ordered
+    assert capsys.readouterr().out == _PINNED_ALL_NAN_STDOUT
+
+
+@pytest.mark.parametrize("entrypoint", ("direct", "prices"))
+def test_strict_all_nan_groupby_labels_validate_before_stdout_or_empty_success(
+    entrypoint: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Pinned group-label validation precedes the all-NaN facade short circuit."""
+
+    from fincore.alphalens import utils
+
+    factor, forward_returns, prices = _all_nan_factor_inputs()
+    groupby = _all_nan_groupby("series", factor.index)
+    with pytest.raises(KeyError, match=r"groups \['two'\] not in passed group names"):
+        if entrypoint == "direct":
+            utils.get_clean_factor(
+                factor,
+                forward_returns,
+                groupby=groupby,
+                groupby_labels={"one": "One"},
+                max_loss=1,
+            )
+        else:
+            utils.get_clean_factor_and_forward_returns(
+                factor,
+                prices,
+                groupby=groupby,
+                groupby_labels={"one": "One"},
+                periods=(1,),
+                max_loss=1,
+            )
+    assert capsys.readouterr().out == ""
+
+
 def test_strict_non_unique_bin_edges_projection_is_identical_for_each_entrypoint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

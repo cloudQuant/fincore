@@ -100,11 +100,40 @@ def _strict_all_nan_factor(factor: object) -> bool:
     return not bool(np.isfinite(values).any())
 
 
+def _strict_all_nan_groupby(
+    groupby: Mapping[object, object] | pd.Series | None,
+    groupby_labels: Mapping[object, object] | None,
+    factor_index: pd.MultiIndex,
+) -> pd.Series | None:
+    """Mirror the pinned group/category operations before its empty-row drop."""
+
+    if groupby is None:
+        return None
+    if isinstance(groupby, dict):
+        # The pinned implementation filters the all-NaN factor first, so its
+        # dictionary asset check receives an empty index and its category has
+        # no categories.  Keep that narrow strict projection in the adapter.
+        groups = pd.Series(index=factor_index[:0], dtype="str")
+    elif isinstance(groupby, pd.Series):
+        groups = groupby
+    else:
+        raise TypeError("groupby must be a mapping, Series, or None")
+
+    if groupby_labels is not None:
+        missing = set(groups.values) - set(groupby_labels.keys())
+        if missing:
+            raise KeyError(f"groups {list(missing)!r} not in passed group names")
+        labels = pd.Series(dict(groupby_labels))
+        groups = pd.Series(index=groups.index, data=labels[cast("Any", groups.values)].values)
+    return groups.astype("category")
+
+
 def _strict_empty_factor_projection(
     factor: pd.Series,
     forward_returns: pd.DataFrame,
     *,
     groupby: Mapping[object, object] | pd.Series | None,
+    groupby_labels: Mapping[object, object] | None,
     max_loss: float,
 ) -> pd.DataFrame | None:
     """Project the pinned all-NaN clean-factor result without changing the kernel."""
@@ -115,6 +144,7 @@ def _strict_empty_factor_projection(
         return None
     if not isinstance(max_loss, Real) or not 0 <= float(max_loss) <= 1:
         return None
+    groups = _strict_all_nan_groupby(groupby, groupby_labels, factor.index)
 
     report = _data.FactorLossReport(
         input_count=len(factor),
@@ -133,8 +163,11 @@ def _strict_empty_factor_projection(
 
     result = forward_returns.copy(deep=True).iloc[0:0]
     result["factor"] = pd.Series(index=result.index, dtype=float)
-    if groupby is not None:
-        result["group"] = pd.Series(pd.Categorical([]), index=result.index)
+    if groups is not None:
+        # Assigning a non-empty Series to an empty frame grows its index;
+        # source assigns before ``dropna``.  Reindex first to retain only the
+        # empty target while preserving CategoricalDtype metadata.
+        result["group"] = groups.reindex(result.index)
     result["factor_quantile"] = pd.Series(index=result.index, dtype=float)
     print(f"max_loss is {float(max_loss) * 100:.1f}%, not exceeded: OK!")
     return result
@@ -191,6 +224,7 @@ def get_clean_factor(
         factor,
         forward_returns,
         groupby=groupby,
+        groupby_labels=groupby_labels,
         max_loss=max_loss,
     )
     if strict_empty is not None:
