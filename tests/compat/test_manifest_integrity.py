@@ -120,8 +120,10 @@ def _reviewable_alphalens_evidence(generator: Any) -> tuple[dict[str, Any], dict
         "requirements_sha256": "5" * 64,
     }
     initial = generator._merge_alphalens_oracle_attestation(generated, None, companions)
+    api_manifest_digest = generator._alphalens_json_digest(generated)
     environment_digest = generator._alphalens_json_digest(companions["environment"])
     attestation = {
+        "api_manifest_digest": api_manifest_digest,
         "candidate_digest": "6" * 64,
         "environment_digest": environment_digest,
         "evidence_key": generator._alphalens_review_evidence_key(
@@ -132,6 +134,47 @@ def _reviewable_alphalens_evidence(generator: Any) -> tuple[dict[str, Any], dict
         ),
         "reviewed": True,
         "reviewed_at": "2026-08-13",
+        "reviewer": "compat-reviewer@example.test",
+        "status": "captured-reviewed",
+    }
+    reviewed = copy.deepcopy(initial)
+    reviewed["oracle_verification"] = copy.deepcopy(attestation)
+    companions["cases"]["oracle_verification"] = copy.deepcopy(attestation)
+    companions["environment"]["oracle_verification"] = copy.deepcopy(attestation)
+    return generated, reviewed, companions
+
+
+def _reviewable_real_alphalens_manifest(generator: Any) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Build an attested tuple from the checked-in Alphalens profile, not a toy API."""
+    generated = (
+        generator._generate_alphalens(ALPHALENS_ROOT)
+        if ALPHALENS_ROOT.is_dir()
+        else _load("alphalens-0.4.0-cloudquant-api.json")
+    )
+    environment_path = Path(__file__).parent / "oracle" / "alphalens-0.4.0-cloudquant-environment.json"
+    explicit_lock = environment_path.with_name("alphalens-0.4.0-cloudquant-conda-explicit.txt")
+    requirements = environment_path.with_name("requirements-alphalens-0.4.0-cloudquant.txt")
+    companions = {
+        "cases": _load("alphalens-0.4.0-cloudquant-cases.json"),
+        "environment": json.loads(environment_path.read_text(encoding="utf-8")),
+        "explicit_lock_sha256": hashlib.sha256(explicit_lock.read_bytes()).hexdigest(),
+        "requirements_sha256": hashlib.sha256(requirements.read_bytes()).hexdigest(),
+    }
+    initial = generator._merge_alphalens_oracle_attestation(generated, None, companions)
+    api_manifest_digest = generator._alphalens_json_digest(generated)
+    environment_digest = generator._alphalens_json_digest(companions["environment"])
+    attestation = {
+        "api_manifest_digest": api_manifest_digest,
+        "candidate_digest": "d" * 64,
+        "environment_digest": environment_digest,
+        "evidence_key": generator._alphalens_review_evidence_key(
+            generated,
+            companions,
+            candidate_digest="d" * 64,
+            environment_digest=environment_digest,
+        ),
+        "reviewed": True,
+        "reviewed_at": "2026-08-14",
         "reviewer": "compat-reviewer@example.test",
         "status": "captured-reviewed",
     }
@@ -477,11 +520,36 @@ def test_alphalens_oracle_review_attestation_invalidates_for_every_review_releva
         assert invalidated["oracle_verification"]["status"] == "not-run", name
 
 
+def test_alphalens_review_attestation_binds_the_entire_real_api_manifest() -> None:
+    generator = _load_generator()
+    generated, reviewed, companions = _reviewable_real_alphalens_manifest(generator)
+    assert generated["profile"] == ALPHALENS_PROFILE
+    assert generated["counts"]["functions"] == 61
+    assert (
+        generator._merge_alphalens_oracle_attestation(generated, reviewed, companions)["oracle_verification"][
+            "reviewed"
+        ]
+        is True
+    )
+
+    mutations = {
+        "profile": lambda manifest: manifest.__setitem__("profile", "changed-profile"),
+        "counts.functions": lambda manifest: manifest["counts"].__setitem__("functions", 62),
+    }
+    for name, mutate in mutations.items():
+        drifted = copy.deepcopy(generated)
+        mutate(drifted)
+        invalidated = generator._merge_alphalens_oracle_attestation(drifted, reviewed, copy.deepcopy(companions))
+        assert invalidated["oracle_verification"]["reviewed"] is False, name
+        assert invalidated["oracle_verification"]["status"] == "not-run", name
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
         ("reviewer", ""),
         ("reviewed_at", "not-a-date"),
+        ("api_manifest_digest", None),
         ("candidate_digest", None),
         ("environment_digest", None),
     ],

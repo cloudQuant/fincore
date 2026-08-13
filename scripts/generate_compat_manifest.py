@@ -1187,6 +1187,7 @@ def _alphalens_review_evidence_key(
     if not isinstance(cases, dict) or not isinstance(environment, dict):
         raise ValueError("Alphalens reviewed oracle attestation requires case and environment JSON")
     evidence = {
+        "api_manifest_digest": _alphalens_json_digest(manifest),
         "api": {
             "commit": manifest["commit"],
             "source_files": manifest["source_files"],
@@ -1234,6 +1235,7 @@ def _valid_alphalens_review_attestation(
         return False
     if attestation != case_attestation or attestation != environment_attestation:
         return False
+    api_manifest_digest = attestation.get("api_manifest_digest")
     candidate_digest = attestation.get("candidate_digest")
     environment_digest = attestation.get("environment_digest")
     if not (
@@ -1242,12 +1244,15 @@ def _valid_alphalens_review_attestation(
         and isinstance(attestation.get("reviewer"), str)
         and bool(attestation["reviewer"].strip())
         and _is_review_date(attestation.get("reviewed_at"))
+        and _is_sha256(api_manifest_digest)
         and _is_sha256(candidate_digest)
         and _is_sha256(environment_digest)
         and _is_sha256(attestation.get("evidence_key"))
         and _is_sha256(companions.get("explicit_lock_sha256"))
         and _is_sha256(companions.get("requirements_sha256"))
     ):
+        return False
+    if api_manifest_digest != _alphalens_json_digest(manifest):
         return False
     if environment_digest != _alphalens_json_digest(environment):
         return False
