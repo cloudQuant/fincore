@@ -471,7 +471,7 @@ def max_drawdown_days(returns: pd.Series | np.ndarray) -> int | float:
     if isinstance(returns.index, pd.DatetimeIndex):
         end_ts = cast("pd.Timestamp", end_idx)
         start_ts = cast("pd.Timestamp", start_idx)
-        return (end_ts - start_ts).days
+        return cast("int", (end_ts - start_ts).days)
     start_pos = cast("int", returns.index.get_loc(start_idx))
     end_pos = cast("int", returns.index.get_loc(end_idx))
     return end_pos - start_pos
@@ -557,7 +557,7 @@ def max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | float:
         recovery_date = cast("pd.Timestamp", post_dd_data[recovery_mask].index[0])
         elapsed = recovery_date - max_dd_date
         if hasattr(elapsed, "days"):
-            return elapsed.days
+            return cast("int", elapsed.days)
         # Non-datetime indexes produce plain integer label differences.
         return int(cast("int", elapsed))
     return np.nan

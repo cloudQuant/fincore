@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,7 @@ import pandas as pd
 from fincore.exceptions import DataAlignmentError
 
 AlignmentPolicy = Literal["strict", "inner", "outer_dropna"]
-TimeSeries = pd.Series | pd.DataFrame
+TimeSeries: TypeAlias = pd.Series | pd.DataFrame
 
 __all__ = ["AlignmentPolicy", "align_binary_metric_inputs", "align_time_series"]
 

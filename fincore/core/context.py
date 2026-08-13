@@ -416,11 +416,11 @@ class AnalysisContext:
         self,
         *,
         returns: pd.Series | object = _UNSET,
-        factor_returns: pd.Series | None | object = _UNSET,
-        positions: pd.DataFrame | None | object = _UNSET,
-        transactions: pd.DataFrame | None | object = _UNSET,
+        factor_returns: pd.Series | object | None = _UNSET,
+        positions: pd.DataFrame | object | None = _UNSET,
+        transactions: pd.DataFrame | object | None = _UNSET,
         period: str | object = _UNSET,
-        normalize_tz: str | None | object = _UNSET,
+        normalize_tz: str | object | None = _UNSET,
     ) -> None:
         """Atomically replace snapshot inputs and invalidate every cached metric."""
 

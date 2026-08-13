@@ -162,7 +162,7 @@ def max_consecutive_up_days(returns: pd.Series) -> float:
     groups = (up_days != up_days.shift(1)).cumsum()
     consecutive_counts = up_days.groupby(groups).sum()
 
-    return consecutive_counts.max()
+    return cast("float", consecutive_counts.max())
 
 
 def max_consecutive_down_days(returns: pd.Series) -> float:
@@ -190,7 +190,7 @@ def max_consecutive_down_days(returns: pd.Series) -> float:
     groups = (down_days != down_days.shift(1)).cumsum()
     consecutive_counts = down_days.groupby(groups).sum()
 
-    return consecutive_counts.max()
+    return cast("float", consecutive_counts.max())
 
 
 def max_consecutive_gain(returns: pd.Series) -> float:

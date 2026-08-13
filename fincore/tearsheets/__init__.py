@@ -91,7 +91,7 @@ _ATTR_MAP = {
     "create_perf_attrib_tear_sheet": ("sheets", "create_perf_attrib_tear_sheet"),
 }
 
-_SUBMODULE_CACHE = {}
+_SUBMODULE_CACHE: dict[str, Any] = {}
 
 
 def __getattr__(name: str) -> Any:
