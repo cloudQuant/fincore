@@ -259,7 +259,7 @@ def conditional_value_at_risk(returns: pd.Series | np.ndarray, cutoff: float = 0
     if not np.all(np.isfinite(arr)):
         return np.nan
     cutoff_index = value_at_risk(returns, cutoff=cutoff)
-    return float(np.mean(returns[returns <= cutoff_index]))
+    return cast("float", np.mean(returns[returns <= cutoff_index]))
 
 
 def tail_ratio(returns: pd.Series | np.ndarray) -> float:
@@ -289,7 +289,7 @@ def tail_ratio(returns: pd.Series | np.ndarray) -> float:
     left_tail = np.abs(np.percentile(returns, 5))
     if left_tail == 0:
         return np.nan
-    return float(np.abs(np.percentile(returns, 95)) / left_tail)
+    return cast("float", np.abs(np.percentile(returns, 95)) / left_tail)
 
 
 def tracking_error(
@@ -423,7 +423,7 @@ def residual_risk(
     residuals = excess_returns - predicted_returns
 
     ann_factor = annualization_factor(period, annualization)
-    return float(np.std(residuals, ddof=1)) * float(np.sqrt(ann_factor))
+    return cast("float", np.std(residuals, ddof=1)) * cast("float", np.sqrt(ann_factor))
 
 
 def var_excess_return(
@@ -585,8 +585,8 @@ def trading_value_at_risk(
     if len(returns) < 2:
         return np.nan
 
-    mean_ret = float(np.mean(returns))
-    std_ret = float(np.std(returns, ddof=1))
+    mean_ret = cast("float", np.mean(returns))
+    std_ret = cast("float", np.std(returns, ddof=1))
 
     return mean_ret - sigma * std_ret
 

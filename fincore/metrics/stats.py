@@ -282,11 +282,11 @@ def stutzer_index(returns: pd.Series | np.ndarray, target_return: float = 0.0) -
             result = minimize_scalar(neg_ip, bounds=(1e-10, 50), method="bounded")
 
         if result.success:
-            ip = float(-result.fun)
+            ip = cast("float", -result.fun)
             if ip < 0:
                 ip = 0.0
             sign = 1.0 if mean_excess > 0 else -1.0
-            return sign * float(np.sqrt(2 * ip))
+            return sign * cast("float", np.sqrt(2 * ip))
         return np.nan
     except (ValueError, FloatingPointError, ZeroDivisionError, RuntimeError) as e:
         logger.debug("stutzer_index failed: %s", e)
@@ -650,7 +650,7 @@ def r_cubed_turtle(returns: pd.Series | np.ndarray, period: str = DAILY, annuali
     if len(max_dds) == 0:
         return np.nan
 
-    avg_max_dd = float(np.mean(max_dds))
+    avg_max_dd = cast("float", np.mean(max_dds))
     if avg_max_dd < 1e-15:
         return np.inf if rar > 0 else np.nan
 
@@ -816,6 +816,6 @@ def normalize(returns: pd.Series | np.ndarray, starting_value: float = 1) -> pd.
     """
     from fincore.metrics.returns import normalize as _normalize
 
-    # The delegate operates on Series (label-aware normalization); the
-    # Series | ndarray annotation here mirrors the historical public API.
+    # The delegate declares a Series-only contract; the cast narrows to that
+    # container without changing runtime behavior.
     return _normalize(cast("pd.Series", returns), starting_value=starting_value)

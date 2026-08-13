@@ -324,7 +324,7 @@ def roll_sharpe_ratio(
 
     assert isinstance(returns, pd.Series)
     ann_factor = annualization_factor(period, annualization)
-    sqrt_ann = float(np.sqrt(ann_factor))
+    sqrt_ann = cast("float", np.sqrt(ann_factor))
 
     ret_adj = returns - risk_free
     rolling_mean = ret_adj.rolling(window, min_periods=1).mean()
@@ -549,7 +549,7 @@ def rolling_volatility(
         Rolling volatility, annualized.
     """
     ann_factor = annualization_factor(period, annualization)
-    sqrt_ann = float(np.sqrt(ann_factor))
+    sqrt_ann = cast("float", np.sqrt(ann_factor))
     return returns.rolling(window=rolling_vol_window).std() * sqrt_ann
 
 
@@ -582,7 +582,7 @@ def rolling_sharpe(
     rolling_std = returns.rolling(window=rolling_sharpe_window).std()
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        return rolling_mean / rolling_std * float(np.sqrt(ann_factor))
+        return rolling_mean / rolling_std * cast("float", np.sqrt(ann_factor))
 
 
 def rolling_beta(

@@ -86,9 +86,9 @@ def annual_return(
         return result
     if ending_value <= 0:
         return -1.0
-    # float() is a no-op on the scalar np value; it only pins the static
-    # type because mypy types ``float ** float`` as Any.
-    return float(ending_value ** (1 / num_years)) - 1
+    # cast() is a runtime no-op; it only pins the static type because
+    # mypy types ``float ** float`` as Any.
+    return cast("float", ending_value ** (1 / num_years)) - 1
 
 
 def annual_return_by_year(

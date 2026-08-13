@@ -358,13 +358,13 @@ def conditional_sharpe_ratio(
     if len(conditional_returns) < 2:
         return np.nan
 
-    mean_ret = float(np.mean(conditional_returns)) - risk_free
-    std_ret = float(np.std(conditional_returns, ddof=1))
+    mean_ret = cast("float", np.mean(conditional_returns)) - risk_free
+    std_ret = cast("float", np.std(conditional_returns, ddof=1))
 
     if std_ret == 0 or not np.isfinite(mean_ret) or not np.isfinite(std_ret):
         return np.nan
 
-    return mean_ret / std_ret * float(np.sqrt(ann_factor))
+    return mean_ret / std_ret * cast("float", np.sqrt(ann_factor))
 
 
 def calmar_ratio(
@@ -468,7 +468,7 @@ def mar_ratio(
     if len(returns_clean) < 1:
         return np.nan
 
-    ann_mean_return = float(np.mean(returns_clean)) * ann_factor
+    ann_mean_return = cast("float", np.mean(returns_clean)) * ann_factor
     # ``max_dd`` is a scalar here; the cast is a static narrowing only.
     result = ann_mean_return / cast("float", abs(max_dd))
 
@@ -540,8 +540,8 @@ def omega_ratio(
     threshold = risk_free + return_threshold
     returns_less_thresh = returns - threshold
 
-    numer = float(np.nansum(returns_less_thresh[returns_less_thresh > 0.0]))
-    denom = -1.0 * float(np.nansum(returns_less_thresh[returns_less_thresh < 0.0]))
+    numer = cast("float", np.nansum(returns_less_thresh[returns_less_thresh > 0.0]))
+    denom = -1.0 * cast("float", np.nansum(returns_less_thresh[returns_less_thresh < 0.0]))
 
     if denom > 0.0:
         return numer / denom
@@ -1012,16 +1012,16 @@ def kappa_three_ratio(
         return np.nan
 
     downside_deviations = np.maximum(0, mar - returns_clean)
-    lpm3 = float(np.mean(downside_deviations**3))
+    lpm3 = cast("float", np.mean(downside_deviations**3))
 
-    mu = float(np.mean(returns_clean))
+    mu = cast("float", np.mean(returns_clean))
 
     if lpm3 < 1e-30:
         return np.inf if mu > mar else np.nan
 
-    # float() is a no-op on the scalar np value; it only pins the static
-    # type because mypy types ``float ** float`` as Any.
-    return (mu - mar) / float(lpm3 ** (1.0 / 3.0))
+    # cast() is a runtime no-op; it only pins the static type because
+    # mypy types ``float ** float`` as Any.
+    return (mu - mar) / cast("float", lpm3 ** (1.0 / 3.0))
 
 
 def deflated_sharpe_ratio(
