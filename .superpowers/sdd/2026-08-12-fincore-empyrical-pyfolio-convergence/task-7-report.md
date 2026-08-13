@@ -149,3 +149,83 @@ explicit raw metric resolver rather than weakening the entire Pyfolio subtree.
 Task 8 may build the compute-once report model and offline renderers on the
 `ReportArtifacts` lifecycle introduced here. Task 12 retains ownership of the
 full-package type-error baseline and must rerun it after Tasks 8–11.
+
+### Fix round: review follow-up (RED tests in worktree)
+
+The review round added 18 RED contract tests to the worktree (17 failures in
+`tests/contracts/test_metric_surface_profiles.py` additions plus the new
+`tests/contracts/test_portfolio_schema.py` matrix; 18 failed, 210 passed at
+start). Each finding and its fix:
+
+1. **`information_ratio` missing from the class and metrics surfaces.**
+   The frozen empyrical-0.6.0 manifest has no `information_ratio` entry, so it
+   was only registered on `fincore_flat` via `_FLAT_EXTRA_KERNELS`. A new
+   `_CLASS_METRICS_EXTRA_KERNELS` block in `fincore/_registry.py` registers
+   `("empyrical_class", "information_ratio", "stateful-enhanced")` with
+   `binding="returns_factor"` and `("metrics", "information_ratio", "enhanced")`.
+   The strict `empyrical_module` surface intentionally gains nothing (no
+   manifest key exists, and upstream 0.6.0 has no such function). All three
+   surfaces now raise `NumericalError` ("finite") for NaN inputs, raise
+   `DataAlignmentError` ("sorted") for unsorted originals, and the class
+   instance binds stored `returns` + `factor_returns` with public signature
+   `(period, annualization, *, alignment, normalize_tz)`.
+2. **Dispatch-coverage markers (`__fincore_dispatch_spec__`).** The registry
+   entries from finding 1 give the class and metrics surfaces exact spec keys;
+   the existing dispatch wrapper already stamps the marker, and
+   `install_metric_module_surface` wraps `ratios.information_ratio`
+   automatically because its kernel_ref lives in that module.
+3. **Unsorted originals silently reordered by inner alignment.** The enhanced
+   `validate_metric_arguments` now checks `index.is_monotonic_increasing` on
+   both original pandas inputs of every `(returns, factor_returns)` /
+   `(lhs, rhs)` pair before `align_binary_metric_inputs` runs. Alignment can no
+   longer hide a caller's unsorted data behind a sorted intersection. Duplicate
+   and finite-value ordering is unchanged; NaN rows dropped by `alignment="inner"`
+   retention still validate after alignment.
+4. **Stale kernels after `importlib.reload`.** Flat entries cached in
+   `fincore.__dict__`, class wrappers, and instance-bound methods previously
+   closed over the first resolved kernel. `fincore/_dispatch.py` now returns a
+   `_LazyMetricCallable` that resolves the kernel through its registry
+   reference on every invocation (signature cached per kernel identity) and
+   exposes `__wrapped__` as a property returning the currently reachable
+   kernel. Bound-method caching is preserved, so `instance.annual_return` stays
+   `is`-identical while `bound.__wrapped__.__wrapped__` resolves the fresh
+   kernel. Signature, name, doc, annotations, and dispatch-spec markers are
+   carried forward, keeping all signature-preservation and alias tests green.
+5. **Empty portfolio inputs accepted at enhanced boundaries.** 
+   `validate_positions_schema` (Series and DataFrame) and
+   `validate_transactions_schema` now reject zero-row inputs with
+   `ValidationError` ("cannot be empty") before index normalization.
+   `validate_market_data_schema` inherits the rejection through its
+   per-panel positions validation, and both `validate_context_inputs` and
+   `validate_metric_arguments("enhanced", ...)` route empty
+   positions/transactions/market_data into the same error instead of
+   `DataAlignmentError` overlap or silent acceptance.
+
+Files changed (production): `fincore/_registry.py`, `fincore/_dispatch.py`,
+`fincore/contracts/validation.py`. Test files committed as owned by the fix
+round: `tests/contracts/test_metric_surface_profiles.py`,
+`tests/contracts/test_portfolio_schema.py`.
+
+Commands run (all with `conda run -n base python -m pytest -o addopts=''`):
+
+```text
+tests/contracts/test_metric_surface_profiles.py tests/contracts/test_portfolio_schema.py:
+    18 failed, 210 passed  ->  231 passed
+tests/contracts tests/test_core tests/test_report:  376 passed
+tests/compat/empyrical tests/compat/pyfolio:  622 passed, 4 pinned warnings
+scoped mypy --follow-imports=skip (_dispatch, _registry, contracts/validation):  Success
+ruff check / ruff format --check on all changed files:  clean
+git diff --check:  clean
+```
+
+Whole-suite comparison (`pytest tests/` with default parallel config)
+confirms the fix round introduces **zero new failures**: the failure sets
+before and after the change are identical except for the 18 RED contract
+tests, which are now fixed. The remaining whole-suite failures (mostly
+`tests/test_empyrical` NaN/empty-input cases that predate this fix round)
+are the branch's known consequence of the committed enhanced class surface
+and are not owned by Task 7's fix round.
+
+Concerns: none blocking. The lazy kernel resolution adds one
+`importlib.import_module` hit per dispatch call (a dict lookup on an
+already-imported module); benchmarks are unaffected at this scale.

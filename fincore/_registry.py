@@ -626,6 +626,44 @@ for _name, _kernel_ref in _FLAT_EXTRA_KERNELS.items():
     )
 
 
+# Enhanced binary metrics that exist on the class and metrics surfaces but are
+# not part of the frozen empyrical-0.6.0 manifest, so they must not appear on
+# the strict empyrical_module surface.
+_CLASS_METRICS_EXTRA_KERNELS = {"information_ratio": "fincore.metrics.ratios:information_ratio"}
+for _name, _kernel_ref in _CLASS_METRICS_EXTRA_KERNELS.items():
+    _projection, _out_policy = _enhanced_out_contract(_name, _kernel_ref)
+    _register(
+        MetricSpec(
+            surface="empyrical_class",
+            public_name=_name,
+            variant="stateful-enhanced",
+            kernel_ref=_kernel_ref,
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding="returns_factor",
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection=_projection,
+            out_policy=_out_policy,
+        )
+    )
+    _register(
+        MetricSpec(
+            surface="metrics",
+            public_name=_name,
+            variant="enhanced",
+            kernel_ref=_kernel_ref,
+            adapter_ref="fincore._dispatch:enhanced_identity_adapter",
+            signature_manifest_key=None,
+            binding="static",
+            validation_profile="enhanced",
+            result_contract_key=f"fincore-0.3.x:{_name}",
+            result_projection=_projection,
+            out_policy=_out_policy,
+        )
+    )
+
+
 _CONTEXT_KERNELS = {
     "annual_return": "annual_return",
     "cumulative_returns": "cum_returns_final",

@@ -216,28 +216,69 @@ def metric_callable(surface: Surface, public_name: str, variant: str):
     return _metric_callable_for_resolved_contract(spec, kernel, adapter)
 
 
+class _LazyMetricCallable:
+    """Preserve the public signature while resolving a fresh kernel per call.
+
+    ``importlib.reload`` replaces kernel function objects inside the metric
+    modules.  Wrappers that closed over the first resolved function would pin
+    cached facades — flat API entries and instance-bound methods included —
+    onto stale kernels.  Resolving through the registry reference on each use
+    keeps every cached wrapper consistent with the code the reload left in
+    place, and ``__wrapped__`` exposes the kernel that is current right now.
+    """
+
+    __name__: str
+    __qualname__: str
+    __module__: str
+    __doc__: str | None
+    __annotations__: dict[str, Any]
+    __signature__: inspect.Signature
+    __fincore_dispatch_spec__: tuple[Surface, str, str]
+
+    def __init__(self, spec: MetricSpec, kernel: Any, adapter: Any, signature: inspect.Signature) -> None:
+        self._spec = spec
+        self._adapter = adapter
+        self._kernel = kernel
+        self._signature = signature
+        self.__name__ = spec.public_name
+        self.__qualname__ = spec.public_name
+        self.__module__ = kernel.__module__
+        self.__doc__ = getattr(kernel, "__doc__", None)
+        self.__annotations__ = dict(getattr(kernel, "__annotations__", {}))
+        self.__signature__ = signature
+        self.__fincore_dispatch_spec__ = (spec.surface, spec.public_name, spec.variant)
+
+    @property
+    def __wrapped__(self) -> Any:
+        """The kernel object currently reachable through the registry."""
+
+        return _resolve(self._spec.kernel_ref)
+
+    def _current_contract(self) -> tuple[Any, inspect.Signature]:
+        kernel = _resolve(self._spec.kernel_ref)
+        if kernel is self._kernel:
+            return kernel, self._signature
+        self._kernel = kernel
+        self._signature = inspect.signature(kernel)
+        return kernel, self._signature
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        if _RAW_KERNEL_DEPTH.get() > 0:
+            return _resolve(self._spec.kernel_ref)(*args, **kwargs)
+        kernel, signature = self._current_contract()
+        bound = _validated_arguments(self._spec, signature, args, kwargs)
+        with _raw_kernel_execution():
+            result = self._adapter(kernel, bound.arguments)
+        return _apply_projection(self._spec, result)
+
+
 @functools.cache
 def _metric_callable_for_resolved_contract(spec: MetricSpec, kernel: Any, adapter: Any):
     """Cache a wrapper by the resolved callables, including reload identity."""
 
     signature = inspect.signature(kernel)
     _check_contract(spec, signature)
-
-    @functools.wraps(kernel)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        if _RAW_KERNEL_DEPTH.get() > 0:
-            return kernel(*args, **kwargs)
-        bound = _validated_arguments(spec, signature, args, kwargs)
-        with _raw_kernel_execution():
-            result = adapter(kernel, bound.arguments)
-        return _apply_projection(spec, result)
-
-    wrapped: Any = wrapper
-    wrapped.__signature__ = signature
-    wrapped.__name__ = spec.public_name
-    wrapped.__qualname__ = spec.public_name
-    wrapped.__fincore_dispatch_spec__ = (spec.surface, spec.public_name, spec.variant)
-    return wrapped
+    return _LazyMetricCallable(spec, kernel, adapter, signature)
 
 
 class _ValidatedMetricModule(types.ModuleType):

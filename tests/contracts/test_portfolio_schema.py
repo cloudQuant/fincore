@@ -20,6 +20,22 @@ def test_positions_schema_requires_cash_under_the_explicit_net_asset_convention(
         _validation_module().validate_positions_schema(positions, require_cash=True)
 
 
+@pytest.mark.parametrize(
+    "positions",
+    [
+        pd.DataFrame(
+            {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
+            index=pd.DatetimeIndex([], name="date"),
+        ),
+        pd.Series(dtype=float, index=pd.DatetimeIndex([], name="date"), name="AAA"),
+    ],
+    ids=["frame", "series"],
+)
+def test_positions_schema_rejects_empty_rows(positions: pd.Series | pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="empty"):
+        _validation_module().validate_positions_schema(positions)
+
+
 def test_positions_schema_rejects_duplicate_columns_and_non_finite_values() -> None:
     index = pd.date_range("2024-01-01", periods=1)
     duplicate = pd.DataFrame([[100.0, 0.0]], columns=["cash", "cash"], index=index)
@@ -96,6 +112,20 @@ def test_transactions_schema_preserves_duplicate_timestamps_and_rows() -> None:
     pd.testing.assert_frame_equal(actual, transactions)
 
 
+def test_transactions_schema_rejects_empty_rows_with_canonical_columns() -> None:
+    transactions = pd.DataFrame(
+        {
+            "amount": pd.Series(dtype=float),
+            "price": pd.Series(dtype=float),
+            "symbol": pd.Series(dtype=object),
+        },
+        index=pd.DatetimeIndex([], name="date"),
+    )
+
+    with pytest.raises(ValidationError, match="empty"):
+        _validation_module().validate_transactions_schema(transactions)
+
+
 def test_transactions_schema_allows_duplicate_timestamps_but_requires_monotonic_order() -> None:
     index = pd.to_datetime(["2024-01-02 10:00", "2024-01-01 10:00"], utc=True)
     transactions = pd.DataFrame(
@@ -135,6 +165,17 @@ def test_market_data_schema_requires_matching_price_and_volume_frames() -> None:
 
     with pytest.raises(DataAlignmentError, match="columns"):
         _validation_module().validate_market_data_schema({"price": price, "volume": volume})
+
+
+def test_market_data_schema_rejects_empty_price_and_volume_rows() -> None:
+    index = pd.DatetimeIndex([], name="date")
+    market_data = {
+        "price": pd.DataFrame({"AAA": pd.Series(dtype=float)}, index=index),
+        "volume": pd.DataFrame({"AAA": pd.Series(dtype=float)}, index=index),
+    }
+
+    with pytest.raises(ValidationError, match="empty"):
+        _validation_module().validate_market_data_schema(market_data)
 
 
 @pytest.mark.parametrize("defect", ["duplicate_columns", "non_finite", "negative_volume"])
@@ -198,6 +239,57 @@ def test_context_requires_exact_positions_date_overlap() -> None:
 
     with pytest.raises(DataAlignmentError, match="overlap"):
         _validation_module().validate_context_inputs(returns=returns, positions=positions)
+
+
+@pytest.mark.parametrize("auxiliary", ["positions", "transactions"])
+def test_context_rejects_empty_portfolio_inputs_at_the_schema_boundary(auxiliary: str) -> None:
+    returns = pd.Series([0.01], index=pd.date_range("2024-01-01", periods=1, tz="UTC"))
+    empty_index = pd.DatetimeIndex([], tz="UTC", name="date")
+    if auxiliary == "positions":
+        value = pd.DataFrame(
+            {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
+            index=empty_index,
+        )
+    else:
+        value = pd.DataFrame(
+            {
+                "amount": pd.Series(dtype=float),
+                "price": pd.Series(dtype=float),
+                "symbol": pd.Series(dtype=object),
+            },
+            index=empty_index,
+        )
+
+    with pytest.raises(ValidationError, match="empty"):
+        _validation_module().validate_context_inputs(returns=returns, **{auxiliary: value})
+
+
+@pytest.mark.parametrize("argument", ["positions", "transactions", "market_data"])
+def test_enhanced_argument_boundary_rejects_empty_portfolio_inputs(argument: str) -> None:
+    empty_index = pd.DatetimeIndex([], name="date")
+    positions = pd.DataFrame(
+        {"AAA": pd.Series(dtype=float), "cash": pd.Series(dtype=float)},
+        index=empty_index,
+    )
+    transactions = pd.DataFrame(
+        {
+            "amount": pd.Series(dtype=float),
+            "price": pd.Series(dtype=float),
+            "symbol": pd.Series(dtype=object),
+        },
+        index=empty_index,
+    )
+    values = {
+        "positions": positions,
+        "transactions": transactions,
+        "market_data": {
+            "price": positions.drop(columns="cash"),
+            "volume": positions.drop(columns="cash"),
+        },
+    }
+
+    with pytest.raises(ValidationError, match="empty"):
+        _validation_module().validate_metric_arguments("enhanced", {argument: values[argument]})
 
 
 def test_context_transactions_overlap_returns_by_calendar_day() -> None:

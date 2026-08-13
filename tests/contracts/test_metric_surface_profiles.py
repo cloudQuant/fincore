@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import pkgutil
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ from fincore import Empyrical
 from fincore import empyrical as legacy
 from fincore._registry import METRIC_REGISTRY
 from fincore.core.context import AnalysisContext
-from fincore.exceptions import NumericalError
+from fincore.exceptions import DataAlignmentError, NumericalError
 
 CONTEXT_KERNELS = {
     "annual_return": "annual_return",
@@ -51,6 +52,147 @@ def _returns_with_nan() -> pd.Series:
 def test_enhanced_surfaces_share_the_same_domain_exception(call) -> None:
     with pytest.raises(NumericalError, match="finite"):
         call(_returns_with_nan())
+
+
+@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
+def test_information_ratio_uses_enhanced_validation_on_every_real_surface(surface: str) -> None:
+    from fincore.metrics import ratios
+
+    returns = _returns_with_nan()
+    factor_returns = pd.Series([0.005, 0.001, -0.004], index=returns.index)
+    calls = {
+        "flat": fincore.information_ratio,
+        "class": Empyrical.information_ratio,
+        "metrics": ratios.information_ratio,
+    }
+
+    with pytest.raises(NumericalError, match="finite"):
+        calls[surface](returns, factor_returns)
+
+
+def test_information_ratio_instance_binds_stored_returns_and_factor() -> None:
+    returns = pd.Series([0.01, -0.005, 0.02], index=pd.date_range("2024-01-01", periods=3))
+    factor_returns = pd.Series([0.004, -0.002, 0.006], index=returns.index)
+    instance = Empyrical(returns=returns, factor_returns=factor_returns)
+
+    assert instance.information_ratio() == Empyrical.information_ratio(returns, factor_returns)
+    assert list(inspect.signature(instance.information_ratio).parameters) == [
+        "period",
+        "annualization",
+        "alignment",
+        "normalize_tz",
+    ]
+
+
+@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
+def test_information_ratio_rejects_original_unsorted_inputs_before_inner_alignment(surface: str) -> None:
+    from fincore.metrics import ratios
+
+    returns = pd.Series(
+        [0.01, 0.02, -0.01],
+        index=pd.to_datetime(["2024-01-03", "2024-01-01", "2024-01-02"]),
+    )
+    factor_returns = pd.Series(
+        [0.004, -0.002, 0.006],
+        index=pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03"]),
+    )
+    calls = {
+        "flat": fincore.information_ratio,
+        "class": Empyrical.information_ratio,
+        "metrics": ratios.information_ratio,
+    }
+
+    with pytest.raises(DataAlignmentError, match="sorted"):
+        calls[surface](returns, factor_returns, alignment="inner")
+
+
+@pytest.mark.parametrize("surface", ["flat", "class", "metrics"])
+def test_information_ratio_checks_finite_values_after_inner_retention(surface: str) -> None:
+    from fincore.metrics import ratios
+
+    returns = pd.Series(
+        [np.nan, 0.01, 0.02, -0.01],
+        index=pd.date_range("2023-12-31", periods=4),
+    )
+    factor_returns = pd.Series(
+        [0.004, -0.002, 0.006],
+        index=pd.date_range("2024-01-01", periods=3),
+    )
+    calls = {
+        "flat": fincore.information_ratio,
+        "class": Empyrical.information_ratio,
+        "metrics": ratios.information_ratio,
+    }
+
+    assert np.isfinite(calls[surface](returns, factor_returns, alignment="inner"))
+
+
+def test_actual_shared_enhanced_exports_have_complete_dispatch_coverage() -> None:
+    import fincore.metrics as metrics_package
+
+    flat_exports = {
+        name for name in fincore.__all__ if not name.startswith("_") and callable(getattr(fincore, name, None))
+    }
+    class_exports = {
+        name for name in dir(Empyrical) if not name.startswith("_") and callable(getattr(Empyrical, name, None))
+    }
+    module_exports: dict[str, list[object]] = {}
+    for module_info in pkgutil.iter_modules(metrics_package.__path__, f"{metrics_package.__name__}."):
+        module = importlib.import_module(module_info.name)
+        for name in getattr(module, "__all__", ()):
+            public = getattr(module, name, None)
+            if not name.startswith("_") and callable(public):
+                module_exports.setdefault(name, []).append(public)
+
+    shared_exports = flat_exports & class_exports & set(module_exports)
+    assert shared_exports == {
+        "aggregate_returns",
+        "alpha",
+        "alpha_beta",
+        "annual_return",
+        "annual_volatility",
+        "beta",
+        "calmar_ratio",
+        "capture",
+        "cum_returns",
+        "cum_returns_final",
+        "downside_risk",
+        "information_ratio",
+        "max_drawdown",
+        "omega_ratio",
+        "sharpe_ratio",
+        "simple_returns",
+        "sortino_ratio",
+        "stability_of_timeseries",
+        "tail_ratio",
+        "value_at_risk",
+    }
+
+    missing_specs: list[tuple[str, str, str]] = []
+    missing_markers: list[tuple[str, str, object]] = []
+    expected_specs = {
+        "flat": ("fincore_flat", "enhanced-0.3.x"),
+        "class": ("empyrical_class", "stateful-enhanced"),
+        "metrics": ("metrics", "enhanced"),
+    }
+    for name in sorted(shared_exports):
+        public_surfaces = {
+            "flat": [getattr(fincore, name)],
+            "class": [getattr(Empyrical, name)],
+            "metrics": module_exports[name],
+        }
+        for label, callables in public_surfaces.items():
+            surface, variant = expected_specs[label]
+            registry_key = (surface, name, variant)
+            if registry_key not in METRIC_REGISTRY:
+                missing_specs.append(registry_key)
+            expected_marker = registry_key
+            for public in callables:
+                marker = getattr(public, "__fincore_dispatch_spec__", None)
+                if marker != expected_marker:
+                    missing_markers.append((label, name, marker))
+
+    assert (missing_specs, missing_markers) == ([], [])
 
 
 def test_strict_legacy_surface_bypasses_enhanced_validation() -> None:
@@ -196,3 +338,31 @@ def test_metrics_alias_still_uses_enhanced_validation_after_module_reload() -> N
     assert reloaded.cagr.__wrapped__ is vars(reloaded)["annual_return"]
     with pytest.raises(NumericalError, match="finite"):
         reloaded.cagr(_returns_with_nan())
+
+
+def test_cached_flat_metric_refreshes_its_kernel_after_module_reload() -> None:
+    from fincore.metrics import yearly
+
+    cached_flat = fincore.annual_return
+    original_kernel = vars(yearly)["annual_return"]
+    reloaded = importlib.reload(yearly)
+    current_kernel = vars(reloaded)["annual_return"]
+
+    assert current_kernel is not original_kernel
+    assert cached_flat.__wrapped__ is current_kernel
+    assert fincore.annual_return.__wrapped__ is current_kernel
+
+
+def test_already_bound_empyrical_metric_refreshes_its_kernel_after_module_reload() -> None:
+    from fincore.metrics import yearly
+
+    returns = pd.Series([0.01, -0.005, 0.02], index=pd.date_range("2024-01-01", periods=3))
+    instance = Empyrical(returns=returns)
+    bound = instance.annual_return
+    original_kernel = vars(yearly)["annual_return"]
+    reloaded = importlib.reload(yearly)
+    current_kernel = vars(reloaded)["annual_return"]
+
+    assert current_kernel is not original_kernel
+    assert bound.__wrapped__.__wrapped__ is current_kernel
+    assert instance.annual_return is bound

@@ -181,6 +181,8 @@ def validate_positions_schema(
 
     if not isinstance(value, (pd.Series, pd.DataFrame)):
         raise _validation_error(f"{name} must be a pandas Series or DataFrame", name, type(value).__name__)
+    if value.empty:
+        raise _validation_error(f"{name} cannot be empty", name)
     if isinstance(value, pd.DataFrame):
         if not value.columns.is_unique:
             raise _validation_error(f"{name} contains duplicate columns", name, list(value.columns))
@@ -221,6 +223,8 @@ def validate_transactions_schema(
 
     if not isinstance(value, pd.DataFrame):
         raise _validation_error(f"{name} must be a pandas DataFrame", name, type(value).__name__)
+    if value.empty:
+        raise _validation_error(f"{name} cannot be empty", name)
     if not value.columns.is_unique:
         raise _validation_error(f"{name} contains duplicate columns", name, list(value.columns))
     required = {"amount", "price", "symbol"}
@@ -398,6 +402,9 @@ def validate_metric_arguments(profile: ValidationProfile, arguments: Mapping[str
     # that the selected public policy would not retain.  Align binary inputs
     # before validating the resulting canonical vectors; kernels receive the
     # same values and may repeat only their inexpensive policy assertion.
+    # Original pandas inputs must already carry a sorted index: silently
+    # reordering them during label intersection would hide a caller defect
+    # behind a computed result.
     from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 
     alignment_policy = cast("AlignmentPolicy", alignment)
@@ -408,6 +415,10 @@ def validate_metric_arguments(profile: ValidationProfile, arguments: Mapping[str
         if isinstance(left, (pd.Series, pd.DataFrame, np.ndarray)) and isinstance(
             right, (pd.Series, pd.DataFrame, np.ndarray)
         ):
+            if isinstance(left, (pd.Series, pd.DataFrame)) and isinstance(right, (pd.Series, pd.DataFrame)):
+                for value, value_name in ((left, left_name), (right, right_name)):
+                    if not value.index.is_monotonic_increasing:
+                        raise DataAlignmentError(f"{value_name} index must be sorted in increasing order")
             checked[left_name], checked[right_name] = align_binary_metric_inputs(
                 left,
                 right,
