@@ -46,12 +46,13 @@ def _make_strict_wrapper(spec: WorkflowSpec):
         bound = signature.bind(*args, **kwargs)
         return _invoke_workflow(spec.public_name, dict(bound.arguments))
 
-    wrapper.__name__ = spec.public_name
-    wrapper.__qualname__ = spec.public_name
-    wrapper.__module__ = __name__
-    wrapper.__doc__ = f"Run the pinned Pyfolio 0.9.6 {spec.public_name} workflow."
-    wrapper.__signature__ = signature
-    return wrapper
+    wrapped: Any = wrapper
+    wrapped.__name__ = spec.public_name
+    wrapped.__qualname__ = spec.public_name
+    wrapped.__module__ = __name__
+    wrapped.__doc__ = f"Run the pinned Pyfolio 0.9.6 {spec.public_name} workflow."
+    wrapped.__signature__ = signature
+    return wrapped
 
 
 _STRICT_PUBLIC: list[str] = []
