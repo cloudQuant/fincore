@@ -29,7 +29,7 @@ Usage::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 
@@ -100,7 +100,9 @@ def _rolling_max_drawdown(
 ) -> pd.Series:
     from fincore.metrics.rolling import roll_max_drawdown
 
-    return roll_max_drawdown(returns, window=window)
+    # roll_max_drawdown's kernel-level signature accepts ndarray too; a
+    # pd.Series input always yields a pd.Series at runtime.
+    return cast("pd.Series", roll_max_drawdown(returns, window=window))
 
 
 @register_metric("beta", family=ROLLING_FAMILY, scope=Scope.BUILTIN)

@@ -152,7 +152,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "fincore.core.*",
     "fincore.metrics.*",
     "fincore.plugin.*",
     "fincore.data.*",

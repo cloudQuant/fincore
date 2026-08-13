@@ -244,7 +244,8 @@ class AnalysisContext:
 
         if self._positions is None:
             return pd.Series(dtype=float)
-        return self._metric("gross_leverage", self._positions)
+        # Registry dispatch returns Any; the gross_leverage kernel yields a Series.
+        return cast("pd.Series", self._metric("gross_leverage", self._positions))
 
     @cached_property
     def turnover(self) -> pd.Series:
@@ -252,7 +253,8 @@ class AnalysisContext:
 
         if self._positions is None or self._transactions is None:
             return pd.Series(dtype=float)
-        return self._metric("turnover", self._positions, self._transactions)
+        # Registry dispatch returns Any; the turnover kernel yields a Series.
+        return cast("pd.Series", self._metric("turnover", self._positions, self._transactions))
 
     # ------------------------------------------------------------------
     # Aggregate helpers
