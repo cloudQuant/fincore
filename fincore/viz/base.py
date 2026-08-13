@@ -1,18 +1,24 @@
 """Visualization backend protocol and registry.
 
 Defines the :class:`VizBackend` protocol that all visualization backends
-must satisfy, plus a helper :func:`get_backend` to resolve a backend by
-name.
+must satisfy, a :class:`RenderModel` (the structured inputs passed to a
+custom backend's ``render`` method), plus a helper :func:`get_backend` to
+resolve a backend by name.  Custom backends registered through
+:func:`fincore.plugin.register_viz_backend` take precedence over the
+built-in backends.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
+
+from fincore.constants import DAILY
 
 if TYPE_CHECKING:
     import pandas as pd
 
-__all__ = ["VizBackend", "get_backend"]
+__all__ = ["RenderModel", "VizBackend", "get_backend"]
 
 
 @runtime_checkable
@@ -59,13 +65,32 @@ class VizBackend(Protocol):
         ...  # pragma: no cover -- Protocol method
 
 
+@dataclass(frozen=True)
+class RenderModel:
+    """Structured, side-effect-free inputs passed to a custom backend's ``render``.
+
+    Custom viz backends may define ``render(model, **kwargs)`` instead of
+    the ``plot_*`` protocol; ``AnalysisContext.plot`` builds this model from
+    the stored snapshot and passes it through.
+    """
+
+    returns: pd.Series
+    factor_returns: pd.Series | None = None
+    period: str = DAILY
+
+
 def get_backend(name: str = "matplotlib") -> VizBackend:
     """Resolve a visualization backend by name.
+
+    Backends registered in the single extension registry
+    (:func:`fincore.plugin.register_viz_backend`) take precedence over the
+    built-in backends.  Registered classes must be instantiable without
+    arguments.
 
     Parameters
     ----------
     name : str
-        Backend identifier.  Supported backends:
+        Backend identifier.  Built-in backends:
         - ``'matplotlib'``: Static Matplotlib plots (requires matplotlib)
         - ``'html'``: Self-contained HTML reports
         - ``'plotly'``: Interactive Plotly plots (requires plotly)
@@ -84,6 +109,13 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
         If the backend's dependencies are not installed.
     """
     name = name.lower().strip()
+
+    from fincore.plugin.registry import get_viz_backend
+
+    registered = get_viz_backend(name)
+    if registered is not None:
+        backend: Any = registered() if callable(registered) else registered
+        return cast("VizBackend", backend)
 
     if name == "matplotlib":
         from fincore.viz.matplotlib_backend import MatplotlibBackend

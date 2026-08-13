@@ -100,6 +100,34 @@ class AnalysisContext:
         return invoke_prevalidated_metric("context", public_name, "cached-property", *args, **kwargs)
 
     # ------------------------------------------------------------------
+    # Extension registry access
+    # ------------------------------------------------------------------
+
+    def compute(self, name: str, *args: Any, **kwargs: Any) -> Any:
+        """Compute an extension-registered metric by name on the stored returns.
+
+        Resolves metrics registered through
+        :func:`fincore.plugin.register_metric` (default family).  The metric
+        receives the stored returns as its first argument, followed by any
+        positional/keyword arguments given here.
+
+        Raises
+        ------
+        ValueError
+            If no extension metric with this name is registered.
+        """
+        from fincore.plugin.registry import get_metric, list_metrics
+
+        fn = get_metric(name)
+        if fn is None:
+            available = sorted(list_metrics())
+            raise ValueError(
+                f"Unknown metric {name!r}. Registered extension metrics: {available} "
+                f"(core metrics are available as cached attributes, e.g. ctx.sharpe_ratio)."
+            )
+        return fn(self._returns, *args, **kwargs)
+
+    # ------------------------------------------------------------------
     # helpers
     # ------------------------------------------------------------------
 
@@ -287,15 +315,30 @@ class AnalysisContext:
         Parameters
         ----------
         backend : str
-            Visualization backend name (``'matplotlib'`` or ``'html'``).
+            Visualization backend name (``'matplotlib'`` or ``'html'``, or a
+            backend registered through :func:`fincore.plugin.register_viz_backend`).
 
         Returns
         -------
         Depends on the backend (e.g. matplotlib Figure or HTML string).
+        Custom backends that define ``render(model, **kwargs)`` receive a
+        :class:`~fincore.viz.base.RenderModel` and control the returned
+        artifacts.
         """
         from fincore.viz.base import get_backend
 
         viz = get_backend(backend)
+
+        render = getattr(viz, "render", None)
+        if callable(render):
+            from fincore.viz.base import RenderModel
+
+            model = RenderModel(
+                returns=self._returns,
+                factor_returns=self._factor_returns,
+                period=self._period,
+            )
+            return render(model, **kwargs)
 
         from fincore._dispatch import resolve_raw_metric
 
