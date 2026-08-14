@@ -7,6 +7,7 @@ overrides only functions whose numerical kernel has been characterized.
 from __future__ import annotations
 
 import importlib
+import operator
 from typing import Any, Sequence, cast
 
 import numpy as np
@@ -410,6 +411,53 @@ def common_start_returns(
     return pd.concat(source_slices, axis=1)
 
 
+def _strict_replay_average_event_stdout(
+    factor_data: pd.DataFrame,
+    returns: pd.DataFrame,
+    *,
+    periods_before: int,
+    periods_after: int,
+    demeaned: bool,
+    group_adjust: bool,
+    by_group: bool,
+) -> None:
+    """Replay source ``average_cumulative_return_by_quantile`` diagnostics.
+
+    Source calls :func:`common_start_returns` once for every quantile (and,
+    when requested, every group), whose CloudQuant implementation prints each
+    aligned ``series``.  The enhanced kernel is intentionally silent; keeping
+    this slice-only replay at the strict boundary preserves stdout without a
+    second numerical aggregation.
+    """
+
+    def replay_quantiles(data: pd.DataFrame, demean_by: pd.Series | None) -> None:
+        quantiles = data["factor_quantile"]
+        for _, quantile_data in quantiles.groupby(quantiles):
+            _strict_print_common_start_return_slices(
+                quantile_data,
+                returns,
+                periods_before,
+                periods_after,
+                cumulative=True,
+                mean_by_date=True,
+                demean_by=demean_by,
+            )
+
+    if by_group:
+        for _, group_data in factor_data.groupby("group"):
+            group_quantiles = group_data["factor_quantile"]
+            replay_quantiles(
+                group_data,
+                group_quantiles if group_adjust else factor_data["factor_quantile"] if demeaned else None,
+            )
+        return
+    if group_adjust:
+        for _, group_data in factor_data.groupby("group"):
+            replay_quantiles(group_data, group_data["factor_quantile"])
+        return
+    replay_quantiles(factor_data, factor_data["factor_quantile"] if demeaned else None)
+
+
 def average_cumulative_return_by_quantile(
     factor_data: pd.DataFrame,
     returns: pd.DataFrame,
@@ -420,15 +468,48 @@ def average_cumulative_return_by_quantile(
     by_group: bool = False,
 ) -> pd.DataFrame:
     _reject_opaque("average_cumulative_return_by_quantile", factor_data, returns)
+    before, legacy_before = _legacy_event_window_bound(periods_before)
+    after, legacy_after = _legacy_event_window_bound(periods_after)
+    if isinstance(factor_data, pd.DataFrame) and isinstance(returns, pd.DataFrame):
+        _strict_replay_average_event_stdout(
+            factor_data,
+            returns,
+            periods_before=cast("int", before),
+            periods_after=cast("int", after),
+            demeaned=demeaned,
+            group_adjust=group_adjust,
+            by_group=by_group,
+        )
+    if legacy_before or legacy_after:
+        return _performance._average_cumulative_return_by_quantile(
+            factor_data,
+            returns,
+            periods_before=cast("int", before),
+            periods_after=cast("int", after),
+            demeaned=demeaned,
+            group_adjust=group_adjust,
+            by_group=by_group,
+            _allow_legacy_event_windows=True,
+        )
     return _performance.average_cumulative_return_by_quantile(
         factor_data,
         returns,
-        periods_before=periods_before,
-        periods_after=periods_after,
+        periods_before=cast("int", before),
+        periods_after=cast("int", after),
         demeaned=demeaned,
         group_adjust=group_adjust,
         by_group=by_group,
     )
+
+
+def _legacy_event_window_bound(value: object) -> tuple[object, bool]:
+    """Normalize the source's integer-like/signed event-window grammar."""
+
+    try:
+        normalized = operator.index(cast("Any", value))
+    except TypeError:
+        return value, False
+    return normalized, not isinstance(value, int) or isinstance(value, bool) or normalized < 0
 
 
 def _strict_position_frame(

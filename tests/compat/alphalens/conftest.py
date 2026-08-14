@@ -465,6 +465,79 @@ def _shared_inputs() -> tuple[pd.Series, pd.DataFrame, pd.DataFrame, pd.Series]:
     return raw_factor, prices, tz_aware_prices, groups
 
 
+# Literal dense source fixture used by the pinned Alphalens tear-sheet suite.
+# Keep this separate from ``_shared_inputs``: the latter is a compact modern
+# fixture for broad factor-analysis tests, while C4 tear-sheet migration must
+# retain the original six assets, sparse factor topology, and 2015 calendars.
+_PINNED_TEARS_FACTOR_ROWS: tuple[tuple[int | None, ...], ...] = (
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, 4, 2, 1, None, None),
+    (3, None, None, 1, 4, 2),
+    (3, None, None, 1, 4, 2),
+)
+
+
+@lru_cache(maxsize=4)
+def _pinned_tears_dense_inputs(
+    input_ordinal: int,
+    timezone: str | None = None,
+) -> tuple[pd.Series, pd.DataFrame, pd.Series, pd.DatetimeIndex]:
+    """Rebuild the pinned daily/BDay dense tear-sheet inputs literally.
+
+    The return values are cache-owned; C4 callers must make local copies
+    before passing them to data preparation or mutating their indexes.
+    """
+
+    if input_ordinal not in (0, 1):
+        raise ValueError("pinned tear-sheet input ordinal must be 0 or 1")
+    tickers = ("A", "B", "C", "D", "E", "F")
+    price_rows = [[1.25**row, 1.50**row, 1.00**row, 0.50**row, 1.50**row, 1.00**row] for row in range(1, 51)]
+    if input_ordinal == 0:
+        price_dates = pd.date_range("2015-01-10", "2015-02-28", freq="D", name="date")
+        factor_dates = pd.date_range("2015-01-15", "2015-02-13", freq="D", name="date")
+    else:
+        price_dates = pd.date_range("2015-01-10", "2015-03-22", freq="B", name="date")
+        factor_dates = pd.date_range("2015-01-15", "2015-02-25", freq="B", name="date")
+    prices = pd.DataFrame(price_rows, index=price_dates, columns=tickers)
+    wide = pd.DataFrame(_PINNED_TEARS_FACTOR_ROWS, index=factor_dates, columns=tickers)
+    if timezone is not None:
+        prices.index = pd.DatetimeIndex(prices.index.tz_localize(timezone), freq=price_dates.freq, name="date")
+        wide.index = pd.DatetimeIndex(wide.index.tz_localize(timezone), freq=factor_dates.freq, name="date")
+        factor_dates = wide.index
+    factor = wide.stack(future_stack=True).dropna()
+    factor.index = factor.index.set_names(("date", "asset"))
+    groups = pd.Series((1, 2, 1, 2, 1, 2), index=pd.Index(tickers, name="asset"), name="group")
+    assert len(factor) == 120
+    assert factor.index.get_level_values("asset").nunique() == len(tickers)
+    return factor, prices, groups, factor_dates
+
+
 @pytest.fixture
 def raw_factor() -> pd.Series:
     """A fresh factor series; callers may safely make local mutations."""

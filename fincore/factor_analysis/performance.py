@@ -9,6 +9,7 @@ later model/report work without importing optional plotting dependencies.
 
 from __future__ import annotations
 
+import operator
 from typing import Any, cast
 
 import numpy as np
@@ -447,7 +448,7 @@ def _event_assets_at(factor: pd.Series | pd.DataFrame, timestamp: object) -> pd.
     return cast("pd.Index", pd.Index(assets[dates == timestamp]).unique())
 
 
-def common_start_returns(
+def _common_start_returns(
     factor: pd.Series | pd.DataFrame,
     returns: pd.DataFrame,
     before: int,
@@ -455,10 +456,17 @@ def common_start_returns(
     cumulative: bool = False,
     mean_by_date: bool = False,
     demean_by: pd.Series | pd.DataFrame | None = None,
+    _allow_legacy_event_windows: bool = False,
 ) -> pd.DataFrame:
-    """Align return windows around each factor date on a shared integer offset index."""
+    """Internal event-window implementation with an opt-in legacy grammar."""
 
-    if not isinstance(before, int) or not isinstance(after, int) or before < 0 or after < 0:
+    if _allow_legacy_event_windows:
+        try:
+            before = operator.index(before)
+            after = operator.index(after)
+        except TypeError as error:
+            raise ValueError("before and after must be non-negative integers") from error
+    elif not isinstance(before, int) or not isinstance(after, int) or before < 0 or after < 0:
         raise ValueError("before and after must be non-negative integers")
     factor_copy = _event_factor_copy(factor)
     if not isinstance(returns, pd.DataFrame):
@@ -506,16 +514,40 @@ def common_start_returns(
     return pd.concat(windows, axis=1).sort_index()
 
 
+def common_start_returns(
+    factor: pd.Series | pd.DataFrame,
+    returns: pd.DataFrame,
+    before: int,
+    after: int,
+    cumulative: bool = False,
+    mean_by_date: bool = False,
+    demean_by: pd.Series | pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Align return windows around each factor date on a shared integer offset index."""
+
+    return _common_start_returns(
+        factor,
+        returns,
+        before,
+        after,
+        cumulative=cumulative,
+        mean_by_date=mean_by_date,
+        demean_by=demean_by,
+    )
+
+
 def _average_event_window(
     event_factor: pd.Series,
     returns: pd.DataFrame,
     before: int,
     after: int,
     demean_by: pd.Series | None,
+    *,
+    _allow_legacy_event_windows: bool = False,
 ) -> pd.DataFrame:
     """Return the event-window mean/std pair for one quantile/group slice."""
 
-    aligned = common_start_returns(
+    aligned = _common_start_returns(
         event_factor,
         returns,
         before,
@@ -523,12 +555,13 @@ def _average_event_window(
         cumulative=True,
         mean_by_date=True,
         demean_by=demean_by,
+        _allow_legacy_event_windows=_allow_legacy_event_windows,
     )
     aligned = aligned.replace([np.inf, -np.inf], np.nan)
     return pd.DataFrame({"mean": aligned.mean(axis=1), "std": aligned.std(axis=1)}).T
 
 
-def average_cumulative_return_by_quantile(
+def _average_cumulative_return_by_quantile(
     factor_data: pd.DataFrame,
     returns: pd.DataFrame,
     periods_before: int = 10,
@@ -536,9 +569,16 @@ def average_cumulative_return_by_quantile(
     demeaned: bool = True,
     group_adjust: bool = False,
     by_group: bool = False,
+    _allow_legacy_event_windows: bool = False,
 ) -> pd.DataFrame:
     """Average cumulative event returns for each factor quantile (and group)."""
 
+    if _allow_legacy_event_windows:
+        try:
+            periods_before = operator.index(periods_before)
+            periods_after = operator.index(periods_after)
+        except TypeError as error:
+            raise ValueError("before and after must be non-negative integers") from error
     data = _event_factor_copy(factor_data)
     if not isinstance(data, pd.DataFrame) or "factor_quantile" not in data.columns:
         raise ValueError("factor_data must contain a 'factor_quantile' column")
@@ -566,6 +606,7 @@ def average_cumulative_return_by_quantile(
                     periods_before,
                     periods_after,
                     _demean_source(group_data),
+                    _allow_legacy_event_windows=_allow_legacy_event_windows,
                 )
                 for statistic in ("mean", "std"):
                     group_rows.append(cast("pd.Series", event.loc[statistic]))
@@ -583,7 +624,7 @@ def average_cumulative_return_by_quantile(
                 selected = group_data.loc[group_data["factor_quantile"] == quantile, "factor_quantile"]
                 if not selected.empty:
                     group_events.append(
-                        common_start_returns(
+                        _common_start_returns(
                             selected,
                             returns,
                             periods_before,
@@ -591,6 +632,7 @@ def average_cumulative_return_by_quantile(
                             cumulative=True,
                             mean_by_date=True,
                             demean_by=group_data["factor_quantile"],
+                            _allow_legacy_event_windows=_allow_legacy_event_windows,
                         )
                     )
             aligned = pd.concat(group_events, axis=1) if group_events else pd.DataFrame()
@@ -602,12 +644,35 @@ def average_cumulative_return_by_quantile(
                 periods_before,
                 periods_after,
                 data["factor_quantile"] if demeaned else None,
+                _allow_legacy_event_windows=_allow_legacy_event_windows,
             )
         for statistic in ("mean", "std"):
             rows.append(cast("pd.Series", event.loc[statistic]))
             row_index.append((cast("object", quantile), statistic))
     index = pd.MultiIndex.from_tuples(row_index, names=("factor_quantile", None))
     return pd.DataFrame(rows, index=index)
+
+
+def average_cumulative_return_by_quantile(
+    factor_data: pd.DataFrame,
+    returns: pd.DataFrame,
+    periods_before: int = 10,
+    periods_after: int = 15,
+    demeaned: bool = True,
+    group_adjust: bool = False,
+    by_group: bool = False,
+) -> pd.DataFrame:
+    """Average cumulative event returns for each factor quantile (and group)."""
+
+    return _average_cumulative_return_by_quantile(
+        factor_data,
+        returns,
+        periods_before=periods_before,
+        periods_after=periods_after,
+        demeaned=demeaned,
+        group_adjust=group_adjust,
+        by_group=by_group,
+    )
 
 
 __all__ = [

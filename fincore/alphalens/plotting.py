@@ -182,9 +182,21 @@ def _legacy_plot_quantile_returns_violin(
         _, target = pyplot.subplots(1, 1, figsize=(18, 6))
     displayed = data.multiply(10_000.0)
     displayed.columns = displayed.columns.set_names("forward_periods")
-    stacked = displayed.stack()
-    stacked.name = "return"
-    long = stacked.reset_index()
+    if displayed.columns.has_duplicates:
+        # Pandas 3's ``stack`` rejects duplicate column labels, whereas the
+        # pinned plotting path accepted each physical forward-return column.
+        # Preserve that source-visible long form positionally for strict
+        # duplicate-period tear sheets.
+        pieces: list[pd.DataFrame] = []
+        for position, period in enumerate(displayed.columns):
+            piece = displayed.iloc[:, position].rename("return").reset_index()
+            piece["forward_periods"] = period
+            pieces.append(piece)
+        long = pd.concat(pieces, ignore_index=True)
+    else:
+        stacked = displayed.stack()
+        stacked.name = "return"
+        long = stacked.reset_index()
     seaborn.violinplot(
         data=long,
         x="factor_quantile",
@@ -386,16 +398,25 @@ def _legacy_plot_monthly_ic_heatmap(mean_monthly_ic: pd.DataFrame, ax: object) -
 def _legacy_plot_cumulative_returns_by_quantile(quantile_returns: pd.DataFrame, period: object, ax: object) -> Any:
     """Render strict quantile curves with source limits, warnings, and ordering."""
 
+    from fincore.alphalens.performance import cumulative_returns
+
+    wide = quantile_returns.unstack("factor_quantile")
+    cumulative = wide.apply(cumulative_returns).loc[:, ::-1]
+    return _legacy_plot_cumulative_returns_by_quantile_values(cumulative, period, ax)
+
+
+def _legacy_plot_cumulative_returns_by_quantile_values(
+    cumulative: pd.DataFrame,
+    period: object,
+    ax: object,
+) -> Any:
+    """Render strict quantile curves that were precomputed during model assembly."""
+
     renderer = _renderer()
     pyplot, cm, ticker, _ = renderer._plot_dependencies()
-    source: Any = quantile_returns
     target: Any = ax
     if target is None:
         _, target = pyplot.subplots(1, 1, figsize=(18, 6))
-    from fincore.alphalens.performance import cumulative_returns
-
-    wide = source.unstack("factor_quantile")
-    cumulative = wide.apply(cumulative_returns).loc[:, ::-1]
     cumulative.plot(lw=2, ax=target, cmap=cm.coolwarm)
     target.legend()
     lower, upper = cumulative.min().min(), cumulative.max().max()
@@ -415,15 +436,29 @@ def _legacy_plot_cumulative_returns_by_quantile(quantile_returns: pd.DataFrame, 
 def _legacy_plot_cumulative_returns(factor_returns: pd.Series, period: object, title: str | None, ax: object) -> Any:
     """Render the source strict cumulative-return Series projection."""
 
+    from fincore.alphalens.performance import cumulative_returns
+
+    return _legacy_plot_cumulative_returns_values(cumulative_returns(factor_returns), period, title, ax)
+
+
+def _legacy_plot_cumulative_returns_values(
+    cumulative: pd.Series,
+    period: object,
+    title: str | None,
+    ax: object,
+) -> Any:
+    """Render a strict portfolio curve precomputed during model assembly."""
+
     renderer = _renderer()
     pyplot, _, _, _ = renderer._plot_dependencies()
     target: Any = ax
     if target is None:
         _, target = pyplot.subplots(1, 1, figsize=(18, 6))
-    from fincore.alphalens.performance import cumulative_returns
-
-    cumulative: Any = cumulative_returns(factor_returns)
-    cumulative.plot(ax=target, lw=3, color="forestgreen", alpha=0.6)
+    values = cumulative.copy(deep=True)
+    if len(values):
+        # The strict empyrical projection constructs a fresh nonempty Series.
+        values.name = None
+    values.plot(ax=target, lw=3, color="forestgreen", alpha=0.6)
     target.set(
         ylabel="Cumulative Returns",
         title=f"Portfolio Cumulative Return ({period} Fwd Period)" if title is None else title,

@@ -1334,6 +1334,9 @@ def _snapshot_value(value: object) -> object:
             mean_returns=cast("pd.Series", _snapshot_value(value.mean_returns)),
             return_distribution=cast("pd.Series", _snapshot_value(value.return_distribution)),
             quantile_average_returns=cast("pd.DataFrame", _snapshot_value(value.quantile_average_returns)),
+            aggregate_quantile_average_returns=cast(
+                "pd.DataFrame", _snapshot_value(value.aggregate_quantile_average_returns)
+            ),
         )
     if value is None or isinstance(
         value,
@@ -1525,8 +1528,17 @@ class EventAnalysisModel:
     mean_returns: pd.Series
     return_distribution: pd.Series
     quantile_average_returns: pd.DataFrame
+    aggregate_quantile_average_returns: pd.DataFrame
 
-    _DATA_FIELDS = frozenset({"event_windows", "mean_returns", "return_distribution", "quantile_average_returns"})
+    _DATA_FIELDS = frozenset(
+        {
+            "event_windows",
+            "mean_returns",
+            "return_distribution",
+            "quantile_average_returns",
+            "aggregate_quantile_average_returns",
+        }
+    )
 
     def __post_init__(self) -> None:
         """Own independent event data rather than caller-visible work buffers."""
@@ -1552,20 +1564,33 @@ class FactorAnalysisModel:
     factor_weights: pd.DataFrame
     factor_returns: pd.DataFrame
     factor_cumulative_returns: Mapping[str, pd.Series]
+    legacy_quantile_cumulative_returns: Mapping[str, pd.DataFrame]
     factor_positions: Mapping[str, pd.DataFrame]
     alpha_beta: pd.DataFrame
     mean_returns_by_quantile: pd.DataFrame
     std_error_by_quantile: pd.DataFrame
     mean_returns_by_date: pd.DataFrame
+    std_error_by_date: pd.DataFrame
+    aggregate_mean_returns_by_quantile: pd.DataFrame
+    aggregate_std_error_by_quantile: pd.DataFrame
+    aggregate_mean_returns_by_date: pd.DataFrame
+    aggregate_std_error_by_date: pd.DataFrame
+    aggregate_mean_return_spread: pd.DataFrame
+    aggregate_mean_return_spread_std: pd.DataFrame | None
     mean_return_spread: pd.DataFrame
     mean_return_spread_std: pd.DataFrame | None
     information_coefficient: pd.DataFrame
     mean_information_coefficient: pd.Series | pd.DataFrame
+    aggregate_information_coefficient: pd.DataFrame
+    aggregate_mean_information_coefficient: pd.Series | pd.DataFrame
+    summary_information_coefficient: pd.DataFrame
     quantile_turnover: Mapping[int, pd.DataFrame]
     rank_autocorrelation: pd.DataFrame
     grouped_results: Mapping[Hashable, FactorGroupAnalysis]
     time_aggregated_results: Mapping[str, pd.Series | pd.DataFrame]
+    aggregate_time_aggregated_results: Mapping[str, pd.Series | pd.DataFrame]
     pyfolio_inputs: PyfolioFactorInputs | None
+    event_input_snapshot: pd.DataFrame | None
     event_returns: EventAnalysisModel | None = None
     result_fingerprint: str = ""
 
@@ -1576,20 +1601,33 @@ class FactorAnalysisModel:
             "factor_weights",
             "factor_returns",
             "factor_cumulative_returns",
+            "legacy_quantile_cumulative_returns",
             "factor_positions",
             "alpha_beta",
             "mean_returns_by_quantile",
             "std_error_by_quantile",
             "mean_returns_by_date",
+            "std_error_by_date",
+            "aggregate_mean_returns_by_quantile",
+            "aggregate_std_error_by_quantile",
+            "aggregate_mean_returns_by_date",
+            "aggregate_std_error_by_date",
+            "aggregate_mean_return_spread",
+            "aggregate_mean_return_spread_std",
             "mean_return_spread",
             "mean_return_spread_std",
             "information_coefficient",
             "mean_information_coefficient",
+            "aggregate_information_coefficient",
+            "aggregate_mean_information_coefficient",
+            "summary_information_coefficient",
             "quantile_turnover",
             "rank_autocorrelation",
             "grouped_results",
             "time_aggregated_results",
+            "aggregate_time_aggregated_results",
             "pyfolio_inputs",
+            "event_input_snapshot",
             "event_returns",
         }
     )
