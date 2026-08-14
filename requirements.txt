@@ -1,5 +1,6 @@
 # requirements.txt — 开发环境依赖
-# 核心依赖由 pyproject.toml / setup.py 管理
+# Runtime metadata is authoritative in pyproject.toml; this file is only for
+# contributor environments and must not be used as distribution metadata.
 
 # Testing
 pytest>=6.0
@@ -17,6 +18,7 @@ mypy>=1.5
 matplotlib>=3.3
 seaborn>=0.11
 ipython>=7.0
+statsmodels>=0.14
 
 # Bayesian (optional)
 # pymc>=5.0

@@ -86,6 +86,17 @@ def test_no_self_reference_in_any_extra() -> None:
             )
 
 
+def test_extras_do_not_depend_on_external_compatibility_packages_or_urls() -> None:
+    """The integrated Alphalens and Empyrical code must never be reinstalled."""
+    for extra_name, reqs in _extras().items():
+        for raw in reqs:
+            requirement = Requirement(raw)
+            assert requirement.name not in {"alphalens", "empyrical"}, (
+                f"extra {extra_name!r} installs an external compatibility package: {raw!r}"
+            )
+            assert requirement.url is None, f"extra {extra_name!r} installs from URL: {raw!r}"
+
+
 def test_all_excludes_dev_only_tools() -> None:
     """Dev-only tooling belongs to ``dev``, never to the runtime ``all`` union."""
     names_in_all = {Requirement(req).name for req in _extras()["all"]}

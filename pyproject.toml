@@ -35,7 +35,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Functional extras — one per installable capability.
+# Functional extras — one per installable capability.  These lists are the
+# only runtime dependency metadata; integrated compatibility facades never
+# re-install external alphalens or empyrical distributions.
 pyfolio = ["matplotlib>=3.3", "seaborn>=0.11", "ipython>=7"]
 factor-analysis = ["statsmodels>=0.14"]
 alphalens = ["statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7"]

@@ -110,6 +110,29 @@ def test_runtime_assets_ship_in_wheel(wheel_path: Path) -> None:
     assert "fincore/report/assets/echarts.min.js" in names, "vendored ECharts asset missing from wheel"
     assert "fincore/report/model.py" in names, "report model module missing from wheel"
     assert "fincore/py.typed" in names, "py.typed marker missing from wheel"
+    required_modules = {
+        "fincore/alphalens/__init__.py",
+        "fincore/alphalens/performance.py",
+        "fincore/alphalens/plotting.py",
+        "fincore/alphalens/tears.py",
+        "fincore/factor_analysis/__init__.py",
+        "fincore/factor_analysis/data.py",
+        "fincore/factor_analysis/performance.py",
+        "fincore/factor_analysis/portfolio.py",
+    }
+    assert required_modules <= names, f"Alphalens runtime modules missing: {sorted(required_modules - names)}"
+
+
+def test_wheel_includes_the_approved_apache_license_only(wheel_path: Path) -> None:
+    """The artifact carries the project license; notices need a separate approval."""
+    with zipfile.ZipFile(wheel_path) as zf:
+        license_files = [name for name in zf.namelist() if name.endswith(".dist-info/licenses/LICENSE")]
+        assert len(license_files) == 1, f"expected one bundled LICENSE, found {license_files}"
+        license_text = zf.read(license_files[0]).decode("utf-8")
+    assert "Apache License" in license_text
+    assert not [name for name in _names(wheel_path) if "THIRD_PARTY_NOTICES" in name], (
+        "third-party notice files require a separate human license decision"
+    )
 
 
 def test_no_stray_assets_in_wheel(wheel_path: Path) -> None:
@@ -118,8 +141,12 @@ def test_no_stray_assets_in_wheel(wheel_path: Path) -> None:
         assert not any(n.startswith(banned_prefix) for n in names), f"stray {banned_prefix!r} content in wheel"
     js_files = [n for n in names if n.endswith(".js")]
     assert js_files == ["fincore/report/assets/echarts.min.js"], f"unexpected .js assets: {js_files}"
-    data_files = [n for n in names if n.endswith((".csv", ".xlsx", ".ipynb"))]
+    data_files = [n for n in names if n.endswith((".csv", ".xlsx", ".ipynb", ".png"))]
     assert not data_files, f"example/notebook data files must not ship in the wheel: {data_files}"
+    forbidden_fragments = ("versioneer", "requirements-alphalens", "requirements-empyrical", "requirements-pyfolio")
+    assert not [n for n in names if any(fragment in n.lower() for fragment in forbidden_fragments)], (
+        "compatibility oracle or Versioneer files must not ship in the wheel"
+    )
 
 
 def test_wheel_filename_embeds_single_source_version(wheel_path: Path) -> None:

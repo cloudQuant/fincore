@@ -1,4 +1,5 @@
-# Test requirements
+# Contributor test environment only. Runtime metadata and extras are defined
+# exclusively in pyproject.toml.
 pytest>=6.0
 pytest-xdist>=2.0
 pytest-cov>=2.10
@@ -18,3 +19,4 @@ seaborn>=0.11
 PyPDF2>=3.0
 bokeh>=3.0
 plotly>=5.0
+statsmodels>=0.14
