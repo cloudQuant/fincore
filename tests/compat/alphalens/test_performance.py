@@ -834,6 +834,34 @@ def test_strict_common_start_returns_preserves_columns_name_after_compounding(
     assert capsys.readouterr().out == f"series =  {expected}\n"
 
 
+def test_strict_common_start_returns_compounds_duplicate_columns_positionally(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned ``DataFrame.apply`` compounds duplicate asset labels independently."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame(
+        [[0.10, 0.20], [0.20, -0.10], [-0.10, 0.30]],
+        index=dates,
+        columns=pd.Index(["A", "A"], name="ticker"),
+    )
+    expected_returns = returns.apply(enhanced.cumulative_returns, axis=0)
+    expected = expected_returns.iloc[0:3].loc[:, ["A"]].copy()
+    expected.index = pd.RangeIndex(-1, 2)
+
+    actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=False)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == f"series =  {expected}\n"
+
+
 @pytest.mark.parametrize("before", [1, np.int64(1)], ids=("python-int", "numpy-int64"))
 def test_strict_common_start_returns_preserves_raw_concat_index_order(
     before: int | np.integer[object],
