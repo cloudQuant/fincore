@@ -253,3 +253,41 @@ def test_strict_empty_canonical_factor_data_keeps_source_positions_error_only() 
         strict_performance.factor_positions(source, "1D")
     with pytest.raises(ValueError, match=re.escape(expected_message)):
         strict_performance.create_pyfolio_input(source, "1D")
+
+
+def test_strict_duplicate_benchmark_period_projects_key_error_after_main_period_validation() -> None:
+    """A duplicate benchmark label reaches its own pinned factor-return selection."""
+
+    source = _strict_factor_data()
+    source.insert(3, "5D", source["5D"].to_numpy(), allow_duplicates=True)
+
+    with pytest.raises(ValueError, match="exactly one"):
+        enhanced_create_pyfolio_input(source, "1D", benchmark_period="5D")
+    with pytest.raises(KeyError, match=re.escape("'5D'")):
+        strict_performance.create_pyfolio_input(source, "1D", benchmark_period="5D")
+    with pytest.raises(ValueError, match=re.escape("Period 'missing' not found")):
+        strict_performance.create_pyfolio_input(source, "missing", benchmark_period="5D")
+
+
+@pytest.mark.parametrize(
+    "function_name",
+    ["factor_cumulative_returns", "factor_positions", "create_pyfolio_input"],
+)
+def test_strict_source_validation_orders_filters_and_group_before_duplicate_main_period(function_name: str) -> None:
+    """Strict prechecks must follow the source call path rather than global rules."""
+
+    strict = getattr(strict_performance, function_name)
+
+    duplicate_missing_group = _strict_factor_data().drop(columns="group")
+    duplicate_missing_group.insert(2, "1D", duplicate_missing_group["1D"].to_numpy(), allow_duplicates=True)
+    with pytest.raises(KeyError, match=re.escape("'group'")):
+        strict(duplicate_missing_group, "1D", group_neutral=True)
+
+    duplicate_missing_quantile = _strict_factor_data().drop(columns="factor_quantile")
+    duplicate_missing_quantile.insert(2, "1D", duplicate_missing_quantile["1D"].to_numpy(), allow_duplicates=True)
+    with pytest.raises(KeyError, match=re.escape("'factor_quantile'")):
+        strict(duplicate_missing_quantile, "1D", quantiles=[1])
+
+    missing_filter_columns = _strict_factor_data().drop(columns=["factor_quantile", "group"])
+    with pytest.raises(KeyError, match=re.escape("'factor_quantile'")):
+        strict(missing_filter_columns, "1D", quantiles=[1], group_neutral=True)

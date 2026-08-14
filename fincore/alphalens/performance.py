@@ -474,33 +474,91 @@ def _strict_reject_duplicate_return_period(factor_data: object, period: object) 
             raise KeyError(period)
 
 
-def _strict_require_group_for_neutral_portfolio(factor_data: object, group_neutral: bool) -> None:
-    """Keep the source's missing-group KeyError ahead of enhanced validation."""
-
-    if group_neutral and isinstance(factor_data, pd.DataFrame) and "group" not in factor_data.columns:
-        raise KeyError("group")
-
-
-def _strict_reject_empty_position_filter(
+def _strict_filter_portfolio_data(
     factor_data: object,
     *,
     quantiles: Sequence[int] | None,
     groups: Sequence[str] | None,
-) -> None:
-    """Project the pinned ``positions(weights).unstack`` empty-filter failure."""
+) -> pd.DataFrame | None:
+    """Apply the pinned quantile then group filters solely for strict ordering.
+
+    ``factor_cumulative_returns`` and ``factor_positions`` both access their
+    forward period before constructing ``portfolio_data`` and apply these two
+    filters before calling ``factor_weights``.  The enhanced kernel performs
+    the same useful work, but projects a few later errors differently.  This
+    small, copy-free preflight deliberately reproduces only the source error
+    order; the enhanced kernel remains the sole numerical implementation.
+    """
 
     if not isinstance(factor_data, pd.DataFrame):
-        return
+        return None
     filtered = factor_data
     if quantiles is not None:
-        if "factor_quantile" not in filtered.columns:
-            return
+        # Deliberately use source-style item access: a missing field is a
+        # source-visible KeyError and precedes group-neutral validation.
         filtered = filtered.loc[filtered["factor_quantile"].isin(quantiles)]
     if groups is not None:
-        if "group" not in filtered.columns:
-            raise KeyError("group")
         filtered = filtered.loc[filtered["group"].isin(groups)]
-    if filtered.empty:
+    return filtered
+
+
+def _strict_validate_portfolio_weight_path(
+    factor_data: object,
+    period: object,
+    *,
+    group_neutral: bool,
+    quantiles: Sequence[int] | None,
+    groups: Sequence[str] | None,
+) -> pd.DataFrame | None:
+    """Validate source period/filter/weight prerequisites in execution order."""
+
+    _strict_require_portfolio_period(factor_data, period)
+    filtered = _strict_filter_portfolio_data(factor_data, quantiles=quantiles, groups=groups)
+    if group_neutral and isinstance(filtered, pd.DataFrame) and "group" not in filtered.columns:
+        # ``factor_weights`` constructs the group grouper only after filters.
+        raise KeyError("group")
+    return filtered
+
+
+def _strict_validate_cumulative_return_path(
+    factor_data: object,
+    period: object,
+    *,
+    group_neutral: bool,
+    quantiles: Sequence[int] | None,
+    groups: Sequence[str] | None,
+) -> None:
+    """Validate strict ``factor_cumulative_returns`` through ``returns[period]``."""
+
+    _strict_validate_portfolio_weight_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
+    # This selection occurs only after source filters and ``factor_weights``.
+    _strict_reject_duplicate_return_period(factor_data, period)
+
+
+def _strict_validate_position_path(
+    factor_data: object,
+    period: object,
+    *,
+    group_neutral: bool,
+    quantiles: Sequence[int] | None,
+    groups: Sequence[str] | None,
+) -> None:
+    """Validate strict ``factor_positions`` through its final unstack call."""
+
+    filtered = _strict_validate_portfolio_weight_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
+    if isinstance(filtered, pd.DataFrame) and filtered.empty:
         raise ValueError(_STRICT_EMPTY_POSITION_FILTER_ERROR)
 
 
@@ -534,9 +592,13 @@ def factor_cumulative_returns(
     """Return the source-projected cumulative factor portfolio curve."""
 
     _reject_opaque("factor_cumulative_returns", factor_data)
-    _strict_require_portfolio_period(factor_data, period)
-    _strict_reject_duplicate_return_period(factor_data, period)
-    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
+    _strict_validate_cumulative_return_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
     result = _portfolio.factor_cumulative_returns(
         factor_data,
         period,
@@ -566,9 +628,13 @@ def factor_positions(
     """Project simulated factor positions through the strict facade."""
 
     _reject_opaque("factor_positions", factor_data)
-    _strict_require_portfolio_period(factor_data, period)
-    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
-    _strict_reject_empty_position_filter(factor_data, quantiles=quantiles, groups=groups)
+    _strict_validate_position_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
     result = _portfolio.factor_positions(
         factor_data,
         period,
@@ -595,10 +661,24 @@ def create_pyfolio_input(
     """Return the strict legacy 3-tuple from the enhanced typed bridge."""
 
     _reject_opaque("create_pyfolio_input", factor_data)
-    _strict_require_portfolio_period(factor_data, period)
-    _strict_reject_duplicate_return_period(factor_data, period)
-    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
-    _strict_reject_empty_position_filter(factor_data, quantiles=quantiles, groups=groups)
+    # The source builds returns first, then positions, and only then the
+    # optional benchmark.  Keep that exact error priority rather than applying
+    # facade-wide duplicate/group checks before the source paths run.
+    _strict_validate_cumulative_return_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
+    _strict_validate_position_path(
+        factor_data,
+        period,
+        group_neutral=group_neutral,
+        quantiles=quantiles,
+        groups=groups,
+    )
+    _strict_reject_duplicate_return_period(factor_data, benchmark_period)
     output = _portfolio.create_pyfolio_input(
         factor_data,
         period,
