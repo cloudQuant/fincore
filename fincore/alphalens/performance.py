@@ -322,10 +322,14 @@ def _strict_print_common_start_return_slices(
     returns_copy = returns.copy(deep=True)
     returns_copy.index = pd.DatetimeIndex(returns_copy.index, name="date")
     if not cumulative:
+        columns = returns_copy.columns.copy()
         returns_copy = pd.DataFrame(
             {column: _performance.cumulative_returns(returns_copy[column]) for column in returns_copy.columns},
             index=returns_copy.index,
         )
+        # The pinned ``returns.apply(cumulative_returns, axis=0)`` path keeps
+        # the original columns Index, including its name and dtype metadata.
+        returns_copy.columns = columns
     demean_copy = _performance._event_factor_copy(demean_by) if demean_by is not None else None
     all_returns: list[pd.Series | pd.DataFrame] = []
     factor_index = cast("pd.MultiIndex", factor_copy.index)

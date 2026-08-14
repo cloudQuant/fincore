@@ -803,6 +803,37 @@ def test_strict_common_start_returns_preserves_caller_columns_name_without_demea
     assert capsys.readouterr().out == f"series =  {expected}\n"
 
 
+@pytest.mark.parametrize("columns_name", ["asset", "ticker"])
+def test_strict_common_start_returns_preserves_columns_name_after_compounding(
+    columns_name: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned ``returns.apply`` keeps named columns when ``cumulative`` is false."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.10, 0.20, -0.10]}, index=dates)
+    returns.columns = returns.columns.rename(columns_name)
+    expected_returns = pd.DataFrame(
+        {column: enhanced.cumulative_returns(returns[column]) for column in returns.columns},
+        index=returns.index,
+    )
+    expected_returns.columns = returns.columns
+    expected = expected_returns.iloc[0:3].loc[:, ["A"]].copy()
+    expected.index = pd.RangeIndex(-1, 2)
+
+    actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=False)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == f"series =  {expected}\n"
+
+
 @pytest.mark.parametrize("before", [1, np.int64(1)], ids=("python-int", "numpy-int64"))
 def test_strict_common_start_returns_preserves_raw_concat_index_order(
     before: int | np.integer[object],
