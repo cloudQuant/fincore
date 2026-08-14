@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
+import os
+import struct
+import subprocess
+import sys
 from collections.abc import Mapping
 from dataclasses import FrozenInstanceError, fields, is_dataclass
+from decimal import Decimal
 from typing import get_type_hints
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -32,6 +39,43 @@ class _MutableGroupLabel:
         if not isinstance(other, _MutableGroupLabel):
             return NotImplemented
         return tuple(self.labels) < tuple(other.labels)
+
+
+class _BaseSlottedLabel:
+    """Base state must participate in a subclass's deterministic fingerprint."""
+
+    __slots__ = ("base_label",)
+
+    def __init__(self, base_label: str) -> None:
+        self.base_label = base_label
+
+
+class _InheritedSlottedLabel(_BaseSlottedLabel):
+    """Hashable group value with semantic state split across two slot classes."""
+
+    __slots__ = ("label",)
+
+    def __init__(self, base_label: str, label: str) -> None:
+        super().__init__(base_label)
+        self.label = label
+
+    def __hash__(self) -> int:
+        return hash(_InheritedSlottedLabel)
+
+
+class _DictAndInheritedSlotLabel(_BaseSlottedLabel):
+    """A subclass with a dict must not hide inherited slot state."""
+
+    def __init__(self, base_label: str, label: str) -> None:
+        super().__init__(base_label)
+        self.label = label
+
+    def __hash__(self) -> int:
+        return hash(_DictAndInheritedSlotLabel)
+
+
+class _IdentityOnlyKey:
+    """A pickle clone cannot preserve this key's identity-only lookup behavior."""
 
 
 def _only_periods(factor_data: pd.DataFrame, periods: tuple[str, ...]) -> pd.DataFrame:
@@ -270,6 +314,531 @@ def test_config_and_result_fingerprints_cover_options_and_input(
     assert incomplete_event.result_fingerprint != changed_incomplete_event.result_fingerprint
 
 
+def test_fingerprint_is_stable_across_hash_seeds_for_unordered_object_values() -> None:
+    """Hashable object cells cannot make provenance depend on process hash randomization."""
+
+    script = """
+import pandas as pd
+from fincore.factor_analysis.models import fingerprint_value
+
+print(fingerprint_value(pd.DataFrame({'group': [frozenset({'aa', 'bb', 'cc'})]})))
+"""
+
+    def fingerprint_for_seed(seed: str) -> str:
+        environment = os.environ.copy()
+        environment["PYTHONHASHSEED"] = seed
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            check=True,
+            capture_output=True,
+            cwd=".",
+            env=environment,
+            text=True,
+        )
+        return completed.stdout.strip()
+
+    assert fingerprint_for_seed("1") == fingerprint_for_seed("2")
+
+
+def test_fingerprint_includes_inherited_slot_state() -> None:
+    """Changing an inherited slot is as material as changing a subclass slot."""
+
+    from fincore.factor_analysis.models import fingerprint_value
+
+    left = pd.DataFrame({"group": [_InheritedSlottedLabel("base-left", "shared")]})
+    right = pd.DataFrame({"group": [_InheritedSlottedLabel("base-right", "shared")]})
+    dict_backed_left = pd.DataFrame({"group": [_DictAndInheritedSlotLabel("base-left", "shared")]})
+    dict_backed_right = pd.DataFrame({"group": [_DictAndInheritedSlotLabel("base-right", "shared")]})
+
+    assert fingerprint_value(left) != fingerprint_value(right)
+    assert fingerprint_value(dict_backed_left) != fingerprint_value(dict_backed_right)
+
+
+def test_fingerprint_retains_extension_dtype_parameters() -> None:
+    """Two extension dtypes with the same display name must not alias."""
+
+    pyarrow = pytest.importorskip("pyarrow")
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    python_storage = pd.Series(["label", None], dtype=pd.StringDtype(storage="python"))
+    arrow_storage = pd.Series(["label", None], dtype=pd.ArrowDtype(pyarrow.string()))
+    arrow_timestamp = pd.Series(
+        [pd.Timestamp("2024-01-01 09:30", tz="America/New_York"), None],
+        dtype=pd.ArrowDtype(pyarrow.timestamp("us", tz="America/New_York")),
+    )
+
+    assert str(python_storage.dtype) == "string"
+    assert fingerprint_value(python_storage) != fingerprint_value(arrow_storage)
+    restored = deserialize_serializable_value(
+        json.loads(
+            json.dumps(
+                serializable_value(
+                    {"python": python_storage, "arrow": arrow_storage, "arrow_timestamp": arrow_timestamp}
+                ),
+                allow_nan=False,
+            )
+        )
+    )
+
+    assert isinstance(restored, Mapping)
+    pd.testing.assert_series_equal(restored["python"], python_storage)
+    pd.testing.assert_series_equal(restored["arrow"], arrow_storage)
+    pd.testing.assert_series_equal(restored["arrow_timestamp"], arrow_timestamp)
+
+    python_index = pd.Index(["label", None], dtype=pd.StringDtype(storage="python"), name="asset")
+    arrow_index = pd.Index(["label", None], dtype=pd.ArrowDtype(pyarrow.string()), name="asset")
+    restored_indexes = deserialize_serializable_value(
+        json.loads(
+            json.dumps(
+                serializable_value(
+                    {
+                        "python": pd.DataFrame({"value": [1, 2]}, index=python_index),
+                        "arrow": pd.DataFrame({"value": [1, 2]}, index=arrow_index),
+                    }
+                ),
+                allow_nan=False,
+            )
+        )
+    )
+
+    assert isinstance(restored_indexes, Mapping)
+    pd.testing.assert_index_equal(restored_indexes["python"].index, python_index, exact=True)
+    pd.testing.assert_index_equal(restored_indexes["arrow"].index, arrow_index, exact=True)
+
+
+def test_fingerprint_supports_standard_extension_dtype_metadata(clean_factor_data: pd.DataFrame) -> None:
+    """Timezone, period, interval, and sparse dtypes stay fingerprintable."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    observed = clean_factor_data.copy(deep=True)
+    observed["observed_at"] = pd.date_range("2024-01-01", periods=len(observed), tz="America/New_York")
+    model = analyze_factor(observed, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    extension_frame = pd.DataFrame(
+        {
+            "period": pd.Series(pd.period_range("2024-01", periods=2, freq="M")),
+            "interval": pd.Series(pd.arrays.IntervalArray.from_breaks([0, 1, 2])),
+            "sparse": pd.Series([0, 1], dtype=pd.SparseDtype("int64", fill_value=0)),
+        }
+    )
+
+    assert len(model.result_fingerprint) == 64
+    assert len(fingerprint_value(extension_frame)) == 64
+    restored = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value(extension_frame), allow_nan=False))
+    )
+    assert isinstance(restored, pd.DataFrame)
+    pd.testing.assert_frame_equal(restored, extension_frame)
+
+
+def test_fingerprint_retains_structured_numpy_dtype_layout() -> None:
+    """Raw bytes alone cannot identify structured ndarray field metadata."""
+
+    from fincore.factor_analysis.models import fingerprint_value
+
+    left = np.array([(1, 2)], dtype=[("left", "i4"), ("right", "i4")])
+    right = np.array([(1, 2)], dtype=[("bid", "i4"), ("ask", "i4")])
+
+    assert left.dtype.str == right.dtype.str == "|V8"
+    assert left.tobytes() == right.tobytes()
+    assert fingerprint_value(left) != fingerprint_value(right)
+    assert fingerprint_value(pd.DataFrame({"metadata": [left]})) != fingerprint_value(
+        pd.DataFrame({"metadata": [right]})
+    )
+
+
+def test_fingerprint_retains_numpy_dtype_metadata() -> None:
+    """Public NumPy dtype metadata is part of the model input contract."""
+
+    from fincore.factor_analysis.models import fingerprint_value
+
+    left = np.array([1], dtype=np.dtype("i4", metadata={"unit": "USD"}))
+    right = np.array([1], dtype=np.dtype("i4", metadata={"unit": "EUR"}))
+
+    assert left.tobytes() == right.tobytes()
+    assert fingerprint_value(left) != fingerprint_value(right)
+    assert fingerprint_value(pd.DataFrame({"metadata": [left]})) != fingerprint_value(
+        pd.DataFrame({"metadata": [right]})
+    )
+
+
+def test_json_handoff_retains_ieee_float_bits_in_scalars_and_tables() -> None:
+    """NaN payloads and signs cannot be collapsed by a textual float codec."""
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    first_nan = struct.unpack(">d", bytes.fromhex("7ff8000000000001"))[0]
+    second_nan = struct.unpack(">d", bytes.fromhex("7ff8000000000002"))[0]
+    source = {"first": first_nan, "second": second_nan, "frame": pd.DataFrame({"value": [first_nan]})}
+    restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(source), allow_nan=False)))
+
+    assert isinstance(restored, Mapping)
+    assert struct.pack(">d", restored["first"]) == struct.pack(">d", first_nan)
+    assert struct.pack(">d", restored["second"]) == struct.pack(">d", second_nan)
+    assert struct.pack(">d", restored["frame"].iloc[0, 0]) == struct.pack(">d", first_nan)
+    assert fingerprint_value(first_nan) != fingerprint_value(second_nan)
+
+
+def test_model_handoff_retains_numpy_dtype_attrs(clean_factor_data: pd.DataFrame) -> None:
+    """NumPy dtype state in renderer metadata remains part of the owned model."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value
+
+    source = clean_factor_data.copy(deep=True)
+    source.attrs["metadata_dtype"] = np.dtype("i4", metadata={"unit": "USD"})
+    source.attrs["typed_metadata_key_dtype"] = np.dtype("i4", metadata={1: "typed-key"})
+    source.attrs["structured_dtype"] = np.dtype([("left", "i4"), ("right", "i4")], metadata={"unit": "USD"})
+    source.attrs["aligned_dtype"] = np.dtype(
+        [(("title_a", "a"), "i4"), ("b", "f8")], align=True, metadata={"unit": "USD"}
+    )
+    source.attrs["subarray_dtype"] = np.dtype((np.dtype("i4"), (2,)), metadata={"unit": "USD"})
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    restored = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
+
+    assert isinstance(restored, Mapping)
+    restored_dtype = restored["factor_data"].attrs["metadata_dtype"]
+    assert isinstance(restored_dtype, np.dtype)
+    assert restored_dtype.metadata == {"unit": "USD"}
+    for name in ("typed_metadata_key_dtype", "structured_dtype", "aligned_dtype", "subarray_dtype"):
+        restored_dtype = restored["factor_data"].attrs[name]
+        source_dtype = source.attrs[name]
+        assert isinstance(restored_dtype, np.dtype)
+        assert restored_dtype.descr == source_dtype.descr
+        assert restored_dtype.metadata == source_dtype.metadata
+        assert restored_dtype.isalignedstruct == source_dtype.isalignedstruct
+    assert (
+        model.result_fingerprint
+        != analyze_factor(
+            clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False
+        ).result_fingerprint
+    )
+
+
+def test_model_fingerprint_and_json_handoff_support_stdlib_asset_labels(
+    clean_factor_data: pd.DataFrame,
+) -> None:
+    """Valid non-string asset labels remain usable in provenance and handoff."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value, serializable_value
+
+    asset_dates = {
+        asset: dt.date(2024, 1, position + 1)
+        for position, asset in enumerate(clean_factor_data.index.get_level_values("asset").unique())
+    }
+    relabelled = clean_factor_data.copy(deep=True)
+    relabelled.index = pd.MultiIndex.from_arrays(
+        [
+            clean_factor_data.index.get_level_values("date"),
+            clean_factor_data.index.get_level_values("asset").map(asset_dates),
+        ],
+        names=clean_factor_data.index.names,
+    )
+
+    model = analyze_factor(relabelled, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    restored = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
+    scalar_labels = pd.Index(
+        [
+            dt.date(2024, 1, 1),
+            dt.datetime(2024, 1, 1, 9, 30, 15, 123456),
+            dt.timedelta(days=2, seconds=3, microseconds=4),
+        ],
+        dtype=object,
+        name="asset",
+    )
+
+    assert len(model.result_fingerprint) == 64
+    assert isinstance(restored, Mapping)
+    pd.testing.assert_frame_equal(restored["factor_data"], model.factor_data)
+    label_frame = pd.DataFrame({"value": [1, 2, 3]}, index=scalar_labels)
+    round_tripped_labels = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value(label_frame), allow_nan=False))
+    )
+    assert isinstance(round_tripped_labels, pd.DataFrame)
+    pd.testing.assert_frame_equal(round_tripped_labels, label_frame)
+
+
+def test_stdlib_datetime_timezone_identity_is_retained_in_handoff_and_fingerprint() -> None:
+    """A named zone cannot alias its same-offset fixed-timezone counterpart."""
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    named_zone = dt.datetime(2024, 6, 1, 9, 30, tzinfo=ZoneInfo("America/New_York"))
+    fixed_offset = dt.datetime(2024, 6, 1, 9, 30, tzinfo=dt.timezone(dt.timedelta(hours=-4)))
+    source = pd.DataFrame({"value": [1]}, index=pd.Index([named_zone], dtype=object, name="asset"))
+    restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(source), allow_nan=False)))
+    restored_scalars = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value({"time": named_zone}), allow_nan=False))
+    )
+
+    assert isinstance(restored, pd.DataFrame)
+    restored_label = restored.index[0]
+    assert isinstance(restored_label, dt.datetime)
+    assert isinstance(restored_label.tzinfo, ZoneInfo)
+    assert restored_label.tzinfo.key == "America/New_York"
+    assert isinstance(restored_scalars, Mapping)
+    assert isinstance(restored_scalars["time"], dt.datetime)
+    assert isinstance(restored_scalars["time"].tzinfo, ZoneInfo)
+    assert restored_scalars["time"].tzinfo.key == "America/New_York"
+    assert fingerprint_value({"time": named_zone}) != fingerprint_value({"time": fixed_offset})
+
+
+def test_datetime_fixed_offset_microseconds_are_lossless_in_handoff_and_fingerprint() -> None:
+    """Fixed offsets must not be rounded to whole seconds during JSON handoff."""
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    one_microsecond = dt.datetime(2024, 6, 1, 9, 30, tzinfo=dt.timezone(dt.timedelta(microseconds=1)))
+    mixed_offset = dt.datetime(
+        2024,
+        6,
+        1,
+        9,
+        30,
+        tzinfo=dt.timezone(dt.timedelta(seconds=30, microseconds=1)),
+    )
+    restored = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value({"one": one_microsecond, "mixed": mixed_offset}), allow_nan=False))
+    )
+
+    assert isinstance(restored, Mapping)
+    assert restored["one"] == one_microsecond
+    assert restored["mixed"] == mixed_offset
+    assert restored["one"].utcoffset() == dt.timedelta(microseconds=1)
+    assert restored["mixed"].utcoffset() == dt.timedelta(seconds=30, microseconds=1)
+    assert fingerprint_value(one_microsecond) != fingerprint_value(mixed_offset)
+
+
+def test_pandas_fixed_offset_microsecond_timezones_are_lossless_in_handoff_and_fingerprint() -> None:
+    """Pandas timestamps and indexes must retain local time and exact fixed offsets."""
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    timezone = dt.timezone(dt.timedelta(microseconds=1))
+    timestamp = pd.Timestamp(dt.datetime(2024, 1, 1, 9, 30, tzinfo=timezone))
+    nanosecond_timestamp = pd.Timestamp("2024-01-01 09:30:00.123456789", tz=timezone)
+    index = pd.DatetimeIndex([timestamp], name="date")
+    empty_index = pd.DatetimeIndex([], tz=timezone, name="date")
+    source = {
+        "timestamp": timestamp,
+        "nanosecond_timestamp": nanosecond_timestamp,
+        "indexed": pd.DataFrame({"value": [1.0]}, index=index),
+        "empty": pd.DataFrame({"value": []}, index=empty_index),
+    }
+    restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(source), allow_nan=False)))
+
+    assert isinstance(restored, Mapping)
+    restored_timestamp = restored["timestamp"]
+    assert isinstance(restored_timestamp, pd.Timestamp)
+    assert restored_timestamp.isoformat() == timestamp.isoformat()
+    assert fingerprint_value(restored_timestamp) == fingerprint_value(timestamp)
+    restored_nanosecond_timestamp = restored["nanosecond_timestamp"]
+    assert isinstance(restored_nanosecond_timestamp, pd.Timestamp)
+    assert restored_nanosecond_timestamp.value == nanosecond_timestamp.value
+    assert restored_nanosecond_timestamp.tz == nanosecond_timestamp.tz
+    assert fingerprint_value(restored_nanosecond_timestamp) == fingerprint_value(nanosecond_timestamp)
+    for unit, value in (("s", 1_704_101_400), ("ms", 1_704_101_400_123)):
+        unit_source = pd.Timestamp(value, unit=unit, tz=timezone)
+        unit_target = deserialize_serializable_value(json.loads(json.dumps(serializable_value(unit_source))))
+        assert isinstance(unit_target, pd.Timestamp)
+        assert unit_target.unit == unit_source.unit
+        assert fingerprint_value(unit_target) == fingerprint_value(unit_source)
+    pd.testing.assert_frame_equal(restored["indexed"], source["indexed"])
+    pd.testing.assert_frame_equal(restored["empty"], source["empty"])
+
+
+def test_pandas_dateutil_and_pytz_fixed_offsets_use_the_lossless_timezone_envelope() -> None:
+    """Fixed offsets need not pass through a non-reversible timezone display string."""
+
+    import pytz
+    from dateutil import tz
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    values = {
+        "dateutil": pd.Timestamp("2024-01-01 09:30:00.123456789", tz=tz.tzoffset("custom", 30)),
+        "pytz": pd.Timestamp("2024-01-01 09:30:00.123456789", tz=pytz.FixedOffset(30)),
+    }
+    restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(values), allow_nan=False)))
+
+    assert isinstance(restored, Mapping)
+    for name, source in values.items():
+        target = restored[name]
+        assert isinstance(target, pd.Timestamp)
+        assert target.value == source.value
+        assert target.utcoffset() == source.utcoffset()
+        assert fingerprint_value(target) == fingerprint_value(source)
+        source_index = pd.DatetimeIndex([source], name="date")
+        restored_frame = deserialize_serializable_value(
+            json.loads(
+                json.dumps(serializable_value(pd.DataFrame({"value": [1.0]}, index=source_index)), allow_nan=False)
+            )
+        )
+        assert isinstance(restored_frame, pd.DataFrame)
+        restored_index = restored_frame.index
+        assert isinstance(restored_index, pd.DatetimeIndex)
+        assert tuple(restored_index.asi8) == tuple(source_index.asi8)
+        assert restored_index[0].utcoffset() == source_index[0].utcoffset()
+        assert fingerprint_value(restored_index) == fingerprint_value(source_index)
+
+
+def test_pandas_named_timezone_providers_use_one_lossless_iana_envelope() -> None:
+    """ZoneInfo, dateutil and pytz names share one reversible timezone identity."""
+
+    import pytz
+    from dateutil import tz
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    providers = {
+        "zoneinfo": ZoneInfo("America/New_York"),
+        "dateutil": tz.gettz("America/New_York"),
+        "pytz": pytz.timezone("America/New_York"),
+    }
+    for month in ("2024-01", "2024-07"):
+        source = {
+            name: pd.Timestamp(f"{month}-01 09:30:00.123456789", tz=timezone) for name, timezone in providers.items()
+        }
+        restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(source), allow_nan=False)))
+
+        assert isinstance(restored, Mapping)
+        for name, timestamp in source.items():
+            target = restored[name]
+            assert isinstance(target, pd.Timestamp)
+            assert target.value == timestamp.value
+            assert target.utcoffset() == timestamp.utcoffset()
+            assert str(target.tz) == "America/New_York"
+            assert fingerprint_value(target) == fingerprint_value(timestamp)
+            source_index = pd.DatetimeIndex([timestamp], name="date")
+            restored_frame = deserialize_serializable_value(
+                json.loads(
+                    json.dumps(serializable_value(pd.DataFrame({"value": [1.0]}, index=source_index)), allow_nan=False)
+                )
+            )
+            assert isinstance(restored_frame, pd.DataFrame)
+            assert fingerprint_value(restored_frame.index) == fingerprint_value(source_index)
+
+
+def test_model_handoff_supports_hashable_unordered_object_cells(clean_factor_data: pd.DataFrame) -> None:
+    """Frozen metadata remains serializable in both table cells and mapping keys."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value, serializable_value
+
+    metadata = frozenset({"a", "b"})
+    source = clean_factor_data.copy(deep=True)
+    source["metadata"] = [metadata] * len(source)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
+    restored_mapping = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value({metadata: {"values": metadata}}), allow_nan=False))
+    )
+
+    assert isinstance(restored_model, Mapping)
+    pd.testing.assert_frame_equal(restored_model["factor_data"], model.factor_data)
+    assert isinstance(restored_mapping, Mapping)
+    assert restored_mapping[metadata] == {"values": metadata}
+
+
+def test_model_handoff_supports_accepted_binary_numeric_and_arrow_object_values(
+    clean_factor_data: pd.DataFrame,
+) -> None:
+    """Lossless handoff covers supported object cells and parameterized Arrow scalars."""
+
+    pyarrow = pytest.importorskip("pyarrow")
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value, serializable_value
+
+    array_value = np.array([1, 2], dtype=np.int16)
+    source = clean_factor_data.copy(deep=True)
+    source["metadata_array"] = [array_value] * len(source)
+    source["metadata_bytes"] = [b"asset-bytes"] * len(source)
+    source["metadata_complex"] = [complex(1.5, -2.25)] * len(source)
+    source["metadata_decimal"] = [Decimal("1.2300")] * len(source)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
+    arrow_frame = pd.DataFrame(
+        {
+            "decimal": pd.Series([Decimal("1.23"), None], dtype=pd.ArrowDtype(pyarrow.decimal128(10, 2))),
+            "list": pd.Series([[1, 2], None], dtype=pd.ArrowDtype(pyarrow.list_(pyarrow.int16()))),
+        }
+    )
+    restored_arrow = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value(arrow_frame), allow_nan=False))
+    )
+
+    assert isinstance(restored_model, Mapping)
+    restored_factor_data = restored_model["factor_data"]
+    restored_array = restored_factor_data["metadata_array"].iloc[0]
+    assert isinstance(restored_array, np.ndarray)
+    assert restored_array.dtype == np.dtype("int16")
+    np.testing.assert_array_equal(restored_array, array_value)
+    assert restored_factor_data["metadata_bytes"].iloc[0] == b"asset-bytes"
+    assert restored_factor_data["metadata_complex"].iloc[0] == complex(1.5, -2.25)
+    assert restored_factor_data["metadata_decimal"].iloc[0].as_tuple() == Decimal("1.2300").as_tuple()
+    assert isinstance(restored_arrow, pd.DataFrame)
+    pd.testing.assert_frame_equal(restored_arrow, arrow_frame)
+
+
+def test_json_handoff_retains_numpy_scalars_and_nested_object_arrays(
+    clean_factor_data: pd.DataFrame,
+) -> None:
+    """Object cells cannot collapse NumPy dtypes or nested array values to Python."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
+
+    nested = np.empty(2, dtype=object)
+    nested[0] = np.array([1, 2], dtype=np.int16)
+    nested[1] = {"value": np.array([3], dtype=np.int8)}
+    object_scalar = np.array([({"value": "x"},)], dtype=[("payload", object)])[0]
+    scalar_values = {
+        "float32": np.float32(1.25),
+        "int16": np.int16(7),
+        "datetime64": np.datetime64("2024-01-02T03:04:05.678", "ms"),
+        "timedelta64": np.timedelta64(1234, "ms"),
+        "longdouble": np.longdouble("1.234567890123456789"),
+        "clongdouble": np.clongdouble("1.25-2.5j"),
+        "nested": nested,
+        "object_scalar": object_scalar,
+    }
+    restored_scalars = deserialize_serializable_value(
+        json.loads(json.dumps(serializable_value(scalar_values), allow_nan=False))
+    )
+    source = clean_factor_data.copy(deep=True)
+    source["metadata_scalar"] = pd.Series([np.float32(1.25)] * len(source), index=source.index, dtype=object)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
+
+    assert isinstance(restored_scalars, Mapping)
+    for name, scalar in scalar_values.items():
+        if name == "nested":
+            restored_nested = restored_scalars[name]
+            assert isinstance(restored_nested, np.ndarray)
+            assert restored_nested.dtype == nested.dtype
+            np.testing.assert_array_equal(restored_nested[0], nested[0])
+            np.testing.assert_array_equal(restored_nested[1]["value"], nested[1]["value"])
+            continue
+        if name == "object_scalar":
+            assert isinstance(restored_scalars[name], np.void)
+            assert restored_scalars[name]["payload"] == {"value": "x"}
+            assert fingerprint_value(restored_scalars[name]) == fingerprint_value(scalar)
+            continue
+        restored_scalar = restored_scalars[name]
+        assert isinstance(restored_scalar, np.generic)
+        assert restored_scalar.dtype == scalar.dtype
+        assert restored_scalar.tobytes() == scalar.tobytes()
+        assert fingerprint_value(restored_scalar) == fingerprint_value(scalar)
+    assert isinstance(restored_model, Mapping)
+    restored_scalar = restored_model["factor_data"]["metadata_scalar"].iloc[0]
+    assert isinstance(restored_scalar, np.float32)
+    assert restored_scalar.tobytes() == np.float32(1.25).tobytes()
+
+
 def test_config_owns_sequence_options_and_rejects_lossy_integer_capital() -> None:
     """A frozen config cannot retain caller-owned lists or rounded capital."""
 
@@ -298,6 +867,71 @@ def test_config_owns_sequence_options_and_rejects_lossy_integer_capital() -> Non
     with pytest.raises(ValueError, match="exactly"):
         FactorAnalysisConfig(pyfolio_capital=2**53 + 1)
     assert FactorAnalysisConfig(pyfolio_capital=2**54).pyfolio_capital == 2**54
+
+
+def test_config_rejects_nondeterministic_sequences_and_invalid_typed_options(
+    clean_factor_data: pd.DataFrame,
+) -> None:
+    """Typed config inputs must not silently accept unordered or invalid values."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.models import FactorAnalysisConfig
+
+    with pytest.raises(TypeError, match="periods"):
+        FactorAnalysisConfig(periods="1D")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="periods"):
+        FactorAnalysisConfig(periods={"1D", "5D"})  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="turnover_periods"):
+        FactorAnalysisConfig(turnover_periods={1, 2})  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="time_aggregation"):
+        FactorAnalysisConfig(time_aggregation="M")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="long_short"):
+        FactorAnalysisConfig(long_short="yes")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="event_before"):
+        FactorAnalysisConfig(event_before=True)
+    with pytest.raises(TypeError, match="event_before"):
+        FactorAnalysisConfig(event_before="bad", event_after=None)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="non-negative"):
+        FactorAnalysisConfig(event_before=-1)
+
+    with pytest.raises(TypeError, match="periods"):
+        analyze_factor(clean_factor_data, periods="1D", include_pyfolio=False)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="event_before"):
+        analyze_factor(
+            clean_factor_data,
+            event_before="bad",  # type: ignore[arg-type]
+            event_after=None,
+            include_pyfolio=False,
+        )
+
+
+def test_frozen_mapping_owns_and_releases_independent_mutable_values() -> None:
+    """Mapping keys and nested mutable values cannot mutate a stored snapshot."""
+
+    from fincore.factor_analysis.models import frozen_mapping
+
+    source = {"items": [{"value": 1}], "labels": {1, 2}}
+    frozen = frozen_mapping(source)
+    source["items"][0]["value"] = 99
+    source["labels"].add(3)
+
+    assert frozen["items"] == [{"value": 1}]
+    assert frozen["labels"] == {1, 2}
+    exposed_items = frozen["items"]
+    exposed_labels = frozen["labels"]
+    exposed_items.append({"value": 4})
+    exposed_labels.add(4)
+    assert frozen["items"] == [{"value": 1}]
+    assert frozen["labels"] == {1, 2}
+
+    equal_key = _MutableGroupLabel(["group"])
+    equal_key_mapping = frozen_mapping({equal_key: "value"})
+    released_key = next(iter(equal_key_mapping))
+    assert equal_key_mapping[equal_key] == "value"
+    assert equal_key_mapping[released_key] == "value"
+    assert dict(equal_key_mapping)[released_key] == "value"
+    with pytest.raises(TypeError, match="preserve equality"):
+        frozen_mapping({_IdentityOnlyKey(): "value"})
 
 
 def test_model_exposes_defensive_snapshots_for_all_renderer_data(
@@ -407,7 +1041,12 @@ def test_serializable_handoff_round_trips_exact_values_keys_and_pandas_metadata(
         },
         index=index,
     )
-    source = {1: "integer-key", "1": "text-key", "frame": frame}
+    frame.attrs["renderer-hint"] = {"periods": ("1D",)}
+    frame.flags.allows_duplicate_labels = False
+    series = pd.Series([1.0, 2.0], index=index, name="alpha")
+    series.attrs["source"] = "frozen"
+    series.flags.allows_duplicate_labels = False
+    source = {1: "integer-key", "1": "text-key", "frame": frame, "series": series}
 
     payload = serializable_value(source)
     restored = deserialize_serializable_value(json.loads(json.dumps(payload, allow_nan=False)))
@@ -416,6 +1055,11 @@ def test_serializable_handoff_round_trips_exact_values_keys_and_pandas_metadata(
     assert restored[1] == "integer-key"
     assert restored["1"] == "text-key"
     pd.testing.assert_frame_equal(restored["frame"], frame)
+    pd.testing.assert_series_equal(restored["series"], series)
+    assert restored["frame"].attrs == frame.attrs
+    assert restored["frame"].flags.allows_duplicate_labels is False
+    assert restored["series"].attrs == series.attrs
+    assert restored["series"].flags.allows_duplicate_labels is False
 
 
 def test_serializable_handoff_round_trips_distant_and_empty_timezone_indexes() -> None:

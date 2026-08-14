@@ -7,7 +7,7 @@ library; later renderers receive only :class:`FactorAnalysisModel` data.
 
 from __future__ import annotations
 
-from collections.abc import Hashable, Sequence  # noqa: TC003
+from collections.abc import Hashable, Sequence
 from typing import cast
 
 import numpy as np
@@ -50,6 +50,8 @@ def _copy_clean_factor_data(factor_data: pd.DataFrame) -> tuple[pd.DataFrame, tu
 def _normalize_periods(available: tuple[str, ...], periods: Sequence[str] | None) -> tuple[str, ...]:
     """Validate a deterministic nonempty forward-period selection."""
 
+    if periods is not None and (isinstance(periods, (str, bytes, bytearray)) or not isinstance(periods, Sequence)):
+        raise TypeError("periods must be a sequence")
     selected = available if periods is None else tuple(periods)
     if not selected:
         raise ValueError("at least one forward period must be selected")
@@ -64,10 +66,12 @@ def _normalize_periods(available: tuple[str, ...], periods: Sequence[str] | None
 def _normalize_positive_lags(turnover_periods: Sequence[int]) -> tuple[int, ...]:
     """Validate turnover/rank lags once for both renderer-facing fields."""
 
+    if isinstance(turnover_periods, (str, bytes, bytearray)) or not isinstance(turnover_periods, Sequence):
+        raise TypeError("turnover_periods must be a sequence")
     normalized = tuple(turnover_periods)
     if not normalized:
         raise ValueError("turnover_periods must contain at least one positive lag")
-    if any(not isinstance(period, int) or period <= 0 for period in normalized):
+    if any(not isinstance(period, int) or isinstance(period, bool) or period <= 0 for period in normalized):
         raise ValueError("turnover_periods must contain positive integers")
     if len(set(normalized)) != len(normalized):
         raise ValueError("turnover_periods must not contain duplicates")
@@ -77,6 +81,8 @@ def _normalize_positive_lags(turnover_periods: Sequence[int]) -> tuple[int, ...]
 def _normalize_time_aggregation(time_aggregation: Sequence[str]) -> tuple[str, ...]:
     """Validate named pandas aggregation frequencies for the model payload."""
 
+    if isinstance(time_aggregation, (str, bytes, bytearray)) or not isinstance(time_aggregation, Sequence):
+        raise TypeError("time_aggregation must be a sequence")
     normalized = tuple(time_aggregation)
     if any(not isinstance(frequency, str) or not frequency for frequency in normalized):
         raise ValueError("time_aggregation must contain nonempty frequency strings")
