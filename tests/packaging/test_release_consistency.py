@@ -92,6 +92,8 @@ def _release_check(dist_dir: Path) -> subprocess.CompletedProcess[str]:
         ("wheel", "Empyrical>=1"),
         ("sdist", "AlphaLens>=1"),
         ("wheel", "safe-package @ https://example.invalid/safe-package-1.0.whl"),
+        ("wheel", "not a valid @ requirement"),
+        ("sdist", "not a valid @ requirement"),
     ),
 )
 def test_release_consistency_rejects_prohibited_artifact_requirements(
@@ -109,3 +111,4 @@ def test_release_consistency_rejects_prohibited_artifact_requirements(
 
     assert result.returncode == 1, f"release consistency accepted {artifact} metadata: {requirement!r}"
     assert requirement in result.stdout
+    assert "Traceback" not in result.stdout + result.stderr

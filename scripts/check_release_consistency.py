@@ -31,7 +31,7 @@ import zipfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from packaging.requirements import Requirement
+from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
 
 if TYPE_CHECKING:
@@ -124,7 +124,20 @@ def _is_allowed_compatibility_requirement(requirement: Requirement) -> bool:
 
 def _check_artifact_requirements(check: Callable[[bool, str], None], requirements: list[str], *, label: str) -> None:
     """Reject external compatibility packages and direct URLs in built metadata."""
-    prohibited = [raw for raw in requirements if not _is_allowed_compatibility_requirement(Requirement(raw))]
+    malformed: list[str] = []
+    prohibited: list[str] = []
+    for raw in requirements:
+        try:
+            requirement = Requirement(raw)
+        except InvalidRequirement:
+            malformed.append(raw)
+            continue
+        if not _is_allowed_compatibility_requirement(requirement):
+            prohibited.append(raw)
+    check(
+        not malformed,
+        f"{label} Requires-Dist contains only valid requirements ({malformed or 'valid'})",
+    )
     check(
         not prohibited,
         f"{label} Requires-Dist uses no external Alphalens/Empyrical or direct URL ({prohibited or 'clean'})",
