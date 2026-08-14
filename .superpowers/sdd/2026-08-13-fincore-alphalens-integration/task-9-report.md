@@ -149,6 +149,62 @@ consumer code or wheel runtime dependency metadata.
 
 Follow-up fix commit: `4dcf019 fix: harden alphalens package artifacts`.
 
+## Re-review follow-up (2026-08-15)
+
+The remaining Critical bypass was case-sensitive comparison of
+`Requirement.name`.  Source dependency inputs, wheel/sdist metadata, and the
+release-consistency extra guard now compare `canonicalize_name(requirement.name)`
+against the canonical PEP 503 prohibited names (`alphalens`, `empyrical`).
+
+Two parameterized regressions inject the valid mixed-case requirements
+`Empyrical>=1` and `AlphaLens>=1` into the actual source-input and wheel-metadata
+guards.  Each must be rejected, so future raw-name comparisons cannot silently
+permit an external compatibility package.
+
+RED command and result:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_extras_union.py::test_source_requirement_guard_rejects_mixed_case_external_names \
+  tests/packaging/test_wheel_contents.py::test_wheel_metadata_guard_rejects_mixed_case_external_names \
+  -q --tb=short --maxfail=0
+# 4 failed: the unnormalized guards did not raise for either mixed-case name
+```
+
+GREEN commands and results:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_extras_union.py::test_source_requirement_guard_rejects_mixed_case_external_names \
+  tests/packaging/test_wheel_contents.py::test_wheel_metadata_guard_rejects_mixed_case_external_names \
+  -q --tb=short --maxfail=0
+# 4 passed in 0.32s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_extras_union.py::test_supported_dependency_inputs_do_not_install_external_compatibility_packages_or_urls \
+  tests/packaging/test_wheel_contents.py::test_sdist_excludes_contributor_and_test_requirement_artifacts \
+  tests/packaging/test_wheel_contents.py::test_distribution_metadata_has_no_external_compatibility_requirements_or_urls \
+  -q --tb=short --maxfail=0
+# 4 passed in 4.90s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/packaging -q --tb=short --maxfail=0
+# 32 passed in 8.25s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff check \
+  scripts/check_release_consistency.py tests/packaging/test_extras_union.py tests/packaging/test_wheel_contents.py
+# All checks passed
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff format --check \
+  scripts/check_release_consistency.py tests/packaging/test_extras_union.py tests/packaging/test_wheel_contents.py
+# 3 files already formatted
+```
+
+Re-review fix commit: `a40b4ad fix: canonicalize package dependency guards`.
+
 ## Concern
 
 The isolated Alphalens rendering profile emits intended legacy summary tables
