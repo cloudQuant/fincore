@@ -414,10 +414,15 @@ def test_strict_facade_matches_every_task4_enhanced_kernel() -> None:
         strict.factor_rank_autocorrelation(factor_data),
         enhanced.factor_rank_autocorrelation(factor_data),
     )
-    pd.testing.assert_frame_equal(
-        strict.common_start_returns(event_factor, event_returns, 1, 2, cumulative=True),
-        enhanced.common_start_returns(event_factor, event_returns, 1, 2, cumulative=True),
-    )
+    source_assets = list(set(event_factor.index.get_level_values("asset")))
+    strict_event_expected = event_returns.iloc[1:5].loc[:, source_assets].copy()
+    strict_event_expected.index = pd.RangeIndex(-1, 3)
+    strict_event = strict.common_start_returns(event_factor, event_returns, 1, 2, cumulative=True)
+    enhanced_event = enhanced.common_start_returns(event_factor, event_returns, 1, 2, cumulative=True)
+    pd.testing.assert_frame_equal(strict_event, strict_event_expected)
+    enhanced_event_expected = strict_event_expected.loc[:, ["A", "B", "C", "D"]].copy()
+    enhanced_event_expected.columns = enhanced_event_expected.columns.rename("asset")
+    pd.testing.assert_frame_equal(enhanced_event, enhanced_event_expected)
     pd.testing.assert_frame_equal(
         strict.average_cumulative_return_by_quantile(event_factor, event_returns, 1, 2),
         enhanced.average_cumulative_return_by_quantile(event_factor, event_returns, 1, 2),
@@ -680,7 +685,9 @@ def test_strict_common_start_returns_emits_one_pinned_slice_per_resolved_event(
     enhanced_actual = enhanced.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
     enhanced_stdout = capsys.readouterr().out
 
-    pd.testing.assert_frame_equal(strict_actual, enhanced_actual)
+    strict_expected = pd.concat(expected_windows, axis=1)
+    pd.testing.assert_frame_equal(strict_actual, strict_expected)
+    pd.testing.assert_frame_equal(enhanced_actual.rename_axis(columns=None), strict_expected)
     assert strict_stdout == expected_stdout
     assert strict_stdout.count("series = ") == 2
     assert enhanced_stdout == ""
@@ -769,5 +776,96 @@ def test_strict_common_start_returns_preserves_pinned_signed_windows(
 
     pd.testing.assert_frame_equal(actual, expected)
     assert stdout == f"series =  {expected}\n"
+    with pytest.raises(ValueError, match="non-negative"):
+        enhanced.common_start_returns(factor, returns, before=before, after=after, cumulative=True)
+
+
+def test_strict_common_start_returns_projects_source_columns_name_without_demean(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned list/set selection leaves normal event-return columns unnamed."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03]}, index=dates)
+    expected = returns.iloc[0:3].loc[:, ["A"]].copy()
+    expected.index = pd.RangeIndex(-1, 2)
+    expected.columns = expected.columns.rename(None)
+
+    actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == f"series =  {expected}\n"
+
+
+@pytest.mark.parametrize("cumulative", [True, False], ids=("cumulative", "compound-first"))
+def test_strict_common_start_returns_returns_source_set_column_order(
+    cumulative: bool,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Normal strict results use the pinned source slices, not enhanced asset ordering."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-06-03", periods=4, freq="D", name="date")
+    factor = pd.Series(
+        [1.0, 1.0, 1.0, 1.0],
+        index=pd.MultiIndex.from_tuples(
+            [(dates[1], "A"), (dates[1], "B"), (dates[2], "A"), (dates[2], "B")],
+            names=("date", "asset"),
+        ),
+    )
+    returns = pd.DataFrame({"A": [0.10, 0.20, 0.30, 0.40], "B": [-0.10, 0.10, 0.30, 0.40]}, index=dates)
+    source_returns = returns if cumulative else (returns + 1.0).cumprod()
+    source_assets = list({"A", "B"})
+    expected_windows: list[pd.DataFrame] = []
+    for day_zero in (1, 2):
+        window = source_returns.iloc[day_zero - 1 : day_zero + 2].loc[:, source_assets].copy()
+        window.index = pd.RangeIndex(-1, 2)
+        expected_windows.append(window)
+    expected = pd.concat(expected_windows, axis=1)
+
+    actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=cumulative)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == "".join(f"series =  {window}\n" for window in expected_windows)
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected_offsets"),
+    [(np.int64(1), np.int64(1), pd.RangeIndex(-1, 2)), (np.int64(-1), np.int64(1), pd.RangeIndex(1, 2))],
+    ids=("positive-numpy-integrals", "negative-numpy-integral"),
+)
+def test_strict_common_start_returns_accepts_numpy_integral_windows(
+    before: np.integer[object],
+    after: np.integer[object],
+    expected_offsets: pd.RangeIndex,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned source accepts NumPy integral windows regardless of sign."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03]}, index=dates)
+    start = max(1 - int(before), 0)
+    stop = min(1 + int(after) + 1, len(returns.index))
+    expected = returns.iloc[start:stop].loc[:, ["A"]].copy()
+    expected.index = expected_offsets
+
+    actual = strict.common_start_returns(factor, returns, before=before, after=after, cumulative=True)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == f"series =  {expected}\n"
     with pytest.raises(ValueError, match="non-negative"):
         enhanced.common_start_returns(factor, returns, before=before, after=after, cumulative=True)

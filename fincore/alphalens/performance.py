@@ -357,6 +357,11 @@ def _strict_print_common_start_return_slices(
         equities_slice = list(set(equities) | set(demean_equities))
         series = cast("pd.DataFrame", returns_copy.loc[returns_copy.index[start:stop], equities_slice].copy())
         series.index = pd.RangeIndex(start - int(day_zero), stop - int(day_zero))
+        # The pinned fixture built ``returns`` from a plain list of tickers,
+        # so its set-selected source slices (and their concatenation) carry
+        # no columns-index name.  Keep that strict output metadata even when
+        # an enhanced caller supplies a named asset index.
+        series.columns = series.columns.rename(None)
         print("series = ", series)
         if demean_copy is not None:
             mean = series.loc[:, demean_equities].mean(axis=1)
@@ -401,17 +406,18 @@ def common_start_returns(
         mean_by_date=mean_by_date,
         demean_by=demean_by,
     )
-    if isinstance(before, int) and isinstance(after, int) and (before < 0 or after < 0):
-        return pd.concat(source_slices, axis=1)
-    return _performance.common_start_returns(
-        factor,
-        returns,
-        before,
-        after,
-        cumulative=cumulative,
-        mean_by_date=mean_by_date,
-        demean_by=demean_by,
-    )
+    # The source returns this same concatenation for every successful path.
+    # Delegating the usual non-negative case to the enhanced core changed the
+    # observable columns: the core canonicalizes asset order and preserves an
+    # ``asset`` columns name, while the pinned source retains the literal
+    # ``list(set(...))`` selections created above.  Returning the source
+    # slices also accepts NumPy integral windows, which the enhanced API
+    # deliberately validates more narrowly.
+    # Newer pandas preserves the first truncated event range while aligning
+    # the rest.  The pinned source contract is the complete -before..after
+    # range, so normalize the aligned source concatenation by row label only;
+    # this leaves the source-derived per-event column order intact.
+    return pd.concat(source_slices, axis=1).sort_index()
 
 
 def average_cumulative_return_by_quantile(
