@@ -17,6 +17,8 @@ from packaging.requirements import Requirement
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
+CONTRIBUTOR_REQUIREMENT_FILES = (REPO_ROOT / "requirements.txt", REPO_ROOT / "requirements-test.txt")
+PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
 
 # Functional extras: every extra that installs runtime capability.
 FUNCTIONAL_EXTRAS = {
@@ -71,6 +73,29 @@ def _functional_union(extras: dict[str, list[str]]) -> set[str]:
     return union
 
 
+def _supported_source_requirements() -> list[tuple[str, str]]:
+    """Return every requirement used by contributor or PEP 517/621 metadata."""
+    with PYPROJECT.open("rb") as fh:
+        metadata = tomllib.load(fh)
+    requirements: list[tuple[str, str]] = [
+        ("pyproject build-system", raw) for raw in metadata["build-system"]["requires"]
+    ]
+    project = metadata["project"]
+    requirements.extend(("pyproject dependencies", raw) for raw in project.get("dependencies", []))
+    requirements.extend(
+        (f"pyproject extra {name}", raw)
+        for name, values in project.get("optional-dependencies", {}).items()
+        for raw in values
+    )
+    for path in CONTRIBUTOR_REQUIREMENT_FILES:
+        requirements.extend(
+            (path.name, line.strip())
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        )
+    return requirements
+
+
 def test_all_is_exact_normalized_union_of_functional_extras() -> None:
     """``all`` must equal the union of the functional extras, requirement-for-requirement."""
     extras = _extras()
@@ -86,15 +111,15 @@ def test_no_self_reference_in_any_extra() -> None:
             )
 
 
-def test_extras_do_not_depend_on_external_compatibility_packages_or_urls() -> None:
-    """The integrated Alphalens and Empyrical code must never be reinstalled."""
-    for extra_name, reqs in _extras().items():
-        for raw in reqs:
-            requirement = Requirement(raw)
-            assert requirement.name not in {"alphalens", "empyrical"}, (
-                f"extra {extra_name!r} installs an external compatibility package: {raw!r}"
-            )
-            assert requirement.url is None, f"extra {extra_name!r} installs from URL: {raw!r}"
+def test_supported_dependency_inputs_do_not_install_external_compatibility_packages_or_urls() -> None:
+    """Contributor and distribution metadata never re-install integrated code."""
+    for source, raw in _supported_source_requirements():
+        assert "://" not in raw and not raw.lower().startswith("git+"), f"{source} installs from URL: {raw!r}"
+        requirement = Requirement(raw)
+        assert requirement.name not in PROHIBITED_EXTERNAL_REQUIREMENTS, (
+            f"{source} installs an external compatibility package: {raw!r}"
+        )
+        assert requirement.url is None, f"{source} installs from URL: {raw!r}"
 
 
 def test_all_excludes_dev_only_tools() -> None:

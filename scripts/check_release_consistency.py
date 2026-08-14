@@ -50,6 +50,7 @@ _BANNED_ARTIFACT_FRAGMENTS = (
     "requirements-pyfolio",
 )
 _BANNED_ARTIFACT_SUFFIXES = (".ipynb", ".png")
+_CONTRIBUTOR_REQUIREMENT_ARTIFACTS = {"requirements.txt", "requirements-test.txt"}
 _REQUIRED_RUNTIME_MODULES = {
     "fincore/alphalens/__init__.py",
     "fincore/alphalens/performance.py",
@@ -100,10 +101,11 @@ def _check_artifact_layout(
             name.startswith(("/", "../"))
             or "/../" in name
             or name.lower().endswith(_BANNED_ARTIFACT_SUFFIXES)
+            or Path(name).name in _CONTRIBUTOR_REQUIREMENT_ARTIFACTS
             or any(fragment in name.lower() for fragment in _BANNED_ARTIFACT_FRAGMENTS)
             for name in names
         ),
-        f"{label} excludes sibling paths, Versioneer, notebooks, PNGs, and oracle requirements",
+        f"{label} excludes sibling paths, contributor requirements, Versioneer, notebooks, PNGs, and oracle requirements",
     )
     notice_files = [name for name in relative_names if "THIRD_PARTY_NOTICES" in name]
     check(not notice_files, f"{label} has no unapproved third-party notice file")

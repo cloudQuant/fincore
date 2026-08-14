@@ -446,10 +446,11 @@ jobs:
       # Wheel-consumer smoke: pip --target installs the wheel (plus extras)
       # into isolated targets and fresh ``-S -E`` subprocesses assert package
       # provenance, star-import safety, and DependencyError gates.  The full
-      # profile matrix (incl. bayesian/report-pdf/all) is the release gate;
+      # five required Task 9 profiles are the release gate; legacy dedicated
+      # profiles remain available to the script but are not part of this job.
       # Playwright browser binaries + real PDF rendering are a separate
       # two-stage job.
-      - name: Wheel consumer smoke (full profile matrix)
+      - name: Wheel consumer smoke (Task 9 required profiles)
         run: >-
           python scripts/test_installed_wheel.py --dist dist/
           --profiles core factor-analysis alphalens alphalens-pyfolio all

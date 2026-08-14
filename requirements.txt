@@ -30,5 +30,4 @@ akshare
 # Dev tools
 setuptools
 packaging
-empyrical
 scikit-learn
