@@ -117,6 +117,20 @@ def _check_artifact_layout(
         check("Apache License" in read_text(license_names[0]), f"{label} LICENSE is Apache-2.0")
 
 
+def _is_allowed_compatibility_requirement(requirement: Requirement) -> bool:
+    """Return whether a requirement keeps integrated compatibility code local."""
+    return canonicalize_name(requirement.name) not in _PROHIBITED_EXTERNAL_REQUIREMENTS and requirement.url is None
+
+
+def _check_artifact_requirements(check: Callable[[bool, str], None], requirements: list[str], *, label: str) -> None:
+    """Reject external compatibility packages and direct URLs in built metadata."""
+    prohibited = [raw for raw in requirements if not _is_allowed_compatibility_requirement(Requirement(raw))]
+    check(
+        not prohibited,
+        f"{label} Requires-Dist uses no external Alphalens/Empyrical or direct URL ({prohibited or 'clean'})",
+    )
+
+
 def _failures(dist_dir: Path | None) -> list[str]:
     failures: list[str] = []
 
@@ -196,6 +210,7 @@ def _failures(dist_dir: Path | None) -> list[str]:
             requires = metadata.get_all("Requires-Dist", [])
             self_deps = [req for req in requires if _SELF_DEP_RE.match(req)]
             check(not self_deps, f"no self-dependency in {wheel.name} ({self_deps or 'clean'})")
+            _check_artifact_requirements(check, requires, label=wheel.name)
             provides = set(metadata.get_all("Provides-Extra", []))
             expected_extras = set(project.get("optional-dependencies", {}))
             check(
@@ -212,7 +227,7 @@ def _failures(dist_dir: Path | None) -> list[str]:
                 names = set(tf.getnames())
                 package_root = next(name.split("/", 1)[0] for name in names if name.endswith("/PKG-INFO")) + "/"
                 pkg_info = next(n for n in names if n.endswith("/PKG-INFO"))
-                text = tf.extractfile(pkg_info).read().decode("utf-8", "replace")  # type: ignore[union-attr]
+                pkg_info_metadata = email.message_from_bytes(tf.extractfile(pkg_info).read())  # type: ignore[union-attr]
                 _check_artifact_layout(
                     check,
                     names,
@@ -220,10 +235,8 @@ def _failures(dist_dir: Path | None) -> list[str]:
                     label=sdist.name,
                     prefix=package_root,
                 )
-            version_line = next(
-                (ln.split(":", 1)[1].strip() for ln in text.splitlines() if ln.startswith("Version:")), None
-            )
-            check(version_line == version, f"sdist PKG-INFO version for {sdist.name}")
+            check(pkg_info_metadata["Version"] == version, f"sdist PKG-INFO version for {sdist.name}")
+            _check_artifact_requirements(check, pkg_info_metadata.get_all("Requires-Dist", []), label=sdist.name)
     else:
         print("NOTE: no --dist directory given; skipping built-artifact checks")
 
@@ -238,7 +251,7 @@ def _failures(dist_dir: Path | None) -> list[str]:
             )
             parsed = Requirement(req)
             check(
-                canonicalize_name(parsed.name) not in _PROHIBITED_EXTERNAL_REQUIREMENTS and parsed.url is None,
+                _is_allowed_compatibility_requirement(parsed),
                 f"extra {extra_name!r} uses only integrated compatibility code ({req!r})",
             )
 
