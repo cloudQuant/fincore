@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 
 from fincore.factor_analysis.calendar import get_forward_returns_columns
-from fincore.metrics.returns import cum_returns as _fincore_cum_returns
 
 
 def _copy_factor_data(factor_data: pd.DataFrame) -> pd.DataFrame:
@@ -206,7 +205,12 @@ def factor_returns(
     equal_weight: bool = False,
     by_asset: bool = False,
 ) -> pd.DataFrame:
-    """Compute weighted forward returns, optionally retaining individual assets."""
+    """Compute weighted forward returns, optionally retaining individual assets.
+
+    The aggregate path deliberately uses pandas' default sum projection: an
+    all-missing weighted period becomes ``0.0`` for the date, matching the
+    pinned strict surface and keeping the enhanced kernel profile-free.
+    """
 
     copied = _copy_factor_data(factor_data)
     columns = _forward_columns(copied)
@@ -219,7 +223,7 @@ def factor_returns(
     weighted = copied.loc[:, columns].multiply(weights, axis=0)
     if by_asset:
         return weighted
-    return weighted.groupby(level="date", observed=False, sort=True).sum(min_count=1)
+    return weighted.groupby(level="date", observed=False, sort=True).sum()
 
 
 def factor_alpha_beta(
@@ -319,10 +323,21 @@ def factor_rank_autocorrelation(factor_data: pd.DataFrame, period: int = 1) -> p
 
 
 def cumulative_returns(returns: pd.Series | pd.DataFrame | np.ndarray) -> pd.Series | pd.DataFrame | np.ndarray:
-    """Compound simple returns from a unit starting value using fincore's kernel."""
+    """Compound simple returns from one, treating missing observations as zero.
 
-    source = returns.copy(deep=True) if isinstance(returns, (pd.Series, pd.DataFrame)) else np.array(returns, copy=True)
-    return _fincore_cum_returns(source, starting_value=1)
+    This is the local, profile-free equivalent of the pinned Alphalens
+    ``empyrical.cum_returns(..., starting_value=1)`` boundary.  It must not
+    use fincore's validation-wrapped metric dispatcher because legacy factor
+    return streams intentionally allow missing observations.
+    """
+
+    if isinstance(returns, pd.Series):
+        return (returns.copy(deep=True).fillna(0.0) + 1.0).cumprod()
+    if isinstance(returns, pd.DataFrame):
+        return (returns.copy(deep=True).fillna(0.0) + 1.0).cumprod()
+    source = np.array(returns, copy=True)
+    source[np.isnan(source)] = 0.0
+    return cast("np.ndarray", np.cumprod(source + 1.0, axis=0))
 
 
 def mean_return_by_quantile(
@@ -473,7 +488,9 @@ def common_start_returns(
         windows.append(window.mean(axis=1) if mean_by_date else window)
     if not windows:
         return pd.DataFrame(index=pd.RangeIndex(-before, after + 1))
-    return pd.concat(windows, axis=1)
+    # Older pandas sorted the union of unequal event windows during concat.
+    # Make that source-visible integer-offset order explicit under pandas 3.
+    return pd.concat(windows, axis=1).sort_index()
 
 
 def _average_event_window(

@@ -12,6 +12,7 @@ from fincore.alphalens.performance import (
     cumulative_returns,
     mean_return_by_quantile,
 )
+from fincore.alphalens.utils import get_clean_factor_and_forward_returns
 
 
 @pytest.mark.parametrize(
@@ -101,18 +102,109 @@ def test_cumulative_returns_upstream_case(source_case_id: str) -> None:
     pd.testing.assert_series_equal(source, original)
 
 
-def _mean_quantile_source() -> pd.DataFrame:
-    """Create a fresh pre-cleaned source-shaped factor table for all eight rows."""
+def test_cumulative_returns_projects_nan_as_a_zero_return() -> None:
+    """Pinned Alphalens compounding treats a missing daily return as zero."""
 
-    dates = pd.date_range("2015-01-11", periods=3, freq="D", name="date")
+    from fincore.factor_analysis.performance import cumulative_returns as enhanced_cumulative_returns
+
+    index = pd.date_range("2024-01-02", periods=4, freq="D", name="date")
+    source = pd.Series([0.10, np.nan, -0.10, 0.20], index=index, name="factor_return")
+    original = source.copy(deep=True)
+    expected = pd.Series([1.10, 1.10, 0.99, 1.188], index=index, name="factor_return")
+
+    pd.testing.assert_series_equal(cumulative_returns(source), expected)
+    pd.testing.assert_series_equal(enhanced_cumulative_returns(source), expected)
+    pd.testing.assert_series_equal(source, original)
+
+
+_MEAN_RETURN_BY_QUANTILE_CASES = (
+    # daily returns, literal factor matrix, bins, by_group, source means/errors
+    (
+        [1.1, 1.2, 1.1, 1.2, 1.1, 1.2],
+        [[1, 2, 1, 2, 1, 2], [1, 2, 1, 2, 1, 2], [1, 2, 1, 2, 1, 2]],
+        2,
+        False,
+        [0.1, 0.2],
+        [0.0, 0.0],
+    ),
+    (
+        [1.1, 1.2, 1.1, 1.2, 1.1, 1.2],
+        [[1, 2, 1, 2, 1, 2], [1, 2, 1, 2, 1, 2], [1, 2, 1, 2, 1, 2]],
+        2,
+        True,
+        [0.1, 0.1, 0.2, 0.2],
+        [0.0, 0.0, 0.0, 0.0],
+    ),
+    (
+        [1.1, 1.1, 1.1, 1.2, 1.2, 1.2],
+        [[1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3]],
+        3,
+        False,
+        [0.15, 0.15, 0.15],
+        [0.0, 0.0, 0.0],
+    ),
+    (
+        [1.1, 1.1, 1.1, 1.2, 1.2, 1.2],
+        [[1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3], [1, 2, 3, 1, 2, 3]],
+        3,
+        True,
+        [0.1, 0.2, 0.1, 0.2, 0.1, 0.2],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ),
+    (
+        [1.5, 1.5, 1.2, 1.0, 1.0, 1.0],
+        [[1, 1, 2, 2, 2, 2], [2, 2, 1, 2, 2, 2], [2, 2, 1, 2, 2, 2]],
+        2,
+        False,
+        [0.3, 0.15],
+        [0.1, 0.05],
+    ),
+    (
+        [1.5, 1.5, 1.2, 1.0, 1.0, 1.0],
+        [[1, 1, 3, 2, 2, 2], [3, 3, 1, 2, 2, 2], [3, 3, 1, 2, 2, 2]],
+        3,
+        False,
+        [0.3, 0.0, 0.4],
+        [0.1, 0.0, 0.1],
+    ),
+    (
+        [1.6, 1.6, 1.0, 1.0, 1.0, 1.0],
+        [[1, 1, 2, 2, 2, 2], [2, 2, 1, 1, 1, 1], [2, 2, 1, 1, 1, 1]],
+        2,
+        False,
+        [0.2, 0.4],
+        [0.2, 0.2],
+    ),
+    (
+        [1.6, 1.6, 1.0, 1.6, 1.6, 1.0],
+        [[1, 1, 2, 1, 1, 2], [2, 2, 1, 2, 2, 1], [2, 2, 1, 2, 2, 1]],
+        2,
+        True,
+        [0.2, 0.2, 0.4, 0.4],
+        [0.2, 0.2, 0.2, 0.2],
+    ),
+)
+
+
+def _mean_quantile_source(daily_returns: list[float], factor_values: list[list[int]]) -> tuple[pd.Series, pd.DataFrame]:
+    """Reconstruct the pinned prices/factor/group inputs for one source row."""
+
+    dates = pd.date_range("2015-01-11", periods=4, freq="D", name="date")
     assets = pd.Index(["A", "B", "C", "D", "E", "F"], name="asset")
-    index = pd.MultiIndex.from_product((dates, assets), names=("date", "asset"))
-    frame = pd.DataFrame(index=index)
-    frame["factor"] = np.tile([1.1, 1.2, 1.1, 1.2, 1.1, 1.2], len(dates))
-    frame["factor_quantile"] = np.tile([1, 2, 1, 2, 1, 2], len(dates))
-    frame["group"] = pd.Categorical(np.tile([1, 1, 1, 2, 2, 2], len(dates)))
-    frame["1D"] = np.tile([0.1, 0.2, 0.1, 0.2, 0.1, 0.2], len(dates))
-    return frame
+    prices = pd.DataFrame(
+        [[daily_return**power for daily_return in daily_returns] for power in range(1, 5)],
+        index=dates,
+        columns=assets,
+    )
+    factor_dates = dates[:-1]
+    factor_index = pd.MultiIndex.from_product((factor_dates, assets), names=("date", "asset"))
+    factor = pd.Series(
+        [value for row in factor_values for value in row],
+        index=factor_index,
+        name="factor",
+        dtype=float,
+    )
+    return factor, prices
 
 
 @pytest.mark.parametrize(
@@ -177,12 +269,23 @@ def _mean_quantile_source() -> pd.DataFrame:
     ],
 )
 def test_mean_return_by_quantile_upstream_case(source_case_id: str) -> None:
-    """Exercise every mapped source row with mean and standard-error frames."""
+    """Reconstruct each pinned row and assert complete mean/error tables."""
 
     ordinal = int(source_case_id.rsplit("#", 1)[1])
-    source = _mean_quantile_source()
-    original = source.copy(deep=True)
-    by_group = ordinal in {1, 3, 7}
+    daily_returns, factor_values, bins, by_group, expected_values, expected_errors = _MEAN_RETURN_BY_QUANTILE_CASES[
+        ordinal
+    ]
+    factor, prices = _mean_quantile_source(daily_returns, factor_values)
+    original_factor = factor.copy(deep=True)
+    original_prices = prices.copy(deep=True)
+    source = get_clean_factor_and_forward_returns(
+        factor,
+        prices,
+        groupby={"A": 1, "B": 1, "C": 1, "D": 2, "E": 2, "F": 2},
+        quantiles=None,
+        bins=bins,
+        periods=(1,),
+    )
     actual, standard_error = mean_return_by_quantile(
         source,
         by_date=False,
@@ -193,25 +296,32 @@ def test_mean_return_by_quantile_upstream_case(source_case_id: str) -> None:
     if by_group:
         expected_index: pd.Index = pd.MultiIndex.from_product(
             (
-                pd.Index([1, 2], name="factor_quantile"),
+                pd.Index(range(1, bins + 1), name="factor_quantile"),
                 pd.CategoricalIndex([1, 2], categories=[1, 2], name="group"),
             )
         )
-        expected_values = [0.1, 0.1, 0.2, 0.2]
     else:
-        expected_index = pd.Index([1, 2], name="factor_quantile")
-        expected_values = [0.1, 0.2]
+        expected_index = pd.Index(range(1, bins + 1), name="factor_quantile")
     expected = pd.DataFrame({"1D": expected_values}, index=expected_index)
+    expected_error = pd.DataFrame({"1D": expected_errors}, index=expected_index)
     pd.testing.assert_frame_equal(actual, expected, rtol=1e-12, atol=1e-12)
-    pd.testing.assert_index_equal(standard_error.index, expected.index)
-    pd.testing.assert_index_equal(standard_error.columns, expected.columns)
-    pd.testing.assert_frame_equal(source, original)
+    pd.testing.assert_frame_equal(standard_error, expected_error, rtol=1e-12, atol=1e-12)
+    pd.testing.assert_series_equal(factor, original_factor)
+    pd.testing.assert_frame_equal(prices, original_prices)
 
 
 def test_mean_quantile_spread_and_by_date_enhanced_contract() -> None:
     """Cover the unmapped spread helper plus date-level enhanced output shape."""
 
-    source = _mean_quantile_source()
+    factor, prices = _mean_quantile_source(*_MEAN_RETURN_BY_QUANTILE_CASES[0][:2])
+    source = get_clean_factor_and_forward_returns(
+        factor,
+        prices,
+        groupby={"A": 1, "B": 1, "C": 1, "D": 2, "E": 2, "F": 2},
+        quantiles=None,
+        bins=2,
+        periods=(1,),
+    )
     mean_by_date, standard_error = mean_return_by_quantile(source, by_date=True, demeaned=False)
     spread, spread_error = compute_mean_returns_spread(mean_by_date, 2, 1, standard_error)
     expected = pd.Series(0.1, index=spread.index, name="1D")
@@ -231,7 +341,7 @@ def _strict_facade_factor_data() -> pd.DataFrame:
             "factor": [1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0, 2.0, 4.0, 1.0, 3.0],
             "factor_quantile": [1, 2, 3, 4] * 3,
             "group": ["one", "one", "two", "two"] * 3,
-            "1D": [0.01, 0.02, -0.01, 0.03] * 3,
+            "1D": [0.01, 0.02, -0.01, 0.03, 0.02, 0.03, 0.00, 0.04, 0.03, 0.04, 0.01, 0.05],
         },
         index=index,
     )
@@ -310,3 +420,98 @@ def test_strict_alpha_beta_projects_missing_optional_dependency(monkeypatch: pyt
     monkeypatch.setattr(strict.importlib, "import_module", _missing)
     with pytest.raises(DependencyError, match="factor-analysis"):
         strict.factor_alpha_beta(_strict_facade_factor_data())
+
+
+def _alpha_beta_projection_inputs(*, constant_market: bool, missing_return: bool) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Create literal OLS edge cases without reusing the production projection."""
+
+    dates = pd.date_range("2024-02-01", periods=3, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    market_rows = [1.0, 1.0] * 3 if constant_market else [0.01, 0.01, 0.02, 0.02, 0.03, 0.03]
+    factor_data = pd.DataFrame(
+        {"factor": [1.0, 2.0] * 3, "1D": market_rows},
+        index=index,
+    )
+    portfolio = pd.DataFrame({"1D": [0.10, np.nan if missing_return else 0.20, 0.30]}, index=dates)
+    return factor_data, portfolio
+
+
+def test_strict_alpha_beta_preserves_ols_constant_market_projection() -> None:
+    """A one-parameter source OLS fit projects both strict rows to NaN."""
+
+    from fincore.alphalens import performance as strict
+
+    factor_data, portfolio = _alpha_beta_projection_inputs(constant_market=True, missing_return=False)
+    expected = pd.DataFrame({"1D": [np.nan, np.nan]}, index=pd.Index(["Ann. alpha", "beta"]))
+
+    pd.testing.assert_frame_equal(strict.factor_alpha_beta(factor_data, returns=portfolio), expected)
+
+
+def test_strict_alpha_beta_propagates_nan_while_enhanced_kernel_remains_profile_free() -> None:
+    """Strict OLS propagates NaN inputs; enhanced least squares has its own policy."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    factor_data, portfolio = _alpha_beta_projection_inputs(constant_market=False, missing_return=True)
+    strict_expected = pd.DataFrame({"1D": [np.nan, np.nan]}, index=pd.Index(["Ann. alpha", "beta"]))
+
+    pd.testing.assert_frame_equal(strict.factor_alpha_beta(factor_data, returns=portfolio), strict_expected)
+    enhanced_actual = enhanced.factor_alpha_beta(factor_data, returns=portfolio)
+    assert np.isfinite(enhanced_actual.to_numpy(dtype=float, copy=False)).all()
+
+
+def test_strict_alpha_beta_accepts_a_series_for_the_first_of_multiple_periods() -> None:
+    """Pinned source renames a Series to the first universe-return period."""
+
+    from statsmodels.regression.linear_model import OLS
+    from statsmodels.tools.tools import add_constant
+
+    from fincore.alphalens import performance as strict
+
+    factor_data, _ = _alpha_beta_projection_inputs(constant_market=False, missing_return=False)
+    factor_data["5D"] = factor_data["1D"] * 2.0
+    returns = pd.Series([0.10, 0.20, 0.30], index=pd.date_range("2024-02-01", periods=3, freq="D"))
+    universe = factor_data.groupby(level="date", observed=False, sort=True)["1D"].mean()
+    alpha, beta = OLS(returns.to_numpy(), add_constant(universe.to_numpy())).fit().params
+    expected = pd.DataFrame(
+        {"1D": [(1.0 + alpha) ** (pd.Timedelta("252Days") / pd.Timedelta("1D")) - 1.0, beta]},
+        index=pd.Index(["Ann. alpha", "beta"]),
+    )
+
+    pd.testing.assert_frame_equal(strict.factor_alpha_beta(factor_data, returns=returns), expected)
+
+
+def test_strict_alpha_beta_implicit_returns_use_the_strict_factor_returns_projection() -> None:
+    """Implicit OLS inputs retain the strict all-missing portfolio row semantics."""
+
+    from statsmodels.tools.sm_exceptions import MissingDataError
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-04-01", periods=3, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    factor_data = pd.DataFrame({"factor": [1.0, 2.0] * 3, "1D": [np.nan] * 6}, index=index)
+    expected_returns = pd.DataFrame({"1D": [0.0, 0.0, 0.0]}, index=pd.DatetimeIndex(dates.to_numpy(), name="date"))
+
+    pd.testing.assert_frame_equal(strict.factor_returns(factor_data), expected_returns)
+    with pytest.raises(MissingDataError, match="exog contains inf or nans"):
+        strict.factor_alpha_beta(factor_data)
+
+
+def test_strict_common_start_returns_rejects_an_absent_event_calendar() -> None:
+    """Pinned ``pd.concat([])`` projection remains distinct from enhanced empty output."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    factor_index = pd.MultiIndex.from_product(([pd.Timestamp("2024-03-04")], ["A"]), names=("date", "asset"))
+    factor = pd.DataFrame({"factor_quantile": [1]}, index=factor_index)
+    returns = pd.DataFrame({"A": [1.0, 1.1]}, index=pd.date_range("2024-03-01", periods=2, freq="D"))
+
+    with pytest.raises(ValueError, match="No objects to concatenate"):
+        strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
+    pd.testing.assert_frame_equal(
+        enhanced.common_start_returns(factor, returns, before=1, after=1, cumulative=True),
+        pd.DataFrame(index=pd.Index([-1, 0, 1])),
+    )

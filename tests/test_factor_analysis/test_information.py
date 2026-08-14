@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.alphalens import performance as strict_performance
 from fincore.factor_analysis.performance import (
     factor_information_coefficient,
     mean_information_coefficient,
@@ -83,6 +84,27 @@ def test_information_coefficient_upstream_case(source_case_id: str) -> None:
         expected_values = np.full(2, -1.0 if ordinal == 0 else 1.0)
     expected = pd.DataFrame({"1D": expected_values}, index=expected_index)
     pd.testing.assert_frame_equal(actual, expected, check_freq=False)
+    strict_expected = expected
+    if ordinal >= 2:
+        strict_expected = pd.DataFrame(
+            {"1D": expected_values},
+            index=pd.MultiIndex.from_product(
+                (
+                    pd.date_range("2015-01-01", periods=2, freq="D", name="date"),
+                    pd.CategoricalIndex([1, 2], categories=[1, 2], name="group"),
+                ),
+                names=("date", "group"),
+            ),
+        )
+    pd.testing.assert_frame_equal(
+        strict_performance.factor_information_coefficient(
+            source,
+            group_adjust=ordinal == 3,
+            by_group=ordinal >= 2,
+        ),
+        strict_expected,
+        check_freq=False,
+    )
     pd.testing.assert_frame_equal(source, original)
 
 
@@ -145,6 +167,28 @@ def test_mean_information_coefficient_upstream_case(source_case_id: str) -> None
         expected_index = pd.DatetimeIndex(["2015-01-04"], name="date")
     expected = pd.DataFrame({"1D": np.full(len(expected_index), expected_value)}, index=expected_index)
     pd.testing.assert_frame_equal(actual, expected, check_freq=False)
+    strict_expected = expected
+    if ordinal == 2:
+        strict_expected = pd.DataFrame(
+            {"1D": [expected_value, expected_value]},
+            index=pd.CategoricalIndex([1, 2], categories=[1, 2], name="group"),
+        )
+    elif ordinal == 3:
+        strict_expected = pd.DataFrame(
+            {"1D": np.full(2, expected_value)},
+            index=pd.MultiIndex.from_product(
+                (
+                    pd.DatetimeIndex(["2015-01-04"], name="date"),
+                    pd.CategoricalIndex([1, 2], categories=[1, 2], name="group"),
+                ),
+                names=("date", "group"),
+            ),
+        )
+    pd.testing.assert_frame_equal(
+        strict_performance.mean_information_coefficient(source, by_group=by_group, by_time=by_time),
+        strict_expected,
+        check_freq=False,
+    )
     pd.testing.assert_frame_equal(source, original)
 
 
@@ -156,3 +200,24 @@ def test_information_coefficient_enhanced_nan_invariant() -> None:
     actual = factor_information_coefficient(source)
     assert (((actual >= -1) & (actual <= 1)) | actual.isna()).all().all()
     pd.testing.assert_frame_equal(source, original)
+
+
+def test_strict_information_coefficient_propagates_nan_while_enhanced_is_pairwise() -> None:
+    """Pinned strict SciPy IC propagates a missing forward return per date."""
+
+    from fincore.alphalens import performance as strict
+
+    date = pd.Timestamp("2024-03-01")
+    index = pd.MultiIndex.from_product(([date], ["A", "B", "C"]), names=("date", "asset"))
+    source = pd.DataFrame({"factor": [1.0, 2.0, 3.0], "1D": [1.0, np.nan, 3.0]}, index=index)
+    expected = pd.DataFrame({"1D": [np.nan]}, index=pd.DatetimeIndex([date], name="date"))
+
+    pd.testing.assert_frame_equal(strict.factor_information_coefficient(source), expected)
+    pd.testing.assert_frame_equal(
+        factor_information_coefficient(source),
+        pd.DataFrame({"1D": [1.0]}, index=pd.DatetimeIndex([date], name="date")),
+    )
+    pd.testing.assert_series_equal(
+        strict.mean_information_coefficient(source),
+        pd.Series({"1D": np.nan}),
+    )

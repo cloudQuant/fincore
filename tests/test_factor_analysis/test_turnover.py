@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.tseries.offsets import BDay
 
+from fincore.alphalens import performance as strict_performance
 from fincore.factor_analysis.performance import factor_rank_autocorrelation, quantile_turnover
 
 
@@ -18,17 +20,134 @@ def _quantile_factor(values: list[list[float]]) -> pd.Series:
     return pd.Series(np.asarray(values, dtype=float).reshape(-1), index=index, name="factor_quantile")
 
 
-def _manual_turnover(source: pd.Series, quantile: int, period: int) -> pd.Series:
-    """Independent set-based oracle for the source-row turnover meaning."""
-
-    selected = source[source == quantile]
-    dates = pd.DatetimeIndex(selected.index.get_level_values("date").unique(), name="date")
-    memberships = [set(selected.loc[date].index) for date in dates]
-    values = [
-        np.nan if position < period else len(current - memberships[position - period]) / len(current)
-        for position, current in enumerate(memberships)
-    ]
-    return pd.Series(values, index=dates, name=quantile, dtype=float)
+_TURNOVER_CASES = (
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        4,
+        1,
+        [np.nan, 1.0, 1.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        4,
+        1,
+        [np.nan, 1.0, 1.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        4,
+        2,
+        [np.nan, np.nan, 0.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        4,
+        2,
+        [np.nan, np.nan, 0.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        4,
+        3,
+        [np.nan, np.nan, np.nan, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        4,
+        3,
+        [np.nan, np.nan, np.nan, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        3,
+        1,
+        [np.nan, 0.0, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        3,
+        1,
+        [np.nan, 0.0, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        3,
+        2,
+        [np.nan, np.nan, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        3,
+        2,
+        [np.nan, np.nan, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        3,
+        3,
+        [np.nan, np.nan, np.nan, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        3,
+        3,
+        [np.nan, np.nan, np.nan, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [4, 3, 2, 1]],
+        "1B",
+        2,
+        1,
+        [np.nan, 1.0, 1.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [4, 3, 2, 1]],
+        "1D",
+        2,
+        1,
+        [np.nan, 1.0, 1.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 3, 2, 4]] * 6,
+        "1B",
+        3,
+        4,
+        [np.nan, np.nan, np.nan, np.nan, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 3, 2, 4]] * 6,
+        "1D",
+        3,
+        4,
+        [np.nan, np.nan, np.nan, np.nan, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 3, 2, 4]] * 5 + [[1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        3,
+        10,
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 3, 2, 4]] * 5 + [[1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        3,
+        10,
+        [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 0.0, 1.0],
+    ),
+)
 
 
 @pytest.mark.parametrize(
@@ -163,23 +282,96 @@ def _manual_turnover(source: pd.Series, quantile: int, period: int) -> pd.Series
     ],
 )
 def test_quantile_turnover_upstream_case(source_case_id: str) -> None:
-    """Exercise every mapped turnover row with an exact set-membership oracle."""
+    """Rebuild each literal pinned row, including its frequency and result."""
 
     ordinal = int(source_case_id.rsplit("#", 1)[1])
-    patterns = (
-        [[1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4], [1, 2, 3, 4]],
-        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
-        [[1, 2, 3, 4], [1, 3, 2, 4]] * 6,
-        [[1, 2, 3, 4], [4, 3, 2, 1]] * 3,
+    values, frequency, quantile, period, expected_values = _TURNOVER_CASES[ordinal]
+    source = _quantile_factor(values)
+    source.index = source.index.set_levels(
+        pd.date_range("2015-01-01", periods=len(values), freq=BDay() if frequency == "1B" else "D", name="date"),
+        level="date",
     )
-    quantile = (4, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 2, 1, 1, 4, 4, 3, 3)[ordinal]
-    period = (1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 1, 1, 4, 4, 3, 3)[ordinal]
-    source = _quantile_factor(patterns[ordinal % len(patterns)])
     original = source.copy(deep=True)
     actual = quantile_turnover(source, quantile, period=period)
-    expected = _manual_turnover(source, quantile, period)
-    pd.testing.assert_series_equal(actual, expected, check_freq=False)
+    expected_dates = pd.DatetimeIndex(
+        pd.date_range("2015-01-01", periods=len(values), freq=BDay() if frequency == "1B" else "D").to_numpy(),
+        name="date",
+    )
+    expected = pd.Series(
+        expected_values,
+        index=expected_dates,
+        name=quantile,
+        dtype=float,
+    )
+    pd.testing.assert_series_equal(actual, expected)
+    pd.testing.assert_series_equal(strict_performance.quantile_turnover(source, quantile, period=period), expected)
     pd.testing.assert_series_equal(source, original)
+
+
+_RANK_AUTOCORRELATION_CASES = (
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1B",
+        1,
+        [np.nan, 1.0, 1.0, 1.0],
+    ),
+    (
+        [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]],
+        "1D",
+        1,
+        [np.nan, 1.0, 1.0, 1.0],
+    ),
+    (
+        [[4, 3, 2, 1], [1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4]],
+        "1B",
+        1,
+        [np.nan, -1.0, -1.0, -1.0],
+    ),
+    (
+        [[4, 3, 2, 1], [1, 2, 3, 4], [4, 3, 2, 1], [1, 2, 3, 4]],
+        "1D",
+        1,
+        [np.nan, -1.0, -1.0, -1.0],
+    ),
+    (
+        [
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+        ],
+        "1B",
+        3,
+        [np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 0.6, -0.6, -1.0, 1.0, -0.6, -1.0],
+    ),
+    (
+        [
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+            [1, 2, 3, 4],
+            [2, 1, 4, 3],
+            [2, 1, 4, 3],
+            [4, 3, 2, 1],
+        ],
+        "1D",
+        3,
+        [np.nan, np.nan, np.nan, 1.0, 1.0, 1.0, 0.6, -0.6, -1.0, 1.0, -0.6, -1.0],
+    ),
+)
 
 
 @pytest.mark.parametrize(
@@ -230,26 +422,25 @@ def test_quantile_turnover_upstream_case(source_case_id: str) -> None:
     ],
 )
 def test_factor_rank_autocorrelation_upstream_case(source_case_id: str) -> None:
-    """Cover ordered/reversed/tied source ranks and exact period alignment."""
+    """Rebuild the source rank sequences and assert literal autocorrelations."""
 
     ordinal = int(source_case_id.rsplit("#", 1)[1])
-    dates = pd.date_range("2015-01-01", periods=12 if ordinal >= 4 else 4, freq="D", name="date")
-    ordered = np.array([1.0, 2.0, 3.0, 4.0])
-    reversed_values = ordered[::-1]
-    rows = [ordered if position % 2 == 0 or ordinal < 2 else reversed_values for position in range(len(dates))]
-    if ordinal in {0, 1}:
-        rows = [ordered] * len(dates)
+    values, frequency, period, expected_values = _RANK_AUTOCORRELATION_CASES[ordinal]
+    dates = pd.date_range("2015-01-01", periods=len(values), freq=BDay() if frequency == "1B" else "D", name="date")
     source = pd.DataFrame(
-        {"factor": np.asarray(rows).reshape(-1)},
+        {"factor": np.asarray(values, dtype=float).reshape(-1)},
         index=pd.MultiIndex.from_product((dates, ["A", "B", "C", "D"]), names=("date", "asset")),
     )
     original = source.copy(deep=True)
-    period = 3 if ordinal >= 4 else 1
     actual = factor_rank_autocorrelation(source, period=period)
-    ranked = source["factor"].groupby(level="date", observed=False).rank().unstack("asset")
-    expected = ranked.corrwith(ranked.shift(period), axis=1)
-    expected.name = period
+    expected = pd.Series(
+        expected_values,
+        index=dates,
+        name=period,
+        dtype=float,
+    )
     pd.testing.assert_series_equal(actual, expected)
+    pd.testing.assert_series_equal(strict_performance.factor_rank_autocorrelation(source, period=period), expected)
     pd.testing.assert_frame_equal(source, original)
 
 

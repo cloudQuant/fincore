@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.alphalens import performance as strict_performance
 from fincore.factor_analysis.performance import factor_alpha_beta, factor_returns, factor_weights
 
 
@@ -169,6 +170,14 @@ def test_factor_weights_upstream_case(source_case_id: str) -> None:
     actual = factor_weights(source, demeaned=demeaned, group_adjust=group_adjust, equal_weight=equal_weight)
     expected = pd.Series(expected_values, index=source.index, name="factor", dtype=float)
     pd.testing.assert_series_equal(actual, expected, rtol=1e-12, atol=1e-12)
+    pd.testing.assert_series_equal(
+        strict_performance.factor_weights(
+            source, demeaned=demeaned, group_adjust=group_adjust, equal_weight=equal_weight
+        ),
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+    )
     pd.testing.assert_frame_equal(source, original)
 
 
@@ -223,10 +232,10 @@ def test_factor_returns_upstream_case(source_case_id: str) -> None:
             False,
             [-1.25, -1.25],
         ),
-        ([1] * 8, [4, 3, 2, 1, 1, 2, 3, 4], False, [np.nan, np.nan]),
+        ([1] * 8, [4, 3, 2, 1, 1, 2, 3, 4], False, [0.0, 0.0]),
         ([1, 2, 3, 4, 4, 3, 2, 1], [4, 3, 2, 1, 1, 2, 3, 4], True, [-0.5, -0.5]),
         ([1, 2, 3, 4, 1, 2, 3, 4], [1, 4, 1, 2, 1, 2, 2, 1], True, [1.0, 0.0]),
-        ([1] * 8, [4, 3, 2, 1, 1, 2, 3, 4], True, [np.nan, np.nan]),
+        ([1] * 8, [4, 3, 2, 1, 1, 2, 3, 4], True, [0.0, 0.0]),
     )[ordinal]
     source = _factor_frame(
         [factor_values[:4], factor_values[4:]], ["A", "B", "C", "D"], {"A": "one", "B": "one", "C": "two", "D": "two"}
@@ -238,6 +247,26 @@ def test_factor_returns_upstream_case(source_case_id: str) -> None:
         {"1D": expected_values}, index=pd.date_range("2000-01-12", periods=2, freq="D", name="date")
     )
     pd.testing.assert_frame_equal(actual, expected, rtol=1e-12, atol=1e-12, check_freq=False)
+    pd.testing.assert_frame_equal(
+        strict_performance.factor_returns(source, demeaned=True, group_adjust=group_adjust),
+        expected,
+        rtol=1e-12,
+        atol=1e-12,
+        check_freq=False,
+    )
+    pd.testing.assert_frame_equal(source, original)
+
+
+def test_factor_returns_projects_an_all_nan_weighted_period_to_zero() -> None:
+    """Pinned pandas groupby sum retains the portfolio row as 0.0, not NaN."""
+
+    source = _factor_frame([[1.0, 2.0]], ["A", "B"])
+    source["1D"] = np.nan
+    original = source.copy(deep=True)
+    expected = pd.DataFrame({"1D": [0.0]}, index=pd.DatetimeIndex([pd.Timestamp("2000-01-12")], name="date"))
+
+    pd.testing.assert_frame_equal(factor_returns(source), expected)
+    pd.testing.assert_frame_equal(strict_performance.factor_returns(source), expected)
     pd.testing.assert_frame_equal(source, original)
 
 
@@ -264,6 +293,7 @@ def test_factor_alpha_beta_upstream_case(source_case_id: str) -> None:
     actual = factor_alpha_beta(source)
     expected = pd.DataFrame({"1D": [-1.0, 5.0 / 6.0]}, index=["Ann. alpha", "beta"])
     pd.testing.assert_frame_equal(actual, expected, rtol=1e-10, atol=1e-10)
+    pd.testing.assert_frame_equal(strict_performance.factor_alpha_beta(source), expected, rtol=1e-10, atol=1e-10)
     pd.testing.assert_frame_equal(source, original)
 
 

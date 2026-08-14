@@ -8,14 +8,15 @@ remaining Task 5 portfolio symbols keep their original deferred boundary.
 from __future__ import annotations
 
 import importlib
-from typing import Any
+from typing import Any, cast
 
-import pandas as pd  # noqa: TC002 - public facade annotations are runtime-reflectable.
+import pandas as pd
 
 from fincore.alphalens._compat import export_deferred_functions
 from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
 from fincore.exceptions import DependencyError
 from fincore.factor_analysis import performance as _performance
+from fincore.factor_analysis.calendar import get_forward_returns_columns
 
 _PERFORMANCE_NAMES = export_deferred_functions(globals(), "performance")
 
@@ -53,7 +54,11 @@ def factor_information_coefficient(
     by_group: bool = False,
 ) -> pd.DataFrame:
     _reject_opaque("factor_information_coefficient", factor_data)
-    return _performance.factor_information_coefficient(factor_data, group_adjust=group_adjust, by_group=by_group)
+    return _strict_factor_information_coefficient(
+        factor_data,
+        group_adjust=group_adjust,
+        by_group=by_group,
+    )
 
 
 def mean_information_coefficient(
@@ -63,12 +68,58 @@ def mean_information_coefficient(
     by_time: str | None = None,
 ) -> pd.Series | pd.DataFrame:
     _reject_opaque("mean_information_coefficient", factor_data)
-    return _performance.mean_information_coefficient(
+    information = _strict_factor_information_coefficient(
         factor_data,
         group_adjust=group_adjust,
         by_group=by_group,
-        by_time=by_time,
     )
+    groupers: list[object] = []
+    if by_time is not None:
+        groupers.append(pd.Grouper(freq="ME" if by_time == "M" else by_time))
+    if by_group:
+        groupers.append("group")
+    if not groupers:
+        return information.mean()
+    return information.reset_index().set_index("date").groupby(groupers, observed=False, sort=True).mean()
+
+
+def _strict_factor_information_coefficient(
+    factor_data: pd.DataFrame,
+    *,
+    group_adjust: bool,
+    by_group: bool,
+) -> pd.DataFrame:
+    """Use SciPy's pinned ``spearmanr`` NaN propagation at the facade boundary.
+
+    The enhanced kernel intentionally uses pandas' pairwise Spearman
+    correlation.  Alphalens 0.4.0 called ``scipy.stats.spearmanr`` without a
+    ``nan_policy`` override, so an incomplete date/period produces ``NaN``.
+    Keeping that projection here leaves the enhanced API profile-free.
+    """
+
+    copied = _performance._copy_factor_data(factor_data)
+    columns = get_forward_returns_columns(copied.columns)
+    if group_adjust:
+        copied = _performance._demean_forward_returns(copied, by_group=True)
+    if by_group and "group" not in copied.columns:
+        raise ValueError("factor_data must contain a 'group' column when by_group=True")
+
+    try:
+        stats = importlib.import_module("scipy.stats")
+    except ModuleNotFoundError as exc:
+        raise DependencyError(
+            "factor_information_coefficient requires scipy. Install it with:\n    pip install scipy",
+            dependency="scipy",
+        ) from exc
+
+    def source_ic(group: pd.DataFrame) -> pd.Series:
+        factor = group["factor"]
+        return cast("pd.Series", group.loc[:, columns].apply(lambda values: stats.spearmanr(values, factor)[0]))
+
+    groupers: list[object] = [copied.index.get_level_values("date")]
+    if by_group:
+        groupers.append("group")
+    return copied.groupby(groupers, observed=False, sort=True).apply(source_ic)
 
 
 def factor_weights(
@@ -103,17 +154,72 @@ def factor_returns(
     )
 
 
-def _require_statsmodels() -> None:
-    """Check the optional strict alpha/beta dependency only at call time."""
+def _require_statsmodels() -> tuple[Any, Any]:
+    """Load the pinned strict alpha/beta OLS primitives only at call time."""
 
     try:
-        importlib.import_module("statsmodels.regression.linear_model")
+        linear_model = importlib.import_module("statsmodels.regression.linear_model")
+        tools = importlib.import_module("statsmodels.tools.tools")
     except ModuleNotFoundError as exc:
         raise DependencyError(
             "factor_alpha_beta requires the optional 'factor-analysis' extra. "
             "Install it with:\n    pip install fincore[factor-analysis]",
             dependency="statsmodels",
         ) from exc
+    return linear_model.OLS, tools.add_constant
+
+
+def _strict_factor_alpha_beta(
+    factor_data: pd.DataFrame,
+    returns: pd.DataFrame | pd.Series | None,
+    demeaned: bool,
+    group_adjust: bool,
+    equal_weight: bool,
+) -> pd.DataFrame:
+    """Project the source's statsmodels OLS edge semantics at the strict boundary."""
+
+    if not isinstance(factor_data, pd.DataFrame):
+        raise TypeError("factor_data must be a pandas DataFrame")
+    forward_columns = get_forward_returns_columns(factor_data.columns)
+    returns_frame: pd.DataFrame | pd.Series
+    if returns is None:
+        # Retain the strict facade composition point: any future legacy
+        # projection in factor_returns (including all-NaN aggregation) must
+        # also feed the implicit alpha/beta path.
+        returns_frame = factor_returns(
+            factor_data,
+            demeaned=demeaned,
+            group_adjust=group_adjust,
+            equal_weight=equal_weight,
+        )
+    elif isinstance(returns, (pd.Series, pd.DataFrame)):
+        returns_frame = returns.copy(deep=True)
+    else:
+        raise TypeError("returns must be a pandas Series, DataFrame, or None")
+
+    universe_returns = factor_data.groupby(level="date", observed=False, sort=True)[list(forward_columns)].mean()
+    universe_returns = universe_returns.loc[returns_frame.index]
+    if isinstance(returns_frame, pd.Series):
+        if not len(universe_returns.columns):
+            raise ValueError("factor_data must contain at least one forward-return column")
+        returns_frame.name = universe_returns.columns[0]
+        returns_frame = returns_frame.to_frame()
+
+    ols, add_constant = _require_statsmodels()
+    result = pd.DataFrame(index=pd.Index(["Ann. alpha", "beta"]))
+    for period in returns_frame.columns:
+        design = add_constant(universe_returns[period].to_numpy(dtype=float, copy=False))
+        fitted = ols(returns_frame[period].to_numpy(dtype=float, copy=False), design).fit()
+        try:
+            alpha, beta = fitted.params
+        except ValueError:
+            result.loc["Ann. alpha", period] = float("nan")
+            result.loc["beta", period] = float("nan")
+            continue
+        annualization = pd.Timedelta("252Days") / pd.Timedelta(period)
+        result.loc["Ann. alpha", period] = (1.0 + alpha) ** annualization - 1.0
+        result.loc["beta", period] = beta
+    return result
 
 
 def factor_alpha_beta(
@@ -124,13 +230,12 @@ def factor_alpha_beta(
     equal_weight: bool = False,
 ) -> pd.DataFrame:
     _reject_opaque("factor_alpha_beta", factor_data, returns)
-    _require_statsmodels()
-    return _performance.factor_alpha_beta(
+    return _strict_factor_alpha_beta(
         factor_data,
-        returns=returns,
-        demeaned=demeaned,
-        group_adjust=group_adjust,
-        equal_weight=equal_weight,
+        returns,
+        demeaned,
+        group_adjust,
+        equal_weight,
     )
 
 
@@ -186,6 +291,19 @@ def common_start_returns(
     demean_by: pd.Series | pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     _reject_opaque("common_start_returns", factor, returns)
+    # The pinned source collected one slice per event date and fed the list to
+    # ``pd.concat``.  If every event date is absent from ``returns`` that call
+    # raises ``ValueError('No objects to concatenate')``.  The enhanced kernel
+    # deliberately returns a typed empty event window instead, so retain the
+    # legacy projection here rather than teaching the profile-free core about
+    # a facade-only error surface.
+    if isinstance(factor, (pd.Series, pd.DataFrame)) and isinstance(factor.index, pd.MultiIndex):
+        try:
+            event_dates = factor.index.get_level_values("date")
+        except KeyError:
+            event_dates = factor.index.get_level_values(0)
+        if not event_dates.isin(returns.index).any():
+            raise ValueError("No objects to concatenate")
     return _performance.common_start_returns(
         factor,
         returns,
