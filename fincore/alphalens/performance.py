@@ -456,6 +456,26 @@ def _strict_position_frame(
 _STRICT_EMPTY_POSITION_FILTER_ERROR = "index must be a MultiIndex to unstack, <class 'pandas.RangeIndex'> was passed"
 
 
+def _strict_factor_data_level_names(factor_data: object) -> tuple[object, object] | None:
+    """Validate and retain the source-visible factor MultiIndex names.
+
+    The enhanced kernel intentionally canonicalizes a two-level input to
+    ``("date", "asset")``.  Pinned Alphalens instead uses its first level by
+    the literal ``"date"`` name, so a missing or renamed first level fails
+    before any computation.  Its second-level name is not prescribed and
+    flows through ``unstack`` into strict position columns.
+    """
+
+    if not isinstance(factor_data, pd.DataFrame):
+        return None
+    index = factor_data.index
+    if not isinstance(index, pd.MultiIndex) or index.nlevels != 2:
+        return None
+    if index.names[0] != "date":
+        raise KeyError("Level date not found")
+    return index.names[0], index.names[1]
+
+
 def _strict_require_portfolio_period(factor_data: object, period: object) -> None:
     """Perform the pinned period lookup before strict-only filter projections."""
 
@@ -592,6 +612,7 @@ def factor_cumulative_returns(
     """Return the source-projected cumulative factor portfolio curve."""
 
     _reject_opaque("factor_cumulative_returns", factor_data)
+    _strict_factor_data_level_names(factor_data)
     _strict_validate_cumulative_return_path(
         factor_data,
         period,
@@ -628,6 +649,7 @@ def factor_positions(
     """Project simulated factor positions through the strict facade."""
 
     _reject_opaque("factor_positions", factor_data)
+    level_names = _strict_factor_data_level_names(factor_data)
     _strict_validate_position_path(
         factor_data,
         period,
@@ -644,7 +666,14 @@ def factor_positions(
         quantiles=quantiles,
         groups=groups,
     )
-    return _strict_position_frame(result)
+    if level_names is None:
+        return _strict_position_frame(result)
+    return _strict_position_frame(
+        result,
+        index_name=level_names[0],
+        columns_name=level_names[1],
+        preserve_names=True,
+    )
 
 
 def create_pyfolio_input(
@@ -661,6 +690,7 @@ def create_pyfolio_input(
     """Return the strict legacy 3-tuple from the enhanced typed bridge."""
 
     _reject_opaque("create_pyfolio_input", factor_data)
+    level_names = _strict_factor_data_level_names(factor_data)
     # The source builds returns first, then positions, and only then the
     # optional benchmark.  Keep that exact error priority rather than applying
     # facade-wide duplicate/group checks before the source paths run.
@@ -699,7 +729,18 @@ def create_pyfolio_input(
         # holding horizon.
         strict_positions = strict_positions.copy(deep=True)
         strict_positions.loc[~strict_positions.index.isin(output.returns.index), :] = np.nan
-    return returns, _strict_position_frame(strict_positions), output.benchmark_rets
+    if level_names is None:
+        return returns, _strict_position_frame(strict_positions), output.benchmark_rets
+    return (
+        returns,
+        _strict_position_frame(
+            strict_positions,
+            index_name=level_names[0],
+            columns_name=level_names[1],
+            preserve_names=True,
+        ),
+        output.benchmark_rets,
+    )
 
 
 for _name in (

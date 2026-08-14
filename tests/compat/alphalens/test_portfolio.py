@@ -269,6 +269,38 @@ def test_strict_duplicate_benchmark_period_projects_key_error_after_main_period_
         strict_performance.create_pyfolio_input(source, "missing", benchmark_period="5D")
 
 
+@pytest.mark.parametrize("index_names", [(None, None), ("when", "symbol")])
+@pytest.mark.parametrize(
+    "function_name",
+    ["factor_cumulative_returns", "factor_positions", "create_pyfolio_input"],
+)
+def test_strict_factor_portfolio_apis_require_the_pinned_date_level_name(
+    index_names: tuple[object, object],
+    function_name: str,
+) -> None:
+    """Strict factor-data APIs reject names that source ``get_level_values`` rejects."""
+
+    source = _strict_factor_data()
+    source.index = source.index.set_names(index_names)
+
+    with pytest.raises(KeyError, match=re.escape("Level date not found")):
+        getattr(strict_performance, function_name)(source, "1D")
+
+
+@pytest.mark.parametrize("asset_name", ["ticker", None])
+def test_strict_factor_portfolio_positions_preserve_the_source_asset_level_name(asset_name: object) -> None:
+    """Only a source-named first level is required; the asset level is retained."""
+
+    source = _strict_factor_data()
+    source.index = source.index.set_names(("date", asset_name))
+
+    factor_positions = strict_performance.factor_positions(source, "1D")
+    _, pyfolio_positions, _ = strict_performance.create_pyfolio_input(source, "1D")
+
+    assert factor_positions.columns.name == asset_name
+    assert pyfolio_positions.columns.name == asset_name
+
+
 @pytest.mark.parametrize(
     "function_name",
     ["factor_cumulative_returns", "factor_positions", "create_pyfolio_input"],
