@@ -84,6 +84,22 @@ pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
 pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
 ```
 
+## Alphalens migration — strict and enhanced routes
+
+The pinned cloudQuant-local Alphalens source identity is commit
+`3fa17ad4c3edb025d1410de7aeba9673cba7791c`; its historical `v0.4.0` and
+`1.0.0+dev` strings are conflicting evidence, not release identities.
+`fincore.alphalens` is the strict source-shaped façade, while
+`fincore.factor_analysis` is the enhanced prepare/analyze/render API.
+
+The documented boundary is only what current executable tests cover: strict
+public paths and signatures plus targeted enhanced kernels and workflows. It
+is not a full standalone compatibility claim. No top-level `import alphalens`,
+notebook/HTML, or interactive-backend workflow is supported in this first
+integration. Use `fincore[factor-analysis]` for compute-only analysis and
+`fincore[alphalens]` for rendering or strict migration calls. The human
+license/NOTICE decision remains a release blocker.
+
 ## Intentional divergence registrations
 
 The enhanced surfaces (`fincore.metrics`, flat API, `AnalysisContext`) may

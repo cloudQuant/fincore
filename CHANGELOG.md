@@ -9,7 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Alphalens migration surfaces** — `fincore.alphalens` provides the
+  source-shaped strict namespace, while `fincore.factor_analysis` provides the
+  distinct enhanced prepare/analyze/render workflow and typed
+  `PyfolioFactorInputs` bridge. Install `fincore[factor-analysis]` for
+  compute-only enhanced analysis or `fincore[alphalens]` for the rendering
+  stack.
+- **Offline executable factor-analysis example** —
+  `examples/factor_analysis_quickstart.py` uses fixed-seed synthetic data,
+  makes no network requests or default file writes, renders headlessly under
+  Agg, and closes its figures explicitly.
+
+### Release blockers
+
+- The human Alphalens license/NOTICE and provenance decision is still pending.
+  This Unreleased entry does not create a release claim, a third-party notice,
+  or a legal conclusion.
 
 ## [0.3.0] - unreleased (release candidate)
 

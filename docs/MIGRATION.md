@@ -301,3 +301,72 @@ Do not perform a blind replacement such as `import empyrical` to
 only after the relevant matrix rows reach the required level. `AnalysisContext`,
 `RollingEngine`, optimization, and visualization APIs are fincore features, not
 empyrical compatibility guarantees.
+
+## Migration from Alphalens
+
+The Alphalens integration has two intentionally separate choices. The strict
+namespace is for source-shaped migrations; the enhanced namespace is for new
+work that benefits from explicit preparation, immutable analysis models, and
+caller-owned plot artifacts. Neither choice installs a standalone package, so
+top-level `import alphalens` is unsupported.
+
+| Standalone | Fincore strict | Fincore enhanced |
+| --- | --- | --- |
+| `alphalens.utils.get_clean_factor_and_forward_returns` | `fincore.alphalens.utils.get_clean_factor_and_forward_returns` | `fincore.factor_analysis.prepare_factor_data` |
+| `alphalens.performance.factor_information_coefficient` | `fincore.alphalens.performance.factor_information_coefficient` | `fincore.factor_analysis.factor_information_coefficient` |
+| `alphalens.tears.create_full_tear_sheet` | `fincore.alphalens.tears.create_full_tear_sheet` | `analyze_factor` + `render_full_tear_sheet` |
+| `create_pyfolio_input` + external pyfolio | strict tuple + `fincore.pyfolio` | `PyfolioFactorInputs` |
+
+For the enhanced full-sheet row, `render_full_tear_sheet` means
+`fincore.factor_analysis.create_full_tear_sheet(model)`: first create the
+model with `analyze_factor`, then render, inspect, show, or close the returned
+artifacts explicitly. The enhanced Pyfolio bridge returns
+`PyfolioFactorInputs`; it does not import or invoke external Pyfolio.
+
+### Offline quickstart
+
+Install the rendering extra and run the checked executable example:
+
+```bash
+pip install "fincore[alphalens]"
+MPLBACKEND=Agg python examples/factor_analysis_quickstart.py
+```
+
+The example uses fixed-seed local synthetic data, has no network path and no
+default output-file path. It demonstrates the strict quickstart, enhanced
+`prepare_factor_data` plus `analyze_factor`, the Pyfolio bridge, and an Agg
+summary tear sheet whose figures are closed after use. If the rendering stack
+is absent, its `DependencyError` names the exact repair:
+
+```text
+pip install fincore[alphalens]
+```
+
+### Behavioral differences and migration checks
+
+- The strict façade follows the pinned cloudQuant-local source snapshot at
+  commit `3fa17ad4c3edb025d1410de7aeba9673cba7791c`; the source's `v0.4.0`
+  Versioneer string and `setup.py` fallback `1.0.0+dev` are conflicting
+  evidence, not release identities. Pin and report the commit, not either
+  version string.
+- `filter_zscore=20` is a source-shaped default on the strict cleanup call,
+  but it filters using the full forward-return distribution and can introduce
+  look-ahead bias. Prefer `filter_zscore=None` unless a research protocol
+  explicitly justifies the filter; the executable example does so.
+- Factor and price timestamps must use compatible timezones. Preserve the
+  source calendar/frequency and test sessions, holidays, and any naive/aware
+  conversion rather than assuming a daily calendar.
+- `max_loss` is an acceptance threshold, not a cosmetic warning. Inspect the
+  enhanced `PreparedFactorData.loss_report` and choose a research-justified
+  limit before increasing it.
+- Use `fincore[factor-analysis]` for compute-only enhanced workflows. Use
+  `fincore[alphalens]` when rendering or migrating strict Alphalens calls;
+  `fincore[pyfolio]` remains the separate extra for Pyfolio tear sheets.
+- The first integration has no notebook, HTML-report, or interactive-backend
+  promise. It is not a claim of full standalone Alphalens compatibility.
+
+Compatibility wording is deliberately limited to the executable strict-path,
+signature, kernel, and workflow tests currently present in this repository.
+See `docs/compatibility/alphalens-0.4.0-cloudquant.md` for the pinned source
+identity and scope. The required human license/NOTICE decision remains a
+release blocker; this guide makes no legal conclusion.

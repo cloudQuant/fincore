@@ -1,9 +1,12 @@
 # Alphalens cloudQuant local compatibility profile
 
-This is a frozen source target for the planned `fincore.alphalens` façade. It
-is not a claim that the façade, factor-analysis kernels, numerical behavior,
-or tear sheets have been implemented. The machine-readable source of truth is
+This is the frozen source target for the Beta `fincore.alphalens` strict
+façade and its separate `fincore.factor_analysis` enhanced workflow. The
+machine-readable source of truth is
 [`tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json`](../../tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json).
+Only the strict-path/signature and enhanced kernel/workflow behavior exercised
+by the repository's executable tests is claimed; this page is not a statement
+of full standalone Alphalens compatibility.
 
 ## Pinned identity
 
@@ -37,17 +40,17 @@ own blob evidence; neither overrides the commit.
 
 ## Static compatibility contract
 
-| Module | Functions | Classes | Intended levels |
+| Module | Functions | Classes | Executable-test boundary |
 | --- | ---: | ---: | --- |
-| `performance` | 16 | 0 | C0–C3 |
-| `utils` | 17 | 2 | C0–C3 |
-| `plotting` | 21 | 0 | C0–C2 plus figure semantics |
-| `tears` | 7 | 1 | C0–C2 plus C4 |
+| `performance` | 16 | 0 | strict public paths/signatures plus targeted numerical kernels |
+| `utils` | 17 | 2 | strict public paths/signatures plus targeted cleanup/data kernels |
+| `plotting` | 21 | 0 | strict public paths/signatures; rendering only where a targeted workflow exercises it |
+| `tears` | 7 | 1 | strict public paths/signatures plus targeted figure/workflow tests |
 
 Every entry records its module, symbol, kind, source line and SHA256,
 source-visible signature, predicted `inspect.signature` form, accepted-call
-grammar, and C0–C4 status. All current levels are `not-verified`: freezing a
-target is not compatibility proof.
+grammar, and C0–C4 status. Freezing a target alone is not compatibility proof:
+read each executable test scope for the actual level and behavior it covers.
 
 The restricted AST logic recognizes the pinned decorators without importing
 the sibling package. `quantize_factor` preserves its source signature while
@@ -328,4 +331,5 @@ core source modules carries a Quantopian Apache-2.0 header. Repository history
 also contains a commit described as copying code from the official site. These
 are engineering provenance facts, not a legal determination. Human/license
 review remains pending before copying, adapting, notices, SPDX text, or a
-release claim; see [upstream provenance](../upstream-provenance.md).
+release claim. It is a release blocker: no Alphalens NOTICE decision is
+invented here. See [upstream provenance](../upstream-provenance.md).

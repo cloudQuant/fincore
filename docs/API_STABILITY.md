@@ -107,11 +107,35 @@ engine = RollingEngine(returns, factor_returns=benchmark, window=60)
 engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 ```
 
+## In-development Alphalens migration surfaces
+
+`fincore.alphalens` is the strict, source-shaped compatibility namespace for
+the pinned cloudQuant-local Alphalens snapshot at commit
+`3fa17ad4c3edb025d1410de7aeba9673cba7791c`. The separate
+`fincore.factor_analysis` namespace is the enhanced API for new code:
+prepare data once, analyze it once, then render explicitly owned artifacts.
+
+These surfaces are **Beta and not Stable**. The strict public-path and
+signature checks and the enhanced kernel/workflow tests define the only
+current compatibility claims; they do not certify the entire standalone
+Alphalens package. In particular, fincore does not support top-level
+`import alphalens`, a notebook/HTML workflow, or an interactive rendering
+backend in this first integration. Install `fincore[factor-analysis]` for
+compute-only enhanced analysis and `fincore[alphalens]` for plotting or strict
+Alphalens migration workflows.
+
+The historical source reports conflicting version evidence (`v0.4.0` in
+Versioneer and `1.0.0+dev` in `setup.py`); the full commit above is the only
+identity used by this policy. The pending human license/NOTICE decision is a
+release blocker.
+
 ## Not covered by this policy
 
 - `Empyrical`/`Pyfolio` methods beyond the frozen verified surface;
 - equality between enhanced `fincore.metrics` behavior and empyrical behavior
   (documented divergences exist by design);
+- broad standalone Alphalens equivalence beyond the executable tests attached
+  to the strict façade and enhanced workflow;
 - modules and functions prefixed with `_` (internal, may change without
   notice):
   ```python
