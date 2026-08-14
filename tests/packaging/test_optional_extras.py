@@ -46,6 +46,7 @@ OPTIONAL_ROOTS = [
     "matplotlib",
     "seaborn",
     "IPython",
+    "statsmodels",
     "plotly",
     "bokeh",
     "playwright",

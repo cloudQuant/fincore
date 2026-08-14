@@ -1,7 +1,7 @@
 """Optional-extras union contract tests.
 
 ``all`` must be the exact normalized union of the functional extras
-(pyfolio / interactive / report-pdf / report-xlsx / bayesian / data-*) —
+(pyfolio / factor-analysis / alphalens / interactive / report-pdf / report-xlsx / bayesian / data-*) —
 never a self-reference such as ``fincore[...]`` and never dev-only tooling.
 The compatibility aliases (``viz``, ``datareader``) declare exactly which
 functional extras they cover, so a hand-edited alias list cannot drift past
@@ -21,6 +21,8 @@ PYPROJECT = REPO_ROOT / "pyproject.toml"
 # Functional extras: every extra that installs runtime capability.
 FUNCTIONAL_EXTRAS = {
     "pyfolio",
+    "factor-analysis",
+    "alphalens",
     "interactive",
     "report-pdf",
     "report-xlsx",
@@ -88,6 +90,20 @@ def test_all_excludes_dev_only_tools() -> None:
     """Dev-only tooling belongs to ``dev``, never to the runtime ``all`` union."""
     names_in_all = {Requirement(req).name for req in _extras()["all"]}
     assert not (names_in_all & DEV_ONLY_TOOLS), f"dev-only tools leaked into all: {names_in_all & DEV_ONLY_TOOLS}"
+
+
+def test_alphalens_extras_cover_the_declared_runtime_boundaries() -> None:
+    """The recovery commands emitted by strict adapters name installable extras."""
+
+    extras = _extras()
+    assert _normalized(extras["factor-analysis"]) == {"statsmodels>=0.14"}
+    assert _normalized(extras["alphalens"]) == {
+        "statsmodels>=0.14",
+        "matplotlib>=3.3",
+        "seaborn>=0.11",
+        "ipython>=7",
+    }
+    assert _normalized(extras["alphalens"]) <= _normalized(extras["dev"])
 
 
 def test_datareader_alias_maps_exactly_to_data_pandas_datareader() -> None:

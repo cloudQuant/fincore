@@ -26,6 +26,8 @@ PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 FUNCTIONAL_EXTRAS = {
     "pyfolio",
+    "factor-analysis",
+    "alphalens",
     "interactive",
     "report-pdf",
     "report-xlsx",

@@ -51,6 +51,12 @@ def test_decorator_call_grammar_matches_manifest(item: tuple[dict[str, Any], dic
         assert isinstance(value(*args, **hidden_kwargs), value)
         return
 
+    if entry["module"] == "plotting" and entry["symbol"] in {"axes_style", "plotting_context"}:
+        context = value(*args, **hidden_kwargs)
+        assert hasattr(context, "__enter__")
+        assert hasattr(context, "__exit__")
+        return
+
     with pytest.raises(NotImplementedError, match=str(entry["symbol"])):
         value(*args, **hidden_kwargs)
 

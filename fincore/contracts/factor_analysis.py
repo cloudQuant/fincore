@@ -391,6 +391,7 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ("performance", "factor_positions"),
             ("performance", "positions"),
         }
+        task_7_plotting = module == "plotting"
         specs[key] = FactorFunctionSpec(
             module=module,
             public_name=name,
@@ -403,6 +404,8 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
                 if task_4_performance
                 else "factor_analysis_task_5_portfolio_kernel"
                 if task_5_portfolio
+                else "factor_analysis_task_7_renderer"
+                if task_7_plotting
                 else "deferred_task_2_kernel"
             ),
             profile="legacy_alphalens_cloudquant_0_4_0",
@@ -418,6 +421,8 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
                 "strict_alphalens_data_projection"
                 if task_3_utility or task_4_performance or task_5_portfolio
                 else "not_implemented_until_task_3_4_5_or_8"
+                if not task_7_plotting
+                else "strict_alphalens_plotting_projection"
             ),
         )
     if len(specs) != 61:
