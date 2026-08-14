@@ -50,7 +50,7 @@ INVENTORY_ENVELOPE_FIELDS = frozenset(
     {"schema_version", "profile", "commit", "counts", "extraction", "source_files", "cases"}
 )
 MIGRATION_ENVELOPE_FIELDS = frozenset({"schema_version", "profile", "commit", "review", "cases"})
-COLLECTION_PROOF_SCHEMA_VERSION = "alphalens-upstream-collection-proof-v1"
+COLLECTION_PROOF_SCHEMA_VERSION = "alphalens-upstream-collection-proof-v2"
 COLLECTION_PROOF_COMMAND_IDENTITY = "fincore.alphalens-upstream-collect-v1"
 EXPECTED_INVENTORY_CASES_SHA256 = "090b70d56e813ecdb691258730a563f80b5e639c2accff3e40e6e68951c4c495"
 INVENTORY_RECORD_BASE_FIELDS = frozenset(
@@ -141,7 +141,22 @@ GROUP_PATHS = {
 }
 GROUP_GRADES = {"utils": {"C2", "C3"}, "performance": {"C2", "C3"}, "tears": {"C4"}}
 RESULT_OUTCOMES = ("setup", "call", "teardown")
-RESULT_SCHEMA_VERSION = "alphalens-upstream-case-results-v2"
+RESULT_SCHEMA_VERSION = "alphalens-upstream-case-results-v3"
+GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40,64}$")
+COLLECTION_PROOF_ENVELOPE_FIELDS = frozenset(
+    {
+        "schema_version",
+        "command_identity",
+        "scope",
+        "command",
+        "target_paths",
+        "git_revision",
+        "exitstatus",
+        "nodeids",
+        "collection_errors",
+    }
+)
+RESULT_ENVELOPE_FIELDS = frozenset({"schema_version", "git_revision", "xdist", "pytest_exitstatus", "results"})
 SUMMARY_LINE = re.compile(r"^\d+(?:/\d+)? tests? collected")
 SOURCE_TEST_MODULES = frozenset({"test_utils", "test_performance", "test_tears"})
 SOURCE_TEST_IDENTITIES = SOURCE_TEST_MODULES | frozenset(f"tests.{name}" for name in SOURCE_TEST_MODULES)
@@ -573,6 +588,30 @@ def _collection_proof_output_path(path: Path) -> Path:
     return candidate
 
 
+def _current_git_revision() -> str:
+    """Return HEAD only after proving the script's repository root is the worktree root."""
+
+    repository_root = REPO_ROOT.resolve()
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repository_root), "rev-parse", "--show-toplevel", "--verify", "HEAD"],
+            cwd=repository_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise MigrationAuditError(f"cannot obtain repository Git revision: {exc}") from exc
+    lines = completed.stdout.splitlines()
+    if completed.returncode != 0 or len(lines) != 2:
+        raise MigrationAuditError("cannot obtain a repository-root Git revision")
+    reported_root = Path(lines[0]).resolve()
+    revision = lines[1].strip()
+    if reported_root != repository_root or GIT_REVISION_PATTERN.fullmatch(revision) is None:
+        raise MigrationAuditError("repository Git revision is not a full HEAD at the repository root")
+    return revision
+
+
 def _write_collection_proof(path: Path, scope: str) -> None:
     """Run the exact future-target collector and persist its structured proof envelope.
 
@@ -582,6 +621,7 @@ def _write_collection_proof(path: Path, scope: str) -> None:
     never accept that proof.
     """
     output_path = _collection_proof_output_path(path)
+    git_revision = _current_git_revision()
     target_paths = _collection_target_paths(scope)
     command = [
         sys.executable,
@@ -611,6 +651,7 @@ def _write_collection_proof(path: Path, scope: str) -> None:
         "scope": scope,
         "command": command,
         "target_paths": target_paths,
+        "git_revision": git_revision,
         "exitstatus": completed.returncode,
         "nodeids": _nodeids_from_collection_output(completed.stdout),
         "collection_errors": errors,
@@ -626,22 +667,12 @@ def _write_collection_proof(path: Path, scope: str) -> None:
         )
 
 
-def _read_collection_proof(path: Path, scope: str) -> list[str]:
-    """Validate the complete controlled-collector envelope and return its nodeids."""
+def _read_collection_proof(path: Path, scope: str) -> tuple[list[str], str]:
+    """Validate the complete controlled-collector envelope and return nodeids plus HEAD."""
     proof = _load_json(path, "--collection-proof")
-    required_fields = {
-        "schema_version",
-        "command_identity",
-        "scope",
-        "command",
-        "target_paths",
-        "exitstatus",
-        "nodeids",
-        "collection_errors",
-    }
-    if set(proof) != required_fields:
-        missing = sorted(required_fields - set(proof))
-        extra = sorted(set(proof) - required_fields)
+    if set(proof) != COLLECTION_PROOF_ENVELOPE_FIELDS:
+        missing = sorted(COLLECTION_PROOF_ENVELOPE_FIELDS - set(proof))
+        extra = sorted(set(proof) - COLLECTION_PROOF_ENVELOPE_FIELDS)
         raise MigrationAuditError(f"collection proof has an unsupported shape: missing={missing} extra={extra}")
     if proof["schema_version"] != COLLECTION_PROOF_SCHEMA_VERSION:
         raise MigrationAuditError(
@@ -654,6 +685,11 @@ def _read_collection_proof(path: Path, scope: str) -> list[str]:
     target_paths = _collection_target_paths(scope)
     if proof["target_paths"] != target_paths:
         raise MigrationAuditError("collection proof target_paths do not match the requested scope")
+    git_revision = proof["git_revision"]
+    if not isinstance(git_revision, str) or GIT_REVISION_PATTERN.fullmatch(git_revision) is None:
+        raise MigrationAuditError("collection proof git_revision must be a full Git revision")
+    if git_revision != _current_git_revision():
+        raise MigrationAuditError("collection proof git_revision does not match current HEAD")
     command = proof["command"]
     expected_command_tail = ["-m", "pytest", "-o", "addopts=", "--collect-only", "-q", *target_paths]
     if (
@@ -671,7 +707,7 @@ def _read_collection_proof(path: Path, scope: str) -> list[str]:
     nodeids = proof["nodeids"]
     if not isinstance(nodeids, list) or not nodeids or not all(isinstance(nodeid, str) for nodeid in nodeids):
         raise MigrationAuditError("collection proof requires a non-empty string nodeids list")
-    return nodeids
+    return nodeids, git_revision
 
 
 def _target_files(selected_map: dict[str, dict[str, Any]]) -> set[str]:
@@ -1650,13 +1686,24 @@ def _validate_nodeids(
     return expected
 
 
-def _validate_results(path: Path, expected: dict[str, str]) -> None:
+def _validate_results(path: Path, expected: dict[str, str], collection_revision: str | None = None) -> None:
     """Validate non-xdist all-attempt pass results written by the shared marker hook."""
     result_document = _load_json(path, "--results")
+    if set(result_document) != RESULT_ENVELOPE_FIELDS:
+        missing = sorted(RESULT_ENVELOPE_FIELDS - set(result_document))
+        extra = sorted(set(result_document) - RESULT_ENVELOPE_FIELDS)
+        raise MigrationAuditError(f"--results has an unsupported shape: missing={missing} extra={extra}")
     if result_document.get("schema_version") != RESULT_SCHEMA_VERSION:
         raise MigrationAuditError(
             f"--results schema must be {RESULT_SCHEMA_VERSION}: {result_document.get('schema_version')!r}"
         )
+    git_revision = result_document.get("git_revision")
+    if not isinstance(git_revision, str) or GIT_REVISION_PATTERN.fullmatch(git_revision) is None:
+        raise MigrationAuditError("--results git_revision must be a full Git revision")
+    if git_revision != _current_git_revision():
+        raise MigrationAuditError("--results git_revision does not match current HEAD")
+    if collection_revision is not None and git_revision != collection_revision:
+        raise MigrationAuditError("--results git_revision does not match collection proof git_revision")
     if result_document.get("xdist") is not False:
         raise MigrationAuditError("--results was produced under xdist; non-xdist proof is required")
     if result_document.get("pytest_exitstatus") != 0:
@@ -1743,11 +1790,11 @@ def main(argv: list[str] | None = None) -> int:
                 "(target collection/results deferred until Tasks 3/4/8)"
             )
             return 0
-        nodeids = _read_collection_proof(arguments.collection_proof, arguments.scope)
+        nodeids, collection_revision = _read_collection_proof(arguments.collection_proof, arguments.scope)
         _validate_target_ast(selected_inventory, selected_map)
         expected = _validate_nodeids(nodeids, selected_inventory, selected_map)
         assert arguments.results is not None
-        _validate_results(arguments.results, expected)
+        _validate_results(arguments.results, expected, collection_revision)
         print(f"executed migration audit OK: scope={arguments.scope} targets={len(expected)}")
     except MigrationAuditError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)

@@ -806,15 +806,15 @@ def test_quantize_factor_upstream_case(
     pd.testing.assert_series_equal(actual, expected)
 ```
 
-`tests/conftest.py` 必须在其既有 `pytest_configure` hook 中动态注册 `alphalens_upstream_case(case_id)`，使 `--strict-markers` 下可收集；并对带该 marker 的 item 执行以下不可绕过规则：collection 时遇到 `skip`、`skipif`、`xfail` marker 立即作为 usage error；运行期间无论 setup/call/teardown 产生 skip、xfail 或非 passed outcome，都将该 item 改报失败。conftest 新增 `--alphalens-upstream-result-json PATH` 选项，在**非 xdist** run 的 `pytest_sessionfinish` 把每个 marked item 的 `nodeid`、marker case ID、setup/call/teardown outcome 写到 `build/`；只允许 checker 用此结果证明每个 mapped target 真正 `passed`。
+`tests/conftest.py` 必须在其既有 `pytest_configure` hook 中动态注册 `alphalens_upstream_case(case_id)`，使 `--strict-markers` 下可收集；并对带该 marker 的 item 执行以下不可绕过规则：collection 时遇到 `skip`、`skipif`、`xfail` marker 立即作为 usage error；运行期间无论 setup/call/teardown 产生 skip、xfail 或非 passed outcome，都将该 item 改报失败。conftest 新增 `--alphalens-upstream-result-json PATH` 选项，在**非 xdist** run 的 `pytest_sessionfinish` 把每个 marked item 的 `nodeid`、marker case ID、setup/call/teardown outcome 写到 `build/`；结果 envelope 必须在仓库 root 安全执行 `git rev-parse --show-toplevel --verify HEAD` 后写入完整 `git_revision`。只允许 checker 用此结果证明每个 mapped target 真正 `passed`。
 
 **Step 5: 实现 collection audit 工具并冻结交接边界**
 
-`scripts/check_alphalens_upstream_test_migration.py` 接收 `--inventory`、`--migration`、`--write-collection-proof PATH`、`--collection-proof PATH`、`--results` 和 `--scope {utils,performance,tears,all}`。Task 1.5 的 source/map 静态验证不传 proof 或 results；对应 target tests 已实现并完成非-xdist实际运行后，先用 `--write-collection-proof build/...json` 生成受控 collection proof，再将该 proof 和 `--results` 一并传回 checker。`--write-collection-proof` 只接受仓库 `build/` 下的相对文件路径，禁止手工 transcript。
+`scripts/check_alphalens_upstream_test_migration.py` 接收 `--inventory`、`--migration`、`--write-collection-proof PATH`、`--collection-proof PATH`、`--results` 和 `--scope {utils,performance,tears,all}`。Task 1.5 的 source/map 静态验证不传 proof 或 results；对应 target tests 已实现并完成非-xdist实际运行后，先用 `--write-collection-proof build/...json` 生成受控 collection proof，再将该 proof 和 `--results` 一并传回 checker。`--write-collection-proof` 只接受仓库 `build/` 下的相对文件路径，禁止手工 transcript；collector envelope 同样必须写入从仓库 root 获得的完整 `git_revision`。
 
 - 验证 inventory 与 map 的 case-ID 集合一对一相等；
 - 验证目标 selector 只指向 Task 3/4/8 的 fincore tests，且 assertion grade 与 source group 相容；
-- 只从 versioned `--collection-proof` JSON 读取 nodeid；该 proof 必须由受控 `--write-collection-proof` collector 为相同 scope 生成，具有固定 command identity/target paths、`exitstatus=0`、空 collection errors。确认 utils/performance 的每个 complete source case ID 和 tears 的每个 complete invocation ID 恰好出现一次；对 tears，同步校验 inventory invocation ID、map `invocation_targets` key、exact target nodeid 和 collect nodeid 三方全等；
+- 只从 versioned `--collection-proof` JSON 读取 nodeid；该 proof 必须由受控 `--write-collection-proof` collector 为相同 scope 生成，具有固定 command identity/target paths、`exitstatus=0`、空 collection errors。collection proof 和 `--results` 两个 envelope 的完整 `git_revision` 都必须等于 checker 启动时的当前 HEAD，且彼此相等；任何提交或 HEAD 切换后必须重新生成两者。确认 utils/performance 的每个 complete source case ID 和 tears 的每个 complete invocation ID 恰好出现一次；对 tears，同步校验 inventory invocation ID、map `invocation_targets` key、exact target nodeid 和 collect nodeid 三方全等；
 - 对 target test AST 拒绝裸 `.equals()` 和没有 `assert`/`pd.testing`/`np.testing`/C4 artifact assertion 的目标函数；
 - 拒绝 target tests 中 `import alphalens`、从 sibling 的绝对路径导入或把 source-side test module 当作 fixture；
 - 读取 `--results` 的 result JSON，要求每个 mapped nodeid 的 setup/call/teardown 均为 passed；不把 collection error、xfailed item、runtime skip 或 source-side shadow 当成已迁移。
@@ -822,6 +822,8 @@ def test_quantize_factor_upstream_case(
 Task 1.5 只校验 source inventory 和完整映射；真实 target nodeid 验证分别在 Task 3、4、8 完成后运行，避免用假测试提前伪造通过。
 
 **Step 6: 运行 GREEN**
+
+以下三步必须在同一 HEAD 上连续执行；`git_revision` 会自动写入两个 proof，若期间提交或切换 HEAD，最后一步会拒绝旧 artifact，必须从测试运行重新生成。
 
 ```bash
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \

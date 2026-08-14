@@ -53,6 +53,37 @@ def _load(path: Path) -> dict[str, object]:
         return json.load(handle)
 
 
+def _git_revision(root: Path) -> str:
+    """Return the checked-out revision used by an isolated proof fixture."""
+
+    completed = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--show-toplevel", "--verify", "HEAD"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    repository_root, revision = completed.stdout.splitlines()
+    assert Path(repository_root).resolve() == root.resolve()
+    return revision
+
+
+def _initialize_pytester_git(pytester: pytest.Pytester) -> str:
+    """Give a pytester proof run a real repository-local HEAD revision."""
+
+    tracked = pytester.path / "tracked.txt"
+    tracked.write_text("proof fixture\n", encoding="utf-8")
+    for command in (
+        ("git", "init"),
+        ("git", "add", tracked.name),
+        ("git", "-c", "user.name=Fincore Tests", "-c", "user.email=fincore@example.invalid", "commit", "-m", "proof"),
+    ):
+        completed = subprocess.run(command, cwd=pytester.path, capture_output=True, text=True, check=False)
+        assert completed.returncode == 0, completed.stdout + completed.stderr
+    return _git_revision(pytester.path)
+
+
 def _run_static_checker(
     tmp_path: Path, inventory: dict[str, object], migration: dict[str, object]
 ) -> subprocess.CompletedProcess[str]:
@@ -444,11 +475,12 @@ def _collection_proof(
 ) -> dict[str, object]:
     target_paths = sorted(checker["GROUP_PATHS"]["utils"])
     return {
-        "schema_version": "alphalens-upstream-collection-proof-v1",
+        "schema_version": "alphalens-upstream-collection-proof-v2",
         "command_identity": "fincore.alphalens-upstream-collect-v1",
         "scope": "utils",
         "command": [sys.executable, "-m", "pytest", "-o", "addopts=", "--collect-only", "-q", *target_paths],
         "target_paths": target_paths,
+        "git_revision": _git_revision(ROOT),
         "exitstatus": exitstatus,
         "nodeids": [
             "tests/compat/alphalens/test_forward_returns.py::test_forward_returns["
@@ -456,6 +488,32 @@ def _collection_proof(
         ],
         "collection_errors": [] if errors is None else errors,
     }
+
+
+def test_collection_proof_rejects_missing_git_revision(tmp_path: Path) -> None:
+    """Execution proof must be bound to a repository HEAD, not only nodeids."""
+
+    checker = runpy.run_path(str(CHECKER))
+    proof_path = tmp_path / "missing-revision-proof.json"
+    proof = _collection_proof(checker)
+    proof.pop("git_revision")
+    proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    with pytest.raises(checker["MigrationAuditError"], match="git_revision"):
+        checker["_read_collection_proof"](proof_path, "utils")
+
+
+def test_collection_proof_rejects_stale_git_revision(tmp_path: Path) -> None:
+    """A syntactically valid revision must still be the checker process HEAD."""
+
+    checker = runpy.run_path(str(CHECKER))
+    proof = _collection_proof(checker)
+    proof["git_revision"] = "0" * 40
+    proof_path = tmp_path / "stale-revision-proof.json"
+    proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    with pytest.raises(checker["MigrationAuditError"], match="git_revision.*current HEAD"):
+        checker["_read_collection_proof"](proof_path, "utils")
 
 
 def test_collection_proof_rejects_nonzero_or_error_even_with_a_correct_nodeid(tmp_path: Path) -> None:
@@ -535,7 +593,9 @@ def test_collection_proof_accepts_a_passing_controlled_envelope(tmp_path: Path) 
     proof = _collection_proof(checker)
     proof_path = tmp_path / "passing-proof.json"
     proof_path.write_text(json.dumps(proof, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    assert checker["_read_collection_proof"](proof_path, "utils") == proof["nodeids"]
+    nodeids, revision = checker["_read_collection_proof"](proof_path, "utils")
+    assert nodeids == proof["nodeids"]
+    assert revision == proof["git_revision"]
 
 
 def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
@@ -553,8 +613,15 @@ def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
         stdout = f"{nodeid}\n1 test collected\n"
         stderr = ""
 
-    def fake_run(command: list[str], **kwargs: object) -> Completed:
+    class RevisionCompleted:
+        returncode = 0
+        stdout = f"{tmp_path}\n{'a' * 40}\n"
+        stderr = ""
+
+    def fake_run(command: list[str], **kwargs: object) -> Completed | RevisionCompleted:
         calls.append((command, kwargs))
+        if command[0] == "git":
+            return RevisionCompleted()
         return Completed()
 
     writer_globals = checker["_write_collection_proof"].__globals__
@@ -565,17 +632,23 @@ def test_controlled_collector_writes_the_verifiable_scope_bound_proof(
     checker["_write_collection_proof"](proof_path, "utils")
 
     proof = _load(tmp_path / proof_path)
+    assert proof["schema_version"] == "alphalens-upstream-collection-proof-v2"
     assert proof["command_identity"] == "fincore.alphalens-upstream-collect-v1"
     assert proof["scope"] == "utils"
     assert proof["target_paths"] == sorted(checker["GROUP_PATHS"]["utils"])
+    assert proof["git_revision"] == "a" * 40
     assert proof["exitstatus"] == 0
     assert proof["nodeids"] == [nodeid]
     assert proof["collection_errors"] == []
     assert calls == [
         (
+            ["git", "-C", str(tmp_path), "rev-parse", "--show-toplevel", "--verify", "HEAD"],
+            {"cwd": tmp_path, "capture_output": True, "text": True, "check": False},
+        ),
+        (
             proof["command"],
             {"cwd": tmp_path, "capture_output": True, "text": True, "check": False},
-        )
+        ),
     ]
 
 
@@ -824,6 +897,7 @@ def test_upstream_marker_records_runtime_nonpassing_phase_as_a_failure(
     pytester: pytest.Pytester, case_id: str, body: str, expected_outcome: str
 ) -> None:
     conftest = (ROOT / "tests" / "conftest.py").read_text(encoding="utf-8")
+    revision = _initialize_pytester_git(pytester)
     pytester.makeconftest(conftest)
 
     pytester.makepyfile(
@@ -838,7 +912,8 @@ def test_upstream_marker_records_runtime_nonpassing_phase_as_a_failure(
     result = pytester.runpytest("-q", "--alphalens-upstream-result-json", "build/upstream-results.json")
     assert result.ret == pytest.ExitCode.TESTS_FAILED
     document = json.loads((pytester.path / "build" / "upstream-results.json").read_text(encoding="utf-8"))
-    assert document["schema_version"] == "alphalens-upstream-case-results-v2"
+    assert document["schema_version"] == "alphalens-upstream-case-results-v3"
+    assert document["git_revision"] == revision
     assert document["xdist"] is False
     assert document["results"] == [
         {
@@ -859,6 +934,7 @@ def test_upstream_marker_rerun_is_never_accepted_after_an_earlier_failure(
 ) -> None:
     """Exercise the installed rerun plugin in a real subprocess, not a hook mock."""
     pytest.importorskip("pytest_rerunfailures")
+    _initialize_pytester_git(pytester)
     pytester.makeconftest((ROOT / "tests" / "conftest.py").read_text(encoding="utf-8"))
     pytester.makepyfile(
         """
@@ -890,6 +966,7 @@ def test_upstream_marker_history_forces_failure_if_a_late_plugin_enables_reruns(
 ) -> None:
     """Keep the session non-accepted if a future plugin enables retries after collection."""
     pytest.importorskip("pytest_rerunfailures")
+    _initialize_pytester_git(pytester)
     pytester.makeconftest((ROOT / "tests" / "conftest.py").read_text(encoding="utf-8"))
     pytester.makepyfile(
         late_rerun_plugin="""
@@ -922,6 +999,7 @@ def test_upstream_marker_history_forces_failure_if_a_late_plugin_enables_reruns(
     assert result.ret == pytest.ExitCode.TESTS_FAILED
     document = json.loads((pytester.path / "build" / "upstream-results.json").read_text(encoding="utf-8"))
     assert document["pytest_exitstatus"] == pytest.ExitCode.TESTS_FAILED
+    assert document["git_revision"] == _git_revision(pytester.path)
     assert document["results"][0]["outcomes"]["call"] == "failed"
     assert [attempt["outcomes"]["call"] for attempt in document["results"][0]["attempts"]] == [
         "failed",
@@ -938,7 +1016,8 @@ def test_result_checker_rejects_a_nonpassing_rerun_attempt_even_if_terminal_outc
     proof.write_text(
         json.dumps(
             {
-                "schema_version": "alphalens-upstream-case-results-v2",
+                "schema_version": "alphalens-upstream-case-results-v3",
+                "git_revision": _git_revision(ROOT),
                 "xdist": False,
                 "pytest_exitstatus": 0,
                 "results": [
@@ -967,6 +1046,76 @@ def test_result_checker_rejects_a_nonpassing_rerun_attempt_even_if_terminal_outc
         checker["_validate_results"](
             proof,
             {"rerun-case": "tests/compat/alphalens/test_target.py::test_target[rerun-case]"},
+        )
+
+
+def test_result_checker_rejects_missing_or_stale_git_revision(tmp_path: Path) -> None:
+    """A passing result payload cannot be replayed from another repository revision."""
+
+    checker = runpy.run_path(str(CHECKER))
+    proof = tmp_path / "upstream-results.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "schema_version": "alphalens-upstream-case-results-v3",
+                "xdist": False,
+                "pytest_exitstatus": 0,
+                "git_revision": "0" * 40,
+                "results": [
+                    {
+                        "case_id": "revision-case",
+                        "nodeid": "tests/compat/alphalens/test_target.py::test_target[revision-case]",
+                        "outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"},
+                        "attempts": [{"outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"}}],
+                    }
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(checker["MigrationAuditError"], match="git_revision.*current HEAD"):
+        checker["_validate_results"](
+            proof,
+            {"revision-case": "tests/compat/alphalens/test_target.py::test_target[revision-case]"},
+        )
+
+
+def test_result_checker_requires_result_and_collection_revisions_to_match(tmp_path: Path) -> None:
+    """Both current-HEAD checks are retained and the two proof envelopes agree."""
+
+    checker = runpy.run_path(str(CHECKER))
+    proof = tmp_path / "upstream-results.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "schema_version": "alphalens-upstream-case-results-v3",
+                "git_revision": _git_revision(ROOT),
+                "xdist": False,
+                "pytest_exitstatus": 0,
+                "results": [
+                    {
+                        "case_id": "revision-case",
+                        "nodeid": "tests/compat/alphalens/test_target.py::test_target[revision-case]",
+                        "outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"},
+                        "attempts": [{"outcomes": {"setup": "passed", "call": "passed", "teardown": "passed"}}],
+                    }
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(checker["MigrationAuditError"], match="collection proof git_revision"):
+        checker["_validate_results"](
+            proof,
+            {"revision-case": "tests/compat/alphalens/test_target.py::test_target[revision-case]"},
+            "0" * 40,
         )
 
 

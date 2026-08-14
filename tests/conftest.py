@@ -15,13 +15,16 @@ Priority Levels:
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 from pathlib import Path
 
 import pytest
 
 _UPSTREAM_RESULT_PHASES = ("setup", "call", "teardown")
 _UPSTREAM_RERUN_MARKERS = ("flaky", "rerun", "reruns", "rerunfailures")
-_UPSTREAM_RESULTS_SCHEMA = "alphalens-upstream-case-results-v2"
+_UPSTREAM_RESULTS_SCHEMA = "alphalens-upstream-case-results-v3"
+_GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40,64}$")
 
 # ==============================================================================
 # Priority Markers - Apply to test classes and methods
@@ -81,6 +84,30 @@ def _result_path(config: pytest.Config) -> Path | None:
     except ValueError as exc:
         raise pytest.UsageError("--alphalens-upstream-result-json must point under build/") from exc
     return path
+
+
+def _repository_git_revision(root: Path) -> str:
+    """Return a verified HEAD only when ``root`` is the Git worktree root."""
+
+    repository_root = root.resolve()
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repository_root), "rev-parse", "--show-toplevel", "--verify", "HEAD"],
+            cwd=repository_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise pytest.UsageError(f"cannot obtain Git revision for upstream result proof: {exc}") from exc
+    lines = completed.stdout.splitlines()
+    if completed.returncode != 0 or len(lines) != 2:
+        raise pytest.UsageError("cannot obtain a repository-root Git revision for upstream result proof")
+    reported_root = Path(lines[0]).resolve()
+    revision = lines[1].strip()
+    if reported_root != repository_root or _GIT_REVISION_PATTERN.fullmatch(revision) is None:
+        raise pytest.UsageError("upstream result proof requires a full Git revision at the repository root")
+    return revision
 
 
 def _global_reruns_requested(config: pytest.Config) -> bool:
@@ -153,7 +180,11 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "alphalens_upstream_case(case_id): pinned Alphalens upstream case or invocation migration proof",
     )
-    config._alphalens_upstream_result_path = _result_path(config)  # type: ignore[attr-defined]
+    result_path = _result_path(config)
+    config._alphalens_upstream_result_path = result_path  # type: ignore[attr-defined]
+    config._alphalens_upstream_git_revision = (  # type: ignore[attr-defined]
+        _repository_git_revision(Path(str(config.rootpath))) if result_path is not None else None
+    )
     config._alphalens_upstream_results = {}  # type: ignore[attr-defined]
 
 
@@ -208,9 +239,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if blocked:
             marker_errors.append(f"{item.nodeid}: upstream case cannot carry {', '.join(blocked)}")
             continue
-        rerun_markers = [
-            name for name in _UPSTREAM_RERUN_MARKERS if item.get_closest_marker(name) is not None
-        ]
+        rerun_markers = [name for name in _UPSTREAM_RERUN_MARKERS if item.get_closest_marker(name) is not None]
         if rerun_markers:
             marker_errors.append(f"{item.nodeid}: upstream case cannot carry {', '.join(rerun_markers)}")
             continue
@@ -272,9 +301,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     path: Path | None = config._alphalens_upstream_result_path  # type: ignore[attr-defined]
     if path is None:
         return
+    revision: str | None = config._alphalens_upstream_git_revision  # type: ignore[attr-defined]
+    assert revision is not None
     path.parent.mkdir(parents=True, exist_ok=True)
     document = {
         "schema_version": _UPSTREAM_RESULTS_SCHEMA,
+        "git_revision": revision,
         "xdist": False,
         "pytest_exitstatus": final_exitstatus,
         "results": [results[nodeid] for nodeid in sorted(results)],

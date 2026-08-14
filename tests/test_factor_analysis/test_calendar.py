@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import pytest
 from pandas.tseries.offsets import BusinessDay, CustomBusinessDay, Day
 
 
@@ -151,6 +152,27 @@ def test_calendar_difference_uses_local_wall_dates_and_inverts_calendar_addition
     for delta in (pd.Timedelta("1D"), pd.Timedelta("-1D")):
         end = add_custom_calendar_timedelta(start, delta, BusinessDay())
         assert diff_custom_calendar_timedeltas(start, end, BusinessDay()) == delta
+
+
+@pytest.mark.parametrize(
+    ("start", "holiday"),
+    [
+        (pd.Timestamp("2024-03-08 09:30", tz="America/New_York"), pd.Timestamp("2024-03-11")),
+        (pd.Timestamp("2024-11-01 09:30", tz="America/New_York"), pd.Timestamp("2024-11-04")),
+    ],
+    ids=("spring-forward", "fall-back"),
+)
+def test_calendar_diff_uses_wall_clock_remainder_across_new_york_dst(
+    start: pd.Timestamp, holiday: pd.Timestamp
+) -> None:
+    """Calendar add/diff remains inverse through both New York DST transitions."""
+
+    from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, diff_custom_calendar_timedeltas
+
+    expected = pd.Timedelta("1D 2h")
+    for frequency in (BusinessDay(), CustomBusinessDay(holidays=(holiday,))):
+        end = add_custom_calendar_timedelta(start, expected, frequency)
+        assert diff_custom_calendar_timedeltas(start, end, frequency) == expected
 
 
 def test_backshift_preserves_unnamed_unused_level_positions() -> None:

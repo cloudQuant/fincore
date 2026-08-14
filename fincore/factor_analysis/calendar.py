@@ -101,8 +101,13 @@ def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd
         weekmask=cast("str", weekmask),
         holidays=cast("Any", holidays),
     )
-    timediff = end_timestamp - start_timestamp
-    return timediff - pd.Timedelta(days=timediff.components.days - actual_days)
+    # Preserve the local wall-clock remainder as well.  Subtracting two aware
+    # timestamps measures elapsed UTC time, which changes by an hour across a
+    # DST boundary.  Calendar arithmetic above instead advances local trading
+    # dates, so use the timezone-naive local values for the complementary
+    # remainder calculation too.
+    wall_timediff = local_end - local_start
+    return wall_timediff - pd.Timedelta(days=wall_timediff.components.days - actual_days)
 
 
 def timedelta_to_string(timedelta: pd.Timedelta | object) -> str:
