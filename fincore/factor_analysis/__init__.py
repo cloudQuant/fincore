@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fincore.contracts.factor_analysis import FactorFunctionSpec
 from fincore.contracts.factor_workflows import FactorWorkflowSpec
+from fincore.factor_analysis.analysis import analyze_factor
 from fincore.factor_analysis.calendar import (
     add_custom_calendar_timedelta,
     backshift_returns_series,
@@ -27,6 +28,12 @@ from fincore.factor_analysis.exceptions import (
     FactorLossExceededError,
     MaxLossExceededError,
     NonMatchingTimezoneError,
+)
+from fincore.factor_analysis.models import (
+    EventAnalysisModel,
+    FactorAnalysisConfig,
+    FactorAnalysisModel,
+    FactorGroupAnalysis,
 )
 from fincore.factor_analysis.performance import (
     average_cumulative_return_by_quantile,
@@ -52,8 +59,12 @@ from fincore.factor_analysis.portfolio import (
 
 __all__ = [
     "EnhancedNonMatchingTimezoneError",
+    "EventAnalysisModel",
+    "FactorAnalysisConfig",
+    "FactorAnalysisModel",
     "FactorDataError",
     "FactorFunctionSpec",
+    "FactorGroupAnalysis",
     "FactorLossExceededError",
     "FactorLossReport",
     "FactorWorkflowSpec",
@@ -62,6 +73,7 @@ __all__ = [
     "PreparedFactorData",
     "PyfolioFactorInputs",
     "add_custom_calendar_timedelta",
+    "analyze_factor",
     "average_cumulative_return_by_quantile",
     "backshift_returns_series",
     "common_start_returns",
