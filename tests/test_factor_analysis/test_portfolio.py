@@ -156,3 +156,22 @@ def test_enhanced_pyfolio_input_uses_none_for_a_missing_benchmark_period_and_kee
     net = output.positions.drop(columns="cash").sum(axis=1)
     pd.testing.assert_series_equal(output.positions["cash"], 1.0 - net, check_names=False)
     np.testing.assert_allclose(gross[gross > 0].to_numpy(), np.ones((gross > 0).sum()))
+
+
+def test_enhanced_pyfolio_capital_positions_fill_the_full_five_day_holding_horizon() -> None:
+    """Capital scaling must not turn active post-return-horizon rows into NaN."""
+
+    source = _factor_data()
+    output = create_pyfolio_input(
+        source,
+        "5D",
+        capital=100_000,
+        long_short=False,
+        equal_weight=True,
+        benchmark_period="missing",
+    )
+
+    assert output.positions.index[-1] == pd.Timestamp("2024-01-12")
+    assert output.returns.index[-1] == pd.Timestamp("2024-01-05")
+    assert not output.positions.isna().any().any()
+    assert output.positions.loc[pd.Timestamp("2024-01-12")].abs().sum() > 0

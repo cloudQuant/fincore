@@ -250,7 +250,12 @@ def create_pyfolio_input(
     daily_positions = daily_positions.div(asset_gross, axis=0).fillna(0.0)
     daily_positions["cash"] = 1.0 - daily_positions.sum(axis=1)
     if capital is not None:
-        daily_positions = daily_positions.mul(daily_cumulative.reindex(daily_positions.index) * capital, axis=0)
+        # Holding periods can extend past the final factor-return observation.
+        # The enhanced bridge keeps the last known portfolio value through
+        # that active-position horizon instead of manufacturing trailing NaN
+        # dollar positions during ``reindex``.
+        capital_curve = daily_cumulative.reindex(daily_positions.index).ffill()
+        daily_positions = daily_positions.mul(capital_curve * capital, axis=0)
 
     forward_columns = get_forward_returns_columns(factor_data.columns)
     benchmark_rets: pd.Series | None = None

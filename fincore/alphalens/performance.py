@@ -431,11 +431,95 @@ def average_cumulative_return_by_quantile(
     )
 
 
+def _strict_position_frame(
+    frame: pd.DataFrame,
+    *,
+    index_name: object | None = None,
+    columns_name: object | None = None,
+    preserve_names: bool = False,
+) -> pd.DataFrame:
+    """Restore the pinned untyped position-frame projection at the facade.
+
+    The enhanced kernel initializes its position table as float64 for stable
+    arithmetic.  Pinned Alphalens initialized the corresponding table without
+    a dtype and filled it later, leaving asset (and subsequently cash) columns
+    as ``object``.  Keep that legacy metadata at the strict boundary only.
+    """
+
+    projected = frame.astype(object)
+    if preserve_names:
+        projected.index = projected.index.rename(index_name)
+        projected.columns = projected.columns.rename(columns_name)
+    return projected
+
+
+_STRICT_EMPTY_POSITION_FILTER_ERROR = "index must be a MultiIndex to unstack, <class 'pandas.RangeIndex'> was passed"
+
+
+def _strict_require_portfolio_period(factor_data: object, period: object) -> None:
+    """Perform the pinned period lookup before strict-only filter projections."""
+
+    if isinstance(factor_data, pd.DataFrame):
+        forward_columns = get_forward_returns_columns(factor_data.columns)
+        if period not in forward_columns:
+            raise ValueError(f"Period '{period}' not found")
+
+
+def _strict_reject_duplicate_return_period(factor_data: object, period: object) -> None:
+    """Project source ``returns[period]`` duplicate-label selection as KeyError."""
+
+    if isinstance(factor_data, pd.DataFrame):
+        forward_columns = get_forward_returns_columns(factor_data.columns)
+        if int((forward_columns == period).sum()) > 1:
+            raise KeyError(period)
+
+
+def _strict_require_group_for_neutral_portfolio(factor_data: object, group_neutral: bool) -> None:
+    """Keep the source's missing-group KeyError ahead of enhanced validation."""
+
+    if group_neutral and isinstance(factor_data, pd.DataFrame) and "group" not in factor_data.columns:
+        raise KeyError("group")
+
+
+def _strict_reject_empty_position_filter(
+    factor_data: object,
+    *,
+    quantiles: Sequence[int] | None,
+    groups: Sequence[str] | None,
+) -> None:
+    """Project the pinned ``positions(weights).unstack`` empty-filter failure."""
+
+    if not isinstance(factor_data, pd.DataFrame):
+        return
+    filtered = factor_data
+    if quantiles is not None:
+        if "factor_quantile" not in filtered.columns:
+            return
+        filtered = filtered.loc[filtered["factor_quantile"].isin(quantiles)]
+    if groups is not None:
+        if "group" not in filtered.columns:
+            raise KeyError("group")
+        filtered = filtered.loc[filtered["group"].isin(groups)]
+    if filtered.empty:
+        raise ValueError(_STRICT_EMPTY_POSITION_FILTER_ERROR)
+
+
 def positions(weights: pd.Series, period: object, freq: Any = None) -> pd.DataFrame:
     """Project the standalone active-position kernel through the strict facade."""
 
     _reject_opaque("positions", weights)
-    return _portfolio.positions(weights, period, freq=freq)
+    names: tuple[object | None, object | None] | None = None
+    if isinstance(weights, pd.Series) and isinstance(weights.index, pd.MultiIndex) and weights.index.nlevels == 2:
+        names = tuple(weights.index.names)  # type: ignore[assignment]
+    result = _portfolio.positions(weights, period, freq=freq)
+    if names is None:
+        return _strict_position_frame(result)
+    return _strict_position_frame(
+        result,
+        index_name=names[0],
+        columns_name=names[1],
+        preserve_names=True,
+    )
 
 
 def factor_cumulative_returns(
@@ -450,6 +534,9 @@ def factor_cumulative_returns(
     """Return the source-projected cumulative factor portfolio curve."""
 
     _reject_opaque("factor_cumulative_returns", factor_data)
+    _strict_require_portfolio_period(factor_data, period)
+    _strict_reject_duplicate_return_period(factor_data, period)
+    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
     result = _portfolio.factor_cumulative_returns(
         factor_data,
         period,
@@ -479,7 +566,10 @@ def factor_positions(
     """Project simulated factor positions through the strict facade."""
 
     _reject_opaque("factor_positions", factor_data)
-    return _portfolio.factor_positions(
+    _strict_require_portfolio_period(factor_data, period)
+    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
+    _strict_reject_empty_position_filter(factor_data, quantiles=quantiles, groups=groups)
+    result = _portfolio.factor_positions(
         factor_data,
         period,
         long_short=long_short,
@@ -488,6 +578,7 @@ def factor_positions(
         quantiles=quantiles,
         groups=groups,
     )
+    return _strict_position_frame(result)
 
 
 def create_pyfolio_input(
@@ -504,6 +595,10 @@ def create_pyfolio_input(
     """Return the strict legacy 3-tuple from the enhanced typed bridge."""
 
     _reject_opaque("create_pyfolio_input", factor_data)
+    _strict_require_portfolio_period(factor_data, period)
+    _strict_reject_duplicate_return_period(factor_data, period)
+    _strict_require_group_for_neutral_portfolio(factor_data, group_neutral)
+    _strict_reject_empty_position_filter(factor_data, quantiles=quantiles, groups=groups)
     output = _portfolio.create_pyfolio_input(
         factor_data,
         period,
@@ -516,7 +611,15 @@ def create_pyfolio_input(
         benchmark_period=benchmark_period,
     )
     returns = output.returns.rename(None) if not output.returns.empty else output.returns
-    return returns, output.positions, output.benchmark_rets
+    strict_positions = output.positions
+    if capital is not None:
+        # Pinned Alphalens scales positions with a plain ``cumrets.reindex``.
+        # Preserve its trailing-NaN legacy projection here while the enhanced
+        # builder intentionally forward-fills capital through the active
+        # holding horizon.
+        strict_positions = strict_positions.copy(deep=True)
+        strict_positions.loc[~strict_positions.index.isin(output.returns.index), :] = np.nan
+    return returns, _strict_position_frame(strict_positions), output.benchmark_rets
 
 
 for _name in (
