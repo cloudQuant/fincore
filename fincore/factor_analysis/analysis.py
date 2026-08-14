@@ -23,6 +23,7 @@ from fincore.factor_analysis.models import (
     FactorGroupAnalysis,
     fingerprint_value,
     frozen_mapping,
+    snapshot_pandas,
 )
 
 
@@ -37,7 +38,7 @@ def _copy_clean_factor_data(factor_data: pd.DataFrame) -> tuple[pd.DataFrame, tu
         raise ValueError("factor_data must contain a 'factor' column")
     if "factor_quantile" not in factor_data.columns:
         raise ValueError("factor_data must contain a 'factor_quantile' column")
-    snapshot = factor_data.copy(deep=True)
+    snapshot = cast("pd.DataFrame", snapshot_pandas(factor_data))
     forward_columns = get_forward_returns_columns(snapshot.columns)
     if not len(forward_columns):
         raise ValueError("factor_data must contain at least one forward-return column")
@@ -188,7 +189,7 @@ def _event_model(
     # Even an incomplete event request belongs in the model provenance: a
     # later caller must not receive the same result fingerprint after changing
     # supplied event data merely because no event section was requested yet.
-    returns_snapshot = event_returns.copy(deep=True)
+    returns_snapshot = cast("pd.DataFrame", snapshot_pandas(event_returns))
     if event_before is None or event_after is None:
         return None, returns_snapshot
     if not isinstance(event_before, int) or not isinstance(event_after, int) or event_before < 0 or event_after < 0:

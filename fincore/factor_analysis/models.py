@@ -18,6 +18,8 @@ from typing import Any, Literal, TypeVar, cast
 
 import numpy as np
 import pandas as pd
+from pandas.tseries.frequencies import to_offset
+from pandas.tseries.offsets import BDay, CustomBusinessDay
 
 from fincore.factor_analysis.portfolio import PyfolioFactorInputs
 
@@ -51,6 +53,64 @@ _WIRE_TYPE = "__fincore_factor_analysis_type__"
 _WIRE_SCHEMA = "fincore-factor-analysis-json-v1"
 
 
+def _frequency_payload(frequency: object) -> object:
+    """Encode a DateOffset without reducing a custom trading calendar to ``C``."""
+
+    if frequency is None:
+        return None
+    if isinstance(frequency, CustomBusinessDay):
+        custom_frequency = cast("Any", frequency)
+        return {
+            _WIRE_TYPE: "custom-business-day-offset",
+            "n": str(custom_frequency.n),
+            "normalize": custom_frequency.normalize,
+            "weekmask": custom_frequency.weekmask,
+            "holidays": [_wire_scalar(pd.Timestamp(holiday)) for holiday in custom_frequency.holidays],
+            "offset": _wire_scalar(pd.Timedelta(custom_frequency.offset)),
+        }
+    if isinstance(frequency, BDay):
+        business_frequency = cast("Any", frequency)
+        return {
+            _WIRE_TYPE: "business-day-offset",
+            "n": str(business_frequency.n),
+            "normalize": business_frequency.normalize,
+            "offset": _wire_scalar(pd.Timedelta(business_frequency.offset)),
+        }
+    return {_WIRE_TYPE: "offset", "frequency": cast("Any", frequency).freqstr}
+
+
+def _frequency_from_payload(payload: object) -> object:
+    """Restore one DateOffset emitted by :func:`_frequency_payload`."""
+
+    if payload is None:
+        return None
+    if not isinstance(payload, Mapping):
+        raise ValueError("invalid factor-analysis frequency handoff payload")
+    wire_type = payload.get(_WIRE_TYPE)
+    if wire_type == "custom-business-day-offset":
+        holidays = [_unwire_scalar(item) for item in cast("list[object]", payload["holidays"])]
+        offset = _unwire_scalar(payload["offset"])
+        custom_business_day = cast("Any", CustomBusinessDay)
+        return custom_business_day(
+            n=int(cast("str", payload["n"])),
+            normalize=bool(payload["normalize"]),
+            weekmask=cast("str", payload["weekmask"]),
+            holidays=cast("list[object]", holidays),
+            offset=cast("Any", offset),
+        )
+    if wire_type == "business-day-offset":
+        offset = _unwire_scalar(payload["offset"])
+        business_day = cast("Any", BDay)
+        return business_day(
+            n=int(cast("str", payload["n"])),
+            normalize=bool(payload["normalize"]),
+            offset=cast("Any", offset),
+        )
+    if wire_type == "offset":
+        return to_offset(cast("str", payload["frequency"]))
+    raise ValueError(f"unknown factor-analysis frequency wire type {wire_type!r}")
+
+
 def _wire_scalar(value: object) -> object:
     """Encode one scalar without losing numeric bits or pandas sentinels."""
 
@@ -69,13 +129,19 @@ def _wire_scalar(value: object) -> object:
     if isinstance(value, float):
         return {_WIRE_TYPE: "float", "hex": value.hex()}
     if isinstance(value, pd.Timestamp):
+        unit = value.unit
         return {
             _WIRE_TYPE: "timestamp",
-            "nanoseconds": str(value.value),
+            "value": str(value.asm8.astype("int64")),
+            "unit": unit,
             "timezone": None if value.tz is None else str(value.tz),
         }
     if isinstance(value, pd.Timedelta):
-        return {_WIRE_TYPE: "timedelta", "nanoseconds": str(value.value)}
+        return {
+            _WIRE_TYPE: "timedelta",
+            "value": str(value.asm8.astype("int64")),
+            "unit": value.unit,
+        }
     raise TypeError(f"factor-analysis JSON handoff does not support scalar {value!r} ({type(value).__name__})")
 
 
@@ -94,13 +160,14 @@ def _unwire_scalar(value: object) -> object:
     if wire_type == "float":
         return float.fromhex(cast("str", value["hex"]))
     if wire_type == "timestamp":
-        nanoseconds = int(cast("str", value["nanoseconds"]))
+        timestamp_value = int(cast("str", value["value"]))
+        unit = cast("Any", value["unit"])
         timezone = value.get("timezone")
         if timezone is None:
-            return pd.Timestamp(nanoseconds, unit="ns")
-        return pd.Timestamp(nanoseconds, unit="ns", tz="UTC").tz_convert(cast("str", timezone))
+            return pd.Timestamp(timestamp_value, unit=unit)
+        return pd.Timestamp(timestamp_value, unit=unit, tz="UTC").tz_convert(cast("str", timezone))
     if wire_type == "timedelta":
-        return pd.Timedelta(int(cast("str", value["nanoseconds"])), unit="ns")
+        return pd.Timedelta(int(cast("str", value["value"])), unit=cast("Any", value["unit"]))
     raise ValueError(f"unknown factor-analysis scalar wire type {wire_type!r}")
 
 
@@ -135,15 +202,16 @@ def _index_payload(index: pd.Index) -> dict[str, object]:
             _WIRE_TYPE: "datetime-index",
             "name": _wire_scalar(index.name),
             "values": [_wire_scalar(value) for value in index],
-            "freq": index.freqstr,
+            "frequency": _frequency_payload(index.freq),
             "unit": index.unit,
+            "timezone": None if index.tz is None else str(index.tz),
         }
     if isinstance(index, pd.TimedeltaIndex):
         return {
             _WIRE_TYPE: "timedelta-index",
             "name": _wire_scalar(index.name),
             "values": [_wire_scalar(value) for value in index],
-            "freq": index.freqstr,
+            "frequency": _frequency_payload(index.freq),
             "unit": index.unit,
         }
     return {
@@ -155,14 +223,15 @@ def _index_payload(index: pd.Index) -> dict[str, object]:
 
 
 def _restore_frequency(
-    index: pd.DatetimeIndex | pd.TimedeltaIndex, frequency: object
+    index: pd.DatetimeIndex | pd.TimedeltaIndex, frequency_payload: object
 ) -> pd.DatetimeIndex | pd.TimedeltaIndex:
     """Restore a valid explicit frequency without rejecting irregular indexes."""
 
+    frequency = _frequency_from_payload(frequency_payload)
     if frequency is None:
         return index
     try:
-        return type(index)(index, freq=cast("str", frequency), name=index.name)  # type: ignore[arg-type]
+        return type(index)(index, freq=frequency, name=index.name)  # type: ignore[arg-type]
     except ValueError:
         return index
 
@@ -207,15 +276,34 @@ def _index_from_payload(payload: Mapping[str, object]) -> pd.Index:
             name=_unwire_scalar(payload["name"]),
         )
     if wire_type == "datetime-index":
-        values = [_unwire_scalar(item) for item in cast("list[object]", payload["values"])]
-        datetime_result = pd.DatetimeIndex(values, name=_unwire_scalar(payload["name"]))
+        unit = cast("str", payload["unit"])
+        datetime_values: list[int] = []
+        for item in cast("list[object]", payload["values"]):
+            if not isinstance(item, Mapping):
+                raise ValueError("invalid factor-analysis datetime index value")
+            item_wire_type = item.get(_WIRE_TYPE)
+            if item_wire_type == "pandas-nat":
+                datetime_values.append(np.iinfo(np.int64).min)
+                continue
+            if item_wire_type != "timestamp" or item.get("unit") != unit:
+                raise ValueError("invalid factor-analysis datetime index timestamp unit")
+            datetime_values.append(int(cast("str", item["value"])))
+        datetime_array = np.asarray(datetime_values, dtype=cast("Any", f"datetime64[{unit}]"))
+        timezone = cast("str | None", payload.get("timezone"))
+        datetime_result = pd.DatetimeIndex(
+            datetime_array,
+            name=_unwire_scalar(payload["name"]),
+            tz="UTC" if timezone is not None else None,
+        )
+        if timezone is not None:
+            datetime_result = datetime_result.tz_convert(timezone)
         datetime_result = cast("pd.DatetimeIndex", _restore_datetime_unit(datetime_result, payload.get("unit")))
-        return cast("pd.Index", _restore_frequency(datetime_result, payload.get("freq")))
+        return cast("pd.Index", _restore_frequency(datetime_result, payload.get("frequency")))
     if wire_type == "timedelta-index":
         values = [_unwire_scalar(item) for item in cast("list[object]", payload["values"])]
         timedelta_result = pd.TimedeltaIndex(values, name=cast("str | None", _unwire_scalar(payload["name"])))
         timedelta_result = cast("pd.TimedeltaIndex", _restore_datetime_unit(timedelta_result, payload.get("unit")))
-        return cast("pd.Index", _restore_frequency(timedelta_result, payload.get("freq")))
+        return cast("pd.Index", _restore_frequency(timedelta_result, payload.get("frequency")))
     if wire_type == "index":
         generic_result = pd.Index(
             [_unwire_scalar(item) for item in cast("list[object]", payload["values"])],
@@ -391,20 +479,34 @@ def fingerprint_value(value: object) -> str:
     return sha256(_fingerprint_bytes(value)).hexdigest()
 
 
+def snapshot_pandas(value: pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:
+    """Take an owned recursive pandas snapshot, including object-dtype cells."""
+
+    try:
+        snapshot = pickle.loads(pickle.dumps(value, protocol=5))
+    except (AttributeError, pickle.PickleError, TypeError, ValueError) as error:
+        raise TypeError("factor-analysis data must contain pickleable object values") from error
+    if not isinstance(snapshot, (pd.Series, pd.DataFrame)):  # pragma: no cover - pickle protocol invariant
+        raise TypeError("factor-analysis pandas snapshot changed its runtime type")
+    return snapshot
+
+
 def _snapshot_value(value: object) -> object:
     """Deep-copy analytical data before storage or public model exposure."""
 
     if isinstance(value, (pd.Series, pd.DataFrame)):
-        return value.copy(deep=True)
+        return snapshot_pandas(value)
     if isinstance(value, Mapping):
         return frozen_mapping(value)
     if isinstance(value, tuple):
         return tuple(_snapshot_value(item) for item in value)
     if isinstance(value, PyfolioFactorInputs):
         return PyfolioFactorInputs(
-            returns=value.returns.copy(deep=True),
-            positions=value.positions.copy(deep=True),
-            benchmark_rets=None if value.benchmark_rets is None else value.benchmark_rets.copy(deep=True),
+            returns=cast("pd.Series", snapshot_pandas(value.returns)),
+            positions=cast("pd.DataFrame", snapshot_pandas(value.positions)),
+            benchmark_rets=None
+            if value.benchmark_rets is None
+            else cast("pd.Series", snapshot_pandas(value.benchmark_rets)),
         )
     if isinstance(value, FactorGroupAnalysis):
         return FactorGroupAnalysis(
@@ -431,13 +533,27 @@ def _snapshot_value(value: object) -> object:
     return value
 
 
+def _snapshot_mapping_key(value: _MappingKey) -> _MappingKey:
+    """Copy a mapping key so mutable-but-hashable labels cannot leak inward."""
+
+    try:
+        snapshot = pickle.loads(pickle.dumps(value, protocol=5))
+    except (AttributeError, pickle.PickleError, TypeError, ValueError) as error:
+        raise TypeError("factor-analysis mapping keys must be pickleable") from error
+    if not isinstance(snapshot, Hashable):  # pragma: no cover - Mapping protocol invariant
+        raise TypeError("factor-analysis mapping key snapshot is not hashable")
+    return cast("_MappingKey", snapshot)
+
+
 def frozen_mapping(mapping: Mapping[_MappingKey, _MappingValue]) -> Mapping[_MappingKey, _MappingValue]:
     """Own mapping values and expose a fresh read-only cache boundary."""
 
-    return MappingProxyType({key: cast("_MappingValue", _snapshot_value(value)) for key, value in mapping.items()})
+    return MappingProxyType(
+        {_snapshot_mapping_key(key): cast("_MappingValue", _snapshot_value(value)) for key, value in mapping.items()}
+    )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FactorAnalysisConfig:
     """Every typed option that can alter an :class:`FactorAnalysisModel`."""
 
@@ -471,8 +587,13 @@ class FactorAnalysisConfig:
         if capital is not None:
             if not isinstance(capital, (int, float)) or isinstance(capital, bool):
                 raise TypeError("pyfolio_capital must be an int, float, or None")
-            if isinstance(capital, int) and abs(capital) > 2**53:
-                raise ValueError("pyfolio_capital integer must be representable exactly by float arithmetic")
+            if isinstance(capital, int):
+                try:
+                    exactly_representable = int(float(capital)) == capital
+                except OverflowError:
+                    exactly_representable = False
+                if not exactly_representable:
+                    raise ValueError("pyfolio_capital integer must be representable exactly by float arithmetic")
 
         object.__setattr__(self, "periods", periods)
         object.__setattr__(self, "turnover_periods", turnover_periods)
@@ -495,7 +616,7 @@ class FactorAnalysisConfig:
         object.__setattr__(self, "fingerprint", fingerprint_value(payload))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FactorGroupAnalysis:
     """Typed, per-group analytical data used by grouped tables and charts."""
 
@@ -527,6 +648,7 @@ class FactorGroupAnalysis:
     def __post_init__(self) -> None:
         """Own independent group data rather than caller-visible work buffers."""
 
+        object.__setattr__(self, "group", _snapshot_mapping_key(self.group))
         for name in self._DATA_FIELDS:
             object.__setattr__(self, name, _snapshot_value(object.__getattribute__(self, name)))
 
@@ -537,7 +659,7 @@ class FactorGroupAnalysis:
         return value
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class EventAnalysisModel:
     """Frozen event-window values, averages, and distribution inputs."""
 
@@ -561,7 +683,7 @@ class EventAnalysisModel:
         return value
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FactorAnalysisModel:
     """One compute-once analytical snapshot consumed by later renderers."""
 
@@ -644,4 +766,5 @@ __all__ = [
     "fingerprint_value",
     "frozen_mapping",
     "serializable_value",
+    "snapshot_pandas",
 ]

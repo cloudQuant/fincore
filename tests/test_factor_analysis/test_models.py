@@ -10,9 +10,28 @@ from typing import get_type_hints
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.tseries.offsets import BDay, CustomBusinessDay
 
 from fincore.factor_analysis import performance, portfolio
 from fincore.factor_analysis.calendar import get_forward_returns_columns
+
+
+class _MutableGroupLabel:
+    """Pickleable, hashable object used to prove object cells are owned."""
+
+    def __init__(self, labels: list[str]) -> None:
+        self.labels = labels
+
+    def __hash__(self) -> int:
+        return hash(_MutableGroupLabel)
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, _MutableGroupLabel) and self.labels == other.labels
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, _MutableGroupLabel):
+            return NotImplemented
+        return tuple(self.labels) < tuple(other.labels)
 
 
 def _only_periods(factor_data: pd.DataFrame, periods: tuple[str, ...]) -> pd.DataFrame:
@@ -278,6 +297,7 @@ def test_config_owns_sequence_options_and_rejects_lossy_integer_capital() -> Non
 
     with pytest.raises(ValueError, match="exactly"):
         FactorAnalysisConfig(pyfolio_capital=2**53 + 1)
+    assert FactorAnalysisConfig(pyfolio_capital=2**54).pyfolio_capital == 2**54
 
 
 def test_model_exposes_defensive_snapshots_for_all_renderer_data(
@@ -331,6 +351,47 @@ def test_model_exposes_defensive_snapshots_for_all_renderer_data(
     assert model.result_fingerprint == fingerprint
     with pytest.raises(TypeError):
         model.factor_positions["new"] = pd.DataFrame()  # type: ignore[index]
+    with pytest.raises(AttributeError):
+        _ = model.__dict__
+
+
+def test_model_owns_mutable_object_cells_before_computation(clean_factor_data: pd.DataFrame) -> None:
+    """Pandas object cells cannot retain aliases into the caller's input frame."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+
+    mutable_group = _MutableGroupLabel(["initial"])
+    source = clean_factor_data.astype({"group": object})
+    source.iloc[0, source.columns.get_loc("group")] = mutable_group
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    fingerprint = model.result_fingerprint
+
+    mutable_group.labels.append("caller-mutation")
+
+    stored_group = model.factor_data.iloc[0, model.factor_data.columns.get_loc("group")]
+    assert isinstance(stored_group, _MutableGroupLabel)
+    assert stored_group.labels == ["initial"]
+    assert model.result_fingerprint == fingerprint
+
+
+def test_grouped_model_exposes_copied_mapping_keys(clean_factor_data: pd.DataFrame) -> None:
+    """Mutable group labels from a public mapping cannot alter canonical provenance."""
+
+    from fincore.factor_analysis.analysis import analyze_factor
+
+    first_group = _MutableGroupLabel(["one"])
+    second_group = _MutableGroupLabel(["two"])
+    source = clean_factor_data.astype({"group": object})
+    source.loc[:, "group"] = [first_group if row % 2 else second_group for row in range(len(source))]
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), by_group=True, include_pyfolio=False)
+    fingerprint = model.result_fingerprint
+
+    exposed_key = next(key for key in model.grouped_results if isinstance(key, _MutableGroupLabel))
+    exposed_key.labels.append("public-mutation")
+
+    canonical_key = next(key for key in model.grouped_results if isinstance(key, _MutableGroupLabel))
+    assert canonical_key.labels in (["one"], ["two"])
+    assert model.result_fingerprint == fingerprint
 
 
 def test_serializable_handoff_round_trips_exact_values_keys_and_pandas_metadata() -> None:
@@ -355,6 +416,35 @@ def test_serializable_handoff_round_trips_exact_values_keys_and_pandas_metadata(
     assert restored[1] == "integer-key"
     assert restored["1"] == "text-key"
     pd.testing.assert_frame_equal(restored["frame"], frame)
+
+
+def test_serializable_handoff_round_trips_distant_and_empty_timezone_indexes() -> None:
+    """Datetime handoff keeps the native unit and timezone without values to infer it."""
+
+    from fincore.factor_analysis.models import deserialize_serializable_value, serializable_value
+
+    far_index = pd.DatetimeIndex([pd.Timestamp("2500-01-01 09:30")], name="date")
+    far_timezone_index = pd.DatetimeIndex([pd.Timestamp("2500-06-01 09:30", tz="America/New_York")], name="date")
+    empty_index = pd.DatetimeIndex([], tz="America/New_York", name="date", freq="D")
+    custom_business_day = CustomBusinessDay(weekmask="Mon Tue Wed Thu", holidays=["2024-01-02"])
+    custom_index = pd.date_range("2024-01-01", periods=3, freq=custom_business_day, name="date")
+    normalized_business_index = pd.date_range("2024-01-01 12:00", periods=3, freq=BDay(normalize=True), name="date")
+    source = {
+        "far": pd.DataFrame({"value": [1.0]}, index=far_index),
+        "far_timezone": pd.DataFrame({"value": [1.0]}, index=far_timezone_index),
+        "empty": pd.DataFrame({"value": pd.Series(dtype=float)}, index=empty_index),
+        "custom": pd.DataFrame({"value": [1.0, 2.0, 3.0]}, index=custom_index),
+        "normalized_business": pd.DataFrame({"value": [1.0, 2.0, 3.0]}, index=normalized_business_index),
+    }
+
+    restored = deserialize_serializable_value(json.loads(json.dumps(serializable_value(source), allow_nan=False)))
+
+    assert isinstance(restored, Mapping)
+    pd.testing.assert_frame_equal(restored["far"], source["far"])
+    pd.testing.assert_frame_equal(restored["far_timezone"], source["far_timezone"])
+    pd.testing.assert_frame_equal(restored["empty"], source["empty"])
+    pd.testing.assert_frame_equal(restored["custom"], source["custom"])
+    pd.testing.assert_frame_equal(restored["normalized_business"], source["normalized_business"])
 
 
 def test_group_and_event_sections_are_optional_typed_models(
