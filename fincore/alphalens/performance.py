@@ -1,14 +1,13 @@
 """Strict Alphalens performance facade backed by Task 4 kernels.
 
 The module begins with the static C0/C1 deferred registry, then intentionally
-overrides only functions whose numerical kernel has been characterized.  The
-remaining Task 5 portfolio symbols keep their original deferred boundary.
+overrides only functions whose numerical kernel has been characterized.
 """
 
 from __future__ import annotations
 
 import importlib
-from typing import Any, cast
+from typing import Any, Sequence, cast
 
 import numpy as np
 import pandas as pd
@@ -17,6 +16,7 @@ from fincore.alphalens._compat import export_deferred_functions
 from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
 from fincore.exceptions import DependencyError
 from fincore.factor_analysis import performance as _performance
+from fincore.factor_analysis import portfolio as _portfolio
 from fincore.factor_analysis.calendar import get_forward_returns_columns
 
 _PERFORMANCE_NAMES = export_deferred_functions(globals(), "performance")
@@ -431,19 +431,111 @@ def average_cumulative_return_by_quantile(
     )
 
 
+def positions(weights: pd.Series, period: object, freq: Any = None) -> pd.DataFrame:
+    """Project the standalone active-position kernel through the strict facade."""
+
+    _reject_opaque("positions", weights)
+    return _portfolio.positions(weights, period, freq=freq)
+
+
+def factor_cumulative_returns(
+    factor_data: pd.DataFrame,
+    period: object,
+    long_short: bool = True,
+    group_neutral: bool = False,
+    equal_weight: bool = False,
+    quantiles: Sequence[int] | None = None,
+    groups: Sequence[str] | None = None,
+) -> pd.Series:
+    """Return the source-projected cumulative factor portfolio curve."""
+
+    _reject_opaque("factor_cumulative_returns", factor_data)
+    result = _portfolio.factor_cumulative_returns(
+        factor_data,
+        period,
+        long_short=long_short,
+        group_neutral=group_neutral,
+        equal_weight=equal_weight,
+        quantiles=quantiles,
+        groups=groups,
+    )
+    # ``empyrical.cum_returns`` constructs a fresh nonempty Series in the
+    # pinned strict path, so its legacy name is None.  Its empty-copy branch
+    # preserves metadata, just as the existing strict cumulative wrapper does.
+    if not result.empty:
+        result = result.rename(None)
+    return result
+
+
+def factor_positions(
+    factor_data: pd.DataFrame,
+    period: object,
+    long_short: bool = True,
+    group_neutral: bool = False,
+    equal_weight: bool = False,
+    quantiles: Sequence[int] | None = None,
+    groups: Sequence[str] | None = None,
+) -> pd.DataFrame:
+    """Project simulated factor positions through the strict facade."""
+
+    _reject_opaque("factor_positions", factor_data)
+    return _portfolio.factor_positions(
+        factor_data,
+        period,
+        long_short=long_short,
+        group_neutral=group_neutral,
+        equal_weight=equal_weight,
+        quantiles=quantiles,
+        groups=groups,
+    )
+
+
+def create_pyfolio_input(
+    factor_data: pd.DataFrame,
+    period: object,
+    capital: float | None = None,
+    long_short: bool = True,
+    group_neutral: bool = False,
+    equal_weight: bool = False,
+    quantiles: Sequence[int] | None = None,
+    groups: Sequence[str] | None = None,
+    benchmark_period: object = "1D",
+) -> tuple[pd.Series, pd.DataFrame, pd.Series | None]:
+    """Return the strict legacy 3-tuple from the enhanced typed bridge."""
+
+    _reject_opaque("create_pyfolio_input", factor_data)
+    output = _portfolio.create_pyfolio_input(
+        factor_data,
+        period,
+        capital=capital,
+        long_short=long_short,
+        group_neutral=group_neutral,
+        equal_weight=equal_weight,
+        quantiles=quantiles,
+        groups=groups,
+        benchmark_period=benchmark_period,
+    )
+    returns = output.returns.rename(None) if not output.returns.empty else output.returns
+    return returns, output.positions, output.benchmark_rets
+
+
 for _name in (
     "average_cumulative_return_by_quantile",
     "common_start_returns",
     "compute_mean_returns_spread",
     "cumulative_returns",
     "factor_alpha_beta",
+    "factor_cumulative_returns",
     "factor_information_coefficient",
     "factor_rank_autocorrelation",
     "factor_returns",
     "factor_weights",
     "mean_information_coefficient",
     "mean_return_by_quantile",
+    "positions",
     "quantile_turnover",
+    "factor_positions",
+    "create_pyfolio_input",
 ):
     _attach_spec(globals()[_name], _name)
 

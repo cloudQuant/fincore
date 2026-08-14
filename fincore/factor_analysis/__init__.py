@@ -42,6 +42,13 @@ from fincore.factor_analysis.performance import (
     mean_return_by_quantile,
     quantile_turnover,
 )
+from fincore.factor_analysis.portfolio import (
+    PyfolioFactorInputs,
+    create_pyfolio_input,
+    factor_cumulative_returns,
+    factor_positions,
+    positions,
+)
 
 __all__ = [
     "EnhancedNonMatchingTimezoneError",
@@ -53,16 +60,20 @@ __all__ = [
     "MaxLossExceededError",
     "NonMatchingTimezoneError",
     "PreparedFactorData",
+    "PyfolioFactorInputs",
     "add_custom_calendar_timedelta",
     "average_cumulative_return_by_quantile",
     "backshift_returns_series",
     "common_start_returns",
     "compute_forward_returns",
     "compute_mean_returns_spread",
+    "create_pyfolio_input",
     "cumulative_returns",
     "diff_custom_calendar_timedeltas",
     "factor_alpha_beta",
+    "factor_cumulative_returns",
     "factor_information_coefficient",
+    "factor_positions",
     "factor_rank_autocorrelation",
     "factor_returns",
     "factor_weights",
@@ -70,6 +81,7 @@ __all__ = [
     "infer_trading_calendar",
     "mean_information_coefficient",
     "mean_return_by_quantile",
+    "positions",
     "prepare_factor_data",
     "prepare_factor_data_from_forward_returns",
     "quantile_turnover",

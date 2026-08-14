@@ -385,6 +385,12 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ("performance", "mean_return_by_quantile"),
             ("performance", "quantile_turnover"),
         }
+        task_5_portfolio = key in {
+            ("performance", "create_pyfolio_input"),
+            ("performance", "factor_cumulative_returns"),
+            ("performance", "factor_positions"),
+            ("performance", "positions"),
+        }
         specs[key] = FactorFunctionSpec(
             module=module,
             public_name=name,
@@ -395,6 +401,8 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
                 if task_3_utility
                 else "factor_analysis_task_4_kernel"
                 if task_4_performance
+                else "factor_analysis_task_5_portfolio_kernel"
+                if task_5_portfolio
                 else "deferred_task_2_kernel"
             ),
             profile="legacy_alphalens_cloudquant_0_4_0",
@@ -408,8 +416,8 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             adapter=adapter,
             result_projection=(
                 "strict_alphalens_data_projection"
-                if task_3_utility or task_4_performance
-                else "not_implemented_until_task_3_4_or_8"
+                if task_3_utility or task_4_performance or task_5_portfolio
+                else "not_implemented_until_task_3_4_5_or_8"
             ),
         )
     if len(specs) != 61:
