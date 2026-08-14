@@ -205,6 +205,58 @@ GREEN commands and results:
 
 Re-review fix commit: `a40b4ad fix: canonicalize package dependency guards`.
 
+## Re-review 2 follow-up (2026-08-15)
+
+The release-consistency script previously checked only wheel self-dependencies
+and sdist version headers.  It now parses the actual wheel `METADATA` and
+sdist `PKG-INFO` `Requires-Dist` fields through one shared helper.  The helper
+canonicalizes names with PEP 503 normalization and rejects external
+`alphalens`/`empyrical` distributions (including mixed case) and direct URLs.
+The source-extra check shares the same predicate.
+
+The new focused regression builds a real wheel/sdist pair, injects a valid
+header before each metadata body, and runs the release script as a subprocess.
+It proves rejection of wheel `Empyrical>=1`, sdist `AlphaLens>=1`, and a wheel
+direct URL requirement.
+
+RED command and result:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_release_consistency.py::test_release_consistency_rejects_prohibited_artifact_requirements \
+  -q --tb=short --maxfail=0
+# 3 failed in 5.75s: release consistency accepted each injected artifact requirement
+```
+
+GREEN commands and results:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_release_consistency.py::test_release_consistency_rejects_prohibited_artifact_requirements \
+  -q --tb=short --maxfail=0
+# 3 passed in 5.47s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/packaging -q --tb=short --maxfail=0
+# 35 passed in 54.81s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_release_consistency.py --dist build/alphalens-dist-task9-followup
+# Release consistency: OK (wheel and sdist Requires-Dist guards both clean)
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff check \
+  scripts/check_release_consistency.py tests/packaging/test_release_consistency.py
+# All checks passed
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff format --check \
+  scripts/check_release_consistency.py tests/packaging/test_release_consistency.py
+# 2 files already formatted
+```
+
+Re-review 2 fix commit: `e9d8561 fix: guard artifact dependency metadata`.
+
 ## Concern
 
 The isolated Alphalens rendering profile emits intended legacy summary tables
