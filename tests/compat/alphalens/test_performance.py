@@ -684,3 +684,90 @@ def test_strict_common_start_returns_emits_one_pinned_slice_per_resolved_event(
     assert strict_stdout == expected_stdout
     assert strict_stdout.count("series = ") == 2
     assert enhanced_stdout == ""
+
+
+def test_strict_common_start_returns_checks_demean_event_before_stdout(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned ``demean_by.loc[timestamp]`` fails before a source slice is printed."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    demean_by = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[0], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03]}, index=dates)
+
+    with pytest.raises(KeyError) as error:
+        strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True, demean_by=demean_by)
+
+    assert error.value.args == (dates[1],)
+    assert capsys.readouterr().out == ""
+
+
+def test_strict_common_start_returns_prints_source_set_slice_for_demean_assets(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Source stdout selects factor and demean assets through an unnamed set list."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    demean_by = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "B")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03], "B": [0.04, 0.05, 0.06]}, index=dates)
+    source_assets = list({"A"} | {"B"})
+    expected_slice = returns.iloc[0:3].loc[:, source_assets].copy()
+    expected_slice.index = pd.RangeIndex(-1, 2)
+
+    strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True, demean_by=demean_by)
+
+    assert capsys.readouterr().out == f"series =  {expected_slice}\n"
+
+
+@pytest.mark.parametrize(
+    ("before", "after", "expected_offsets"),
+    [(-1, 1, pd.RangeIndex(1, 2)), (1, -1, pd.RangeIndex(-1, 0))],
+    ids=("negative-before", "negative-after"),
+)
+def test_strict_common_start_returns_preserves_pinned_signed_windows(
+    before: int,
+    after: int,
+    expected_offsets: pd.RangeIndex,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Strict source compatibility permits signed windows while enhanced rejects them."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    dates = pd.date_range("2024-06-03", periods=3, freq="D", name="date")
+    factor = pd.Series(
+        [1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03]}, index=dates)
+    start = max(1 - before, 0)
+    stop = min(1 + after + 1, len(returns.index))
+    expected = returns.iloc[start:stop].loc[:, ["A"]].copy()
+    expected.index = expected_offsets
+
+    actual = strict.common_start_returns(factor, returns, before=before, after=after, cumulative=True)
+    stdout = capsys.readouterr().out
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert stdout == f"series =  {expected}\n"
+    with pytest.raises(ValueError, match="non-negative"):
+        enhanced.common_start_returns(factor, returns, before=before, after=after, cumulative=True)

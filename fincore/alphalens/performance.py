@@ -308,13 +308,14 @@ def _strict_print_common_start_return_slices(
     after: int,
     *,
     cumulative: bool,
+    mean_by_date: bool,
     demean_by: pd.Series | pd.DataFrame | None,
-) -> None:
+) -> list[pd.Series | pd.DataFrame]:
     """Reproduce the pinned per-event ``print('series = ', series)`` trace.
 
     The enhanced core deliberately has no stdout side effects. This narrow
-    strict-facade projection emits each successfully resolved source slice in
-    sorted event-date order, before any optional demeaning transformation.
+    strict-facade projection emits and returns each successfully resolved
+    source slice in sorted event-date order, before optional demeaning.
     """
 
     factor_copy = _performance._event_factor_copy(factor)
@@ -326,8 +327,12 @@ def _strict_print_common_start_return_slices(
             index=returns_copy.index,
         )
     demean_copy = _performance._event_factor_copy(demean_by) if demean_by is not None else None
+    all_returns: list[pd.Series | pd.DataFrame] = []
+    factor_index = cast("pd.MultiIndex", factor_copy.index)
+    date_values = factor_index.get_level_values("date")
+    asset_values = factor_index.get_level_values("asset")
 
-    for timestamp, group in factor_copy.groupby(level="date", observed=False, sort=True):
+    for timestamp in pd.Index(date_values).unique().sort_values():
         try:
             day_zero = returns_copy.index.get_loc(timestamp)
         except KeyError:
@@ -336,14 +341,32 @@ def _strict_print_common_start_return_slices(
             raise ValueError("returns index must map each factor date to one row")
         start = max(int(day_zero) - before, 0)
         stop = min(int(day_zero) + after + 1, len(returns_copy.index))
-        event_assets = pd.Index(group.index.get_level_values("asset")).unique()
-        demean_assets = (
-            _performance._event_assets_at(demean_copy, timestamp) if demean_copy is not None else pd.Index([])
-        )
-        all_assets = event_assets.append(demean_assets.difference(event_assets))
-        series = returns_copy.iloc[start:stop].loc[:, all_assets].copy()
+        equities = pd.Index(asset_values[date_values == timestamp])
+        if demean_copy is None:
+            demean_equities = pd.Index([])
+        else:
+            # Preserve the source's direct lookup before emitting stdout:
+            # missing event dates raise ``KeyError(timestamp)`` rather than
+            # being converted into the enhanced core's friendly empty error.
+            demean_slice = cast("Any", demean_copy.loc[cast("Any", timestamp)])
+            demean_index = cast("pd.Index", demean_slice.index)
+            demean_equities = demean_index.get_level_values("asset")
+        # Source uses a literal set/list union before printing. Besides its
+        # set-derived order, that intentionally removes the columns Index
+        # name; keep this stdout representation at the strict boundary.
+        equities_slice = list(set(equities) | set(demean_equities))
+        series = cast("pd.DataFrame", returns_copy.loc[returns_copy.index[start:stop], equities_slice].copy())
         series.index = pd.RangeIndex(start - int(day_zero), stop - int(day_zero))
         print("series = ", series)
+        if demean_copy is not None:
+            mean = series.loc[:, demean_equities].mean(axis=1)
+            series = series.loc[:, equities].sub(mean, axis=0)
+        if mean_by_date:
+            all_returns.append(series.mean(axis=1))
+        else:
+            all_returns.append(series)
+
+    return all_returns
 
 
 def common_start_returns(
@@ -369,14 +392,17 @@ def common_start_returns(
             event_dates = factor.index.get_level_values(0)
         if not event_dates.isin(returns.index).any():
             raise ValueError("No objects to concatenate")
-    _strict_print_common_start_return_slices(
+    source_slices = _strict_print_common_start_return_slices(
         factor,
         returns,
         before,
         after,
         cumulative=cumulative,
+        mean_by_date=mean_by_date,
         demean_by=demean_by,
     )
+    if isinstance(before, int) and isinstance(after, int) and (before < 0 or after < 0):
+        return pd.concat(source_slices, axis=1)
     return _performance.common_start_returns(
         factor,
         returns,
