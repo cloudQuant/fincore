@@ -10,6 +10,7 @@ from __future__ import annotations
 import importlib
 from typing import Any, cast
 
+import numpy as np
 import pandas as pd
 
 from fincore.alphalens._compat import export_deferred_functions
@@ -100,6 +101,10 @@ def _strict_factor_information_coefficient(
     copied = _performance._copy_factor_data(factor_data)
     columns = get_forward_returns_columns(copied.columns)
     if group_adjust:
+        # Source grouping resolves the requested column before it encounters
+        # the empty concat path, so keep the missing-column priority exact.
+        if "group" not in copied.columns:
+            raise KeyError("group")
         # Alphalens' source reaches ``pd.concat([])`` while constructing the
         # group-adjusted empty table. This is deliberately a strict-facade
         # error projection; the enhanced kernel remains profile-free.
@@ -107,7 +112,7 @@ def _strict_factor_information_coefficient(
             raise ValueError("No objects to concatenate")
         copied = _performance._demean_forward_returns(copied, by_group=True)
     if by_group and "group" not in copied.columns:
-        raise ValueError("factor_data must contain a 'group' column when by_group=True")
+        raise KeyError("group")
 
     try:
         stats = importlib.import_module("scipy.stats")
@@ -202,17 +207,14 @@ def _strict_factor_alpha_beta(
     else:
         raise TypeError("returns must be a pandas Series, DataFrame, or None")
 
-    # The pinned implementation begins with ``pd.DataFrame()`` and only
-    # materializes alpha/beta rows inside its period loop. Preserve its true
-    # empty shape when no period is supplied or discoverable.
-    if not len(forward_columns) or (isinstance(returns_frame, pd.DataFrame) and not len(returns_frame.columns)):
-        return pd.DataFrame()
-
     universe_returns = factor_data.groupby(level="date", observed=False, sort=True)[list(forward_columns)].mean()
     universe_returns = universe_returns.loc[returns_frame.index]
+    # The pinned implementation aligns explicit returns before its period loop.
+    # Only a successfully aligned zero-column DataFrame is a genuine 0x0
+    # result; do not swallow missing-date or supplied-period lookup errors.
+    if isinstance(returns_frame, pd.DataFrame) and not len(returns_frame.columns):
+        return pd.DataFrame()
     if isinstance(returns_frame, pd.Series):
-        if not len(universe_returns.columns):
-            raise ValueError("factor_data must contain at least one forward-return column")
         returns_frame.name = universe_returns.columns[0]
         returns_frame = returns_frame.to_frame()
 
@@ -253,9 +255,10 @@ def factor_alpha_beta(
 def cumulative_returns(returns: pd.Series) -> pd.Series:
     _reject_opaque("cumulative_returns", returns)
     result = _performance.cumulative_returns(returns)
-    if isinstance(result, pd.Series):
+    if isinstance(result, pd.Series) and len(result):
         # ``empyrical.cum_returns`` constructed a fresh Series in the pinned
-        # strict surface, so an input name is not part of the legacy result.
+        # strict surface for nonempty inputs, so their input name is not part
+        # of the legacy result. Its empty early-return instead preserves it.
         result = result.copy(deep=True)
         result.name = None
     return result  # type: ignore[return-value]
@@ -298,6 +301,51 @@ def factor_rank_autocorrelation(factor_data: pd.DataFrame, period: int = 1) -> p
     return _performance.factor_rank_autocorrelation(factor_data, period=period)
 
 
+def _strict_print_common_start_return_slices(
+    factor: pd.Series | pd.DataFrame,
+    returns: pd.DataFrame,
+    before: int,
+    after: int,
+    *,
+    cumulative: bool,
+    demean_by: pd.Series | pd.DataFrame | None,
+) -> None:
+    """Reproduce the pinned per-event ``print('series = ', series)`` trace.
+
+    The enhanced core deliberately has no stdout side effects. This narrow
+    strict-facade projection emits each successfully resolved source slice in
+    sorted event-date order, before any optional demeaning transformation.
+    """
+
+    factor_copy = _performance._event_factor_copy(factor)
+    returns_copy = returns.copy(deep=True)
+    returns_copy.index = pd.DatetimeIndex(returns_copy.index, name="date")
+    if not cumulative:
+        returns_copy = pd.DataFrame(
+            {column: _performance.cumulative_returns(returns_copy[column]) for column in returns_copy.columns},
+            index=returns_copy.index,
+        )
+    demean_copy = _performance._event_factor_copy(demean_by) if demean_by is not None else None
+
+    for timestamp, group in factor_copy.groupby(level="date", observed=False, sort=True):
+        try:
+            day_zero = returns_copy.index.get_loc(timestamp)
+        except KeyError:
+            continue
+        if not isinstance(day_zero, (int, np.integer)):
+            raise ValueError("returns index must map each factor date to one row")
+        start = max(int(day_zero) - before, 0)
+        stop = min(int(day_zero) + after + 1, len(returns_copy.index))
+        event_assets = pd.Index(group.index.get_level_values("asset")).unique()
+        demean_assets = (
+            _performance._event_assets_at(demean_copy, timestamp) if demean_copy is not None else pd.Index([])
+        )
+        all_assets = event_assets.append(demean_assets.difference(event_assets))
+        series = returns_copy.iloc[start:stop].loc[:, all_assets].copy()
+        series.index = pd.RangeIndex(start - int(day_zero), stop - int(day_zero))
+        print("series = ", series)
+
+
 def common_start_returns(
     factor: pd.Series | pd.DataFrame,
     returns: pd.DataFrame,
@@ -321,6 +369,14 @@ def common_start_returns(
             event_dates = factor.index.get_level_values(0)
         if not event_dates.isin(returns.index).any():
             raise ValueError("No objects to concatenate")
+    _strict_print_common_start_return_slices(
+        factor,
+        returns,
+        before,
+        after,
+        cumulative=cumulative,
+        demean_by=demean_by,
+    )
     return _performance.common_start_returns(
         factor,
         returns,

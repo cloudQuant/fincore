@@ -118,6 +118,21 @@ def test_cumulative_returns_projects_nan_as_a_zero_return() -> None:
     pd.testing.assert_series_equal(source, original)
 
 
+def test_strict_cumulative_returns_preserves_an_empty_named_series() -> None:
+    """Pinned empyrical returns its copy unchanged before compounding empties."""
+
+    source = pd.Series(
+        [],
+        index=pd.DatetimeIndex([], name="date"),
+        dtype=float,
+        name="factor_return",
+    )
+    original = source.copy(deep=True)
+
+    pd.testing.assert_series_equal(cumulative_returns(source), source)
+    pd.testing.assert_series_equal(source, original)
+
+
 _MEAN_RETURN_BY_QUANTILE_CASES = (
     # daily returns, literal factor matrix, bins, by_group, source means/errors
     (
@@ -523,6 +538,45 @@ def test_strict_alpha_beta_projects_empty_periods_to_the_pinned_empty_frame(
     )
 
 
+@pytest.mark.parametrize("returns_kind", ["dataframe", "series"])
+def test_strict_alpha_beta_does_not_swallow_explicit_returns_without_a_factor_period(
+    returns_kind: str,
+) -> None:
+    """Pinned source preserves its downstream lookup errors for explicit returns."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-05-01", periods=2, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    factor_data = pd.DataFrame({"factor": [1.0, 2.0, 1.0, 2.0]}, index=index)
+    if returns_kind == "dataframe":
+        returns: pd.DataFrame | pd.Series = pd.DataFrame({"1D": [0.01, 0.02]}, index=dates)
+        expected_error: type[Exception] = KeyError
+    else:
+        returns = pd.Series([0.01, 0.02], index=dates)
+        expected_error = IndexError
+
+    with pytest.raises(expected_error):
+        strict.factor_alpha_beta(factor_data, returns=returns)
+
+
+def test_strict_alpha_beta_aligns_zero_column_returns_before_empty_projection() -> None:
+    """Pinned source reaches ``.loc`` before returning a genuine empty frame."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-05-01", periods=2, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    factor_data = pd.DataFrame(
+        {"factor": [1.0, 2.0, 1.0, 2.0], "1D": [0.01, 0.02, 0.03, 0.04]},
+        index=index,
+    )
+    out_of_universe_returns = pd.DataFrame(index=pd.DatetimeIndex([pd.Timestamp("2024-06-01")], name="date"))
+
+    with pytest.raises(KeyError):
+        strict.factor_alpha_beta(factor_data, returns=out_of_universe_returns)
+
+
 @pytest.mark.parametrize("entrypoint", ["factor_information_coefficient", "mean_information_coefficient"])
 def test_strict_group_adjusted_empty_factor_data_projects_the_source_concat_error(entrypoint: str) -> None:
     """Pinned strict group adjustment errors instead of inventing an empty IC result."""
@@ -546,6 +600,42 @@ def test_strict_group_adjusted_empty_factor_data_projects_the_source_concat_erro
         getattr(strict, entrypoint)(factor_data, group_adjust=True)
 
 
+@pytest.mark.parametrize("entrypoint", ["factor_information_coefficient", "mean_information_coefficient"])
+def test_strict_group_adjusted_empty_factor_data_without_group_preserves_source_priority(entrypoint: str) -> None:
+    """A missing group column wins over the pinned empty-concatenation error."""
+
+    from fincore.alphalens import performance as strict
+
+    empty_index = pd.MultiIndex.from_arrays(
+        [pd.DatetimeIndex([], name="date"), pd.Index([], name="asset")],
+        names=("date", "asset"),
+    )
+    factor_data = pd.DataFrame(
+        {
+            "factor": pd.Series([], dtype=float, index=empty_index),
+            "1D": pd.Series([], dtype=float, index=empty_index),
+        },
+        index=empty_index,
+    )
+
+    with pytest.raises(KeyError, match="group"):
+        getattr(strict, entrypoint)(factor_data, group_adjust=True)
+
+
+@pytest.mark.parametrize("entrypoint", ["factor_information_coefficient", "mean_information_coefficient"])
+def test_strict_by_group_without_group_projects_the_source_keyerror(entrypoint: str) -> None:
+    """Pinned strict grouping looks up ``group`` instead of raising a custom error."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-05-01", periods=1, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    factor_data = pd.DataFrame({"factor": [1.0, 2.0], "1D": [0.01, 0.02]}, index=index)
+
+    with pytest.raises(KeyError, match="group"):
+        getattr(strict, entrypoint)(factor_data, by_group=True)
+
+
 def test_strict_common_start_returns_rejects_an_absent_event_calendar() -> None:
     """Pinned ``pd.concat([])`` projection remains distinct from enhanced empty output."""
 
@@ -562,3 +652,35 @@ def test_strict_common_start_returns_rejects_an_absent_event_calendar() -> None:
         enhanced.common_start_returns(factor, returns, before=1, after=1, cumulative=True),
         pd.DataFrame(index=pd.Index([-1, 0, 1])),
     )
+
+
+def test_strict_common_start_returns_emits_one_pinned_slice_per_resolved_event(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The strict facade retains the source's visible per-event ``series`` prints."""
+
+    from fincore.alphalens import performance as strict
+    from fincore.factor_analysis import performance as enhanced
+
+    dates = pd.date_range("2024-06-03", periods=4, freq="D", name="date")
+    factor = pd.Series(
+        [1.0, 1.0],
+        index=pd.MultiIndex.from_tuples([(dates[1], "A"), (dates[2], "A")], names=("date", "asset")),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03, 0.04]}, index=dates)
+    expected_windows: list[pd.DataFrame] = []
+    for day_zero in (1, 2):
+        window = returns.iloc[day_zero - 1 : day_zero + 2].loc[:, ["A"]].copy()
+        window.index = pd.RangeIndex(-1, 2)
+        expected_windows.append(window)
+    expected_stdout = "".join(f"series =  {window}\n" for window in expected_windows)
+
+    strict_actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
+    strict_stdout = capsys.readouterr().out
+    enhanced_actual = enhanced.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
+    enhanced_stdout = capsys.readouterr().out
+
+    pd.testing.assert_frame_equal(strict_actual, enhanced_actual)
+    assert strict_stdout == expected_stdout
+    assert strict_stdout.count("series = ") == 2
+    assert enhanced_stdout == ""
