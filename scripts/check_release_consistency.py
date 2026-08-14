@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -51,6 +52,7 @@ _BANNED_ARTIFACT_FRAGMENTS = (
 )
 _BANNED_ARTIFACT_SUFFIXES = (".ipynb", ".png")
 _CONTRIBUTOR_REQUIREMENT_ARTIFACTS = {"requirements.txt", "requirements-test.txt"}
+_PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
 _REQUIRED_RUNTIME_MODULES = {
     "fincore/alphalens/__init__.py",
     "fincore/alphalens/performance.py",
@@ -236,7 +238,7 @@ def _failures(dist_dir: Path | None) -> list[str]:
             )
             parsed = Requirement(req)
             check(
-                parsed.name not in {"alphalens", "empyrical"} and parsed.url is None,
+                canonicalize_name(parsed.name) not in _PROHIBITED_EXTERNAL_REQUIREMENTS and parsed.url is None,
                 f"extra {extra_name!r} uses only integrated compatibility code ({req!r})",
             )
 

@@ -13,7 +13,9 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
+import pytest
 from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
@@ -96,6 +98,16 @@ def _supported_source_requirements() -> list[tuple[str, str]]:
     return requirements
 
 
+def _assert_supported_requirement_is_integrated(source: str, raw: str) -> None:
+    """Reject external compatibility distributions in a supported input."""
+    assert "://" not in raw and not raw.lower().startswith("git+"), f"{source} installs from URL: {raw!r}"
+    requirement = Requirement(raw)
+    assert canonicalize_name(requirement.name) not in PROHIBITED_EXTERNAL_REQUIREMENTS, (
+        f"{source} installs an external compatibility package: {raw!r}"
+    )
+    assert requirement.url is None, f"{source} installs from URL: {raw!r}"
+
+
 def test_all_is_exact_normalized_union_of_functional_extras() -> None:
     """``all`` must equal the union of the functional extras, requirement-for-requirement."""
     extras = _extras()
@@ -114,12 +126,14 @@ def test_no_self_reference_in_any_extra() -> None:
 def test_supported_dependency_inputs_do_not_install_external_compatibility_packages_or_urls() -> None:
     """Contributor and distribution metadata never re-install integrated code."""
     for source, raw in _supported_source_requirements():
-        assert "://" not in raw and not raw.lower().startswith("git+"), f"{source} installs from URL: {raw!r}"
-        requirement = Requirement(raw)
-        assert requirement.name not in PROHIBITED_EXTERNAL_REQUIREMENTS, (
-            f"{source} installs an external compatibility package: {raw!r}"
-        )
-        assert requirement.url is None, f"{source} installs from URL: {raw!r}"
+        _assert_supported_requirement_is_integrated(source, raw)
+
+
+@pytest.mark.parametrize("raw", ("Empyrical>=1", "AlphaLens>=1"))
+def test_source_requirement_guard_rejects_mixed_case_external_names(raw: str) -> None:
+    """PEP 503 name variants cannot bypass the contributor/metadata guard."""
+    with pytest.raises(AssertionError, match="external compatibility package"):
+        _assert_supported_requirement_is_integrated("mixed-case fixture", raw)
 
 
 def test_all_excludes_dev_only_tools() -> None:

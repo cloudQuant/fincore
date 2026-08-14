@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
@@ -136,6 +137,13 @@ def _sdist_metadata(sdist: Path) -> email.message.Message:
         return email.message_from_bytes(tf.extractfile(pkg_info).read())  # type: ignore[union-attr]
 
 
+def _assert_metadata_requirement_is_integrated(raw: str) -> None:
+    """Reject external compatibility distributions in built package metadata."""
+    requirement = Requirement(raw)
+    assert canonicalize_name(requirement.name) not in PROHIBITED_EXTERNAL_REQUIREMENTS, raw
+    assert requirement.url is None, raw
+
+
 # ---------------------------------------------------------------------------
 # Artifact layout
 # ---------------------------------------------------------------------------
@@ -226,9 +234,14 @@ def test_distribution_metadata_has_no_external_compatibility_requirements_or_url
     """Built METADATA/PKG-INFO cannot pull an external Alphalens/Empyrical."""
     metadata = _metadata(wheel_path) if artifact == "wheel" else _sdist_metadata(sdist_path)
     for raw in metadata.get_all("Requires-Dist", []):
-        requirement = Requirement(raw)
-        assert requirement.name not in PROHIBITED_EXTERNAL_REQUIREMENTS, raw
-        assert requirement.url is None, raw
+        _assert_metadata_requirement_is_integrated(raw)
+
+
+@pytest.mark.parametrize("raw", ("Empyrical>=1", "AlphaLens>=1"))
+def test_wheel_metadata_guard_rejects_mixed_case_external_names(raw: str) -> None:
+    """PEP 503 name variants cannot bypass the wheel metadata guard."""
+    with pytest.raises(AssertionError, match=raw):
+        _assert_metadata_requirement_is_integrated(raw)
 
 
 def test_metadata_classifier_is_beta_not_production(wheel_path: Path) -> None:
