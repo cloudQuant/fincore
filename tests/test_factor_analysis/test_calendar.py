@@ -129,3 +129,50 @@ def test_calendar_difference_accepts_timezone_aware_endpoints_without_numpy_pars
         )
     assert result == pd.Timedelta("1D")
     assert not any(item.category is DeprecationWarning for item in recorded)
+
+
+def test_calendar_difference_uses_local_wall_dates_and_inverts_calendar_addition() -> None:
+    """Timezone-aware business days are counted in their local calendar, not UTC dates."""
+
+    from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, diff_custom_calendar_timedeltas
+
+    shanghai_start = pd.Timestamp("2024-01-05 00:30", tz="Asia/Shanghai")
+    shanghai_end = pd.Timestamp("2024-01-08 00:30", tz="Asia/Shanghai")
+    assert diff_custom_calendar_timedeltas(shanghai_start, shanghai_end, BusinessDay()) == pd.Timedelta("1D")
+
+    # The Friday immediately before the DST fallback keeps the local Friday ->
+    # Saturday half-open business-day count even though both UTC endpoints are
+    # Saturday.  This detects accidental UTC-date conversion for negative offsets.
+    new_york_start = pd.Timestamp("2024-11-01 23:30", tz="America/New_York")
+    new_york_end = pd.Timestamp("2024-11-02 00:30", tz="America/New_York")
+    assert diff_custom_calendar_timedeltas(new_york_start, new_york_end, BusinessDay()) == pd.Timedelta("1D 1h")
+
+    start = pd.Timestamp("2024-01-10 09:30", tz="America/New_York")
+    for delta in (pd.Timedelta("1D"), pd.Timedelta("-1D")):
+        end = add_custom_calendar_timedelta(start, delta, BusinessDay())
+        assert diff_custom_calendar_timedeltas(start, end, BusinessDay()) == delta
+
+
+def test_backshift_preserves_unnamed_unused_level_positions() -> None:
+    """Backshifting uses MultiIndex codes, including unobserved date and asset levels."""
+
+    from fincore.factor_analysis.calendar import backshift_returns_series
+
+    dates = pd.DatetimeIndex(("2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04"))
+    assets = pd.Index(("A", "B", "UNUSED"))
+    index = pd.MultiIndex(
+        levels=(dates, assets),
+        codes=((1, 1, 3), (0, 1, 1)),
+        names=(None, None),
+    )
+    returns = pd.Series((0.1, 0.2, 0.4), index=index, name="1D")
+    expected_index = pd.MultiIndex(
+        levels=(dates[:-1], assets),
+        codes=((0, 0, 2), (0, 1, 1)),
+        names=(None, None),
+    )
+
+    shifted = backshift_returns_series(returns, 1)
+    pd.testing.assert_series_equal(shifted, pd.Series((0.1, 0.2, 0.4), index=expected_index, name="1D"))
+    pd.testing.assert_index_equal(shifted.index.levels[0], dates[:-1])
+    pd.testing.assert_index_equal(shifted.index.levels[1], assets)

@@ -128,6 +128,41 @@ def test_forward_returns_reject_timezone_mismatch_and_preserve_inputs() -> None:
     pd.testing.assert_frame_equal(prices, prices_before)
 
 
+def test_strict_forward_returns_pad_missing_factor_assets_like_pinned_prices_filter() -> None:
+    """Missing price columns become aligned all-NaN rows on the strict source-visible path."""
+
+    from fincore.alphalens import utils
+
+    dates = pd.date_range("2024-01-02", periods=4, name="date")
+    index = pd.MultiIndex.from_product((dates[:2], ("A", "MISSING")), names=("date", "asset"))
+    factor = pd.Series((1.0, 2.0, 3.0, 4.0), index=index, name="factor")
+    prices = pd.DataFrame({"A": (10.0, 11.0, 12.0, 13.0)}, index=dates)
+    factor_before = factor.copy(deep=True)
+    prices_before = prices.copy(deep=True)
+
+    expected = pd.DataFrame(
+        {"1D": (0.1, np.nan, 1.0 / 11.0, np.nan)},
+        index=index,
+    )
+    actual = utils.compute_forward_returns(factor, prices, periods=(1,))
+    pd.testing.assert_frame_equal(actual, expected)
+
+    cleaned = utils.get_clean_factor_and_forward_returns(
+        factor,
+        prices,
+        periods=(1,),
+        quantiles=None,
+        bins=1,
+        max_loss=1,
+    )
+    pd.testing.assert_index_equal(
+        cleaned.index, pd.MultiIndex.from_tuples(((dates[0], "A"), (dates[1], "A")), names=("date", "asset"))
+    )
+    pd.testing.assert_series_equal(cleaned["1D"], expected.loc[(slice(None), "A"), "1D"], check_names=False)
+    pd.testing.assert_series_equal(factor, factor_before)
+    pd.testing.assert_frame_equal(prices, prices_before)
+
+
 def test_forward_returns_support_intraday_labels_and_zscore_filtering() -> None:
     """Intraday session spacing produces canonical labels and optional filtering."""
 

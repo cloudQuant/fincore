@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from numbers import Real
-from typing import TYPE_CHECKING, Any, NoReturn, cast
+from typing import Any, Mapping, NoReturn, Sequence, cast
 
 import numpy as np
 import pandas as pd
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
 
 from fincore.alphalens._compat import export_deferred_functions
 from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
@@ -173,6 +170,29 @@ def _strict_empty_factor_projection(
     return result
 
 
+def _strict_prices_for_factor(factor: object, prices: object) -> object:
+    """Pad only strict-facade missing assets to mirror ``prices.filter``.
+
+    The enhanced kernel deliberately rejects missing price columns.  Pinned
+    Alphalens instead filters the price table and later reindexes back to the
+    factor index, leaving each unavailable asset's forward-return rows as
+    ``NaN``.  A copied all-NaN column recreates that adapter-only projection
+    while keeping caller data and enhanced validation unchanged.
+    """
+
+    if not isinstance(factor, pd.Series) or not isinstance(factor.index, pd.MultiIndex):
+        return prices
+    if factor.index.nlevels != 2 or not isinstance(prices, pd.DataFrame):
+        return prices
+    missing = pd.Index(factor.index.levels[1]).difference(prices.columns)
+    if missing.empty:
+        return prices
+    padded = prices.copy(deep=True)
+    for asset in missing:
+        padded[asset] = np.nan
+    return padded
+
+
 def add_custom_calendar_timedelta(input: object, timedelta: object, freq: object) -> pd.Timestamp | pd.DatetimeIndex:
     _reject_opaque("add_custom_calendar_timedelta", input, timedelta, freq)
     return _calendar.add_custom_calendar_timedelta(input, timedelta, freq)  # type: ignore[arg-type]
@@ -194,7 +214,7 @@ def compute_forward_returns(
     try:
         return _data.compute_forward_returns(
             factor,
-            prices,
+            _strict_prices_for_factor(factor, prices),  # type: ignore[arg-type]
             periods=periods,
             filter_zscore=filter_zscore,
             cumulative_returns=cumulative_returns,

@@ -158,7 +158,10 @@ def compute_forward_returns(
     selected_prices = cast("pd.DataFrame", prices_copy.reindex(columns=assets))
     labels: list[str] = []
     raw_values: dict[str, np.ndarray] = {}
-    for raw_period in sorted({int(period) for period in periods}):
+    # Preserve duplicate source periods.  The pinned strict API forms its
+    # output from a unique value table and then selects the original ordered
+    # label list, which intentionally produces duplicate visible columns.
+    for raw_period in sorted(int(period) for period in periods):
         base_returns = selected_prices.pct_change(raw_period if cumulative_returns else 1, fill_method=None)
         forward = base_returns.shift(-raw_period).reindex(shared_dates)
         if filter_zscore is not None:
@@ -168,8 +171,6 @@ def compute_forward_returns(
             standard_deviation = forward.std(axis=0)
             forward = forward.mask((forward.sub(mean)).abs() > float(filter_zscore) * standard_deviation, np.nan)
         label = _period_label(prices_index, shared_dates, raw_period, calendar)
-        if label in raw_values:
-            raise ValueError(f"periods produce duplicate forward-return label {label!r}")
         labels.append(label)
         raw_values[label] = forward.to_numpy().reshape(-1)
 
@@ -239,7 +240,9 @@ def quantize_factor(
     groupers: list[Any] = [data.index.get_level_values("date")]
     if by_group:
         groupers.append(data["group"])
-    result = data.groupby(groupers, observed=False, group_keys=False, sort=False)["factor"].apply(
+    # ``sort=True`` is the pinned/default grouping behavior and avoids the
+    # pandas 3 concat failure for a date-interleaved MultiIndex.
+    result = data.groupby(groupers, observed=False, group_keys=False, sort=True)["factor"].apply(
         _quantile_calculation,
         quantiles=quantiles,
         bins=bins,

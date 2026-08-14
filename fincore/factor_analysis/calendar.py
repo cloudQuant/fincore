@@ -89,9 +89,15 @@ def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd
     # source.  Its [start, end) treatment is significant for off-session
     # endpoints (for example Saturday -> Monday), and unlike date_range does
     # not accidentally count a closed endpoint as a session.
+    # A trading calendar is defined by local wall dates.  ``to_datetime64``
+    # converts aware timestamps to UTC, which can shift a Friday/Saturday
+    # boundary for positive or negative offsets.  Drop only the timezone
+    # metadata before asking NumPy to count local calendar days.
+    local_start = start_timestamp.tz_localize(None) if start_timestamp.tz is not None else start_timestamp
+    local_end = end_timestamp.tz_localize(None) if end_timestamp.tz is not None else end_timestamp
     actual_days = np.busday_count(
-        start_timestamp.to_datetime64().astype("datetime64[D]"),
-        end_timestamp.to_datetime64().astype("datetime64[D]"),
+        local_start.to_datetime64().astype("datetime64[D]"),
+        local_end.to_datetime64().astype("datetime64[D]"),
         weekmask=cast("str", weekmask),
         holidays=cast("Any", holidays),
     )
@@ -149,17 +155,28 @@ def backshift_returns_series(series: pd.Series, N: int) -> pd.Series:
         raise ValueError("series must use a two-level MultiIndex")
     if not isinstance(N, int) or N <= 0:
         raise ValueError("N must be a positive integer")
-    dates = pd.DatetimeIndex(series.index.get_level_values(0).unique()).sort_values()
-    if len(dates) <= N:
-        return series.iloc[0:0].copy()
-    mapping = {date: dates[position - N] for position, date in enumerate(dates) if position >= N}
-    frame: pd.DataFrame = series.to_frame(name="_value").reset_index()
-    date_name, asset_name = series.index.names
-    frame = frame[frame[date_name].isin(mapping)].copy()
-    frame[date_name] = frame[date_name].map(mapping)
-    shifted = cast("pd.Series", frame.set_index([date_name, asset_name])["_value"])
-    shifted.name = series.name
-    return shifted
+    index = series.index
+    date_levels, asset_levels = index.levels
+    date_codes, asset_codes = (np.asarray(codes) for codes in index.codes)
+    if len(date_levels) <= N:
+        empty_index = pd.MultiIndex(
+            levels=cast("Any", (date_levels[:0], asset_levels)),
+            codes=cast("Any", (np.asarray([], dtype=int), np.asarray([], dtype=int))),
+            names=index.names,
+            verify_integrity=False,
+        )
+        return pd.Series(index=empty_index, dtype=series.dtype, name=series.name)
+
+    # Shift level *positions*, not observed values.  This keeps gaps and
+    # unused levels intact and also works when level names are ``None``.
+    retained = date_codes >= N
+    shifted_index = pd.MultiIndex(
+        levels=cast("Any", (date_levels[:-N], asset_levels)),
+        codes=cast("Any", (date_codes[retained] - N, asset_codes[retained])),
+        names=index.names,
+        verify_integrity=False,
+    )
+    return pd.Series(series.to_numpy(copy=True)[retained], index=shifted_index, name=series.name)
 
 
 __all__ = [

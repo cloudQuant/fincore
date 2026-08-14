@@ -79,3 +79,60 @@ def test_prepare_factor_data_handles_group_mapping_labels_and_all_nan_factor() -
 
     with pytest.raises(ValueError, match="finite"):
         prepare_factor_data(factor * np.nan, prices, periods=(1,))
+
+
+def test_interleaved_factor_dates_quantize_and_prepare_without_mutating_inputs() -> None:
+    """Pandas 3 accepts a date-interleaved factor index through both Task 3 APIs."""
+
+    from fincore.alphalens import utils
+    from fincore.factor_analysis.data import prepare_factor_data, quantize_factor
+
+    dates = pd.DatetimeIndex(("2024-01-03", "2024-01-02"), name="date")
+    index = pd.MultiIndex.from_tuples(
+        ((dates[0], "B"), (dates[1], "A"), (dates[0], "A"), (dates[1], "B")),
+        names=("date", "asset"),
+    )
+    factor = pd.Series((4.0, 1.0, 3.0, 2.0), index=index, name="factor")
+    factor_data = pd.DataFrame({"factor": factor})
+    prices = pd.DataFrame(
+        {"A": (10.0, 11.0, 12.0, 13.0), "B": (20.0, 19.0, 21.0, 22.0)},
+        index=pd.date_range("2024-01-02", periods=4, name="date"),
+    )
+    factor_before = factor.copy(deep=True)
+    factor_data_before = factor_data.copy(deep=True)
+    prices_before = prices.copy(deep=True)
+
+    expected_quantiles = pd.Series((2, 1, 1, 2), index=index, name="factor_quantile").sort_index()
+    enhanced_quantiles = quantize_factor(factor_data, quantiles=2)
+    strict_quantiles = utils.quantize_factor(factor_data, quantiles=2)
+    pd.testing.assert_series_equal(enhanced_quantiles.sort_index(), expected_quantiles)
+    pd.testing.assert_series_equal(strict_quantiles.sort_index(), expected_quantiles)
+
+    prepared = prepare_factor_data(factor, prices, periods=(1,), quantiles=2, max_loss=1)
+    assert set(prepared.data["factor_quantile"].astype(int)) == {1, 2}
+    pd.testing.assert_series_equal(factor, factor_before)
+    pd.testing.assert_frame_equal(factor_data, factor_data_before)
+    pd.testing.assert_frame_equal(prices, prices_before)
+
+
+def test_forward_returns_preserve_duplicate_period_columns() -> None:
+    """Duplicate source periods remain duplicate ordered columns instead of being deduplicated."""
+
+    from fincore.alphalens import utils
+    from fincore.factor_analysis.data import compute_forward_returns
+
+    dates = pd.date_range("2024-01-02", periods=4, name="date")
+    factor = pd.Series(
+        (1.0, 2.0),
+        index=pd.MultiIndex.from_product((dates[:2], ("A",)), names=("date", "asset")),
+        name="factor",
+    )
+    prices = pd.DataFrame({"A": (10.0, 11.0, 12.0, 13.0)}, index=dates)
+    expected = pd.DataFrame(
+        ((0.1, 0.1), (1.0 / 11.0, 1.0 / 11.0)),
+        index=factor.index,
+        columns=pd.Index(("1D", "1D")),
+    )
+
+    pd.testing.assert_frame_equal(compute_forward_returns(factor, prices, periods=(1, 1)), expected)
+    pd.testing.assert_frame_equal(utils.compute_forward_returns(factor, prices, periods=(1, 1)), expected)

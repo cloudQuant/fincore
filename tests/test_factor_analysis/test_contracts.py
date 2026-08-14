@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import typing
 
 import numpy as np
 import pandas as pd
@@ -66,6 +67,17 @@ def test_clean_factor_fixture_is_real_and_returns_mutation_isolated(clean_factor
     from tests.compat.alphalens.conftest import _shared_clean_factor_data
 
     assert _shared_clean_factor_data().iloc[0, 0] == original
+
+
+def test_strict_utils_runtime_type_hints_resolve_public_collection_annotations() -> None:
+    """Postponed facade annotations remain resolvable by runtime contract tooling."""
+
+    from fincore.alphalens import utils
+
+    for function in (utils.compute_forward_returns, utils.get_clean_factor, utils.get_clean_factor_and_forward_returns):
+        hints = typing.get_type_hints(function)
+        assert "factor" in hints
+        assert "return" in hints
 
 
 def _all_nan_factor_inputs() -> tuple[pd.Series, pd.DataFrame, pd.DataFrame]:
