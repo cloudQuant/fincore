@@ -780,10 +780,10 @@ def test_strict_common_start_returns_preserves_pinned_signed_windows(
         enhanced.common_start_returns(factor, returns, before=before, after=after, cumulative=True)
 
 
-def test_strict_common_start_returns_projects_source_columns_name_without_demean(
+def test_strict_common_start_returns_preserves_caller_columns_name_without_demean(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Pinned list/set selection leaves normal event-return columns unnamed."""
+    """Pinned source selection retains the caller-provided columns metadata."""
 
     from fincore.alphalens import performance as strict
 
@@ -793,14 +793,45 @@ def test_strict_common_start_returns_projects_source_columns_name_without_demean
         index=pd.MultiIndex.from_tuples([(dates[1], "A")], names=("date", "asset")),
     )
     returns = pd.DataFrame({"A": [0.01, 0.02, 0.03]}, index=dates)
+    returns.columns = returns.columns.rename("ticker")
     expected = returns.iloc[0:3].loc[:, ["A"]].copy()
     expected.index = pd.RangeIndex(-1, 2)
-    expected.columns = expected.columns.rename(None)
 
     actual = strict.common_start_returns(factor, returns, before=1, after=1, cumulative=True)
 
     pd.testing.assert_frame_equal(actual, expected)
     assert capsys.readouterr().out == f"series =  {expected}\n"
+
+
+@pytest.mark.parametrize("before", [1, np.int64(1)], ids=("python-int", "numpy-int64"))
+def test_strict_common_start_returns_preserves_raw_concat_index_order(
+    before: int | np.integer[object],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Pinned ``pd.concat`` retains the first truncated event window's row order."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-06-03", periods=4, freq="D", name="date")
+    factor = pd.Series(
+        [1.0, 1.0],
+        index=pd.MultiIndex.from_tuples(
+            [(dates[0], "A"), (dates[2], "A")],
+            names=("date", "asset"),
+        ),
+    )
+    returns = pd.DataFrame({"A": [0.01, 0.02, 0.03, 0.04]}, index=dates)
+    first = returns.iloc[0:2].loc[:, ["A"]].copy()
+    first.index = pd.RangeIndex(0, 2)
+    second = returns.iloc[1:4].loc[:, ["A"]].copy()
+    second.index = pd.RangeIndex(-1, 2)
+    expected = pd.concat([first, second], axis=1)
+    pd.testing.assert_index_equal(expected.index, pd.Index([0, 1, -1]))
+
+    actual = strict.common_start_returns(factor, returns, before=before, after=1, cumulative=True)
+
+    pd.testing.assert_frame_equal(actual, expected)
+    assert capsys.readouterr().out == f"series =  {first}\nseries =  {second}\n"
 
 
 @pytest.mark.parametrize("cumulative", [True, False], ids=("cumulative", "compound-first"))

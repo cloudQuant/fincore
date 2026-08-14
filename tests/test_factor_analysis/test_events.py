@@ -316,7 +316,12 @@ def test_common_start_returns_upstream_case(source_case_id: str) -> None:
         demean_by=source if demeaned else None,
     )
     strict_summary = pd.DataFrame({"mean": strict_actual.mean(axis=1), "std": strict_actual.std(axis=1)})
-    pd.testing.assert_frame_equal(strict_summary, expected, rtol=1e-5, atol=1e-7)
+    # Pinned ``pd.concat`` preserves the first truncated event window's row
+    # order.  Reindex the frozen per-offset values to that raw source order;
+    # a dedicated strict-facade regression asserts the concrete non-monotonic
+    # ordering instead of normalizing the production result.
+    strict_expected = expected.reindex(strict_summary.index)
+    pd.testing.assert_frame_equal(strict_summary, strict_expected, rtol=1e-5, atol=1e-7)
     pd.testing.assert_series_equal(source, original_source)
     pd.testing.assert_frame_equal(returns, original_returns)
 
