@@ -461,9 +461,10 @@ def _strict_factor_data_level_names(factor_data: object) -> tuple[object, object
 
     The enhanced kernel intentionally canonicalizes a two-level input to
     ``("date", "asset")``.  Pinned Alphalens instead uses its first level by
-    the literal ``"date"`` name, so a missing or renamed first level fails
-    before any computation.  Its second-level name is not prescribed and
-    flows through ``unstack`` into strict position columns.
+    the literal ``"date"`` name at the weight-building boundary, so a missing
+    or renamed first level must fail before the enhanced numerical core.  Its
+    second-level name is not prescribed and flows through ``unstack`` into
+    strict position columns.
     """
 
     if not isinstance(factor_data, pd.DataFrame):
@@ -534,6 +535,11 @@ def _strict_validate_portfolio_weight_path(
 
     _strict_require_portfolio_period(factor_data, period)
     filtered = _strict_filter_portfolio_data(factor_data, quantiles=quantiles, groups=groups)
+    # Pinned ``factor_weights`` resolves the date level only after the period
+    # and optional filters, and before its group-neutral grouper.  Keeping the
+    # check here protects that source-visible error priority while still
+    # running before the enhanced kernel canonicalizes index names.
+    _strict_factor_data_level_names(factor_data)
     if group_neutral and isinstance(filtered, pd.DataFrame) and "group" not in filtered.columns:
         # ``factor_weights`` constructs the group grouper only after filters.
         raise KeyError("group")
@@ -612,7 +618,6 @@ def factor_cumulative_returns(
     """Return the source-projected cumulative factor portfolio curve."""
 
     _reject_opaque("factor_cumulative_returns", factor_data)
-    _strict_factor_data_level_names(factor_data)
     _strict_validate_cumulative_return_path(
         factor_data,
         period,
@@ -649,7 +654,6 @@ def factor_positions(
     """Project simulated factor positions through the strict facade."""
 
     _reject_opaque("factor_positions", factor_data)
-    level_names = _strict_factor_data_level_names(factor_data)
     _strict_validate_position_path(
         factor_data,
         period,
@@ -657,6 +661,7 @@ def factor_positions(
         quantiles=quantiles,
         groups=groups,
     )
+    level_names = _strict_factor_data_level_names(factor_data)
     result = _portfolio.factor_positions(
         factor_data,
         period,
@@ -690,7 +695,6 @@ def create_pyfolio_input(
     """Return the strict legacy 3-tuple from the enhanced typed bridge."""
 
     _reject_opaque("create_pyfolio_input", factor_data)
-    level_names = _strict_factor_data_level_names(factor_data)
     # The source builds returns first, then positions, and only then the
     # optional benchmark.  Keep that exact error priority rather than applying
     # facade-wide duplicate/group checks before the source paths run.
@@ -708,6 +712,7 @@ def create_pyfolio_input(
         quantiles=quantiles,
         groups=groups,
     )
+    level_names = _strict_factor_data_level_names(factor_data)
     _strict_reject_duplicate_return_period(factor_data, benchmark_period)
     output = _portfolio.create_pyfolio_input(
         factor_data,

@@ -305,6 +305,25 @@ def test_strict_factor_portfolio_positions_preserve_the_source_asset_level_name(
     "function_name",
     ["factor_cumulative_returns", "factor_positions", "create_pyfolio_input"],
 )
+def test_strict_factor_date_level_validation_keeps_period_and_filter_priority(function_name: str) -> None:
+    """The new date-name gate must not preempt earlier pinned source accesses."""
+
+    strict = getattr(strict_performance, function_name)
+    source = _strict_factor_data()
+    source.index = source.index.set_names(("when", "symbol"))
+
+    with pytest.raises(ValueError, match=re.escape("Period 'missing' not found")):
+        strict(source, "missing")
+
+    missing_quantile = source.drop(columns="factor_quantile")
+    with pytest.raises(KeyError, match=re.escape("'factor_quantile'")):
+        strict(missing_quantile, "1D", quantiles=[1])
+
+
+@pytest.mark.parametrize(
+    "function_name",
+    ["factor_cumulative_returns", "factor_positions", "create_pyfolio_input"],
+)
 def test_strict_source_validation_orders_filters_and_group_before_duplicate_main_period(function_name: str) -> None:
     """Strict prechecks must follow the source call path rather than global rules."""
 
