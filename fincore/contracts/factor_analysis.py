@@ -371,12 +371,32 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ("utils", "timedelta_strings_to_integers"),
             ("utils", "timedelta_to_string"),
         }
+        task_4_performance = key in {
+            ("performance", "average_cumulative_return_by_quantile"),
+            ("performance", "common_start_returns"),
+            ("performance", "compute_mean_returns_spread"),
+            ("performance", "cumulative_returns"),
+            ("performance", "factor_alpha_beta"),
+            ("performance", "factor_information_coefficient"),
+            ("performance", "factor_rank_autocorrelation"),
+            ("performance", "factor_returns"),
+            ("performance", "factor_weights"),
+            ("performance", "mean_information_coefficient"),
+            ("performance", "mean_return_by_quantile"),
+            ("performance", "quantile_turnover"),
+        }
         specs[key] = FactorFunctionSpec(
             module=module,
             public_name=name,
             source_signature=_signature_from_static_text(source_text),
             introspection_signature=_signature_from_static_text(introspection_text or source_text),
-            implementation="factor_analysis_task_3_kernel" if task_3_utility else "deferred_task_2_kernel",
+            implementation=(
+                "factor_analysis_task_3_kernel"
+                if task_3_utility
+                else "factor_analysis_task_4_kernel"
+                if task_4_performance
+                else "deferred_task_2_kernel"
+            ),
             profile="legacy_alphalens_cloudquant_0_4_0",
             optional_extra=(
                 "factor-analysis"
@@ -387,7 +407,9 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ),
             adapter=adapter,
             result_projection=(
-                "strict_alphalens_data_projection" if task_3_utility else "not_implemented_until_task_3_4_or_8"
+                "strict_alphalens_data_projection"
+                if task_3_utility or task_4_performance
+                else "not_implemented_until_task_3_4_or_8"
             ),
         )
     if len(specs) != 61:
