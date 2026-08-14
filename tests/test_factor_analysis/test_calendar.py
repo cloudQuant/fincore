@@ -175,6 +175,156 @@ def test_calendar_diff_uses_wall_clock_remainder_across_new_york_dst(
         assert diff_custom_calendar_timedeltas(start, end, frequency) == expected
 
 
+@pytest.mark.parametrize(
+    ("start", "delta", "expected_end", "frequency"),
+    [
+        pytest.param(
+            pd.Timestamp("2024-03-08 09:30", tz="America/New_York"),
+            pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-03-11 11:30", tz="America/New_York"),
+            BusinessDay(),
+            id="spring-forward-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-03-11 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-03-08 09:30", tz="America/New_York"),
+            BusinessDay(),
+            id="spring-backward-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-11-01 09:30", tz="America/New_York"),
+            pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-11-04 11:30", tz="America/New_York"),
+            BusinessDay(),
+            id="fall-forward-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-11-04 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-11-01 09:30", tz="America/New_York"),
+            BusinessDay(),
+            id="fall-backward-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-03-08 09:30", tz="America/New_York"),
+            pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-03-12 11:30", tz="America/New_York"),
+            CustomBusinessDay(holidays=(pd.Timestamp("2024-03-11"),)),
+            id="spring-forward-custom-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-03-11 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-03-07 09:30", tz="America/New_York"),
+            CustomBusinessDay(holidays=(pd.Timestamp("2024-03-07"),)),
+            id="spring-backward-custom-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-11-01 09:30", tz="America/New_York"),
+            pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-11-05 11:30", tz="America/New_York"),
+            CustomBusinessDay(holidays=(pd.Timestamp("2024-11-04"),)),
+            id="fall-forward-custom-bday",
+        ),
+        pytest.param(
+            pd.Timestamp("2024-11-04 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-10-31 09:30", tz="America/New_York"),
+            CustomBusinessDay(holidays=(pd.Timestamp("2024-10-31"),)),
+            id="fall-backward-custom-bday",
+        ),
+    ],
+)
+def test_timezone_aware_calendar_add_and_diff_are_inverses_across_new_york_dst(
+    start: pd.Timestamp,
+    delta: pd.Timedelta,
+    expected_end: pd.Timestamp,
+    frequency: BusinessDay | CustomBusinessDay,
+) -> None:
+    """Enhanced aware-calendar calls preserve local wall-clock add/diff inverses.
+
+    This deliberate inverse contract differs from the pinned naive endpoint
+    matrix above, which retains its source half-open ``busday_count`` result.
+    """
+
+    from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, diff_custom_calendar_timedeltas
+
+    end = add_custom_calendar_timedelta(start, delta, frequency)
+    assert end == expected_end
+    assert diff_custom_calendar_timedeltas(start, end, frequency) == delta
+
+
+@pytest.mark.parametrize(
+    ("start", "delta", "expected_end"),
+    [
+        (
+            pd.Timestamp("2024-01-08 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-01-05 09:30", tz="America/New_York"),
+        ),
+        (
+            pd.Timestamp("2024-01-06 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D 2h"),
+            pd.Timestamp("2024-01-05 09:30", tz="America/New_York"),
+        ),
+        (
+            pd.Timestamp("2024-01-08 11:30", tz="America/New_York"),
+            -pd.Timedelta("1D"),
+            pd.Timestamp("2024-01-05 11:30", tz="America/New_York"),
+        ),
+        (
+            pd.Timestamp("2024-01-08 11:30", tz="America/New_York"),
+            -pd.Timedelta("2h"),
+            pd.Timestamp("2024-01-06 09:30", tz="America/New_York"),
+        ),
+    ],
+    ids=("weekday-negative-remainder", "weekend-start", "exact-negative-day", "normalized-negative-subday"),
+)
+def test_timezone_aware_negative_calendar_deltas_are_inverses_away_from_dst(
+    start: pd.Timestamp, delta: pd.Timedelta, expected_end: pd.Timestamp
+) -> None:
+    """The aware inverse rule covers sessions, off-sessions, and normalized negatives."""
+
+    from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, diff_custom_calendar_timedeltas
+
+    for frequency in (BusinessDay(), CustomBusinessDay(holidays=(pd.Timestamp("2024-01-24"),))):
+        end = add_custom_calendar_timedelta(start, delta, frequency)
+        assert end == expected_end
+        assert diff_custom_calendar_timedeltas(start, end, frequency) == delta
+
+
+def test_naive_negative_endpoint_retains_pinned_half_open_busday_semantics() -> None:
+    """The aware add/diff inverse projection never changes the strict naive oracle."""
+
+    from fincore.factor_analysis.calendar import diff_custom_calendar_timedeltas
+
+    start = pd.Timestamp("2024-01-08 11:30")
+    end = pd.Timestamp("2024-01-05 09:30")
+    expected = _pinned_busday_difference(start, end, BusinessDay())
+    assert expected == -pd.Timedelta("2h")
+    assert diff_custom_calendar_timedeltas(start, end, BusinessDay()) == expected
+
+
+@pytest.mark.parametrize(
+    "frequency",
+    (BusinessDay(), CustomBusinessDay(holidays=(pd.Timestamp("2024-01-15"),))),
+    ids=("business-day", "custom-business-day"),
+)
+def test_aware_off_session_forward_offset_ambiguity_keeps_half_open_projection(
+    frequency: BusinessDay | CustomBusinessDay,
+) -> None:
+    """Non-injective forward offsets never cause the negative inverse branch to guess."""
+
+    from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, diff_custom_calendar_timedeltas
+
+    start = pd.Timestamp("2024-01-06 11:30", tz="America/New_York")  # Saturday
+    end = pd.Timestamp("2024-01-08 11:30", tz="America/New_York")  # Monday
+    assert add_custom_calendar_timedelta(start, pd.Timedelta(0), frequency) == end
+    assert add_custom_calendar_timedelta(start, pd.Timedelta("1D"), frequency) == end
+    assert diff_custom_calendar_timedeltas(start, end, frequency) == pd.Timedelta(0)
+
+
 def test_backshift_preserves_unnamed_unused_level_positions() -> None:
     """Backshifting uses MultiIndex codes, including unobserved date and asset levels."""
 

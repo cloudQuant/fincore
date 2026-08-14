@@ -71,6 +71,41 @@ def add_custom_calendar_timedelta(
     return input + offset * whole_days + remainder
 
 
+def _negative_aware_calendar_inverse(
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    offset: BusinessDay | CustomBusinessDay,
+    local_end: pd.Timestamp,
+    busday_count: int,
+) -> pd.Timedelta | None:
+    """Recover a normalized negative add delta for same-zone aware endpoints.
+
+    ``Timedelta.components`` represents a negative value with a negative
+    whole-day component and a non-negative remainder.  Adding that remainder
+    can move the calendar-offset anchor into the next local date, while NumPy's
+    half-open reverse count sees one fewer business day.  The only possible
+    normalized candidates are the half-open count and up to two preceding
+    offsets: one for the negative local remainder and one for an off-session
+    ``DateOffset(0)`` roll-forward.  Accept exactly one public-add
+    reconstruction, never an arbitrary nearby date.  The bounded choice
+    preserves the pinned naive half-open semantics because it applies only to
+    same-zone aware endpoints.
+    """
+
+    if start.tz is None or end.tz is None or start.tz != end.tz or end >= start:
+        return None
+    candidates: list[pd.Timedelta] = []
+    for whole_days in range(busday_count - 2, busday_count + 1):
+        anchor = start + offset * whole_days
+        local_anchor = anchor.tz_localize(None)
+        remainder = local_end - local_anchor
+        if not pd.Timedelta(0) <= remainder < pd.Timedelta(days=1):
+            continue
+        if anchor + remainder == end:
+            candidates.append(pd.Timedelta(days=whole_days) + remainder)
+    return candidates[0] if len(candidates) == 1 else None
+
+
 def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd.Timedelta:
     """Return ``end - start`` with whole-day components measured by ``freq``."""
 
@@ -95,12 +130,18 @@ def diff_custom_calendar_timedeltas(start: object, end: object, freq: Any) -> pd
     # metadata before asking NumPy to count local calendar days.
     local_start = start_timestamp.tz_localize(None) if start_timestamp.tz is not None else start_timestamp
     local_end = end_timestamp.tz_localize(None) if end_timestamp.tz is not None else end_timestamp
-    actual_days = np.busday_count(
-        local_start.to_datetime64().astype("datetime64[D]"),
-        local_end.to_datetime64().astype("datetime64[D]"),
-        weekmask=cast("str", weekmask),
-        holidays=cast("Any", holidays),
+    actual_days = int(
+        np.busday_count(
+            local_start.to_datetime64().astype("datetime64[D]"),
+            local_end.to_datetime64().astype("datetime64[D]"),
+            weekmask=cast("str", weekmask),
+            holidays=cast("Any", holidays),
+        )
     )
+    if isinstance(offset, (BusinessDay, CustomBusinessDay)):
+        inverse = _negative_aware_calendar_inverse(start_timestamp, end_timestamp, offset, local_end, actual_days)
+        if inverse is not None:
+            return inverse
     # Preserve the local wall-clock remainder as well.  Subtracting two aware
     # timestamps measures elapsed UTC time, which changes by an hour across a
     # DST boundary.  Calendar arithmetic above instead advances local trading
