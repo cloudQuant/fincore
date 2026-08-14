@@ -100,6 +100,11 @@ def _strict_factor_information_coefficient(
     copied = _performance._copy_factor_data(factor_data)
     columns = get_forward_returns_columns(copied.columns)
     if group_adjust:
+        # Alphalens' source reaches ``pd.concat([])`` while constructing the
+        # group-adjusted empty table. This is deliberately a strict-facade
+        # error projection; the enhanced kernel remains profile-free.
+        if copied.empty:
+            raise ValueError("No objects to concatenate")
         copied = _performance._demean_forward_returns(copied, by_group=True)
     if by_group and "group" not in copied.columns:
         raise ValueError("factor_data must contain a 'group' column when by_group=True")
@@ -197,6 +202,12 @@ def _strict_factor_alpha_beta(
     else:
         raise TypeError("returns must be a pandas Series, DataFrame, or None")
 
+    # The pinned implementation begins with ``pd.DataFrame()`` and only
+    # materializes alpha/beta rows inside its period loop. Preserve its true
+    # empty shape when no period is supplied or discoverable.
+    if not len(forward_columns) or (isinstance(returns_frame, pd.DataFrame) and not len(returns_frame.columns)):
+        return pd.DataFrame()
+
     universe_returns = factor_data.groupby(level="date", observed=False, sort=True)[list(forward_columns)].mean()
     universe_returns = universe_returns.loc[returns_frame.index]
     if isinstance(returns_frame, pd.Series):
@@ -241,7 +252,13 @@ def factor_alpha_beta(
 
 def cumulative_returns(returns: pd.Series) -> pd.Series:
     _reject_opaque("cumulative_returns", returns)
-    return _performance.cumulative_returns(returns)  # type: ignore[return-value]
+    result = _performance.cumulative_returns(returns)
+    if isinstance(result, pd.Series):
+        # ``empyrical.cum_returns`` constructed a fresh Series in the pinned
+        # strict surface, so an input name is not part of the legacy result.
+        result = result.copy(deep=True)
+        result.name = None
+    return result  # type: ignore[return-value]
 
 
 def mean_return_by_quantile(

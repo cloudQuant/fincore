@@ -103,17 +103,18 @@ def test_cumulative_returns_upstream_case(source_case_id: str) -> None:
 
 
 def test_cumulative_returns_projects_nan_as_a_zero_return() -> None:
-    """Pinned Alphalens compounding treats a missing daily return as zero."""
+    """Strict Alphalens compounding treats NaN as zero and clears Series.name."""
 
     from fincore.factor_analysis.performance import cumulative_returns as enhanced_cumulative_returns
 
     index = pd.date_range("2024-01-02", periods=4, freq="D", name="date")
     source = pd.Series([0.10, np.nan, -0.10, 0.20], index=index, name="factor_return")
     original = source.copy(deep=True)
-    expected = pd.Series([1.10, 1.10, 0.99, 1.188], index=index, name="factor_return")
+    strict_expected = pd.Series([1.10, 1.10, 0.99, 1.188], index=index)
+    enhanced_expected = pd.Series([1.10, 1.10, 0.99, 1.188], index=index, name="factor_return")
 
-    pd.testing.assert_series_equal(cumulative_returns(source), expected)
-    pd.testing.assert_series_equal(enhanced_cumulative_returns(source), expected)
+    pd.testing.assert_series_equal(cumulative_returns(source), strict_expected)
+    pd.testing.assert_series_equal(enhanced_cumulative_returns(source), enhanced_expected)
     pd.testing.assert_series_equal(source, original)
 
 
@@ -497,6 +498,52 @@ def test_strict_alpha_beta_implicit_returns_use_the_strict_factor_returns_projec
     pd.testing.assert_frame_equal(strict.factor_returns(factor_data), expected_returns)
     with pytest.raises(MissingDataError, match="exog contains inf or nans"):
         strict.factor_alpha_beta(factor_data)
+
+
+@pytest.mark.parametrize("empty_boundary", ["missing-forward-column", "empty-explicit-returns"])
+def test_strict_alpha_beta_projects_empty_periods_to_the_pinned_empty_frame(
+    empty_boundary: str,
+) -> None:
+    """Pinned source adds no alpha/beta rows when no forward period is present."""
+
+    from fincore.alphalens import performance as strict
+
+    dates = pd.date_range("2024-05-01", periods=2, freq="D", name="date")
+    index = pd.MultiIndex.from_product((dates, ["A", "B"]), names=("date", "asset"))
+    factor_data = pd.DataFrame({"factor": [1.0, 2.0, 1.0, 2.0]}, index=index)
+    if empty_boundary == "empty-explicit-returns":
+        factor_data["1D"] = [0.01, 0.02, 0.03, 0.04]
+        returns: pd.DataFrame | None = pd.DataFrame(index=dates)
+    else:
+        returns = None
+
+    pd.testing.assert_frame_equal(
+        strict.factor_alpha_beta(factor_data, returns=returns),
+        pd.DataFrame(),
+    )
+
+
+@pytest.mark.parametrize("entrypoint", ["factor_information_coefficient", "mean_information_coefficient"])
+def test_strict_group_adjusted_empty_factor_data_projects_the_source_concat_error(entrypoint: str) -> None:
+    """Pinned strict group adjustment errors instead of inventing an empty IC result."""
+
+    from fincore.alphalens import performance as strict
+
+    empty_index = pd.MultiIndex.from_arrays(
+        [pd.DatetimeIndex([], name="date"), pd.Index([], name="asset")],
+        names=("date", "asset"),
+    )
+    factor_data = pd.DataFrame(
+        {
+            "factor": pd.Series([], dtype=float, index=empty_index),
+            "group": pd.Categorical([], categories=["one", "two"]),
+            "1D": pd.Series([], dtype=float, index=empty_index),
+        },
+        index=empty_index,
+    )
+
+    with pytest.raises(ValueError, match="No objects to concatenate"):
+        getattr(strict, entrypoint)(factor_data, group_adjust=True)
 
 
 def test_strict_common_start_returns_rejects_an_absent_event_calendar() -> None:

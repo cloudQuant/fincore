@@ -60,7 +60,12 @@ def _demean_forward_returns(factor_data: pd.DataFrame, *, by_group: bool = False
             raise ValueError("factor_data must contain a 'group' column when group_adjust=True")
         keys.append(copied["group"])
     means = copied.groupby(keys, observed=False, sort=True)[list(columns)].transform("mean")
-    copied.loc[:, columns] = copied.loc[:, columns] - means
+    # Pandas 3 refuses an in-place float assignment into an int64 column.
+    # Replace each forward-return column after an explicit float projection so
+    # group adjustment remains non-mutating and valid for pinned integer data.
+    demeaned = copied.loc[:, columns].astype(float).subtract(means.astype(float))
+    for column in columns:
+        copied[column] = demeaned[column]
     return copied
 
 
@@ -301,7 +306,15 @@ def quantile_turnover(quantile_factor: pd.Series, quantile: int, period: int = 1
     for date, group in selected.groupby(level="date", observed=False, sort=True):
         dates.append(date)
         names.append(set(group.index.get_level_values("asset")))
-    index = pd.DatetimeIndex(dates, name="date")
+    selected_dates = pd.DatetimeIndex(dates, name="date")
+    # ``groupby`` materializes scalar timestamps and loses the source level's
+    # frequency.  When this quantile is represented on every source date, use
+    # that public MultiIndex level directly, matching the pinned Series index
+    # metadata for Day and BusinessDay calendars.
+    multi_index = cast("pd.MultiIndex", copied.index)
+    date_level_position = multi_index.names.index("date")
+    source_dates = pd.DatetimeIndex(multi_index.levels[date_level_position], name="date")
+    index = source_dates if selected_dates.equals(source_dates) else selected_dates
     turnover = pd.Series(np.nan, index=index, name=quantile, dtype=float)
     for position in range(period, len(names)):
         current = names[position]

@@ -293,8 +293,13 @@ def test_quantile_turnover_upstream_case(source_case_id: str) -> None:
     )
     original = source.copy(deep=True)
     actual = quantile_turnover(source, quantile, period=period)
-    expected_dates = pd.DatetimeIndex(
-        pd.date_range("2015-01-01", periods=len(values), freq=BDay() if frequency == "1B" else "D").to_numpy(),
+    # The pinned ``groupby(...).apply`` result retains the source date-level
+    # frequency.  Keep the frequency-bearing index here so a reconstructed
+    # DatetimeIndex cannot accidentally mask that metadata regression.
+    expected_dates = pd.date_range(
+        "2015-01-01",
+        periods=len(values),
+        freq=BDay() if frequency == "1B" else "D",
         name="date",
     )
     expected = pd.Series(

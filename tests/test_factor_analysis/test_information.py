@@ -63,9 +63,7 @@ def test_information_coefficient_upstream_case(source_case_id: str) -> None:
     """Use exact pinned source-row arguments and compare the full IC frame."""
 
     ordinal = int(source_case_id.rsplit("#", 1)[1])
-    forward_returns = (
-        [4.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 4.0] if ordinal == 0 else [1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0]
-    )
+    forward_returns = [4, 3, 2, 1, 1, 2, 3, 4] if ordinal == 0 else [1, 2, 3, 4, 4, 3, 2, 1]
     source = _information_data(forward_returns)
     original = source.copy(deep=True)
     actual = factor_information_coefficient(
@@ -145,9 +143,7 @@ def test_mean_information_coefficient_upstream_case(source_case_id: str) -> None
     """Use exact daily/weekly/group pinned mean-IC source-row configurations."""
 
     ordinal = int(source_case_id.rsplit("#", 1)[1])
-    forward_returns = (
-        [4.0, 3.0, 2.0, 1.0, 1.0, 2.0, 3.0, 4.0] if ordinal == 0 else [1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0]
-    )
+    forward_returns = [4, 3, 2, 1, 1, 2, 3, 4] if ordinal == 0 else [1, 2, 3, 4, 4, 3, 2, 1]
     source = _information_data(forward_returns)
     original = source.copy(deep=True)
     by_group = ordinal >= 2
@@ -221,3 +217,33 @@ def test_strict_information_coefficient_propagates_nan_while_enhanced_is_pairwis
         strict.mean_information_coefficient(source),
         pd.Series({"1D": np.nan}),
     )
+
+
+def test_group_adjustment_replaces_integer_forward_columns_with_float_results() -> None:
+    """Pandas 3 group adjustment accepts the pinned integer IC #03 fixture."""
+
+    source = _information_data([1, 2, 3, 4, 4, 3, 2, 1])
+    original = source.copy(deep=True)
+    dates = pd.date_range("2015-01-01", periods=2, freq="D", name="date")
+    enhanced_expected = pd.DataFrame(
+        {"1D": np.ones(4)},
+        index=pd.MultiIndex.from_product((dates, [1, 2]), names=("date", "group")),
+    )
+    strict_expected = pd.DataFrame(
+        {"1D": np.ones(4)},
+        index=pd.MultiIndex.from_product(
+            (dates, pd.CategoricalIndex([1, 2], categories=[1, 2], name="group")),
+            names=("date", "group"),
+        ),
+    )
+
+    pd.testing.assert_frame_equal(
+        factor_information_coefficient(source, group_adjust=True, by_group=True),
+        enhanced_expected,
+    )
+    pd.testing.assert_frame_equal(
+        strict_performance.factor_information_coefficient(source, group_adjust=True, by_group=True),
+        strict_expected,
+    )
+    pd.testing.assert_frame_equal(source, original)
+    assert source["1D"].dtype == np.dtype("int64")
