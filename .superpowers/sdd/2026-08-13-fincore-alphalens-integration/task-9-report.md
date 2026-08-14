@@ -147,7 +147,7 @@ and `all`).  This follow-up is confined to contributor metadata, sdist layout,
 artifact verification, and workflow labels; it does not alter the installed
 consumer code or wheel runtime dependency metadata.
 
-Follow-up commit: pending final SHA.
+Follow-up fix commit: `4dcf019 fix: harden alphalens package artifacts`.
 
 ## Concern
 
