@@ -83,6 +83,141 @@ def _medians(group: list[dict]) -> dict:
     }
 
 
+def _factor_key(case: dict) -> tuple[str, str]:
+    return (case["scenario"], case["kernel"])
+
+
+def _check_factor_schema(data: dict, label: str) -> list[str]:
+    """Validate only the opt-in factor-analysis payload schema."""
+
+    violations: list[str] = []
+    if data.get("rss_unit") != "bytes":
+        violations.append(f"{label}: unknown RSS unit {data.get('rss_unit')!r}")
+    provenance = data.get("provenance") or {}
+    violations.extend(
+        f"{label}: provenance missing {field!r}"
+        for field in ("commit", "python", "numpy", "pandas", "scipy", "statsmodels", "os", "arch", "platform_label")
+        if not provenance.get(field)
+    )
+    cases = data.get("cases") or []
+    if not cases:
+        violations.append(f"{label}: payload has no cases")
+    required = (
+        "scenario",
+        "kernel",
+        "input_shape",
+        "output_shape",
+        "seed",
+        "wall_seconds",
+        "peak_rss_bytes",
+        "output_digest",
+        "warmup",
+        "repeat",
+        "repeats",
+    )
+    for case in cases:
+        missing = [field for field in required if field not in case]
+        if missing:
+            violations.append(f"{label}: case missing {missing!r}: {case}")
+        digest = case.get("output_digest")
+        if not isinstance(digest, str) or len(digest) != 64:
+            violations.append(f"{label}: case has invalid SHA256 digest: {case}")
+    return violations
+
+
+def _factor_digest_violations(baseline: dict, candidate: dict) -> list[str]:
+    """Compare deterministic output digests and shapes before timing data."""
+
+    violations = _check_factor_schema(baseline, "baseline") + _check_factor_schema(candidate, "candidate")
+    if violations:
+        return violations
+    base_groups = _group_cases(baseline["cases"], _factor_key)
+    cand_groups = _group_cases(candidate["cases"], _factor_key)
+    missing = set(cand_groups) - set(base_groups)
+    if missing:
+        violations.append(f"candidate cases missing from baseline: {sorted(missing)}")
+    for key in sorted(set(cand_groups) & set(base_groups)):
+        base_digests = {case["output_digest"] for case in base_groups[key]}
+        cand_digests = {case["output_digest"] for case in cand_groups[key]}
+        base_shapes = {json.dumps(case["output_shape"], sort_keys=True) for case in base_groups[key]}
+        cand_shapes = {json.dumps(case["output_shape"], sort_keys=True) for case in cand_groups[key]}
+        if len(base_digests) != 1 or len(cand_digests) != 1 or base_digests != cand_digests:
+            violations.append(
+                f"{key[0]}/{key[1]}: output_digest mismatch "
+                f"baseline={sorted(base_digests)} candidate={sorted(cand_digests)}"
+            )
+        if len(base_shapes) != 1 or len(cand_shapes) != 1 or base_shapes != cand_shapes:
+            violations.append(
+                f"{key[0]}/{key[1]}: output_shape mismatch "
+                f"baseline={sorted(base_shapes)} candidate={sorted(cand_shapes)}"
+            )
+    return violations
+
+
+def _compare_factor_analysis(baseline: dict | None, candidate: dict, args) -> int:
+    """Run the opt-in digest-first, same-platform factor benchmark gate."""
+
+    if baseline is None:
+        violations = _check_factor_schema(candidate, "candidate")
+        if violations:
+            for violation in violations:
+                print(f"FAIL: {violation}", file=sys.stderr)
+            return 1
+        print("factor-analysis baseline absent; artifact only, performance comparison not run")
+        return 0
+
+    digest_violations = _factor_digest_violations(baseline, candidate)
+    if digest_violations:
+        for violation in digest_violations:
+            print(f"FAIL: {violation}", file=sys.stderr)
+        print("performance comparison not run because digest/shape gate failed", file=sys.stderr)
+        return 1
+
+    baseline_platform = baseline["provenance"]["platform_label"]
+    candidate_platform = candidate["provenance"]["platform_label"]
+    if baseline_platform != candidate_platform:
+        print(
+            f"platform mismatch ({baseline_platform} != {candidate_platform}); "
+            "artifact only, performance comparison not run"
+        )
+        return 0
+
+    approval = baseline.get("approval") or {}
+    if not (
+        approval.get("status") == "approved"
+        and approval.get("approved_by")
+        and approval.get("approved_at")
+        and approval.get("reviewed_candidate_sha256")
+    ):
+        print("baseline approval is pending; performance comparison not run", file=sys.stderr)
+        return 1
+
+    base_groups = _group_cases(baseline["cases"], _factor_key)
+    cand_groups = _group_cases(candidate["cases"], _factor_key)
+    violations: list[str] = []
+    for key in sorted(cand_groups):
+        base_time = _median([case["wall_seconds"] for case in base_groups[key]])
+        cand_time = _median([case["wall_seconds"] for case in cand_groups[key]])
+        base_rss = _median([case["peak_rss_bytes"] for case in base_groups[key]])
+        cand_rss = _median([case["peak_rss_bytes"] for case in cand_groups[key]])
+        if cand_time > base_time * (1.0 + args.max_time_regression):
+            violations.append(
+                f"{key[0]}/{key[1]}: wall_seconds regressed "
+                f"{cand_time:.6g} vs {base_time:.6g}"
+            )
+        if cand_rss > base_rss * (1.0 + args.max_rss_regression):
+            violations.append(
+                f"{key[0]}/{key[1]}: peak_rss_bytes regressed "
+                f"{cand_rss:.6g} vs {base_rss:.6g}"
+            )
+    for violation in violations:
+        print(f"FAIL: {violation}", file=sys.stderr)
+    if violations:
+        return 1
+    print("all factor-analysis digest, shape, time, and RSS gates passed")
+    return 0
+
+
 def _slope(x1: float, x2: float, y1: float, y2: float) -> float | None:
     """Log-log slope between two (x, y) points; None when undefined."""
     if min(x1, x2) <= 0 or min(y1, y2) <= 0 or x1 == x2:
@@ -352,6 +487,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="run structural gates only when the baseline file is absent",
     )
+    parser.add_argument("--digest-gate", choices=("sha256",), help="compare output digest/shape before performance")
     parser.add_argument("--report", help="write the full comparison artifact as JSON here")
     return parser.parse_args(argv)
 
@@ -374,6 +510,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"baseline {args.baseline!r} not found; running structural gates only")
     elif not args.baseline:
         print("no --baseline given; running structural gates only")
+
+    if args.digest_gate == "sha256" and candidate.get("kind") == "factor_analysis":
+        return _compare_factor_analysis(baseline, candidate, args)
 
     kind = candidate.get("kind")
     report: dict = {"slopes": {}, "per_row_bytes": {}}
