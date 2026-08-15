@@ -210,6 +210,23 @@ pytest -o addopts='' tests/docs -q    # Executable documentation examples
 pytest tests/ --cov=fincore           # With coverage
 ```
 
+### Related Projects
+
+fincore is part of the cloudQuant quantitative-research ecosystem. The other
+members cover backtesting, strategy authoring, tooling, and web workflows:
+
+| Project | Description |
+| --- | --- |
+| [backtrader](https://github.com/cloudQuant/backtrader) | Professional Python algorithmic-trading framework for backtesting and live trading, actively maintained by cloudQuant. |
+| [backtrader-skills](https://github.com/cloudQuant/backtrader-skills) | Offline author/review/test tooling for the backtrader fork: turns local datasets and typed `StrategySpec v1` into pytest strategies or three-file bundles, reviews candidates without importing them, and runs approved candidates in isolated child processes. |
+| [backtrader-mcp](https://github.com/cloudQuant/backtrader-mcp) | Local-first MCP server for building and running reproducible backtrader strategies: immutable datasets, private strategy drafts, and bounded subprocess runs with durable status and reports. Offline and backtest-only. |
+| [backtrader_web](https://github.com/cloudQuant/backtrader_web) | "AI for Investor": a web-based full-cycle backtrader strategy management platform (Vue 3 + FastAPI) covering research, strategy generation, backtesting analysis, paper trading, live execution, and data management. |
+| [backtrader-agent](https://github.com/cloudQuant/backtrader-agent) | Offline-first strategy-authoring agent runtime: content-addressed data storage, canonical strategy specifications, static review, hash-bound approvals, and a fixed child-process execution profile with recoverable session provenance. |
+| [fincore](https://github.com/cloudQuant/fincore) | This repository: unified Python toolkit for financial metrics (150+), performance analysis, backtesting support, AI-driven insights, and multi-database/data source integration. |
+
+More details on how these projects fit together:
+[Ecosystem](https://cloudquant.github.io/fincore/ecosystem/) in the online docs.
+
 ### License
 
 The fincore repository declares Apache License 2.0; see [LICENSE](LICENSE).
@@ -374,6 +391,23 @@ pytest -o addopts='' tests/compat -q  # empyrical/pyfolio 兼容门禁
 pytest -o addopts='' tests/docs -q    # 可执行文档示例
 pytest tests/ --cov=fincore           # 含覆盖率
 ```
+
+### 相关项目
+
+fincore 是 cloudQuant 量化研究生态的一部分。生态中的其他成员覆盖回测、
+策略编写、工具链与 Web 工作流：
+
+| 项目 | 简介 |
+| --- | --- |
+| [backtrader](https://github.com/cloudQuant/backtrader) | 专业的 Python 量化交易框架，支持回测与实盘交易，由 cloudQuant 持续维护。 |
+| [backtrader-skills](https://github.com/cloudQuant/backtrader-skills) | backtrader 分支的离线编写/审查/测试工具：将本地数据集与类型化 `StrategySpec v1` 转换为 pytest 策略或三文件策略包，不导入即可静态审查候选，并在隔离子进程中运行已批准候选。 |
+| [backtrader-mcp](https://github.com/cloudQuant/backtrader-mcp) | 本地优先的 MCP 服务器，用于构建和运行可复现的 backtrader 策略：不可变数据集、私有策略草稿、有界子进程运行及持久化状态与报告。完全离线、仅限回测。 |
+| [backtrader_web](https://github.com/cloudQuant/backtrader_web) | "AI for Investor"：基于 Web 的 backtrader 全周期策略管理平台（Vue 3 + FastAPI），覆盖研究、策略生成、回测分析、模拟盘、实盘执行与数据管理。 |
+| [backtrader-agent](https://github.com/cloudQuant/backtrader-agent) | 离线优先的策略编写智能体运行时：内容寻址数据存储、规范化策略规格、静态审查、哈希绑定的审批，以及固定子进程执行配置与可恢复的会话溯源。 |
+| [fincore](https://github.com/cloudQuant/fincore) | 本仓库：统一的 Python 金融工具包，提供 150+ 金融指标、绩效分析、回测支持、AI 驱动的洞察以及多数据库/数据源集成。 |
+
+更多项目间协作关系见在线文档的
+[Ecosystem](https://cloudquant.github.io/fincore/ecosystem/) 页面。
 
 ### 贡献
 
