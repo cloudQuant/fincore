@@ -190,3 +190,27 @@ def test_timeout_output_normalizes_bytes() -> None:
     error = subprocess.TimeoutExpired(["pytest"], 1, output=b"partial stdout", stderr=b"partial stderr")
 
     assert collector._timeout_output(error) == "partial stdoutpartial stderr"
+
+
+def test_disposable_baseline_copy_allows_generated_egg_info_but_not_source_files() -> None:
+    collector = _collector_module()
+
+    assert collector._is_excluded(Path("fincore.egg-info/PKG-INFO"))
+    assert not collector._is_excluded(Path("fincore/alphalens/utils.py"))
+
+
+def test_disposable_baseline_copy_has_an_isolated_git_head(tmp_path) -> None:
+    collector = _collector_module()
+    (tmp_path / "tracked.py").write_text("value = 1\n", encoding="utf-8")
+
+    collector._initialize_copy_git_repository(tmp_path)
+
+    revision = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert revision.returncode == 0, revision.stdout + revision.stderr
+    assert len(revision.stdout.strip()) == 40

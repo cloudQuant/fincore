@@ -21,7 +21,17 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-CACHE_PARTS = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "__pycache__", "build", "dist", "htmlcov"}
+CACHE_PARTS = {
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "fincore.egg-info",
+    "htmlcov",
+}
 COMMAND_TIMEOUT_SECONDS = 900
 NON_SERIAL_SELECTOR = "not serial and not slow and not integration"
 TRUSTED_SELECTOR = "not slow and not integration"
@@ -107,6 +117,34 @@ def _copy_source_tree(source_root: Path, copy_root: Path, manifest: dict[str, st
         destination = copy_root / relative_name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
+
+
+def _initialize_copy_git_repository(copy_root: Path) -> None:
+    """Give the isolated tree its own HEAD for proof fixtures that require one.
+
+    The source repository is never touched. The disposable commit is excluded
+    from the write inventory together with all other `.git` metadata.
+    """
+
+    commands = (
+        ("git", "init", "--quiet"),
+        ("git", "add", "--all"),
+        (
+            "git",
+            "-c",
+            "user.name=Fincore baseline",
+            "-c",
+            "user.email=fincore-baseline@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "disposable baseline snapshot",
+        ),
+    )
+    for command in commands:
+        result = subprocess.run(command, cwd=copy_root, capture_output=True, text=True, check=False, timeout=30)
+        if result.returncode != 0:
+            raise RuntimeError(f"could not initialize disposable Git repository: {result.stdout}{result.stderr}")
 
 
 def _parse_count(output: str, name: str) -> int:
@@ -387,6 +425,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="fincore-quality-baseline-") as temp_dir:
         copy_root = Path(temp_dir) / "fincore"
         _copy_source_tree(source_root, copy_root, included_manifest)
+        _initialize_copy_git_repository(copy_root)
         data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root))
         specifications = [
             ("trusted-baseline", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR]),
