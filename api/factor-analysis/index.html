@@ -1,0 +1,6139 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Quantitative Performance & Risk Analytics for Python">
+      
+      
+      
+        <link rel="canonical" href="https://cloudquant.github.io/fincore/api/factor-analysis/">
+      
+      
+        <link rel="prev" href="../report/">
+      
+      
+        <link rel="next" href="../../development/contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Factor-analysis - fincore</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#factor-analysis-api" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="fincore" class="md-header__button md-logo" aria-label="fincore" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            fincore
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Factor-analysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/cloudQuant/fincore" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cloudQuant/fincore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guide/concepts/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../development/contributing/" class="md-tabs__link">
+          
+  
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../ecosystem/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Ecosystem
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="fincore" class="md-nav__button md-logo" aria-label="fincore" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    fincore
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/cloudQuant/fincore" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cloudQuant/fincore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration from empyrical
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/analysis-context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AnalysisContext
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/rolling-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RollingEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Portfolio Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/factor-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factor-analysis Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fincore/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore (top-level)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.metrics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viz/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.viz
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../attribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.attribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../risk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.risk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fincore.report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factor-analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factor-analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enhanced-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhanced API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.factor_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="factor_analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorFunctionSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorFunctionSpec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorWorkflowSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorWorkflowSpec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossReport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorLossReport
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorLossReport">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossReport.legacy_forward_returns_loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        legacy_forward_returns_loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PreparedFactorData" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PreparedFactorData
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EnhancedNonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EnhancedNonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorDataError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorDataError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.MaxLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MaxLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.NonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EventAnalysisModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EventAnalysisModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EventAnalysisModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EventAnalysisModel.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorAnalysisConfig
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorAnalysisConfig">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisConfig.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorAnalysisModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorAnalysisModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel.to_serializable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_serializable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorGroupAnalysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorGroupAnalysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorGroupAnalysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorGroupAnalysis.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PyfolioFactorInputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PyfolioFactorInputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PyfolioFactorInputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PyfolioFactorInputs.as_legacy_tuple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        as_legacy_tuple
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorTearSheetArtifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorTearSheetArtifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GridFigure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GridFigure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.create_new_figure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_new_figure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.next_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.next_cell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_cell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.analyze_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.add_custom_calendar_timedelta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_custom_calendar_timedelta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.backshift_returns_series" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        backshift_returns_series
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.diff_custom_calendar_timedeltas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        diff_custom_calendar_timedeltas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.get_forward_returns_columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_forward_returns_columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.infer_trading_calendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        infer_trading_calendar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.timedelta_strings_to_integers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timedelta_strings_to_integers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.timedelta_to_string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timedelta_to_string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.compute_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.prepare_factor_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prepare_factor_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.prepare_factor_data_from_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prepare_factor_data_from_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.quantize_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantize_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.average_cumulative_return_by_quantile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        average_cumulative_return_by_quantile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.common_start_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        common_start_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.compute_mean_returns_spread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_mean_returns_spread
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_alpha_beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_alpha_beta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_information_coefficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_information_coefficient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_rank_autocorrelation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_rank_autocorrelation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_weights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_weights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.mean_information_coefficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean_information_coefficient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.mean_return_by_quantile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean_return_by_quantile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.quantile_turnover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantile_turnover
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_pyfolio_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_pyfolio_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.close_owned_figures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close_owned_figures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_event_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_event_study_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_study_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_full_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_full_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_information_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_information_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_summary_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_summary_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_turnover_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_turnover_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.show_owned_figures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        show_owned_figures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict utilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        utils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="utils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.MaxLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MaxLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.NonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.rethrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rethrow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.non_unique_bin_edges_error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        non_unique_bin_edges_error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.demean_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        demean_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.print_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print_table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.rate_of_return" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rate_of_return
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.std_conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        std_conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.quantize_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantize_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.factor_cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.factor_positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.create_pyfolio_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_pyfolio_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-tear-sheets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict tear sheets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tears
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tears">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GridFigure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GridFigure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.create_new_figure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_new_figure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.next_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.next_cell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_cell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_summary_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_summary_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_information_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_information_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_turnover_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_turnover_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_full_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_full_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_event_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_event_study_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_study_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/api-stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ecosystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ecosystem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enhanced-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhanced API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.factor_analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="factor_analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorFunctionSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorFunctionSpec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorWorkflowSpec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorWorkflowSpec
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossReport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorLossReport
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorLossReport">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossReport.legacy_forward_returns_loss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        legacy_forward_returns_loss
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PreparedFactorData" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PreparedFactorData
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EnhancedNonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EnhancedNonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorDataError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorDataError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.MaxLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MaxLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.NonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EventAnalysisModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EventAnalysisModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EventAnalysisModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.EventAnalysisModel.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisConfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorAnalysisConfig
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorAnalysisConfig">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisConfig.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorAnalysisModel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorAnalysisModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorAnalysisModel.to_serializable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        to_serializable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorGroupAnalysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorGroupAnalysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FactorGroupAnalysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorGroupAnalysis.__post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        __post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PyfolioFactorInputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PyfolioFactorInputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PyfolioFactorInputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.PyfolioFactorInputs.as_legacy_tuple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        as_legacy_tuple
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.FactorTearSheetArtifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FactorTearSheetArtifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GridFigure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GridFigure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.create_new_figure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_new_figure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.next_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.next_cell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_cell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.GridFigure.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.analyze_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        analyze_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.add_custom_calendar_timedelta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        add_custom_calendar_timedelta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.backshift_returns_series" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        backshift_returns_series
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.diff_custom_calendar_timedeltas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        diff_custom_calendar_timedeltas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.get_forward_returns_columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_forward_returns_columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.infer_trading_calendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        infer_trading_calendar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.timedelta_strings_to_integers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timedelta_strings_to_integers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.timedelta_to_string" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timedelta_to_string
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.compute_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.prepare_factor_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prepare_factor_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.prepare_factor_data_from_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prepare_factor_data_from_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.quantize_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantize_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.average_cumulative_return_by_quantile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        average_cumulative_return_by_quantile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.common_start_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        common_start_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.compute_mean_returns_spread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compute_mean_returns_spread
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_alpha_beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_alpha_beta
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_information_coefficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_information_coefficient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_rank_autocorrelation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_rank_autocorrelation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_weights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_weights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.mean_information_coefficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean_information_coefficient
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.mean_return_by_quantile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mean_return_by_quantile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.quantile_turnover" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantile_turnover
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_pyfolio_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_pyfolio_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.factor_positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.close_owned_figures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close_owned_figures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_event_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_event_study_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_study_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_full_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_full_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_information_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_information_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_summary_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_summary_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.create_turnover_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_turnover_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.factor_analysis.show_owned_figures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        show_owned_figures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict utilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        utils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="utils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.MaxLossExceededError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MaxLossExceededError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.NonMatchingTimezoneError" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NonMatchingTimezoneError
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.rethrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rethrow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.non_unique_bin_edges_error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        non_unique_bin_edges_error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.demean_forward_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        demean_forward_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.print_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        print_table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.rate_of_return" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rate_of_return
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.std_conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        std_conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.utils.quantize_factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        quantize_factor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict performance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        performance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="performance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.factor_cumulative_returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_cumulative_returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.factor_positions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        factor_positions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.performance.create_pyfolio_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_pyfolio_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strict-tear-sheets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strict tear sheets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tears
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="tears">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GridFigure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GridFigure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.create_new_figure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_new_figure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.next_row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.next_cell" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        next_cell
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.GridFigure.close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_summary_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_summary_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_information_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_information_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_turnover_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_turnover_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_full_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_full_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_event_returns_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_returns_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fincore.alphalens.tears.create_event_study_tear_sheet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        create_event_study_tear_sheet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="factor-analysis-api">Factor-analysis API<a class="headerlink" href="#factor-analysis-api" title="Permanent link">&para;</a></h1>
+<p><code>fincore.alphalens</code> is the source-shaped strict façade. For new code, prefer
+the enhanced <code>fincore.factor_analysis</code> API: prepare factor data once, analyze
+the resulting clean table once, and render returned artifacts explicitly.</p>
+<p>Plotting is optional and resolved only when a renderer runs. Install
+<code>fincore[alphalens]</code> for rendering; compute-only enhanced workflows use
+<code>fincore[factor-analysis]</code>.</p>
+<h2 id="enhanced-api">Enhanced API<a class="headerlink" href="#enhanced-api" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.factor_analysis" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.factor_analysis</code>
+
+
+<a href="#fincore.factor_analysis" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Enhanced factor-analysis contracts and standalone Task 3 data kernel.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorFunctionSpec" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorFunctionSpec</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">public_name</span><span class="p">,</span> <span class="n">introspection_signature</span><span class="p">,</span> <span class="n">source_signature</span><span class="p">,</span> <span class="n">implementation</span><span class="p">,</span> <span class="n">profile</span><span class="p">,</span> <span class="n">optional_extra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">adapter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result_projection</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorFunctionSpec" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>One named function contract on a factor-analysis compatibility surface.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorWorkflowSpec" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorWorkflowSpec</span><span class="p">(</span><span class="n">public_name</span><span class="p">,</span> <span class="n">introspection_signature</span><span class="p">,</span> <span class="n">source_signature</span><span class="p">,</span> <span class="n">model_ref</span><span class="p">,</span> <span class="n">renderer_ref</span><span class="p">,</span> <span class="n">optional_extra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result_projection</span><span class="o">=</span><span class="s1">&#39;legacy_none_show&#39;</span><span class="p">,</span> <span class="n">by_group_variants</span><span class="o">=</span><span class="p">())</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorWorkflowSpec" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>A deferred tear-sheet workflow, including its future renderer lifecycle.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorLossReport" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorLossReport</span><span class="p">(</span><span class="n">input_count</span><span class="p">,</span> <span class="n">finite_factor_count</span><span class="p">,</span> <span class="n">forward_returns_count</span><span class="p">,</span> <span class="n">binning_count</span><span class="p">,</span> <span class="n">factor_input_loss</span><span class="p">,</span> <span class="n">forward_returns_loss</span><span class="p">,</span> <span class="n">binning_loss</span><span class="p">,</span> <span class="n">total_loss</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorLossReport" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>A transparent breakdown of rows removed during factor preparation.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="fincore.factor_analysis.FactorLossReport.legacy_forward_returns_loss" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <code class="highlight language-python"><span class="n">legacy_forward_returns_loss</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorLossReport.legacy_forward_returns_loss" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Loss wording used by the pinned strict facade's stdout projection.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.PreparedFactorData" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">PreparedFactorData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">loss_report</span><span class="p">,</span> <span class="n">calendar</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.PreparedFactorData" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Prepared factor table, loss accounting, and inferred trading calendar.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.EnhancedNonMatchingTimezoneError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>EnhancedNonMatchingTimezoneError</code>
+
+
+<a href="#fincore.factor_analysis.EnhancedNonMatchingTimezoneError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="            FactorDataError (fincore.factor_analysis.exceptions.FactorDataError)" href="#fincore.factor_analysis.FactorDataError">FactorDataError</a></code></p>
+
+
+
+        <p>Factor and price timestamps use different timezone conventions.</p>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorDataError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>FactorDataError</code>
+
+
+<a href="#fincore.factor_analysis.FactorDataError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="ValueError">ValueError</span></code></p>
+
+
+
+        <p>Base class for invalid factor-analysis inputs.</p>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorLossExceededError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorLossExceededError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.FactorLossExceededError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="            FactorDataError (fincore.factor_analysis.exceptions.FactorDataError)" href="#fincore.factor_analysis.FactorDataError">FactorDataError</a></code></p>
+
+
+
+        <p>The enhanced kernel dropped more input rows than the accepted limit.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.MaxLossExceededError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MaxLossExceededError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.MaxLossExceededError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="Exception">Exception</span></code></p>
+
+
+
+        <p>Pinned strict identity for a rejected cleaning-loss budget.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.NonMatchingTimezoneError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>NonMatchingTimezoneError</code>
+
+
+<a href="#fincore.factor_analysis.NonMatchingTimezoneError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="Exception">Exception</span></code></p>
+
+
+
+        <p>Pinned strict identity for a factor/prices timezone mismatch.</p>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.EventAnalysisModel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">EventAnalysisModel</span><span class="p">(</span><span class="n">event_windows</span><span class="p">,</span> <span class="n">mean_returns</span><span class="p">,</span> <span class="n">return_distribution</span><span class="p">,</span> <span class="n">quantile_average_returns</span><span class="p">,</span> <span class="n">aggregate_quantile_average_returns</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.EventAnalysisModel" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Frozen event-window values, averages, and distribution inputs.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.EventAnalysisModel.__post_init__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">__post_init__</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.EventAnalysisModel.__post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Own independent event data rather than caller-visible work buffers.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorAnalysisConfig" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorAnalysisConfig</span><span class="p">(</span><span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">(),</span> <span class="n">event_before</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_after</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">turnover_periods</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">time_aggregation</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,),</span> <span class="n">include_pyfolio</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pyfolio_capital</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pyfolio_benchmark_period</span><span class="o">=</span><span class="s1">&#39;1D&#39;</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorAnalysisConfig" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Every typed option that can alter an :class:<code>FactorAnalysisModel</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.FactorAnalysisConfig.__post_init__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">__post_init__</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.FactorAnalysisConfig.__post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Normalize public options before computing the frozen config digest.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorAnalysisModel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorAnalysisModel</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">factor_data</span><span class="p">,</span> <span class="n">forward_periods</span><span class="p">,</span> <span class="n">quantile_statistics</span><span class="p">,</span> <span class="n">factor_weights</span><span class="p">,</span> <span class="n">factor_returns</span><span class="p">,</span> <span class="n">factor_cumulative_returns</span><span class="p">,</span> <span class="n">legacy_quantile_cumulative_returns</span><span class="p">,</span> <span class="n">factor_positions</span><span class="p">,</span> <span class="n">alpha_beta</span><span class="p">,</span> <span class="n">mean_returns_by_quantile</span><span class="p">,</span> <span class="n">std_error_by_quantile</span><span class="p">,</span> <span class="n">mean_returns_by_date</span><span class="p">,</span> <span class="n">std_error_by_date</span><span class="p">,</span> <span class="n">aggregate_mean_returns_by_quantile</span><span class="p">,</span> <span class="n">aggregate_std_error_by_quantile</span><span class="p">,</span> <span class="n">aggregate_mean_returns_by_date</span><span class="p">,</span> <span class="n">aggregate_std_error_by_date</span><span class="p">,</span> <span class="n">aggregate_mean_return_spread</span><span class="p">,</span> <span class="n">aggregate_mean_return_spread_std</span><span class="p">,</span> <span class="n">mean_return_spread</span><span class="p">,</span> <span class="n">mean_return_spread_std</span><span class="p">,</span> <span class="n">information_coefficient</span><span class="p">,</span> <span class="n">mean_information_coefficient</span><span class="p">,</span> <span class="n">aggregate_information_coefficient</span><span class="p">,</span> <span class="n">aggregate_mean_information_coefficient</span><span class="p">,</span> <span class="n">summary_information_coefficient</span><span class="p">,</span> <span class="n">quantile_turnover</span><span class="p">,</span> <span class="n">rank_autocorrelation</span><span class="p">,</span> <span class="n">grouped_results</span><span class="p">,</span> <span class="n">time_aggregated_results</span><span class="p">,</span> <span class="n">aggregate_time_aggregated_results</span><span class="p">,</span> <span class="n">pyfolio_inputs</span><span class="p">,</span> <span class="n">event_input_snapshot</span><span class="p">,</span> <span class="n">event_returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">result_fingerprint</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorAnalysisModel" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>One compute-once analytical snapshot consumed by later renderers.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.FactorAnalysisModel.__post_init__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">__post_init__</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.FactorAnalysisModel.__post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Store private canonical snapshots for every renderer-facing field.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.FactorAnalysisModel.to_serializable" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">to_serializable</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.FactorAnalysisModel.to_serializable" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return a JSON-compatible, renderer-free representation of this model.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorGroupAnalysis" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorGroupAnalysis</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">quantile_statistics</span><span class="p">,</span> <span class="n">factor_weights</span><span class="p">,</span> <span class="n">factor_returns</span><span class="p">,</span> <span class="n">mean_returns_by_quantile</span><span class="p">,</span> <span class="n">std_error_by_quantile</span><span class="p">,</span> <span class="n">information_coefficient</span><span class="p">,</span> <span class="n">mean_information_coefficient</span><span class="p">,</span> <span class="n">quantile_turnover</span><span class="p">,</span> <span class="n">rank_autocorrelation</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorGroupAnalysis" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Typed, per-group analytical data used by grouped tables and charts.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.FactorGroupAnalysis.__post_init__" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">__post_init__</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.FactorGroupAnalysis.__post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Own independent group data rather than caller-visible work buffers.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.PyfolioFactorInputs" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">PyfolioFactorInputs</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">benchmark_rets</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.PyfolioFactorInputs" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Typed, enhanced representation of the three inputs expected by Pyfolio.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.PyfolioFactorInputs.as_legacy_tuple" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">as_legacy_tuple</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.PyfolioFactorInputs.as_legacy_tuple" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the immutable container's legacy Alphalens tuple projection.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.FactorTearSheetArtifacts" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">FactorTearSheetArtifacts</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">figures</span><span class="p">,</span> <span class="n">tables</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+<a href="#fincore.factor_analysis.FactorTearSheetArtifacts" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Caller-owned figures and renderer-ready tables for one workflow.</p>
+<p>Enhanced workflows do not display or close these figures by default.  The
+strict Alphalens facade uses the same artifact object internally, then
+applies its legacy show-and-close projection at the public boundary.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.factor_analysis.GridFigure" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">GridFigure</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.GridFigure" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>One lazily-created figure with the pinned row/cell grid primitives.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.GridFigure.create_new_figure" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">create_new_figure</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.GridFigure.create_new_figure" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the one figure owned by this grid for explicit ownership checks.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.GridFigure.next_row" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">next_row</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.GridFigure.next_row" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Allocate the next full-width row using the source cursor grammar.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.GridFigure.next_cell" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">next_cell</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.GridFigure.next_cell" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Allocate the next cell, advancing to a new row when necessary.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.factor_analysis.GridFigure.close" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+
+<a href="#fincore.factor_analysis.GridFigure.close" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close only this grid's own figure and release its layout references.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.analyze_factor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">analyze_factor</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">turnover_periods</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">time_aggregation</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,),</span> <span class="n">include_pyfolio</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pyfolio_capital</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pyfolio_benchmark_period</span><span class="o">=</span><span class="s1">&#39;1D&#39;</span><span class="p">,</span> <span class="n">event_returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_before</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">event_after</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.analyze_factor" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute one immutable, renderer-ready model from already-clean data.</p>
+<p>The enhanced public contract always requires positive, unique turnover
+lags.  Source-compatible tear-sheet oddities are intentionally kept in a
+private assembly bridge so they cannot weaken this API's validation.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.add_custom_calendar_timedelta" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">add_custom_calendar_timedelta</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.add_custom_calendar_timedelta" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Add a timedelta while counting whole days through a trading calendar.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.backshift_returns_series" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">backshift_returns_series</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.backshift_returns_series" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Move a backward-looking MultiIndex return series <code>N</code> sessions earlier.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.diff_custom_calendar_timedeltas" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">diff_custom_calendar_timedeltas</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.diff_custom_calendar_timedeltas" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return <code>end - start</code> with whole-day components measured by <code>freq</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.get_forward_returns_columns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">get_forward_returns_columns</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">require_exact_day_multiple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.get_forward_returns_columns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return columns matching the pinned forward-return timedelta grammar.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.infer_trading_calendar" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">infer_trading_calendar</span><span class="p">(</span><span class="n">factor_idx</span><span class="p">,</span> <span class="n">prices_idx</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.infer_trading_calendar" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Infer active weekdays and missing-session holidays from two date indexes.</p>
+<p>Both inputs are copied into a normalized <code>DatetimeIndex</code> first, so the
+function has no side effect on caller-owned index frequency metadata.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.timedelta_strings_to_integers" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">timedelta_strings_to_integers</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.timedelta_strings_to_integers" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the whole-day portion of each forward-return label.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.timedelta_to_string" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">timedelta_to_string</span><span class="p">(</span><span class="n">timedelta</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.timedelta_to_string" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Format a <code>Timedelta</code> using the pinned forward-return label grammar.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.compute_forward_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">compute_forward_returns</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">prices</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">filter_zscore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cumulative_returns</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.compute_forward_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute forward percentage returns aligned exactly to a factor MultiIndex.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.prepare_factor_data" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">prepare_factor_data</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">prices</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">max_loss</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">binning_by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filter_zscore</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groupby_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zero_aware</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cumulative_returns</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.prepare_factor_data" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Normalize factor/prices and return a cleaned factor table with loss detail.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.prepare_factor_data_from_forward_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">prepare_factor_data_from_forward_returns</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">forward_returns</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">binning_by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groupby_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_loss</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">zero_aware</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.prepare_factor_data_from_forward_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Prepare a factor table when forward returns have already been computed.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.quantize_factor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">quantize_factor</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">no_raise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">zero_aware</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.quantize_factor" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Assign one period-wise quantile/bin label per finite factor observation.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.average_cumulative_return_by_quantile" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">average_cumulative_return_by_quantile</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">returns</span><span class="p">,</span> <span class="n">periods_before</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">periods_after</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">demeaned</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.average_cumulative_return_by_quantile" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Average cumulative event returns for each factor quantile (and group).</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.common_start_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">common_start_returns</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">returns</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">cumulative</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mean_by_date</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">demean_by</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.common_start_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Align return windows around each factor date on a shared integer offset index.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.compute_mean_returns_spread" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">compute_mean_returns_spread</span><span class="p">(</span><span class="n">mean_returns</span><span class="p">,</span> <span class="n">upper_quant</span><span class="p">,</span> <span class="n">lower_quant</span><span class="p">,</span> <span class="n">std_err</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.compute_mean_returns_spread" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute the upper-minus-lower quantile mean-return spread and error.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.cumulative_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">cumulative_returns</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.cumulative_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compound simple returns from one, treating missing observations as zero.</p>
+<p>This is the local, profile-free equivalent of the pinned Alphalens
+<code>empyrical.cum_returns(..., starting_value=1)</code> boundary.  It must not
+use fincore's validation-wrapped metric dispatcher because legacy factor
+return streams intentionally allow missing observations.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_alpha_beta" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_alpha_beta</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">returns</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">demeaned</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_alpha_beta" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Estimate annualized intercept and market beta from factor returns.</p>
+<p>The enhanced kernel uses a small NumPy least-squares projection.  The
+strict facade separately verifies the optional statsmodels boundary before
+delegating here, so importing this module remains optional-dependency free.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_information_coefficient" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_information_coefficient</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_information_coefficient" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute per-date Spearman IC values for every forward-return period.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_rank_autocorrelation" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_rank_autocorrelation</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_rank_autocorrelation" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute cross-sectional rank autocorrelation after a date-period shift.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_returns</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">demeaned</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_asset</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compute weighted forward returns, optionally retaining individual assets.</p>
+<p>The aggregate path deliberately uses pandas' default sum projection: an
+all-missing weighted period becomes <code>0.0</code> for the date, matching the
+pinned strict surface and keeping the enhanced kernel profile-free.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_weights" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_weights</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">demeaned</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_weights" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build date-wise factor weights with optional group-neutral normalization.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.mean_information_coefficient" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">mean_information_coefficient</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_time</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.mean_information_coefficient" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Aggregate IC by optional time and group dimensions.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.mean_return_by_quantile" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">mean_return_by_quantile</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">by_date</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">demeaned</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_adjust</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.mean_return_by_quantile" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return mean forward returns and standard errors by factor quantile.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.quantile_turnover" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">quantile_turnover</span><span class="p">(</span><span class="n">quantile_factor</span><span class="p">,</span> <span class="n">quantile</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.quantile_turnover" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the fraction of names newly entering one quantile per date.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_pyfolio_input" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_pyfolio_input</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">capital</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">benchmark_period</span><span class="o">=</span><span class="s1">&#39;1D&#39;</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_pyfolio_input" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build typed daily returns, positions, and optional benchmark for Pyfolio.</p>
+<p>The enhanced builder is independent of external Pyfolio.  It merely emits
+data in the workflow's canonical shape; rendering stays in
+:mod:<code>fincore.pyfolio</code> and remains lazily optional.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_cumulative_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_cumulative_returns</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_cumulative_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Simulate and compound a filtered factor portfolio for one return period.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.factor_positions" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_positions</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.factor_positions" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Simulate gross-normalized asset positions for a filtered factor portfolio.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.positions" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">positions</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.positions" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Build gross-normalized active positions for overlapping factor trades.</p>
+<p><code>period</code> may include an intraday remainder (for example <code>"1D3h"</code>).
+Whole session days advance with the supplied trading calendar while the
+remainder stays at its wall-clock time.  The output includes every trade
+and expiry timestamp, with a zero row after the final holding expires.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.close_owned_figures" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">close_owned_figures</span><span class="p">(</span><span class="n">artifacts</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.close_owned_figures" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close exactly the figures returned by an enhanced workflow.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_event_returns_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_event_returns_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">std_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_include_returns_tables</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_event_returns_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render aggregate and optional group event-window return sections.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_event_study_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_event_study_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">avgretplot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rate_of_ret</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_bars</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_event_study_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render event distribution, optional event returns, and quantile-return sections.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_full_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_full_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">legacy_projection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_full_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compose the returns, information, and turnover artifacts from one model.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_information_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_information_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">legacy_projection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_information_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render IC time-series, distributions, Q-Q, monthly, and group sections.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_returns_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_returns_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">legacy_projection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_returns_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render portfolio, quantile, spread, and optional group returns sections.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_summary_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_summary_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">legacy_projection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_summary_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the compact returns, information, and turnover sections from one model.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.create_turnover_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_turnover_tear_sheet</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">turnover_periods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">legacy_projection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.create_turnover_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render stored quantile-turnover and rank-autocorrelation sections.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.factor_analysis.show_owned_figures" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">show_owned_figures</span><span class="p">(</span><span class="n">artifacts</span><span class="p">)</span></code>
+
+<a href="#fincore.factor_analysis.show_owned_figures" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Display exactly the figures returned by one enhanced workflow.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="strict-utilities">Strict utilities<a class="headerlink" href="#strict-utilities" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.alphalens.utils" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.alphalens.utils</code>
+
+
+<a href="#fincore.alphalens.utils" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Strict Alphalens utility facade backed by the Task 3 factor-data kernel.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.alphalens.utils.MaxLossExceededError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">MaxLossExceededError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.MaxLossExceededError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="Exception">Exception</span></code></p>
+
+
+
+        <p>Pinned strict identity for a rejected cleaning-loss budget.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.alphalens.utils.NonMatchingTimezoneError" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>NonMatchingTimezoneError</code>
+
+
+<a href="#fincore.alphalens.utils.NonMatchingTimezoneError" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="Exception">Exception</span></code></p>
+
+
+
+        <p>Pinned strict identity for a factor/prices timezone mismatch.</p>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.rethrow" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">rethrow</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">additional_message</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.rethrow" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Re-raise <code>exception</code> after appending strict-source context to <code>args</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.non_unique_bin_edges_error" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">non_unique_bin_edges_error</span><span class="p">(</span><span class="n">func</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.non_unique_bin_edges_error" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Decorate a quantization callable with the pinned duplicate-edge guidance.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.demean_forward_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">demean_forward_returns</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">grouper</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.demean_forward_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return copied forward returns demeaned by date or the supplied grouping.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.print_table" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">print_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.print_table" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Display one strict-source table lazily through IPython's display hook.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.rate_of_return" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">rate_of_return</span><span class="p">(</span><span class="n">period_ret</span><span class="p">,</span> <span class="n">base_period</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.rate_of_return" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert a named forward-return period to a named base-period rate.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.std_conversion" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">std_conversion</span><span class="p">(</span><span class="n">period_std</span><span class="p">,</span> <span class="n">base_period</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.std_conversion" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Scale a named forward-period standard deviation to <code>base_period</code>.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.utils.quantize_factor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">quantize_factor</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.utils.quantize_factor" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Bind the source signature while retaining the legacy decorator signature.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="strict-performance">Strict performance<a class="headerlink" href="#strict-performance" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.alphalens.performance" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.alphalens.performance</code>
+
+
+<a href="#fincore.alphalens.performance" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Strict Alphalens performance facade backed by characterized kernels.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.performance.positions" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">positions</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.performance.positions" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Project the standalone active-position kernel through the strict facade.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.performance.factor_cumulative_returns" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_cumulative_returns</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.performance.factor_cumulative_returns" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the source-projected cumulative factor portfolio curve.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.performance.factor_positions" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">factor_positions</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.performance.factor_positions" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Project simulated factor positions through the strict facade.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.performance.create_pyfolio_input" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_pyfolio_input</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">capital</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">equal_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">benchmark_period</span><span class="o">=</span><span class="s1">&#39;1D&#39;</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.performance.create_pyfolio_input" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the strict legacy 3-tuple from the enhanced typed bridge.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="strict-tear-sheets">Strict tear sheets<a class="headerlink" href="#strict-tear-sheets" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="fincore.alphalens.tears" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>fincore.alphalens.tears</code>
+
+
+<a href="#fincore.alphalens.tears" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Strict, lazy Alphalens tear-sheet projection backed by model workflows.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="fincore.alphalens.tears.GridFigure" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>              <code class="highlight language-python"><span class="n">GridFigure</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.GridFigure" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>One lazily-created figure with the pinned row/cell grid primitives.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.alphalens.tears.GridFigure.create_new_figure" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">create_new_figure</span><span class="p">()</span></code>
+
+<a href="#fincore.alphalens.tears.GridFigure.create_new_figure" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Return the one figure owned by this grid for explicit ownership checks.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.alphalens.tears.GridFigure.next_row" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">next_row</span><span class="p">()</span></code>
+
+<a href="#fincore.alphalens.tears.GridFigure.next_row" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Allocate the next full-width row using the source cursor grammar.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.alphalens.tears.GridFigure.next_cell" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">next_cell</span><span class="p">()</span></code>
+
+<a href="#fincore.alphalens.tears.GridFigure.next_cell" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Allocate the next cell, advancing to a new row when necessary.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="fincore.alphalens.tears.GridFigure.close" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <code class="highlight language-python"><span class="n">close</span><span class="p">()</span></code>
+
+<a href="#fincore.alphalens.tears.GridFigure.close" class="headerlink" title="Permanent link">&para;</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Close only this grid's own figure and release its layout references.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_summary_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_summary_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_summary_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the pinned summary workflow from a single compute-once model.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_returns_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_returns_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_returns_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the pinned returns workflow and preserve its show/close lifecycle.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_information_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_information_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_information_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the pinned information workflow using the same model snapshot.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_turnover_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_turnover_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">turnover_periods</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_turnover_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render source-shaped turnover periods from their stored model results.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_full_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_full_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_full_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Compose the three legacy sections from one shared model snapshot.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_event_returns_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_event_returns_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">returns</span><span class="p">,</span> <span class="n">avgretplot</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">long_short</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">group_neutral</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">by_group</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_event_returns_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render source event-return sections from one model-bound event window.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="fincore.alphalens.tears.create_event_study_tear_sheet" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">create_event_study_tear_sheet</span><span class="p">(</span><span class="n">factor_data</span><span class="p">,</span> <span class="n">returns</span><span class="p">,</span> <span class="n">avgretplot</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">rate_of_ret</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_bars</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span></code>
+
+<a href="#fincore.alphalens.tears.create_event_study_tear_sheet" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Render the legacy event-study composition from a typed event model.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
