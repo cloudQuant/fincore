@@ -90,3 +90,4 @@ nav:
     - Compatibility: development/compatibility.md
     - API Stability: development/api-stability.md
     - Changelog: development/changelog.md
+  - Ecosystem: ecosystem.md
