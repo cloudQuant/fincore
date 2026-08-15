@@ -29,6 +29,13 @@ import tarfile
 import tomllib
 import zipfile
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import canonicalize_name
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
@@ -37,6 +44,26 @@ CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 _VERSION_RE = re.compile(r"reports version \*\*(\d+\.\d+\.\d+)\*\*")
 _RELEASE_SECTION_RE = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
 _SELF_DEP_RE = re.compile(r"^\s*fincore(\[|\s*$|$)", re.IGNORECASE)
+_BANNED_ARTIFACT_FRAGMENTS = (
+    "versioneer",
+    "requirements-alphalens",
+    "requirements-empyrical",
+    "requirements-pyfolio",
+)
+_BANNED_ARTIFACT_SUFFIXES = (".ipynb", ".png")
+_CONTRIBUTOR_REQUIREMENT_ARTIFACTS = {"requirements.txt", "requirements-test.txt"}
+_PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
+_REQUIRED_RUNTIME_MODULES = {
+    "fincore/alphalens/__init__.py",
+    "fincore/alphalens/performance.py",
+    "fincore/alphalens/plotting.py",
+    "fincore/alphalens/tears.py",
+    "fincore/factor_analysis/__init__.py",
+    "fincore/factor_analysis/data.py",
+    "fincore/factor_analysis/performance.py",
+    "fincore/factor_analysis/portfolio.py",
+    "fincore/py.typed",
+}
 
 
 def _project() -> dict:
@@ -52,6 +79,69 @@ def _gt(a: str, b: str) -> bool:
     from packaging.version import Version
 
     return Version(a) > Version(b)
+
+
+def _check_artifact_layout(
+    check: Callable[[bool, str], None],
+    names: set[str],
+    read_text: Callable[[str], str],
+    *,
+    label: str,
+    prefix: str = "",
+) -> None:
+    """Check source-free runtime layout and the approved Apache-only license."""
+    relative_names = {name.removeprefix(prefix) for name in names if name.startswith(prefix)}
+    required = {prefix + module for module in _REQUIRED_RUNTIME_MODULES}
+    check(required <= names, f"{label} contains Alphalens and factor-analysis runtime modules")
+    forbidden_prefixes = tuple(prefix + directory for directory in ("tests/", "examples/", "docs/", "benchmarks/"))
+    check(
+        not any(name.startswith(forbidden_prefixes) for name in names),
+        f"{label} excludes tests, examples, docs, and benchmarks",
+    )
+    check(
+        not any(
+            name.startswith(("/", "../"))
+            or "/../" in name
+            or name.lower().endswith(_BANNED_ARTIFACT_SUFFIXES)
+            or Path(name).name in _CONTRIBUTOR_REQUIREMENT_ARTIFACTS
+            or any(fragment in name.lower() for fragment in _BANNED_ARTIFACT_FRAGMENTS)
+            for name in names
+        ),
+        f"{label} excludes sibling paths, contributor requirements, Versioneer, notebooks, PNGs, and oracle requirements",
+    )
+    notice_files = [name for name in relative_names if "THIRD_PARTY_NOTICES" in name]
+    check(not notice_files, f"{label} has no unapproved third-party notice file")
+    license_names = [name for name in names if name.endswith("/LICENSE") or name == prefix + "LICENSE"]
+    check(len(license_names) == 1, f"{label} includes exactly one LICENSE")
+    if len(license_names) == 1:
+        check("Apache License" in read_text(license_names[0]), f"{label} LICENSE is Apache-2.0")
+
+
+def _is_allowed_compatibility_requirement(requirement: Requirement) -> bool:
+    """Return whether a requirement keeps integrated compatibility code local."""
+    return canonicalize_name(requirement.name) not in _PROHIBITED_EXTERNAL_REQUIREMENTS and requirement.url is None
+
+
+def _check_artifact_requirements(check: Callable[[bool, str], None], requirements: list[str], *, label: str) -> None:
+    """Reject external compatibility packages and direct URLs in built metadata."""
+    malformed: list[str] = []
+    prohibited: list[str] = []
+    for raw in requirements:
+        try:
+            requirement = Requirement(raw)
+        except InvalidRequirement:
+            malformed.append(raw)
+            continue
+        if not _is_allowed_compatibility_requirement(requirement):
+            prohibited.append(raw)
+    check(
+        not malformed,
+        f"{label} Requires-Dist contains only valid requirements ({malformed or 'valid'})",
+    )
+    check(
+        not prohibited,
+        f"{label} Requires-Dist uses no external Alphalens/Empyrical or direct URL ({prohibited or 'clean'})",
+    )
 
 
 def _failures(dist_dir: Path | None) -> list[str]:
@@ -123,10 +213,17 @@ def _failures(dist_dir: Path | None) -> list[str]:
             with zipfile.ZipFile(wheel) as zf:
                 metadata_name = next(n for n in zf.namelist() if n.endswith(".dist-info/METADATA"))
                 metadata = email.message_from_bytes(zf.read(metadata_name))
+                _check_artifact_layout(
+                    check,
+                    set(zf.namelist()),
+                    lambda name: zf.read(name).decode("utf-8", "replace"),
+                    label=wheel.name,
+                )
             check(metadata["Version"] == version, f"wheel METADATA version for {wheel.name}")
             requires = metadata.get_all("Requires-Dist", [])
             self_deps = [req for req in requires if _SELF_DEP_RE.match(req)]
             check(not self_deps, f"no self-dependency in {wheel.name} ({self_deps or 'clean'})")
+            _check_artifact_requirements(check, requires, label=wheel.name)
             provides = set(metadata.get_all("Provides-Extra", []))
             expected_extras = set(project.get("optional-dependencies", {}))
             check(
@@ -140,12 +237,19 @@ def _failures(dist_dir: Path | None) -> list[str]:
                 f"sdist filename {sdist.name} embeds version {version}",
             )
             with tarfile.open(sdist) as tf:
-                pkg_info = next(n for n in tf.getnames() if n.endswith("/PKG-INFO"))
-                text = tf.extractfile(pkg_info).read().decode("utf-8", "replace")  # type: ignore[union-attr]
-            version_line = next(
-                (ln.split(":", 1)[1].strip() for ln in text.splitlines() if ln.startswith("Version:")), None
-            )
-            check(version_line == version, f"sdist PKG-INFO version for {sdist.name}")
+                names = set(tf.getnames())
+                package_root = next(name.split("/", 1)[0] for name in names if name.endswith("/PKG-INFO")) + "/"
+                pkg_info = next(n for n in names if n.endswith("/PKG-INFO"))
+                pkg_info_metadata = email.message_from_bytes(tf.extractfile(pkg_info).read())  # type: ignore[union-attr]
+                _check_artifact_layout(
+                    check,
+                    names,
+                    lambda name: tf.extractfile(name).read().decode("utf-8", "replace"),  # type: ignore[union-attr]
+                    label=sdist.name,
+                    prefix=package_root,
+                )
+            check(pkg_info_metadata["Version"] == version, f"sdist PKG-INFO version for {sdist.name}")
+            _check_artifact_requirements(check, pkg_info_metadata.get_all("Requires-Dist", []), label=sdist.name)
     else:
         print("NOTE: no --dist directory given; skipping built-artifact checks")
 
@@ -157,6 +261,11 @@ def _failures(dist_dir: Path | None) -> list[str]:
             check(
                 not _SELF_DEP_RE.match(req),
                 f"extra {extra_name!r} contains no self-reference ({req!r})",
+            )
+            parsed = Requirement(req)
+            check(
+                _is_allowed_compatibility_requirement(parsed),
+                f"extra {extra_name!r} uses only integrated compatibility code ({req!r})",
             )
 
     # ------------------------------------------------------------------

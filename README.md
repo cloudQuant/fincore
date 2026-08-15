@@ -24,13 +24,14 @@ Current version: **0.3.0** (Beta). Python **3.11+** is required; this is a docum
 
 ### Three API surfaces
 
-fincore 0.3.0 exposes three clearly separated surfaces. One name does not silently switch semantics between them:
+fincore 0.3.0 exposes clearly separated surfaces. One name does not silently switch semantics between them:
 
 | Surface | What it is | Guarantee |
 |---------|------------|-----------|
 | **Strict compatibility** — `fincore.empyrical` | Frozen empyrical 0.6.0 surface: 54/54 public symbols (C0), 49/49 callables (C1), core callables numerically verified (C3) | Pinned by `tests/compat/fixtures/` manifests and enforced by the `tests/compat/` gates |
 | **pyfolio façade** — `fincore.pyfolio` | Frozen pyfolio 0.9.6 profile of 11 tear-sheet workflows: all entries C1, risk/returns/perf-attrib/full-sheet main chains C4 | Requires the `fincore[pyfolio]` extra |
 | **Enhanced semantics** — `fincore.metrics`, flat API, `AnalysisContext` | fincore's own, documented divergences (e.g. `week_year="iso"`, explicit validation exceptions) | Recommended API; enhanced, not empyrical-identical |
+| **Alphalens migration** — `fincore.alphalens` / `fincore.factor_analysis` | A source-shaped strict façade and a separate enhanced prepare/analyze/render workflow | Beta integration; use the tested APIs documented in the [migration guide](docs/MIGRATION.md), not a top-level `alphalens` import |
 
 See the [compatibility matrix](https://cloudquant.github.io/fincore/development/compatibility/), [empyrical matrix](docs/compatibility/empyrical-0.6.0.md), and [pyfolio profile](docs/compatibility/pyfolio-0.9.6.md).
 
@@ -53,6 +54,8 @@ See the [compatibility matrix](https://cloudquant.github.io/fincore/development/
 ```bash
 pip install fincore                       # Core metrics
 pip install "fincore[pyfolio]"            # + Pyfolio tear sheets (matplotlib, seaborn, ipython)
+pip install "fincore[factor-analysis]"    # + Compute-only enhanced factor analysis
+pip install "fincore[alphalens]"          # + Factor-analysis rendering and strict Alphalens migration APIs
 pip install "fincore[interactive]"        # + Plotly, Bokeh backends
 pip install "fincore[report-pdf]"         # + Playwright PDF rendering
 pip install "fincore[report-xlsx]"        # + XLSX report export
@@ -152,6 +155,23 @@ w = optimize(returns_df, objective="max_sharpe")
 Every Python code block above is executed with the same data and arguments
 by a matching test in [`tests/docs/test_examples.py`](tests/docs/test_examples.py).
 
+### Alphalens migration quickstart
+
+The repository includes an executable, deterministic migration example. It
+builds local synthetic data with a fixed seed, uses no network, writes no
+output files, renders only with Agg, and closes its returned figures:
+
+```bash
+pip install "fincore[alphalens]"
+MPLBACKEND=Agg python examples/factor_analysis_quickstart.py
+```
+
+Use `fincore.alphalens` for source-shaped strict calls and
+`fincore.factor_analysis` for new prepare/analyze/render workflows. Do not use
+`import alphalens`: fincore intentionally does not install or expose a
+top-level standalone-compatible package. See [the migration guide](docs/MIGRATION.md)
+for the API map and limitations.
+
 ### Architecture
 
 ```
@@ -194,7 +214,9 @@ pytest tests/ --cov=fincore           # With coverage
 
 The fincore repository declares Apache License 2.0; see [LICENSE](LICENSE).
 Adapted-source provenance and unresolved upstream notice questions are tracked
-in [docs/upstream-provenance.md](docs/upstream-provenance.md).
+in [docs/upstream-provenance.md](docs/upstream-provenance.md). The required
+human Alphalens license/NOTICE decision remains a release blocker; no
+third-party notice or legal conclusion is implied by this integration.
 
 ---
 

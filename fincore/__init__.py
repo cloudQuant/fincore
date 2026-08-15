@@ -73,6 +73,7 @@ __all__ = [
     "aggregate_returns",
     "alpha",
     "alpha_beta",
+    "alphalens",
     "analyze",
     "annual_return",
     "annual_volatility",
@@ -132,6 +133,12 @@ assert set(_FLAT_REGISTRY) == set(_FLAT_API)
 
 
 def __getattr__(name: str) -> Any:
+    if name == "alphalens":
+        import importlib
+
+        module = importlib.import_module("fincore.alphalens")
+        globals()["alphalens"] = module
+        return module
     if name == "empyrical":
         import importlib
 

@@ -68,6 +68,14 @@ jobs:
       - name: Compatibility manifest suite
         run: pytest -o addopts='' tests/compat -q --tb=short --maxfail=0
 
+      - name: Alphalens compatibility gate
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python -m pytest -o addopts=''
+          tests/compat/alphalens tests/test_factor_analysis
+          -q --tb=short --maxfail=0
+
       - name: Offline integration suite
         run: pytest -o addopts='' tests/ -q --tb=short --maxfail=0 -m integration_offline
 
@@ -93,8 +101,10 @@ jobs:
       - name: Verify release consistency
         run: python scripts/check_release_consistency.py --dist dist/
 
-      - name: Wheel consumer smoke (full profile matrix)
-        run: python scripts/test_installed_wheel.py --dist dist/ --profiles core pyfolio interactive bayesian report-pdf all
+      - name: Wheel consumer smoke (Task 9 required profiles)
+        run: >-
+          python scripts/test_installed_wheel.py --dist dist/
+          --profiles core factor-analysis alphalens alphalens-pyfolio all
 
       - name: Packaging contract tests
         run: pytest -o addopts='' tests/packaging -q --maxfail=0

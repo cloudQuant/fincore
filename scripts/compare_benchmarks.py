@@ -39,14 +39,35 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import statistics
 import sys
+from datetime import datetime
 from itertools import pairwise
 from pathlib import Path
 
 MIB = 1024 * 1024
 KNOWN_RSS_UNITS = {"bytes"}
 UPSTREAM_METRICS = {"roll_alpha", "roll_alpha_beta"}
+FACTOR_BENCHMARK_SCHEMA = "fincore-factor-analysis-benchmarks-v1"
+FACTOR_BENCHMARK_KIND = "factor_analysis"
+FACTOR_BENCHMARK_SEED = 20260815
+FACTOR_SCENARIOS: dict[str, tuple[dict[str, int], tuple[str, ...]]] = {
+    "small-ci": (
+        {"dates": 252, "assets": 100, "rows": 25200},
+        ("prepare", "quantize", "information-coefficient", "weights"),
+    ),
+    "medium-artifact": (
+        {"dates": 1260, "assets": 500, "rows": 630000},
+        ("prepare", "factor-returns", "full-model"),
+    ),
+    "event": (
+        {"dates": 756, "assets": 200, "rows": 151200},
+        ("common-start", "event-average"),
+    ),
+}
+SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+GIT_SHA_PATTERN = re.compile(r"[0-9a-f]{40}")
 
 
 def _load(path: str) -> dict:
@@ -81,6 +102,362 @@ def _medians(group: list[dict]) -> dict:
         "peak_rss_bytes": _median([c["peak_rss_bytes"] for c in group]),
         "rss_before_bytes": _median([c["rss_before_bytes"] for c in group]),
     }
+
+
+def _factor_key(case: dict) -> tuple[str, str]:
+    return (case["scenario"], case["kernel"])
+
+
+def _is_nonnegative_integer(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _is_nonnegative_finite_number(value: object) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        and float(value) >= 0.0
+    )
+
+
+def _is_sha256(value: object) -> bool:
+    return isinstance(value, str) and SHA256_PATTERN.fullmatch(value) is not None
+
+
+def _is_git_sha(value: object) -> bool:
+    return isinstance(value, str) and GIT_SHA_PATTERN.fullmatch(value) is not None
+
+
+def _is_output_shape(value: object) -> bool:
+    """Accept the JSON-safe array/model-shape forms emitted by the runner."""
+
+    if isinstance(value, list):
+        return bool(value) and all(_is_nonnegative_integer(item) for item in value)
+    if not isinstance(value, dict) or set(value) != {"factor_data", "forward_periods"}:
+        return False
+    factor_data = value["factor_data"]
+    forward_periods = value["forward_periods"]
+    return (
+        isinstance(factor_data, list)
+        and bool(factor_data)
+        and all(_is_nonnegative_integer(item) for item in factor_data)
+        and isinstance(forward_periods, list)
+        and bool(forward_periods)
+        and all(isinstance(period, str) and period for period in forward_periods)
+    )
+
+
+def _is_timestamp(value: object) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).tzinfo is not None
+    except ValueError:
+        return False
+
+
+def _check_factor_baseline_metadata(data: dict, provenance: dict, label: str) -> list[str]:
+    """Validate mutually exclusive approved and candidate-only baseline states."""
+
+    violations: list[str] = []
+    baseline_status = data.get("baseline_status")
+    approval = data.get("approval")
+    protocol = data.get("candidate_protocol")
+    if not isinstance(approval, dict):
+        return [f"{label}: approval metadata must be an object"]
+    if not isinstance(protocol, dict):
+        return [f"{label}: candidate_protocol metadata must be an object"]
+
+    reference_platform = protocol.get("reference_platform")
+    if reference_platform != provenance.get("platform_label"):
+        violations.append(f"{label}: candidate_protocol reference_platform must match provenance platform_label")
+    if not isinstance(protocol.get("candidate_path"), str) or not protocol["candidate_path"]:
+        violations.append(f"{label}: candidate_protocol candidate_path must be a nonempty string")
+    if not _is_sha256(protocol.get("captured_candidate_sha256")):
+        violations.append(f"{label}: candidate_protocol captured_candidate_sha256 must be a 64-hex SHA256")
+    required_reviewers = protocol.get("required_reviewers")
+    if (
+        not isinstance(required_reviewers, list)
+        or not all(isinstance(reviewer, str) for reviewer in required_reviewers)
+        or not {"kernel owner", "Track E"} <= set(required_reviewers)
+    ):
+        violations.append(f"{label}: candidate_protocol must name kernel owner and Track E")
+    if not isinstance(protocol.get("approval_steps"), list) or not protocol["approval_steps"]:
+        violations.append(f"{label}: candidate_protocol approval_steps must be nonempty")
+    if not isinstance(protocol.get("current_blockers"), list):
+        violations.append(f"{label}: candidate_protocol current_blockers must be a list")
+
+    status = approval.get("status")
+    approved_by = approval.get("approved_by")
+    approved_at = approval.get("approved_at")
+    reviewed_sha = approval.get("reviewed_candidate_sha256")
+    if status == "pending":
+        if baseline_status != "candidate-only-not-release-approved":
+            violations.append(f"{label}: pending baseline_status must be candidate-only-not-release-approved")
+        if any(value is not None for value in (approved_by, approved_at, reviewed_sha)):
+            violations.append(f"{label}: pending approval metadata must be null")
+        if protocol.get("captured_candidate_review_status") != "unreviewed":
+            violations.append(f"{label}: pending candidate_protocol must be unreviewed")
+        if not protocol.get("current_blockers"):
+            violations.append(f"{label}: pending candidate_protocol must list current_blockers")
+    elif status == "approved":
+        if baseline_status != "approved":
+            violations.append(f"{label}: approved baseline_status must be approved")
+        if provenance.get("dirty") is not False:
+            violations.append(f"{label}: approved baseline must have dirty=false")
+        if not isinstance(approved_by, str) or not approved_by.strip():
+            violations.append(f"{label}: approved baseline requires approved_by")
+        if not _is_timestamp(approved_at):
+            violations.append(f"{label}: approved baseline requires timezone-aware approved_at")
+        if not _is_sha256(reviewed_sha):
+            violations.append(f"{label}: approved baseline requires reviewed_candidate_sha256")
+        if protocol.get("captured_candidate_review_status") != "reviewed":
+            violations.append(f"{label}: approved candidate_protocol must be reviewed")
+        if protocol.get("captured_candidate_sha256") != reviewed_sha:
+            violations.append(f"{label}: approved candidate_protocol SHA must equal reviewed_candidate_sha256")
+        if protocol.get("current_blockers"):
+            violations.append(f"{label}: approved candidate_protocol current_blockers must be empty")
+    else:
+        violations.append(f"{label}: approval status must be 'pending' or 'approved'")
+    return violations
+
+
+def _check_factor_schema(data: object, label: str, *, baseline: bool) -> list[str]:
+    """Fail closed on the complete opt-in factor-analysis artifact contract."""
+
+    if not isinstance(data, dict):
+        return [f"{label}: payload must be a JSON object"]
+
+    violations: list[str] = []
+    if data.get("schema") != FACTOR_BENCHMARK_SCHEMA:
+        violations.append(f"{label}: schema must be {FACTOR_BENCHMARK_SCHEMA!r}")
+    if data.get("kind") != FACTOR_BENCHMARK_KIND:
+        violations.append(f"{label}: kind must be {FACTOR_BENCHMARK_KIND!r}")
+    if data.get("rss_unit") != "bytes":
+        violations.append(f"{label}: rss_unit must be 'bytes'")
+
+    provenance = data.get("provenance")
+    if not isinstance(provenance, dict):
+        violations.append(f"{label}: provenance must be an object")
+        provenance = {}
+    violations.extend(
+        f"{label}: provenance missing {field!r}"
+        for field in ("python", "numpy", "pandas", "scipy", "statsmodels", "os", "arch")
+        if not isinstance(provenance.get(field), str) or not provenance[field]
+    )
+    if not _is_git_sha(provenance.get("commit")):
+        violations.append(f"{label}: provenance commit must be a 40-hex Git SHA")
+    if not isinstance(provenance.get("dirty"), bool):
+        violations.append(f"{label}: provenance missing 'dirty'")
+    expected_platform = (
+        f"{provenance.get('os')}-{provenance.get('arch')}"
+        if isinstance(provenance.get("os"), str) and isinstance(provenance.get("arch"), str)
+        else None
+    )
+    if provenance.get("platform_label") != expected_platform:
+        violations.append(f"{label}: platform_label must match provenance os and arch")
+
+    runner = data.get("runner")
+    if not isinstance(runner, dict):
+        violations.append(f"{label}: runner must be an object")
+        runner = {}
+    warmups = runner.get("warmups")
+    repeats = runner.get("repeats")
+    if not _is_nonnegative_integer(warmups):
+        violations.append(f"{label}: runner warmups must be a nonnegative integer")
+    if not _is_nonnegative_integer(repeats) or repeats < 1:
+        violations.append(f"{label}: runner repeats must be a positive integer")
+
+    cases = data.get("cases")
+    if not isinstance(cases, list) or not cases:
+        violations.append(f"{label}: payload has no cases")
+        cases = []
+
+    valid_groups: dict[tuple[str, str], list[dict]] = {}
+    observed_scenarios: set[str] = set()
+    for number, case in enumerate(cases):
+        prefix = f"{label}: case {number}"
+        if not isinstance(case, dict):
+            violations.append(f"{prefix} must be an object")
+            continue
+        scenario = case.get("scenario")
+        kernel = case.get("kernel")
+        scenario_is_valid = isinstance(scenario, str) and scenario in FACTOR_SCENARIOS
+        kernel_is_valid = scenario_is_valid and isinstance(kernel, str) and kernel in FACTOR_SCENARIOS[scenario][1]
+        if not kernel_is_valid:
+            violations.append(f"{prefix} has unknown scenario/kernel {scenario!r}/{kernel!r}")
+        else:
+            observed_scenarios.add(scenario)
+            valid_groups.setdefault((scenario, kernel), []).append(case)
+            if case.get("input_shape") != FACTOR_SCENARIOS[scenario][0]:
+                violations.append(f"{prefix} has noncanonical input_shape")
+        if case.get("seed") != FACTOR_BENCHMARK_SEED:
+            violations.append(f"{prefix} has noncanonical seed")
+        if not _is_output_shape(case.get("output_shape")):
+            violations.append(f"{prefix} has invalid output_shape")
+        if not _is_sha256(case.get("output_digest")):
+            violations.append(f"{prefix} has invalid SHA256 digest")
+        if case.get("rss_unit") != "bytes":
+            violations.append(f"{prefix} has invalid rss_unit")
+        if not _is_nonnegative_finite_number(case.get("wall_seconds")):
+            violations.append(f"{prefix} has invalid wall_seconds")
+        violations.extend(
+            f"{prefix} has invalid {field}"
+            for field in ("rss_before_bytes", "peak_rss_bytes", "rss_delta_bytes", "tracemalloc_peak_bytes")
+            if not _is_nonnegative_integer(case.get(field))
+        )
+        before = case.get("rss_before_bytes")
+        peak = case.get("peak_rss_bytes")
+        delta = case.get("rss_delta_bytes")
+        if all(_is_nonnegative_integer(value) for value in (before, peak, delta)):
+            if peak < before:
+                violations.append(f"{prefix} peak_rss_bytes must be >= rss_before_bytes")
+            if delta != max(peak - before, 0):
+                violations.append(f"{prefix} rss_delta_bytes must match peak minus before")
+        if not _is_nonnegative_integer(case.get("warmup")):
+            violations.append(f"{prefix} warmup must be a nonnegative integer")
+        if not _is_nonnegative_integer(case.get("repeat")):
+            violations.append(f"{prefix} repeat must be a nonnegative integer")
+        if not _is_nonnegative_integer(case.get("repeats")) or case.get("repeats", 0) < 1:
+            violations.append(f"{prefix} repeats must be a positive integer")
+
+    if (
+        isinstance(warmups, int)
+        and not isinstance(warmups, bool)
+        and isinstance(repeats, int)
+        and not isinstance(repeats, bool)
+        and repeats >= 1
+    ):
+        expected_keys = {
+            (scenario, kernel) for scenario in observed_scenarios for kernel in FACTOR_SCENARIOS[scenario][1]
+        }
+        actual_keys = set(valid_groups)
+        missing = expected_keys - actual_keys
+        unexpected = actual_keys - expected_keys
+        if missing:
+            violations.append(f"{label}: missing required cases: {sorted(missing)}")
+        if unexpected:
+            violations.append(f"{label}: unexpected cases: {sorted(unexpected)}")
+        expected_repeat_ids = list(range(repeats))
+        for key, group in sorted(valid_groups.items()):
+            repeat_ids = sorted(case["repeat"] for case in group if _is_nonnegative_integer(case.get("repeat")))
+            if repeat_ids != expected_repeat_ids:
+                violations.append(
+                    f"{label}: {key[0]}/{key[1]} repeat IDs must be {expected_repeat_ids}, got {repeat_ids}"
+                )
+            if any(case.get("warmup") != warmups or case.get("repeats") != repeats for case in group):
+                violations.append(f"{label}: {key[0]}/{key[1]} repeat protocol must match runner")
+
+    if baseline:
+        violations.extend(_check_factor_baseline_metadata(data, provenance, label))
+    else:
+        violations.extend(
+            f"{label}: candidate must not contain {field}"
+            for field in ("baseline_status", "approval", "candidate_protocol")
+            if field in data
+        )
+    return violations
+
+
+def _factor_digest_violations(baseline: dict, candidate: dict) -> list[str]:
+    """Compare deterministic output digests and shapes before timing data."""
+
+    violations = _check_factor_schema(baseline, "baseline", baseline=True) + _check_factor_schema(
+        candidate, "candidate", baseline=False
+    )
+    if violations:
+        return violations
+    base_groups = _group_cases(baseline["cases"], _factor_key)
+    cand_groups = _group_cases(candidate["cases"], _factor_key)
+    missing_from_candidate = set(base_groups) - set(cand_groups)
+    unexpected_in_candidate = set(cand_groups) - set(base_groups)
+    if missing_from_candidate:
+        violations.append(f"candidate missing required cases: {sorted(missing_from_candidate)}")
+    if unexpected_in_candidate:
+        violations.append(f"candidate has unexpected cases: {sorted(unexpected_in_candidate)}")
+    for key in sorted(set(cand_groups) & set(base_groups)):
+        base_digests = {case["output_digest"] for case in base_groups[key]}
+        cand_digests = {case["output_digest"] for case in cand_groups[key]}
+        base_shapes = {json.dumps(case["output_shape"], sort_keys=True) for case in base_groups[key]}
+        cand_shapes = {json.dumps(case["output_shape"], sort_keys=True) for case in cand_groups[key]}
+        base_inputs = {json.dumps(case["input_shape"], sort_keys=True) for case in base_groups[key]}
+        cand_inputs = {json.dumps(case["input_shape"], sort_keys=True) for case in cand_groups[key]}
+        base_seeds = {case["seed"] for case in base_groups[key]}
+        cand_seeds = {case["seed"] for case in cand_groups[key]}
+        if len(base_digests) != 1 or len(cand_digests) != 1 or base_digests != cand_digests:
+            violations.append(
+                f"{key[0]}/{key[1]}: output_digest mismatch "
+                f"baseline={sorted(base_digests)} candidate={sorted(cand_digests)}"
+            )
+        if len(base_shapes) != 1 or len(cand_shapes) != 1 or base_shapes != cand_shapes:
+            violations.append(
+                f"{key[0]}/{key[1]}: output_shape mismatch "
+                f"baseline={sorted(base_shapes)} candidate={sorted(cand_shapes)}"
+            )
+        if len(base_inputs) != 1 or len(cand_inputs) != 1 or base_inputs != cand_inputs:
+            violations.append(
+                f"{key[0]}/{key[1]}: input_shape mismatch "
+                f"baseline={sorted(base_inputs)} candidate={sorted(cand_inputs)}"
+            )
+        if len(base_seeds) != 1 or len(cand_seeds) != 1 or base_seeds != cand_seeds:
+            violations.append(
+                f"{key[0]}/{key[1]}: seed mismatch baseline={sorted(base_seeds)} candidate={sorted(cand_seeds)}"
+            )
+    return violations
+
+
+def _compare_factor_analysis(baseline: dict | None, candidate: dict, args) -> int:
+    """Run the opt-in digest-first, same-platform factor benchmark gate."""
+
+    if baseline is None:
+        violations = _check_factor_schema(candidate, "candidate", baseline=False)
+        if violations:
+            for violation in violations:
+                print(f"FAIL: {violation}", file=sys.stderr)
+            return 1
+        print("factor-analysis baseline absent; artifact only, performance comparison not run")
+        return 0
+
+    digest_violations = _factor_digest_violations(baseline, candidate)
+    if digest_violations:
+        for violation in digest_violations:
+            print(f"FAIL: {violation}", file=sys.stderr)
+        print("performance comparison not run because digest/shape gate failed", file=sys.stderr)
+        return 1
+
+    baseline_platform = baseline["provenance"]["platform_label"]
+    candidate_platform = candidate["provenance"]["platform_label"]
+    if baseline_platform != candidate_platform:
+        print(
+            f"platform mismatch ({baseline_platform} != {candidate_platform}); "
+            "artifact only, performance comparison not run"
+        )
+        return 0
+
+    approval = baseline["approval"]
+    if approval["status"] != "approved":
+        print("baseline approval is pending; performance comparison not run", file=sys.stderr)
+        return 1
+
+    base_groups = _group_cases(baseline["cases"], _factor_key)
+    cand_groups = _group_cases(candidate["cases"], _factor_key)
+    violations: list[str] = []
+    for key in sorted(cand_groups):
+        base_time = _median([case["wall_seconds"] for case in base_groups[key]])
+        cand_time = _median([case["wall_seconds"] for case in cand_groups[key]])
+        base_rss = _median([case["peak_rss_bytes"] for case in base_groups[key]])
+        cand_rss = _median([case["peak_rss_bytes"] for case in cand_groups[key]])
+        if cand_time > base_time * (1.0 + args.max_time_regression):
+            violations.append(f"{key[0]}/{key[1]}: wall_seconds regressed {cand_time:.6g} vs {base_time:.6g}")
+        if cand_rss > base_rss * (1.0 + args.max_rss_regression):
+            violations.append(f"{key[0]}/{key[1]}: peak_rss_bytes regressed {cand_rss:.6g} vs {base_rss:.6g}")
+    for violation in violations:
+        print(f"FAIL: {violation}", file=sys.stderr)
+    if violations:
+        return 1
+    print("all factor-analysis digest, shape, time, and RSS gates passed")
+    return 0
 
 
 def _slope(x1: float, x2: float, y1: float, y2: float) -> float | None:
@@ -352,6 +729,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="run structural gates only when the baseline file is absent",
     )
+    parser.add_argument("--digest-gate", choices=("sha256",), help="compare output digest/shape before performance")
     parser.add_argument("--report", help="write the full comparison artifact as JSON here")
     return parser.parse_args(argv)
 
@@ -374,6 +752,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"baseline {args.baseline!r} not found; running structural gates only")
     elif not args.baseline:
         print("no --baseline given; running structural gates only")
+
+    if args.digest_gate == "sha256":
+        return _compare_factor_analysis(baseline, candidate, args)
 
     kind = candidate.get("kind")
     report: dict = {"slopes": {}, "per_row_bytes": {}}

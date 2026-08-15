@@ -1,0 +1,353 @@
+{
+  "schema_version": 1,
+  "project": "alphalens",
+  "profile": "cloudquant-local-3fa17ad",
+  "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+  "fixture_source": {
+    "mode": "reviewed-small-json-input-cases",
+    "source": "behavioral-contract-inputs-not-oracle-outputs"
+  },
+  "source_files": [
+    {
+      "git_blob": "339757d6d8027b680e89d3dc180e297ce38dd16d",
+      "path": "alphalens/__init__.py",
+      "sha256": "4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07"
+    },
+    {
+      "git_blob": "048b72a25ea891060f924ae03c52dc94f94687a2",
+      "path": "alphalens/performance.py",
+      "sha256": "0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac"
+    },
+    {
+      "git_blob": "85e8f312848a1cca6e07808f2d433d0c116364c4",
+      "path": "alphalens/plotting.py",
+      "sha256": "56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15"
+    },
+    {
+      "git_blob": "01664911c254f100ff272dd4a277dc2d1ba32753",
+      "path": "alphalens/tears.py",
+      "sha256": "2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05"
+    },
+    {
+      "git_blob": "8aca231a6b1c40764c9dae5f2e8ad9d22839b6dc",
+      "path": "alphalens/utils.py",
+      "sha256": "adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871"
+    }
+  ],
+  "serializer": {
+    "name": "fincore-compat-json-table-v1",
+    "table_fields": [
+      "kind",
+      "index",
+      "index_names",
+      "timezone",
+      "columns",
+      "dtypes",
+      "values",
+      "nan_mask"
+    ],
+    "nan_encoding": "null-with-parallel-boolean-mask"
+  },
+  "case_selection_review": {
+    "status": "static-input-schema-reviewed",
+    "reviewer": "Codex",
+    "reviewed_at": "2026-08-13",
+    "candidate_digest": null,
+    "environment_digest": null,
+    "scope": "deterministic inputs only; numerical output review is pending"
+  },
+  "oracle_verification": {
+    "reviewed": false,
+    "status": "not-run"
+  },
+  "cases": [
+    {
+      "case_id": "daily-basic-v1",
+      "category": "daily",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "daily factor and wide-price alignment",
+      "parameters": {
+        "periods": [
+          1,
+          5
+        ],
+        "max_loss": 0.35
+      },
+      "tables": {
+        "factor": {
+          "kind": "series",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-03", "A"], ["2020-01-03", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[1.0], [-1.0], [0.5], [-0.5]],
+          "nan_mask": [[false], [false], [false], [false]]
+        },
+        "prices": {
+          "kind": "dataframe",
+          "index": ["2020-01-02", "2020-01-03", "2020-01-06", "2020-01-07", "2020-01-08", "2020-01-09", "2020-01-10"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[100.0, 50.0], [102.0, 49.0], [104.0, 51.0], [105.0, 52.0], [107.0, 53.0], [109.0, 54.0], [110.0, 55.0]],
+          "nan_mask": [[false, false], [false, false], [false, false], [false, false], [false, false], [false, false], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "business-day-calendar-v1",
+      "category": "business-day",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "holiday gap and business-day return labels",
+      "parameters": {"periods": [1, 2]},
+      "tables": {
+        "factor": {
+          "kind": "series",
+          "index": [["2020-07-02", "A"], ["2020-07-02", "B"], ["2020-07-06", "A"], ["2020-07-06", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[1.0], [-1.0], [2.0], [-2.0]],
+          "nan_mask": [[false], [false], [false], [false]]
+        },
+        "prices": {
+          "kind": "dataframe",
+          "index": ["2020-07-02", "2020-07-06", "2020-07-07", "2020-07-08", "2020-07-09", "2020-07-10"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[100.0, 50.0], [101.0, 49.0], [103.0, 50.0], [102.0, 51.0], [104.0, 52.0], [105.0, 53.0]],
+          "nan_mask": [[false, false], [false, false], [false, false], [false, false], [false, false], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "intraday-four-hour-v1",
+      "category": "intraday",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "intraday timestamps retain their 09:30 time-of-day across business dates",
+      "parameters": {"periods": [1]},
+      "tables": {
+        "factor": {
+          "kind": "series",
+          "index": [["2020-01-02T09:30:00", "A"], ["2020-01-02T09:30:00", "B"], ["2020-01-03T09:30:00", "A"], ["2020-01-03T09:30:00", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[0.25], [-0.25], [0.75], [-0.75]],
+          "nan_mask": [[false], [false], [false], [false]]
+        },
+        "prices": {
+          "kind": "dataframe",
+          "index": ["2020-01-02T09:30:00", "2020-01-03T09:30:00", "2020-01-06T09:30:00"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[10.0, 20.0], [10.4, 19.5], [10.2, 20.5]],
+          "nan_mask": [[false, false], [false, false], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "tz-aware-utc-v1",
+      "category": "tz-aware",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "matching UTC factor and price indexes",
+      "parameters": {"periods": [1]},
+      "tables": {
+        "factor": {
+          "kind": "series",
+          "index": [["2020-01-02T00:00:00+00:00", "A"], ["2020-01-02T00:00:00+00:00", "B"], ["2020-01-03T00:00:00+00:00", "A"], ["2020-01-03T00:00:00+00:00", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": "UTC",
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[1.0], [-1.0], [0.5], [-0.5]],
+          "nan_mask": [[false], [false], [false], [false]]
+        },
+        "prices": {
+          "kind": "dataframe",
+          "index": ["2020-01-02T00:00:00+00:00", "2020-01-03T00:00:00+00:00", "2020-01-06T00:00:00+00:00"],
+          "index_names": ["date"],
+          "timezone": "UTC",
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[100.0, 50.0], [99.0, 51.0], [101.0, 50.0]],
+          "nan_mask": [[false, false], [false, false], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "ties-nan-zero-aware-v1",
+      "category": "ties-nan-zero",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "tie handling, explicit NaN mask, and zero-aware quantization",
+      "parameters": {"quantiles": 2, "zero_aware": true, "no_raise": true},
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-02", "C"], ["2020-01-02", "D"], ["2020-01-02", "E"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[-1.0], [0.0], [0.0], [1.0], [null]],
+          "nan_mask": [[false], [false], [false], [false], [true]]
+        }
+      }
+    },
+    {
+      "case_id": "group-neutral-v1",
+      "category": "group-neutral",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "per-group factor weighting and mean-return behavior",
+      "parameters": {"demeaned": true, "group_adjust": true, "equal_weight": false},
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-02", "C"], ["2020-01-02", "D"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor", "1D", "group"],
+          "dtypes": {"factor": "float64", "1D": "float64", "group": "object"},
+          "values": [[1.0, 0.02, "tech"], [-1.0, -0.01, "tech"], [2.0, 0.01, "finance"], [-2.0, -0.02, "finance"]],
+          "nan_mask": [[false, false, false], [false, false, false], [false, false, false], [false, false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "bins-and-quantiles-v1",
+      "category": "bins-quantiles",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "mutually exclusive bins and quantiles grammar",
+      "parameters": {
+        "quantile_call": {"quantiles": 3, "bins": null},
+        "bin_call": {"quantiles": null, "bins": [-2.0, 0.0, 2.0]}
+      },
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-02", "C"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[-1.0], [0.0], [1.0]],
+          "nan_mask": [[false], [false], [false]]
+        }
+      }
+    },
+    {
+      "case_id": "max-loss-boundary-v1",
+      "category": "max-loss-boundary",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "strict max_loss boundary around a deliberately missing price",
+      "parameters": {"max_loss": [0.0, 0.25, 0.26]},
+      "tables": {
+        "factor": {
+          "kind": "series",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-03", "A"], ["2020-01-03", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor"],
+          "dtypes": {"factor": "float64"},
+          "values": [[1.0], [-1.0], [1.0], [-1.0]],
+          "nan_mask": [[false], [false], [false], [false]]
+        },
+        "prices": {
+          "kind": "dataframe",
+          "index": ["2020-01-02", "2020-01-03", "2020-01-06"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[10.0, 20.0], [11.0, null], [12.0, 22.0]],
+          "nan_mask": [[false, false], [false, true], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "pre-cleaned-performance-v1",
+      "category": "pre-cleaned-performance",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "pre-cleaned factor_data for IC, returns, alpha/beta, and turnover",
+      "parameters": {"period": "1D", "long_short": true, "group_neutral": false},
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-03", "A"], ["2020-01-03", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor", "1D", "factor_quantile"],
+          "dtypes": {"factor": "float64", "1D": "float64", "factor_quantile": "int64"},
+          "values": [[1.0, 0.02, 2], [-1.0, -0.01, 1], [0.5, 0.01, 2], [-0.5, -0.02, 1]],
+          "nan_mask": [[false, false, false], [false, false, false], [false, false, false], [false, false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "event-window-v1",
+      "category": "event-window",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "event-centered return window for average cumulative returns",
+      "parameters": {"periods_before": 1, "periods_after": 2, "demeaned": true, "group_adjust": false},
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-03", "A"], ["2020-01-06", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor", "factor_quantile"],
+          "dtypes": {"factor": "float64", "factor_quantile": "int64"},
+          "values": [[1.0, 2], [-1.0, 1]],
+          "nan_mask": [[false, false], [false, false]]
+        },
+        "returns": {
+          "kind": "dataframe",
+          "index": ["2020-01-02", "2020-01-03", "2020-01-06", "2020-01-07", "2020-01-08"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["A", "B"],
+          "dtypes": {"A": "float64", "B": "float64"},
+          "values": [[0.01, -0.01], [0.02, 0.01], [-0.01, 0.02], [0.01, -0.02], [0.0, 0.01]],
+          "nan_mask": [[false, false], [false, false], [false, false], [false, false], [false, false]]
+        }
+      }
+    },
+    {
+      "case_id": "pyfolio-input-v1",
+      "category": "pyfolio-input",
+      "serializer": "fincore-compat-json-table-v1",
+      "purpose": "strict create_pyfolio_input return, positions, and benchmark contract input",
+      "parameters": {"period": "1D", "capital": 1000000, "long_short": true, "group_neutral": false},
+      "tables": {
+        "factor_data": {
+          "kind": "dataframe",
+          "index": [["2020-01-02", "A"], ["2020-01-02", "B"], ["2020-01-03", "A"], ["2020-01-03", "B"]],
+          "index_names": ["date", "asset"],
+          "timezone": null,
+          "columns": ["factor", "1D", "factor_quantile"],
+          "dtypes": {"factor": "float64", "1D": "float64", "factor_quantile": "int64"},
+          "values": [[2.0, 0.02, 2], [-2.0, -0.01, 1], [1.0, 0.01, 2], [-1.0, -0.02, 1]],
+          "nan_mask": [[false, false, false], [false, false, false], [false, false, false], [false, false, false]]
+        },
+        "benchmark": {
+          "kind": "series",
+          "index": ["2020-01-02", "2020-01-03"],
+          "index_names": ["date"],
+          "timezone": null,
+          "columns": ["benchmark"],
+          "dtypes": {"benchmark": "float64"},
+          "values": [[0.005], [-0.002]],
+          "nan_mask": [[false], [false]]
+        }
+      }
+    }
+  ]
+}

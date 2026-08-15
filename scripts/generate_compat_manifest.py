@@ -5,11 +5,13 @@ from __future__ import annotations
 
 import argparse
 import ast
+import datetime as datetime_module
 import hashlib
 import json
 import math
 import operator
 import os
+import re
 import subprocess
 import tempfile
 from copy import deepcopy
@@ -19,6 +21,27 @@ from typing import Any
 
 EMPYRICAL_COMMIT = "74655e974ed2935563820c548c339731f1fe0621"
 PYFOLIO_COMMIT = "724bbd7dbed9a88bb47e1057f2ca29b3409d8e7a"
+ALPHALENS_COMMIT = "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
+ALPHALENS_PROFILE = "cloudquant-local-3fa17ad"
+ALPHALENS_MODULES = ("performance", "plotting", "tears", "utils")
+ALPHALENS_SOURCE_PATHS = (
+    "alphalens/__init__.py",
+    "alphalens/performance.py",
+    "alphalens/plotting.py",
+    "alphalens/tears.py",
+    "alphalens/utils.py",
+)
+ALPHALENS_EVIDENCE_PATHS = ("LICENSE", "README.md", "setup.py", "alphalens/_version.py")
+ALPHALENS_TEAR_SHEETS = (
+    "create_summary_tear_sheet",
+    "create_returns_tear_sheet",
+    "create_information_tear_sheet",
+    "create_turnover_tear_sheet",
+    "create_full_tear_sheet",
+    "create_event_returns_tear_sheet",
+    "create_event_study_tear_sheet",
+)
+ALPHALENS_EXPECTED_COUNTS = {"functions": 61, "classes": 3, "definitions": 64}
 PYFOLIO_PROFILE = (
     "create_full_tear_sheet",
     "create_simple_tear_sheet",
@@ -195,6 +218,19 @@ class PinnedGitSource:
 
     def sha256(self, path: str) -> str:
         return hashlib.sha256(self.read_bytes(path)).hexdigest()
+
+    def blob_id(self, path: str) -> str:
+        """Return the pinned blob object ID without consulting worktree bytes."""
+        blob = _run_process(
+            ["git", "rev-parse", f"{self.commit}:{path}"],
+            cwd=self.root,
+            operation=f"resolve pinned Git blob {path}",
+            timeout=LOCAL_GIT_TIMEOUT_SECONDS,
+            text=True,
+        ).stdout.strip()
+        if re.fullmatch(r"[0-9a-f]{40,64}", blob) is None:
+            raise ValueError(f"pinned Git blob {path} has an invalid object ID")
+        return blob
 
 
 class StaticConstantResolver:
@@ -655,6 +691,154 @@ def _source_record(source: PinnedGitSource, package: str, path: str) -> dict[str
     return {"path": path, "sha256": source.sha256(repository_path)}
 
 
+def _blob_record(source: PinnedGitSource, path: str) -> dict[str, str]:
+    """Freeze both Git-object and content hashes for one pinned repository path."""
+    return {
+        "path": path,
+        "git_blob": source.blob_id(path),
+        "sha256": source.sha256(path),
+    }
+
+
+def _source_signature(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    arguments: ast.arguments | None = None,
+) -> str:
+    """Render the source-visible signature without evaluating defaults."""
+    signature = f"({ast.unparse(arguments if arguments is not None else node.args)})"
+    if node.returns is not None:
+        signature += f" -> {ast.unparse(node.returns)}"
+    return signature
+
+
+def _without_bound_receiver(arguments: ast.arguments) -> ast.arguments:
+    """Create class-call arguments from a statically declared ``__init__``."""
+    copied = deepcopy(arguments)
+    positional = [*arguments.posonlyargs, *arguments.args]
+    if not positional or positional[0].arg not in {"self", "cls"}:
+        return copied
+    first_default = len(positional) - len(arguments.defaults)
+    if arguments.posonlyargs:
+        copied.posonlyargs.pop(0)
+    else:
+        copied.args.pop(0)
+    if first_default <= 0:
+        copied.defaults.pop(0)
+    return copied
+
+
+def _class_constructor(
+    node: ast.ClassDef,
+) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    return next(
+        (
+            child
+            for child in node.body
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name == "__init__"
+        ),
+        None,
+    )
+
+
+def _decorator_reference(node: ast.expr) -> tuple[str | None, str] | None:
+    """Resolve a local decorator reference using only the decorator AST."""
+    if isinstance(node, ast.Name):
+        return (None, node.id)
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+        return (node.value.id, node.attr)
+    return None
+
+
+def _decorator_wrapper(
+    definition: ast.FunctionDef | ast.AsyncFunctionDef,
+) -> ast.FunctionDef | ast.AsyncFunctionDef | None:
+    """Find a directly returned local wrapper in a simple decorator factory."""
+    local_functions = {
+        child.name: child for child in definition.body if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    for child in definition.body:
+        if isinstance(child, ast.Return) and isinstance(child.value, ast.Name):
+            return local_functions.get(child.value.id)
+    return None
+
+
+def _wrapper_uses_wraps(wrapper: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    return any(
+        isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id == "wraps"
+        for decorator in wrapper.decorator_list
+    )
+
+
+def _alphalens_introspection_signature(
+    module: str,
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    trees: dict[str, ast.Module],
+    source_signature: str,
+) -> tuple[str | None, str | None]:
+    """Infer inspect.signature behavior for the two pinned local decorators.
+
+    This deliberately recognizes only wrappers represented in the pinned AST.
+    It never imports the sibling package or executes decorator code.
+    """
+    if not node.decorator_list:
+        return source_signature, None
+    if len(node.decorator_list) != 1:
+        return None, ast.unparse(node.decorator_list[0])
+    reference = _decorator_reference(node.decorator_list[0])
+    if reference is None:
+        return None, ast.unparse(node.decorator_list[0])
+    decorator_module, decorator_name = reference
+    decorator_module = module if decorator_module is None else decorator_module
+    definition = _definitions(trees.get(decorator_module, ast.Module(body=[], type_ignores=[]))).get(decorator_name)
+    if not isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return None, ast.unparse(node.decorator_list[0])
+    wrapper = _decorator_wrapper(definition)
+    if wrapper is None:
+        return None, ast.unparse(node.decorator_list[0])
+    if _wrapper_uses_wraps(wrapper):
+        return source_signature, ast.unparse(node.decorator_list[0])
+    return _source_signature(wrapper), ast.unparse(node.decorator_list[0])
+
+
+def _alphalens_accepted_call_cases(
+    *,
+    kind: str,
+    decorator: str | None,
+) -> list[dict[str, Any]]:
+    """Describe binding grammar, not executable financial payload values."""
+    if kind == "class":
+        return [
+            {
+                "case_id": "constructor",
+                "binding": "constructor-signature",
+                "hidden_kwargs": {},
+            }
+        ]
+    cases: list[dict[str, Any]] = [
+        {
+            "case_id": "source-visible",
+            "binding": "source-signature",
+            "hidden_kwargs": {},
+        }
+    ]
+    if decorator == "plotting.customize":
+        cases.extend(
+            [
+                {
+                    "case_id": "customize-set-context-true",
+                    "binding": "source-signature-plus-hidden-keyword",
+                    "hidden_kwargs": {"set_context": True},
+                },
+                {
+                    "case_id": "customize-set-context-false",
+                    "binding": "source-signature-plus-hidden-keyword",
+                    "hidden_kwargs": {"set_context": False},
+                },
+            ]
+        )
+    return cases
+
+
 def _entry(
     *,
     package: str,
@@ -833,6 +1017,361 @@ def _generate_pyfolio(root: Path) -> dict[str, Any]:
     return {
         **_manifest_base("pyfolio", _literal_assignment(trees["__init__"], "__version__"), source.commit, source_files),
         "compatibility_profile": profile,
+    }
+
+
+def _versioneer_version_from_pinned_ast(tree: ast.Module) -> str:
+    """Extract the embedded Versioneer tag without executing ``_version.py``."""
+    refnames: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        if not any(isinstance(target, ast.Name) and target.id == "git_refnames" for target in targets):
+            continue
+        try:
+            value = ast.literal_eval(node.value)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(value, str):
+            refnames.append(value)
+    tags = {match.group(1) for refname in refnames for match in re.finditer(r"(?:^|[,\s])tag:\s*v([^,\s)]+)", refname)}
+    if len(tags) != 1:
+        raise ValueError("pinned Alphalens Versioneer source does not expose one tag version")
+    return tags.pop()
+
+
+def _setup_fallback_version_from_pinned_ast(tree: ast.Module) -> str:
+    """Extract the explicit ``get_version`` fallback return from ``setup.py``."""
+    get_version = next(
+        (
+            node
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "get_version"
+        ),
+        None,
+    )
+    if get_version is None:
+        raise ValueError("pinned Alphalens setup.py has no get_version function")
+    for node in get_version.body:
+        if not isinstance(node, ast.Return):
+            continue
+        try:
+            value = ast.literal_eval(node.value)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(value, str):
+            return value
+    raise ValueError("pinned Alphalens setup.py has no static get_version fallback")
+
+
+def _alphalens_entry(
+    *,
+    module: str,
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+    source_sha256: str,
+    resolver: StaticConstantResolver,
+    trees: dict[str, ast.Module],
+) -> dict[str, Any]:
+    """Build a C0-C4 placeholder entry from a public top-level AST node."""
+    kind = "class" if isinstance(node, ast.ClassDef) else "function"
+    decorator: str | None = None
+    parameters: list[dict[str, Any]] = []
+    source_signature: str | None
+    introspection_signature: str | None
+    needs_dynamic_review = False
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        source_signature = _source_signature(node)
+        introspection_signature, decorator = _alphalens_introspection_signature(
+            module,
+            node,
+            trees,
+            source_signature,
+        )
+        parameters = _parameters(node, resolver, module)
+        unresolved_defaults = any(not parameter["resolved"] for parameter in parameters)
+        if unresolved_defaults:
+            # A source spelling such as ``stats.norm`` is useful provenance,
+            # but it is not a canonical runtime inspect.signature default.
+            introspection_signature = None
+        needs_dynamic_review = introspection_signature is None or unresolved_defaults
+    else:
+        constructor = _class_constructor(node)
+        if constructor is None:
+            source_signature = None
+            introspection_signature = None
+            needs_dynamic_review = True
+        else:
+            source_signature = _source_signature(constructor)
+            introspection_signature = _source_signature(
+                constructor,
+                _without_bound_receiver(constructor.args),
+            )
+            parameters = _parameters(constructor, resolver, module)
+            needs_dynamic_review = any(not parameter["resolved"] for parameter in parameters)
+    compatibility = dict(COMPAT_PENDING)
+    return {
+        "module": module,
+        "symbol": node.name,
+        "kind": kind,
+        "source_path": f"alphalens/{module}.py",
+        "source_line": node.lineno,
+        "source_sha256": source_sha256,
+        "source_signature": source_signature,
+        "introspection_signature": introspection_signature,
+        "decorator": decorator,
+        "accepted_call_cases": _alphalens_accepted_call_cases(kind=kind, decorator=decorator),
+        "parameters": parameters,
+        "needs_dynamic_review": needs_dynamic_review,
+        "extraction": "static_ast_from_pinned_git_blob",
+        "compatibility": compatibility,
+        **compatibility,
+    }
+
+
+def _alphalens_evidence_key(manifest: dict[str, Any]) -> str:
+    """Bind an oracle attestation to static source and call-grammar evidence."""
+    evidence = {
+        "commit": manifest["commit"],
+        "source_files": manifest["source_files"],
+        "evidence_files": manifest["evidence_files"],
+        "reported_versions": manifest["reported_versions"],
+        "entries": [
+            {
+                key: entry.get(key)
+                for key in (
+                    "module",
+                    "symbol",
+                    "kind",
+                    "source_path",
+                    "source_line",
+                    "source_sha256",
+                    "source_signature",
+                    "introspection_signature",
+                    "decorator",
+                    "accepted_call_cases",
+                )
+            }
+            for entry in manifest["entries"]
+        ],
+    }
+    return hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _alphalens_json_digest(value: dict[str, Any]) -> str:
+    """Hash a review-relevant JSON document without its circular attestation."""
+    normalized = deepcopy(value)
+    normalized.pop("oracle_verification", None)
+    normalized.pop("evidence_key", None)
+    return hashlib.sha256(json.dumps(normalized, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _alphalens_review_evidence_key(
+    manifest: dict[str, Any],
+    companions: dict[str, Any],
+    *,
+    candidate_digest: str,
+    environment_digest: str,
+) -> str:
+    """Bind an approved review to every source, lock, and candidate digest.
+
+    The candidate itself is deliberately not checked in: a reviewer records its
+    digest in all three attestations after inspecting its transient output.  The
+    key makes a subsequent fixture, environment, or lock change impossible to
+    retain as reviewed without a new review record.
+    """
+    cases = companions.get("cases")
+    environment = companions.get("environment")
+    explicit_lock_sha256 = companions.get("explicit_lock_sha256")
+    requirements_sha256 = companions.get("requirements_sha256")
+    if not isinstance(cases, dict) or not isinstance(environment, dict):
+        raise ValueError("Alphalens reviewed oracle attestation requires case and environment JSON")
+    evidence = {
+        "api_manifest_digest": _alphalens_json_digest(manifest),
+        "api": {
+            "commit": manifest["commit"],
+            "source_files": manifest["source_files"],
+            "evidence_files": manifest["evidence_files"],
+            "reported_versions": manifest["reported_versions"],
+            "entries": manifest["entries"],
+        },
+        "cases_digest": _alphalens_json_digest(cases),
+        "environment_digest": environment_digest,
+        "explicit_lock_sha256": explicit_lock_sha256,
+        "requirements_sha256": requirements_sha256,
+        "candidate_output_digest": candidate_digest,
+    }
+    return hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def _is_sha256(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
+
+
+def _is_review_date(value: object) -> bool:
+    if not isinstance(value, str) or len(value) != 10:
+        return False
+    try:
+        return datetime_module.date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
+def _valid_alphalens_review_attestation(
+    attestation: object,
+    manifest: dict[str, Any],
+    companions: dict[str, Any] | None,
+) -> bool:
+    """Accept review only if all immutable evidence has a matching record."""
+    if not isinstance(attestation, dict) or companions is None:
+        return False
+    cases = companions.get("cases")
+    environment = companions.get("environment")
+    if not isinstance(cases, dict) or not isinstance(environment, dict):
+        return False
+    case_attestation = cases.get("oracle_verification")
+    environment_attestation = environment.get("oracle_verification")
+    if not isinstance(case_attestation, dict) or not isinstance(environment_attestation, dict):
+        return False
+    if attestation != case_attestation or attestation != environment_attestation:
+        return False
+    api_manifest_digest = attestation.get("api_manifest_digest")
+    candidate_digest = attestation.get("candidate_digest")
+    environment_digest = attestation.get("environment_digest")
+    if not (
+        attestation.get("reviewed") is True
+        and attestation.get("status") in {"captured-reviewed", "approved"}
+        and isinstance(attestation.get("reviewer"), str)
+        and bool(attestation["reviewer"].strip())
+        and _is_review_date(attestation.get("reviewed_at"))
+        and _is_sha256(api_manifest_digest)
+        and _is_sha256(candidate_digest)
+        and _is_sha256(environment_digest)
+        and _is_sha256(attestation.get("evidence_key"))
+        and _is_sha256(companions.get("explicit_lock_sha256"))
+        and _is_sha256(companions.get("requirements_sha256"))
+    ):
+        return False
+    if api_manifest_digest != _alphalens_json_digest(manifest):
+        return False
+    if environment_digest != _alphalens_json_digest(environment):
+        return False
+    expected_key = _alphalens_review_evidence_key(
+        manifest,
+        companions,
+        candidate_digest=candidate_digest,
+        environment_digest=environment_digest,
+    )
+    return attestation["evidence_key"] == expected_key
+
+
+def _merge_alphalens_oracle_attestation(
+    generated: dict[str, Any], previous: dict[str, Any] | None, companions: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Retain reviewed Alphalens evidence only with a complete matching tuple."""
+    result = deepcopy(generated)
+    evidence_key = _alphalens_evidence_key(result)
+    result["evidence_key"] = evidence_key
+    default_oracle = {
+        "evidence_key": evidence_key,
+        "reviewed": False,
+        "status": "not-run",
+    }
+    previous_oracle = previous.get("oracle_verification", {}) if previous is not None else {}
+    if _valid_alphalens_review_attestation(previous_oracle, result, companions):
+        result["oracle_verification"] = deepcopy(previous_oracle)
+        result["evidence_key"] = previous_oracle["evidence_key"]
+    else:
+        result["oracle_verification"] = default_oracle
+    return result
+
+
+def _generate_alphalens(root: Path) -> dict[str, Any]:
+    """Generate the static, non-importing compatibility target for Alphalens."""
+    source = PinnedGitSource(root, ALPHALENS_COMMIT)
+    _require_head(source, ALPHALENS_COMMIT, "alphalens")
+    trees = _package_trees(source, "alphalens", ("__init__", *ALPHALENS_MODULES))
+    resolver = StaticConstantResolver(trees)
+    source_files = [_blob_record(source, path) for path in ALPHALENS_SOURCE_PATHS]
+    evidence_files = [_blob_record(source, path) for path in ALPHALENS_EVIDENCE_PATHS]
+    source_hashes = {record["path"]: record["sha256"] for record in source_files}
+    entries = [
+        _alphalens_entry(
+            module=module,
+            node=node,
+            source_sha256=source_hashes[f"alphalens/{module}.py"],
+            resolver=resolver,
+            trees=trees,
+        )
+        for module in ALPHALENS_MODULES
+        for node in trees[module].body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not node.name.startswith("_")
+    ]
+    entries.sort(key=lambda entry: (entry["module"], entry["symbol"]))
+    functions = sum(entry["kind"] == "function" for entry in entries)
+    classes = sum(entry["kind"] == "class" for entry in entries)
+    counts = {"functions": functions, "classes": classes, "definitions": len(entries)}
+    if counts != ALPHALENS_EXPECTED_COUNTS:
+        raise ValueError(f"unexpected Alphalens static surface: {counts}")
+    module_counts = {
+        module: {
+            "classes": sum(entry["kind"] == "class" for entry in entries if entry["module"] == module),
+            "functions": sum(entry["kind"] == "function" for entry in entries if entry["module"] == module),
+            "source_path": f"alphalens/{module}.py",
+            "source_sha256": source_hashes[f"alphalens/{module}.py"],
+        }
+        for module in ALPHALENS_MODULES
+    }
+    version_evidence = {record["path"]: record for record in evidence_files}
+    reported_versions = {
+        "versioneer": _versioneer_version_from_pinned_ast(
+            _read_ast(source.read_text("alphalens/_version.py"), "alphalens/_version.py")
+        ),
+        "setup_fallback": _setup_fallback_version_from_pinned_ast(_read_ast(source.read_text("setup.py"), "setup.py")),
+    }
+    tear_sheets = [
+        entry["symbol"] for entry in entries if entry["module"] == "tears" and entry["symbol"].startswith("create_")
+    ]
+    if tuple(tear_sheets) != tuple(sorted(ALPHALENS_TEAR_SHEETS)):
+        raise ValueError(f"unexpected Alphalens tear-sheet profile: {tear_sheets}")
+    return {
+        "schema_version": 1,
+        "project": "alphalens",
+        "profile": ALPHALENS_PROFILE,
+        "commit": source.commit,
+        "identity": {"kind": "pinned-git-commit", "value": source.commit},
+        "fixture_source": {
+            "mode": "static_ast_from_pinned_git_blob",
+            "generator": "scripts/generate_compat_manifest.py",
+            "root": "external Git object database supplied with --alphalens-root",
+        },
+        "source_files": source_files,
+        "evidence_files": evidence_files,
+        "reported_versions": reported_versions,
+        "reported_version_evidence": {
+            "setup_fallback": {
+                **version_evidence["setup.py"],
+                "ast_location": "get_version static fallback return",
+            },
+            "versioneer": {
+                **version_evidence["alphalens/_version.py"],
+                "ast_location": "get_keywords git_refnames tag",
+            },
+        },
+        "version_ambiguity": {
+            "authoritative_identity": "commit",
+            "status": "ambiguous-version-strings",
+            "reason": (
+                "The pinned commit is authoritative; Versioneer's embedded tag and setup.py fallback "
+                "are frozen source facts, not a release identity."
+            ),
+        },
+        "provenance_review": {"status": "human/license review pending"},
+        "modules": module_counts,
+        "counts": counts,
+        "entries": entries,
+        "tear_sheets": tear_sheets,
+        "oracle_verification": {"reviewed": False, "status": "not-run"},
     }
 
 
@@ -1076,6 +1615,35 @@ def _load_existing(path: Path) -> dict[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _load_alphalens_oracle_companions(output: Path) -> dict[str, Any] | None:
+    """Read immutable Alphalens review sidecars when the target owns them.
+
+    A standalone generation directory intentionally has no review sidecars;
+    that output remains unreviewed rather than inheriting an unattested status.
+    """
+    cases_path = output / "alphalens-0.4.0-cloudquant-cases.json"
+    oracle_directory = output.parent / "oracle"
+    environment_path = oracle_directory / "alphalens-0.4.0-cloudquant-environment.json"
+    explicit_lock_path = oracle_directory / "alphalens-0.4.0-cloudquant-conda-explicit.txt"
+    requirements_path = oracle_directory / "requirements-alphalens-0.4.0-cloudquant.txt"
+    paths = (cases_path, environment_path, explicit_lock_path, requirements_path)
+    if not all(path.is_file() for path in paths):
+        return None
+    try:
+        cases = _load_existing(cases_path)
+        environment = _load_existing(environment_path)
+        if cases is None or environment is None:
+            return None
+        return {
+            "cases": cases,
+            "environment": environment,
+            "explicit_lock_sha256": hashlib.sha256(explicit_lock_path.read_bytes()).hexdigest(),
+            "requirements_sha256": hashlib.sha256(requirements_path.read_bytes()).hexdigest(),
+        }
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1083,19 +1651,31 @@ def _write_json(path: Path, data: dict[str, Any]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--empyrical-root", type=Path, required=True)
-    parser.add_argument("--pyfolio-root", type=Path, required=True)
+    parser.add_argument("--empyrical-root", type=Path)
+    parser.add_argument("--pyfolio-root", type=Path)
+    parser.add_argument("--alphalens-root", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--target",
+        action="append",
+        choices=("empyrical", "pyfolio", "pyfolio-portfolio-contracts", "flat-migrations", "alphalens"),
+        help="repeatable target selector; omitting it preserves the legacy empyrical/pyfolio output set",
+    )
     parser.add_argument(
         "--oracle-python",
         type=Path,
         help="optional isolated interpreter with pinned upstream dependencies installed",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.target is None and (args.empyrical_root is None or args.pyfolio_root is None):
+        parser.error("--empyrical-root and --pyfolio-root are required when --target is omitted")
+    return args
 
 
-def main() -> None:
-    args = parse_args()
+def _legacy_main(args: argparse.Namespace) -> None:
+    """Retain the pre-Alphalens command path and bytes exactly as before."""
+    assert args.empyrical_root is not None
+    assert args.pyfolio_root is not None
     empyrical_path = args.output / "empyrical-0.6.0-api.json"
     pyfolio_path = args.output / "pyfolio-0.9.6-api.json"
     portfolio_contract_path = args.output / "pyfolio-0.9.6-portfolio-contracts.json"
@@ -1129,6 +1709,66 @@ def main() -> None:
     _write_json(pyfolio_path, pyfolio)
     _write_json(portfolio_contract_path, portfolio_contracts)
     _write_json(args.output / "fincore-flat-api-migrations.json", _generate_flat_migrations(repo_root))
+
+
+def _target_root(value: Path | None, option: str, target: str) -> Path:
+    if value is None:
+        raise ValueError(f"{option} is required when --target {target} is selected")
+    return value.resolve()
+
+
+def _selected_targets_main(args: argparse.Namespace) -> None:
+    """Run a requested subset without touching unrelated checked-in fixtures."""
+    assert args.target is not None
+    if args.oracle_python is not None:
+        raise ValueError("--oracle-python is supported only by the legacy full-generation command")
+    targets = tuple(dict.fromkeys(args.target))
+    repo_root = Path(__file__).resolve().parents[1]
+    for target in targets:
+        if target == "empyrical":
+            root = _target_root(args.empyrical_root, "--empyrical-root", target)
+            path = args.output / "empyrical-0.6.0-api.json"
+            generated = _generate_empyrical(root)
+            generated = _merge_review_attestations(generated, _load_existing(path), "symbols")
+            generated["callables"] = [entry for entry in generated["symbols"] if entry["kind"] == "callable"]
+            _write_json(path, generated)
+        elif target == "pyfolio":
+            root = _target_root(args.pyfolio_root, "--pyfolio-root", target)
+            path = args.output / "pyfolio-0.9.6-api.json"
+            generated = _generate_pyfolio(root)
+            _write_json(
+                path,
+                _merge_review_attestations(generated, _load_existing(path), "compatibility_profile"),
+            )
+        elif target == "pyfolio-portfolio-contracts":
+            root = _target_root(args.pyfolio_root, "--pyfolio-root", target)
+            _write_json(
+                args.output / "pyfolio-0.9.6-portfolio-contracts.json", _generate_pyfolio_portfolio_contracts(root)
+            )
+        elif target == "flat-migrations":
+            _write_json(args.output / "fincore-flat-api-migrations.json", _generate_flat_migrations(repo_root))
+        elif target == "alphalens":
+            root = _target_root(args.alphalens_root, "--alphalens-root", target)
+            path = args.output / "alphalens-0.4.0-cloudquant-api.json"
+            generated = _generate_alphalens(root)
+            _write_json(
+                path,
+                _merge_alphalens_oracle_attestation(
+                    generated,
+                    _load_existing(path),
+                    _load_alphalens_oracle_companions(args.output),
+                ),
+            )
+        else:  # pragma: no cover - argparse choices make this unreachable.
+            raise ValueError(f"unsupported compatibility-manifest target {target!r}")
+
+
+def main() -> None:
+    args = parse_args()
+    if args.target is None:
+        _legacy_main(args)
+    else:
+        _selected_targets_main(args)
 
 
 if __name__ == "__main__":

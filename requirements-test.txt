@@ -1,4 +1,5 @@
-# Test requirements
+# Contributor test environment only. Runtime metadata and extras are defined
+# exclusively in pyproject.toml.
 pytest>=6.0
 pytest-xdist>=2.0
 pytest-cov>=2.10
@@ -12,9 +13,14 @@ pandas>=1.5.0
 scipy>=1.3.0
 bottleneck>=1.6.0
 
+# Named-zone factor-analysis tests exercise the tzdata fallback branch on
+# every platform; Windows additionally has no system IANA database.
+tzdata>=2024.1
+
 # Visualization and report (for pyfolio, tearsheets, viz, PDF report tests)
 matplotlib>=3.3
 seaborn>=0.11
 PyPDF2>=3.0
 bokeh>=3.0
 plotly>=5.0
+statsmodels>=0.14

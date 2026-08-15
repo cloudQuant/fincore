@@ -32,6 +32,7 @@ job (see .github/workflows notes).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -45,6 +46,7 @@ PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 #: Every optional root any extra installs (star-import must never trigger one).
 OPTIONAL_ROOTS = (
+    "statsmodels",
     "matplotlib",
     "seaborn",
     "IPython",
@@ -63,12 +65,53 @@ OPTIONAL_ROOTS = (
 
 CORE_THIRD_PARTY = ("numpy", "pandas", "scipy", "pytz", "packaging")
 
+_PYFOLIO_VISUAL_ROOTS = ("matplotlib", "seaborn", "IPython")
+_ALPHALENS_ROOTS = ("statsmodels", *_PYFOLIO_VISUAL_ROOTS)
+
+
+def _forbidden_except(*allowed: str) -> tuple[str, ...]:
+    allowed_roots = set(allowed)
+    return tuple(root for root in OPTIONAL_ROOTS if root not in allowed_roots)
+
+
 PROFILES: dict[str, dict] = {
     "core": {
         "extra": None,
         "allowed_extra_imports": (),
         "forbidden_imports": OPTIONAL_ROOTS,
         "pyfolio_expected": "missing",
+        "smokes": ("core",),
+        "install_timeout": 300,
+        "consumer_timeout": 90,
+    },
+    "factor-analysis": {
+        "extra": "factor-analysis",
+        "allowed_extra_imports": ("statsmodels",),
+        "forbidden_imports": _forbidden_except("statsmodels"),
+        "pyfolio_expected": "missing",
+        "smokes": ("factor-analysis",),
+        "install_timeout": 300,
+        "consumer_timeout": 120,
+    },
+    "alphalens": {
+        "extra": "alphalens",
+        "allowed_extra_imports": _ALPHALENS_ROOTS,
+        "forbidden_imports": _forbidden_except(*_ALPHALENS_ROOTS),
+        # Alphalens has the same visualization roots as the pyfolio facade,
+        # but this profile exercises only the factor/plotting boundary.
+        "pyfolio_expected": "skip",
+        "smokes": ("factor-analysis", "alphalens"),
+        "install_timeout": 600,
+        "consumer_timeout": 180,
+    },
+    "alphalens-pyfolio": {
+        "extra": "alphalens,pyfolio",
+        "allowed_extra_imports": _ALPHALENS_ROOTS,
+        "forbidden_imports": _forbidden_except(*_ALPHALENS_ROOTS),
+        "pyfolio_expected": "available",
+        "smokes": ("factor-analysis", "alphalens", "alphalens-pyfolio"),
+        "install_timeout": 600,
+        "consumer_timeout": 240,
     },
     "pyfolio": {
         "extra": "pyfolio",
@@ -87,6 +130,7 @@ PROFILES: dict[str, dict] = {
             "pandas_datareader",
         ),
         "pyfolio_expected": "available",
+        "smokes": ("core",),
     },
     "interactive": {
         "extra": "interactive",
@@ -106,6 +150,7 @@ PROFILES: dict[str, dict] = {
             "pandas_datareader",
         ),
         "pyfolio_expected": "missing",
+        "smokes": ("core",),
     },
     "bayesian": {
         "extra": "bayesian",
@@ -126,6 +171,7 @@ PROFILES: dict[str, dict] = {
             "pandas_datareader",
         ),
         "pyfolio_expected": "missing",
+        "smokes": ("core",),
     },
     "report-pdf": {
         "extra": "report-pdf",
@@ -145,12 +191,19 @@ PROFILES: dict[str, dict] = {
             "pandas_datareader",
         ),
         "pyfolio_expected": "missing",
+        "smokes": ("core",),
     },
     "all": {
         "extra": "all",
         "allowed_extra_imports": OPTIONAL_ROOTS,
         "forbidden_imports": (),
         "pyfolio_expected": "available",
+        "smokes": ("core", "factor-analysis", "alphalens", "alphalens-pyfolio"),
+        "pip_check": True,
+        "install_mode": "venv",
+        "install_timeout": 900,
+        "consumer_timeout": 300,
+        "pip_check_timeout": 120,
     },
 }
 
@@ -159,11 +212,13 @@ _CONSUMER = textwrap.dedent(
     import importlib
     import importlib.util
     import json
+    import os
     import sys
     from pathlib import Path
 
     target, expected_version, profile = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
     payload = json.loads(sys.argv[4])
+    os.environ.setdefault("MPLBACKEND", "Agg")
 
     # Isolated bootstrap: ONLY the target joins the path (-S already dropped
     # site-packages; stdlib remains).
@@ -219,13 +274,14 @@ _CONSUMER = textwrap.dedent(
             assert "pip install fincore[pyfolio]" in str(exc), str(exc)
         else:
             raise AssertionError("expected DependencyError from fincore.pyfolio without the pyfolio extra")
-    else:
+    elif payload["pyfolio_expected"] == "available":
         from fincore import Pyfolio  # noqa: F401
         assert Pyfolio.__name__ == "Pyfolio"
         instance = Pyfolio()
         assert instance.__class__.__name__ == "Pyfolio"
 
-    # Real computation on the isolated stack.
+    # Real core computation on the isolated stack.
+    print(f"PROFILE {profile}: core smoke", flush=True)
     import numpy as np
     import pandas as pd
 
@@ -236,6 +292,72 @@ _CONSUMER = textwrap.dedent(
     context = fincore.analyze(returns)
     assert np.isfinite(context.sharpe_ratio)
     assert context.max_drawdown <= 0
+
+    def factor_data():
+        # Create a small in-consumer factor table without checkout fixtures.
+        from fincore.factor_analysis.data import prepare_factor_data
+
+        dates = pd.date_range("2024-01-02", periods=24, freq="B")
+        assets = ("A", "B", "C")
+        index = pd.MultiIndex.from_product((dates[:-3], assets), names=("date", "asset"))
+        values = [
+            float((date_index + asset_index) % len(assets))
+            for date_index in range(len(dates) - 3)
+            for asset_index in range(len(assets))
+        ]
+        factor = pd.Series(values, index=index, dtype=float)
+        steps = np.arange(len(dates), dtype=float)
+        prices = pd.DataFrame(
+            {
+                asset: 100.0 * (1.0 + 0.0005 * (asset_index + 1)) ** steps
+                for asset_index, asset in enumerate(assets)
+            },
+            index=dates,
+        )
+        return prepare_factor_data(factor, prices, periods=(1,), quantiles=3, max_loss=1.0).data
+
+    factor_table = None
+    if "factor-analysis" in payload["smokes"]:
+        print(f"PROFILE {profile}: factor-analysis smoke", flush=True)
+        from fincore.factor_analysis.performance import factor_alpha_beta, factor_information_coefficient
+
+        factor_table = factor_data()
+        information = factor_information_coefficient(factor_table)
+        alpha_beta = factor_alpha_beta(factor_table)
+        assert not information.empty and not alpha_beta.empty
+
+    if "alphalens" in payload["smokes"]:
+        print(f"PROFILE {profile}: alphalens plot and summary smoke", flush=True)
+        import matplotlib.pyplot as plt
+        from fincore.alphalens import performance as alphalens_performance
+        from fincore.alphalens import plotting as alphalens_plotting
+        from fincore.alphalens import tears as alphalens_tears
+
+        assert factor_table is not None
+        mean_returns, _ = alphalens_performance.mean_return_by_quantile(factor_table)
+        figure, axis = plt.subplots()
+        alphalens_plotting.plot_quantile_returns_bar(mean_returns, ax=axis)
+        assert figure.axes
+        plt.close(figure)
+        assert alphalens_tears.create_summary_tear_sheet(factor_table) is None
+        plt.close("all")
+
+    if "alphalens-pyfolio" in payload["smokes"]:
+        print(f"PROFILE {profile}: Alphalens-to-Pyfolio smoke", flush=True)
+        import matplotlib.pyplot as plt
+        from fincore import Pyfolio
+        from fincore.alphalens.performance import create_pyfolio_input
+
+        assert factor_table is not None
+        factor_returns, positions, benchmark = create_pyfolio_input(factor_table, "1D", capital=1_000.0)
+        figure = Pyfolio().create_returns_tear_sheet(
+            factor_returns,
+            positions=positions,
+            benchmark_rets=benchmark,
+            run_flask_app=True,
+        )
+        assert figure is not None and figure.axes
+        plt.close(figure)
 
     print(f"PROFILE {profile} OK")
     """
@@ -252,8 +374,6 @@ def _scrubbed_env() -> dict[str, str]:
 
 
 def _payload(profile: str) -> str:
-    import json
-
     spec = PROFILES[profile]
     return json.dumps(
         {
@@ -262,41 +382,102 @@ def _payload(profile: str) -> str:
             "forbidden": list(spec["forbidden_imports"]),
             "optional_roots": list(OPTIONAL_ROOTS),
             "pyfolio_expected": spec["pyfolio_expected"],
+            "smokes": list(spec["smokes"]),
         }
     )
+
+
+def _venv_python(venv_dir: Path) -> Path:
+    """Return the interpreter path for a platform-native virtual environment."""
+    return venv_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+
+
+def _create_venv(work: Path, profile: str) -> tuple[Path, Path]:
+    """Create a profile-local venv and return its Python and purelib paths."""
+    venv_dir = work / "venv"
+    create = subprocess.run(
+        [sys.executable, "-m", "venv", str(venv_dir)],
+        cwd=work,
+        env=_scrubbed_env(),
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    if create.returncode != 0:
+        raise RuntimeError(f"[{profile}] could not create isolated venv:\n{create.stdout}\n{create.stderr}")
+    python = _venv_python(venv_dir)
+    purelib = subprocess.run(
+        [python, "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"],
+        cwd=work,
+        env=_scrubbed_env(),
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if purelib.returncode != 0:
+        raise RuntimeError(f"[{profile}] could not locate venv site-packages:\n{purelib.stderr}")
+    return python, Path(purelib.stdout.strip())
 
 
 def _run_profile(wheel: Path, profile: str, version: str) -> None:
     spec = PROFILES[profile]
     print(f"[{profile}] installing wheel{'[%s]' % spec['extra'] if spec['extra'] else ''} into isolated target ...")
     with tempfile.TemporaryDirectory(prefix=f"fincore-wheel-{profile}-") as work:
-        target = Path(work) / "target"
-        target.mkdir()
+        work_path = Path(work)
+        install_mode = spec.get("install_mode", "target")
+        if install_mode == "venv":
+            install_python, target = _create_venv(work_path, profile)
+        else:
+            install_python = Path(sys.executable)
+            target = work_path / "target"
+            target.mkdir()
         consumer = Path(work) / "consumer.py"
         consumer.write_text(_CONSUMER, encoding="utf-8")
         cwd = Path(work) / "cwd"
         cwd.mkdir()
 
         install_spec = str(wheel) if spec["extra"] is None else f"fincore[{spec['extra']}] @ {wheel.resolve().as_uri()}"
-        install = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "--target", str(target), install_spec],
-            cwd=cwd,
-            env=_scrubbed_env(),
-            capture_output=True,
-            text=True,
-            timeout=1800,
-        )
+        install_command = [str(install_python), "-m", "pip", "install", "--quiet"]
+        if install_mode == "target":
+            install_command.extend(("--target", str(target)))
+        install_command.append(install_spec)
+        try:
+            install = subprocess.run(
+                install_command,
+                cwd=cwd,
+                env=_scrubbed_env(),
+                capture_output=True,
+                text=True,
+                timeout=spec.get("install_timeout", 600),
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"[{profile}] pip install exceeded its bounded timeout") from exc
         if install.returncode != 0:
             raise RuntimeError(f"[{profile}] pip install failed:\n{install.stdout}\n{install.stderr}")
 
-        run = subprocess.run(
-            [sys.executable, "-S", "-E", str(consumer), str(target), version, profile, _payload(profile)],
-            cwd=cwd,
-            env=_scrubbed_env(),
-            capture_output=True,
-            text=True,
-            timeout=600,
-        )
+        if spec.get("pip_check"):
+            pip_check = subprocess.run(
+                [str(install_python), "-m", "pip", "check"],
+                cwd=cwd,
+                env=_scrubbed_env(),
+                capture_output=True,
+                text=True,
+                timeout=spec.get("pip_check_timeout", 120),
+            )
+            if pip_check.returncode != 0:
+                raise RuntimeError(f"[{profile}] pip check failed:\n{pip_check.stdout}\n{pip_check.stderr}")
+
+        try:
+            run = subprocess.run(
+                [str(install_python), "-S", "-E", str(consumer), str(target), version, profile, _payload(profile)],
+                cwd=cwd,
+                env={**_scrubbed_env(), "MPLBACKEND": "Agg"},
+                capture_output=True,
+                text=True,
+                timeout=spec.get("consumer_timeout", 300),
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"[{profile}] isolated consumer exceeded its bounded timeout") from exc
         if run.returncode != 0:
             raise RuntimeError(f"[{profile}] fresh consumer failed:\n{run.stdout}\n{run.stderr}")
         print(f"[{profile}] {run.stdout.strip()}")

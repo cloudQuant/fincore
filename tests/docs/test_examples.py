@@ -12,6 +12,7 @@ doc example changes, update the matching test (and vice versa).
 from __future__ import annotations
 
 import json
+import runpy
 import tempfile
 from pathlib import Path
 
@@ -20,10 +21,20 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fincore
+
 # Real tear-sheet chains must stay headless and deterministic.
 matplotlib.use("Agg", force=True)
 
-import fincore
+
+_ROOT = Path(__file__).resolve().parents[2]
+_FACTOR_ANALYSIS_QUICKSTART = _ROOT / "examples" / "factor_analysis_quickstart.py"
+
+
+def _load_factor_analysis_quickstart() -> dict[str, object]:
+    """Load the documented offline quickstart without executing its CLI entry point."""
+
+    return runpy.run_path(str(_FACTOR_ANALYSIS_QUICKSTART))
 
 
 def _series(start: str = "2024-01-02", periods: int = 5, seed: int = 0) -> pd.Series:
@@ -326,3 +337,65 @@ def test_stability_documented_flat_api_names() -> None:
     ]
     for name in names:
         assert callable(getattr(fincore, name)), name
+
+
+# ---------------------------------------------------------------------------
+# Factor-analysis migration quickstart: deterministic, offline, headless
+# ---------------------------------------------------------------------------
+
+
+def test_factor_analysis_quickstart_runs_strict_facade() -> None:
+    example = _load_factor_analysis_quickstart()
+
+    clean = example["strict_quickstart"]()
+
+    assert isinstance(clean, pd.DataFrame)
+    assert {"factor", "factor_quantile", "1D"}.issubset(clean.columns)
+    assert clean.index.names == ["date", "asset"]
+
+
+def test_factor_analysis_quickstart_prepares_and_analyzes_enhanced_model() -> None:
+    example = _load_factor_analysis_quickstart()
+
+    prepared, model = example["enhanced_prepare_and_analyze"]()
+
+    assert prepared.loss_report.total_loss <= 0.35
+    assert model.forward_periods == ("1D",)
+    assert not model.information_coefficient.empty
+
+
+def test_factor_analysis_quickstart_builds_pyfolio_bridge_inputs() -> None:
+    example = _load_factor_analysis_quickstart()
+
+    inputs = example["pyfolio_bridge"]()
+
+    assert inputs.returns.index.isin(inputs.positions.index).all()
+    assert "cash" in inputs.positions.columns
+
+
+def test_factor_analysis_quickstart_renders_and_closes_headless_summary() -> None:
+    example = _load_factor_analysis_quickstart()
+
+    artifacts = example["summary_tear_sheet"]()
+
+    assert artifacts.figures
+    assert "quantile_statistics" in artifacts.tables
+    assert not matplotlib.pyplot.fignum_exists(artifacts.figures[0].number)
+
+
+def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch: pytest.MonkeyPatch) -> None:
+    example = _load_factor_analysis_quickstart()
+    from fincore.exceptions import DependencyError
+    from fincore.factor_analysis import render_matplotlib
+
+    real_import = render_matplotlib.importlib.import_module
+
+    def missing_matplotlib(name: str, *args: object, **kwargs: object) -> object:
+        if name == "matplotlib.pyplot":
+            raise ModuleNotFoundError("No module named 'matplotlib'", name="matplotlib")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(render_matplotlib.importlib, "import_module", missing_matplotlib)
+    with pytest.raises(DependencyError, match=r"pip install fincore\[alphalens\]"):
+        render_matplotlib._plot_dependencies()
+    assert example["OPTIONAL_EXTRA_INSTALL"] == "fincore[alphalens]"

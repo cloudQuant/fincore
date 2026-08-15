@@ -71,6 +71,7 @@ nav:
     - RollingEngine: guide/rolling-engine.md
     - Visualization: guide/visualization.md
     - Portfolio Optimization: guide/optimization.md
+    - Factor-analysis Migration: guide/factor-analysis.md
   - API Reference:
     - Overview: api/index.md
     - fincore (top-level): api/fincore.md
@@ -82,6 +83,7 @@ nav:
     - fincore.attribution: api/attribution.md
     - fincore.risk: api/risk.md
     - fincore.report: api/report.md
+    - Factor-analysis: api/factor-analysis.md
   - Development:
     - Contributing: development/contributing.md
     - Development Guide: development/guide.md

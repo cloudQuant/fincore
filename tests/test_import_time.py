@@ -44,6 +44,19 @@ def test_import_fincore_direct():
 
 
 @pytest.mark.p2
+def test_import_alphalens_facade_direct() -> None:
+    """Verify that the strict Alphalens facade remains a lightweight cold import."""
+
+    elapsed = _cold_import_elapsed(
+        "import sys; import fincore.alphalens; import fincore.alphalens.performance; "
+        "assert 'matplotlib' not in sys.modules; assert 'seaborn' not in sys.modules; "
+        "assert 'IPython' not in sys.modules; assert 'statsmodels' not in sys.modules"
+    )
+
+    assert elapsed >= 0
+
+
+@pytest.mark.p2
 def test_import_empyrical_fast():
     """Verify a cold Empyrical import in an isolated interpreter."""
     elapsed = _cold_import_elapsed("from fincore import Empyrical; assert Empyrical is not None")

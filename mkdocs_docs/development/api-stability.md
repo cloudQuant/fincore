@@ -25,6 +25,16 @@ below carries no broader guarantee.
 
 ## Not covered
 
+### Alphalens migration surfaces
+
+`fincore.alphalens` and `fincore.factor_analysis` are Beta migration APIs,
+not Stable surfaces. Their source identity is pinned to commit
+`3fa17ad4c3edb025d1410de7aeba9673cba7791c`; `v0.4.0` and `1.0.0+dev` are
+ambiguous historical version strings. Claims are limited to the strict-path,
+signature, kernel, and workflow behavior exercised by current executable
+tests, not full standalone Alphalens parity. The unresolved human
+license/NOTICE decision is a release blocker.
+
 - `Empyrical`/`Pyfolio` methods beyond the frozen verified surface;
 - enhanced-vs-legacy equality (documented divergences exist by design);
 - modules prefixed with `_` (e.g. `fincore._registry`) — internal.

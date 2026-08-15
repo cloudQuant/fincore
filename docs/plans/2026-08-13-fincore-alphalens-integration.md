@@ -2,7 +2,7 @@
 
 > **For Codex:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** 将本地 Alphalens 因子研究能力以可追溯、可兼容、可测试、可独立安装的方式集成进 fincore，同时复用已经验证过的 Empyrical/Pyfolio 收敛架构和发布门禁。
+**Goal:** 将本地 Alphalens 因子研究能力以可追溯、可兼容、可测试、可独立安装的方式集成进 fincore；将 pinned 上游测试场景逐例重写为 fincore 的强断言兼容测试并可追溯验收，同时复用已经验证过的 Empyrical/Pyfolio 收敛架构和发布门禁。
 
 **Architecture:** 对外提供轻量的 `fincore.alphalens` 兼容 package，保留 `performance`、`utils`、`plotting`、`tears` 四个模块路径；内部新增独立的 `fincore.factor_analysis` 领域包，将数据准备、计算模型和 Matplotlib 渲染分层。严格兼容入口与 fincore 增强入口共享内核，但使用不同的校验 profile、异常投影和副作用策略；Alphalens 生成的组合输入直接进入现有 `fincore.pyfolio` 工作流，不再依赖外部 empyrical、pyfolio 或 sibling checkout。
 
@@ -41,6 +41,7 @@
 6. 兼容 profile 名称固定为 `cloudquant-local-3fa17ad`，fixture 文件名使用 `alphalens-0.4.0-cloudquant-*`，但所有验收以完整 commit 和 blob SHA256 为准。
 7. 首版只实现本地快照已有的 Matplotlib tear sheets；HTML、PDF、Plotly、Bokeh、多因子组合研究和数据供应商接入是非目标。
 8. 严格 tear-sheet façade 保留 legacy 的 `plt.show()`/`None` 返回行为；增强 API 默认 `show=False` 并返回结构化模型或 Figure。两条路径都不得修改全局 Matplotlib backend、写包目录或写 site-packages。
+9. `/Users/yunjinqi/Documents/new_projects/alphalens/tests/` 的三个 pinned 测试文件是**测试迁移输入**，不是 CI 的运行时依赖：每个 active 参数化 case 和每个已注释 tear-sheet variant 必须有稳定 source case ID、来源 SHA256、迁移目标和断言等级。迁移是重写为 fincore namespace、native `pytest.parametrize`、强断言的测试合同；禁止在 CI 直接 import/run sibling tests，也禁止原样复制已失效的 `.equals()` 或 smoke-only 断言。
 
 ### 0.2 术语边界
 
@@ -109,7 +110,7 @@ fincore.factor_analysis contracts and kernels
 - 不迁移 `versioneer.py`、`_version.py`、旧 Python classifier、notebook、大图片和 virtual-document 产物。
 - 不把 sibling checkout 作为运行时依赖或 CI 必需输入。
 - 不在默认 CI 访问 GitHub/Gitee 或安装浮动 Git URL。
-- 不修复 standalone Alphalens 仓库；其测试只作为场景来源和 pinned oracle 输入。
+- 不修复 standalone Alphalens 仓库；其测试源码不作为 fincore 的运行时/CI 依赖。Task 1.5 必须把其所有可识别 case 记录到 pinned inventory，并在 fincore 中逐例重写为有强断言的目标测试或 C4 workflow variant。
 - 不声明“完全兼容”“Production Ready”或版本升级，除非本计划全部 release gates 有证据。
 - 不把行覆盖率或“没有抛异常”当成因子数值、图表和跨层工作流证明。
 - 不扩展现有 `fincore.attribution` 的语义来容纳横截面因子信号。
@@ -182,7 +183,29 @@ fincore 当前兼容门禁复验：
 
 结果：`647 passed, 1 skipped, 4 warnings`。这证明 manifest、strict façade、C0–C4 和 wheel-oriented 的既有模式可以复用。
 
-### 2.3 来源与许可证风险
+### 2.3 上游测试迁移盘点（必须逐例处置）
+
+本计划**不是**把 sibling 的测试目录原样复制到 fincore：当前 upstream suite 在现代 pandas 环境不能稳定收集，且存在无效断言和整类注释。它也不能被静默替换成少量新 smoke test。Task 1.5 要从 pinned Git blob 静态提取 source case，而不是 import upstream package；所有 source case 都必须在 checked-in migration map 中有唯一去向。
+
+| pinned 测试源 | Git blob | SHA256 | source case | 当前质量 / collection 状态 | fincore 迁移落点 |
+| --- | --- | --- | ---: | --- | --- |
+| `tests/test_utils.py` | `22480c305a07b8ccd83e15ed7b6d1b06be08307e` | `0f476933684b1eae8f86c3ce9dcf3806b840cc69a1005e19f43a52d4bdf31334` | 36（10 个方法） | 36 个有 `assert_frame_equal`/`assert_series_equal` | Task 3 的 `test_forward_returns.py`、`test_factor_cleaning.py`，C2/C3 强断言 |
+| `tests/test_performance.py` | `5f38d92b936f3b7f0afb0b4d63a84edd347766a1` | `278ecc858a228e686edd6e8aa4ef30d42fe7258a9af5da14263de61607474917` | 81（12 个参数化方法） | 12 个静态 `assert_*` 被注释并以裸 `.equals()` 替代，覆盖到 81 个 parameter row；诊断运行只收集 80 个，另 1 个被 parameterized 生成名称冲突遮蔽 | Task 4 的 `test_performance.py` 和 enhanced analytics tests；每个 case 重写为 C2/C3 数值或 invariant 断言 |
+| `tests/test_tears.py` | `8c1b74705e89ae3fe090049120c06d34fe7f13fd` | `227d23e8eebb3585b29f5f953e67f817517d802148f3e72c0cf8b27087853b86` | 24 个 decorator row，展开为 96 个内部 workflow invocation variant | 整个 `TearsTestCase` 被注释，收集数 0，恢复后也只是“未抛异常” smoke | Task 8 的 `test_tearsheets_e2e.py` / `test_tears.py`，重建为 C4 结构、show/close 和资源所有权断言 |
+
+固定 inventory 数为 **117 个 active declared case**（36 utils + 81 performance）、**116 个在已记录的诊断性兼容注入运行中可 collection 的 case**（一个 parameterized name collision）、**24 个 dormant tear decorator row** 和其展开的 **96 个 workflow invocation variant**。其中 `source_collection_state`、`assertion_quality` 与 migration disposition 是三个不同事实：被原仓遮蔽或注释不等于可以在 fincore 中漏迁；每个 source row 及其所有内部 invocation 都必须映射到可收集的 fincore 参数化 case。
+
+迁移规则：
+
+- case ID 固定为 `tests/<file>::<Class>::<method>#<zero-padded-ordinal>`；非参数方法 ordinal 为 `00`。生成工具必须从 commit `3fa17ad4c3edb025d1410de7aeba9673cba7791c` 的 blob 产生，不能读取未 pin 的 worktree；
+- `test_utils.py` 的 36 个 case 必须保留输入/期望数据语义，但使用 factory + `.copy(deep=True)`，不继承 upstream class-level 可变 DataFrame；
+- `test_performance.py` 的 81 个 case 必须恢复成 `pd.testing`/`numpy.testing` 或明确定义的数学 invariant；`equals()` 返回值、注释掉的 assert、只检查“不抛异常”均不是可接受迁移；
+- `test_tears.py` 的 24 个 decorator row 及其 96 个内部 workflow invocation 必须由真实 strict C4 workflow 覆盖；不得把它们压缩成 7 个无参数 smoke test；
+- migration map 不允许 `skip`、`xfail`、`smoke_only`、`raw_copy` 或无 target selector 的 accepted disposition。确有原仓 defect 时，记录 `source_collection_state=shadowed`/`commented_out`，但迁移 disposition 仍是强断言重写；
+- 不添加 `parameterized` 作为 fincore 的依赖；使用 native `pytest.parametrize`，每个 `pytest.param(..., id=source_case_id)` 使 collection nodeid 可由 audit 脚本验证；
+- 如复用任何原始测试的受版权保护表达、注释或 fixture 文本，先保留 Apache-2.0/Quantopian attribution 并纳入 Task 1 的人工 license review；默认采用行为等价的重写，而非大段复制。
+
+### 2.4 来源与许可证风险
 
 - sibling 根 `LICENSE` 是 MIT text；
 - `performance.py`、`utils.py`、`plotting.py`、`tears.py` 保留 Quantopian Apache-2.0 文件头；
@@ -369,7 +392,7 @@ alphalens = [
 
 | Iteration | Tasks | 目标 | 基础工作量 | 退出条件 |
 | --- | --- | --- | ---: | --- |
-| I0 | 1–2 | snapshot、manifest、兼容 package、schema 骨架 | 4–6 人日 | 64/64 C0，适用项 C1；import 无重依赖 |
+| I0 | 1、1.5、2 | snapshot、upstream-test migration map、manifest、兼容 package、schema 骨架 | 6–9 人日 | 64/64 C0，适用项 C1；141/141 source row、96/96 tear invocation 有去向；import 无重依赖 |
 | I1 | 3 | factor data/calendar | 6–8 人日 | cleaning/forward returns C2–C3 |
 | I2 | 4–5 | performance + Pyfolio bridge | 8–11 人日 | 33 个 compute/utils surface 达到目标；Pyfolio bridge C4 |
 | I3 | 6–8 | model、renderer、7 tear sheets | 10–13 人日 | 7/7 真实 tear-sheet 链全绿 |
@@ -377,12 +400,12 @@ alphalens = [
 | I5 | 10–11 | docs、examples、性能/资源门禁 | 5–7 人日 | 文档可执行；benchmark 有 provenance |
 | I6 | 12 | 全量验收和证据 | 2–3 人日 | 所有 release blockers 有证据或明确 pending |
 
-基础总量约 39–53 人日；预留 20% 给 pandas/SciPy 跨版本、图形平台和集成返工，总开发计划约 47–64 人日。4 人团队在依赖切片合理时预计 3–4 周日历时间。法律/许可证人工审核不计入上述开发工期，但未关闭会延后可发布日期。
+基础总量约 41–56 人日；预留 20% 给 pandas/SciPy 跨版本、图形平台、上游 case 重写和集成返工，总开发计划约 49–67 人日。4 人团队在依赖切片合理时预计 3–4 周日历时间。法律/许可证人工审核不计入上述开发工期，但未关闭会延后可发布日期。
 
 ### 6.1 并行波次
 
 ```text
-Wave 0: Task 1 -> Task 2
+Wave 0: Task 1 -> Task 1.5 -> Task 2
 Wave 1: Task 3 || Task 4 的 pre-cleaned-data cases || Task 9 的 packaging RED tests
 Wave 2: Task 5 || Task 6 || Task 7
 Wave 3: Task 8 || Task 10 || Task 11
@@ -395,7 +418,7 @@ Task 4 可以先用 frozen pre-cleaned factor_data fixture 开发，但最终合
 
 | Track | 独占路径 | 允许共享的协调文件 |
 | --- | --- | --- |
-| A Compatibility | `scripts/generate_compat_manifest.py`、`tests/compat/fixtures/alphalens-*`、`tests/compat/alphalens/test_public_api.py`、`test_signatures.py`、`fincore/alphalens/` | `docs/upstream-provenance.md` |
+| A Compatibility | `scripts/generate_compat_manifest.py`、`scripts/generate_alphalens_upstream_test_inventory.py`、`scripts/check_alphalens_upstream_test_migration.py`、`tests/compat/fixtures/alphalens-*`、`tests/compat/test_alphalens_upstream_test_migration.py`、`tests/compat/alphalens/test_public_api.py`、`test_signatures.py`、`fincore/alphalens/` | `docs/upstream-provenance.md`、`tests/conftest.py` |
 | B Data | `fincore/factor_analysis/{calendar,data,exceptions}.py`、data/forward tests | `fincore/contracts/factor_analysis.py` 由 Track A 先建，后续变更需协调 |
 | C Analytics | `fincore/factor_analysis/{performance,portfolio}.py`、performance/bridge tests | 不修改 façade signatures |
 | D Viz | `fincore/factor_analysis/{models,analysis,render_matplotlib,tears}.py`、plot/tear tests | 不修改 Pyfolio tearsheets |
@@ -606,9 +629,233 @@ git add scripts/generate_compat_manifest.py \
 git commit -m "test: pin alphalens compatibility profile"
 ```
 
-### Task 2: 建立轻量 strict façade、factor contracts 和 C0/C1 门禁
+### Task 1.5: 逐例迁移 pinned upstream 测试场景并建立可审计映射
 
 **Dependencies:** Task 1
+
+**Owner:** Track A
+
+**Estimate:** 2–3 人日
+
+**Files:**
+
+- Create: `scripts/generate_alphalens_upstream_test_inventory.py`
+- Create: `scripts/check_alphalens_upstream_test_migration.py`
+- Create: `tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json`
+- Create: `tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json`
+- Create: `tests/compat/test_alphalens_upstream_test_migration.py`
+- Modify: `tests/conftest.py`
+- Modify: `docs/compatibility/alphalens-0.4.0-cloudquant.md`
+- Modify: `docs/upstream-provenance.md`
+
+**Step 1: 先写 upstream inventory/migration RED tests**
+
+```python
+def test_pinned_upstream_test_inventory_and_migration_map_are_complete() -> None:
+    inventory = _load("alphalens-0.4.0-cloudquant-upstream-test-inventory.json")
+    migration = _load("alphalens-0.4.0-cloudquant-upstream-test-migration.json")
+
+    assert inventory["commit"] == "3fa17ad4c3edb025d1410de7aeba9673cba7791c"
+    assert inventory["counts"] == {
+        "active_declared_cases": 117,
+        "diagnostic_collectible_cases": 116,
+        "active_methods": 22,
+        "dormant_tear_rows": 24,
+        "dormant_tear_workflows": 7,
+        "dormant_tear_invocations": 96,
+    }
+    assert inventory["source_files"] == {
+        "tests/test_utils.py": {
+            "git_blob": "22480c305a07b8ccd83e15ed7b6d1b06be08307e",
+            "sha256": "0f476933684b1eae8f86c3ce9dcf3806b840cc69a1005e19f43a52d4bdf31334",
+        },
+        "tests/test_performance.py": {
+            "git_blob": "5f38d92b936f3b7f0afb0b4d63a84edd347766a1",
+            "sha256": "278ecc858a228e686edd6e8aa4ef30d42fe7258a9af5da14263de61607474917",
+        },
+        "tests/test_tears.py": {
+            "git_blob": "8c1b74705e89ae3fe090049120c06d34fe7f13fd",
+            "sha256": "227d23e8eebb3585b29f5f953e67f817517d802148f3e72c0cf8b27087853b86",
+        },
+    }
+
+    source_ids = {case["source_case_id"] for case in inventory["cases"]}
+    assert len(source_ids) == 141  # 117 active rows + 24 dormant rows
+    assert set(migration["cases"]) == source_ids
+    assert all(
+        item["disposition"]
+        in {"rewritten_strict", "rewritten_invariant", "rebuilt_c4"}
+        for item in migration["cases"].values()
+    )
+    assert all(item["target_selectors"] and item["assertion_grade"]
+               for item in migration["cases"].values())
+    assert sum(len(case["invocation_ids"])
+               for case in inventory["cases"]
+               if case["source_path"] == "tests/test_tears.py") == 96
+    invocation_ids = {
+        invocation_id
+        for case in inventory["cases"]
+        for invocation_id in case.get("invocation_ids", [])
+    }
+    invocation_targets = {
+        invocation_id: nodeid
+        for item in migration["cases"].values()
+        for invocation_id, nodeid in item.get("invocation_targets", {}).items()
+    }
+    assert set(invocation_targets) == invocation_ids
+    assert len(set(invocation_targets.values())) == len(invocation_ids)
+
+
+def test_no_accepted_upstream_case_is_silently_weakened_or_omitted() -> None:
+    migration = _load("alphalens-0.4.0-cloudquant-upstream-test-migration.json")
+    forbidden = {"skip", "xfail", "smoke_only", "raw_copy", "unmapped"}
+    assert not {
+        item["disposition"] for item in migration["cases"].values()
+    } & forbidden
+```
+
+测试还必须验证：source case ID 唯一且稳定；每条 inventory 记录包含 source path、class/method、source line、parameter ordinal、`source_collection_state`、`assertion_quality`、来源 blob/SHA；map 中的 `target_selectors` 落在本计划 Task 3、4 或 8 的测试路径，且 assertion grade 分别为 C2/C3/C4。tear row 还必须含全部 `invocation_ids`；对应 map record 必须包含 `invocation_targets: {invocation_id: exact_pytest_nodeid}`，两个 ID 集合和实际 collect nodeid 三方全等，96 个 target nodeid 不可复用。不得把 source collection failure 解释为迁移豁免。
+
+**Step 2: 运行 RED**
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/compat/test_alphalens_upstream_test_migration.py \
+  -q --tb=short --maxfail=0
+```
+
+Expected: FAIL，inventory、migration map 与 audit scripts 尚不存在。
+
+**Step 3: 从 pinned Git blobs 生成 inventory，不 import upstream package**
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/generate_alphalens_upstream_test_inventory.py \
+  --source /Users/yunjinqi/Documents/new_projects/alphalens \
+  --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
+  --output tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json
+```
+
+实现约束：
+
+- 对 `tests/test_utils.py`、`tests/test_performance.py` 用 AST 读取 class methods 和 `parameterized.expand` 的 literal rows；每个普通方法也是一个 ordinal `00` case；
+- 对完全注释的 `tests/test_tears.py::TearsTestCase`，只在受限的、去掉该 block 注释前缀的临时文本上做 AST 解析；绝不 `exec`、`import` 或运行该源码；
+- 检测并记录一个 `shadowed_by_generated_method_name` performance row，而不是只相信 pytest collection 数；所有 24 个 commented tear variant 标记为 `commented_out`；
+- `assertion_quality` 至少区分 `pandas_assertion`、`discarded_equals`、`smoke_only`；source file bytes 和 case inventory 均从 `git show <commit>:<path>` 获得；
+- generator 必须 byte-idempotent，遇到 commit、blob 或预期 inventory count 不符即非零退出；不依赖 `parameterized`、Matplotlib、empyrical 或 network。
+
+**Step 4: 写完整 migration map，并规定目标测试的 case-ID 协议**
+
+map 采用人工审阅的 JSON，不让 generator 覆盖。每个 source case 一条记录，例如：
+
+```json
+{
+  "tests/test_utils.py::UtilsTestCase::test_quantize_factor#00": {
+    "disposition": "rewritten_strict",
+    "target_selectors": [
+      "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#00]"
+    ],
+    "assertion_grade": "C3",
+    "source_collection_state": "active_declared"
+  },
+  "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00": {
+    "disposition": "rebuilt_c4",
+    "target_selectors": [
+      "tests/compat/alphalens/test_tearsheets_e2e.py::test_full_tear_sheet_upstream_invocation"
+    ],
+    "invocation_targets": {
+      "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-00]"
+    },
+    "assertion_grade": "C4",
+    "source_collection_state": "commented_out"
+  }
+}
+```
+
+完整映射必须满足：
+
+| source group | 数量 | 固定目标 | 必需重写方式 |
+| --- | ---: | --- | --- |
+| utils forward returns / quantization / cleaning | 36 | `tests/compat/alphalens/test_forward_returns.py`、`test_factor_cleaning.py` | `pd.testing` 的 index/dtype/values/NaN mask C2/C3 断言 |
+| performance IC / weights / returns / turnover / cumulative / events | 81 | `tests/compat/alphalens/test_performance.py` 与 `tests/test_factor_analysis/test_{information,weights_returns,turnover,events}.py` | 重建 upstream input/expected；用 `pd.testing`、`numpy.testing` 或明确 invariant，绝不丢弃 `.equals()` 返回值 |
+| dormant tear workflow rows / internal invocations | 24 / 96 | `tests/compat/alphalens/test_tearsheets_e2e.py`、`tests/test_factor_analysis/test_tears.py` | 96 个真实 C4 workflow invocation、Figure/Axes、show/close、artifact ownership；不得只验证不抛异常 |
+
+utils/performance 的每个迁入参数化项使用下面的模式；`id` 必须等于完整 source case ID，便于后续以 pytest collection nodeid 反查。tear tests 的 `id` 使用 `source_case_id + "/input-<n>/call-<n>"` 的完整 invocation ID，确保 24 行的所有 96 次原始内部调用都可单独审计。所有 source/invocation target 都同时带 `alphalens_upstream_case` marker，marker 的唯一参数必须等于该完整 ID：
+
+```python
+@pytest.mark.parametrize(
+    "source_case_id, factor_data, expected",
+    [
+        pytest.param(
+            "tests/test_utils.py::UtilsTestCase::test_quantize_factor#00",
+            factor_data_factory(),
+            expected,
+            id="tests/test_utils.py::UtilsTestCase::test_quantize_factor#00",
+            marks=pytest.mark.alphalens_upstream_case(
+                "tests/test_utils.py::UtilsTestCase::test_quantize_factor#00"
+            ),
+        ),
+    ],
+)
+def test_quantize_factor_upstream_case(
+    source_case_id: str,
+    factor_data: pd.DataFrame,
+    expected: pd.Series,
+) -> None:
+    actual = legacy_utils.quantize_factor(factor_data, quantiles=4)
+    pd.testing.assert_series_equal(actual, expected)
+```
+
+`tests/conftest.py` 必须在其既有 `pytest_configure` hook 中动态注册 `alphalens_upstream_case(case_id)`，使 `--strict-markers` 下可收集；并对带该 marker 的 item 执行以下不可绕过规则：collection 时遇到 `skip`、`skipif`、`xfail` marker 立即作为 usage error；运行期间无论 setup/call/teardown 产生 skip、xfail 或非 passed outcome，都将该 item 改报失败。conftest 新增 `--alphalens-upstream-result-json PATH` 选项，在**非 xdist** run 的 `pytest_sessionfinish` 把每个 marked item 的 `nodeid`、marker case ID、setup/call/teardown outcome 写到 `build/`；结果 envelope 必须在仓库 root 安全执行 `git rev-parse --show-toplevel --verify HEAD` 后写入完整 `git_revision`。只允许 checker 用此结果证明每个 mapped target 真正 `passed`。
+
+**Step 5: 实现 collection audit 工具并冻结交接边界**
+
+`scripts/check_alphalens_upstream_test_migration.py` 接收 `--inventory`、`--migration`、`--write-collection-proof PATH`、`--collection-proof PATH`、`--results` 和 `--scope {utils,performance,tears,all}`。Task 1.5 的 source/map 静态验证不传 proof 或 results；对应 target tests 已实现并完成非-xdist实际运行后，先用 `--write-collection-proof build/...json` 生成受控 collection proof，再将该 proof 和 `--results` 一并传回 checker。`--write-collection-proof` 只接受仓库 `build/` 下的相对文件路径，禁止手工 transcript；collector envelope 同样必须写入从仓库 root 获得的完整 `git_revision`。
+
+- 验证 inventory 与 map 的 case-ID 集合一对一相等；
+- 验证目标 selector 只指向 Task 3/4/8 的 fincore tests，且 assertion grade 与 source group 相容；
+- 只从 versioned `--collection-proof` JSON 读取 nodeid；该 proof 必须由受控 `--write-collection-proof` collector 为相同 scope 生成，具有固定 command identity/target paths、`exitstatus=0`、空 collection errors。collection proof 和 `--results` 两个 envelope 的完整 `git_revision` 都必须等于 checker 启动时的当前 HEAD，且彼此相等；任何提交或 HEAD 切换后必须重新生成两者。确认 utils/performance 的每个 complete source case ID 和 tears 的每个 complete invocation ID 恰好出现一次；对 tears，同步校验 inventory invocation ID、map `invocation_targets` key、exact target nodeid 和 collect nodeid 三方全等；
+- 对 target test AST 拒绝裸 `.equals()` 和没有 `assert`/`pd.testing`/`np.testing`/C4 artifact assertion 的目标函数；
+- 拒绝 target tests 中 `import alphalens`、从 sibling 的绝对路径导入或把 source-side test module 当作 fixture；
+- 读取 `--results` 的 result JSON，要求每个 mapped nodeid 的 setup/call/teardown 均为 passed；不把 collection error、xfailed item、runtime skip 或 source-side shadow 当成已迁移。
+
+Task 1.5 只校验 source inventory 和完整映射；真实 target nodeid 验证分别在 Task 3、4、8 完成后运行，避免用假测试提前伪造通过。
+
+**Step 6: 运行 GREEN**
+
+以下三步必须在同一 HEAD 上连续执行；`git_revision` 会自动写入两个 proof，若期间提交或切换 HEAD，最后一步会拒绝旧 artifact，必须从测试运行重新生成。
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/compat/test_alphalens_upstream_test_migration.py \
+  -q --tb=short --maxfail=0
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/generate_alphalens_upstream_test_inventory.py \
+  --source /Users/yunjinqi/Documents/new_projects/alphalens \
+  --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
+  --check tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json
+```
+
+Expected: PASS；inventory 117/116/24/96 数量和三个 source SHA 完全固定，且 migration map 覆盖 141/141 个 source row、96/96 个 tear invocation。
+
+**Step 7: Commit**
+
+```bash
+git add scripts/generate_alphalens_upstream_test_inventory.py \
+  scripts/check_alphalens_upstream_test_migration.py \
+  tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  tests/compat/test_alphalens_upstream_test_migration.py \
+  tests/conftest.py \
+  docs/compatibility/alphalens-0.4.0-cloudquant.md \
+  docs/upstream-provenance.md
+git commit -m "test: map upstream alphalens cases"
+```
+
+### Task 2: 建立轻量 strict façade、factor contracts 和 C0/C1 门禁
+
+**Dependencies:** Tasks 1 and 1.5
 
 **Owner:** Track A
 
@@ -788,7 +1035,7 @@ git commit -m "feat: add alphalens facade and factor contracts"
 
 ### Task 3: 实现 factor data preparation、calendar 和 loss contracts
 
-**Dependencies:** Task 2
+**Dependencies:** Tasks 1.5 and 2
 
 **Owner:** Track B
 
@@ -821,6 +1068,8 @@ git commit -m "feat: add alphalens facade and factor contracts"
 - pandas 3 下无依赖 `stack` 默认值的期望构造。
 
 使用 `pd.testing.assert_series_equal` / `assert_frame_equal`，禁止裸 `.equals()`。
+
+本 Task 同时消费 Task 1.5 map 中 **36/36** 个 `tests/test_utils.py` source case：每个迁入参数项的 `pytest.param(..., id=source_case_id)` 必须保留完整 ID。不得把 27 个 `quantize_factor` parameter rows 合并成只覆盖边界的少量新 case；可以用 factory 取代 upstream class-level mutable fixture，但每个原始输入/期望组合必须仍被独立收集。`tests/test_utils.py` 的 3 个 forward-return、27 个 quantize、6 个 clean-factor case 分别落到 `test_forward_returns.py` 和 `test_factor_cleaning.py`，并以 C2/C3 强断言替换原始数据构造中的 pandas 旧默认值依赖。
 
 **Step 2: 写 cleaning/quantization RED tests**
 
@@ -931,6 +1180,35 @@ def prepare_factor_data(
 
 Expected: 既有兼容面无回归。
 
+然后验证 utils source-case migration collection：
+
+```bash
+mkdir -p build
+MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
+  python -m pytest -o addopts='' \
+  tests/compat/alphalens/test_forward_returns.py \
+  tests/compat/alphalens/test_factor_cleaning.py \
+  -q --tb=short --maxfail=0 \
+  --alphalens-upstream-result-json build/alphalens-utils-upstream-results.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope utils \
+  --write-collection-proof build/alphalens-utils-upstream-collection.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --collection-proof build/alphalens-utils-upstream-collection.json \
+  --results build/alphalens-utils-upstream-results.json \
+  --scope utils
+```
+
+Expected: PASS；36/36 utils source case IDs 恰好一次出现，且没有 `.equals()`/smoke-only target。
+
 **Step 7: Commit**
 
 ```bash
@@ -945,7 +1223,7 @@ git commit -m "feat: add factor data preparation"
 
 ### Task 4: 实现 IC、权重、收益、turnover 和 event analytics
 
-**Dependencies:** Task 2；最终合并依赖 Task 3
+**Dependencies:** Tasks 1.5 and 2；最终合并依赖 Task 3
 
 **Owner:** Track C
 
@@ -999,6 +1277,8 @@ ic = factor_information_coefficient(clean_data)
 assert ((ic >= -1) & (ic <= 1) | ic.isna()).all().all()
 ```
 
+本 Task 同时消费 Task 1.5 map 中 **81/81** 个 `tests/test_performance.py` source case。每一个 upstream parameter row 都必须在 `tests/compat/alphalens/test_performance.py` 或对应 enhanced analytics test 中以完整 `source_case_id` 作为 `pytest.param(..., id=...)` 出现一次；原 upstream 实际 collection 漏掉的那个 generated-name collision row 也必须重建，不能因为原仓未收集而豁免。class-level `factor_data` 必须换成 per-case factory/deep copy，禁止测试之间原地污染。
+
 **Step 2: 运行 RED**
 
 ```bash
@@ -1026,7 +1306,7 @@ Expected: FAIL，analytics kernels 尚未实现。
 
 **Step 4: 修复旧测试中的伪断言，不复制坏 fixture**
 
-- 旧 `.equals()` 场景改为 `pd.testing.assert_*`；
+- 81 个 performance source row 均逐例改写；其中共享这些 row 的 12 个静态裸 `.equals()` 伪断言必须替换为 `pd.testing.assert_*`、`np.testing.assert_*` 或可审阅的数学 invariant；任何一个 source case 若不再逐元素比较，map 必须说明为何 invariant 足以覆盖相同语义；
 - 旧 pandas `stack` 期望必须显式 `future_stack`/`dropna` 等语义或直接构造 MultiIndex；
 - frozen oracle output 与数学 invariant 同时通过；
 - 不把“修改 expected 直到绿色”当作修复。
@@ -1044,6 +1324,38 @@ Expected: FAIL，analytics kernels 尚未实现。
 ```
 
 Expected: PASS，无 placeholder。
+
+然后验证 performance source-case migration collection：
+
+```bash
+mkdir -p build
+MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
+  python -m pytest -o addopts='' \
+  tests/compat/alphalens/test_performance.py \
+  tests/test_factor_analysis/test_information.py \
+  tests/test_factor_analysis/test_weights_returns.py \
+  tests/test_factor_analysis/test_turnover.py \
+  tests/test_factor_analysis/test_events.py \
+  -q --tb=short --maxfail=0 \
+  --alphalens-upstream-result-json build/alphalens-performance-upstream-results.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope performance \
+  --write-collection-proof build/alphalens-performance-upstream-collection.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --collection-proof build/alphalens-performance-upstream-collection.json \
+  --results build/alphalens-performance-upstream-results.json \
+  --scope performance
+```
+
+Expected: PASS；81/81 performance source case IDs 恰好一次出现；没有 discarded `.equals()` 或 source-name collision 遗漏。
 
 **Step 6: Commit**
 
@@ -1438,7 +1750,7 @@ git commit -m "feat: add alphalens matplotlib plots"
 
 ### Task 8: 实现 7 个真实 tear-sheet workflow 和无写入门禁
 
-**Dependencies:** Tasks 6–7
+**Dependencies:** Tasks 1.5 and 6–7
 
 **Owner:** Track D
 
@@ -1478,6 +1790,8 @@ factor_data -> kernels -> FactorAnalysisModel -> renderer -> tear workflow
 - enhanced API 返回 `FactorTearSheetArtifacts`，默认不 show；
 - test teardown 后没有打开 Figure；
 - 不写 package、source、site-packages。
+
+本 Task 同时消费 Task 1.5 map 中 `tests/test_tears.py` 的 **24/24 decorator row 和 96/96 内部 workflow invocation**。每个 C4 参数项使用完整 invocation ID（`<source_case_id>/input-<n>/call-<n>`）作为 `pytest.param(..., id=...)`，保留 upstream 的 quantiles/bins、periods、`filter_zscore`、timezone、两种 price/factor input 和 long-short/group-neutral/by-group 调用维度。7 个 workflow 函数的存在不能替代 96 个变体的迁移：summary 的两种 long-short 调用、full 的 2×3 调用、event-returns 的 2×6 调用、event-study 的两种 input 都必须分别进入 collection 和 C4 断言。
 
 **Step 2: 写 source-write RED test**
 
@@ -1556,6 +1870,35 @@ MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
 ```
 
 Expected: 7/7 C4；无 backend/source-write/Figure leak 回归。
+
+然后验证 tear source-case migration collection：
+
+```bash
+mkdir -p build
+MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
+  python -m pytest -o addopts='' \
+  tests/compat/alphalens/test_tearsheets_e2e.py \
+  tests/test_factor_analysis/test_tears.py \
+  -q --tb=short --maxfail=0 \
+  --alphalens-upstream-result-json build/alphalens-tears-upstream-results.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope tears \
+  --write-collection-proof build/alphalens-tears-upstream-collection.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --collection-proof build/alphalens-tears-upstream-collection.json \
+  --results build/alphalens-tears-upstream-results.json \
+  --scope tears
+```
+
+Expected: PASS；24/24 upstream tear rows 和 96/96 workflow invocation IDs 都恰好一次出现，且每项具有非 smoke 的 C4 artifact/show-close/resource-ownership 断言。
 
 **Step 6: Commit**
 
@@ -1906,7 +2249,7 @@ git commit -m "perf: gate factor analysis scaling"
 
 ### Task 12: 执行全量验收、刷新证据并关闭发布门
 
-**Dependencies:** Tasks 1–11
+**Dependencies:** Tasks 1, 1.5, and 2–11
 
 **Owner:** Controller/release owner；禁止多个 worker 同时修改 baseline
 
@@ -1924,11 +2267,15 @@ git commit -m "perf: gate factor analysis scaling"
 **Step 1: 查找占位和坏测试**
 
 ```bash
-rg -n "NotImplementedError|TODO.*alphalens|placeholder" \
-  fincore/alphalens fincore/factor_analysis
+if rg -n "NotImplementedError|TODO.*alphalens|placeholder" \
+  fincore/alphalens fincore/factor_analysis; then
+  exit 1
+fi
 
-rg -n '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*\.equals\(' \
-  tests/compat/alphalens tests/test_factor_analysis
+if rg -n '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*\.equals\(' \
+  tests/compat/alphalens tests/test_factor_analysis; then
+  exit 1
+fi
 ```
 
 Expected: 两个命令都没有需要处理的匹配。
@@ -1936,10 +2283,13 @@ Expected: 两个命令都没有需要处理的匹配。
 **Step 2: 运行 strict/enhanced/bridge gates**
 
 ```bash
+mkdir -p build
 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
   python -m pytest -o addopts='' \
+  tests/compat/test_alphalens_upstream_test_migration.py \
   tests/compat/alphalens tests/test_factor_analysis \
-  -q --tb=short --maxfail=0
+  -q --tb=short --maxfail=0 \
+  --alphalens-upstream-result-json build/alphalens-upstream-migration-results.json
 
 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
   python -m pytest -o addopts='' \
@@ -1949,6 +2299,34 @@ MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base \
 ```
 
 Expected: 全绿；`--maxfail=0`；C0–C4 无 xfail 伪通过。
+
+**Step 2.5: 审计上游 case 的最终迁移完整性**
+
+```bash
+mkdir -p build
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/generate_alphalens_upstream_test_inventory.py \
+  --source /Users/yunjinqi/Documents/new_projects/alphalens \
+  --commit 3fa17ad4c3edb025d1410de7aeba9673cba7791c \
+  --check tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --scope all \
+  --write-collection-proof build/alphalens-all-upstream-collection.json
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \
+  scripts/check_alphalens_upstream_test_migration.py \
+  --inventory tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-inventory.json \
+  --migration tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json \
+  --collection-proof build/alphalens-all-upstream-collection.json \
+  --results build/alphalens-upstream-migration-results.json \
+  --scope all
+```
+
+Expected: PASS；先证明 checked-in inventory 能从 pinned Git blob 重建，再证明 36/36 utils、81/81 performance、24/24 dormant tear rows 和 96/96 tear invocation IDs 都有且仅有一个可收集、实际 passed 的强断言 target；无 `skip`、`xfail`、`smoke_only`、裸 `.equals()` 或 sibling `alphalens` import 伪通过。
 
 **Step 3: 运行静态和文档门禁**
 
@@ -2060,6 +2438,7 @@ git commit -m "chore: record alphalens acceptance evidence"
 - [ ] 17 utils + 16 performance 计算面达到适用的 C2/C3。
 - [ ] 21 plotting API 有结构/数据断言，不只是 smoke。
 - [ ] 7/7 tear sheets 达到真实 C4。
+- [ ] pinned upstream test inventory、SHA256 和 migration map 可复现；36/36 utils、81/81 performance、24/24 dormant tear row 与 96/96 tear invocation 均有唯一、可收集的 fincore 强断言 target。
 - [ ] `create_pyfolio_input` 输出进入现有 fincore Pyfolio 真实 workflow。
 - [ ] strict 和 enhanced profile 的差异已文档化。
 - [ ] 不存在 placeholder、静默 xfail 或无 assert 比较。
@@ -2084,6 +2463,7 @@ git commit -m "chore: record alphalens acceptance evidence"
 - [ ] current baseline 已由脚本重新生成。
 - [ ] public docs 和示例可执行且不联网。
 - [ ] source manifest、commit、SHA256、oracle review 可追溯。
+- [ ] `scripts/check_alphalens_upstream_test_migration.py --scope all` 通过，且 result JSON 证明每个 mapped target 实际 passed；没有 `skip`、`xfail`、`smoke_only`、裸 `.equals()` 或 sibling test import 被当作测试迁移完成。
 - [ ] license/NOTICE/SPDX 人工审核关闭；如未关闭则 release status 保持 blocked。
 - [ ] release owner 单独决定版本；本计划本身不授权发布。
 
@@ -2094,7 +2474,7 @@ git commit -m "chore: record alphalens acceptance evidence"
 | 根 MIT 与源码 Apache-2.0 冲突 | 法律/发布阻断 | pinned blob + header inventory + 人工 license gate |
 | sibling 无 tag、版本三套事实 | 错误兼容目标 | commit 为唯一身份；manifest 同时记录冲突版本 |
 | modern env 无法 import oracle | 无法在线差分 | static manifest + isolated pinned oracle + reviewed golden cases |
-| old tests 缺 assert/重复名称 | 假绿色 | 全部重写强断言；检查裸 `.equals()`；唯一 case id |
+| old tests 缺 assert/重复名称/整类注释 | 源场景在迁移中静默丢失或假绿色 | pinned 141-row inventory + 96 tear invocation ledger；每项唯一 case/invocation ID、强断言 target、collection audit；检查裸 `.equals()` |
 | pandas 3 stack/groupby/calendar 漂移 | shape/数值变化 | explicit options + pandas3 regression fixtures |
 | strict 校验被 enhanced 改写 | 兼容静默漂移 | 独立 profile/adapter/result projection |
 | optional deps eager import | core 安装不可用 | blocked-import subprocess + installed core profile |

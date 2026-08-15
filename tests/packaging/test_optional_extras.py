@@ -21,6 +21,9 @@ Two independent strategies:
 
 from __future__ import annotations
 
+import ast
+import os
+import runpy
 import subprocess
 import sys
 import textwrap
@@ -46,6 +49,7 @@ OPTIONAL_ROOTS = [
     "matplotlib",
     "seaborn",
     "IPython",
+    "statsmodels",
     "plotly",
     "bokeh",
     "playwright",
@@ -147,3 +151,88 @@ def test_version_fallback_function_reads_pyproject_directly() -> None:
     import fincore
 
     assert fincore._version_from_pyproject() == _pyproject_version()
+
+
+def test_installed_wheel_cli_accepts_required_alphalens_profiles(tmp_path: Path) -> None:
+    """The wheel-consumer CLI exposes each required Alphalens install profile."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(REPO_ROOT / "scripts" / "test_installed_wheel.py"),
+            "--dist",
+            str(tmp_path),
+            "--profiles",
+            "core",
+            "factor-analysis",
+            "alphalens",
+            "alphalens-pyfolio",
+            "all",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    # A missing test wheel is expected here; argparse must accept every
+    # documented profile before the script reaches that artifact check.
+    assert proc.returncode == 1, proc.stderr
+    assert "no wheel matching fincore-" in proc.stderr
+
+
+def test_isolated_wheel_consumer_bootstrap_imports_json() -> None:
+    """The emitted ``-S -E`` consumer owns every standard-library import it uses."""
+    namespace = runpy.run_path(str(REPO_ROOT / "scripts" / "test_installed_wheel.py"), run_name="wheel_consumer_test")
+    consumer_tree = ast.parse(namespace["_CONSUMER"])
+    imported_modules = {
+        alias.name for node in ast.walk(consumer_tree) if isinstance(node, ast.Import) for alias in node.names
+    }
+    assert "json" in imported_modules
+
+
+def test_required_wheel_profiles_have_explicit_bounded_timeouts() -> None:
+    """A dependency resolver or consumer hang cannot block release CI forever."""
+    namespace = runpy.run_path(str(REPO_ROOT / "scripts" / "test_installed_wheel.py"), run_name="wheel_timeout_test")
+    profiles = namespace["PROFILES"]
+    for name in ("core", "factor-analysis", "alphalens", "alphalens-pyfolio", "all"):
+        spec = profiles[name]
+        assert 0 < spec["install_timeout"] <= 900
+        assert 0 < spec["consumer_timeout"] <= 300
+
+
+def test_all_profile_uses_a_real_venv_for_pip_check() -> None:
+    """``pip check`` must inspect its own environment, not a ``--target`` path."""
+    namespace = runpy.run_path(str(REPO_ROOT / "scripts" / "test_installed_wheel.py"), run_name="wheel_pip_check_test")
+    assert namespace["PROFILES"]["all"]["install_mode"] == "venv"
+
+
+def test_pip_check_in_a_venv_detects_an_unsatisfied_installed_requirement(tmp_path: Path) -> None:
+    """Regression: venv ``pip check`` sees its own broken installed metadata."""
+    venv_dir = tmp_path / "venv"
+    subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True, timeout=120)
+    python = venv_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    purelib = Path(
+        subprocess.run(
+            [python, "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        ).stdout.strip()
+    )
+    metadata = purelib / "fincore_pip_check_regression-1.0.dist-info"
+    metadata.mkdir()
+    (metadata / "METADATA").write_text(
+        "Metadata-Version: 2.1\n"
+        "Name: fincore-pip-check-regression\n"
+        "Version: 1.0\n"
+        "Requires-Dist: fincore-definitely-missing-test-dependency (==1.0)\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [python, "-m", "pip", "check"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode != 0
+    assert "fincore-definitely-missing-test-dependency" in result.stdout + result.stderr

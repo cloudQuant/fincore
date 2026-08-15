@@ -166,6 +166,6 @@
   "schema_version": 2,
   "source": {
     "path": "fincore/__init__.py",
-    "sha256": "a2799fec3573e561840e05607bba2eb40ffde626b9c44f3d4e3b08cea54c4db0"
+    "sha256": "ed3d7e61b0cb808c2ade77a7c125fe65eef64b2396aece643039b088978545f9"
   }
 }

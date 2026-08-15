@@ -21,8 +21,22 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-CACHE_PARTS = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "__pycache__", "build", "dist", "htmlcov"}
-COMMAND_TIMEOUT_SECONDS = 900
+CACHE_PARTS = {
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "fincore.egg-info",
+    "htmlcov",
+}
+# The current complete suite needs roughly eight minutes without coverage;
+# branch instrumentation adds enough overhead that a 15-minute ceiling is too
+# short. Keep a finite, documented 30-minute budget for every full baseline
+# subprocess rather than producing an incomplete quality artifact.
+COMMAND_TIMEOUT_SECONDS = 30 * 60
 NON_SERIAL_SELECTOR = "not serial and not slow and not integration"
 TRUSTED_SELECTOR = "not slow and not integration"
 BENCHMARKS_IGNORE = "--ignore=tests/benchmarks"
@@ -109,6 +123,34 @@ def _copy_source_tree(source_root: Path, copy_root: Path, manifest: dict[str, st
         shutil.copy2(source, destination)
 
 
+def _initialize_copy_git_repository(copy_root: Path) -> None:
+    """Give the isolated tree its own HEAD for proof fixtures that require one.
+
+    The source repository is never touched. The disposable commit is excluded
+    from the write inventory together with all other `.git` metadata.
+    """
+
+    commands = (
+        ("git", "init", "--quiet"),
+        ("git", "add", "--all"),
+        (
+            "git",
+            "-c",
+            "user.name=Fincore baseline",
+            "-c",
+            "user.email=fincore-baseline@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "disposable baseline snapshot",
+        ),
+    )
+    for command in commands:
+        result = subprocess.run(command, cwd=copy_root, capture_output=True, text=True, check=False, timeout=30)
+        if result.returncode != 0:
+            raise RuntimeError(f"could not initialize disposable Git repository: {result.stdout}{result.stderr}")
+
+
 def _parse_count(output: str, name: str) -> int:
     matches = re.findall(rf"(?:^|, |\s)(\d+) {name}(?:,|\s|$)", output, flags=re.MULTILINE)
     return int(matches[-1]) if matches else 0
@@ -162,6 +204,17 @@ def _timeout_output(error: subprocess.TimeoutExpired) -> str:
     return as_text(error.stdout) + as_text(error.stderr)
 
 
+def _baseline_environment() -> dict[str, str]:
+    """Return the deterministic, headless environment for disposable pytest runs."""
+
+    environment = os.environ.copy()
+    # On macOS, ``matplotlib.get_backend()`` may initialize pyplot when the
+    # shell-selected GUI backend is queried.  The import-boundary tests must
+    # instead run under the same explicitly headless backend as CI.
+    environment["MPLBACKEND"] = "Agg"
+    return environment
+
+
 def _run_checked(
     copy_root: Path,
     tracked_package_files: list[str],
@@ -178,6 +231,7 @@ def _run_checked(
         result = subprocess.run(
             command,
             cwd=copy_root,
+            env=_baseline_environment(),
             capture_output=True,
             text=True,
             check=False,
@@ -387,6 +441,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="fincore-quality-baseline-") as temp_dir:
         copy_root = Path(temp_dir) / "fincore"
         _copy_source_tree(source_root, copy_root, included_manifest)
+        _initialize_copy_git_repository(copy_root)
         data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root))
         specifications = [
             ("trusted-baseline", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR]),

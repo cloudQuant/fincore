@@ -1,0 +1,1424 @@
+{
+  "cases": {
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "shadowed_by_generated_method_name",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#06]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_common_start_returns#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_events.py::test_common_start_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_common_start_returns#07]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#06]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#07]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#08": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_cumulative_returns#08]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_alpha_beta#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_alpha_beta_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_alpha_beta#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_factor_rank_autocorrelation_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_rank_autocorrelation#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_returns#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_returns#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_returns#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_returns#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_returns#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_returns#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_returns#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_returns#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_returns#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_returns#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#06]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_factor_weights#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_upstream_case[tests/test_performance.py::PerformanceTestCase::test_factor_weights#07]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_information_coefficient#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_information_coefficient#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_information_coefficient#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_information_coefficient#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_information_coefficient#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_information_coefficient#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_information_coefficient#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_information_coefficient#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_mean_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_mean_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_mean_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_information.py::test_mean_information_coefficient_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_information_coefficient#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#06]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_performance.py::test_mean_return_by_quantile_upstream_case[tests/test_performance.py::PerformanceTestCase::test_mean_return_by_quantile#07]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#00]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#01]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#02]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#03]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#04]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#05]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#06]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#07]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#08": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#08]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#09": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#09]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#10": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#10]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#11": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#11]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#12": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#12]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#13": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#13]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#14": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#14]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#15": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#15]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#16": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#16]"
+      ]
+    },
+    "tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#17": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "discarded_equals",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_turnover.py::test_quantile_turnover_upstream_case[tests/test_performance.py::PerformanceTestCase::test_quantile_turnover#17]"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-00/call-05]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#00/input-01/call-05]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-00/call-05]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#01/input-01/call-05]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-00/call-05]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#02/input-01/call-05]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-00/call-05]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-01": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-02": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-03": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-03]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-04": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-04]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-05": "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_returns_tear_sheet#03/input-01/call-05]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#00/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#00/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#00/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#00/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#01/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#01/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#01/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#01/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#02": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#02/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#02/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#02/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#02/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#03": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#03/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#03/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#03/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#03/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#04": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#04/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#04/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#04/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#04/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#05": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#05/input-00/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#05/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#05/input-01/call-00": "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_event_study_tear_sheet#05/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/test_factor_analysis/test_tears.py::test_create_event_study_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#00/input-01/call-02]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#01/input-01/call-02]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#02/input-01/call-02]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-00/call-02]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-01": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-01]",
+        "tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-02": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_full_tear_sheet#03/input-01/call-02]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_full_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_information_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#00/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_information_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#01/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_information_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_information_tear_sheet#01/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_information_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#00/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#01/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_returns_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_returns_tear_sheet#01/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_returns_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#00/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#00/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#00/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#01/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#01/input-00/call-00]",
+        "tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#01/input-01/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_summary_tear_sheet#01/input-01/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_summary_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#00": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#00/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#00/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#01": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#01/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#01/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#02": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#02/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#02/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#03": {
+      "assertion_grade": "C4",
+      "disposition": "rebuilt_c4",
+      "invocation_targets": {
+        "tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#03/input-00/call-00": "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation[tests/test_tears.py::TearsTestCase::test_create_turnover_tear_sheet#03/input-00/call-00]"
+      },
+      "source_assertion_quality": "smoke_only",
+      "source_collection_state": "commented_out",
+      "target_selectors": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_create_turnover_tear_sheet_upstream_invocation"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_forward_returns.py::test_compute_forward_returns_upstream_case[tests/test_utils.py::UtilsTestCase::test_compute_forward_returns#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_index_out_of_bound#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_forward_returns.py::test_compute_forward_returns_index_out_of_bound_upstream_case[tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_index_out_of_bound#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_non_cum#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_forward_returns.py::test_compute_forward_returns_non_cum_upstream_case[tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_non_cum#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_1#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_1_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_1#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_2#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_2_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_2#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_3#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_3_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_3#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_4#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_4_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_4#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_5#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_5_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_5#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_6#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_6_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_6#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#00": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#00]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#01": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#01]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#02": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#02]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#03": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#03]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#04": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#04]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#05": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#05]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#06": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#06]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#07": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#07]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#08": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#08]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#09": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#09]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#10": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#10]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#11": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#11]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#12": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#12]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#13": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#13]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#14": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#14]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#15": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#15]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#16": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#16]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#17": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#17]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#18": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#18]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#19": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#19]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#20": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#20]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#21": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#21]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#22": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#22]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#23": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#23]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#24": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#24]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#25": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#25]"
+      ]
+    },
+    "tests/test_utils.py::UtilsTestCase::test_quantize_factor#26": {
+      "assertion_grade": "C3",
+      "disposition": "rewritten_strict",
+      "source_assertion_quality": "pandas_assertion",
+      "source_collection_state": "active_declared",
+      "target_selectors": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_quantize_factor_upstream_case[tests/test_utils.py::UtilsTestCase::test_quantize_factor#26]"
+      ]
+    }
+  },
+  "commit": "3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+  "profile": "cloudquant-local-3fa17ad",
+  "review": {
+    "note": "Human-reviewable source-to-future-target map; Task 1.5 does not claim target execution or acceptance.",
+    "state": "static-map-pending-target-implementation"
+  },
+  "schema_version": "alphalens-upstream-test-migration-v1"
+}

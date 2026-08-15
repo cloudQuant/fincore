@@ -25,6 +25,12 @@ pip install -U .
 # Pyfolio tear sheets (matplotlib, seaborn, ipython)
 pip install "fincore[pyfolio]"
 
+# Compute-only enhanced factor analysis
+pip install "fincore[factor-analysis]"
+
+# Strict Alphalens migration APIs and factor-analysis plotting
+pip install "fincore[alphalens]"
+
 # Interactive backends (plotly, bokeh)
 pip install "fincore[interactive]"
 
@@ -51,6 +57,11 @@ pip install "fincore[dev]"
 ```
 
 `viz` and `datareader` are 0.3.x compatibility aliases.
+
+`fincore[alphalens]` does not install a top-level `alphalens` package. Import
+the strict migration façade as `fincore.alphalens`, or use the enhanced
+`fincore.factor_analysis` workflow. The former source snapshot is identified
+by its pinned commit, not by its conflicting historical version strings.
 
 ## Requirements
 

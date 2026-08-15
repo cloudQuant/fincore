@@ -19,6 +19,18 @@ determination.
 | pyfolio 0.9.6 | same | `pyfolio/plotting.py` | `b15a1ed427417ba53811e9c561da6143130f5585c0e9a132f32bb99132e7cd0e` | Apache-2.0 header |
 | pyfolio 0.9.6 | same | `pyfolio/perf_attrib.py` | `a4436cc02a9f345ea2e238e914b255c72f5fca57305cd965228309a0f25a04c6` | Apache-2.0 header |
 | pyfolio 0.9.6 | same | root `LICENSE` | `4391163aa82bbe18b3d5c9670d3b08e0f249d966d689874c3306bcfc91e51941` | MIT text |
+| Alphalens cloudQuant local | `3fa17ad4c3edb025d1410de7aeba9673cba7791c` | `alphalens/__init__.py` | `4a93dbb33d372a5ed52232426056f16a9c297bff09db7216c94da87770824a07` | imports four public modules; no license header in inspected file |
+| Alphalens cloudQuant local | same | `alphalens/performance.py` | `0c5ff3f6dc6a23c81a5f2c2bfa9b9860b3f9a8657fafe06be429629074b6a6ac` | Copyright 2017 Quantopian, Apache-2.0 header |
+| Alphalens cloudQuant local | same | `alphalens/utils.py` | `adce74b07070f890e2567b1aedf67841ec69b9beeebc9aabee272ea850001871` | Copyright 2018 Quantopian, Apache-2.0 header |
+| Alphalens cloudQuant local | same | `alphalens/plotting.py` | `56a793a44f975fe0f9a650f3a92648cdb8adeb8067557aff24dc9e6e3ce3bc15` | Copyright 2017 Quantopian, Apache-2.0 header |
+| Alphalens cloudQuant local | same | `alphalens/tears.py` | `2d56f6c4f6545bac21d40378f8f63fcee0bfcc666877beb27a3cee6cf338ba05` | Copyright 2017 Quantopian, Apache-2.0 header |
+| Alphalens cloudQuant local | same | root `LICENSE` | `c880f680840331b0c9b2b8968cd08faf26914b6efcd1a7a4afaba105248718d6` | MIT text, copyright line names 云金杞 |
+| Alphalens cloudQuant local | same | root `README.md` | `397ec98f88157234e6a425b21657f74db711e4ee6aa246d11bed9d21665ac621` | project README advertises Apache-2.0 |
+| Alphalens cloudQuant local | same | `setup.py` | `9a0192f4d1189524f568fd1d0a076e5c77cdd0b6bf12621724f76095bc0a0a81` | static fallback version `1.0.0+dev` |
+| Alphalens cloudQuant local | same | `alphalens/_version.py` | `485407a5fb66fd94a9e8e4ff6a86c7c3346182b484ce16cdca11b931af1cf0dc` | Versioneer source embeds `v0.4.0` and older revision `77084f1...` |
+| Alphalens cloudQuant local | same | `tests/test_utils.py` | `0f476933684b1eae8f86c3ce9dcf3806b840cc69a1005e19f43a52d4bdf31334` | upstream test source, Git blob `22480c305a07b8ccd83e15ed7b6d1b06be08307e` |
+| Alphalens cloudQuant local | same | `tests/test_performance.py` | `278ecc858a228e686edd6e8aa4ef30d42fe7258a9af5da14263de61607474917` | upstream test source, Git blob `5f38d92b936f3b7f0afb0b4d63a84edd347766a1`; one parameterized row is source-shadowed |
+| Alphalens cloudQuant local | same | `tests/test_tears.py` | `227d23e8eebb3585b29f5f953e67f817517d802148f3e72c0cf8b27087853b86` | commented upstream tear workflows, Git blob `8c1b74705e89ae3fe090049120c06d34fe7f13fd` |
 
 Paths above are checkout-relative. Manifest source bytes and hashes come from
 the pinned Git blobs, not potentially dirty worktree files. Absolute sibling
@@ -36,6 +48,9 @@ release notice is finalized.
 | `empyrical/perf_attrib.py` | `fincore/metrics/perf_attrib.py`, `fincore/empyrical.py` | Engineering provenance recorded; line-level/license review pending |
 | `pyfolio/tears.py`, `plotting.py` | `fincore/tearsheets/`, `fincore/pyfolio.py` | Engineering provenance recorded; line-level/license review pending |
 | pyfolio portfolio helpers | `fincore/metrics/{positions,transactions,round_trips}.py` | Engineering provenance recorded; line-level/license review pending |
+| Alphalens `performance.py`, `utils.py` | planned `fincore/alphalens/{performance,utils}.py`, `fincore/factor_analysis/{data,performance,portfolio}.py` | Snapshot only; no destination implementation or license decision in this task |
+| Alphalens `plotting.py`, `tears.py` | planned `fincore/alphalens/{plotting,tears}.py`, `fincore/factor_analysis/{render_matplotlib,tears}.py` | Snapshot only; no destination implementation or license decision in this task |
+| Alphalens upstream test sources | planned Task 3/4/8 tests recorded in `tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json` | Static source-to-target review map only; no target execution, copy, adaptation, or license decision in this task |
 
 Several fincore metric files retain Quantopian and Apache-2.0 headers. Other
 candidate destination files do not carry equivalent per-file headers, so the
@@ -50,6 +65,29 @@ Before a release claim or notice file is finalized, a qualified reviewer must:
    copied files;
 3. review the adaptation inventory at file or line level; and
 4. decide whether `THIRD_PARTY_NOTICES.md` is required and approve its content.
+
+For Alphalens specifically, the reviewer must also resolve the root-MIT versus
+file-level-Quantopian-Apache notices, inspect the historical `ff4d582` commit
+message indicating a copy from the official site, and decide which headers or
+notices apply to any future clean-room reimplementation versus adaptation.
+
+The pinned upstream test inventory is engineering evidence, not a legal
+conclusion about test text, derived fixtures, or target rewrites. Its 141-row
+migration map is intentionally a deferred handoff to future test tasks; it
+does not assert that a target suite has been copied, collected, executed, or
+approved. When those target tasks begin, the migration checker will reject
+direct or dynamic upstream/source-test imports, sibling-upstream absolute
+paths assembled for a finite set of AST-visible `runpy`/builtins execution
+APIs (including bounded named first-operand forms), direct assignment aliases
+of those recognized module namespaces, imported `os.path.join` aliases, and
+`sys.path` mutation. Its later collection gate accepts only the checker's
+versioned controlled-collector proof (scope, command identity, zero exit
+status, exact target paths/nodeids, and no collection errors), never a plain
+`pytest --collect-only` transcript; its writer is restricted to a relative,
+non-traversing file under the repository `build/` directory. Its C2/C3/C4 target checks use bounded
+reachable-AST evidence rather than treating a nested or demonstrably dead
+assertion as proof. These are bounded engineering safeguards, not evidence of
+a legal review.
 
 That review has not occurred in this task. Consequently no optional notice file
 is generated and no legal conclusion is implied.

@@ -30,3 +30,4 @@ fincore/
 - [fincore.attribution](attribution.md) — Performance attribution
 - [fincore.risk](risk.md) — Risk models
 - [fincore.report](report.md) — Report generation
+- [Factor-analysis](factor-analysis.md) — Strict Alphalens migration and enhanced factor analysis
