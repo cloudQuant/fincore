@@ -49,11 +49,6 @@ class GridFigure:
     """One lazily-created figure with the pinned row/cell grid primitives."""
 
     def __init__(self, rows, cols):
-        if type(rows) is object or type(cols) is object:
-            raise NotImplementedError(
-                "Legacy Alphalens symbol 'GridFigure' is available for C0/C1 compatibility, "
-                "but its rendering kernel requires concrete row and column counts."
-            )
         if isinstance(rows, bool) or not isinstance(rows, int) or rows < 1:
             raise ValueError("rows must be a positive integer")
         if isinstance(cols, bool) or not isinstance(cols, int) or cols < 1:

@@ -10,6 +10,8 @@ import pytest
 
 from .conftest import accepted_call_cases, callable_entries_with_signature
 
+_NON_STUB_ERRORS = (AttributeError, ImportError, IndexError, KeyError, RuntimeError, TypeError, ValueError)
+
 
 def _entry_id(entry: dict[str, Any]) -> str:
     return f"{entry['module']}:{entry['symbol']}"
@@ -27,6 +29,19 @@ def _required_arguments(entry: dict[str, Any]) -> tuple[object, ...]:
     return tuple(object() for _ in required)
 
 
+def _assert_real_implementation_boundary(value: Any, *args: object, **kwargs: object) -> None:
+    """Accept natural value validation, but never a C0/C1-only implementation stub."""
+
+    try:
+        value(*args, **kwargs)
+    except NotImplementedError as error:
+        pytest.fail(f"strict facade retained a placeholder implementation: {error}")
+    except _NON_STUB_ERRORS:
+        # Opaque values deliberately exercise only the accepted binding grammar;
+        # concrete kernels are entitled to reject malformed runtime values.
+        pass
+
+
 @pytest.mark.parametrize("entry", callable_entries_with_signature(), ids=_entry_id)
 def test_signature_matches_manifest(entry: dict[str, Any]) -> None:
     """Public inspection follows the frozen legacy signature projection."""
@@ -39,7 +54,7 @@ def test_signature_matches_manifest(entry: dict[str, Any]) -> None:
 
 @pytest.mark.parametrize("item", accepted_call_cases(), ids=_case_id)
 def test_decorator_call_grammar_matches_manifest(item: tuple[dict[str, Any], dict[str, Any]]) -> None:
-    """Accepted legacy binding reaches the explicit deferred implementation boundary."""
+    """Accepted legacy binding reaches a real implementation boundary."""
 
     entry, case = item
     module = importlib.import_module(f"fincore.alphalens.{entry['module']}")
@@ -57,13 +72,12 @@ def test_decorator_call_grammar_matches_manifest(item: tuple[dict[str, Any], dic
         assert hasattr(context, "__exit__")
         return
 
-    with pytest.raises(NotImplementedError, match=str(entry["symbol"])):
-        value(*args, **hidden_kwargs)
+    _assert_real_implementation_boundary(value, *args, **hidden_kwargs)
 
 
 @pytest.mark.parametrize("entry", callable_entries_with_signature(), ids=_entry_id)
 def test_source_signature_rejects_unexpected_keyword(entry: dict[str, Any]) -> None:
-    """Deferred kernels still reject calls before reporting deferred execution."""
+    """Concrete strict kernels retain the frozen source keyword grammar."""
 
     if entry["kind"] == "class":
         return
@@ -80,8 +94,7 @@ def test_customize_hidden_context_precedes_source_binding() -> None:
 
     assert "set_context" not in str(inspect.signature(create_summary_tear_sheet))
     for set_context in (True, False):
-        with pytest.raises(NotImplementedError, match="create_summary_tear_sheet"):
-            create_summary_tear_sheet(object(), set_context=set_context)
+        _assert_real_implementation_boundary(create_summary_tear_sheet, object(), set_context=set_context)
 
 
 def test_quantize_factor_reports_generic_legacy_signature_but_binds_source_grammar() -> None:
@@ -92,5 +105,4 @@ def test_quantize_factor_reports_generic_legacy_signature_but_binds_source_gramm
     assert str(inspect.signature(quantize_factor)) == "(*args, **kwargs)"
     with pytest.raises(TypeError):
         quantize_factor()
-    with pytest.raises(NotImplementedError, match="quantize_factor"):
-        quantize_factor(object(), quantiles=5)
+    _assert_real_implementation_boundary(quantize_factor, object(), quantiles=5)

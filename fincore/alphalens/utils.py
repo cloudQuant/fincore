@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import importlib
+from functools import wraps
 from numbers import Real
 from typing import Any, Mapping, NoReturn, Sequence, cast
 
 import numpy as np
 import pandas as pd
 
-from fincore.alphalens._compat import export_deferred_functions
-from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
+from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec, function_specs_for_module
+from fincore.exceptions import DependencyError
 from fincore.factor_analysis import calendar as _calendar
 from fincore.factor_analysis import data as _data
 from fincore.factor_analysis.exceptions import (
@@ -19,7 +21,7 @@ from fincore.factor_analysis.exceptions import (
     NonMatchingTimezoneError,
 )
 
-_UTILITY_NAMES = export_deferred_functions(globals(), "utils")
+_UTILITY_NAMES = tuple(spec.public_name for spec in function_specs_for_module("utils"))
 _NON_UNIQUE_BIN_EDGES_MESSAGE = """
 
     An error occurred while computing bins/quantiles on the input provided.
@@ -45,20 +47,6 @@ def _spec(name: str) -> FactorFunctionSpec:
     return ALPHALENS_FUNCTION_SPECS[("utils", name)]
 
 
-def _deferred(name: str) -> None:
-    raise NotImplementedError(
-        f"Legacy Alphalens symbol '{name}' is available for C0/C1 compatibility, "
-        "but its numerical or rendering kernel is not implemented yet."
-    )
-
-
-def _reject_opaque(name: str, *values: object) -> None:
-    """Keep Task 2 C1 opaque-call grammar at the explicit implementation boundary."""
-
-    if any(type(value) is object for value in values):
-        _deferred(name)
-
-
 def _attach_spec(function: Any, name: str) -> Any:
     spec = _spec(name)
     # The actual implementation carries annotations for the enhanced kernel,
@@ -81,7 +69,7 @@ def _raise_legacy_bin_edge_error(error: ValueError) -> NoReturn:
     """Apply the pinned decorator's error projection at every strict entrypoint."""
 
     if "Bin edges must be unique" in str(error):
-        raise ValueError(f"{error}{_NON_UNIQUE_BIN_EDGES_MESSAGE}") from None
+        rethrow(error, _NON_UNIQUE_BIN_EDGES_MESSAGE)
     raise error
 
 
@@ -193,13 +181,95 @@ def _strict_prices_for_factor(factor: object, prices: object) -> object:
     return padded
 
 
+def rethrow(exception: BaseException, additional_message: str) -> NoReturn:
+    """Re-raise ``exception`` after appending strict-source context to ``args``."""
+
+    if not exception.args:
+        exception.args = (additional_message,)
+    else:
+        # Alphalens passes string-valued ``args[0]`` here. Retain that source
+        # grammar (including its natural TypeError for other exception shapes)
+        # instead of coercing a foreign exception into a new message.
+        exception.args = (cast("str", exception.args[0]) + additional_message, *exception.args[1:])
+    raise exception
+
+
+def non_unique_bin_edges_error(func: Any) -> Any:
+    """Decorate a quantization callable with the pinned duplicate-edge guidance."""
+
+    @wraps(func)
+    def decorated(*args: Any, **kwargs: Any) -> Any:
+        try:
+            return func(*args, **kwargs)
+        except ValueError as error:
+            if "Bin edges must be unique" in str(error):
+                rethrow(error, _NON_UNIQUE_BIN_EDGES_MESSAGE)
+            raise
+
+    return decorated
+
+
+def demean_forward_returns(factor_data: pd.DataFrame, grouper: object = None) -> pd.DataFrame:
+    """Return copied forward returns demeaned by date or the supplied grouping."""
+
+    copied = factor_data.copy()
+    if grouper is None or (isinstance(grouper, list) and not grouper):
+        grouper = copied.index.get_level_values("date")
+    columns = _calendar.get_forward_returns_columns(copied.columns)
+    copied[columns] = copied.groupby(cast("Any", grouper), observed=False)[columns].transform(
+        lambda values: values - values.mean()
+    )
+    return copied
+
+
+def print_table(table: pd.Series | pd.DataFrame, name: str | None = None, fmt: str | None = None) -> None:
+    """Display one strict-source table lazily through IPython's display hook."""
+
+    displayed: pd.DataFrame | pd.Series = table.to_frame() if isinstance(table, pd.Series) else table
+    if isinstance(displayed, pd.DataFrame):
+        displayed.columns.name = name
+    previous_format = pd.get_option("display.float_format")
+    if fmt is not None:
+        pd.set_option("display.float_format", lambda value: fmt.format(value))
+    try:
+        display = importlib.import_module("IPython.display").display
+    except ModuleNotFoundError as error:
+        raise DependencyError(
+            "print_table requires IPython. Install it with:\n    pip install fincore[alphalens]",
+            dependency="IPython",
+        ) from error
+    try:
+        display(displayed)
+    finally:
+        if fmt is not None:
+            pd.set_option("display.float_format", previous_format)
+
+
+def rate_of_return(period_ret: pd.Series | pd.DataFrame, base_period: object) -> pd.Series | pd.DataFrame:
+    """Convert a named forward-return period to a named base-period rate."""
+
+    conversion_factor = cast(
+        "float",
+        pd.Timedelta(cast("Any", base_period)) / pd.Timedelta(cast("Any", period_ret.name)),
+    )
+    return cast("pd.Series | pd.DataFrame", period_ret.add(1).pow(conversion_factor).sub(1))
+
+
+def std_conversion(period_std: pd.Series | pd.DataFrame, base_period: object) -> pd.Series | pd.DataFrame:
+    """Scale a named forward-period standard deviation to ``base_period``."""
+
+    conversion_factor = cast(
+        "float",
+        pd.Timedelta(cast("Any", period_std.name)) / pd.Timedelta(cast("Any", base_period)),
+    )
+    return cast("pd.Series | pd.DataFrame", period_std / np.sqrt(conversion_factor))
+
+
 def add_custom_calendar_timedelta(input: object, timedelta: object, freq: object) -> pd.Timestamp | pd.DatetimeIndex:
-    _reject_opaque("add_custom_calendar_timedelta", input, timedelta, freq)
     return _calendar.add_custom_calendar_timedelta(input, timedelta, freq)  # type: ignore[arg-type]
 
 
 def backshift_returns_series(series: pd.Series, N: int) -> pd.Series:
-    _reject_opaque("backshift_returns_series", series, N)
     return _calendar.backshift_returns_series(series, N)
 
 
@@ -210,7 +280,6 @@ def compute_forward_returns(
     filter_zscore: float | None = None,
     cumulative_returns: bool = True,
 ) -> pd.DataFrame:
-    _reject_opaque("compute_forward_returns", factor, prices)
     try:
         return _data.compute_forward_returns(
             factor,
@@ -224,7 +293,6 @@ def compute_forward_returns(
 
 
 def diff_custom_calendar_timedeltas(start: object, end: object, freq: object) -> pd.Timedelta:
-    _reject_opaque("diff_custom_calendar_timedeltas", start, end, freq)
     return _calendar.diff_custom_calendar_timedeltas(start, end, freq)  # type: ignore[arg-type]
 
 
@@ -239,7 +307,6 @@ def get_clean_factor(
     max_loss: float = 0.35,
     zero_aware: bool = False,
 ) -> pd.DataFrame:
-    _reject_opaque("get_clean_factor", factor, forward_returns)
     strict_empty = _strict_empty_factor_projection(
         factor,
         forward_returns,
@@ -286,7 +353,6 @@ def get_clean_factor_and_forward_returns(
     zero_aware: bool = False,
     cumulative_returns: bool = True,
 ) -> pd.DataFrame:
-    _reject_opaque("get_clean_factor_and_forward_returns", factor, prices)
     forward_returns = compute_forward_returns(
         factor,
         prices,
@@ -308,12 +374,10 @@ def get_clean_factor_and_forward_returns(
 
 
 def get_forward_returns_columns(columns: pd.Index, require_exact_day_multiple: bool = False) -> pd.Index:
-    _reject_opaque("get_forward_returns_columns", columns)
     return _calendar.get_forward_returns_columns(columns, require_exact_day_multiple=require_exact_day_multiple)
 
 
 def infer_trading_calendar(factor_idx: pd.DatetimeIndex, prices_idx: pd.DatetimeIndex) -> object:
-    _reject_opaque("infer_trading_calendar", factor_idx, prices_idx)
     return _calendar.infer_trading_calendar(factor_idx, prices_idx)
 
 
@@ -322,7 +386,6 @@ def quantize_factor(*args: Any, **kwargs: Any) -> pd.Series:
 
     spec = _spec("quantize_factor")
     bound = spec.source_signature.bind(*args, **kwargs)
-    _reject_opaque("quantize_factor", bound.arguments["factor_data"])
     try:
         return _data.quantize_factor(**bound.arguments)
     except ValueError as error:
@@ -339,12 +402,10 @@ _quantize_factor_compat.__fincore_factor_spec__ = _spec("quantize_factor")
 
 
 def timedelta_strings_to_integers(sequence: Sequence[str]) -> list[int]:
-    _reject_opaque("timedelta_strings_to_integers", sequence)
     return _calendar.timedelta_strings_to_integers(sequence)
 
 
 def timedelta_to_string(timedelta: object) -> str:
-    _reject_opaque("timedelta_to_string", timedelta)
     return _calendar.timedelta_to_string(timedelta)
 
 
@@ -360,6 +421,12 @@ for _name in (
     "get_clean_factor_and_forward_returns",
     "get_forward_returns_columns",
     "infer_trading_calendar",
+    "demean_forward_returns",
+    "non_unique_bin_edges_error",
+    "print_table",
+    "rate_of_return",
+    "rethrow",
+    "std_conversion",
     "timedelta_strings_to_integers",
     "timedelta_to_string",
 ):
@@ -367,5 +434,3 @@ for _name in (
 
 
 __all__ = ("MaxLossExceededError", "NonMatchingTimezoneError", *_UTILITY_NAMES)
-
-del export_deferred_functions

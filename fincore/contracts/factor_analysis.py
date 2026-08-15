@@ -363,11 +363,17 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ("utils", "backshift_returns_series"),
             ("utils", "compute_forward_returns"),
             ("utils", "diff_custom_calendar_timedeltas"),
+            ("utils", "demean_forward_returns"),
             ("utils", "get_clean_factor"),
             ("utils", "get_clean_factor_and_forward_returns"),
             ("utils", "get_forward_returns_columns"),
             ("utils", "infer_trading_calendar"),
+            ("utils", "non_unique_bin_edges_error"),
+            ("utils", "print_table"),
             ("utils", "quantize_factor"),
+            ("utils", "rate_of_return"),
+            ("utils", "rethrow"),
+            ("utils", "std_conversion"),
             ("utils", "timedelta_strings_to_integers"),
             ("utils", "timedelta_to_string"),
         }
@@ -392,6 +398,7 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             ("performance", "positions"),
         }
         task_7_plotting = module == "plotting"
+        task_8_tears = module == "tears"
         specs[key] = FactorFunctionSpec(
             module=module,
             public_name=name,
@@ -406,7 +413,9 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
                 if task_5_portfolio
                 else "factor_analysis_task_7_renderer"
                 if task_7_plotting
-                else "deferred_task_2_kernel"
+                else "factor_analysis_task_8_tear_workflow"
+                if task_8_tears
+                else "factor_analysis_strict_compatibility_kernel"
             ),
             profile="legacy_alphalens_cloudquant_0_4_0",
             optional_extra=(
@@ -420,9 +429,11 @@ def _make_function_specs() -> Mapping[tuple[str, str], FactorFunctionSpec]:
             result_projection=(
                 "strict_alphalens_data_projection"
                 if task_3_utility or task_4_performance or task_5_portfolio
-                else "not_implemented_until_task_3_4_5_or_8"
-                if not task_7_plotting
                 else "strict_alphalens_plotting_projection"
+                if task_7_plotting
+                else "strict_alphalens_tear_workflow_projection"
+                if task_8_tears
+                else "strict_alphalens_compatibility_projection"
             ),
         )
     if len(specs) != 61:

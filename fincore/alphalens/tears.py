@@ -13,8 +13,7 @@ import pandas as pd
 
 from fincore.alphalens import performance as _strict_performance
 from fincore.alphalens import plotting as _plotting
-from fincore.alphalens._compat import export_deferred_functions
-from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
+from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec, function_specs_for_module
 from fincore.factor_analysis.analysis import _analyze_factor_for_strict_turnover, analyze_factor
 from fincore.factor_analysis.calendar import get_forward_returns_columns, timedelta_strings_to_integers
 from fincore.factor_analysis.tears import (
@@ -42,25 +41,11 @@ from fincore.factor_analysis.tears import (
     create_turnover_tear_sheet as _create_turnover,
 )
 
-_TEARS_NAMES = export_deferred_functions(globals(), "tears")
+_TEARS_NAMES = tuple(spec.public_name for spec in function_specs_for_module("tears"))
 
 
 def _spec(name: str) -> FactorFunctionSpec:
     return ALPHALENS_FUNCTION_SPECS[("tears", name)]
-
-
-def _deferred(name: str) -> None:
-    raise NotImplementedError(
-        f"Legacy Alphalens symbol '{name}' is available for C0/C1 compatibility, "
-        "but its numerical or rendering kernel is not implemented yet."
-    )
-
-
-def _reject_opaque(name: str, *values: object) -> None:
-    """Retain the C1 opaque-input boundary before model construction exists."""
-
-    if any(type(value) is object for value in values):
-        _deferred(name)
 
 
 def _attach_spec(function: Any, name: str) -> Any:
@@ -314,12 +299,12 @@ def _has_forward_return_columns(factor_data: object) -> bool:
 
 
 def _strict_event_model_input(factor_data: object) -> object:
-    """Supply a private placeholder return only for source event-only paths.
+    """Supply a private stand-in return only for source event-only paths.
 
     Pinned event returns are driven by a separate ``returns`` price frame and
     can render without factor forward-return columns.  The enhanced model
     deliberately requires one because its general-purpose snapshots include
-    portfolio fields.  A zero placeholder keeps that private assembly valid;
+    portfolio fields. A zero stand-in keeps that private assembly valid;
     strict event projections never expose it as source data.
     """
 
@@ -747,7 +732,6 @@ def _close_legacy_context_figures(function: Any) -> Any:
 def create_summary_tear_sheet(factor_data, long_short=True, group_neutral=False):
     """Render the pinned summary workflow from a single compute-once model."""
 
-    _reject_opaque("create_summary_tear_sheet", factor_data)
     _legacy_reject_duplicate_forward_columns(factor_data)
     lags = _summary_turnover_periods(factor_data)
     artifacts = _create_summary(
@@ -774,7 +758,6 @@ def create_summary_tear_sheet(factor_data, long_short=True, group_neutral=False)
 def create_returns_tear_sheet(factor_data, long_short=True, group_neutral=False, by_group=False):
     """Render the pinned returns workflow and preserve its show/close lifecycle."""
 
-    _reject_opaque("create_returns_tear_sheet", factor_data)
     _legacy_reject_duplicate_forward_columns(factor_data)
     _strict_returns_sections(
         _model(factor_data, long_short=long_short, group_neutral=group_neutral, by_group=by_group),
@@ -789,7 +772,6 @@ def create_returns_tear_sheet(factor_data, long_short=True, group_neutral=False,
 def create_information_tear_sheet(factor_data, group_neutral=False, by_group=False):
     """Render the pinned information workflow using the same model snapshot."""
 
-    _reject_opaque("create_information_tear_sheet", factor_data)
     model = _model(
         _deduplicated_forward_model_input(factor_data),
         long_short=True,
@@ -817,7 +799,6 @@ def create_information_tear_sheet(factor_data, group_neutral=False, by_group=Fal
 def create_turnover_tear_sheet(factor_data, turnover_periods=None):
     """Render source-shaped turnover periods from their stored model results."""
 
-    _reject_opaque("create_turnover_tear_sheet", factor_data)
     source_lags = _legacy_turnover_periods(factor_data, turnover_periods)
     # The source discovers default forward labels first, then looks up
     # quantiles before an explicitly empty period list reaches ``pd.concat``.
@@ -862,7 +843,6 @@ def create_turnover_tear_sheet(factor_data, turnover_periods=None):
 def create_full_tear_sheet(factor_data, long_short=True, group_neutral=False, by_group=False):
     """Compose the three legacy sections from one shared model snapshot."""
 
-    _reject_opaque("create_full_tear_sheet", factor_data)
     # Pinned ``create_full_tear_sheet`` displays its factor-quantile
     # statistics before it delegates to returns/period discovery.  Keeping
     # this tiny table projection ahead of model assembly preserves that
@@ -923,7 +903,6 @@ def create_event_returns_tear_sheet(
 ):
     """Render source event-return sections from one model-bound event window."""
 
-    _reject_opaque("create_event_returns_tear_sheet", factor_data, returns)
     before, after = avgretplot
     if _strict_event_returns_fail_after_distribution(factor_data, returns, none_is_failure=True):
         _legacy_event_returns_failure(
@@ -974,11 +953,6 @@ def create_event_study_tear_sheet(factor_data, returns, avgretplot=(5, 15), rate
     # Pinned source does not inspect ``returns`` at all when the optional
     # average-return section is disabled.  Retain that accepted-call grammar
     # rather than leaking enhanced event-input validation into strict mode.
-    _reject_opaque(
-        "create_event_study_tear_sheet",
-        factor_data,
-        *(returns,) if avgretplot is not None else (),
-    )
     before: object = None
     after: object = None
     event_section_enabled = returns is not None and avgretplot is not None
@@ -1076,5 +1050,3 @@ for _name in _TEARS_NAMES:
 
 
 __all__ = ("GridFigure", *_TEARS_NAMES)
-
-del export_deferred_functions

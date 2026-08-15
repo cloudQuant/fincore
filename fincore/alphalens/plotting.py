@@ -14,29 +14,14 @@ from typing import Any, Callable, Mapping, cast
 import numpy as np
 import pandas as pd
 
-from fincore.alphalens._compat import export_deferred_functions
-from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
+from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec, function_specs_for_module
 
-_PLOTTING_NAMES = export_deferred_functions(globals(), "plotting")
+_PLOTTING_NAMES = tuple(spec.public_name for spec in function_specs_for_module("plotting"))
 _DEFAULT_THEORETICAL_DIST = object()
 
 
 def _spec(name: str) -> FactorFunctionSpec:
     return ALPHALENS_FUNCTION_SPECS[("plotting", name)]
-
-
-def _deferred(name: str) -> None:
-    raise NotImplementedError(
-        f"Legacy Alphalens symbol '{name}' is available for C0/C1 compatibility, "
-        "but its numerical or rendering kernel is not implemented yet."
-    )
-
-
-def _reject_opaque(name: str, *values: object) -> None:
-    """Retain the C1 opaque-call boundary until a real value reaches the renderer."""
-
-    if any(type(value) is object for value in values):
-        _deferred(name)
 
 
 def _legacy_require_index_level(value: object, level: str) -> None:
@@ -587,7 +572,6 @@ def _display_table(heading: str | None, table: pd.DataFrame, *, round_values: bo
 def customize(func: Callable[..., Any]) -> Callable[..., Any]:
     """Return a strict legacy context decorator accepting hidden ``set_context``."""
 
-    _reject_opaque("customize", func)
     decorated = _renderer().customize(func)
 
     @wraps(decorated)
@@ -614,7 +598,6 @@ def plot_returns_table(
     mean_ret_quantile: pd.DataFrame,
     mean_ret_spread_quantile: pd.Series | pd.DataFrame,
 ) -> None:
-    _reject_opaque("plot_returns_table", alpha_beta, mean_ret_quantile, mean_ret_spread_quantile)
     _display_table(
         "Returns Analysis", _renderer().build_returns_table(alpha_beta, mean_ret_quantile, mean_ret_spread_quantile)
     )
@@ -623,19 +606,16 @@ def plot_returns_table(
 def plot_turnover_table(
     autocorrelation_data: Mapping[object, pd.Series], quantile_turnover: Mapping[object, pd.DataFrame]
 ) -> None:
-    _reject_opaque("plot_turnover_table", autocorrelation_data, quantile_turnover)
     turnover, autocorrelation = _renderer().build_turnover_tables(autocorrelation_data, quantile_turnover)
     _display_table("Turnover Analysis", turnover)
     _display_table(None, autocorrelation)
 
 
 def plot_information_table(ic_data: pd.DataFrame) -> None:
-    _reject_opaque("plot_information_table", ic_data)
     _display_table("Information Analysis", _renderer().build_information_table(ic_data).T)
 
 
 def plot_quantile_statistics_table(factor_data: pd.DataFrame) -> None:
-    _reject_opaque("plot_quantile_statistics_table", factor_data)
     # The source prepares but does not round this table before its display
     # helper; unlike the other three strict table functions, full precision is
     # observable to notebook display hooks.
@@ -647,17 +627,14 @@ def plot_quantile_statistics_table(factor_data: pd.DataFrame) -> None:
 
 
 def plot_ic_ts(ic: pd.DataFrame, ax: object = None) -> Any:
-    _reject_opaque("plot_ic_ts", ic)
     return _legacy_plot_ic_ts(ic, ax)
 
 
 def plot_ic_hist(ic: pd.DataFrame, ax: object = None) -> Any:
-    _reject_opaque("plot_ic_hist", ic)
     return _legacy_plot_ic_hist(ic, ax)
 
 
 def plot_ic_qq(ic: pd.DataFrame, theoretical_dist: object = _DEFAULT_THEORETICAL_DIST, ax: object = None) -> Any:
-    _reject_opaque("plot_ic_qq", ic)
     return _legacy_plot_ic_qq(ic, theoretical_dist, ax)
 
 
@@ -667,7 +644,6 @@ def plot_quantile_returns_bar(
     ylim_percentiles: tuple[float, float] | None = None,
     ax: object = None,
 ) -> Any:
-    _reject_opaque("plot_quantile_returns_bar", mean_ret_by_q)
     return _legacy_plot_quantile_returns_bar(mean_ret_by_q, by_group, ylim_percentiles, ax)
 
 
@@ -676,7 +652,6 @@ def plot_quantile_returns_violin(
     ylim_percentiles: tuple[float, float] | None = None,
     ax: object = None,
 ) -> Any:
-    _reject_opaque("plot_quantile_returns_violin", return_by_q)
     return _legacy_plot_quantile_returns_violin(return_by_q, ylim_percentiles, ax)
 
 
@@ -686,27 +661,22 @@ def plot_mean_quantile_returns_spread_time_series(
     bandwidth: float = 1,
     ax: object = None,
 ) -> Any:
-    _reject_opaque("plot_mean_quantile_returns_spread_time_series", mean_returns_spread)
     return _legacy_plot_mean_quantile_returns_spread_time_series(mean_returns_spread, std_err, bandwidth, ax)
 
 
 def plot_ic_by_group(ic_group: pd.DataFrame, ax: object = None) -> Any:
-    _reject_opaque("plot_ic_by_group", ic_group)
     return _legacy_plot_ic_by_group(ic_group, ax)
 
 
 def plot_factor_rank_auto_correlation(factor_autocorrelation: pd.Series, period: int = 1, ax: object = None) -> Any:
-    _reject_opaque("plot_factor_rank_auto_correlation", factor_autocorrelation)
     return _legacy_plot_factor_rank_auto_correlation(factor_autocorrelation, period, ax)
 
 
 def plot_top_bottom_quantile_turnover(quantile_turnover: pd.DataFrame, period: int = 1, ax: object = None) -> Any:
-    _reject_opaque("plot_top_bottom_quantile_turnover", quantile_turnover)
     return _legacy_plot_top_bottom_quantile_turnover(quantile_turnover, period, ax)
 
 
 def plot_monthly_ic_heatmap(mean_monthly_ic: pd.DataFrame, ax: object = None) -> Any:
-    _reject_opaque("plot_monthly_ic_heatmap", mean_monthly_ic)
     return _legacy_plot_monthly_ic_heatmap(mean_monthly_ic, ax)
 
 
@@ -717,7 +687,6 @@ def plot_cumulative_returns(
     title: str | None = None,
     ax: object = None,
 ) -> Any:
-    _reject_opaque("plot_cumulative_returns", factor_returns, period)
     del freq
     return _legacy_plot_cumulative_returns(factor_returns, period, title, ax)
 
@@ -725,7 +694,6 @@ def plot_cumulative_returns(
 def plot_cumulative_returns_by_quantile(
     quantile_returns: pd.DataFrame, period: object, freq: object = None, ax: object = None
 ) -> Any:
-    _reject_opaque("plot_cumulative_returns_by_quantile", quantile_returns, period)
     del freq
     return _legacy_plot_cumulative_returns_by_quantile(quantile_returns, period, ax)
 
@@ -737,12 +705,10 @@ def plot_quantile_average_cumulative_return(
     title: str | None = None,
     ax: object = None,
 ) -> Any:
-    _reject_opaque("plot_quantile_average_cumulative_return", avg_cumulative_returns)
     return _legacy_plot_quantile_average_cumulative_return(avg_cumulative_returns, by_quantile, std_bar, title, ax)
 
 
 def plot_events_distribution(events: pd.Series, num_bars: int = 50, ax: object = None) -> Any:
-    _reject_opaque("plot_events_distribution", events)
     return _legacy_plot_events_distribution(events, num_bars, ax)
 
 
@@ -751,4 +717,4 @@ for _name in _PLOTTING_NAMES:
 
 __all__ = _PLOTTING_NAMES
 
-del _name, export_deferred_functions
+del _name

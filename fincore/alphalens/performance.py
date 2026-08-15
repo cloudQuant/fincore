@@ -1,8 +1,4 @@
-"""Strict Alphalens performance facade backed by Task 4 kernels.
-
-The module begins with the static C0/C1 deferred registry, then intentionally
-overrides only functions whose numerical kernel has been characterized.
-"""
+"""Strict Alphalens performance facade backed by characterized kernels."""
 
 from __future__ import annotations
 
@@ -13,33 +9,17 @@ from typing import Any, Sequence, cast
 import numpy as np
 import pandas as pd
 
-from fincore.alphalens._compat import export_deferred_functions
-from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec
+from fincore.contracts.factor_analysis import ALPHALENS_FUNCTION_SPECS, FactorFunctionSpec, function_specs_for_module
 from fincore.exceptions import DependencyError
 from fincore.factor_analysis import performance as _performance
 from fincore.factor_analysis import portfolio as _portfolio
 from fincore.factor_analysis.calendar import get_forward_returns_columns
 
-_PERFORMANCE_NAMES = export_deferred_functions(globals(), "performance")
+_PERFORMANCE_NAMES = tuple(spec.public_name for spec in function_specs_for_module("performance"))
 
 
 def _spec(name: str) -> FactorFunctionSpec:
     return ALPHALENS_FUNCTION_SPECS[("performance", name)]
-
-
-def _deferred(name: str) -> None:
-    spec = _spec(name)
-    raise NotImplementedError(
-        f"Legacy Alphalens symbol '{spec.public_name}' is available for C0/C1 compatibility, "
-        "but its numerical or rendering kernel is not implemented yet."
-    )
-
-
-def _reject_opaque(name: str, *values: object) -> None:
-    """Keep Task 2's opaque C1 grammar at the explicit implementation boundary."""
-
-    if any(type(value) is object for value in values):
-        _deferred(name)
 
 
 def _attach_spec(function: Any, name: str) -> Any:
@@ -55,7 +35,6 @@ def factor_information_coefficient(
     group_adjust: bool = False,
     by_group: bool = False,
 ) -> pd.DataFrame:
-    _reject_opaque("factor_information_coefficient", factor_data)
     return _strict_factor_information_coefficient(
         factor_data,
         group_adjust=group_adjust,
@@ -69,7 +48,6 @@ def mean_information_coefficient(
     by_group: bool = False,
     by_time: str | None = None,
 ) -> pd.Series | pd.DataFrame:
-    _reject_opaque("mean_information_coefficient", factor_data)
     information = _strict_factor_information_coefficient(
         factor_data,
         group_adjust=group_adjust,
@@ -139,7 +117,6 @@ def factor_weights(
     group_adjust: bool = False,
     equal_weight: bool = False,
 ) -> pd.Series:
-    _reject_opaque("factor_weights", factor_data)
     return _performance.factor_weights(
         factor_data,
         demeaned=demeaned,
@@ -155,7 +132,6 @@ def factor_returns(
     equal_weight: bool = False,
     by_asset: bool = False,
 ) -> pd.DataFrame:
-    _reject_opaque("factor_returns", factor_data)
     return _performance.factor_returns(
         factor_data,
         demeaned=demeaned,
@@ -243,7 +219,6 @@ def factor_alpha_beta(
     group_adjust: bool = False,
     equal_weight: bool = False,
 ) -> pd.DataFrame:
-    _reject_opaque("factor_alpha_beta", factor_data, returns)
     return _strict_factor_alpha_beta(
         factor_data,
         returns,
@@ -254,7 +229,6 @@ def factor_alpha_beta(
 
 
 def cumulative_returns(returns: pd.Series) -> pd.Series:
-    _reject_opaque("cumulative_returns", returns)
     result = _performance.cumulative_returns(returns)
     if isinstance(result, pd.Series) and len(result):
         # ``empyrical.cum_returns`` constructed a fresh Series in the pinned
@@ -272,7 +246,6 @@ def mean_return_by_quantile(
     demeaned: bool = True,
     group_adjust: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    _reject_opaque("mean_return_by_quantile", factor_data)
     return _performance.mean_return_by_quantile(
         factor_data,
         by_date=by_date,
@@ -288,17 +261,14 @@ def compute_mean_returns_spread(
     lower_quant: int,
     std_err: pd.DataFrame | None = None,
 ) -> tuple[pd.Series | pd.DataFrame, pd.Series | pd.DataFrame | None]:
-    _reject_opaque("compute_mean_returns_spread", mean_returns)
     return _performance.compute_mean_returns_spread(mean_returns, upper_quant, lower_quant, std_err=std_err)
 
 
 def quantile_turnover(quantile_factor: pd.Series, quantile: int, period: int = 1) -> pd.Series:
-    _reject_opaque("quantile_turnover", quantile_factor)
     return _performance.quantile_turnover(quantile_factor, quantile, period=period)
 
 
 def factor_rank_autocorrelation(factor_data: pd.DataFrame, period: int = 1) -> pd.Series:
-    _reject_opaque("factor_rank_autocorrelation", factor_data)
     return _performance.factor_rank_autocorrelation(factor_data, period=period)
 
 
@@ -378,7 +348,6 @@ def common_start_returns(
     mean_by_date: bool = False,
     demean_by: pd.Series | pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    _reject_opaque("common_start_returns", factor, returns)
     # The pinned source collected one slice per event date and fed the list to
     # ``pd.concat``.  If every event date is absent from ``returns`` that call
     # raises ``ValueError('No objects to concatenate')``.  The enhanced kernel
@@ -467,7 +436,6 @@ def average_cumulative_return_by_quantile(
     group_adjust: bool = False,
     by_group: bool = False,
 ) -> pd.DataFrame:
-    _reject_opaque("average_cumulative_return_by_quantile", factor_data, returns)
     before, legacy_before = _legacy_event_window_bound(periods_before)
     after, legacy_after = _legacy_event_window_bound(periods_after)
     if isinstance(factor_data, pd.DataFrame) and isinstance(returns, pd.DataFrame):
@@ -672,7 +640,6 @@ def _strict_validate_position_path(
 def positions(weights: pd.Series, period: object, freq: Any = None) -> pd.DataFrame:
     """Project the standalone active-position kernel through the strict facade."""
 
-    _reject_opaque("positions", weights)
     names: tuple[object | None, object | None] | None = None
     if isinstance(weights, pd.Series) and isinstance(weights.index, pd.MultiIndex) and weights.index.nlevels == 2:
         names = tuple(weights.index.names)  # type: ignore[assignment]
@@ -698,7 +665,6 @@ def factor_cumulative_returns(
 ) -> pd.Series:
     """Return the source-projected cumulative factor portfolio curve."""
 
-    _reject_opaque("factor_cumulative_returns", factor_data)
     _strict_validate_cumulative_return_path(
         factor_data,
         period,
@@ -734,7 +700,6 @@ def factor_positions(
 ) -> pd.DataFrame:
     """Project simulated factor positions through the strict facade."""
 
-    _reject_opaque("factor_positions", factor_data)
     _strict_validate_position_path(
         factor_data,
         period,
@@ -775,7 +740,6 @@ def create_pyfolio_input(
 ) -> tuple[pd.Series, pd.DataFrame, pd.Series | None]:
     """Return the strict legacy 3-tuple from the enhanced typed bridge."""
 
-    _reject_opaque("create_pyfolio_input", factor_data)
     # The source builds returns first, then positions, and only then the
     # optional benchmark.  Keep that exact error priority rather than applying
     # facade-wide duplicate/group checks before the source paths run.
@@ -851,5 +815,3 @@ for _name in (
 
 
 __all__ = _PERFORMANCE_NAMES
-
-del export_deferred_functions
