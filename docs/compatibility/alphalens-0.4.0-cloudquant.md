@@ -106,15 +106,21 @@ workflows, and 96 individually named internal invocations. Its source outcome
 is `smoke_only`; it is not treated as an exception from migration.
 
 The mapping covers all 141 source row IDs. Utils and Performance entries point
-to the future Task 3/4 target suites with C2/C3 target assertions. Tear rows
-point to the future Task 8 C4 suites, and each of their 96 invocation IDs has
-one unique exact future pytest nodeid. The map records the upstream discarded
+to the Task 3/4 target suites (`tests/compat/alphalens/test_forward_returns.py`,
+`test_factor_cleaning.py`, `test_performance.py`, and the
+`tests/test_factor_analysis/test_{information,weights_returns,turnover,events}.py`
+enhanced suites) with C2/C3 target assertions. Tear rows point to the Task 8 C4
+suites (`tests/compat/alphalens/test_tearsheets_e2e.py` and
+`tests/test_factor_analysis/test_tears.py`), and each of their 96 invocation
+IDs has one unique exact pytest nodeid. The map records the upstream discarded
 `.equals()` assertions as source evidence, not as an accepted target
 assertion.
 
-Task 1.5 freezes this contract but does not create placeholder target tests or
-claim that any future target node was collected or passed. Once Tasks 3, 4,
-and 8 create those tests, first use the checker's
+These target suites exist and are executed by the acceptance run: the Task 12
+controller gates run the mapped tests non-xdist with
+`--alphalens-upstream-result-json`, produce the controlled collection proof,
+and pass both envelopes to `--scope all`, which requires every mapped target
+to have actually collected and passed. To reproduce, first use the checker's
 `--write-collection-proof PATH` wrapper for the selected scope. It runs the
 exact scope-owned `pytest -o addopts= --collect-only -q` command and writes a
 versioned JSON envelope containing its command identity, scope, target paths,
@@ -230,7 +236,7 @@ the controlled wrapper, then use that same scope's passing marker-hook result:
   --scope all \
   --write-collection-proof build/alphalens-upstream-collection.json
 
-# Run the same scope's future target tests non-xdist with
+# Run the same scope's target tests non-xdist with
 # --alphalens-upstream-result-json build/alphalens-upstream-results.json.
 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python \

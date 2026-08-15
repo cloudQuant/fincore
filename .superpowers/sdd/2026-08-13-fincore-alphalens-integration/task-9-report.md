@@ -261,3 +261,48 @@ Re-review 2 fix commit: `e9d8561 fix: guard artifact dependency metadata`.
 
 The isolated Alphalens rendering profile emits intended legacy summary tables
 to stdout. This is harmless but makes wheel-matrix logs verbose.
+
+## Re-review 3 follow-up (2026-08-15)
+
+Malformed `Requires-Dist` values in wheel `METADATA` or sdist `PKG-INFO` now
+produce an ordinary release-consistency failure containing the raw value.
+Artifact parsing catches only `InvalidRequirement`; valid mixed-case external
+packages and direct URLs continue through the existing prohibited-dependency
+guard.
+
+RED command and result:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_release_consistency.py::test_release_consistency_rejects_prohibited_artifact_requirements \
+  -q --tb=short --maxfail=0
+# 2 failed, 3 passed: malformed wheel/sdist metadata raised InvalidRequirement
+```
+
+GREEN commands and results:
+
+```bash
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' \
+  tests/packaging/test_release_consistency.py::test_release_consistency_rejects_prohibited_artifact_requirements \
+  -q --tb=short --maxfail=0
+# 5 passed in 6.35s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest \
+  -o addopts='' tests/packaging -q --tb=short --maxfail=0
+# 37 passed in 14.15s
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff check \
+  scripts/check_release_consistency.py tests/packaging/test_release_consistency.py
+# All checks passed
+
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m ruff format --check \
+  scripts/check_release_consistency.py tests/packaging/test_release_consistency.py
+# 2 files already formatted
+
+git diff --check
+# clean
+```
+
+Re-review 3 fix commit: `4ae8012 fix: reject malformed artifact requirements`.
