@@ -600,6 +600,22 @@ def test_pandas_timezone_payloads_resolve_to_resolved_zoneinfo_objects() -> None
     assert resolved.key == "America/New_York"
 
 
+def test_dateutil_tzfile_text_form_is_normalized_to_the_iana_envelope() -> None:
+    """dateutil's Windows ``tzfile(...)`` string maps to the shared iana-zone kind."""
+
+    import zoneinfo as zoneinfo_module
+
+    from fincore.factor_analysis.models import _pandas_timezone_from_payload, _pandas_timezone_payload
+
+    _require_named_zone("America/New_York")
+    payload = _pandas_timezone_payload("tzfile('America/New_York')")
+    assert payload == {"kind": "iana-zone", "name": "America/New_York"}
+
+    resolved = _pandas_timezone_from_payload({"kind": "pandas-timezone", "name": "tzfile('America/New_York')"})
+    assert isinstance(resolved, zoneinfo_module.ZoneInfo)
+    assert resolved.key == "America/New_York"
+
+
 def test_named_timezone_restore_falls_back_to_the_tzdata_wheel(monkeypatch: pytest.MonkeyPatch) -> None:
     """Without system IANA data, the ``tzdata`` wheel is wired into ``zoneinfo`` explicitly."""
 

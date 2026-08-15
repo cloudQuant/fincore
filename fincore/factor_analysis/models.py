@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import datetime as dt
 import pickle  # nosec B403 # round-trips trusted in-process data only; never deserializes external input
+import re
 import struct
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -102,6 +103,26 @@ def _iana_timezone_name(timezone: object) -> str | None:
     return None
 
 
+_TZFILE_TEXT_FORM = re.compile(r"\Atzfile\('([^']*)'\)\Z")
+
+
+def _iana_name_from_tzfile_text(value: object) -> str | None:
+    """Extract the IANA name from dateutil's ``tzfile(...)`` string form.
+
+    On Windows, dateutil resolves named zones through its bundled tarball and
+    stringifies the result as ``tzfile('America/New_York')``; that text is the
+    only stable identity available for the wire envelope.
+    """
+    match = _TZFILE_TEXT_FORM.match(str(value))
+    if match is None:
+        return None
+    candidate = match.group(1)
+    _, _, candidate = candidate.rpartition("/zoneinfo/")
+    if not candidate or "\\" in candidate or candidate.endswith((".tar", ".tar.gz")):
+        return None
+    return candidate
+
+
 def _pandas_timezone_payload(timezone: object) -> dict[str, object] | None:
     """Encode pandas timezone identity without routing fixed offsets through strings."""
 
@@ -119,6 +140,9 @@ def _pandas_timezone_payload(timezone: object) -> dict[str, object] | None:
     name = _iana_timezone_name(timezone)
     if name is not None:
         return {"kind": "iana-zone", "name": name}
+    text_name = _iana_name_from_tzfile_text(timezone)
+    if text_name is not None:
+        return {"kind": "iana-zone", "name": text_name}
     return {"kind": "pandas-timezone", "name": str(timezone)}
 
 
@@ -133,6 +157,9 @@ def _resolve_named_timezone(name: str) -> object:
     """
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+    unwrapped = _iana_name_from_tzfile_text(name)
+    if unwrapped is not None:
+        name = unwrapped
     try:
         return ZoneInfo(name)
     except ZoneInfoNotFoundError:
