@@ -23,6 +23,31 @@ from fincore.factor_analysis import performance, portfolio
 from fincore.factor_analysis.calendar import get_forward_returns_columns
 
 
+def _require_named_zone(zone: str) -> None:
+    """Make ``zoneinfo`` resolve named zones without a system IANA database.
+
+    Windows has no ``/usr/share/zoneinfo``; when the ``tzdata`` wheel is
+    installed, point ``zoneinfo`` at it explicitly. Skipped only when neither
+    the system database nor ``tzdata`` is available.
+    """
+    import zoneinfo
+
+    try:
+        zoneinfo.ZoneInfo(zone)
+        return
+    except zoneinfo.ZoneInfoNotFoundError:
+        pass
+    try:
+        from importlib import resources
+
+        import tzdata
+
+        zoneinfo.reset_tzpath([str(resources.files(tzdata) / "zoneinfo")])
+        zoneinfo.ZoneInfo(zone)
+    except (ImportError, zoneinfo.ZoneInfoNotFoundError) as error:
+        pytest.skip(f"named IANA zone {zone!r} unavailable: {error}")
+
+
 class _MutableGroupLabel:
     """Pickleable, hashable object used to prove object cells are owned."""
 
@@ -564,6 +589,7 @@ def test_model_fingerprint_and_json_handoff_support_stdlib_asset_labels(
 def test_stdlib_datetime_timezone_identity_is_retained_in_handoff_and_fingerprint() -> None:
     """A named zone cannot alias its same-offset fixed-timezone counterpart."""
 
+    _require_named_zone("America/New_York")
     from fincore.factor_analysis.models import deserialize_serializable_value, fingerprint_value, serializable_value
 
     named_zone = dt.datetime(2024, 6, 1, 9, 30, tzinfo=ZoneInfo("America/New_York"))
@@ -688,6 +714,7 @@ def test_pandas_dateutil_and_pytz_fixed_offsets_use_the_lossless_timezone_envelo
 def test_pandas_named_timezone_providers_use_one_lossless_iana_envelope() -> None:
     """ZoneInfo, dateutil and pytz names share one reversible timezone identity."""
 
+    _require_named_zone("America/New_York")
     import pytz
     from dateutil import tz
 
