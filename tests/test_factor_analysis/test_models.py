@@ -616,6 +616,43 @@ def test_dateutil_tzfile_text_form_is_normalized_to_the_iana_envelope() -> None:
     assert resolved.key == "America/New_York"
 
 
+def test_tzfile_text_forms_without_an_iana_name_are_left_untouched() -> None:
+    """Only genuine ``tzfile(...)`` IANA text is normalized; paths and archives are not."""
+
+    from fincore.factor_analysis.models import _iana_name_from_tzfile_text
+
+    assert _iana_name_from_tzfile_text("tzfile('/usr/share/zoneinfo/America/New_York')") == "America/New_York"
+    assert _iana_name_from_tzfile_text("tzfile('C:\\zones\\dateutil-zoneinfo.tar.gz')") is None
+    assert _iana_name_from_tzfile_text("tzfile('dateutil-zoneinfo.tar.gz')") is None
+    assert _iana_name_from_tzfile_text("America/New_York") is None
+    assert _iana_name_from_tzfile_text(42) is None
+
+
+def test_named_timezone_restore_returns_the_raw_name_without_any_database(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With neither system data nor the tzdata wheel, the raw name goes back to pandas."""
+
+    import builtins
+    import zoneinfo as zoneinfo_module
+
+    from fincore.factor_analysis.models import _resolve_named_timezone
+
+    real_import = builtins.__import__
+
+    def failing_zoneinfo(key: str) -> object:
+        raise zoneinfo_module.ZoneInfoNotFoundError(key)
+
+    def no_tzdata(name: str, globals_: object = None, locals_: object = None, fromlist: object = (), level: int = 0):
+        if name == "tzdata":
+            raise ImportError("tzdata deliberately unavailable")
+        return real_import(name, globals_, locals_, fromlist, level)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(zoneinfo_module, "ZoneInfo", failing_zoneinfo)
+    monkeypatch.setattr(builtins, "__import__", no_tzdata)
+    resolved = _resolve_named_timezone("America/New_York")
+
+    assert resolved == "America/New_York"
+
+
 def test_named_timezone_restore_falls_back_to_the_tzdata_wheel(monkeypatch: pytest.MonkeyPatch) -> None:
     """Without system IANA data, the ``tzdata`` wheel is wired into ``zoneinfo`` explicitly."""
 
@@ -1019,6 +1056,19 @@ def test_frozen_mapping_owns_and_releases_independent_mutable_values() -> None:
     assert dict(equal_key_mapping)[released_key] == "value"
     with pytest.raises(TypeError, match="preserve equality"):
         frozen_mapping({_IdentityOnlyKey(): "value"})
+
+
+def test_snapshot_value_pickles_generic_owned_objects() -> None:
+    """Calendar-like objects outside the typed fast paths use the pickle fallback."""
+
+    from fincore.factor_analysis.models import _snapshot_value
+
+    original = BDay(2)
+    snapshot = _snapshot_value(original)
+
+    assert snapshot == original
+    assert snapshot is not original
+    assert isinstance(snapshot, BDay)
 
 
 def test_model_exposes_defensive_snapshots_for_all_renderer_data(

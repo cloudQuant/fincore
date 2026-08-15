@@ -13,9 +13,9 @@ pandas>=1.5.0
 scipy>=1.3.0
 bottleneck>=1.3.0
 
-# Windows has no system IANA timezone database; the factor-analysis tests
-# exercise named-zone pandas round-trips that require it.
-tzdata>=2024.1 ; platform_system == "Windows"
+# Named-zone factor-analysis tests exercise the tzdata fallback branch on
+# every platform; Windows additionally has no system IANA database.
+tzdata>=2024.1
 
 # Visualization and report (for pyfolio, tearsheets, viz, PDF report tests)
 matplotlib>=3.3
