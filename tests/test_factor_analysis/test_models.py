@@ -11,7 +11,7 @@ import sys
 from collections.abc import Mapping
 from dataclasses import FrozenInstanceError, fields, is_dataclass
 from decimal import Decimal
-from typing import get_type_hints
+from typing import Any, get_type_hints
 from zoneinfo import ZoneInfo
 
 import numpy as np
@@ -584,6 +584,49 @@ def test_model_fingerprint_and_json_handoff_support_stdlib_asset_labels(
     )
     assert isinstance(round_tripped_labels, pd.DataFrame)
     pd.testing.assert_frame_equal(round_tripped_labels, label_frame)
+
+
+def test_pandas_timezone_payloads_resolve_to_resolved_zoneinfo_objects() -> None:
+    """The pandas-timezone restore path never hands a bare name to ``tz_convert``."""
+
+    import zoneinfo as zoneinfo_module
+
+    from fincore.factor_analysis.models import _pandas_timezone_from_payload
+
+    _require_named_zone("America/New_York")
+    resolved = _pandas_timezone_from_payload({"kind": "pandas-timezone", "name": "America/New_York"})
+
+    assert isinstance(resolved, zoneinfo_module.ZoneInfo)
+    assert resolved.key == "America/New_York"
+
+
+def test_named_timezone_restore_falls_back_to_the_tzdata_wheel(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without system IANA data, the ``tzdata`` wheel is wired into ``zoneinfo`` explicitly."""
+
+    import zoneinfo as zoneinfo_module
+
+    from fincore.factor_analysis.models import _resolve_named_timezone
+
+    _require_named_zone("America/New_York")
+    real_zoneinfo = zoneinfo_module.ZoneInfo
+    attempts = {"count": 0}
+
+    def failing_zoneinfo(key: str) -> Any:
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise zoneinfo_module.ZoneInfoNotFoundError(key)
+        return real_zoneinfo(key)
+
+    before = zoneinfo_module.TZPATH
+    try:
+        monkeypatch.setattr(zoneinfo_module, "ZoneInfo", failing_zoneinfo)
+        resolved = _resolve_named_timezone("America/New_York")
+    finally:
+        zoneinfo_module.reset_tzpath(list(before))
+
+    assert isinstance(resolved, real_zoneinfo)
+    assert resolved.key == "America/New_York"
+    assert attempts["count"] == 2
 
 
 def test_stdlib_datetime_timezone_identity_is_retained_in_handoff_and_fingerprint() -> None:

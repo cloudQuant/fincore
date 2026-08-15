@@ -122,6 +122,33 @@ def _pandas_timezone_payload(timezone: object) -> dict[str, object] | None:
     return {"kind": "pandas-timezone", "name": str(timezone)}
 
 
+def _resolve_named_timezone(name: str) -> object:
+    """Resolve an IANA zone name to a ``ZoneInfo`` object when possible.
+
+    CPython's automatic ``tzdata`` fallback is sysconfig-based and misses
+    common Windows layouts, while pandas' own Windows fallback builds
+    malformed ``tzdata.zoneinfo.tzfile(...)`` module paths.  Resolving the
+    name here keeps both restore paths deterministic; unresolvable names are
+    returned unchanged so pandas raises its own resolution error.
+    """
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    try:
+        return ZoneInfo(name)
+    except ZoneInfoNotFoundError:
+        pass
+    try:
+        import zoneinfo as zoneinfo_module
+        from importlib import resources
+
+        import tzdata
+
+        zoneinfo_module.reset_tzpath([str(resources.files(tzdata) / "zoneinfo")])
+        return ZoneInfo(name)
+    except (ImportError, ZoneInfoNotFoundError):
+        return name
+
+
 def _pandas_timezone_from_payload(payload: object) -> object | None:
     """Restore a timezone object/string accepted by ``Timestamp.tz_convert``."""
 
@@ -140,7 +167,7 @@ def _pandas_timezone_from_payload(payload: object) -> object | None:
         field = "key" if kind == "zoneinfo" else "name"
         return ZoneInfo(cast("str", payload[field]))
     if kind == "pandas-timezone":
-        return cast("str", payload["name"])
+        return _resolve_named_timezone(cast("str", payload["name"]))
     raise ValueError(f"unknown factor-analysis pandas timezone wire type {kind!r}")
 
 
