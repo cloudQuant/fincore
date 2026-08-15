@@ -32,7 +32,11 @@ CACHE_PARTS = {
     "fincore.egg-info",
     "htmlcov",
 }
-COMMAND_TIMEOUT_SECONDS = 900
+# The current complete suite needs roughly eight minutes without coverage;
+# branch instrumentation adds enough overhead that a 15-minute ceiling is too
+# short. Keep a finite, documented 30-minute budget for every full baseline
+# subprocess rather than producing an incomplete quality artifact.
+COMMAND_TIMEOUT_SECONDS = 30 * 60
 NON_SERIAL_SELECTOR = "not serial and not slow and not integration"
 TRUSTED_SELECTOR = "not slow and not integration"
 BENCHMARKS_IGNORE = "--ignore=tests/benchmarks"

@@ -225,3 +225,11 @@ def test_baseline_environment_forces_the_headless_matplotlib_backend(monkeypatch
     environment = collector._baseline_environment()
 
     assert environment["MPLBACKEND"] == "Agg"
+
+
+def test_full_quality_runs_have_a_thirty_minute_timeout_budget() -> None:
+    """Coverage has a larger, explicit budget than normal subprocess probes."""
+
+    collector = _collector_module()
+
+    assert collector.COMMAND_TIMEOUT_SECONDS >= 30 * 60
