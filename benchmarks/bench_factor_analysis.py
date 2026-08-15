@@ -114,14 +114,16 @@ def build_workload(scenario_name: str, kernel: str) -> Callable[[], object]:
 
     if kernel == "prepare":
         factor, prices, groups = _raw_inputs(scenario)
-        return lambda: prepare_factor_data(
-            factor,
-            prices,
-            groupby=groups,
-            periods=(1, 5),
-            quantiles=5,
-            max_loss=1,
-        ).data
+        return lambda: (
+            prepare_factor_data(
+                factor,
+                prices,
+                groupby=groups,
+                periods=(1, 5),
+                quantiles=5,
+                max_loss=1,
+            ).data
+        )
 
     if scenario_name == "event":
         factor_data, returns = _event_inputs(scenario)

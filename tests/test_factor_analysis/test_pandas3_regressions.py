@@ -92,7 +92,9 @@ def test_multiindex_codes_round_trip_in_serialization() -> None:
     restored = deserialize_serializable_value(serializable_value(source))
 
     assert isinstance(restored, pd.DataFrame)
-    assert all(np.array_equal(left, right) for left, right in zip(source.index.codes, restored.index.codes, strict=True))
+    assert all(
+        np.array_equal(left, right) for left, right in zip(source.index.codes, restored.index.codes, strict=True)
+    )
 
 
 def test_monthly_alias_is_normalized_without_warning() -> None:

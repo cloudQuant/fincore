@@ -103,11 +103,7 @@ def _direct_test_methods(tree: ast.Module, class_name: str) -> list[ast.Function
     classes = [node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == class_name]
     if len(classes) != 1:
         raise InventoryError(f"expected exactly one class {class_name}, found {len(classes)}")
-    return [
-        node
-        for node in classes[0].body
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
-    ]
+    return [node for node in classes[0].body if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
 
 
 def _parameterized_rows(method: ast.FunctionDef) -> list[ast.expr]:
@@ -138,10 +134,7 @@ def _assertion_quality(method: ast.FunctionDef) -> str:
     calls = [node for node in ast.walk(method) if isinstance(node, ast.Call)]
     if any(name.startswith("assert_") and name.endswith("_equal") for name in names):
         return "pandas_assertion"
-    if any(
-        isinstance(call.func, ast.Attribute) and call.func.attr == "equals"
-        for call in calls
-    ):
+    if any(isinstance(call.func, ast.Attribute) and call.func.attr == "equals" for call in calls):
         return "discarded_equals"
     return "smoke_only"
 
@@ -264,7 +257,11 @@ class _TearCallGroups(ast.NodeVisitor):
         self._active_group_inputs = None
 
     def visit_Call(self, node: ast.Call) -> None:
-        if isinstance(node.func, ast.Name) and node.func.id.startswith("create_") and node.func.id.endswith("_tear_sheet"):
+        if (
+            isinstance(node.func, ast.Name)
+            and node.func.id.startswith("create_")
+            and node.func.id.endswith("_tear_sheet")
+        ):
             if self._active_group is None:
                 self.groups.append((1, [node.func.id]))
             else:
@@ -288,9 +285,7 @@ def _tear_invocations(
     for input_count, calls in collector.groups:
         for input_index in range(input_count):
             for call_index, call_name in enumerate(calls):
-                invocation_id = (
-                    f"{source_case_id}/input-{input_offset + input_index:02d}/call-{call_index:02d}"
-                )
+                invocation_id = f"{source_case_id}/input-{input_offset + input_index:02d}/call-{call_index:02d}"
                 invocation_ids.append(invocation_id)
                 call_names[invocation_id] = call_name
         input_offset += input_count
@@ -308,11 +303,7 @@ def _tear_cases(blob: SourceBlob) -> list[dict[str, Any]]:
         raise InventoryError(f"expected exactly one TearsTestCase, found {len(classes)}")
     class_node = classes[0]
     list_lengths = _class_list_lengths(class_node)
-    methods = [
-        node
-        for node in class_node.body
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
-    ]
+    methods = [node for node in class_node.body if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")]
     cases: list[dict[str, Any]] = []
     for method in methods:
         rows = _parameterized_rows(method)
@@ -342,10 +333,7 @@ def _tear_cases(blob: SourceBlob) -> list[dict[str, Any]]:
 
 def _source_files(blobs: dict[str, SourceBlob]) -> dict[str, dict[str, str]]:
     """Return the compact source evidence shape kept in the checked-in JSON."""
-    return {
-        path: {"git_blob": blob.git_blob, "sha256": blob.sha256}
-        for path, blob in blobs.items()
-    }
+    return {path: {"git_blob": blob.git_blob, "sha256": blob.sha256} for path, blob in blobs.items()}
 
 
 def _validate_inventory(inventory: dict[str, Any]) -> None:
@@ -377,9 +365,7 @@ def _validate_inventory(inventory: dict[str, Any]) -> None:
         if observed != EXPECTED_COUNTS:
             problems.append(f"inventory counts differ: observed {observed}, expected {EXPECTED_COUNTS}")
         shadowed = [
-            case
-            for case in active_cases
-            if case.get("source_collection_state") == "shadowed_by_generated_method_name"
+            case for case in active_cases if case.get("source_collection_state") == "shadowed_by_generated_method_name"
         ]
         if len(shadowed) != 1:
             problems.append(f"expected one shadowed generated performance row, found {len(shadowed)}")
