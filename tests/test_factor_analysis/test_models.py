@@ -607,6 +607,7 @@ def test_named_timezone_restore_falls_back_to_the_tzdata_wheel(monkeypatch: pyte
 
     from fincore.factor_analysis.models import _resolve_named_timezone
 
+    pytest.importorskip("tzdata")  # the wheel is the fallback under test
     _require_named_zone("America/New_York")
     real_zoneinfo = zoneinfo_module.ZoneInfo
     attempts = {"count": 0}
