@@ -69,7 +69,7 @@ dev = [
   "statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7", "PyPDF2>=3",
   "bokeh>=3", "plotly>=5", "playwright>=1.40", "openpyxl>=3",
   "pre-commit>=3", "bandit[toml]>=1.7",
-  "setuptools>=68.0", "wheel",
+  "setuptools>=68.0", "wheel", "build>=1.2",
 ]
 
 # Exact normalized union of functional extras above; excludes dev and aliases.

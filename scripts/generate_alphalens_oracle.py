@@ -376,14 +376,26 @@ def _run_process(
 
 
 def _terminate_process_group(process: subprocess.Popen[Any]) -> None:
-    """Terminate only the session created for this process, then reap its leader."""
-    with contextlib.suppress(ProcessLookupError):
-        os.killpg(process.pid, signal.SIGTERM)
+    """Terminate only the session created for this process, then reap its leader.
+
+    POSIX reaps the whole session (``start_new_session``) with ``killpg``;
+    Windows has no process groups, so the direct child is terminated instead.
+    """
+    if os.name == "posix":
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGTERM)
+        try:
+            process.communicate(timeout=PROCESS_TERMINATION_GRACE_SECONDS)
+        except subprocess.TimeoutExpired:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+            process.communicate()
+        return
+    process.terminate()
     try:
         process.communicate(timeout=PROCESS_TERMINATION_GRACE_SECONDS)
     except subprocess.TimeoutExpired:
-        with contextlib.suppress(ProcessLookupError):
-            os.killpg(process.pid, signal.SIGKILL)
+        process.kill()
         process.communicate()
 
 
@@ -515,6 +527,9 @@ def _conda_executable() -> Path:
 
 def _prefix_python(prefix: Path) -> Path:
     interpreter = prefix / "bin" / "python"
+    if not interpreter.is_file():
+        # Windows layout: the interpreter lives at the prefix root.
+        interpreter = prefix / "python.exe"
     _require(interpreter.is_file(), f"isolated prefix has no Python interpreter: {prefix}")
     return interpreter
 

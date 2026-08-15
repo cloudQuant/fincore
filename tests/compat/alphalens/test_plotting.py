@@ -297,18 +297,20 @@ def test_strict_special_plotting_projections_preserve_source_side_effects_and_er
         {"1D": [1e305, 1e305]},
         index=pd.MultiIndex.from_product((_ic().index[:2], (1,)), names=("date", "factor_quantile")),
     )
+    # The exact NumPy warning text varies with the platform BLAS; the frozen
+    # contract here is "a RuntimeWarning plus the legacy ValueError projection".
     with (
-        pytest.warns(RuntimeWarning, match="overflow encountered in scalar multiply"),
+        pytest.warns(RuntimeWarning, match="overflow|invalid value"),
         pytest.raises(ValueError, match="Axis limits cannot be NaN or Inf"),
     ):
         plotting.plot_quantile_returns_bar(overflow_bars, ylim_percentiles=(5, 95))
     with (
-        pytest.warns(RuntimeWarning, match="overflow encountered in scalar multiply"),
+        pytest.warns(RuntimeWarning, match="overflow|invalid value"),
         pytest.raises(ValueError, match="Axis limits cannot be NaN or Inf"),
     ):
         plotting.plot_quantile_returns_violin(overflow_violin, ylim_percentiles=(5, 95))
     with (
-        pytest.warns(RuntimeWarning, match="invalid value encountered in subtract"),
+        pytest.warns(RuntimeWarning, match="overflow|invalid value"),
         pytest.raises(ValueError, match="Axis limits cannot be NaN or Inf"),
     ):
         plotting.plot_mean_quantile_returns_spread_time_series(

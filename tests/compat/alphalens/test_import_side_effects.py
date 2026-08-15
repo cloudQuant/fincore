@@ -53,6 +53,10 @@ def test_plotting_facade_import_does_not_change_an_existing_matplotlib_backend()
     )
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
+    # Pin a headless backend: with MPLBACKEND unset, ``import matplotlib``
+    # itself may select an interactive backend and load pyplot, which would
+    # make the pyplot assertion below unverifiable.
+    environment["MPLBACKEND"] = "Agg"
     result = subprocess.run(
         [sys.executable, "-I", "-c", code],
         cwd=_REPOSITORY_ROOT,

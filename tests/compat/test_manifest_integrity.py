@@ -52,6 +52,15 @@ def _load(name: str) -> dict[str, Any]:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
+def _sha256_text_file(path: Path) -> str:
+    """SHA256 of a text file with canonical LF line endings.
+
+    Recorded digests come from the reference-host checkout; Windows checkouts
+    may materialize the same blob with CRLF endings.
+    """
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 def _load_generator() -> Any:
     spec = importlib.util.spec_from_file_location("compat_manifest_generator", GENERATOR)
     assert spec is not None and spec.loader is not None
@@ -72,7 +81,10 @@ def _load_alphalens_oracle() -> Any:
 
 def _current_python_prefix() -> Path:
     prefix = Path(sys.executable).resolve().parent.parent
-    assert (prefix / "bin" / "python").is_file()
+    if not (prefix / "bin" / "python").is_file():
+        # Windows layout: the interpreter lives at the prefix root.
+        prefix = Path(sys.prefix)
+    assert (prefix / "bin" / "python").is_file() or (prefix / "python.exe").is_file()
     return prefix
 
 
@@ -141,7 +153,7 @@ def _terminate_owned_test_child(pid: int) -> None:
     if _process_has_exited(pid, timeout=0):
         return
     try:
-        os.kill(pid, signal.SIGKILL)
+        os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
     except ProcessLookupError:
         return
     assert _process_has_exited(pid)
@@ -399,8 +411,10 @@ def test_alphalens_oracle_metadata_is_truthful_unreviewed_observation() -> None:
     assert environment["source"]["commit"] == ALPHALENS_COMMIT
     assert environment["oracle_verification"] == {"reviewed": False, "status": "not-run"}
     assert environment["execution_status"] == "executable-unreviewed-tuple"
-    assert environment["explicit_lock"]["sha256"] == hashlib.sha256(explicit_lock.read_bytes()).hexdigest()
-    assert environment["requirements"]["sha256"] == hashlib.sha256(requirements.read_bytes()).hexdigest()
+    # Hash canonical LF-normalized bytes: the recorded digests come from the
+    # reference-host checkout and Windows checkouts may translate line endings.
+    assert environment["explicit_lock"]["sha256"] == _sha256_text_file(explicit_lock)
+    assert environment["requirements"]["sha256"] == _sha256_text_file(requirements)
     assert "@EXPLICIT" in explicit_lock.read_text(encoding="utf-8")
     explicit_packages = [
         line
@@ -637,6 +651,10 @@ def test_alphalens_worker_serializes_plain_index_without_timezone_attribute(tmp_
     assert value["index"] == [0]
 
 
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="POSIX process groups and session reaping do not exist on Windows",
+)
 def test_alphalens_oracle_timeout_terminates_owned_process_group_and_cleans_prefix(tmp_path: Path) -> None:
     oracle = _load_alphalens_oracle()
     child_pid_path = tmp_path / "child.pid"

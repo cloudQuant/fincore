@@ -86,6 +86,7 @@ def _release_check(dist_dir: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+@pytest.mark.p3  # packaging metadata guard: not a core-metric smoke test; keeps it out of the p0/p1 priority jobs
 @pytest.mark.parametrize(
     ("artifact", "requirement"),
     (

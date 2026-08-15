@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
-import pickle
+import pickle  # nosec B403 # round-trips trusted in-process data only; never deserializes external input
 import struct
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -1282,7 +1282,7 @@ def snapshot_pandas(value: pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame
     """Take an owned recursive pandas snapshot, including object-dtype cells."""
 
     try:
-        snapshot = pickle.loads(pickle.dumps(value, protocol=5))
+        snapshot = pickle.loads(pickle.dumps(value, protocol=5))  # nosec B301 # same-process round-trip snapshot
     except (AttributeError, pickle.PickleError, TypeError, ValueError) as error:
         raise TypeError("factor-analysis data must contain pickleable object values") from error
     if not isinstance(snapshot, (pd.Series, pd.DataFrame)):  # pragma: no cover - pickle protocol invariant
@@ -1344,7 +1344,7 @@ def _snapshot_value(value: object) -> object:
     ):
         return value
     try:
-        return pickle.loads(pickle.dumps(value, protocol=5))
+        return pickle.loads(pickle.dumps(value, protocol=5))  # nosec B301 # same-process round-trip snapshot
     except (AttributeError, pickle.PickleError, TypeError, ValueError) as error:
         raise TypeError("factor-analysis snapshot values must be pickleable") from error
 
@@ -1353,7 +1353,7 @@ def _snapshot_mapping_key(value: _MappingKey) -> _MappingKey:
     """Copy a mapping key so mutable-but-hashable labels cannot leak inward."""
 
     try:
-        snapshot = pickle.loads(pickle.dumps(value, protocol=5))
+        snapshot = pickle.loads(pickle.dumps(value, protocol=5))  # nosec B301 # same-process round-trip snapshot
     except (AttributeError, pickle.PickleError, TypeError, ValueError) as error:
         raise TypeError("factor-analysis mapping keys must be pickleable") from error
     if not isinstance(snapshot, Hashable):  # pragma: no cover - Mapping protocol invariant
