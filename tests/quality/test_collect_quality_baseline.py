@@ -214,3 +214,14 @@ def test_disposable_baseline_copy_has_an_isolated_git_head(tmp_path) -> None:
     )
     assert revision.returncode == 0, revision.stdout + revision.stderr
     assert len(revision.stdout.strip()) == 40
+
+
+def test_baseline_environment_forces_the_headless_matplotlib_backend(monkeypatch) -> None:
+    """Quality collection cannot inherit a macOS GUI backend from the shell."""
+
+    collector = _collector_module()
+    monkeypatch.setenv("MPLBACKEND", "macosx")
+
+    environment = collector._baseline_environment()
+
+    assert environment["MPLBACKEND"] == "Agg"

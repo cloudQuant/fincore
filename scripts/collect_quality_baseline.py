@@ -200,6 +200,17 @@ def _timeout_output(error: subprocess.TimeoutExpired) -> str:
     return as_text(error.stdout) + as_text(error.stderr)
 
 
+def _baseline_environment() -> dict[str, str]:
+    """Return the deterministic, headless environment for disposable pytest runs."""
+
+    environment = os.environ.copy()
+    # On macOS, ``matplotlib.get_backend()`` may initialize pyplot when the
+    # shell-selected GUI backend is queried.  The import-boundary tests must
+    # instead run under the same explicitly headless backend as CI.
+    environment["MPLBACKEND"] = "Agg"
+    return environment
+
+
 def _run_checked(
     copy_root: Path,
     tracked_package_files: list[str],
@@ -216,6 +227,7 @@ def _run_checked(
         result = subprocess.run(
             command,
             cwd=copy_root,
+            env=_baseline_environment(),
             capture_output=True,
             text=True,
             check=False,
