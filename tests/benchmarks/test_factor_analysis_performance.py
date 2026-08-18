@@ -21,9 +21,12 @@ if str(BENCHMARKS) not in sys.path:
 
 from bench_factor_analysis import SCENARIOS, SEED
 
+from scripts.compare_benchmarks import list_candidate_baselines, select_baseline
+
 RUNNER = ROOT / "scripts" / "run_factor_benchmarks.py"
 COMPARATOR = ROOT / "scripts" / "compare_benchmarks.py"
-BASELINE = ROOT / "benchmarks" / "factor-analysis-baseline.json"
+BASELINES_DIR = ROOT / "benchmarks" / "factor-analysis-baselines"
+BASELINE = BASELINES_DIR / "darwin-arm64.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 SHA256 = "a" * 64
 REVIEWED_SHA256 = "b" * 64
@@ -552,3 +555,50 @@ def test_factor_payload_without_digest_gate_keeps_legacy_unknown_kind_behavior(t
 
     assert result.returncode == 1
     assert "unknown candidate kind 'factor_analysis'" in result.stderr
+
+
+def test_selects_only_an_approved_matching_platform_baseline(tmp_path: Path) -> None:
+    approved = _payload(machine="x86_64", baseline=True)
+    approved["provenance"]["platform_label"] = "linux-x86_64"
+    pending = _payload(machine="x86_64", baseline=True, approval="pending")
+    pending["provenance"]["platform_label"] = "linux-x86_64"
+    other = _payload(machine="arm64", baseline=True)
+    other["provenance"]["platform_label"] = "darwin-arm64"
+
+    (tmp_path / "linux-x86_64.json").write_text(json.dumps(approved), encoding="utf-8")
+    (tmp_path / "linux-x86_64-pending.json").write_text(json.dumps(pending), encoding="utf-8")
+    (tmp_path / "darwin-arm64.json").write_text(json.dumps(other), encoding="utf-8")
+
+    baseline = select_baseline(tmp_path, platform_label="linux-x86_64")
+
+    assert baseline is not None
+    assert baseline["approval"]["status"] == "approved"
+    assert baseline["provenance"]["platform_label"] == "linux-x86_64"
+
+
+def test_select_baseline_returns_none_without_an_approved_match(tmp_path: Path) -> None:
+    pending = _payload(machine="x86_64", baseline=True, approval="pending")
+    pending["provenance"]["platform_label"] = "linux-x86_64"
+    (tmp_path / "linux-x86_64.json").write_text(json.dumps(pending), encoding="utf-8")
+
+    assert select_baseline(tmp_path, platform_label="linux-x86_64") is None
+    assert select_baseline(tmp_path, platform_label="darwin-arm64") is None
+
+
+def test_candidate_only_baseline_is_not_a_release_gate() -> None:
+    candidates = list_candidate_baselines()
+    approved = [c for c in candidates if c.get("approval", {}).get("status") == "approved"]
+    unapproved = [c for c in candidates if c.get("approval", {}).get("status") != "approved"]
+
+    assert candidates, "no checked-in factor baselines found"
+    assert len(unapproved) > 0
+    assert len(approved) == 0 or all(a["provenance"]["platform_label"] for a in approved)
+
+
+def test_checked_in_baselines_are_platform_labelled() -> None:
+    baselines = list_candidate_baselines()
+
+    labels = {b["provenance"]["platform_label"] for b in baselines}
+
+    assert "darwin-arm64" in labels
+    assert "linux-x86_64" in labels

@@ -75,6 +75,30 @@ def _load(path: str) -> dict:
         return json.load(fh)
 
 
+FACTOR_BASELINES_DIR = Path(__file__).resolve().parent.parent / "benchmarks" / "factor-analysis-baselines"
+
+
+def list_candidate_baselines(directory: str | Path | None = None) -> list[dict]:
+    """List every platform-labelled factor benchmark baseline JSON."""
+    base = Path(directory) if directory is not None else FACTOR_BASELINES_DIR
+    return [_load(str(path)) for path in sorted(base.glob("*.json"))]
+
+
+def select_baseline(directory: str | Path, platform_label: str) -> dict | None:
+    """Return the approved baseline for a platform, or None when absent.
+
+    A candidate-only (pending) baseline is never selected, so a missing
+    approval is explicit rather than a silent pass.
+    """
+    for baseline in list_candidate_baselines(directory):
+        if (
+            baseline.get("provenance", {}).get("platform_label") == platform_label
+            and baseline.get("approval", {}).get("status") == "approved"
+        ):
+            return baseline
+    return None
+
+
 def _median(values: list[float]) -> float:
     return float(statistics.median(values)) if values else float("nan")
 
