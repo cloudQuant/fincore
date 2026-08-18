@@ -33,3 +33,12 @@ backtrader_web ─────── web platform connecting research, backtest,
 The backtrader family exchanges data through typed contracts (strategy
 specifications, immutable datasets, bounded subprocess runs), so each project
 stays independently installable and offline-first where applicable.
+
+## Capability states
+
+fincore's public surfaces declare their state in a machine-readable registry
+(`fincore.capabilities`) rendered as `docs/quality/capability-inventory.md`.
+States are `stable`, `experimental`, `provider_required`, and
+`not_implemented`. Consult that inventory before depending on a surface in
+production.
+

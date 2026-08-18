@@ -5,6 +5,11 @@ Provides unified access to financial data from multiple sources:
 - Alpha Vantage (via alpha-vantage)
 - Tushare (Chinese A-share data)
 - AkShare (Chinese financial data)
+
+All providers are ``provider_required`` capabilities: each needs its optional
+extra and a working transport.  States are declared in
+:mod:`fincore.capabilities` and rendered into
+``docs/quality/capability-inventory.md``.
 """
 
 from __future__ import annotations
