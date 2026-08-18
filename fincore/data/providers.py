@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
+from fincore.exceptions import DependencyError
+
 if TYPE_CHECKING:
     from datetime import datetime
 
@@ -225,15 +227,27 @@ class YahooFinanceProvider(DataProvider):
     >>> data.head()
     """
 
-    def __init__(self, session=None):
+    def __init__(self, session=None, client=None):
+        # ``client`` is an injected in-memory transport for offline tests; it
+        # takes precedence over the real SDK and skips the yfinance import.
+        if client is not None:
+            self._client = client
+            self._yf = None
+            self._session = session
+            return
+        self._client = None
         try:
             import yfinance as yf
 
             self._yf = yf
             self._session = session
-        except ImportError as e:
-            raise ImportError(
-                "yfinance is required for YahooFinanceProvider. Install with: pip install yfinance"
+        except Exception as e:
+            # A broken optional SDK (not just a missing one) must surface as a
+            # controlled DependencyError, never a raw third-party error.
+            raise DependencyError(
+                "yfinance is required for YahooFinanceProvider. Install with: pip install 'fincore[data-yahoo]'",
+                dependency="yfinance",
+                extra="data-yahoo",
             ) from e
 
     def fetch(
@@ -266,6 +280,10 @@ class YahooFinanceProvider(DataProvider):
         """
         start_dt, end_dt = self.validate_dates(start, end)
 
+        if self._client is not None:
+            return cast("pd.DataFrame", self._client.fetch(symbol, start_dt, end_dt, interval, adjust))
+
+        assert self._yf is not None
         ticker = self._yf.Ticker(symbol)
 
         kwargs = {
@@ -354,6 +372,7 @@ class YahooFinanceProvider(DataProvider):
         dict
             Symbol information.
         """
+        assert self._yf is not None
         ticker = self._yf.Ticker(symbol)
         info = ticker.info
 
@@ -395,9 +414,11 @@ class AlphaVantageProvider(DataProvider):
             import requests
 
             self._requests = requests
-        except ImportError as e:
-            raise ImportError(
-                "requests is required for AlphaVantageProvider. Install with: pip install requests"
+        except Exception as e:
+            raise DependencyError(
+                "requests is required for AlphaVantageProvider. Install with: pip install 'fincore[data-alphavantage]'",
+                dependency="requests",
+                extra="data-alphavantage",
             ) from e
 
         self.api_key = api_key
@@ -540,8 +561,12 @@ class TushareProvider(DataProvider):
             self._ts = ts
             self._token = token
             self._pro = None
-        except ImportError as e:
-            raise ImportError("tushare is required for TushareProvider. Install with: pip install tushare") from e
+        except Exception as e:
+            raise DependencyError(
+                "tushare is required for TushareProvider. Install with: pip install 'fincore[data-cn]'",
+                dependency="tushare",
+                extra="data-cn",
+            ) from e
 
     def _get_pro(self):
         """Lazy initialization of Pro API."""
@@ -697,8 +722,12 @@ class AkShareProvider(DataProvider):
             import akshare as ak
 
             self._ak = ak
-        except ImportError as e:
-            raise ImportError("akshare is required for AkShareProvider. Install with: pip install akshare") from e
+        except Exception as e:
+            raise DependencyError(
+                "akshare is required for AkShareProvider. Install with: pip install 'fincore[data-cn]'",
+                dependency="akshare",
+                extra="data-cn",
+            ) from e
 
     def fetch(  # type: ignore[override]
         self,

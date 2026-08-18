@@ -9,7 +9,7 @@ Analyzes portfolio returns by style characteristics:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Protocol, cast
 
 import numpy as np
 import pandas as pd
@@ -18,11 +18,14 @@ if TYPE_CHECKING:
     from collections.abc import Hashable
 
 __all__ = [
+    "StyleFactorProvider",
     "StyleResult",
     "analyze_performance_by_style",
     "calculate_regression_attribution",
     "calculate_style_tilts",
+    "clear_style_factor_cache",
     "fetch_style_factors",
+    "set_style_provider",
     "style_analysis",
 ]
 
@@ -603,18 +606,47 @@ def analyze_performance_by_style(
     return pd.DataFrame(results).set_index("Period")
 
 
+class StyleFactorProvider(Protocol):
+    """Protocol for style factor data providers.
+
+    A provider callable that takes tickers, factor names and a library name,
+    and returns a DataFrame of style factor data.
+    """
+
+    def __call__(self, tickers: list[str], factors: list[str] | None, library: str) -> pd.DataFrame:
+        """Fetch style factor data."""
+
+
+_style_provider: StyleFactorProvider | None = None
+
+
+def set_style_provider(provider: StyleFactorProvider | None) -> None:
+    """Set the module-level style factor provider (None clears it)."""
+    global _style_provider
+    _style_provider = provider
+
+
+def clear_style_factor_cache() -> None:
+    """Clear any in-process style factor cache and reset the module provider."""
+    global _style_provider
+    _style_provider = None
+
+
 def fetch_style_factors(
     tickers: list[str],
     factors: list[str] | None = None,
     library: str = "us",
+    *,
+    provider: StyleFactorProvider | None = None,
 ) -> pd.DataFrame:
     """Fetch style factor data.
 
     .. note::
 
        A concrete data provider must be configured before calling this
-       function.  Pass pre-fetched factor data directly to
-       :func:`style_analysis` or :func:`calculate_style_tilts`.
+       function.  Pass a ``provider`` that implements the
+       :class:`StyleFactorProvider` protocol, or set a module-level provider
+       via :func:`set_style_provider`.  No default network fetcher is bundled.
 
     Parameters
     ----------
@@ -624,6 +656,8 @@ def fetch_style_factors(
         Style factors to fetch.
     library : str, default "us"
         Data source library. Options: 'us', 'chinese'.
+    provider : StyleFactorProvider, optional
+        Injected provider for offline testing.
 
     Returns
     -------
@@ -633,18 +667,15 @@ def fetch_style_factors(
     Raises
     ------
     NotImplementedError
-        Always raised until a data provider is configured.
+        Raised when no provider is configured.
     """
-    import logging
-
-    logger = logging.getLogger(__name__)
-    logger.error(
-        "fetch_style_factors called without a configured data provider. "
-        "Pass pre-fetched factor data directly to style_analysis() or "
-        "calculate_style_tilts()."
-    )
+    active = provider if provider is not None else _style_provider
+    if active is not None:
+        df = active(tickers, factors, library)
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("Style factor provider must return a pandas DataFrame")
+        return df.copy(deep=True)
     raise NotImplementedError(
         "No style factor data provider is configured. "
-        "Please pass pre-fetched factor data directly to "
-        "style_analysis() or calculate_style_tilts()."
+        "Pass a provider to fetch_style_factors(), or set one via set_style_provider()."
     )

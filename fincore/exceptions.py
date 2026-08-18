@@ -294,22 +294,30 @@ class UnsupportedFormatError(FincoreError):
         )
 
 
-class DependencyError(FincoreError):
-    """Raised when a required dependency is not available."""
+class DependencyError(FincoreError, ImportError):
+    """Raised when a required dependency is not available.
+
+    Also subclasses :class:`ImportError` so historical ``except ImportError``
+    call sites keep working when an optional SDK is missing or broken.
+    """
 
     def __init__(
         self,
         message: str,
         dependency: str | None = None,
+        extra: str | None = None,
     ):
         self.message = message
         self.dependency = dependency
+        self.extra = extra
         super().__init__(message)
 
     def __str__(self) -> str:
         details = [self.message]
         if self.dependency:
             details.append(f"  dependency: {self.dependency}")
+        if self.extra:
+            details.append(f"  install extra: {self.extra}")
         return "\n".join(details)
 
     def to_dict(self) -> dict[str, Any]:
@@ -317,6 +325,7 @@ class DependencyError(FincoreError):
             "error_type": "DependencyError",
             "message": self.message,
             "dependency": self.dependency,
+            "extra": self.extra,
         }
 
     @classmethod
@@ -326,6 +335,7 @@ class DependencyError(FincoreError):
         return cls(
             message=data["message"],
             dependency=data.get("dependency"),
+            extra=data.get("extra"),
         )
 
 

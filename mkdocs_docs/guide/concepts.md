@@ -63,3 +63,39 @@ from fincore.constants import DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
 ```
 
 These control annualization factors across all metrics.
+
+## Data providers and snapshots
+
+Data providers are `provider_required` capabilities: each needs its optional
+extra and a working transport. A broken or missing optional SDK surfaces as a
+controlled `fincore.exceptions.DependencyError` (which names the required extra),
+never a raw third-party error:
+
+```python
+from fincore.data import YahooFinanceProvider
+
+provider = YahooFinanceProvider()  # raises DependencyError if yfinance is missing/broken
+```
+
+For offline tests, inject an in-memory client so the provider logic runs
+without the SDK:
+
+```python
+provider = YahooFinanceProvider(client=fake_client)
+```
+
+To make an external-data analysis reproducible, wrap the fetched frame in a
+`DataSnapshot`, which freezes the source, request interval, as-of timestamp,
+price-adjustment convention, and a SHA256 of the data — without ever recording
+secret configuration:
+
+```python
+from fincore.data.snapshots import DataSnapshot
+
+snapshot = DataSnapshot.from_frame(
+    frame, provider="yahoo",
+    requested_start="2024-01-01", requested_end="2024-12-31",
+    as_of="2024-12-31T23:59:59Z",
+)
+manifest = snapshot.to_manifest()  # provenance only; no API keys or raw data
+```
