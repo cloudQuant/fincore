@@ -59,6 +59,47 @@ def infer_trading_calendar(factor_idx: Iterable[object], prices_idx: Iterable[ob
     return CustomBusinessDay(weekmask=" ".join(traded_weekdays), holidays=holidays)  # type: ignore[call-arg]
 
 
+def _vectorized_business_day_add(
+    index: pd.DatetimeIndex,
+    offset: BusinessDay | CustomBusinessDay,
+    whole_days: int,
+) -> pd.DatetimeIndex:
+    """Vectorized ``index + offset * whole_days`` via ``np.busday_offset``.
+
+    Replicates the pandas elementwise roll semantics exactly: business-day
+    timestamps advance directly, while off-session timestamps roll to the next
+    (or previous, for negative offsets) business day before the remaining whole
+    days are counted.  Only used for naive ``DatetimeIndex`` inputs where a
+    ``CustomBusinessDay`` would otherwise trigger a non-vectorized
+    ``PerformanceWarning``.
+    """
+
+    weekmask = getattr(offset, "weekmask", None) or "Mon Tue Wed Thu Fri"
+    holidays = [pd.Timestamp(h).strftime("%Y-%m-%d") for h in (getattr(offset, "holidays", None) or [])]
+    dates = index.normalize().to_numpy(dtype="datetime64[D]")
+    times = index - index.normalize()
+    is_busday = np.is_busday(dates, weekmask=weekmask, holidays=holidays)
+    result = np.empty(len(dates), dtype="datetime64[D]")
+
+    bus = is_busday
+    if bus.any():
+        result[bus] = np.busday_offset(dates[bus], whole_days, roll="raise", weekmask=weekmask, holidays=holidays)
+    non_bus = ~is_busday
+    if non_bus.any():
+        if whole_days >= 0:
+            shift = whole_days - 1 if whole_days >= 1 else 0
+            result[non_bus] = np.busday_offset(
+                dates[non_bus], shift, roll="forward", weekmask=weekmask, holidays=holidays
+            )
+        else:
+            result[non_bus] = np.busday_offset(
+                dates[non_bus], whole_days + 1, roll="backward", weekmask=weekmask, holidays=holidays
+            )
+    shifted = pd.DatetimeIndex(result, name=index.name) + times
+    shifted.name = index.name
+    return shifted
+
+
 def add_custom_calendar_timedelta(
     input: pd.Timestamp | pd.DatetimeIndex, timedelta: pd.Timedelta | object, freq: Any
 ) -> pd.Timestamp | pd.DatetimeIndex:
@@ -68,6 +109,12 @@ def add_custom_calendar_timedelta(
     delta = pd.Timedelta(cast("Any", timedelta))
     whole_days = delta.components.days
     remainder = delta - pd.Timedelta(days=whole_days)
+    if (
+        isinstance(input, pd.DatetimeIndex)
+        and input.tz is None
+        and isinstance(offset, (BusinessDay, CustomBusinessDay))
+    ):
+        return _vectorized_business_day_add(input, offset, whole_days) + remainder
     return input + offset * whole_days + remainder
 
 
