@@ -21,12 +21,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `examples/factor_analysis_quickstart.py` uses fixed-seed synthetic data,
   makes no network requests or default file writes, renders headlessly under
   Agg, and closes its figures explicitly.
+- **Risk validation layer** — `fincore.risk.models` (`RiskEstimate`,
+  `forecast_var`/`forecast_es` adapters over EVT/GARCH) and
+  `fincore.risk.backtesting` (VaR exception counting, Kupiec and
+  Christoffersen statistics, experimental ES calibration) add out-of-sample
+  risk backtesting without changing the frozen EVT/GARCH kernels.
+- **Reproducible data provider contracts** — `fincore.data.contracts`
+  (`RequestPolicy`) and `fincore.data.snapshots` (`DataSnapshot`) make external
+  data snapshots content-addressed; broken optional SDKs (yfinance/akshare)
+  now surface as a controlled `fincore.DependencyError` naming the required
+  extra instead of a raw third-party error.
+- **Capability inventory** — `fincore.capabilities` declares
+  stable/experimental/provider_required/not_implemented states for public
+  surfaces, rendered to `docs/quality/capability-inventory.md`.
+- **Report audit manifests** — `create_strategy_report(return_result=True,
+  audit_manifest=True)` writes a sidecar JSON recording code commit, dependency
+  versions, and input hashes without copying raw data or credentials.
+- **Third-party notice inventory** — `THIRD_PARTY_NOTICES.md` records pinned
+  upstream commits and review status for empyrical/pyfolio/alphalens, checked
+  by `scripts/check_notices.py`.
 
 ### Release blockers
 
-- The human Alphalens license/NOTICE and provenance decision is still pending.
-  This Unreleased entry does not create a release claim, a third-party notice,
-  or a legal conclusion.
+- The human Alphalens license/NOTICE and provenance decision is still pending
+  (see `THIRD_PARTY_NOTICES.md` and `docs/quality/license-review.md`).
+- The factor-analysis platform baselines remain `candidate-only` until a human
+  approves them (see `docs/quality/factor-benchmark-approval.md`).
 
 ## [0.3.0] - unreleased (release candidate)
 
