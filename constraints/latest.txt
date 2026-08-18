@@ -1,0 +1,12 @@
+# Latest supported dependency combination for fincore.
+#
+# The latest resolver uses the same floors as pyproject.toml but lets pip
+# choose current releases, so CI exercises both ends of the declared range.
+# No upper bounds are imposed here; breaking new releases are caught by the
+# matrix and smoke jobs rather than guessed at.
+
+numpy>=1.24.0
+pandas>=1.5.0
+scipy>=1.3.0
+pytz>=2023.3
+packaging>=21.0
