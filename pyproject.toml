@@ -64,6 +64,7 @@ viz = [
 dev = [
   "pytest>=6", "pytest-xdist>=2", "pytest-cov>=2.10",
   "pytest-benchmark>=3.2", "pytest-sugar>=0.9", "parameterized>=0.7",
+  "hypothesis>=6.100",
   "ruff>=0.4", "mypy>=1.5", "types-requests>=2.25",
   "yfinance>=0.2", "requests>=2.25",
   "statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7", "PyPDF2>=3",
@@ -102,6 +103,7 @@ markers = [
     "integration_online: integration tests that require network access (never run in the release gate)",
     "unit: marks tests as unit tests",
     "serial: marks tests that must run without -n (flaky under pytest-xdist)",
+    "property: marks hypothesis property tests (bounded examples, deterministic seed)",
     "p0: marks tests as critical priority (core metrics, revenue-critical, security, compliance)",
     "p1: marks tests as high priority (frequently used features, important edge cases)",
     "p2: marks tests as medium priority (secondary features, admin functions)",
@@ -159,6 +161,22 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+# Staged typing policy (Task 10): contracts, risk and data are the first
+# annotated boundary.  Frozen legacy kernels (EVT/GARCH), the report renderers,
+# and the strict façades predate this policy; their untyped function bodies are
+# checked later when the boundary widens, so --check-untyped-defs does not flag
+# their pre-existing annotations today.
+[[tool.mypy.overrides]]
+module = [
+    "fincore.risk.evt",
+    "fincore.risk.garch",
+    "fincore.report.*",
+    "fincore.empyrical",
+    "fincore.utils.*",
+    "fincore._pyfolio_impl",
+]
+check_untyped_defs = false
 
 [tool.ruff]
 target-version = "py311"
