@@ -40,5 +40,4 @@ fincore's public surfaces declare their state in a machine-readable registry
 (`fincore.capabilities`) rendered as `docs/quality/capability-inventory.md`.
 States are `stable`, `experimental`, `provider_required`, and
 `not_implemented`. Consult that inventory before depending on a surface in
-production.
-
+ production.
