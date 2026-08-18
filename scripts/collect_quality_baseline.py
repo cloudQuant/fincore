@@ -21,6 +21,12 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
+# The checker (scripts/check_quality_snapshot.py) reads this exact version and
+# rejects any snapshot produced by a different collector.  Bump it whenever the
+# snapshot schema changes so old artifacts can never be mistaken for current
+# evidence.
+SCHEMA_VERSION = 1
+
 CACHE_PARTS = {
     ".git",
     ".mypy_cache",
@@ -225,7 +231,18 @@ def _run_checked(
 ) -> dict[str, Any]:
     package_before = _tracked_package_snapshot(copy_root, tracked_package_files)
     inventory_before = _inventory(copy_root)
-    command = [sys.executable, "-m", "pytest", "-o", "addopts=", *pytest_args]
+    # Baseline commands must never reuse the developer machine's lastfailed
+    # cache: stale node IDs are diagnostic residue, not failure evidence.
+    command = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        *pytest_args,
+    ]
     started = time.perf_counter()
     try:
         result = subprocess.run(
@@ -425,6 +442,7 @@ def main() -> int:
     dirty_provenance = _dirty_provenance(source_root)
     data: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),
+        "schema_version": SCHEMA_VERSION,
         "source": {
             "commit": _git_lines(source_root, "rev-parse", "HEAD")[0],
             **dirty_provenance,

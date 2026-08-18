@@ -14,6 +14,8 @@ def test_import_benchmark_does_not_break_later_monkeypatches() -> None:
             "pytest",
             "-o",
             "addopts=",
+            "-p",
+            "no:cacheprovider",
             "tests/test_import_time.py",
             "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gpd_xi_ge_1_raises_line_425",
             "-q",
