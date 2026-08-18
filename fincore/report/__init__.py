@@ -60,6 +60,7 @@ def create_strategy_report(
     rolling_window: int = 63,
     period: str = "daily",
     return_result: bool = False,
+    audit_manifest: bool = False,
 ) -> str | ReportArtifacts:
     """Generate a strategy report (HTML or PDF) based on the inputs you provide.
 
@@ -89,6 +90,12 @@ def create_strategy_report(
         and return a :class:`ReportArtifacts` (owned files, HTML content, and
         the precomputed model) instead of just the output path.  The default
         path-based return behavior is unchanged.
+    audit_manifest : bool, default False
+        Enhanced interface only.  When True together with ``return_result``,
+        write a sidecar JSON audit manifest (input shapes/hashes, code commit,
+        dependency versions) beside the report and expose it as
+        ``ReportArtifacts.manifest_path``.  The manifest never contains raw
+        returns, positions, transactions, credentials, or absolute local paths.
 
     Returns
     -------
@@ -153,7 +160,31 @@ def create_strategy_report(
         html = Path(path).read_text(encoding="utf-8")
 
     if return_result:
-        return ReportArtifacts(backend=backend, files=[Path(path)], html=html, model=model)
+        artifacts = ReportArtifacts(backend=backend, files=[Path(path)], html=html, model=model)
+        if audit_manifest:
+            from fincore import __version__ as fincore_version
+            from fincore.report.provenance import ReportProvenance
+
+            provenance = ReportProvenance.build(
+                code_version=fincore_version,
+                configuration={
+                    "title": title,
+                    "rolling_window": rolling_window,
+                    "period": period,
+                    "backend": backend,
+                },
+                inputs={
+                    "returns": returns,
+                    "benchmark_rets": benchmark_rets,
+                    "positions": positions,
+                    "transactions": transactions,
+                    "trades": trades,
+                },
+            )
+            manifest_path = Path(path).with_suffix(".manifest.json")
+            provenance.write(manifest_path)
+            artifacts.manifest_path = manifest_path
+        return artifacts
     return path
 
 

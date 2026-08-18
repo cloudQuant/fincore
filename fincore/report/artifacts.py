@@ -29,6 +29,7 @@ class ReportArtifacts:
     html: str | None = None
     model: ReportModel | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    manifest_path: Path | None = None
     _closed_resource_ids: set[int] = field(default_factory=set, init=False, repr=False)
 
     @property
