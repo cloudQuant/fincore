@@ -72,6 +72,9 @@ nav:
     - Visualization: guide/visualization.md
     - Portfolio Optimization: guide/optimization.md
     - Factor-analysis Migration: guide/factor-analysis.md
+    - Risk Validation: guide/risk-validation.md
+    - Reproducible Research: guide/reproducible-research.md
+    - Performance: guide/performance.md
   - API Reference:
     - Overview: api/index.md
     - fincore (top-level): api/fincore.md

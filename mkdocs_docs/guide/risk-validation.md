@@ -1,0 +1,77 @@
+# Risk validation
+
+fincore separates risk *estimation* (EVT, GARCH) from risk *validation*
+(out-of-sample backtesting). The enhanced layer in `fincore.risk.models` and
+`fincore.risk.backtesting` records what was forecast, under which convention
+and horizon, and whether realized outcomes pass, fail, or are statistically
+inconclusive.
+
+## Forecasting VaR and ES
+
+`forecast_var` and `forecast_es` return an immutable `RiskEstimate`:
+
+```python
+import numpy as np
+import pandas as pd
+
+from fincore.risk import forecast_es, forecast_var
+
+rng = np.random.default_rng(7)
+returns = pd.Series(rng.normal(0.0, 0.02, 500))
+
+var = forecast_var(returns, method="historical", confidence_level=0.99)
+es = forecast_es(returns, method="historical", confidence_level=0.99)
+
+print(var.estimate)   # negative under the losses_negative convention
+print(var.sign_convention)
+```
+
+`method` can be `historical` (empirical quantile), `evt` (extreme-value
+theory) or `garch` (conditional volatility). The underlying EVT/GARCH kernels
+in `fincore.risk.evt` and `fincore.risk.garch` are unchanged.
+
+## Backtesting VaR
+
+```python
+# -- minimal-backtest
+from fincore.risk import backtest_var
+
+forecast = pd.Series([-0.02, -0.02, -0.02], index=pd.date_range("2024-01-01", periods=3, tz="UTC"))
+realized = pd.Series([-0.01, -0.03, -0.02], index=forecast.index)
+
+result = backtest_var(forecast, realized, confidence_level=0.99)
+
+assert result.observations == 3
+assert result.exceptions == 1
+# -- minimal-backtest
+```
+
+`backtest_var` reports the exception count plus two standard statistics:
+
+- **Unconditional coverage** (Kupiec): does the exception rate match the
+  chosen confidence level?
+- **Independence** (Christoffersen): are exceptions clustered?
+
+Both are likelihood-ratio tests with an explicit null hypothesis. When the
+sample is too small to be meaningful (fewer than 3 observations, or fewer than
+5 expected exceptions), the result is `inconclusive` rather than a silent pass.
+
+## Backtesting ES (experimental)
+
+Expected Shortfall backtesting is an open problem. The first fincore
+implementation uses a bootstrap calibration score (mean realised shortfall in
+the exception tail versus the forecast ES) and reports status `experimental`;
+it is not a compliance statement.
+
+```python
+from fincore.risk import backtest_es
+
+result = backtest_es(forecast, realized, confidence_level=0.975)
+print(result.status)   # "experimental"
+```
+
+## Sign convention
+
+All enhanced risk results use the `losses_negative` convention: a VaR/ES
+estimate is a negative number, and an exception occurs when the realized return
+falls strictly below the forecast threshold.

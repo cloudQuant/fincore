@@ -1,0 +1,38 @@
+{
+  "schema": "fincore-risk-backtest-cases-v1",
+  "cases": [
+    {
+      "name": "three-observation-single-exception",
+      "index": ["2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z"],
+      "forecast": [-0.02, -0.02, -0.02],
+      "realized": [-0.01, -0.03, -0.02],
+      "confidence_level": 0.99,
+      "observations": 3,
+      "exceptions": 1
+    },
+    {
+      "name": "five-observation-four-exceptions",
+      "index": [
+        "2024-01-01T00:00:00Z",
+        "2024-01-02T00:00:00Z",
+        "2024-01-03T00:00:00Z",
+        "2024-01-04T00:00:00Z",
+        "2024-01-05T00:00:00Z"
+      ],
+      "forecast": [-0.01, -0.01, -0.01, -0.01, -0.01],
+      "realized": [-0.02, -0.03, -0.005, -0.015, -0.02],
+      "confidence_level": 0.95,
+      "observations": 5,
+      "exceptions": 4
+    },
+    {
+      "name": "no-exceptions",
+      "index": ["2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "2024-01-03T00:00:00Z", "2024-01-04T00:00:00Z"],
+      "forecast": [-0.05, -0.05, -0.05, -0.05],
+      "realized": [-0.01, -0.02, 0.01, -0.03],
+      "confidence_level": 0.99,
+      "observations": 4,
+      "exceptions": 0
+    }
+  ]
+}
