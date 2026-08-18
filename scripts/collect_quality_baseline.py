@@ -29,6 +29,7 @@ SCHEMA_VERSION = 1
 
 CACHE_PARTS = {
     ".git",
+    ".hypothesis",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",
