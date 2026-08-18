@@ -113,3 +113,8 @@ viz_returns.html
 
 # Examples output directory
 examples/output/
+
+# JoyinCode local runtime (not part of the fincore distribution)
+.joyincode/
+.omo/
+AGENTS.md
