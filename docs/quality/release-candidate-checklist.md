@@ -83,13 +83,14 @@ blocks the release; it must never be replaced by an assertion.
 | 6.2 | Round-trip benchmarks: same budget | `scripts/run_round_trip_benchmarks.py` | **[CI artifact]** |
 | 6.3 | Benchmark runner schema gates | `tests/benchmarks/test_rolling_regression.py`, `test_round_trip_scaling.py` | **[CI artifact]** |
 | 6.4 | Uploaded benchmark payloads for provenance review | CI artifact name `benchmark-comparison` | **[CI artifact]** |
-| 6.5 | Factor-analysis benchmark gate (small/medium/event scenarios, digest-before-performance, <= 25% time/RSS regression) | `benchmarks/bench_factor_analysis.py`, `scripts/run_factor_benchmarks.py`, `scripts/compare_benchmarks.py --digest-gate sha256`, `tests/benchmarks/test_factor_analysis_performance.py` | **pending human baseline approval** — `benchmarks/factor-analysis-baseline.json` keeps `approved_by`/`approved_at` empty until a human reviews the candidate; no performance-release claim is made before then |
+| 6.5 | Factor-analysis benchmark gate (small/medium/event scenarios, digest-before-performance, <= 25% time/RSS regression) | `benchmarks/bench_factor_analysis.py`, `scripts/run_factor_benchmarks.py`, `scripts/compare_benchmarks.py --digest-gate sha256`, `tests/benchmarks/test_factor_analysis_performance.py` | **pending human baseline approval** — platform-labelled baselines in `benchmarks/factor-analysis-baselines/` keep `approval.status="pending"` until a human reviews a candidate; `select_baseline()` returns only an approved matching-platform baseline, so factor performance is release-blocking only once approval exists (`docs/quality/factor-benchmark-approval.md`) |
 
 ## 7. Provenance / legal evidence
 
 | # | Item | Evidence location | Status gate |
 |---|------|-------------------|-------------|
 | 7.1 | Upstream source register (files, headers, commits, transformations) | `docs/upstream-provenance.md` | human review |
+| 7.1a | Machine-readable third-party notice inventory (pinned commits, review status) | `THIRD_PARTY_NOTICES.md`; `scripts/check_notices.py`; `tests/packaging/test_notices.py` | `python scripts/check_notices.py` |
 | 7.2 | Third-party notice decision (pyfolio root LICENSE = MIT text vs Apache-2.0 headers in source; no conclusion made here) | `docs/upstream-provenance.md`; `docs/compatibility/pyfolio-0.9.6.md` | **human/license review — pending** |
 | 7.3 | Historical 1.0-era claims quarantined as snapshots | `CHANGELOG.md` "Historical snapshots"; `docs/迭代计划/README.md`; header note in `docs/已实现函数索引.md` | local |
 | 7.4 | Alphalens notice decision (root MIT text vs file-level Quantopian Apache-2.0 headers; destination file headers/NOTICE unresolved) | `docs/upstream-provenance.md`; `docs/compatibility/alphalens-0.4.0-cloudquant.md` | **human/license review — pending** |
