@@ -16,7 +16,7 @@ bottleneck>=1.6.0
 
 # Named-zone factor-analysis tests exercise the tzdata fallback branch on
 # every platform; Windows additionally has no system IANA database.
-tzdata>=2024.1
+tzdata>=2026.3
 
 # Visualization and report (for pyfolio, tearsheets, viz, PDF report tests)
 matplotlib>=3.3
