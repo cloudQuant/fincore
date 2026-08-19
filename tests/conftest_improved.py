@@ -118,9 +118,9 @@ def cleanup_module_cache():
     """
     # Setup: save original state
     try:
-        import fincore.empyrical as empyrical
+        import fincore._registry as registry
 
-        original_cache = copy.copy(empyrical._MODULE_CACHE)
+        original_cache = copy.copy(registry._MODULE_CACHE)
     except (ImportError, AttributeError):
         # If module not loaded yet, nothing to save
         original_cache = {}
@@ -129,10 +129,10 @@ def cleanup_module_cache():
 
     # Teardown: restore original state
     try:
-        import fincore.empyrical as empyrical
+        import fincore._registry as registry
 
-        empyrical._MODULE_CACHE.clear()
-        empyrical._MODULE_CACHE.update(original_cache)
+        registry._MODULE_CACHE.clear()
+        registry._MODULE_CACHE.update(original_cache)
     except (ImportError, AttributeError):
         pass
 

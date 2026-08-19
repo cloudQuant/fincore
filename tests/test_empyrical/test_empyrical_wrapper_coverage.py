@@ -6,14 +6,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.empyrical import (
-    Empyrical,
+from fincore._empyrical_legacy import (
     _legacy_aligned_binary_adapter,
     _legacy_beta_adapter,
     _legacy_calmar_adapter,
     _legacy_capture_adapter,
     _legacy_conditional_alpha_beta_adapter,
 )
+from fincore.empyrical import Empyrical
 
 
 def _returns(n: int = 120, seed: int = 1) -> pd.Series:
@@ -251,26 +251,26 @@ class TestLegacyAdapters:
 
 class TestLegacyKernels:
     def test_legacy_max_drawdown_empty(self):
-        from fincore.empyrical import _legacy_max_drawdown
+        from fincore._empyrical_legacy import _legacy_max_drawdown
 
         result = _legacy_max_drawdown(np.array([]))
         assert np.isnan(result)
 
     def test_legacy_max_drawdown_with_out(self):
-        from fincore.empyrical import _legacy_max_drawdown
+        from fincore._empyrical_legacy import _legacy_max_drawdown
 
         out = np.empty(())
         result = _legacy_max_drawdown(np.array([0.01, -0.02, 0.03]), out=out)
         assert np.isfinite(result)
 
     def test_legacy_sharpe_ratio_empty(self):
-        from fincore.empyrical import _legacy_sharpe_ratio
+        from fincore._empyrical_legacy import _legacy_sharpe_ratio
 
         result = _legacy_sharpe_ratio(np.array([0.01]))
         assert np.isnan(result)
 
     def test_legacy_sharpe_ratio_with_out(self):
-        from fincore.empyrical import _legacy_sharpe_ratio
+        from fincore._empyrical_legacy import _legacy_sharpe_ratio
 
         out = np.empty(())
         result = _legacy_sharpe_ratio(np.array([0.01, -0.02, 0.03, 0.01]), out=out)

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import ValidationError
 
 DECIMAL_PLACES = 4
 
@@ -57,10 +58,10 @@ class TestAdvancedRatios(TestCase):
         assert result > 0, f"Expected positive Sterling ratio, got {result}"
 
     def test_sterling_ratio_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected."""
         emp = Empyrical()
-        result = emp.sterling_ratio(self.empty_returns)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            emp.sterling_ratio(self.empty_returns)
 
     # Test Burke Ratio
     def test_burke_ratio(self):
@@ -78,10 +79,10 @@ class TestAdvancedRatios(TestCase):
         assert result > 0, f"Expected positive Burke ratio, got {result}"
 
     def test_burke_ratio_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected."""
         emp = Empyrical()
-        result = emp.burke_ratio(self.empty_returns)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            emp.burke_ratio(self.empty_returns)
 
     # Test Kappa 3 Ratio
     def test_kappa_three_ratio(self):
@@ -99,10 +100,10 @@ class TestAdvancedRatios(TestCase):
         assert result > 0, f"Expected positive Kappa 3 ratio, got {result}"
 
     def test_kappa_three_ratio_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected."""
         emp = Empyrical()
-        result = emp.kappa_three_ratio(self.empty_returns)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            emp.kappa_three_ratio(self.empty_returns)
 
     # Test Adjusted Sharpe Ratio
     def test_adjusted_sharpe_ratio(self):

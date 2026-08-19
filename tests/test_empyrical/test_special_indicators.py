@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
-from fincore.exceptions import DataAlignmentError
+from fincore.exceptions import DataAlignmentError, ValidationError
 
 DECIMAL_PLACES = 4
 
@@ -93,10 +93,10 @@ class TestSpecialIndicators(TestCase):
         assert isinstance(result, (float, np.floating))
 
     def test_var_excess_return_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected."""
         emp = Empyrical()
-        result = emp.var_excess_return(self.empty_returns)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(ValidationError, "empty"):
+            emp.var_excess_return(self.empty_returns)
 
     # Test regression annual return (RAR)
     def test_regression_annual_return(self):
@@ -134,10 +134,10 @@ class TestSpecialIndicators(TestCase):
             assert result > 0.9, f"Expected R-cubed close to 1, got {result}"
 
     def test_r_cubed_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected at the alignment boundary."""
         emp = Empyrical()
-        result = emp.r_cubed(self.empty_returns, self.multi_year_market)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(DataAlignmentError, "common labels"):
+            emp.r_cubed(self.empty_returns, self.multi_year_market)
 
     # Test with different cutoffs
     def test_conditional_sharpe_custom_cutoff(self):

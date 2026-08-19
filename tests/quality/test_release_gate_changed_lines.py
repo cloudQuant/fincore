@@ -398,7 +398,7 @@ def test_legacy_capture_adapters() -> None:
 
 
 def test_legacy_risk_adapters() -> None:
-    import fincore.empyrical as empyrical_module
+    from fincore._empyrical_legacy import _legacy_rolling_window
 
     index = pd.bdate_range("2024-01-01", periods=60)
     returns = pd.Series(np.random.default_rng(7).normal(0.001, 0.01, len(index)), index=index)
@@ -409,11 +409,11 @@ def test_legacy_risk_adapters() -> None:
     result = Empyrical.max_drawdown(returns, out=out)
     assert result == out.item()
     with pytest.raises(ValueError, match="0-length window"):
-        empyrical_module._legacy_rolling_window(returns.to_numpy(), 0)
+        _legacy_rolling_window(returns.to_numpy(), 0)
     with pytest.raises(IndexError, match="scalar"):
-        empyrical_module._legacy_rolling_window(np.array(1.0), 1)
+        _legacy_rolling_window(np.array(1.0), 1)
     with pytest.raises(IndexError, match="window length"):
-        empyrical_module._legacy_rolling_window(np.ones(3), 4)
+        _legacy_rolling_window(np.ones(3), 4)
 
 
 # =============================================================================

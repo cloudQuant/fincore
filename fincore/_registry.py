@@ -17,6 +17,7 @@ Method types:
 
 from __future__ import annotations
 
+import importlib
 from dataclasses import dataclass
 from typing import Literal
 
@@ -293,6 +294,21 @@ MODULE_PATHS = {
 }
 
 
+# Lazy module resolver — shared by empyrical.py and _empyrical_legacy.py to
+# resolve a module alias like ``'_ratios'`` to the real metrics submodule.
+_MODULE_CACHE: dict = {}
+
+
+def _resolve_module(alias: str):
+    """Return the actual module for a registry alias like ``'_ratios'``."""
+    try:
+        return _MODULE_CACHE[alias]
+    except KeyError:
+        mod = importlib.import_module(MODULE_PATHS[alias])
+        _MODULE_CACHE[alias] = mod
+        return mod
+
+
 # Frozen from empyrical 0.6.0.  These strings live in source rather than being
 # loaded from a test fixture so the installed package remains self-contained.
 EMPYRICAL_SIGNATURES = {
@@ -479,28 +495,28 @@ def _binding_for(name: str) -> Binding:
 
 def _legacy_adapter_for(name: str) -> str:
     if name == "annual_volatility":
-        return "fincore.empyrical:_legacy_annual_volatility_adapter"
+        return "fincore._empyrical_legacy:_legacy_annual_volatility_adapter"
     if name == "beta":
-        return "fincore.empyrical:_legacy_beta_adapter"
+        return "fincore._empyrical_legacy:_legacy_beta_adapter"
     if name in {"alpha", "alpha_beta", "beta_fragility_heuristic"}:
-        return "fincore.empyrical:_legacy_aligned_binary_adapter"
+        return "fincore._empyrical_legacy:_legacy_aligned_binary_adapter"
     if name in {"capture", "up_capture", "down_capture", "up_down_capture"}:
-        return "fincore.empyrical:_legacy_capture_adapter"
+        return "fincore._empyrical_legacy:_legacy_capture_adapter"
     if name in {"up_alpha_beta", "down_alpha_beta"}:
-        return "fincore.empyrical:_legacy_conditional_alpha_beta_adapter"
+        return "fincore._empyrical_legacy:_legacy_conditional_alpha_beta_adapter"
     if name == "calmar_ratio":
-        return "fincore.empyrical:_legacy_calmar_adapter"
+        return "fincore._empyrical_legacy:_legacy_calmar_adapter"
     if name == "conditional_value_at_risk":
-        return "fincore.empyrical:_legacy_conditional_value_at_risk_adapter"
+        return "fincore._empyrical_legacy:_legacy_conditional_value_at_risk_adapter"
     if name == "value_at_risk":
-        return "fincore.empyrical:_legacy_value_at_risk_adapter"
+        return "fincore._empyrical_legacy:_legacy_value_at_risk_adapter"
     if name == "perf_attrib":
-        return "fincore.empyrical:_legacy_perf_attrib_adapter"
+        return "fincore._empyrical_legacy:_legacy_perf_attrib_adapter"
     if name in {"roll_up_capture", "roll_down_capture", "roll_up_down_capture"}:
-        return "fincore.empyrical:_legacy_capture_rolling_adapter"
+        return "fincore._empyrical_legacy:_legacy_capture_rolling_adapter"
     if name in _FACTORY_NAMES:
-        return "fincore.empyrical:_legacy_rolling_adapter"
-    return "fincore.empyrical:_legacy_identity_adapter"
+        return "fincore._empyrical_legacy:_legacy_rolling_adapter"
+    return "fincore._empyrical_legacy:_legacy_identity_adapter"
 
 
 METRIC_REGISTRY: dict[tuple[Surface, str, str], MetricSpec] = {}
@@ -662,6 +678,39 @@ for _name, _kernel_ref in _CLASS_METRICS_EXTRA_KERNELS.items():
             out_policy=_out_policy,
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Dual-instance facade methods — auto-fill returns / factor_returns from
+# instance state.  Historically hand-written @_dual_method wrappers in
+# empyrical.py; now registered so @_populate_from_registry emits
+# _MetricMethod descriptors and the Empyrical class stays a thin interface.
+# ---------------------------------------------------------------------------
+def _dual_spec(name: str, mod_alias: str, func_name: str, binding: Binding) -> MetricSpec:
+    return MetricSpec(
+        surface="empyrical_class",
+        public_name=name,
+        variant="stateful-enhanced",
+        kernel_ref=f"{MODULE_PATHS[mod_alias]}:{func_name}",
+        adapter_ref="fincore._dispatch:enhanced_identity_adapter",
+        signature_manifest_key=None,
+        binding=binding,
+        validation_profile="enhanced",
+        result_contract_key=f"fincore-0.3.x:{name}",
+        result_projection="identity",
+        out_policy="unsupported",
+    )
+
+
+for _name, (_mod_alias, _func_name) in DUAL_RETURNS_REGISTRY.items():
+    if ("empyrical_class", _name, "stateful-enhanced") in METRIC_REGISTRY:
+        continue
+    _register(_dual_spec(_name, _mod_alias, _func_name, "returns"))
+
+for _name, (_mod_alias, _func_name) in DUAL_RETURNS_FACTOR_REGISTRY.items():
+    if ("empyrical_class", _name, "stateful-enhanced") in METRIC_REGISTRY:
+        continue
+    _register(_dual_spec(_name, _mod_alias, _func_name, "returns_factor"))
 
 
 _CONTEXT_KERNELS = {

@@ -9,7 +9,7 @@ import pandas as pd
 from numpy.testing import assert_almost_equal
 
 from fincore.empyrical import Empyrical
-from fincore.exceptions import ValidationError
+from fincore.exceptions import DataAlignmentError, ValidationError
 
 DECIMAL_PLACES = 4
 
@@ -97,10 +97,10 @@ class TestReturnMetrics(TestCase):
             assert not result.isnull().any()
 
     def test_annual_active_return_by_year_empty(self):
-        """Test that empty returns give empty Series."""
+        """Test that empty returns are rejected at the alignment boundary."""
         emp = Empyrical()
-        result = emp.annual_active_return_by_year(self.empty_returns, self.multi_year_benchmark)
-        assert len(result) == 0
+        with self.assertRaisesRegex(DataAlignmentError, "common labels"):
+            emp.annual_active_return_by_year(self.empty_returns, self.multi_year_benchmark)
 
     def test_annual_active_return_by_year_consistency(self):
         """Test consistency with annual_return_by_year."""

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.empyrical import Empyrical
+from fincore.exceptions import DataAlignmentError
 
 DECIMAL_PLACES = 4
 
@@ -123,10 +124,10 @@ class TestAnnualAlphaBeta(TestCase):
         assert isinstance(result, (float, np.floating))
 
     def test_residual_risk_empty(self):
-        """Test that empty returns give NaN."""
+        """Test that empty returns are rejected at the alignment boundary."""
         emp = Empyrical()
-        result = emp.residual_risk(self.empty_returns, self.short_market)
-        assert np.isnan(result)
+        with self.assertRaisesRegex(DataAlignmentError, "common labels"):
+            emp.residual_risk(self.empty_returns, self.short_market)
 
     # Integration tests
     def test_annual_metrics_consistency(self):

@@ -698,7 +698,7 @@ def create_interesting_times_tear_sheet(
     """
     Generate a number of returns plots around interesting points in time.
     """
-    rets_interesting = pyfolio_instance.extract_interesting_date_ranges(returns)
+    rets_interesting = _call_explicit_metric(pyfolio_instance, "extract_interesting_date_ranges", returns)
 
     if not rets_interesting:
         warnings.warn("Passed returns do not overlap with any interesting times.", UserWarning, stacklevel=2)
@@ -713,7 +713,7 @@ def create_interesting_times_tear_sheet(
 
     if benchmark_rets is not None:
         returns = clip_returns_to_benchmark(returns, benchmark_rets)
-        bmark_interesting = pyfolio_instance.extract_interesting_date_ranges(benchmark_rets)
+        bmark_interesting = _call_explicit_metric(pyfolio_instance, "extract_interesting_date_ranges", benchmark_rets)
 
     num_plots = len(rets_interesting)
     num_rows = int((num_plots + 1) / 2.0)
