@@ -644,6 +644,59 @@ def plot_cumulative_returns_by_quantile(
     return _axes_result(ax, axes, 1, auto_scalar=True)
 
 
+def _legacy_plot_cumulative_returns_values(
+    cumulative: pd.Series,
+    period: object,
+    title: str | None,
+    ax: object,
+) -> Any:
+    """Render a portfolio cumulative-return curve precomputed during assembly."""
+
+    values = _as_series(cumulative, "cumulative")
+    pyplot, _, _, _ = _plot_dependencies()
+    axes, _ = _normalize_axes(ax, 1, pyplot, figsize=(18, 6))
+    if len(values):
+        values.name = None
+    values.plot(ax=axes[0], lw=3, color="forestgreen", alpha=0.6)
+    axes[0].set(
+        ylabel="Cumulative Returns",
+        title=f"Portfolio Cumulative Return ({period} Fwd Period)" if title is None else title,
+        xlabel="",
+    )
+    axes[0].axhline(1.0, linestyle="-", color="black", lw=1)
+    return _axes_result(ax, axes, 1, auto_scalar=True)
+
+
+def _legacy_plot_cumulative_returns_by_quantile_values(
+    cumulative: pd.DataFrame,
+    period: object,
+    ax: object,
+) -> Any:
+    """Render precomputed quantile cumulative curves without recomputing."""
+
+    data = _as_frame(cumulative, "cumulative")
+    pyplot, cm, ticker, _ = _plot_dependencies()
+    axes, _ = _normalize_axes(ax, 1, pyplot, figsize=(18, 6))
+    data.plot(lw=2, ax=axes[0], cmap=cm.coolwarm)
+    axes[0].legend()
+    finite = data.to_numpy(dtype=float, copy=False)
+    lower = float(np.nanmin(finite)) if np.isfinite(finite).any() else 0.0
+    upper = float(np.nanmax(finite)) if np.isfinite(finite).any() else 1.0
+    if lower == upper:
+        lower, upper = lower - 1.0, upper + 1.0
+    axes[0].set(
+        ylabel="Log Cumulative Returns",
+        title=f"Cumulative Return by Quantile\n                    ({period} Period Forward Return)",
+        xlabel="",
+        yscale="symlog",
+        yticks=np.linspace(lower, upper, 5),
+        ylim=(lower, upper),
+    )
+    axes[0].yaxis.set_major_formatter(ticker.ScalarFormatter())
+    axes[0].axhline(1.0, linestyle="-", color="black", lw=1)
+    return _axes_result(ax, axes, 1, auto_scalar=True)
+
+
 def _quantile_average_series(values: pd.DataFrame, quantile: object, statistic: str) -> pd.Series | None:
     """Select the one visual series for a quantile/statistic from source-shaped data."""
 

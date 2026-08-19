@@ -101,14 +101,16 @@ def validate_returns(
             actual_format=type(returns).__name__,
         )
 
-    if not allow_empty and len(returns) == 0:
+    is_empty = len(returns) == 0
+
+    if not allow_empty and is_empty:
         raise InsufficientDataError(
             f"{name} cannot be empty",
             required_length=1,
             actual_length=0,
         )
 
-    if len(returns) < min_length:
+    if len(returns) < min_length and not (allow_empty and is_empty):
         raise InsufficientDataError(
             f"{name} must have at least {min_length} observations",
             required_length=min_length,
