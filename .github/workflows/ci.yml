@@ -152,6 +152,31 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,alphalens,pyfolio]"
+          pip install -r requirements-test.txt
+
+      - name: Run Alphalens compatibility suites
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python -m pytest -o addopts=''
+          tests/compat/alphalens tests/test_factor_analysis
+          -q --tb=short --maxfail=0
+
+  integration-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"

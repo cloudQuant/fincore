@@ -44,7 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Release blockers
 
 - The human Alphalens license/NOTICE and provenance decision is still pending
-  (see `THIRD_PARTY_NOTICES.md` and `docs/quality/license-review.md`).
+  (see `THIRD_PARTY_NOTICES.md` and `docs/quality/license-review.md`); this
+  entry does not establish a release claim or legal conclusion.
 - The factor-analysis platform baselines remain `candidate-only` until a human
   approves them (see `docs/quality/factor-benchmark-approval.md`).
 
