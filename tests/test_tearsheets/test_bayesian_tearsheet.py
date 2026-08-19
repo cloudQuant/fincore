@@ -284,3 +284,65 @@ def test_plot_stoch_vol_creates_trace_from_data_line_153(monkeypatch):
     ax = tb.plot_stoch_vol(MockEmp(), data, trace=None, ax=None)
     assert ax is not None
     plt.close("all")
+
+
+def test_plot_best_with_all_columns_present_and_no_burn():
+    """Cover the branch where every derived column already exists and burn is 0."""
+    import matplotlib.pyplot as plt
+
+    rng = np.random.RandomState(2)
+    n = 200
+    trace = pd.DataFrame(
+        {
+            "group1_mean": rng.normal(0.0, 0.001, n),
+            "group2_mean": rng.normal(0.0002, 0.001, n),
+            "group1_std": rng.uniform(0.005, 0.02, n),
+            "group2_std": rng.uniform(0.005, 0.02, n),
+            "difference of means": rng.normal(0.0002, 0.001, n),
+            "group1_annual_volatility": rng.uniform(0.1, 0.3, n),
+            "group2_annual_volatility": rng.uniform(0.1, 0.3, n),
+            "group1_sharpe": rng.normal(0.1, 0.5, n),
+            "group2_sharpe": rng.normal(0.1, 0.5, n),
+            "effect size": rng.normal(0.1, 0.2, n),
+        }
+    )
+
+    emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+    _, axs = plt.subplots(ncols=2, nrows=4)
+    tb.plot_best(emp, trace=trace, burn=0, axs=axs)
+
+
+def test_plot_best_without_burn_uses_full_trace():
+    import matplotlib.pyplot as plt
+
+    rng = np.random.RandomState(3)
+    n = 100
+    trace = pd.DataFrame(
+        {
+            "group1_mean": rng.normal(0.0, 0.001, n),
+            "group2_mean": rng.normal(0.0002, 0.001, n),
+            "group1_std": rng.uniform(0.005, 0.02, n),
+            "group2_std": rng.uniform(0.005, 0.02, n),
+        }
+    )
+
+    emp = Empyrical(pd.Series([0.0, 0.0], index=pd.date_range("2020-01-01", periods=2)))
+    _, axs = plt.subplots(ncols=2, nrows=4)
+    tb.plot_best(emp, trace=trace, burn=0, axs=axs)
+
+
+def test_plot_bayes_cone_without_plot_train_len():
+    import matplotlib.pyplot as plt
+
+    idx_train = pd.date_range("2020-01-01", periods=60, freq="D")
+    idx_test = pd.date_range("2020-03-01", periods=20, freq="D")
+
+    rng = np.random.RandomState(4)
+    returns_train = pd.Series(rng.normal(0, 0.01, len(idx_train)), index=idx_train)
+    returns_test = pd.Series(rng.normal(0, 0.01, len(idx_test)), index=idx_test)
+    ppc = rng.normal(0, 0.01, size=(200, len(idx_test)))
+
+    emp = Empyrical(returns_train)
+    _, ax = plt.subplots()
+    score = tb.plot_bayes_cone(emp, returns_train, returns_test, ppc, plot_train_len=None, ax=ax)
+    assert isinstance(score, float)

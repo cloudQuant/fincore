@@ -86,3 +86,40 @@ def test_backtest_es_reports_experimental_status() -> None:
 
     assert result.method == "es"
     assert result.status == "experimental"
+
+
+def test_align_rejects_non_datetime_index() -> None:
+    with pytest.raises(ValueError, match="DatetimeIndex"):
+        backtest_var(pd.Series([-0.02]), pd.Series([-0.03]))
+
+
+def test_kupiec_lr_non_positive_observations() -> None:
+    assert kupiec_lr(0, 0, confidence_level=0.99) == 0.0
+
+
+def test_christoffersen_lr_single_observation() -> None:
+    assert christoffersen_lr(np.array([1])) == 0.0
+
+
+def test_var_backtest_rejects_invalid_confidence_level() -> None:
+    forecast = pd.Series([-0.02], index=pd.date_range("2024-01-01", periods=1))
+    with pytest.raises(ValueError, match="confidence_level"):
+        backtest_var(forecast, forecast, confidence_level=1.5)
+
+
+def test_es_backtest_rejects_invalid_confidence_level() -> None:
+    forecast = pd.Series([-0.02], index=pd.date_range("2024-01-01", periods=1))
+    with pytest.raises(ValueError, match="confidence_level"):
+        backtest_es(forecast, forecast, confidence_level=0.0)
+
+
+def test_var_backtest_fails_when_exceptions_exceed_significance() -> None:
+    rng = np.random.default_rng(1)
+    n = 500
+    idx = pd.date_range("2024-01-01", periods=n, freq="B")
+    realized = pd.Series(rng.normal(0.0, 0.02, n), index=idx)
+    forecast = pd.Series(-0.005, index=idx)  # far too loose for 99% VaR
+
+    result = backtest_var(forecast, realized, confidence_level=0.99)
+
+    assert result.status == "fail"

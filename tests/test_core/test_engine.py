@@ -141,3 +141,49 @@ class TestRollingEngine:
         assert isinstance(results, dict)
         assert "sharpe" in results
         assert "volatility" in results
+
+
+class TestRegisteredRollingTargets:
+    """Directly exercise the registered rolling metric wrappers.
+
+    The shared-moments fast path in ``RollingEngine.compute`` bypasses these
+    wrappers, so they are covered here through their registry-bound callable.
+    """
+
+    def test_direct_rolling_sharpe(self, returns):
+        from fincore.core.engine import _rolling_sharpe
+
+        result = _rolling_sharpe(returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
+        assert len(result) > 0
+
+    def test_direct_rolling_volatility(self, returns):
+        from fincore.core.engine import _rolling_volatility
+
+        result = _rolling_volatility(returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
+        assert (result > 0).all()
+
+    def test_direct_rolling_beta(self, returns, factor_returns):
+        from fincore.core.engine import _rolling_beta
+
+        result = _rolling_beta(
+            returns, factor_returns=factor_returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0)
+        )
+        assert len(result) > 0
+
+    def test_direct_rolling_beta_requires_factor(self, returns):
+        from fincore.core.engine import _rolling_beta
+
+        with pytest.raises(ValueError, match="factor_returns required"):
+            _rolling_beta(returns, factor_returns=None, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
+
+    def test_direct_rolling_sortino(self, returns):
+        from fincore.core.engine import _rolling_sortino
+
+        result = _rolling_sortino(returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
+        assert len(result) > 0
+
+    def test_direct_rolling_mean_return(self, returns):
+        from fincore.core.engine import _rolling_mean_return
+
+        result = _rolling_mean_return(returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
+        assert len(result) > 0

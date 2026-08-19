@@ -165,6 +165,14 @@ def test_all_factor_workflows_are_source_tree_read_only(tmp_path: Path) -> None:
     environment.pop("PYTHONPATH", None)
     environment["MPLBACKEND"] = "Agg"
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
+    # The disposable checkout runs the package source as a subprocess.  Under
+    # pytest-cov the COV_CORE_* variables make that subprocess collect coverage
+    # against the copied tree, so its ~15k lines would be reported a second time
+    # as 0%-covered and halve the aggregate total.  Strip them here: this gate
+    # only verifies the source tree stays read-only, it must not feed coverage.
+    for cov_key in list(environment):
+        if cov_key.startswith("COV_CORE"):
+            environment.pop(cov_key, None)
     protected_roots = [
         checkout,
         source_package,

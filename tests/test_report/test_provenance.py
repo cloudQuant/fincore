@@ -100,3 +100,65 @@ def test_report_provenance_never_leaks_credentials() -> None:
     assert "secret-value" not in payload
     assert "0.01" not in payload
     assert "api_key" not in payload
+
+
+def test_sanitize_configuration_strips_absolute_and_relative_paths() -> None:
+    provenance = ReportProvenance.build(
+        code_version="0.3.0",
+        configuration={
+            "output": "/tmp/report.html",
+            "home": "~/data",
+            "windows_path": "\\temp\\out.txt",
+            "keep_me": 42,
+        },
+        inputs={},
+    )
+    payload = provenance.to_dict()
+    assert "output" not in payload["configuration"]
+    assert "home" not in payload["configuration"]
+    assert "windows_path" not in payload["configuration"]
+    assert payload["configuration"]["keep_me"] == 42
+
+
+def test_git_commit_falls_back_to_unknown_when_git_missing(monkeypatch) -> None:
+    import subprocess
+
+    def boom(*args, **kwargs):
+        raise OSError("git not installed")
+
+    monkeypatch.setattr(subprocess, "run", boom)
+    provenance = ReportProvenance.build(code_version="0.3.0", configuration={}, inputs={})
+    assert provenance.code_commit == "unknown"
+
+
+def test_input_record_handles_dataframe_and_scalar() -> None:
+    provenance = ReportProvenance.build(
+        code_version="0.3.0",
+        configuration={},
+        inputs={
+            "frame": pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]}),
+            "scalar": 7,
+            "none_value": None,
+        },
+    )
+    payload = provenance.to_dict()
+    assert payload["inputs"]["frame"]["kind"] == "dataframe"
+    assert payload["inputs"]["frame"]["rows"] == 3
+    assert payload["inputs"]["frame"]["columns"] == 2
+    assert payload["inputs"]["frame"]["sha256"]
+    assert payload["inputs"]["scalar"]["kind"] == "int"
+    assert "none_value" not in payload["inputs"]
+
+
+def test_input_record_series_includes_time_bounds() -> None:
+    idx = pd.date_range("2024-01-01", periods=3)
+    provenance = ReportProvenance.build(
+        code_version="0.3.0",
+        configuration={},
+        inputs={"returns": pd.Series([0.01, -0.01, 0.02], index=idx)},
+    )
+    payload = provenance.to_dict()
+    rec = payload["inputs"]["returns"]
+    assert rec["kind"] == "series"
+    assert rec["start"] == "2024-01-01 00:00:00"
+    assert rec["end"] == "2024-01-03 00:00:00"

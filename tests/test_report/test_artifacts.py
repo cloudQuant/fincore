@@ -102,3 +102,47 @@ def test_html_context_artifacts_have_stable_lifecycle() -> None:
     assert artifacts.html is not None
     assert "Cumulative Returns" in artifacts.html
     artifacts.close()
+
+
+def test_exit_raises_when_close_fails_without_active_exception() -> None:
+    class Broken:
+        def close(self):
+            raise RuntimeError("close-failed")
+
+    artifacts = ReportArtifacts(backend="test", figures=[Broken()])
+
+    with pytest.raises(RuntimeError, match="close-failed"):
+        artifacts.__exit__(None, None, None)
+
+
+def test_exit_adds_note_when_close_fails_during_exception() -> None:
+    class Broken:
+        def close(self):
+            raise RuntimeError("close-failed")
+
+    artifacts = ReportArtifacts(backend="test", figures=[Broken()])
+    exc = RuntimeError("body-error")
+
+    assert artifacts.__exit__(RuntimeError, exc, None) is False
+    assert any("close() also failed" in note for note in getattr(exc, "__notes__", []))
+
+
+def test_close_handles_missing_matplotlib(monkeypatch) -> None:
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "matplotlib.figure":
+            raise ImportError("matplotlib unavailable")
+        return real_import(name, *args, **kwargs)
+
+    events = []
+
+    class Resource:
+        def close(self):
+            events.append("closed")
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    ReportArtifacts(backend="test", figures=[Resource()]).close()
+    assert events == ["closed"]
