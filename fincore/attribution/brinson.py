@@ -169,33 +169,41 @@ def brinson_results(
     return pd.DataFrame(results)
 
 
+def _carino_k(rp: float, rb: float) -> float:
+    """Carino linking constant for a single period."""
+    if abs(rp - rb) < 1e-15:
+        return 1.0 / (1.0 + rp)
+    return float((np.log1p(rp) - np.log1p(rb)) / (rp - rb))
+
+
 def brinson_cumulative(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,
     portfolio_weights: pd.DataFrame | np.ndarray,
     benchmark_weights: pd.DataFrame | np.ndarray,
 ) -> dict[str, float]:
-    """Calculate cumulative Brinson attribution.
+    """Calculate cumulative Brinson attribution using Carino geometric linking.
 
-    This aggregates per-period Brinson effects (arithmetic sum across periods).
-    It also reports geometric cumulative portfolio/benchmark returns computed
-    from per-period weighted returns.
+    Multi-period attribution must compound geometrically: the arithmetic
+    per-period effects are mapped onto the geometric active return via the
+    Carino linking constant ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)``
+    so the linked effects reconcile to ``(1+R_p)/(1+R_b) - 1``.
 
     Parameters
     ----------
     portfolio_returns : pd.Series or np.ndarray
-        Portfolio returns.
+        Portfolio returns (T periods x N sectors).
     benchmark_returns : pd.Series or np.ndarray
         Benchmark returns.
     portfolio_weights : pd.DataFrame
-        Portfolio weights (final weights for cumulative).
+        Portfolio weights (T x N).
     benchmark_weights : pd.DataFrame
-        Benchmark weights (final weights for cumulative).
+        Benchmark weights (T x N).
 
     Returns
     -------
     dict
-        Cumulative attribution breakdown.
+        Cumulative (Carino-linked) attribution breakdown.
     """
     rp = np.asarray(portfolio_returns, dtype=float)
     rb = np.asarray(benchmark_returns, dtype=float)
@@ -213,29 +221,38 @@ def brinson_cumulative(
     if not (rp.shape == rb.shape == wp.shape == wb.shape):
         raise ValueError("portfolio_returns, benchmark_returns, and weights must have consistent shapes.")
 
-    allocation = 0.0
-    selection = 0.0
-    interaction = 0.0
-    total = 0.0
-
     portfolio_period = np.sum(wp * rp, axis=1)
     benchmark_period = np.sum(wb * rb, axis=1)
 
-    for t in range(rp.shape[0]):
+    n_periods = rp.shape[0]
+    allocation = np.empty(n_periods)
+    selection = np.empty(n_periods)
+    interaction = np.empty(n_periods)
+    for t in range(n_periods):
         attr = brinson_attribution(rp[t], rb[t], wp[t], wb[t])
-        allocation += float(attr["allocation"])
-        selection += float(attr["selection"])
-        interaction += float(attr["interaction"])
-        total += float(attr["total"])
+        allocation[t] = float(attr["allocation"])
+        selection[t] = float(attr["selection"])
+        interaction[t] = float(attr["interaction"])
+
+    k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
+    ksum = float(k.sum())
+
+    if ksum == 0.0:
+        alloc_cum = sel_cum = inter_cum = 0.0
+    else:
+        w_k = k / ksum
+        alloc_cum = float(np.sum(w_k * allocation))
+        sel_cum = float(np.sum(w_k * selection))
+        inter_cum = float(np.sum(w_k * interaction))
 
     portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
     benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
 
     return {
-        "allocation": allocation,
-        "selection": selection,
-        "interaction": interaction,
-        "total": total,
+        "allocation": alloc_cum,
+        "selection": sel_cum,
+        "interaction": inter_cum,
+        "total": alloc_cum + sel_cum + inter_cum,
         "portfolio_cumulative": portfolio_cum,
         "benchmark_cumulative": benchmark_cum,
     }

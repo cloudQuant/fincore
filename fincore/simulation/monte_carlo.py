@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from fincore.simulation.base import SimResult, compute_statistics
-from fincore.simulation.paths import gbm_from_returns, geometric_brownian_motion
+from fincore.simulation.base import SimResult, compute_statistics, estimate_parameters
+from fincore.simulation.paths import geometric_brownian_motion
 from fincore.simulation.scenarios import scenario_table, stress_test
 
 if TYPE_CHECKING:
@@ -86,20 +86,24 @@ class MonteCarlo:
         """
         rng = np.random.default_rng(seed) if seed is not None else None
 
-        # Generate paths
-        paths = gbm_from_returns(
-            returns=self.returns,
-            horizon=horizon,
+        # Use explicit drift/volatility when provided; otherwise estimate.
+        if drift is None or volatility is None:
+            est_mu, est_sigma = estimate_parameters(self.returns, 252)
+            drift = drift if drift is not None else est_mu
+            volatility = volatility if volatility is not None else est_sigma
+
+        # Generate cumulative-return paths from annualized parameters.
+        price_paths = geometric_brownian_motion(
+            S0=1.0,
+            mu=drift,
+            sigma=volatility,
+            T=horizon / 252,
+            dt=1 / 252,
             n_paths=n_paths,
-            frequency=252,
             rng=rng,
+            antithetic=antithetic,
         )
-
-        # Apply antithetic variates if requested
-        if antithetic:
-            from fincore.simulation.paths import antithetic_variates
-
-            paths = antithetic_variates(paths)
+        paths = price_paths[:, 1:] - 1.0
 
         stats = compute_statistics(paths)
         return SimResult(paths, stats)
@@ -189,13 +193,13 @@ class MonteCarlo:
         """
         rng = np.random.default_rng(seed) if seed is not None else None
 
-        # Estimate parameters if not provided
+        # Estimate parameters if not provided (annualized).
         if mu is None or sigma is None:
             from fincore.simulation.base import estimate_parameters
 
             est_mu, est_sigma = estimate_parameters(self.returns)
-            mu = mu if mu is not None else est_mu / 252
-            sigma = sigma if sigma is not None else est_sigma / np.sqrt(252)
+            mu = mu if mu is not None else est_mu
+            sigma = sigma if sigma is not None else est_sigma
 
         # Generate price paths
         paths = geometric_brownian_motion(
@@ -274,15 +278,12 @@ class MonteCarlo:
         """
         rng = np.random.default_rng(seed) if seed is not None else None
 
-        # Convert daily parameters
+        # mu/sigma are annualized; geometric_brownian_motion applies dt scaling.
         dt = 1 / 252
-        mu_daily = mu / 252
-        sigma_daily = sigma / np.sqrt(252)
-
         paths = geometric_brownian_motion(
             S0=S0,
-            mu=mu_daily,
-            sigma=sigma_daily,
+            mu=mu,
+            sigma=sigma,
             T=horizon / 252,
             dt=dt,
             n_paths=n_paths,

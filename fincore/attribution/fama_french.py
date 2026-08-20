@@ -39,6 +39,40 @@ FF4MOM_FACTORS = ["MKT", "SMB", "HML", "MOM"]
 _MIN_STD = 1e-15
 
 
+def _newey_west_covariance(X: np.ndarray, residuals: np.ndarray, nlags: int) -> np.ndarray:
+    """Newey-West (HAC) sandwich covariance ``(X'X)^{-1} S (X'X)^{-1}``.
+
+    ``S`` is the Bartlett-kernel weighted autocovariance matrix with weights
+    ``w_j = 1 - j/(L+1)``.
+    """
+    k = X.shape[1]
+    XtX_inv = np.linalg.inv(X.T @ X)
+    e = residuals
+    S = np.zeros((k, k))
+    for j in range(nlags + 1):
+        w = 1.0 if j == 0 else 1.0 - j / (nlags + 1.0)
+        if j == 0:
+            S += w * (X.T @ ((e**2)[:, None] * X))
+        else:
+            Xt = X[j:]
+            Xt_j = X[:-j]
+            et = e[j:]
+            et_j = e[:-j]
+            S_j = (Xt * et[:, None]).T @ (Xt_j * et_j[:, None])
+            S += w * (S_j + S_j.T)
+    return np.asarray(XtX_inv @ S @ XtX_inv, dtype=float)
+
+
+def _wls_covariance(
+    X: np.ndarray, residuals: np.ndarray, weights: np.ndarray, n: int, k: int
+) -> np.ndarray:
+    """Weighted-least-squares covariance ``scale * (X'WX)^{-1}``."""
+    W = np.diag(weights)
+    XtWX_inv = np.linalg.inv(X.T @ W @ X)
+    scale = float(np.sum(weights * residuals**2) / max(n - k, 1))
+    return np.asarray(scale * XtWX_inv, dtype=float)
+
+
 class FamaFrenchFitResult(TypedDict):
     """Result of Fama-French factor model regression.
 
@@ -111,8 +145,9 @@ class FamaFrenchModel:
         factor_data: pd.DataFrame,
         method: str = "ols",
         newey_west_lags: int = 1,
+        weights: pd.Series | np.ndarray | None = None,
     ) -> FamaFrenchFitResult:
-        """Estimate factor model using OLS regression.
+        """Estimate factor model using OLS or WLS regression.
 
         Parameters
         ----------
@@ -121,9 +156,11 @@ class FamaFrenchModel:
         factor_data : pd.DataFrame
             Factor returns with columns matching factor definitions.
         method : str, default "ols"
-            Estimation method. Options: 'ols', 'wls', 'gls'.
+            Estimation method. Options: 'ols', 'wls'.
         newey_west_lags : int, default 1
-            Number of lags for Newey-West standard errors.
+            Number of lags for Newey-West standard errors (OLS only).
+        weights : pd.Series or np.ndarray, optional
+            Observation weights for WLS; required when ``method="wls"``.
 
         Returns
         -------
@@ -149,55 +186,45 @@ class FamaFrenchModel:
         # Add constant for intercept  — shape (N, K+1)
         X_with_const = np.column_stack([np.ones(X.shape[0]), X])
 
-        # OLS / WLS regression
-        if method in ("ols", "wls"):
+        if method == "ols":
             beta_coeffs, _ss_res, _, _ = np.linalg.lstsq(X_with_const, y, rcond=None)
-
-            # Compute residuals explicitly (lstsq only returns ss_res for overdetermined systems)
-            y_pred = X_with_const @ beta_coeffs
-            residuals = y - y_pred
-
-            # Calculate R-squared
-            ss_tot = np.sum((y - np.mean(y)) ** 2)
-            ss_res = np.sum(residuals**2)
-            r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
+        elif method == "wls":
+            if weights is None:
+                raise ValueError("method='wls' requires a weights argument")
+            w = np.asarray(weights, dtype=float).ravel()
+            if len(w) != len(y):
+                raise ValueError("weights length must match the number of observations")
+            sqrt_w = np.sqrt(w)
+            beta_coeffs, _ss_res, _, _ = np.linalg.lstsq(
+                X_with_const * sqrt_w[:, None], y * sqrt_w, rcond=None
+            )
         else:
             raise ValueError(f"Unknown method: {method}")
+
+        # Compute residuals explicitly.
+        y_pred = X_with_const @ beta_coeffs
+        residuals = y - y_pred
+
+        # Calculate R-squared
+        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        ss_res = np.sum(residuals**2)
+        r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
 
         # Extract alpha and betas
         alpha: float = float(beta_coeffs[0])
         betas: dict[str, float] = dict(zip(self.factors, beta_coeffs[1:].tolist(), strict=False))
 
-        # Calculate standard errors
+        # Standard errors
         n = len(y)
         k = len(beta_coeffs)
-        resid_var = np.sum(residuals**2) / max(n - k, 1)
-
-        # Newey-West standard errors
-        if newey_west_lags > 0:
-            acorr_vals: list[float] = []
-            for lag in range(1, newey_west_lags + 1):
-                if len(residuals) > lag:
-                    resid_prev = residuals[:-lag]
-                    resid_next = residuals[lag:]
-                    if np.std(resid_prev) < _MIN_STD or np.std(resid_next) < _MIN_STD:
-                        acorr_vals.append(0.0)
-                    else:
-                        with np.errstate(invalid="ignore", divide="ignore"):
-                            corr = np.corrcoef(resid_prev, resid_next)[0, 1]
-                        acorr_vals.append(float(corr) if np.isfinite(corr) else 0.0)
-                else:
-                    acorr_vals.append(0.0)
-
-            # Newey-West HAC adjustment factor
-            nw_factor = 1.0
-            for j, rho_j in enumerate(acorr_vals):
-                weight = 1 - (j + 1) / (newey_west_lags + 1)
-                nw_factor += 2 * weight * rho_j
-
-            std_errors = np.sqrt(resid_var * nw_factor / n) * np.ones(k)
+        if method == "wls":
+            cov = _wls_covariance(X_with_const, residuals, np.asarray(weights, dtype=float).ravel(), n, k)
+            std_errors = np.sqrt(np.diag(cov))
+        elif newey_west_lags > 0:
+            cov = _newey_west_covariance(X_with_const, residuals, newey_west_lags)
+            std_errors = np.sqrt(np.diag(cov))
         else:
-            # Simple OLS standard errors
+            resid_var = np.sum(residuals**2) / max(n - k, 1)
             std_errors = np.sqrt(np.diag(resid_var * np.linalg.inv(X_with_const.T @ X_with_const)))
 
         # Calculate t-statistics and p-values

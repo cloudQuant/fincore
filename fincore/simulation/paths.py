@@ -34,6 +34,7 @@ def geometric_brownian_motion(
     n_paths: int,
     rng: np.random.Generator | None = None,
     seed: int | None = None,
+    antithetic: bool = False,
 ) -> np.ndarray:
     """Generate price paths using Geometric Brownian Motion.
 
@@ -63,10 +64,13 @@ def geometric_brownian_motion(
         Random number generator.
     seed : int, optional
         Random seed for reproducibility.
+    antithetic : bool, default False
+        When True, generate the paired ``-Z`` paths from the same random stream,
+        doubling the number of paths (returns ``2 * n_paths`` paths).
 
     Returns
     -------
-    np.ndarray, shape (n_paths, n_steps)
+    np.ndarray, shape (n_paths, n_steps) or (2*n_paths, n_steps)
         Simulated price paths.
     """
     if seed is not None:
@@ -75,8 +79,6 @@ def geometric_brownian_motion(
         rng = np.random.default_rng()
 
     n_steps = int(T / dt)
-    paths = np.zeros((n_paths, n_steps + 1))
-    paths[:, 0] = S0
 
     # Pre-compute constants
     drift = (mu - 0.5 * sigma**2) * dt
@@ -84,6 +86,12 @@ def geometric_brownian_motion(
 
     # Generate all random numbers at once (vectorized)
     Z = rng.standard_normal((n_paths, n_steps))
+    if antithetic:
+        Z = np.concatenate([Z, -Z], axis=0)
+
+    n_total = Z.shape[0]
+    paths = np.zeros((n_total, n_steps + 1))
+    paths[:, 0] = S0
 
     # Simulate paths
     for t in range(1, n_steps + 1):
@@ -134,22 +142,19 @@ def gbm_from_returns(
     if len(ret_arr) == 0:
         raise ValueError("No valid returns for simulation")
 
-    # Estimate parameters
+    # Estimate annualized parameters
     mu, sigma = estimate_parameters(ret_arr, frequency)
 
-    # Convert to daily parameters
-    dt = 1.0 / frequency
-    mu_daily = mu / frequency
-    sigma_daily = sigma / np.sqrt(frequency)
-
-    # Start from 1 (for returns) or 0 (for log returns)
+    # Start from 1 (for returns); dt is the per-step length in years.
     S0 = 1.0
+    dt = 1.0 / frequency
 
-    # Generate price paths
+    # geometric_brownian_motion expects annualized mu/sigma and applies the
+    # single dt scaling internally.
     price_paths = geometric_brownian_motion(
         S0=S0,
-        mu=mu_daily,
-        sigma=sigma_daily,
+        mu=mu,
+        sigma=sigma,
         T=horizon / frequency,
         dt=dt,
         n_paths=n_paths,

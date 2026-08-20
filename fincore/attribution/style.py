@@ -300,11 +300,11 @@ def _calculate_momentum(
     pd.DataFrame
         Momentum scores (1 if positive, 0 if negative).
     """
-    # Cumulative returns over window
-    cum_returns = (1 + returns).cumsum()
+    # Geometric cumulative returns over the full history.
+    cum_returns = (1.0 + returns).cumprod()
 
-    # Momentum: position relative to window periods ago
-    momentum = cum_returns.shift(window) / cum_returns.shift(window) - 1
+    # Momentum: relative change over the trailing window.
+    momentum = cum_returns / cum_returns.shift(window) - 1.0
 
     # Current momentum signal
     current_momentum = momentum.iloc[-1]
@@ -527,12 +527,13 @@ def calculate_regression_attribution(
         pr_valid = pr[valid_mask]
         sr_valid = sr[valid_mask]
 
-        if np.std(pr_valid) < 1e-15 or np.std(sr_valid) < 1e-15:
+        if np.std(sr_valid) < 1e-15:
             style_beta = 0.0
         else:
             with np.errstate(invalid="ignore", divide="ignore"):
-                corr = np.corrcoef(pr_valid, sr_valid)[0, 1]
-            style_beta = float(corr) if np.isfinite(corr) else 0.0
+                cov = float(np.cov(pr_valid, sr_valid, ddof=1)[0, 1])
+                var = float(np.var(sr_valid, ddof=1))
+            style_beta = cov / var if np.isfinite(cov) and np.isfinite(var) and var > 0 else 0.0
 
         # Average style return * beta as contribution
         avg_style_ret = float(np.mean(sr_valid))

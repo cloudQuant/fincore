@@ -90,7 +90,7 @@ def test_brinson_results_single_period_from_1d_inputs():
     assert df["period"].tolist() == ["0"]
 
 
-def test_brinson_cumulative_matches_sum_of_period_effects_and_reports_geometric_returns():
+def test_brinson_cumulative_uses_carino_linking_and_reports_geometric_returns():
     rp = np.array([[0.02, 0.01], [0.00, 0.03]], dtype=float)
     rb = np.array([[0.01, 0.005], [0.01, 0.02]], dtype=float)
     wp = np.array([[0.6, 0.4], [0.5, 0.5]], dtype=float)
@@ -98,16 +98,22 @@ def test_brinson_cumulative_matches_sum_of_period_effects_and_reports_geometric_
 
     cum = brinson_cumulative(rp, rb, wp, wb)
 
-    r0 = brinson_attribution(rp[0], rb[0], wp[0], wb[0])
-    r1 = brinson_attribution(rp[1], rb[1], wp[1], wb[1])
-    assert np.isclose(cum["allocation"], r0["allocation"] + r1["allocation"])
-    assert np.isclose(cum["selection"], r0["selection"] + r1["selection"])
-    assert np.isclose(cum["interaction"], r0["interaction"] + r1["interaction"])
-    assert np.isclose(cum["total"], r0["total"] + r1["total"])
-
-    # Geometric cumulative of per-period weighted returns.
     port_period = np.sum(wp * rp, axis=1)
     bench_period = np.sum(wb * rb, axis=1)
+
+    def carino_k(a: float, b: float) -> float:
+        if abs(a - b) < 1e-15:
+            return 1.0 / (1.0 + a)
+        return (np.log1p(a) - np.log1p(b)) / (a - b)
+
+    K = float(sum(carino_k(a, b) for a, b in zip(port_period, bench_period, strict=True)))
+    total = cum["allocation"] + cum["selection"] + cum["interaction"]
+
+    # Carino identity: exp(K * total) - 1 == geometric active return.
+    geometric_active = np.prod(1.0 + port_period) / np.prod(1.0 + bench_period) - 1.0
+    assert np.isclose(np.expm1(K * total), geometric_active, rtol=1e-12, atol=1e-12)
+
+    # Geometric cumulative of per-period weighted returns is preserved.
     assert np.isclose(cum["portfolio_cumulative"], float(np.prod(1.0 + port_period) - 1.0))
     assert np.isclose(cum["benchmark_cumulative"], float(np.prod(1.0 + bench_period) - 1.0))
 

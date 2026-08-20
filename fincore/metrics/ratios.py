@@ -1114,23 +1114,24 @@ def deflated_sharpe_ratio(
     sr_hat = np.mean(excess) / std_excess if std_excess > 1e-15 else 0.0
 
     gamma3 = _sample_skewness(excess)
-    gamma4 = _sample_excess_kurtosis(excess)
+    gamma4 = _sample_excess_kurtosis(excess) + 3.0  # ordinary kurtosis (normal = 3)
+
+    # Asymptotic variance of the Sharpe-ratio estimator.
+    sr_var = 1.0 - gamma3 * sr_hat + (gamma4 - 1) / 4.0 * sr_hat**2
 
     N = max(num_trials, 1)
     if N <= 1:
         sr_star = 0.0
     else:
-        log_N = np.log(N)
-        if log_N < 1e-10:
-            sr_star = 0.0
-        else:
-            sr_star = np.sqrt(2.0 * log_N) - (np.log(np.pi) + np.log(log_N)) / (2.0 * np.sqrt(2.0 * log_N))
+        gamma_euler = 0.5772156649015329
+        z_inv_N = norm.ppf(1.0 - 1.0 / N)
+        z_inv_Ne = norm.ppf(1.0 - 1.0 / (N * np.e))
+        sr_star = np.sqrt(max(sr_var, 0.0)) * ((1.0 - gamma_euler) * z_inv_N + gamma_euler * z_inv_Ne)
 
-    denom_sq = 1.0 - gamma3 * sr_hat + (gamma4 - 1) / 4.0 * sr_hat**2
-    if denom_sq <= 0:
+    if sr_var <= 0:
         return 1.0 if sr_hat > sr_star else 0.0
 
-    z = (sr_hat - sr_star) * np.sqrt(T - 1) / np.sqrt(denom_sq)
+    z = (sr_hat - sr_star) * np.sqrt(T - 1) / np.sqrt(sr_var)
 
     return float(norm.cdf(z))
 
