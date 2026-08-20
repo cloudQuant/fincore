@@ -13,13 +13,18 @@ import numpy as np
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 __all__ = [
+    "AlignmentError",
     "DataAlignmentError",
     "DependencyError",
     "FincoreError",
+    "InputContractError",
     "InsufficientDataError",
     "InvalidPeriodError",
     "MissingDataError",
+    "NumericalConvergenceError",
     "NumericalError",
+    "ResourceLifecycleError",
+    "ResultContractError",
     "UnsupportedFormatError",
     "ValidationError",
     "check_dependencies",
@@ -337,6 +342,68 @@ class DependencyError(FincoreError, ImportError):
             dependency=data.get("dependency"),
             extra=data.get("extra"),
         )
+
+
+# ---------------------------------------------------------------------------
+# Unified enhanced contract errors (iteration 0042)
+# ---------------------------------------------------------------------------
+
+
+class _ContextualError(FincoreError):
+    """Base for errors that carry operation context.
+
+    Enhanced operations attach ``operation_id``, ``parameter``, ``path`` and
+    ``profile`` so every contract violation can be traced back to the operation
+    that raised it.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        operation_id: str | None = None,
+        parameter: str | None = None,
+        path: str | None = None,
+        profile: str | None = None,
+    ):
+        self.message = message
+        self.operation_id = operation_id
+        self.parameter = parameter
+        self.path = path
+        self.profile = profile
+        super().__init__(message)
+
+    def __str__(self) -> str:
+        details = [self.message]
+        if self.operation_id is not None:
+            details.append(f"  operation: {self.operation_id}")
+        if self.parameter is not None:
+            details.append(f"  parameter: {self.parameter}")
+        if self.path is not None:
+            details.append(f"  path: {self.path}")
+        if self.profile is not None:
+            details.append(f"  profile: {self.profile}")
+        return "\n".join(details)
+
+
+class InputContractError(_ContextualError):
+    """Raised when an enhanced input violates its declared contract."""
+
+
+class AlignmentError(_ContextualError):
+    """Raised when time-series alignment fails under an enhanced profile."""
+
+
+class NumericalConvergenceError(_ContextualError):
+    """Raised when an iterative/numerical kernel fails to converge."""
+
+
+class ResultContractError(_ContextualError):
+    """Raised when a kernel produces a value that violates the result contract."""
+
+
+class ResourceLifecycleError(_ContextualError):
+    """Raised when an artifact/resource is used after close or double-closed."""
 
 
 # ---------------------------------------------------------------------------
