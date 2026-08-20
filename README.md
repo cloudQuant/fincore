@@ -1,7 +1,7 @@
 # fincore | Quantitative Performance & Risk Analytics
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-0.3.0-blueviolet.svg" alt="Version 0.3.0"/>
+    <img src="https://img.shields.io/badge/version-0.4.0.dev0-blueviolet.svg" alt="Version 0.4.0.dev0"/>
     <img src="https://img.shields.io/badge/status-Beta-orange.svg" alt="Status: Beta"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Platforms"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions"/>
@@ -20,11 +20,11 @@
 
 **fincore** is a Python library for quantitative finance analytics — 150+ financial metrics, portfolio optimization, Monte Carlo simulation, and performance attribution. It continues the **empyrical** stack under active maintenance by [cloudQuant](https://github.com/cloudQuant).
 
-Current version: **0.3.0** (Beta). Python **3.11+** is required; this is a documented breaking change relative to empyrical, which supports older interpreters.
+Current version: **0.4.0.dev0** (Beta). Python **3.11+** is required; this is a documented breaking change relative to empyrical, which supports older interpreters.
 
 ### Three API surfaces
 
-fincore 0.3.0 exposes clearly separated surfaces. One name does not silently switch semantics between them:
+fincore 0.4.0.dev0 exposes clearly separated surfaces. One name does not silently switch semantics between them:
 
 | Surface | What it is | Guarantee |
 |---------|------------|-----------|
@@ -243,11 +243,11 @@ third-party notice or legal conclusion is implied by this integration.
 
 **fincore** 是面向量化金融的 Python 分析库 — 150+ 金融指标、组合优化、蒙特卡洛模拟和绩效归因。它延续 **empyrical** 分析栈，由 [cloudQuant](https://github.com/cloudQuant) 持续维护。
 
-当前版本 **0.3.0**（Beta）。要求 **Python 3.11+**；这是相对 empyrical（支持更老解释器）的明确 breaking change。
+当前版本 **0.4.0.dev0**（Beta）。要求 **Python 3.11+**；这是相对 empyrical（支持更老解释器）的明确 breaking change。
 
 ### 三层 API
 
-fincore 0.3.0 暴露三个严格分离的界面，同名函数不会在界面之间静默切换语义：
+fincore 0.4.0.dev0 暴露三个严格分离的界面，同名函数不会在界面之间静默切换语义：
 
 | 界面 | 内容 | 保证 |
 |------|------|------|

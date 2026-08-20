@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-This changelog reports version **0.3.0** (the current release candidate).
+This changelog reports version **0.4.0.dev0** (the current development version).
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -49,10 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The factor-analysis platform baselines remain `candidate-only` until a human
   approves them (see `docs/quality/factor-benchmark-approval.md`).
 
-## [0.3.0] - unreleased (release candidate)
+## [0.3.0]
 
-Current version, release candidate pending final acceptance. Package maturity:
-**Beta** (classifier `Development Status :: 4 - Beta`).
+Package maturity: **Beta** (classifier `Development Status :: 4 - Beta`).
 No claim of "Stable" or "100% coverage" is made anywhere in this project.
 
 ### Added
