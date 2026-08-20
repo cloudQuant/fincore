@@ -1,14 +1,14 @@
 # Current Quality Baseline
 
-Generated: `2026-08-18T20:01:50.006178+00:00`
+Generated: `2026-08-20T16:46:38.002233+00:00`
 
 ## Provenance
 
-- Source commit: `6cb26ab8328299a8f1a55aa977da4d8119e952a8`
+- Source commit: `4f2b6c65ec346b3a60c7eefed6cc1b994f1db687`
 - Dirty state: `False`
 - Tracked diff SHA256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 - Untracked manifest SHA256: `44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a`
-- Disposable-copy manifest SHA256: `c805bb98ea789e7d6a1916b3bbb75e0b5a71a5af042d021afa522c435ac8f1a9`
+- Disposable-copy manifest SHA256: `7fe2327c3ac35a695864179d90d792221cc19306e92d9c88cfbbbedc34a034f7`
 - Manifest exclusions: `docs/quality/current-baseline.json, docs/quality/current-baseline.md`
 
 ## Environment
@@ -23,15 +23,15 @@ Generated: `2026-08-18T20:01:50.006178+00:00`
 
 | Run | Selector | Discovered | Selected | Passed | Skipped | Warnings | Duration | Exit |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| trusted-baseline | `not slow and not integration` | 4495 | 4479 | 4457 | 22 | 97 | 441.418s | 0 |
-| serial | `serial` | 4495 | 7 | 6 | 1 | 2 | 6.660s | 0 |
-| non-serial-single | `not serial and not slow and not integration` | 4495 | 4473 | 4451 | 22 | 98 | 438.296s | 0 |
-| non-serial-xdist | `not serial and not slow and not integration` | 4495 | 4473 | 4451 | 22 | 112 | 206.492s | 0 |
-| branch-coverage | `not slow and not integration` | 4495 | 4479 | 4457 | 22 | 98 | 775.343s | 0 |
+| trusted-baseline | `not slow and not integration` | 5092 | 5076 | 5054 | 22 | 98 | 445.195s | 0 |
+| serial | `serial` | 5092 | 7 | 6 | 1 | 2 | 7.296s | 0 |
+| non-serial-single | `not serial and not slow and not integration` | 5092 | 5070 | 5048 | 22 | 99 | 440.891s | 0 |
+| non-serial-xdist | `not serial and not slow and not integration` | 5092 | 5070 | 5048 | 22 | 113 | 217.458s | 0 |
+| branch-coverage | `not slow and not integration` | 5092 | 5076 | 5054 | 22 | 99 | 779.345s | 0 |
 
 ## Branch Coverage
 
-- Total: `55.0%`
+- Total: `97.0%`
 
 ## Integrity
 
