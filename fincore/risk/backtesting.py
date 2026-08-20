@@ -15,7 +15,7 @@ from typing import Any, Mapping
 
 import numpy as np
 import pandas as pd
-from scipy import stats
+from scipy import special, stats
 
 STATUS_PASS = "pass"
 STATUS_FAIL = "fail"
@@ -42,16 +42,24 @@ def _chi2_pvalue(lr: float, df: int) -> float:
 
 
 def kupiec_lr(observations: int, exceptions: int, confidence_level: float) -> float:
-    """Kupiec proportion-of-failures likelihood-ratio statistic."""
+    """Kupiec proportion-of-failures likelihood-ratio statistic.
+
+    The likelihood-ratio is non-negative by construction::
+
+        LR_POF = 2 * [ x*ln(x/(n*p)) + (n-x)*ln((n-x)/(n*(1-p))) ]
+
+    where ``n`` is the number of observations, ``x`` the number of exceptions
+    and ``p = 1 - confidence_level``.  ``scipy.special.xlogy`` applies the
+    continuous limit ``0 * log(0) = 0`` so ``x = 0`` and ``x = n`` are finite.
+    """
     if observations <= 0:
         return 0.0
     p = 1.0 - confidence_level
-    observed = exceptions / observations
-    if observed in (0.0, 1.0):
-        return math.inf
-    term1 = (observations - exceptions) * math.log((1.0 - observed) / (1.0 - p))
-    term2 = exceptions * math.log(observed / p)
-    return -2.0 * (term1 + term2)
+    n = int(observations)
+    x = int(exceptions)
+    term1 = float(special.xlogy(x, x / (n * p)))
+    term2 = float(special.xlogy(n - x, (n - x) / (n * (1.0 - p))))
+    return max(0.0, 2.0 * (term1 + term2))
 
 
 def _transition_counts(exceptions: np.ndarray) -> tuple[int, int, int, int]:

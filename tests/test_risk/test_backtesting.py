@@ -46,8 +46,10 @@ def test_var_backtest_rejects_duplicate_timestamps() -> None:
         backtest_var(forecast, forecast, confidence_level=0.99)
 
 
-def test_kupiec_lr_zero_exceptions_is_infinite() -> None:
-    assert np.isinf(kupiec_lr(100, 0, confidence_level=0.99))
+def test_kupiec_lr_zero_exceptions_is_finite() -> None:
+    lr = kupiec_lr(100, 0, confidence_level=0.99)
+    assert np.isfinite(lr)
+    assert lr >= 0.0
 
 
 def test_kupiec_lr_matches_expected_rate() -> None:

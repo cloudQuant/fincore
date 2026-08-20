@@ -20,12 +20,20 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy import optimize
+from scipy import optimize, stats
 
 if TYPE_CHECKING:
     import pandas as pd
 
-__all__ = ["EGARCH", "GARCH", "GJRGARCH", "GARCHResult", "conditional_var", "forecast_volatility"]
+__all__ = [
+    "EGARCH",
+    "GARCH",
+    "GJRGARCH",
+    "GARCHResult",
+    "conditional_es",
+    "conditional_var",
+    "forecast_volatility",
+]
 
 
 @dataclass
@@ -42,12 +50,19 @@ class GARCHResult:
         Standardized residuals.
     log_likelihood : float
         Maximized log-likelihood value.
+    model_type : str
+        One of ``garch``, ``egarch`` or ``gjrgarch``; controls the forecast
+        recursion.
+    converged : bool
+        Whether the optimizer reported successful convergence.
     """
 
     params: dict[str, float]
     conditional_var: np.ndarray
     residuals: np.ndarray
     log_likelihood: float
+    model_type: str = "garch"
+    converged: bool = True
 
     def forecast(self, horizon: int = 1) -> np.ndarray:
         """Forecast future conditional variances.
@@ -69,19 +84,36 @@ class GARCHResult:
         omega = self.params["omega"]
         alpha = self.params.get("alpha", 0.0)
         beta = self.params.get("beta", 0.0)
-        persistence = alpha + beta
+        gamma = self.params.get("gamma", 0.0)
 
-        # Last conditional variance and shock (epsilon_t)
-        last_var = self.conditional_var[-1]
-        last_eps = self.residuals[-1] * np.sqrt(last_var)
+        last_var = float(self.conditional_var[-1])
+        last_resid = float(self.residuals[-1])
 
-        for h in range(horizon):
-            if h == 0:
-                # One-step ahead GARCH(1,1): E_t[sigma_{t+1}^2]
-                forecasts[h] = omega + alpha * (last_eps**2) + beta * last_var
-            else:
-                # Multi-step recursion: E_t[sigma_{t+h+1}^2] = omega + (alpha+beta) * E_t[sigma_{t+h}^2]
+        if self.model_type == "garch":
+            last_eps = last_resid * np.sqrt(last_var)
+            persistence = alpha + beta
+            forecasts[0] = omega + alpha * last_eps**2 + beta * last_var
+            for h in range(1, horizon):
                 forecasts[h] = omega + persistence * forecasts[h - 1]
+        elif self.model_type == "gjrgarch":
+            last_eps = last_resid * np.sqrt(last_var)
+            indicator = 1.0 if last_eps < 0 else 0.0
+            persistence = alpha + 0.5 * gamma + beta
+            forecasts[0] = omega + (alpha + gamma * indicator) * last_eps**2 + beta * last_var
+            for h in range(1, horizon):
+                forecasts[h] = omega + persistence * forecasts[h - 1]
+        elif self.model_type == "egarch":
+            last_z = last_resid
+            last_log_s2 = np.log(last_var) if last_var > 0 else 0.0
+            drift = alpha * np.sqrt(2.0 / np.pi)
+            log_f0 = omega + alpha * np.abs(last_z) + gamma * last_z + beta * last_log_s2
+            forecasts[0] = np.exp(log_f0)
+            log_prev = log_f0
+            for h in range(1, horizon):
+                log_prev = omega + drift + beta * log_prev
+                forecasts[h] = np.exp(log_prev)
+        else:  # pragma: no cover - model_type is validated at construction
+            raise ValueError(f"unknown model_type: {self.model_type}")
 
         return forecasts
 
@@ -115,6 +147,13 @@ class GARCH:
         q: int = 1,
         mean_model: str = "zero",
     ):
+        if p != 1 or q != 1:
+            raise ValueError(
+                f"GARCH currently implements only the (1, 1) order; got (p={p}, q={q}). "
+                "Higher-order models are not yet supported."
+            )
+        if mean_model not in ("zero", "constant"):
+            raise ValueError(f"mean_model must be 'zero' or 'constant'; got {mean_model!r}")
         self.p = p
         self.q = q
         self.mean_model = mean_model
@@ -196,6 +235,8 @@ class GARCH:
             conditional_var=cond_var,
             residuals=residuals,
             log_likelihood=-result.fun,
+            model_type="garch",
+            converged=bool(result.success),
         )
 
     def _neg_log_likelihood(
@@ -271,6 +312,11 @@ class EGARCH:
     """
 
     def __init__(self, p: int = 1, q: int = 1):
+        if p != 1 or q != 1:
+            raise ValueError(
+                f"EGARCH currently implements only the (1, 1) order; got (p={p}, q={q}). "
+                "Higher-order models are not yet supported."
+            )
         self.p = p
         self.q = q
 
@@ -338,6 +384,8 @@ class EGARCH:
             conditional_var=cond_var,
             residuals=residuals,
             log_likelihood=-result.fun,
+            model_type="egarch",
+            converged=bool(result.success),
         )
 
     def _neg_log_likelihood(
@@ -396,6 +444,11 @@ class GJRGARCH:
     """
 
     def __init__(self, p: int = 1, q: int = 1):
+        if p != 1 or q != 1:
+            raise ValueError(
+                f"GJRGARCH currently implements only the (1, 1) order; got (p={p}, q={q}). "
+                "Higher-order models are not yet supported."
+            )
         self.p = p
         self.q = q
 
@@ -457,6 +510,8 @@ class GJRGARCH:
             conditional_var=cond_var,
             residuals=residuals,
             log_likelihood=-result.fun,
+            model_type="gjrgarch",
+            converged=bool(result.success),
         )
 
     def _neg_log_likelihood(
@@ -555,6 +610,7 @@ def conditional_var(
     returns: pd.Series | np.ndarray,
     model: str = "GARCH",
     alpha: float = 0.05,
+    horizon: int = 1,
     **kwargs,
 ) -> dict[str, float | np.ndarray | GARCHResult]:
     """Calculate conditional VaR using GARCH models.
@@ -567,34 +623,64 @@ def conditional_var(
         Model type.
     alpha : float, default 0.05
         Significance level.
+    horizon : int, default 1
+        Forecast horizon; multi-horizon VaR aggregates the forecast variances
+        over the horizon (square-root-of-sum under independent increments).
     **kwargs
         Additional model parameters.
 
     Returns
     -------
     dict
-        Contains 'var' (VaR estimate), 'cond_var' (conditional variances),
-        and 'result' (full model fit).
-
-    Examples
-    --------
-    >>> returns = pd.Series(np.random.randn(1000) * 0.02)
-    >>> risk = conditional_var(returns, model="GJRGARCH", alpha=0.01)
-    >>> print(f"Conditional VaR (99%): {risk['var']:.2%}")
+        Contains 'var' (VaR estimate), 'cond_var' (forecast variances over the
+        horizon), 'result' (full model fit) and 'converged' (optimizer status).
     """
-    forecasts, result = forecast_volatility(returns, model, horizon=1, **kwargs)
+    forecasts, result = forecast_volatility(returns, model, horizon=horizon, **kwargs)
 
-    # Forecasted variance
-    forecast_var = forecasts[-1]
-
-    # VaR using normal quantile
-    from scipy import stats
-
+    total_var = float(np.sum(forecasts))
     z_alpha = stats.norm.ppf(alpha)
-    var = z_alpha * np.sqrt(forecast_var)
+    var = z_alpha * np.sqrt(total_var)
 
     return {
         "var": var,
-        "cond_var": forecast_var,
+        "cond_var": forecasts,
         "result": result,
+        "converged": result.converged,
+    }
+
+
+def conditional_es(
+    returns: pd.Series | np.ndarray,
+    model: str = "GARCH",
+    alpha: float = 0.05,
+    horizon: int = 1,
+    **kwargs,
+) -> dict[str, float | np.ndarray | GARCHResult]:
+    """Calculate conditional Expected Shortfall using GARCH models.
+
+    Under the normal-innovation assumption used by the GARCH family here, the
+    Expected Shortfall at tail probability ``alpha`` is::
+
+        ES = -sqrt(sigma^2) * phi(z_alpha) / alpha
+
+    which is strictly more extreme than the VaR ``z_alpha * sqrt(sigma^2)``.
+    ``sigma^2`` is the horizon-aggregated forecast variance.
+
+    Returns
+    -------
+    dict
+        Contains 'es', 'cond_var' (forecast variances), 'result' and
+        'converged'.
+    """
+    forecasts, result = forecast_volatility(returns, model, horizon=horizon, **kwargs)
+
+    total_var = float(np.sum(forecasts))
+    z_alpha = stats.norm.ppf(alpha)
+    es = -np.sqrt(total_var) * stats.norm.pdf(z_alpha) / alpha
+
+    return {
+        "es": es,
+        "cond_var": forecasts,
+        "result": result,
+        "converged": result.converged,
     }

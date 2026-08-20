@@ -8,7 +8,23 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from fincore.risk import forecast_es, forecast_var
+from fincore.risk.backtesting import kupiec_lr
 from fincore.risk.models import SIGN_LOSSES_NEGATIVE
+
+
+@given(
+    st.integers(min_value=1, max_value=2000),
+    st.integers(min_value=0, max_value=2000),
+    st.floats(min_value=0.5, max_value=0.9999, allow_nan=False),
+)
+@settings(max_examples=200, deadline=None)
+def test_kupiec_lr_is_nonnegative(
+    observations: int, exceptions: int, confidence_level: float
+) -> None:
+    exceptions = min(exceptions, observations)
+    lr = kupiec_lr(observations, exceptions, confidence_level)
+    assert lr >= 0.0
+    assert np.isfinite(lr)
 
 
 @given(st.lists(st.floats(min_value=-0.2, max_value=0.2, allow_nan=False), min_size=10, max_size=200))

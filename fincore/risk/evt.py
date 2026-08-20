@@ -102,6 +102,7 @@ def gpd_fit(
     data: ArrayLike,
     threshold: float | None = None,
     method: str = "mle",
+    tail: str = "lower",
 ) -> dict[str, float]:
     """Fit Generalized Pareto Distribution (GPD) to exceedances.
 
@@ -135,11 +136,18 @@ def gpd_fit(
     data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
     data_arr = data_arr[~np.isnan(data_arr)]
 
-    # Use losses (positive tail of negative returns)
-    tail_data = -data_arr[data_arr < 0]
-
-    if len(tail_data) == 0:
-        raise ValueError("No negative returns in data; need at least some losses for GPD fitting")
+    if tail == "lower":
+        # Losses: positive tail of negated negative returns.
+        tail_data = -data_arr[data_arr < 0]
+        if len(tail_data) == 0:
+            raise ValueError("No negative returns in data; need at least some losses for GPD fitting")
+    elif tail == "upper":
+        # Gains: positive tail of positive returns.
+        tail_data = data_arr[data_arr > 0]
+        if len(tail_data) == 0:
+            raise ValueError("No positive returns in data; need at least some gains for GPD fitting")
+    else:
+        raise ValueError("tail must be 'lower' or 'upper'")
 
     # Set threshold
     if threshold is None:
@@ -213,6 +221,7 @@ def gpd_fit(
 def gev_fit(
     data: ArrayLike,
     block_size: int | None = None,
+    tail: str = "lower",
 ) -> dict[str, float]:
     """Fit Generalized Extreme Value (GEV) distribution to block maxima.
 
@@ -254,21 +263,25 @@ def gev_fit(
     trimmed_data = data_arr[: n_blocks * block_size]
     block_maxima = trimmed_data.reshape(-1, block_size)
 
-    # For risk analysis, we want minimum (most negative) returns
-    block_minima = np.min(block_maxima, axis=1)
+    if tail == "lower":
+        block_extreme = np.min(block_maxima, axis=1)
+        neg_extreme = -block_extreme  # positive loss magnitude
+    elif tail == "upper":
+        block_extreme = np.max(block_maxima, axis=1)
+        neg_extreme = block_extreme  # positive gain magnitude
+    else:
+        raise ValueError("tail must be 'lower' or 'upper'")
 
-    # Fit GEV to minima (negate to use standard GEV)
-    neg_minima = -block_minima
+    # Use scipy's genextreme fit on negated minima (positive loss space).
+    # scipy's shape parameter ``c`` has the opposite sign of the standard GEV
+    # shape ``xi`` (c > 0 is bounded Weibull, xi = -c > 0 is heavy Fréchet).
+    c, loc, scale = stats.genextreme.fit(neg_extreme)
 
-    # Use scipy's genextreme fit
-    # Note: scipy uses different parameterization
-    xi, mu, sigma = stats.genextreme.fit(neg_minima)
-
-    # Convert to standard GEV parameters
+    # Return standard GEV parameters in loss space (positive).
     return {
-        "xi": xi,
-        "mu": -mu,  # Flip back for minima
-        "sigma": sigma,
+        "xi": -c,
+        "mu": loc,
+        "sigma": scale,
         "n_blocks": n_blocks,
     }
 
@@ -318,9 +331,7 @@ def evt_var(
     var: float = np.nan  # Initialize var
 
     if model == "gpd":
-        # For GPD, we fit to losses (negative returns converted to positive)
-        # The result needs to be negated to return to return-space
-        params = gpd_fit(data, threshold=threshold)
+        params = gpd_fit(data, threshold=threshold, tail=tail)
 
         xi = params["xi"]
         beta = params["beta"]
@@ -331,31 +342,29 @@ def evt_var(
         n_total = len(data)
         exceed_prob = n_exceed / n_total
 
-        # GPD-based VaR (in loss space, positive)
-        # Formula: VaR = u + (β/ξ) * [((α/F_u))^(-ξ) - 1)]
-        # where F_u = n_exceed/n is the empirical exceedance probability
-        # Reference: McNeil, Frey, Embrechts - Quantitative Risk Management
+        # GPD-based VaR (in tail magnitude space, positive)
         ratio = alpha / exceed_prob
-        var = u - beta * np.log(ratio) if np.abs(xi) < 1e-10 else u + (beta / xi) * (ratio ** (-xi) - 1)
+        var_mag = u - beta * np.log(ratio) if np.abs(xi) < 1e-10 else u + (beta / xi) * (ratio ** (-xi) - 1)
 
-        # Convert to return-space (negative for losses)
-        var = -var
+        # Convert to return-space: negative for lower tail, positive for upper.
+        var = -var_mag if tail == "lower" else var_mag
 
     elif model == "gev":
         # Fit GEV
-        params = gev_fit(data, block_size=block_size)
+        params = gev_fit(data, block_size=block_size, tail=tail)
 
         xi = params["xi"]
         mu = params["mu"]
         sigma = params["sigma"]
 
-        # GEV quantile function (already in return-space)
+        # GEV quantile of the (1 - alpha) upper quantile in tail-magnitude space.
+        q = 1.0 - alpha
         if np.abs(xi) < 1e-10:
-            # Gumbel case
-            var = mu - sigma * np.log(-np.log(alpha))
+            var_mag = mu - sigma * np.log(-np.log(q))
         else:
-            # General case
-            var = mu + (sigma / xi) * ((-np.log(alpha)) ** (-xi) - 1)
+            var_mag = mu + (sigma / xi) * ((-np.log(q)) ** (-xi) - 1)
+
+        var = -var_mag if tail == "lower" else var_mag
     else:
         raise ValueError(f"Unknown model: {model}")  # pragma: no cover -- Invalid input
 
@@ -406,44 +415,38 @@ def evt_cvar(
     var = evt_var(data, alpha, model, tail, threshold=threshold, block_size=block_size)
 
     if model == "gpd":
-        params = gpd_fit(data, threshold=threshold)
+        params = gpd_fit(data, threshold=threshold, tail=tail)
         xi = params["xi"]
         beta = params["beta"]
         u = params["threshold"]
 
-        # For GPD CVaR, we work in loss space (positive values)
-        # then convert back to return-space (negative)
-        var_loss = -var  # Convert back to loss space
+        var_mag = -var if tail == "lower" else var
 
-        # GPD-based CVaR (in loss space)
         if np.abs(xi) < 1e-10:
-            # Exponential case
-            cvar_loss = var_loss + beta
+            cvar_mag = var_mag + beta
         elif xi < 1:
-            # General case
-            cvar_loss = var_loss + (beta + xi * (var_loss - u)) / (1 - xi)
+            cvar_mag = var_mag + (beta + xi * (var_mag - u)) / (1 - xi)
         else:
             raise ValueError("CVaR infinite for xi >= 1")
 
-        # Convert to return-space (negative for losses)
-        cvar = -cvar_loss
+        cvar = -cvar_mag if tail == "lower" else cvar_mag
 
     elif model == "gev":
-        params = gev_fit(data, block_size=block_size)
+        params = gev_fit(data, block_size=block_size, tail=tail)
         xi = params["xi"]
         sigma = params["sigma"]
 
-        # GEV-based CVaR (mu already incorporated via var)
-        t = -np.log(alpha)
+        var_mag = -var if tail == "lower" else var
+        t = -np.log(1.0 - alpha)
 
         if np.abs(xi) < 1e-10:
-            # Gumbel case
-            cvar = var - sigma * (1 + np.euler_gamma)
+            cvar_mag = var_mag + sigma * (1 + np.euler_gamma)
         elif xi < 1:
-            # General case
-            cvar = var + (sigma / xi) * (1 - 1 / (1 - xi) + t ** (-xi) / (1 - xi))
+            cvar_mag = var_mag + (sigma / xi) * (1 - 1 / (1 - xi) + t ** (-xi) / (1 - xi))
         else:
             raise ValueError("CVaR infinite for xi >= 1")
+
+        cvar = -cvar_mag if tail == "lower" else cvar_mag
     else:
         raise ValueError(f"Unknown model: {model}")  # pragma: no cover -- Invalid input
 
@@ -491,7 +494,7 @@ def extreme_risk(
 
     # Fit model
     if model == "gpd":
-        params = gpd_fit(data, threshold=threshold)
+        params = gpd_fit(data, threshold=threshold, tail=tail)
 
         var = evt_var(data, alpha, model, tail, threshold=params["threshold"])
         cvar = evt_cvar(data, alpha, model, tail, threshold=params["threshold"])
@@ -508,7 +511,7 @@ def extreme_risk(
         )
 
     if model == "gev":
-        params = gev_fit(data, block_size=block_size)
+        params = gev_fit(data, block_size=block_size, tail=tail)
         var = evt_var(data, alpha, model, tail, block_size=block_size)
         cvar = evt_cvar(data, alpha, model, tail, block_size=block_size)
 

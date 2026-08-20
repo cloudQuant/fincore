@@ -53,11 +53,11 @@ _CAPABILITIES: tuple[Capability, ...] = (
         id="risk.garch",
         public_path="fincore.risk.garch",
         domain="risk",
-        status=STATUS_STABLE,
-        input_contract="A returns Series/array and model order parameters (p, q).",
-        output_contract="Fitted conditional-volatility model with forecast and conditional VaR.",
+        status=STATUS_EXPERIMENTAL,
+        input_contract="A returns Series/array and model order parameters (p, q) — only (1, 1) is implemented.",
+        output_contract="Fitted conditional-volatility model with forecast and conditional VaR/ES.",
         docs_path="api/risk.md",
-        rationale="Frozen GARCH/EGARCH/GJR-GARCH kernels with pinned numerical fixtures.",
+        rationale="GARCH/EGARCH/GJR-GARCH (1,1) kernels with corrected forecast recursions and convergence checks; higher orders unsupported until fully verified.",
     ),
     # --- strict compatibility façades --------------------------------------
     Capability(

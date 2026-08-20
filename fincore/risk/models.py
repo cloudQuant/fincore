@@ -109,6 +109,7 @@ def forecast_var(
     """
     clean = _validate_returns(returns)
     alpha = 1.0 - confidence_level
+    converged = True
 
     if method == "historical":
         value = float(np.quantile(clean.to_numpy(), alpha))
@@ -121,14 +122,22 @@ def forecast_var(
     elif method == "garch":
         from fincore.risk.garch import conditional_var
 
-        result = conditional_var(clean, alpha=alpha, **kwargs)
+        result = conditional_var(clean, alpha=alpha, horizon=horizon, **kwargs)
         value = cast("float", result["var"])
-        diagnostics = {"kernel": "conditional_var", "alpha": alpha}
+        converged = bool(result.get("converged", True))
+        diagnostics = {"kernel": "conditional_var", "alpha": alpha, "horizon": horizon}
+        if not converged:
+            diagnostics["note"] = "optimizer did not converge"
     else:
         raise ValueError(f"unknown method: {method}")
 
     timestamp = clean.index[-1] if len(clean) else pd.Timestamp("NaT")
-    status = STATUS_OK if len(clean) >= 2 else STATUS_INSUFFICIENT_DATA
+    if len(clean) < 2:
+        status = STATUS_INSUFFICIENT_DATA
+    elif not converged:
+        status = STATUS_FAILED
+    else:
+        status = STATUS_OK
     return RiskEstimate(
         method=method,
         confidence_level=confidence_level,
@@ -157,6 +166,7 @@ def forecast_es(
     """
     clean = _validate_returns(returns)
     alpha = 1.0 - confidence_level
+    converged = True
 
     if method == "historical":
         var_value = float(np.quantile(clean.to_numpy(), alpha))
@@ -169,16 +179,24 @@ def forecast_es(
         value = float(evt_cvar(clean.to_numpy(), alpha=alpha, **kwargs))
         diagnostics = {"kernel": "evt_cvar", "alpha": alpha}
     elif method == "garch":
-        from fincore.risk.garch import conditional_var
+        from fincore.risk.garch import conditional_es
 
-        result = conditional_var(clean, alpha=alpha, **kwargs)
-        value = cast("float", result["var"])
-        diagnostics = {"kernel": "conditional_var", "alpha": alpha, "note": "normal-distribution ES approximation"}
+        result = conditional_es(clean, alpha=alpha, horizon=horizon, **kwargs)
+        value = cast("float", result["es"])
+        converged = bool(result.get("converged", True))
+        diagnostics = {"kernel": "conditional_es", "alpha": alpha, "horizon": horizon}
+        if not converged:
+            diagnostics["note"] = "optimizer did not converge"
     else:
         raise ValueError(f"unknown method: {method}")
 
     timestamp = clean.index[-1] if len(clean) else pd.Timestamp("NaT")
-    status = STATUS_OK if len(clean) >= 2 else STATUS_INSUFFICIENT_DATA
+    if len(clean) < 2:
+        status = STATUS_INSUFFICIENT_DATA
+    elif not converged:
+        status = STATUS_FAILED
+    else:
+        status = STATUS_OK
     return RiskEstimate(
         method=method,
         confidence_level=confidence_level,
