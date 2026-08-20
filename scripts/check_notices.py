@@ -35,8 +35,13 @@ def load_notices(path: str | Path | None = None) -> dict:
     return json.loads(matches[0])
 
 
-def check_notices(notices: dict) -> list[str]:
-    """Return the list of notice violations (empty means valid)."""
+def check_notices(notices: dict, *, require_approved: bool = False) -> list[str]:
+    """Return the list of notice violations (empty means valid).
+
+    When ``require_approved`` is set, every adapted component must carry an
+    ``approved`` review status (fail closed for the release profile); ordinary
+    PR checks may leave records in ``pending-human-review``.
+    """
     violations: list[str] = []
     for component in _REQUIRED_COMPONENTS:
         record = notices.get(component)
@@ -49,6 +54,8 @@ def check_notices(notices: dict) -> list[str]:
         review_status = record.get("review_status")
         if review_status not in _VALID_REVIEW_STATUSES:
             violations.append(f"{component}: review_status must be pending-human-review or approved")
+        if require_approved and review_status != "approved":
+            violations.append(f"{component}: review_status must be approved (release profile)")
         if review_status == "approved":
             if not isinstance(record.get("reviewer"), str) or not record["reviewer"]:
                 violations.append(f"{component}: approved notice requires a reviewer")
@@ -60,9 +67,14 @@ def check_notices(notices: dict) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--notices", default=str(NOTICES_PATH), help="path to THIRD_PARTY_NOTICES.md")
+    parser.add_argument(
+        "--require-approved",
+        action="store_true",
+        help="Fail unless every adapted component has an approved review status (release profile).",
+    )
     args = parser.parse_args(argv)
     notices = load_notices(args.notices)
-    violations = check_notices(notices)
+    violations = check_notices(notices, require_approved=args.require_approved)
     for violation in violations:
         print(f"FAIL: {violation}", file=sys.stderr)
     if violations:

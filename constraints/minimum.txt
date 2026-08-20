@@ -1,17 +1,18 @@
-# Minimum supported dependency combination for fincore.
+# Minimum supported dependency combination for fincore (Python 3.11).
 #
-# These are the floors declared in pyproject.toml, plus the exclusions for the
-# known curl_cffi -> eventlet -> pyOpenSSL incompatibility (PyOpenSSL 24.x
-# references the removed GEN_EMAIL constant in newer cryptography releases,
-# breaking yfinance and akshare imports).  `scripts/check_dependency_matrix.py`
-# and the CI optional-extra smoke job resolve against this file.
+# Unlike latest.txt (which lets pip choose), this file pins the *oldest
+# resolvable* exact combination: each version is the earliest release with a
+# Python 3.11 wheel for its line, so ``pip install -c minimum.txt fincore`` is
+# an actual isolation install rather than a floor declaration.  ``==`` pins make
+# the matrix reproducible; ``scripts/check_dependency_matrix.py`` enforces that
+# the minimum file is pinned while the latest file remains a floor.
 
-numpy>=1.24.0
-pandas>=1.5.0
-scipy>=1.3.0
-pytz>=2023.3
-packaging>=21.0
+numpy==1.24.0
+pandas==1.5.3
+scipy==1.9.3
+pytz==2023.3
+packaging==21.0
 
 # data-yahoo / data-cn transitives: keep a working TLS stack.
-pyOpenSSL>=25.0.0
-cryptography<50.0.0
+pyOpenSSL==25.0.0
+cryptography==45.0.0

@@ -92,11 +92,18 @@ jobs:
       - name: Docs build (strict)
         run: python -m mkdocs build --strict
 
-      - name: Build sdist and wheel
-        run: python -m build --outdir dist/
+      - name: Download CI candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download --name dist --dir dist/ \
+            --workflow ci.yml --repo ${{ github.repository }}
 
       - name: Check dist
-        run: twine check dist/*
+        run: twine check dist/*.whl dist/*.tar.gz
+
+      - name: Verify candidate digest
+        run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json
 
       - name: Verify release consistency
         run: python scripts/check_release_consistency.py --dist dist/
@@ -109,12 +116,6 @@ jobs:
       - name: Packaging contract tests
         run: pytest -o addopts='' tests/packaging -q --maxfail=0
 
-      - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
   publish:
     runs-on: ubuntu-latest
     needs: [verify]
@@ -126,11 +127,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download verified dist artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
+      - name: Download CI candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download --name dist --dir dist/ \
+            --workflow ci.yml --repo ${{ github.repository }}
+
+      - name: Verify candidate digest
+        run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

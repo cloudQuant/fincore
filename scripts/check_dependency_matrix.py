@@ -89,6 +89,36 @@ def _minimum_before_latest(matrix: dict[str, dict[str, str]]) -> list[str]:
     return violations
 
 
+def _check_pin_policy(directory: str | Path) -> list[str]:
+    """``minimum.txt`` must pin exact versions (``==``); ``latest.txt`` must use floors.
+
+    Two ``>=`` files are not an isolation-install proof: the minimum lane would
+    silently resolve to the same packages as the latest lane.  Requiring exact
+    pins in the minimum file forces the matrix to be a real, reproducible
+    oldest-resolvable combination.
+    """
+    base = Path(directory)
+    violations: list[str] = []
+    for filename, require_pin in (("minimum.txt", True), ("latest.txt", False)):
+        path = base / filename
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            spec = line.split("#", 1)[0].strip()
+            if not spec:
+                continue
+            parsed = _parse_spec(line)
+            if parsed is None:
+                continue
+            name, _ = parsed
+            uses_pin = "==" in spec
+            if require_pin and not uses_pin:
+                violations.append(f"{filename}: {name} must use an exact == pin")
+            if not require_pin and uses_pin:
+                violations.append(f"{filename}: {name} must use a >= floor (not ==)")
+    return violations
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--constraints", default=str(CONSTRAINTS_DIR), help="constraints directory")
@@ -100,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no constraints found under {args.constraints}", file=sys.stderr)
         return 1
     violations = _minimum_before_latest(matrix)
+    violations.extend(_check_pin_policy(args.constraints))
     for name in ("minimum", "latest"):
         if name not in matrix:
             violations.append(f"missing constraints file {name}.txt")
