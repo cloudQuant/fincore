@@ -65,7 +65,13 @@ class AnalysisResult(Generic[T]):
 
     @classmethod
     def unsupported(cls, metadata: ResultMetadata, reason: str) -> AnalysisResult[T]:
-        metadata = ResultMetadata(**{**metadata.__dict__, "status": STATUS_UNSUPPORTED, "diagnostics": {**metadata.diagnostics, "reason": reason}})
+        metadata = ResultMetadata(
+            **{
+                **metadata.__dict__,
+                "status": STATUS_UNSUPPORTED,
+                "diagnostics": {**metadata.diagnostics, "reason": reason},
+            }
+        )
         return cls(status=STATUS_UNSUPPORTED, metadata=metadata)
 
     @classmethod

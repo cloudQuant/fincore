@@ -41,9 +41,7 @@ def garch_conditional_var_reference(eps: np.ndarray, omega: float, alpha: float,
     return s2
 
 
-def gjr_conditional_var_reference(
-    eps: np.ndarray, omega: float, alpha: float, gamma: float, beta: float
-) -> np.ndarray:
+def gjr_conditional_var_reference(eps: np.ndarray, omega: float, alpha: float, gamma: float, beta: float) -> np.ndarray:
     """GJR-GARCH(1,1) conditional-variance recursion (independent reference)."""
     eps = np.asarray(eps, dtype=float)
     t = len(eps)

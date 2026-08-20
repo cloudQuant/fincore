@@ -31,25 +31,19 @@ class TestGBMTerminalVolatility:
         )
 
     def test_geometric_brownian_motion_terminal_log_vol(self) -> None:
-        paths = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42
-        )
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42)
         log_ret = np.log(paths[:, -1] / 100.0)
         est_vol = float(np.std(log_ret, ddof=1))
         assert abs(est_vol - 0.20) / 0.20 < 0.05
 
     def test_gbm_terminal_mean_inside_analytic_ci(self) -> None:
-        paths = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42
-        )
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42)
         lo, hi = gbm_terminal_mean_ci(100.0, 0.10, 0.20, 1.0, 20000)
         observed_mean = float(np.mean(paths[:, -1]))
         assert lo < observed_mean < hi
 
     def test_gbm_terminal_log_std_inside_analytic_ci(self) -> None:
-        paths = geometric_brownian_motion(
-            S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42
-        )
+        paths = geometric_brownian_motion(S0=100.0, mu=0.10, sigma=0.20, T=1.0, dt=1 / 252, n_paths=20000, seed=42)
         log_ret = np.log(paths[:, -1] / 100.0)
         lo, hi = gbm_terminal_log_std_ci(0.20, 1.0, 20000)
         observed_std = float(np.std(log_ret, ddof=1))

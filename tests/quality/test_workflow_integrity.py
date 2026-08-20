@@ -30,14 +30,7 @@ def test_detects_missing_needs_reference(tmp_path: Path) -> None:
 
 def test_valid_workflow_passes(tmp_path: Path) -> None:
     wf = tmp_path / "ok.yml"
-    wf.write_text(
-        "jobs:\n"
-        "  a:\n"
-        "    runs-on: ubuntu-latest\n"
-        "  b:\n"
-        "    runs-on: ubuntu-latest\n"
-        "    needs: [a]\n"
-    )
+    wf.write_text("jobs:\n  a:\n    runs-on: ubuntu-latest\n  b:\n    runs-on: ubuntu-latest\n    needs: [a]\n")
 
     assert check_workflow(wf) == []
 

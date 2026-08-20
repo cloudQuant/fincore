@@ -30,7 +30,7 @@ def gbm_terminal_log_mean(mu: float, sigma: float, T: float) -> float:
 
 def gbm_terminal_log_std(sigma: float, T: float) -> float:
     """Analytic standard deviation of ``log(S_T / S0)``."""
-    return float(sigma * (T ** 0.5))
+    return float(sigma * (T**0.5))
 
 
 def gbm_terminal_mean(S0: float, mu: float, T: float) -> float:
@@ -64,7 +64,7 @@ def gbm_terminal_mean_ci(
     """
     mean = gbm_terminal_mean(S0, mu, T)
     std = gbm_terminal_std(S0, mu, sigma, T)
-    se = std / (n_paths ** 0.5)
+    se = std / (n_paths**0.5)
     return mean - z * se, mean + z * se
 
 

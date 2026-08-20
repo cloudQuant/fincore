@@ -20,11 +20,7 @@ def _make_factor_data(n: int = 500) -> tuple[pd.Series, pd.DataFrame]:
         }
     )
     returns = pd.Series(
-        0.001
-        + 1.2 * factors["MKT"]
-        + 0.3 * factors["SMB"]
-        - 0.2 * factors["HML"]
-        + rng.normal(0.0, 0.01, n)
+        0.001 + 1.2 * factors["MKT"] + 0.3 * factors["SMB"] - 0.2 * factors["HML"] + rng.normal(0.0, 0.01, n)
     )
     return returns, factors
 
@@ -159,7 +155,9 @@ class TestStyleBeta:
         style_returns = pd.DataFrame({"style_a": sr}, index=idx)
         portfolio = pd.Series(pr, index=idx)
 
-        result = calculate_regression_attribution(portfolio, style_returns, style_exposures=pd.DataFrame({"style_a": [1.0]}, index=[0]))
+        result = calculate_regression_attribution(
+            portfolio, style_returns, style_exposures=pd.DataFrame({"style_a": [1.0]}, index=[0])
+        )
 
         cov = float(np.cov(pr, sr, ddof=1)[0, 1])
         var = float(np.var(sr, ddof=1))

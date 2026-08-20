@@ -166,9 +166,7 @@ class TestEVTSemantics:
 
     def _asymmetric(self) -> np.ndarray:
         rng = np.random.default_rng(1)
-        return np.concatenate(
-            [rng.normal(0.001, 0.01, 3000), rng.normal(-0.05, 0.03, 1000)]
-        )
+        return np.concatenate([rng.normal(0.001, 0.01, 3000), rng.normal(-0.05, 0.03, 1000)])
 
     def test_upper_and_lower_tail_differ(self) -> None:
         from fincore.risk.evt import evt_var

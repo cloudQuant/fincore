@@ -77,17 +77,13 @@ def main(argv: list[str] | None = None) -> int:
         for name, expected_sha in expected.items():
             actual = digests.get(name)
             if actual != expected_sha:
-                violations.append(
-                    f"digest mismatch for {name}: manifest={expected_sha} actual={actual}"
-                )
+                violations.append(f"digest mismatch for {name}: manifest={expected_sha} actual={actual}")
 
     pyproject_version = _pyproject_version()
     for wheel in wheels:
         wheel_version = _wheel_metadata_version(wheel)
         if wheel_version is not None and wheel_version != pyproject_version:
-            violations.append(
-                f"version drift: wheel {wheel_version} != pyproject.toml {pyproject_version}"
-            )
+            violations.append(f"version drift: wheel {wheel_version} != pyproject.toml {pyproject_version}")
 
     for violation in violations:
         print(f"FAIL: {violation}", file=sys.stderr)

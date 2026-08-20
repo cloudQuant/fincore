@@ -10,9 +10,7 @@ from fincore.contracts.workflows import WORKFLOW_REGISTRY
 def test_catalog_contains_all_registry_entries() -> None:
     catalog = build_builtin_catalog()
     expected = len(METRIC_REGISTRY) + len(WORKFLOW_REGISTRY)
-    assert len(catalog.bindings) == expected, (
-        f"catalog has {len(catalog.bindings)} bindings, expected {expected}"
-    )
+    assert len(catalog.bindings) == expected, f"catalog has {len(catalog.bindings)} bindings, expected {expected}"
 
 
 def test_definitions_are_unique_per_profile() -> None:

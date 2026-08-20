@@ -54,9 +54,7 @@ class OperationCatalog:
 
     @property
     def definition_map(self) -> Mapping[tuple[str, str], OperationDefinition]:
-        return {
-            _definition_key(d.operation_id, d.semantic_profile): d for d in self.definitions
-        }
+        return {_definition_key(d.operation_id, d.semantic_profile): d for d in self.definitions}
 
     @property
     def public_path_map(self) -> Mapping[str, PublicBinding]:

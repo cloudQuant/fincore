@@ -74,9 +74,7 @@ def check_workflow(path: Path) -> list[str]:
     # 1. Duplicate keys via the compose tree.
     compose_tree = yaml.compose(text)
     if compose_tree is not None:
-        violations.extend(
-            f"{path.name}: duplicate mapping key '{dup}'" for dup in _duplicate_keys(compose_tree)
-        )
+        violations.extend(f"{path.name}: duplicate mapping key '{dup}'" for dup in _duplicate_keys(compose_tree))
 
     # 2. Missing needs references.
     doc = yaml.safe_load(text)

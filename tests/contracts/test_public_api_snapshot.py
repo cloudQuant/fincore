@@ -39,11 +39,7 @@ def test_every_surface_has_a_known_profile() -> None:
 
 def test_no_duplicate_public_paths_across_surfaces() -> None:
     snapshot = build_snapshot()
-    paths = [
-        f"{surface}.{name}"
-        for surface, data in snapshot["surfaces"].items()
-        for name in data["public_symbols"]
-    ]
+    paths = [f"{surface}.{name}" for surface, data in snapshot["surfaces"].items() for name in data["public_symbols"]]
     assert len(paths) == len(set(paths)), "duplicate public paths detected"
 
 

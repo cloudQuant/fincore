@@ -32,9 +32,7 @@ def ols_reference(y: np.ndarray, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]
     return np.asarray(model.params), np.asarray(model.bse)
 
 
-def ols_hac_reference(
-    y: np.ndarray, X: np.ndarray, nlags: int = 1
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def ols_hac_reference(y: np.ndarray, X: np.ndarray, nlags: int = 1) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """OLS with Newey-West HAC standard errors.
 
     Returns ``(params, hac_bse, pvalues)``.
@@ -44,9 +42,7 @@ def ols_hac_reference(
     return np.asarray(model.params), np.asarray(model.bse), np.asarray(model.pvalues)
 
 
-def wls_reference(
-    y: np.ndarray, X: np.ndarray, weights: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
+def wls_reference(y: np.ndarray, X: np.ndarray, weights: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Weighted least squares coefficients and standard errors (statsmodels)."""
     sm = _statsmodels()
     model = sm.WLS(y, X, weights=weights).fit()

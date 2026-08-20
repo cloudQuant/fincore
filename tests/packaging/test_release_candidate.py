@@ -29,7 +29,9 @@ def test_sha256_is_deterministic(tmp_path: Path) -> None:
 def _make_wheel(path: Path, version: str) -> Path:
     wheel = path / f"fincore-{version}-py3-none-any.whl"
     with zipfile.ZipFile(wheel, "w") as zf:
-        zf.writestr("fincore-0.4.0.dev0.dist-info/METADATA", f"Metadata-Version: 2.1\nName: fincore\nVersion: {version}\n")
+        zf.writestr(
+            "fincore-0.4.0.dev0.dist-info/METADATA", f"Metadata-Version: 2.1\nName: fincore\nVersion: {version}\n"
+        )
     return wheel
 
 
