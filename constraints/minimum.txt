@@ -13,5 +13,5 @@ pytz>=2023.3
 packaging>=21.0
 
 # data-yahoo / data-cn transitives: keep a working TLS stack.
-pyOpenSSL>=25.0.0
+pyOpenSSL>=26.4.0
 cryptography<50.0.0
