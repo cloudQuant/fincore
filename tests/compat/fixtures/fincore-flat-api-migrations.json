@@ -161,7 +161,7 @@
       "symbol": "alpha_beta"
     }
   ],
-  "fincore_version": "0.3.0",
+  "fincore_version": "0.4.0.dev0",
   "policy": "preserve-0.3.x-flat-api",
   "schema_version": 2,
   "source": {

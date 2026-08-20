@@ -1,0 +1,1157 @@
+{
+  "baseline": "0.3.x",
+  "project": "fincore",
+  "schema_version": 1,
+  "surfaces": {
+    "fincore": {
+      "entries": {
+        "Empyrical": {
+          "kind": "unknown",
+          "public_path": "fincore.Empyrical"
+        },
+        "aggregate_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.aggregate_returns"
+        },
+        "alpha": {
+          "kind": "unknown",
+          "public_path": "fincore.alpha"
+        },
+        "alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.alpha_beta"
+        },
+        "alphalens": {
+          "kind": "unknown",
+          "public_path": "fincore.alphalens"
+        },
+        "analyze": {
+          "kind": "unknown",
+          "public_path": "fincore.analyze"
+        },
+        "annual_return": {
+          "kind": "unknown",
+          "public_path": "fincore.annual_return"
+        },
+        "annual_volatility": {
+          "kind": "unknown",
+          "public_path": "fincore.annual_volatility"
+        },
+        "beta": {
+          "kind": "unknown",
+          "public_path": "fincore.beta"
+        },
+        "calmar_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.calmar_ratio"
+        },
+        "capture": {
+          "kind": "unknown",
+          "public_path": "fincore.capture"
+        },
+        "create_strategy_report": {
+          "kind": "unknown",
+          "public_path": "fincore.create_strategy_report"
+        },
+        "cum_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.cum_returns"
+        },
+        "cum_returns_final": {
+          "kind": "unknown",
+          "public_path": "fincore.cum_returns_final"
+        },
+        "downside_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.downside_risk"
+        },
+        "information_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.information_ratio"
+        },
+        "max_drawdown": {
+          "kind": "unknown",
+          "public_path": "fincore.max_drawdown"
+        },
+        "omega_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.omega_ratio"
+        },
+        "sharpe_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.sharpe_ratio"
+        },
+        "simple_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.simple_returns"
+        },
+        "sortino_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.sortino_ratio"
+        },
+        "stability_of_timeseries": {
+          "kind": "unknown",
+          "public_path": "fincore.stability_of_timeseries"
+        },
+        "tail_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.tail_ratio"
+        },
+        "value_at_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.value_at_risk"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "Empyrical",
+        "aggregate_returns",
+        "alpha",
+        "alpha_beta",
+        "alphalens",
+        "analyze",
+        "annual_return",
+        "annual_volatility",
+        "beta",
+        "calmar_ratio",
+        "capture",
+        "create_strategy_report",
+        "cum_returns",
+        "cum_returns_final",
+        "downside_risk",
+        "information_ratio",
+        "max_drawdown",
+        "omega_ratio",
+        "sharpe_ratio",
+        "simple_returns",
+        "sortino_ratio",
+        "stability_of_timeseries",
+        "tail_ratio",
+        "value_at_risk"
+      ]
+    },
+    "fincore.alphalens": {
+      "entries": {
+        "performance": {
+          "kind": "unknown",
+          "public_path": "fincore.alphalens.performance"
+        },
+        "plotting": {
+          "kind": "unknown",
+          "public_path": "fincore.alphalens.plotting"
+        },
+        "tears": {
+          "kind": "unknown",
+          "public_path": "fincore.alphalens.tears"
+        },
+        "utils": {
+          "kind": "unknown",
+          "public_path": "fincore.alphalens.utils"
+        }
+      },
+      "profile": "strict_alphalens_cloudquant_0_4_0",
+      "public_symbols": [
+        "performance",
+        "plotting",
+        "tears",
+        "utils"
+      ]
+    },
+    "fincore.attribution": {
+      "entries": {
+        "BrinsonAttribution": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.BrinsonAttribution"
+        },
+        "FamaFrenchModel": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.FamaFrenchModel"
+        },
+        "StyleResult": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.StyleResult"
+        },
+        "analyze_performance_by_style": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.analyze_performance_by_style"
+        },
+        "brinson_attribution": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.brinson_attribution"
+        },
+        "brinson_cumulative": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.brinson_cumulative"
+        },
+        "brinson_results": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.brinson_results"
+        },
+        "calculate_regression_attribution": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.calculate_regression_attribution"
+        },
+        "calculate_style_tilts": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.calculate_style_tilts"
+        },
+        "style_analysis": {
+          "kind": "unknown",
+          "public_path": "fincore.attribution.style_analysis"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "BrinsonAttribution",
+        "FamaFrenchModel",
+        "StyleResult",
+        "analyze_performance_by_style",
+        "brinson_attribution",
+        "brinson_cumulative",
+        "brinson_results",
+        "calculate_regression_attribution",
+        "calculate_style_tilts",
+        "style_analysis"
+      ]
+    },
+    "fincore.data": {
+      "entries": {
+        "AkShareProvider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.AkShareProvider"
+        },
+        "AlphaVantageProvider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.AlphaVantageProvider"
+        },
+        "DataProvider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.DataProvider"
+        },
+        "TushareProvider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.TushareProvider"
+        },
+        "YahooFinanceProvider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.YahooFinanceProvider"
+        },
+        "fetch_multiple_prices": {
+          "kind": "unknown",
+          "public_path": "fincore.data.fetch_multiple_prices"
+        },
+        "fetch_price_data": {
+          "kind": "unknown",
+          "public_path": "fincore.data.fetch_price_data"
+        },
+        "get_provider": {
+          "kind": "unknown",
+          "public_path": "fincore.data.get_provider"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "AkShareProvider",
+        "AlphaVantageProvider",
+        "DataProvider",
+        "TushareProvider",
+        "YahooFinanceProvider",
+        "fetch_multiple_prices",
+        "fetch_price_data",
+        "get_provider"
+      ]
+    },
+    "fincore.empyrical": {
+      "entries": {
+        "DAILY": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.DAILY"
+        },
+        "Empyrical": {
+          "kind": "class",
+          "public_path": "fincore.empyrical.Empyrical"
+        },
+        "MONTHLY": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.MONTHLY"
+        },
+        "QUARTERLY": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.QUARTERLY"
+        },
+        "WEEKLY": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.WEEKLY"
+        },
+        "YEARLY": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.YEARLY"
+        },
+        "ZIPLINE": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.ZIPLINE"
+        },
+        "aggregate_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.aggregate_returns"
+        },
+        "alpha": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.alpha"
+        },
+        "alpha_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.alpha_aligned"
+        },
+        "alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.alpha_beta"
+        },
+        "alpha_beta_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.alpha_beta_aligned"
+        },
+        "annual_return": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.annual_return"
+        },
+        "annual_volatility": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.annual_volatility"
+        },
+        "beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.beta"
+        },
+        "beta_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.beta_aligned"
+        },
+        "beta_fragility_heuristic": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.beta_fragility_heuristic"
+        },
+        "beta_fragility_heuristic_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.beta_fragility_heuristic_aligned"
+        },
+        "cagr": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.cagr"
+        },
+        "calmar_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.calmar_ratio"
+        },
+        "capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.capture"
+        },
+        "compute_exposures": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.compute_exposures"
+        },
+        "conditional_value_at_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.conditional_value_at_risk"
+        },
+        "cum_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.cum_returns"
+        },
+        "cum_returns_final": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.cum_returns_final"
+        },
+        "down_alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.down_alpha_beta"
+        },
+        "down_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.down_capture"
+        },
+        "downside_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.downside_risk"
+        },
+        "excess_sharpe": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.excess_sharpe"
+        },
+        "gpd_risk_estimates": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.gpd_risk_estimates"
+        },
+        "gpd_risk_estimates_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.gpd_risk_estimates_aligned"
+        },
+        "max_drawdown": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.max_drawdown"
+        },
+        "omega_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.omega_ratio"
+        },
+        "perf_attrib": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.perf_attrib"
+        },
+        "roll_alpha": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_alpha"
+        },
+        "roll_alpha_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_alpha_aligned"
+        },
+        "roll_alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_alpha_beta"
+        },
+        "roll_alpha_beta_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_alpha_beta_aligned"
+        },
+        "roll_annual_volatility": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_annual_volatility"
+        },
+        "roll_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_beta"
+        },
+        "roll_beta_aligned": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_beta_aligned"
+        },
+        "roll_down_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_down_capture"
+        },
+        "roll_max_drawdown": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_max_drawdown"
+        },
+        "roll_sharpe_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_sharpe_ratio"
+        },
+        "roll_sortino_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_sortino_ratio"
+        },
+        "roll_up_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_up_capture"
+        },
+        "roll_up_down_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.roll_up_down_capture"
+        },
+        "sharpe_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.sharpe_ratio"
+        },
+        "simple_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.simple_returns"
+        },
+        "sortino_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.sortino_ratio"
+        },
+        "stability_of_timeseries": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.stability_of_timeseries"
+        },
+        "tail_ratio": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.tail_ratio"
+        },
+        "up_alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.up_alpha_beta"
+        },
+        "up_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.up_capture"
+        },
+        "up_down_capture": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.up_down_capture"
+        },
+        "value_at_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.empyrical.value_at_risk"
+        }
+      },
+      "profile": "strict_empyrical_0_6_0",
+      "public_symbols": [
+        "DAILY",
+        "Empyrical",
+        "MONTHLY",
+        "QUARTERLY",
+        "WEEKLY",
+        "YEARLY",
+        "ZIPLINE",
+        "aggregate_returns",
+        "alpha",
+        "alpha_aligned",
+        "alpha_beta",
+        "alpha_beta_aligned",
+        "annual_return",
+        "annual_volatility",
+        "beta",
+        "beta_aligned",
+        "beta_fragility_heuristic",
+        "beta_fragility_heuristic_aligned",
+        "cagr",
+        "calmar_ratio",
+        "capture",
+        "compute_exposures",
+        "conditional_value_at_risk",
+        "cum_returns",
+        "cum_returns_final",
+        "down_alpha_beta",
+        "down_capture",
+        "downside_risk",
+        "excess_sharpe",
+        "gpd_risk_estimates",
+        "gpd_risk_estimates_aligned",
+        "max_drawdown",
+        "omega_ratio",
+        "perf_attrib",
+        "roll_alpha",
+        "roll_alpha_aligned",
+        "roll_alpha_beta",
+        "roll_alpha_beta_aligned",
+        "roll_annual_volatility",
+        "roll_beta",
+        "roll_beta_aligned",
+        "roll_down_capture",
+        "roll_max_drawdown",
+        "roll_sharpe_ratio",
+        "roll_sortino_ratio",
+        "roll_up_capture",
+        "roll_up_down_capture",
+        "sharpe_ratio",
+        "simple_returns",
+        "sortino_ratio",
+        "stability_of_timeseries",
+        "tail_ratio",
+        "up_alpha_beta",
+        "up_capture",
+        "up_down_capture",
+        "value_at_risk"
+      ]
+    },
+    "fincore.factor_analysis": {
+      "entries": {
+        "EnhancedNonMatchingTimezoneError": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.EnhancedNonMatchingTimezoneError"
+        },
+        "EventAnalysisModel": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.EventAnalysisModel"
+        },
+        "FactorAnalysisConfig": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorAnalysisConfig"
+        },
+        "FactorAnalysisModel": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorAnalysisModel"
+        },
+        "FactorDataError": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorDataError"
+        },
+        "FactorFunctionSpec": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorFunctionSpec"
+        },
+        "FactorGroupAnalysis": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorGroupAnalysis"
+        },
+        "FactorLossExceededError": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorLossExceededError"
+        },
+        "FactorLossReport": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorLossReport"
+        },
+        "FactorTearSheetArtifacts": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorTearSheetArtifacts"
+        },
+        "FactorWorkflowSpec": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorWorkflowSpec"
+        },
+        "GridFigure": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.GridFigure"
+        },
+        "MaxLossExceededError": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.MaxLossExceededError"
+        },
+        "NonMatchingTimezoneError": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.NonMatchingTimezoneError"
+        },
+        "PreparedFactorData": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.PreparedFactorData"
+        },
+        "PyfolioFactorInputs": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.PyfolioFactorInputs"
+        },
+        "add_custom_calendar_timedelta": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.add_custom_calendar_timedelta"
+        },
+        "analyze_factor": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.analyze_factor"
+        },
+        "average_cumulative_return_by_quantile": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.average_cumulative_return_by_quantile"
+        },
+        "backshift_returns_series": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.backshift_returns_series"
+        },
+        "close_owned_figures": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.close_owned_figures"
+        },
+        "common_start_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.common_start_returns"
+        },
+        "compute_forward_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.compute_forward_returns"
+        },
+        "compute_mean_returns_spread": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.compute_mean_returns_spread"
+        },
+        "create_event_returns_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_event_returns_tear_sheet"
+        },
+        "create_event_study_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_event_study_tear_sheet"
+        },
+        "create_full_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_full_tear_sheet"
+        },
+        "create_information_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_information_tear_sheet"
+        },
+        "create_pyfolio_input": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_pyfolio_input"
+        },
+        "create_returns_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_returns_tear_sheet"
+        },
+        "create_summary_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_summary_tear_sheet"
+        },
+        "create_turnover_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.create_turnover_tear_sheet"
+        },
+        "cumulative_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.cumulative_returns"
+        },
+        "diff_custom_calendar_timedeltas": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.diff_custom_calendar_timedeltas"
+        },
+        "factor_alpha_beta": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_alpha_beta"
+        },
+        "factor_cumulative_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_cumulative_returns"
+        },
+        "factor_information_coefficient": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_information_coefficient"
+        },
+        "factor_positions": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_positions"
+        },
+        "factor_rank_autocorrelation": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_rank_autocorrelation"
+        },
+        "factor_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_returns"
+        },
+        "factor_weights": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_weights"
+        },
+        "get_forward_returns_columns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.get_forward_returns_columns"
+        },
+        "infer_trading_calendar": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.infer_trading_calendar"
+        },
+        "mean_information_coefficient": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.mean_information_coefficient"
+        },
+        "mean_return_by_quantile": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.mean_return_by_quantile"
+        },
+        "positions": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.positions"
+        },
+        "prepare_factor_data": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.prepare_factor_data"
+        },
+        "prepare_factor_data_from_forward_returns": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.prepare_factor_data_from_forward_returns"
+        },
+        "quantile_turnover": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.quantile_turnover"
+        },
+        "quantize_factor": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.quantize_factor"
+        },
+        "show_owned_figures": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.show_owned_figures"
+        },
+        "timedelta_strings_to_integers": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.timedelta_strings_to_integers"
+        },
+        "timedelta_to_string": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.timedelta_to_string"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "EnhancedNonMatchingTimezoneError",
+        "EventAnalysisModel",
+        "FactorAnalysisConfig",
+        "FactorAnalysisModel",
+        "FactorDataError",
+        "FactorFunctionSpec",
+        "FactorGroupAnalysis",
+        "FactorLossExceededError",
+        "FactorLossReport",
+        "FactorTearSheetArtifacts",
+        "FactorWorkflowSpec",
+        "GridFigure",
+        "MaxLossExceededError",
+        "NonMatchingTimezoneError",
+        "PreparedFactorData",
+        "PyfolioFactorInputs",
+        "add_custom_calendar_timedelta",
+        "analyze_factor",
+        "average_cumulative_return_by_quantile",
+        "backshift_returns_series",
+        "close_owned_figures",
+        "common_start_returns",
+        "compute_forward_returns",
+        "compute_mean_returns_spread",
+        "create_event_returns_tear_sheet",
+        "create_event_study_tear_sheet",
+        "create_full_tear_sheet",
+        "create_information_tear_sheet",
+        "create_pyfolio_input",
+        "create_returns_tear_sheet",
+        "create_summary_tear_sheet",
+        "create_turnover_tear_sheet",
+        "cumulative_returns",
+        "diff_custom_calendar_timedeltas",
+        "factor_alpha_beta",
+        "factor_cumulative_returns",
+        "factor_information_coefficient",
+        "factor_positions",
+        "factor_rank_autocorrelation",
+        "factor_returns",
+        "factor_weights",
+        "get_forward_returns_columns",
+        "infer_trading_calendar",
+        "mean_information_coefficient",
+        "mean_return_by_quantile",
+        "positions",
+        "prepare_factor_data",
+        "prepare_factor_data_from_forward_returns",
+        "quantile_turnover",
+        "quantize_factor",
+        "show_owned_figures",
+        "timedelta_strings_to_integers",
+        "timedelta_to_string"
+      ]
+    },
+    "fincore.optimization": {
+      "entries": {
+        "OptimizationError": {
+          "kind": "unknown",
+          "public_path": "fincore.optimization.OptimizationError"
+        },
+        "efficient_frontier": {
+          "kind": "unknown",
+          "public_path": "fincore.optimization.efficient_frontier"
+        },
+        "optimize": {
+          "kind": "unknown",
+          "public_path": "fincore.optimization.optimize"
+        },
+        "risk_parity": {
+          "kind": "unknown",
+          "public_path": "fincore.optimization.risk_parity"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "OptimizationError",
+        "efficient_frontier",
+        "optimize",
+        "risk_parity"
+      ]
+    },
+    "fincore.plugin": {
+      "entries": {
+        "DEFAULT_METRIC_FAMILY": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.DEFAULT_METRIC_FAMILY"
+        },
+        "DuplicatePolicy": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.DuplicatePolicy"
+        },
+        "DuplicateRegistrationError": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.DuplicateRegistrationError"
+        },
+        "ExtensionKind": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.ExtensionKind"
+        },
+        "ExtensionRegistry": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.ExtensionRegistry"
+        },
+        "ROLLING_FAMILY": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.ROLLING_FAMILY"
+        },
+        "Registration": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.Registration"
+        },
+        "Scope": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.Scope"
+        },
+        "clear_registry": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.clear_registry"
+        },
+        "execute_hooks": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.execute_hooks"
+        },
+        "get_metric": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.get_metric"
+        },
+        "get_registry": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.get_registry"
+        },
+        "get_viz_backend": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.get_viz_backend"
+        },
+        "isolated_registry": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.isolated_registry"
+        },
+        "list_hooks": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.list_hooks"
+        },
+        "list_metrics": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.list_metrics"
+        },
+        "list_viz_backends": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.list_viz_backends"
+        },
+        "register_hook": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.register_hook"
+        },
+        "register_metric": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.register_metric"
+        },
+        "register_viz_backend": {
+          "kind": "unknown",
+          "public_path": "fincore.plugin.register_viz_backend"
+        }
+      },
+      "profile": "plugin_v1",
+      "public_symbols": [
+        "DEFAULT_METRIC_FAMILY",
+        "DuplicatePolicy",
+        "DuplicateRegistrationError",
+        "ExtensionKind",
+        "ExtensionRegistry",
+        "ROLLING_FAMILY",
+        "Registration",
+        "Scope",
+        "clear_registry",
+        "execute_hooks",
+        "get_metric",
+        "get_registry",
+        "get_viz_backend",
+        "isolated_registry",
+        "list_hooks",
+        "list_metrics",
+        "list_viz_backends",
+        "register_hook",
+        "register_metric",
+        "register_viz_backend"
+      ]
+    },
+    "fincore.pyfolio": {
+      "entries": {
+        "Pyfolio": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.Pyfolio"
+        },
+        "create_bayesian_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_bayesian_tear_sheet"
+        },
+        "create_capacity_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_capacity_tear_sheet"
+        },
+        "create_full_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_full_tear_sheet"
+        },
+        "create_interesting_times_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_interesting_times_tear_sheet"
+        },
+        "create_perf_attrib_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_perf_attrib_tear_sheet"
+        },
+        "create_position_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_position_tear_sheet"
+        },
+        "create_returns_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_returns_tear_sheet"
+        },
+        "create_risk_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_risk_tear_sheet"
+        },
+        "create_round_trip_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_round_trip_tear_sheet"
+        },
+        "create_simple_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_simple_tear_sheet"
+        },
+        "create_txn_tear_sheet": {
+          "kind": "unknown",
+          "public_path": "fincore.pyfolio.create_txn_tear_sheet"
+        }
+      },
+      "profile": "strict_pyfolio_0_9_6",
+      "public_symbols": [
+        "Pyfolio",
+        "create_bayesian_tear_sheet",
+        "create_capacity_tear_sheet",
+        "create_full_tear_sheet",
+        "create_interesting_times_tear_sheet",
+        "create_perf_attrib_tear_sheet",
+        "create_position_tear_sheet",
+        "create_returns_tear_sheet",
+        "create_risk_tear_sheet",
+        "create_round_trip_tear_sheet",
+        "create_simple_tear_sheet",
+        "create_txn_tear_sheet"
+      ]
+    },
+    "fincore.report": {
+      "entries": {
+        "ReportArtifacts": {
+          "kind": "unknown",
+          "public_path": "fincore.report.ReportArtifacts"
+        },
+        "create_strategy_report": {
+          "kind": "function",
+          "public_path": "fincore.report.create_strategy_report",
+          "signature": "(returns, *, benchmark_rets=None, positions=None, transactions=None, trades=None, title='Strategy Report', output='report.html', rolling_window=63, period='daily', return_result=False, audit_manifest=False)"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "ReportArtifacts",
+        "create_strategy_report"
+      ]
+    },
+    "fincore.risk": {
+      "entries": {
+        "EGARCH": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.EGARCH"
+        },
+        "GARCH": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.GARCH"
+        },
+        "GJRGARCH": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.GJRGARCH"
+        },
+        "RiskBacktestResult": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.RiskBacktestResult"
+        },
+        "RiskEstimate": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.RiskEstimate"
+        },
+        "backtest_es": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.backtest_es"
+        },
+        "backtest_var": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.backtest_var"
+        },
+        "conditional_var": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.conditional_var"
+        },
+        "evt_cvar": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.evt_cvar"
+        },
+        "evt_var": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.evt_var"
+        },
+        "extreme_risk": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.extreme_risk"
+        },
+        "forecast_es": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.forecast_es"
+        },
+        "forecast_var": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.forecast_var"
+        },
+        "forecast_volatility": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.forecast_volatility"
+        },
+        "gev_fit": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.gev_fit"
+        },
+        "gpd_fit": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.gpd_fit"
+        },
+        "hill_estimator": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.hill_estimator"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "EGARCH",
+        "GARCH",
+        "GJRGARCH",
+        "RiskBacktestResult",
+        "RiskEstimate",
+        "backtest_es",
+        "backtest_var",
+        "conditional_var",
+        "evt_cvar",
+        "evt_var",
+        "extreme_risk",
+        "forecast_es",
+        "forecast_var",
+        "forecast_volatility",
+        "gev_fit",
+        "gpd_fit",
+        "hill_estimator"
+      ]
+    },
+    "fincore.simulation": {
+      "entries": {
+        "MonteCarlo": {
+          "kind": "unknown",
+          "public_path": "fincore.simulation.MonteCarlo"
+        },
+        "bootstrap": {
+          "kind": "unknown",
+          "public_path": "fincore.simulation.bootstrap"
+        },
+        "bootstrap_ci": {
+          "kind": "unknown",
+          "public_path": "fincore.simulation.bootstrap_ci"
+        }
+      },
+      "profile": "enhanced_v1",
+      "public_symbols": [
+        "MonteCarlo",
+        "bootstrap",
+        "bootstrap_ci"
+      ]
+    }
+  }
+}

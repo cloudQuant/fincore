@@ -1043,7 +1043,7 @@ def test_pyfolio_manifest_is_pinned() -> None:
 
 def test_flat_api_migration_manifest_is_explicit() -> None:
     data = _load("fincore-flat-api-migrations.json")
-    assert data["fincore_version"] == "0.3.0"
+    assert data["fincore_version"] == "0.4.0.dev0"
     assert data["policy"] == "preserve-0.3.x-flat-api"
     assert data["entries"]
     for entry in data["entries"]:
