@@ -88,13 +88,15 @@ class TestFamaFrenchHAC:
 class TestBrinsonLinking:
     """Multi-period Brinson must reconcile via geometric (Carino) linking."""
 
-    @staticmethod
-    def _carino_k(rp: float, rb: float) -> float:
-        if abs(rp - rb) < 1e-15:
-            return 1.0 / (1.0 + rp)
-        return (np.log1p(rp) - np.log1p(rb)) / (rp - rb)
+    def test_brinson_cumulative_reconciles_directly_to_relative_geometric_active_return(self) -> None:
+        """Linked effects must report the investor's relative, not log, active return.
 
-    def test_brinson_cumulative_reconciles(self) -> None:
+        The period-level Brinson effects are arithmetic.  Carino's period
+        constants transform their sum into log relative return; a global
+        relative-return-space constant then maps that log return back to the
+        reported geometric active return.  This assertion intentionally uses
+        only NumPy operations and does not call the oracle under test.
+        """
         from fincore.attribution.brinson import brinson_cumulative
 
         rp = np.array([[0.05, 0.03], [0.02, -0.01], [0.04, 0.06]])
@@ -106,13 +108,11 @@ class TestBrinsonLinking:
 
         portfolio_period = np.sum(wp * rp, axis=1)
         benchmark_period = np.sum(wb * rb, axis=1)
-        k = np.array([self._carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
-        K = float(k.sum())
         total = result["allocation"] + result["selection"] + result["interaction"]
 
         geometric_active = np.prod(1.0 + portfolio_period) / np.prod(1.0 + benchmark_period) - 1.0
-        assert np.isclose(np.expm1(K * total), geometric_active, rtol=1e-12, atol=1e-12), (
-            f"expm1(K*total)={np.expm1(K * total)} vs geometric active {geometric_active}"
+        assert np.isclose(total, geometric_active, rtol=1e-12, atol=1e-12), (
+            f"linked total={total} vs relative geometric active {geometric_active}"
         )
 
     def test_brinson_cumulative_matches_carino_oracle(self) -> None:
@@ -135,6 +135,12 @@ class TestBrinsonLinking:
         benchmark_period = np.sum(wb * rb, axis=1)
         ref = carino_linking_reference(effects, portfolio_period, benchmark_period)
 
+        assert np.isclose(
+            ref["allocation"] + ref["selection"] + ref["interaction"],
+            ref["active_return"],
+            rtol=1e-12,
+            atol=1e-12,
+        )
         assert np.isclose(result["allocation"], ref["allocation"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["selection"], ref["selection"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["interaction"], ref["interaction"], rtol=1e-12, atol=1e-12)

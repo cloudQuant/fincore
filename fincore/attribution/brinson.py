@@ -184,10 +184,14 @@ def brinson_cumulative(
 ) -> dict[str, float]:
     """Calculate cumulative Brinson attribution using Carino geometric linking.
 
-    Multi-period attribution must compound geometrically: the arithmetic
-    per-period effects are mapped onto the geometric active return via the
-    Carino linking constant ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)``
-    so the linked effects reconcile to ``(1+R_p)/(1+R_b) - 1``.
+    Multi-period attribution must compound geometrically.  The arithmetic
+    per-period effects are scaled by the Carino period constants
+    ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)`` and by a single
+    global constant in relative-return space.  More specifically, if
+    ``A = (1 + R_p) / (1 + R_b) - 1`` is the relative geometric active
+    return, each effect is linked as ``sum_t (k_t / K) * effect_t``, where
+    ``K = [ln(1+A) - ln(1+0)] / (A-0)``.  The returned effects therefore
+    directly reconcile to ``A`` (rather than to its logarithm).
 
     Parameters
     ----------
@@ -234,19 +238,16 @@ def brinson_cumulative(
         selection[t] = float(attr["selection"])
         interaction[t] = float(attr["interaction"])
 
-    k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
-    ksum = float(k.sum())
-
-    if ksum == 0.0:
-        alloc_cum = sel_cum = inter_cum = 0.0
-    else:
-        w_k = k / ksum
-        alloc_cum = float(np.sum(w_k * allocation))
-        sel_cum = float(np.sum(w_k * selection))
-        inter_cum = float(np.sum(w_k * interaction))
-
     portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
     benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
+    relative_active = float((1.0 + portfolio_cum) / (1.0 + benchmark_cum) - 1.0)
+
+    k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
+    global_k = _carino_k(relative_active, 0.0)
+    linked_scale = k / global_k
+    alloc_cum = float(np.sum(linked_scale * allocation))
+    sel_cum = float(np.sum(linked_scale * selection))
+    inter_cum = float(np.sum(linked_scale * interaction))
 
     return {
         "allocation": alloc_cum,

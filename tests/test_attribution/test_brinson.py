@@ -90,7 +90,7 @@ def test_brinson_results_single_period_from_1d_inputs():
     assert df["period"].tolist() == ["0"]
 
 
-def test_brinson_cumulative_uses_carino_linking_and_reports_geometric_returns():
+def test_brinson_cumulative_uses_carino_linking_and_reports_relative_geometric_active_return():
     rp = np.array([[0.02, 0.01], [0.00, 0.03]], dtype=float)
     rb = np.array([[0.01, 0.005], [0.01, 0.02]], dtype=float)
     wp = np.array([[0.6, 0.4], [0.5, 0.5]], dtype=float)
@@ -101,21 +101,45 @@ def test_brinson_cumulative_uses_carino_linking_and_reports_geometric_returns():
     port_period = np.sum(wp * rp, axis=1)
     bench_period = np.sum(wb * rb, axis=1)
 
-    def carino_k(a: float, b: float) -> float:
-        if abs(a - b) < 1e-15:
-            return 1.0 / (1.0 + a)
-        return (np.log1p(a) - np.log1p(b)) / (a - b)
-
-    K = float(sum(carino_k(a, b) for a, b in zip(port_period, bench_period, strict=True)))
     total = cum["allocation"] + cum["selection"] + cum["interaction"]
 
-    # Carino identity: exp(K * total) - 1 == geometric active return.
+    # Global Carino normalization maps the linked effects directly to the
+    # relative geometric active return, rather than to log active return.
     geometric_active = np.prod(1.0 + port_period) / np.prod(1.0 + bench_period) - 1.0
-    assert np.isclose(np.expm1(K * total), geometric_active, rtol=1e-12, atol=1e-12)
+    assert np.isclose(total, geometric_active, rtol=1e-12, atol=1e-12)
 
     # Geometric cumulative of per-period weighted returns is preserved.
     assert np.isclose(cum["portfolio_cumulative"], float(np.prod(1.0 + port_period) - 1.0))
     assert np.isclose(cum["benchmark_cumulative"], float(np.prod(1.0 + bench_period) - 1.0))
+
+
+def test_brinson_cumulative_single_period_reports_relative_active_return():
+    rp = np.array([0.04, 0.01], dtype=float)
+    rb = np.array([0.02, 0.00], dtype=float)
+    wp = np.array([0.7, 0.3], dtype=float)
+    wb = np.array([0.5, 0.5], dtype=float)
+
+    result = brinson_cumulative(rp, rb, wp, wb)
+
+    portfolio_return = float(np.sum(wp * rp))
+    benchmark_return = float(np.sum(wb * rb))
+    expected_active = (1.0 + portfolio_return) / (1.0 + benchmark_return) - 1.0
+    assert np.isclose(result["total"], expected_active, rtol=1e-12, atol=1e-12)
+
+
+def test_brinson_cumulative_handles_equal_return_period_without_nan():
+    rp = np.array([[0.03, 0.01], [0.04, 0.00]], dtype=float)
+    rb = np.array([[0.02, 0.02], [0.01, 0.01]], dtype=float)
+    wp = np.array([[0.5, 0.5], [0.7, 0.3]], dtype=float)
+    wb = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=float)
+
+    result = brinson_cumulative(rp, rb, wp, wb)
+
+    portfolio_period = np.sum(wp * rp, axis=1)
+    benchmark_period = np.sum(wb * rb, axis=1)
+    expected_active = np.prod(1.0 + portfolio_period) / np.prod(1.0 + benchmark_period) - 1.0
+    assert np.isfinite(result["total"])
+    assert np.isclose(result["total"], expected_active, rtol=1e-12, atol=1e-12)
 
 
 def test_brinson_cumulative_single_period_from_1d_inputs():

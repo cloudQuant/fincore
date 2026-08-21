@@ -18,11 +18,13 @@ For period ``t`` with portfolio return ``r^p_t`` and benchmark return
     k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)   if r^p_t != r^b_t
     k_t = 1 / (1 + r^p_t)                                  otherwise
 
-    K = sum_t k_t
+    A = product_t (1 + r^p_t) / product_t (1 + r^b_t) - 1
+    K = [ln(1 + A) - ln(1 + 0)] / (A - 0)
 
     E_cum = sum_t (k_t / K) * E_t      (E in {allocation, selection, interaction})
 
-The cumulative effects then reconcile to the geometric active return::
+The cumulative effects then reconcile directly to the relative geometric
+active return::
 
     (1+R_p)/(1+R_b) - 1 = allocation_cum + selection_cum + interaction_cum
 
@@ -68,17 +70,16 @@ def carino_linking_reference(
     """
     rp = np.asarray(portfolio_period_returns, dtype=float)
     rb = np.asarray(benchmark_period_returns, dtype=float)
-    k = np.array([_carino_k(a, b) for a, b in zip(rp, rb, strict=True)])
-    ksum = float(k.sum())
-    if ksum == 0.0:
-        return dict.fromkeys(period_effects, 0.0) | {"active_return": 0.0}
+    rp_cum = float(np.prod(1.0 + rp) - 1.0)
+    rb_cum = float(np.prod(1.0 + rb) - 1.0)
+    active_return = float((1.0 + rp_cum) / (1.0 + rb_cum) - 1.0)
+    period_k = np.array([_carino_k(a, b) for a, b in zip(rp, rb, strict=True)])
+    global_k = _carino_k(active_return, 0.0)
 
     out: dict[str, float] = {}
     for name, effects in period_effects.items():
         e = np.asarray(effects, dtype=float)
-        out[name] = float(np.sum((k / ksum) * e))
+        out[name] = float(np.sum((period_k / global_k) * e))
 
-    rp_cum = float(np.prod(1.0 + rp) - 1.0)
-    rb_cum = float(np.prod(1.0 + rb) - 1.0)
-    out["active_return"] = float((1.0 + rp_cum) / (1.0 + rb_cum) - 1.0)
+    out["active_return"] = active_return
     return out
