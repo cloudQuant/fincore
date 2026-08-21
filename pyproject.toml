@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,8 @@ name = "fincore"
 version = "0.4.0.dev0"
 description = "Quantitative performance and risk analytics for Python"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
     {name = "cloudQuant", email = "yunjinqi@gmail.com"},
@@ -20,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Mathematics",
@@ -83,6 +83,10 @@ all = [
 
 [project.urls]
 Homepage = "https://github.com/cloudQuant/fincore"
+Documentation = "https://github.com/cloudQuant/fincore#readme"
+Repository = "https://github.com/cloudQuant/fincore"
+Issues = "https://github.com/cloudQuant/fincore/issues"
+Changelog = "https://github.com/cloudQuant/fincore/blob/master/CHANGELOG.md"
 
 [tool.setuptools.package-data]
 fincore = ["py.typed", "report/assets/*.js"]
