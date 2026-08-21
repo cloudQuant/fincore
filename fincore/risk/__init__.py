@@ -17,6 +17,10 @@ from fincore.risk.backtesting import (
     backtest_es,
     backtest_var,
 )
+from fincore.risk.diagnostics import (
+    WalkForwardVaRResult,
+    walk_forward_var,
+)
 from fincore.risk.evt import (
     evt_cvar,
     evt_var,
@@ -37,6 +41,7 @@ from fincore.risk.models import (
     forecast_es,
     forecast_var,
 )
+from fincore.risk.specs import RiskModelSpec
 
 __all__ = [
     "EGARCH",
@@ -45,6 +50,8 @@ __all__ = [
     "GJRGARCH",
     "RiskBacktestResult",
     "RiskEstimate",
+    "RiskModelSpec",
+    "WalkForwardVaRResult",
     "backtest_es",
     "backtest_var",
     "conditional_var",
@@ -58,4 +65,5 @@ __all__ = [
     "gpd_fit",
     # EVT functions
     "hill_estimator",
+    "walk_forward_var",
 ]

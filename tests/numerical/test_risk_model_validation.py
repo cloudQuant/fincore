@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fincore.risk import RiskModelSpec as PublicRiskModelSpec
+from fincore.risk import walk_forward_var
 from fincore.risk.backtesting import backtest_var
 from fincore.risk.calibration import basel_traffic_light, es_calibration_score, expected_exception_count
 from fincore.risk.specs import RiskModelSpec
@@ -17,6 +19,7 @@ class TestRiskModelSpec:
         assert spec.confidence_level == 0.99
         assert spec.horizon == 1
         assert spec.sign_convention == "losses_negative"
+        assert PublicRiskModelSpec is RiskModelSpec
 
     def test_rejects_invalid_confidence(self) -> None:
         with pytest.raises(ValueError, match="confidence_level"):
@@ -25,6 +28,25 @@ class TestRiskModelSpec:
     def test_rejects_invalid_target(self) -> None:
         with pytest.raises(ValueError, match="forecast_target"):
             RiskModelSpec(forecast_target="bogus")
+
+    @pytest.mark.parametrize(
+        ("field", "value", "message"),
+        [
+            ("distribution", "garch", "distribution"),
+            ("sign_convention", "losses_positive", "sign_convention"),
+            ("window", 1, "window"),
+            ("refit_cadence", 0, "refit_cadence"),
+            ("model_version", "experimental", "model_version"),
+        ],
+    )
+    def test_rejects_unsupported_or_invalid_model_contract(
+        self,
+        field: str,
+        value: object,
+        message: str,
+    ) -> None:
+        with pytest.raises(ValueError, match=message):
+            RiskModelSpec(**{field: value})  # type: ignore[arg-type]
 
 
 class TestBaselTrafficLight:
@@ -60,6 +82,71 @@ class TestExpectedExceptions:
 
 
 class TestWalkForward:
+    def test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable(self) -> None:
+        rng = np.random.default_rng(7)
+        idx = pd.date_range("2020-01-01", periods=160, freq="B", tz="UTC")
+        returns = pd.Series(rng.normal(0.0, 0.02, len(idx)), index=idx)
+        spec = RiskModelSpec(confidence_level=0.95, distribution="historical", window=40, refit_cadence=5)
+
+        result = walk_forward_var(returns, spec)
+
+        expected_first = float(np.quantile(returns.iloc[:40].to_numpy(), 0.05))
+        assert result.status == "ok"
+        assert result.forecast.index.equals(idx[40:])
+        assert result.realized.index.equals(result.forecast.index)
+        assert result.realized.equals(returns.iloc[40:])
+        assert result.forecast.iloc[0] == pytest.approx(expected_first)
+        assert result.refit_timestamps.equals(idx[40::5])
+        assert len(result.inputs_digest) == 64
+        assert result.backtest is not None
+        assert result.backtest.observations == len(result.forecast)
+
+    def test_normal_forecast_reuses_fit_until_the_next_deterministic_refit(self) -> None:
+        idx = pd.date_range("2021-01-01", periods=80, freq="B", tz="UTC")
+        returns = pd.Series(np.linspace(-0.03, 0.04, len(idx)), index=idx)
+        spec = RiskModelSpec(distribution="normal", confidence_level=0.95, window=20, refit_cadence=4)
+
+        result = walk_forward_var(returns, spec)
+
+        assert result.status == "ok"
+        assert result.forecast.iloc[0] == pytest.approx(result.forecast.iloc[1])
+        assert result.forecast.iloc[1] == pytest.approx(result.forecast.iloc[3])
+        assert result.forecast.iloc[4] != pytest.approx(result.forecast.iloc[3])
+        assert result.refit_timestamps.equals(idx[20::4])
+
+    def test_future_perturbation_cannot_change_completed_forecasts(self) -> None:
+        rng = np.random.default_rng(12)
+        idx = pd.date_range("2022-01-01", periods=180, freq="B", tz="UTC")
+        returns = pd.Series(rng.normal(0.0, 0.02, len(idx)), index=idx)
+        spec = RiskModelSpec(distribution="historical", confidence_level=0.95, window=40, refit_cadence=1)
+        baseline = walk_forward_var(returns, spec)
+
+        cutoff = idx[120]
+        changed = returns.copy()
+        changed.loc[cutoff:] = changed.loc[cutoff:] - 0.5
+        perturbed = walk_forward_var(changed, spec)
+
+        pd.testing.assert_series_equal(
+            baseline.forecast.loc[:cutoff],
+            perturbed.forecast.loc[:cutoff],
+            check_names=False,
+        )
+        assert baseline.inputs_digest != perturbed.inputs_digest
+
+    def test_reports_structured_insufficiency_and_unsupported_status(self) -> None:
+        idx = pd.date_range("2022-01-01", periods=10, freq="B", tz="UTC")
+        returns = pd.Series(np.linspace(-0.01, 0.01, len(idx)), index=idx)
+
+        insufficient = walk_forward_var(returns, RiskModelSpec(window=10))
+        unsupported = walk_forward_var(returns, RiskModelSpec(forecast_target="es", window=2))
+
+        assert insufficient.status == "insufficient_data"
+        assert insufficient.forecast.empty
+        assert insufficient.backtest is None
+        assert unsupported.status == "unsupported"
+        assert unsupported.forecast.empty
+        assert unsupported.backtest is None
+
     def test_forecast_uses_only_past_data(self) -> None:
         rng = np.random.default_rng(7)
         n = 400
