@@ -1,6 +1,6 @@
 # Compatibility
 
-This page describes the C0–C4 compatibility status of fincore 0.3.0 against
+This page describes the C0–C4 compatibility status of fincore 0.4.0.dev0 against
 its three frozen upstream targets: empyrical 0.6.0, pyfolio 0.9.6, and the
 cloudQuant-local Alphalens snapshot. Everything claimed here is enforced by
 executable gates in `tests/compat/` (CI jobs `compat` and `compat-alphalens`)

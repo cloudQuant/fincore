@@ -3,9 +3,9 @@
 See the full [CHANGELOG.md](https://github.com/cloudQuant/fincore/blob/master/CHANGELOG.md)
 in the repository.
 
-## [0.3.0] - unreleased (release candidate)
+## [0.4.0.dev0] - development
 
-Current version. Package maturity: **Beta**. No Stable/1.0 claim is made.
+Current development version. Package maturity: **Beta**. No Stable/1.0 claim is made.
 
 ### Added
 
@@ -22,7 +22,8 @@ Current version. Package maturity: **Beta**. No Stable/1.0 claim is made.
 ### Changed
 
 - Python 3.11+ required (breaking change vs empyrical).
-- Flat API remains bound to enhanced `fincore.metrics` semantics in 0.3.x.
+- Flat API remains bound to enhanced `fincore.metrics` semantics in the 0.4
+  development line.
 
 ### Fixed
 

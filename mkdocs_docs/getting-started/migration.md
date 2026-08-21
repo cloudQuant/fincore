@@ -1,12 +1,12 @@
 # Migration from empyrical
 
-The current fincore version is **0.3.0**. There is no current 1.0.0 release, so
+The current fincore development version is **0.4.0.dev0**. There is no current 1.0.0 release, so
 do not require `fincore>=1.0.0`.
 
 > **Breaking change:** fincore requires **Python 3.11+**; empyrical supports
 > older interpreters.
 
-## The three API surfaces
+## The four API surfaces
 
 1. **Strict compatibility** — `fincore.empyrical` is the frozen empyrical
    0.6.0 surface (54 public symbols, 49 callables): all symbols C0, all
@@ -14,7 +14,11 @@ do not require `fincore>=1.0.0`.
 2. **pyfolio façade** — `fincore.pyfolio` implements the frozen pyfolio 0.9.6
    profile of 11 workflows: all entries C1, risk/returns/perf-attrib/full-sheet
    main chains C4. `from fincore import Pyfolio` requires `fincore[pyfolio]`.
-3. **Enhanced semantics** — `fincore.metrics`, the flat API, and
+3. **Alphalens façade** — `fincore.alphalens` is the frozen cloudQuant-local
+   Alphalens compatibility surface. It remains distinct from the enhanced
+   factor-analysis kernel and uses `fincore[alphalens]` for optional analysis
+   and plotting dependencies.
+4. **Enhanced semantics** — `fincore.metrics`, the flat API, and
    `AnalysisContext` are fincore's own interfaces with documented divergences.
    Recommended for new code; not evidence of empyrical equality.
 
@@ -22,10 +26,10 @@ Details and the full C0–C4 matrix: [Compatibility](../development/compatibilit
 Frozen manifests: `tests/compat/fixtures/`; executable gates: `tests/compat/`
 (CI job `compat`).
 
-## 0.3.x imports
+## 0.4 development imports
 
 Existing flat imports remain mapped to enhanced `fincore.metrics` functions in
-0.3.x:
+the 0.4 development line:
 
 ```python
 import pandas as pd
