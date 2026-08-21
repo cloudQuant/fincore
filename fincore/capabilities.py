@@ -198,10 +198,16 @@ _CAPABILITIES: tuple[Capability, ...] = (
         public_path="fincore.report.create_strategy_report",
         domain="report",
         status=STATUS_STABLE,
-        input_contract="Returns Series (required) plus optional benchmark/positions/transactions/trades.",
-        output_contract="An HTML or PDF strategy report at the caller-selected path.",
+        input_contract=(
+            "Validated periodic returns plus optional benchmark/positions/transactions/trades; "
+            "an enhanced DisclosureContext declares cashflow, fee and unit semantics."
+        ),
+        output_contract=(
+            "An HTML or PDF strategy report with calculation, units, sample and data-quality disclosure; "
+            "optional provenance sidecar."
+        ),
         docs_path="api/report.md",
-        rationale="Compute-once/render-many report pipeline with deterministic sections.",
+        rationale="Compute-once/render-many report pipeline with deterministic sections and explicit performance context.",
     ),
     # --- factor analysis ---------------------------------------------------
     Capability(

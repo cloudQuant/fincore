@@ -9,11 +9,28 @@ of the performance gate; full multi-scale benchmarks run in CI.
 
 from __future__ import annotations
 
+import sys
 import time
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+# A direct script invocation otherwise resolves ``fincore`` from an editable,
+# site, or PYTHONPATH-shadowed installation.  Performance evidence must use
+# this source candidate.
+def _is_checkout_path(entry: str) -> bool:
+    try:
+        return Path(entry or ".").resolve() == ROOT
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+sys.path[:] = [entry for entry in sys.path if not _is_checkout_path(entry)]
+sys.path.insert(0, str(ROOT))
 
 from fincore.api import build_builtin_catalog
 from fincore.api.invoke import invoke

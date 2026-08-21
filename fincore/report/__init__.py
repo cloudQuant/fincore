@@ -45,6 +45,7 @@ from fincore.report.artifacts import ReportArtifacts
 if TYPE_CHECKING:
     import pandas as pd
 
+    from fincore.performance import DisclosureContext
     from fincore.report.model import ReportModel
 
 
@@ -61,6 +62,7 @@ def create_strategy_report(
     period: str = "daily",
     return_result: bool = False,
     audit_manifest: bool = False,
+    disclosure_context: DisclosureContext | None = None,
 ) -> str | ReportArtifacts:
     """Generate a strategy report (HTML or PDF) based on the inputs you provide.
 
@@ -96,6 +98,14 @@ def create_strategy_report(
         dependency versions) beside the report and expose it as
         ``ReportArtifacts.manifest_path``.  The manifest never contains raw
         returns, positions, transactions, credentials, or absolute local paths.
+    disclosure_context : DisclosureContext, optional
+        Enhanced-interface calculation context for the displayed performance
+        figures.  Its established defaults are complete caller declarations
+        (TWR, gross-of-fees, no cashflows, annualized), so pass it only when
+        all declarations are supported by the calculation record.  Without a
+        context, the report uses conservative source-derived language: it
+        explicitly states that it received a caller-supplied simple return
+        series and did not perform cashflow adjustment.
 
     Returns
     -------
@@ -116,6 +126,7 @@ def create_strategy_report(
             trades,
             rolling_window,
             period=period,
+            disclosure_context=disclosure_context,
         )
 
     if output.lower().endswith(".pdf"):
@@ -134,6 +145,7 @@ def create_strategy_report(
                 rolling_window=rolling_window,
                 period=period,
                 model=model,
+                disclosure_context=disclosure_context if model is None else None,
             ),
         )
         backend = "pdf"
@@ -154,6 +166,7 @@ def create_strategy_report(
                 rolling_window=rolling_window,
                 period=period,
                 model=model,
+                disclosure_context=disclosure_context if model is None else None,
             ),
         )
         backend = "html"
@@ -165,6 +178,7 @@ def create_strategy_report(
             from fincore import __version__ as fincore_version
             from fincore.report.provenance import ReportProvenance
 
+            assert model is not None
             provenance = ReportProvenance.build(
                 code_version=fincore_version,
                 configuration={
@@ -172,6 +186,7 @@ def create_strategy_report(
                     "rolling_window": rolling_window,
                     "period": period,
                     "backend": backend,
+                    "performance_disclosure": model["performance_disclosure"],
                 },
                 inputs={
                     "returns": returns,

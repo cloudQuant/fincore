@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
+from dataclasses import replace
 
 import numpy as np
 import pandas as pd
@@ -59,6 +60,139 @@ def _period_defs(period):
     if period == "monthly":
         return [("1M", 1), ("3M", 3), ("6M", 6), ("1Y", 12), ("3Y", 36), ("5Y", 60)]
     return _PERIOD_DEFS
+
+
+_DEFAULT_DISCLOSURE_NOTE = "GIPS-aware disclosure support; not GIPS compliance certification."
+_LEGACY_DISCLOSURE_NOTE = "Legacy precomputed model: raw-input validation and calculation provenance unavailable."
+
+
+def _disclosure_text(value, default):
+    """Keep report disclosures complete when a caller leaves a field blank."""
+
+    return value if isinstance(value, str) and value.strip() else default
+
+
+def _merge_disclosure_context(default, disclosure_context):
+    """Merge non-empty caller declarations into a provenance-backed default."""
+
+    from fincore.performance import DisclosureContext
+
+    if disclosure_context is None:
+        return default
+    if not isinstance(disclosure_context, DisclosureContext):
+        raise TypeError("disclosure_context must be a DisclosureContext")
+
+    return replace(
+        default,
+        convention=_disclosure_text(disclosure_context.convention, default.convention),
+        sample_period=_disclosure_text(disclosure_context.sample_period, default.sample_period),
+        data_quality=_disclosure_text(disclosure_context.data_quality, default.data_quality),
+        fees=_disclosure_text(disclosure_context.fees, default.fees),
+        cashflows=_disclosure_text(disclosure_context.cashflows, default.cashflows),
+        benchmark=_disclosure_text(disclosure_context.benchmark, default.benchmark),
+        risk_free=_disclosure_text(disclosure_context.risk_free, default.risk_free),
+        annualized=bool(disclosure_context.annualized),
+        notes=tuple(disclosure_context.notes) or default.notes,
+        return_type=_disclosure_text(disclosure_context.return_type, default.return_type),
+        units=_disclosure_text(disclosure_context.units, default.units),
+        frequency=_disclosure_text(disclosure_context.frequency, default.frequency),
+    )
+
+
+def _resolved_performance_disclosure(returns, benchmark_rets, period, disclosure_context):
+    """Resolve complete, honest report disclosure from validated inputs.
+
+    Generic strategy reports receive a periodic returns series, not an
+    independently auditable valuation/cashflow ledger.  The default therefore
+    declares that limitation instead of claiming a TWR or fee convention.
+    Callers that computed an enhanced TWR/MWR series can provide an explicit
+    :class:`DisclosureContext`; missing sample/data-quality fields remain
+    derived from the validated report input.
+    """
+
+    from fincore.performance import DisclosureContext
+
+    sample_period = (
+        f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')} "
+        f"({len(returns)} {period} observations)"
+    )
+    default = DisclosureContext(
+        convention="Simple periodic returns; geometrically compounded",
+        sample_period=sample_period,
+        data_quality=f"{len(returns)} finite observations; unique, increasing DatetimeIndex validated",
+        fees="not supplied; caller-defined return series",
+        cashflows="not supplied; no cashflow adjustment applied",
+        benchmark="benchmark return series supplied" if benchmark_rets is not None else "none supplied",
+        risk_free="not supplied; ratios use documented defaults",
+        annualized=True,
+        notes=(_DEFAULT_DISCLOSURE_NOTE,),
+        return_type="simple",
+        units="decimal return per period",
+        frequency=period,
+    )
+    return _merge_disclosure_context(default, disclosure_context)
+
+
+def _legacy_performance_disclosure(model, disclosure_context):
+    """Resolve a fail-closed disclosure for a pre-disclosure report model.
+
+    Legacy models are already computed, so their raw inputs must never affect
+    a later rendering.  The durable model metadata supplies only the sample
+    range/count/frequency; every unavailable financial semantic is labelled as
+    such and a caller may add explicit declarations through ``DisclosureContext``.
+    """
+
+    from fincore.performance import DisclosureContext
+
+    raw_period = model.get("period")
+    period = raw_period if isinstance(raw_period, str) and raw_period.strip() else "unknown"
+    raw_date_range = model.get("date_range")
+    raw_count = model.get("n_periods")
+    if (
+        isinstance(raw_date_range, (tuple, list))
+        and len(raw_date_range) == 2
+        and all(isinstance(value, str) and value for value in raw_date_range)
+        and isinstance(raw_count, int)
+        and raw_count >= 0
+    ):
+        sample_period = f"{raw_date_range[0]} to {raw_date_range[1]} ({raw_count} {period} observations)"
+    else:
+        sample_period = "not recorded in legacy precomputed model"
+
+    default = DisclosureContext(
+        convention="legacy precomputed model; calculation convention unavailable",
+        sample_period=sample_period,
+        data_quality="legacy precomputed model; raw-input validation provenance unavailable",
+        fees="not recorded in legacy precomputed model",
+        cashflows="not recorded in legacy precomputed model",
+        benchmark="not recorded in legacy precomputed model",
+        risk_free="not recorded in legacy precomputed model",
+        annualized=True,
+        notes=(_LEGACY_DISCLOSURE_NOTE, _DEFAULT_DISCLOSURE_NOTE),
+        return_type="unknown",
+        units="unknown",
+        frequency=period,
+    )
+    return _merge_disclosure_context(default, disclosure_context)
+
+
+def _disclosure_payload(context):
+    """Return the JSON-safe disclosure shape shared by renderers and provenance."""
+
+    return {
+        "convention": context.convention,
+        "return_type": context.return_type,
+        "units": context.units,
+        "frequency": context.frequency,
+        "sample_period": context.sample_period,
+        "data_quality": context.data_quality,
+        "fees": context.fees,
+        "cashflows": context.cashflows,
+        "benchmark": context.benchmark,
+        "risk_free": context.risk_free,
+        "annualized": bool(context.annualized),
+        "notes": [str(note) for note in context.notes],
+    }
 
 
 def _compute_core_perf(context, Empyrical, returns, benchmark_rets, period):
@@ -421,6 +555,8 @@ def compute_sections(
     trades,
     rolling_window,
     period="daily",
+    *,
+    disclosure_context=None,
 ):
     """Compute all statistics and time series needed by the report renderers.
 
@@ -459,6 +595,9 @@ def compute_sections(
     sections["n_periods"] = len(returns)
     sections["n_days"] = len(returns)
     sections["n_months"] = _approx_months(len(returns), period)
+    sections["performance_disclosure"] = _disclosure_payload(
+        _resolved_performance_disclosure(returns, benchmark_rets, period, disclosure_context)
+    )
 
     # ------ Core performance ------
     perf = _compute_core_perf(context, Empyrical, returns, benchmark_rets, period)

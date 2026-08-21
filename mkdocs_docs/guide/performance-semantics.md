@@ -73,8 +73,55 @@ and ambiguous timing are errors rather than silently adjusted values.
 
 TWR measures the compound return after external-flow neutralization;
 `mwr`/`xirr` measure money-weighted return with a separately documented,
-conservative conventional-cashflow policy. Use `DisclosureContext` with any
-enhanced report to state convention, sample period, fees, cashflows,
-benchmark, risk-free convention, and annualization. These helpers provide
-GIPS-aware calculation and disclosure support; they do not certify GIPS
-compliance.
+conservative conventional-cashflow policy. Every enhanced strategy report now
+renders a calculation disclosure. With a plain periodic return series, its
+default is deliberately conservative: it says that cashflow and fee treatment
+were not supplied and no cashflow adjustment was performed. It does **not**
+silently label that series as TWR.
+
+Pass a `DisclosureContext` only when the calculation record supports the
+declarations. Its established defaults are themselves declarations: TWR,
+gross-of-fees, no cashflows and annualized metrics. Therefore, treat every
+context instance as a complete caller assertion, including when only one field
+is overridden. Omit `disclosure_context` entirely to receive conservative
+values derived from the validated report input. A legacy precomputed report
+model without a disclosure is rendered only with its immutable model metadata
+and explicit ``legacy/unknown`` provenance; later raw inputs are not consulted.
+The resolved, structured disclosure is rendered in HTML/PDF. An optional audit
+manifest records its sanitized form, redacting credentials and omitting local
+paths rather than copying sensitive free-form text verbatim.
+
+```python
+import pandas as pd
+
+from fincore.performance import DisclosureContext
+from fincore.report import create_strategy_report
+
+returns = pd.Series(
+    [0.001 if day % 2 else -0.0005 for day in range(60)],
+    index=pd.date_range("2024-01-02", periods=60, freq="B", tz="UTC"),
+)
+context = DisclosureContext(
+    convention="TWR after external-flow neutralization",
+    return_type="simple",
+    units="decimal return per period",
+    frequency="daily",
+    fees="net-of-fees",
+    cashflows="timed transaction ledger",
+    benchmark="S&P 500 total return",
+    risk_free="USD 3M Treasury",
+)
+
+# ``returns`` is the already-calculated, validated periodic return series.
+artifacts = create_strategy_report(
+    returns,
+    output="report.html",
+    disclosure_context=context,
+    return_result=True,
+    audit_manifest=True,
+)
+assert artifacts.model["performance_disclosure"]["convention"].startswith("TWR")
+```
+
+These helpers provide GIPS-aware calculation and disclosure support; they do
+not certify GIPS compliance.

@@ -21,6 +21,21 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+# ``python scripts/snapshot_public_api.py`` otherwise puts ``scripts/`` (not
+# the checkout root) on sys.path and may inspect an unrelated installed or
+# PYTHONPATH-shadowed fincore at runtime.  The AST scan and dynamic ``__all__``
+# probe must agree on this candidate source tree.
+def _is_checkout_path(entry: str) -> bool:
+    try:
+        return Path(entry or ".").resolve() == ROOT
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+sys.path[:] = [entry for entry in sys.path if not _is_checkout_path(entry)]
+sys.path.insert(0, str(ROOT))
 PACKAGE = ROOT / "fincore"
 
 SCHEMA_VERSION = 1

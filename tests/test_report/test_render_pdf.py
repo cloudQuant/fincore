@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from PyPDF2 import PdfReader, PdfWriter
 
+from fincore.performance import DisclosureContext
 from fincore.report.render_pdf import generate_pdf
 
 
@@ -91,6 +92,40 @@ def test_generate_pdf_with_mocked_playwright(tmp_path, monkeypatch) -> None:
 
     reader = PdfReader(str(out))
     assert len(reader.pages) == 1
+
+
+def test_generate_pdf_forwards_disclosure_when_it_computes_the_model(tmp_path, monkeypatch) -> None:
+    pytest.importorskip("playwright")
+    import playwright.sync_api as ps
+
+    import fincore.report.render_html as render_html
+
+    monkeypatch.setattr(ps, "sync_playwright", lambda: _FakePlaywrightCM())
+    captured = {}
+    original = render_html.generate_html
+
+    def recording_generate_html(*args, **kwargs):
+        captured["disclosure_context"] = kwargs.get("disclosure_context")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(render_html, "generate_html", recording_generate_html)
+    context = DisclosureContext(convention="TWR", cashflows="timed ledger")
+    index = pd.date_range("2024-01-01", periods=20, freq="B", tz="UTC")
+    returns = pd.Series([0.001 if number % 2 else -0.0006 for number in range(len(index))], index=index)
+
+    generate_pdf(
+        returns,
+        benchmark_rets=None,
+        positions=None,
+        transactions=None,
+        trades=None,
+        title="PDF Disclosure",
+        output=str(tmp_path / "disclosure.pdf"),
+        rolling_window=10,
+        disclosure_context=context,
+    )
+
+    assert captured["disclosure_context"] is context
 
 
 def test_generate_pdf_ignores_cleanup_oserrors(tmp_path, monkeypatch) -> None:

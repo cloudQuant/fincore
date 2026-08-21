@@ -12,12 +12,13 @@ from __future__ import annotations
 import functools
 import json
 from collections import OrderedDict
+from html import escape
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from fincore.report.compute import compute_sections
+from fincore.report.compute import _disclosure_payload, _legacy_performance_disclosure, compute_sections
 from fincore.report.format import (
     HTML_CSS,
     css_cls,
@@ -30,6 +31,7 @@ from fincore.report.format import (
 )
 
 if TYPE_CHECKING:
+    from fincore.performance import DisclosureContext
     from fincore.report.model import ReportModel
 
 __all__ = ["generate_html", "load_echarts_js"]
@@ -176,6 +178,7 @@ def _build_sidebar(s):
     """Build the sidebar navigation HTML."""
     nav = [
         ("overview", "Overview"),
+        ("disclosure", "Performance Disclosure"),
         ("period", "Period Returns"),
         ("performance", "Performance"),
         ("returns", "Returns"),
@@ -223,6 +226,7 @@ def generate_html(
     period="daily",
     *,
     model: ReportModel | None = None,
+    disclosure_context: DisclosureContext | None = None,
 ):
     """Generate an interactive HTML report (ECharts + sidebar navigation).
 
@@ -230,14 +234,30 @@ def generate_html(
     ----------
     model : ReportModel, optional
         A precomputed report model.  When given, the renderer never computes
-        statistics itself (compute-once, render-many); raw inputs are only
-        used when ``model`` is ``None``.
+        statistics itself (compute-once, render-many), and raw inputs are not
+        read.  A legacy model without a disclosure is rendered with an
+        explicit legacy disclosure derived only from model metadata.
     """
     if model is not None:
         # Shallow copy: rendering never mutates a caller-owned model.
         s: dict = dict(model)
+        if "performance_disclosure" not in s:
+            # Legacy precomputed models have no disclosure section.  Never
+            # consult raw inputs here: they may describe another report.
+            s["performance_disclosure"] = _disclosure_payload(_legacy_performance_disclosure(model, disclosure_context))
+        elif disclosure_context is not None:
+            raise ValueError("disclosure_context must be included when the report model is computed")
     else:
-        s = compute_sections(returns, benchmark_rets, positions, transactions, trades, rolling_window, period=period)
+        s = compute_sections(
+            returns,
+            benchmark_rets,
+            positions,
+            transactions,
+            trades,
+            rolling_window,
+            period=period,
+            disclosure_context=disclosure_context,
+        )
     s["_title"] = title
 
     # ---- chart data ----
@@ -423,6 +443,36 @@ def _build_body_trades(b, s):
     b.append("</div>")
 
 
+def _build_body_disclosure(b, s):
+    """Render the calculation context with escaped caller-provided text."""
+
+    disclosure = s["performance_disclosure"]
+    labels = (
+        ("Convention", "convention"),
+        ("Return type", "return_type"),
+        ("Units", "units"),
+        ("Frequency", "frequency"),
+        ("Sample period", "sample_period"),
+        ("Data quality", "data_quality"),
+        ("Fees", "fees"),
+        ("Cashflows", "cashflows"),
+        ("Benchmark", "benchmark"),
+        ("Risk-free", "risk_free"),
+        ("Annualized", "annualized"),
+        ("Notes", "notes"),
+    )
+    rows = []
+    for label, key in labels:
+        value = disclosure.get(key, "")
+        if key == "annualized":
+            value = "yes" if value else "no"
+        elif key == "notes":
+            value = "; ".join(str(note) for note in value) if value else "none"
+        rows.append(f"<tr><th>{escape(label)}</th><td>{escape(str(value))}</td></tr>")
+    b.append('<div class="sec" id="disclosure"><div class="sec-title">Performance Disclosure</div>')
+    b.append("<table>" + "".join(rows) + "</table></div>")
+
+
 def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
     """Build the HTML body section list."""
     b = []
@@ -438,6 +488,9 @@ def _build_body_sections(s, pct_perf, monthly_tbl, hm_months, rolling_window):
 
     # -- Summary --
     b.append(f'<div class="summary-box">{s["summary_text"]}</div>')
+
+    # -- Performance disclosure --
+    _build_body_disclosure(b, s)
 
     # -- Overview --
     b.append('<div class="sec" id="overview"><div class="sec-title">Overview</div>')

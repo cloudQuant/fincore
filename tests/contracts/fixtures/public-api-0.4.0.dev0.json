@@ -1097,7 +1097,7 @@
         "create_strategy_report": {
           "kind": "function",
           "public_path": "fincore.report.create_strategy_report",
-          "signature": "(returns, *, benchmark_rets=None, positions=None, transactions=None, trades=None, title='Strategy Report', output='report.html', rolling_window=63, period='daily', return_result=False, audit_manifest=False)"
+          "signature": "(returns, *, benchmark_rets=None, positions=None, transactions=None, trades=None, title='Strategy Report', output='report.html', rolling_window=63, period='daily', return_result=False, audit_manifest=False, disclosure_context=None)"
         }
       },
       "profile": "enhanced_v1",

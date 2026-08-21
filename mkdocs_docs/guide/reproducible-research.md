@@ -27,7 +27,11 @@ print(manifest["content_sha256"])  # 64-hex SHA256 of the data
 The manifest carries provenance only — no API keys, tokens, raw returns, or
 absolute local paths. Reports add a second layer: with `return_result=True` and
 `audit_manifest=True`, `create_strategy_report` writes a sidecar JSON recording
-the code commit, dependency versions, and per-input shapes and hashes (see
+the code commit, dependency versions, per-input shapes and hashes, and the
+sanitized resolved structured performance disclosure (calculation convention, units,
+frequency, sample period, data quality, fee/cashflow treatment, benchmark,
+risk-free convention and annualization). It still does not copy raw input
+values into the manifest; free-form report HTML is rendered separately (see
 [Risk validation](risk-validation.md) and the report API).
 
 Provider access is `provider_required`: inject a client for offline tests, and

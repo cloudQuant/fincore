@@ -10,6 +10,7 @@
 
 - 数值安全：修正 Brinson 多期 Carino linking 的累计绝对主动收益对账，并增加近损失边界和独立 Decimal oracle；XIRR/MWR 明确日历日、标签对齐及非传统现金流 fail-closed 策略；walk-forward historical VaR 使用有限样本 Weibull 分位数并复核回测诊断。
 - 现金流绩效：增强层已新增现金流调整 TWR，明确时区、期初/期末、逐笔交易事件台账、净/毛费用、报告币种和全索引 FX；终值为零的总损失被保留，歧义、溢出和不可表示的回报会 fail closed。该 API 已注册到 `OperationCatalog` 并写入 0.4.0.dev0 公共 API 快照，未改变 strict Empyrical/Pyfolio 行为。
+- 绩效报告披露：`create_strategy_report`、HTML 和 PDF 渲染现在传播同一份结构化 `DisclosureContext`；普通周期收益默认明确为“调用者提供、未做现金流调整”，不伪称 TWR。报告显示计算口径、return type、单位、频率、样本期、数据质量、费用、现金流、benchmark、risk-free 和 annualization；可选 manifest 记录经脱敏的已解析披露而不复制原始输入数值。HTML 对调用方的披露文本进行转义。
 - 运行与性能：NumPy drawdown 后端保持 canonical 语义；新增多尺度、语义 digest 驱动的 workload profile；有效前沿对不可行约束、协方差和残差 fail closed。
 - 打包与发布前检查：候选 wheel/sdist 通过 metadata、内容、发布一致性和 5 种隔离 consumer profile；最低/最新依赖矩阵实际安装候选 wheel 并记录版本。
 - 工程门禁：工作流结构检查、公开 API snapshot、Ruff、Mypy、严格 MkDocs、性能预算与全部基准套件均已执行。工作流不会在本记录中被视为远端分支保护或 PyPI 环境审批的替代品。
@@ -27,7 +28,8 @@
 | 当前构建的 wheel/sdist | `twine check`、release consistency、candidate consistency 通过 |
 | 隔离 wheel consumers | `core`、`factor-analysis`、`alphalens`、`alphalens-pyfolio`、`all`：5/5 通过 |
 | 候选依赖矩阵 | minimum / latest 两条隔离安装均通过，实际版本日志已由 `check_dependency_matrix.py` 输出 |
-| 现金流绩效切片 | 下列 scoped 命令：730 passed、5 warnings；`cashflows.py` branch coverage 77% |
+| 现金流绩效切片 | `tests/numerical/test_cashflow_performance.py --cov=fincore.performance.cashflows --cov-branch`：14 passed、1 warning；`cashflows.py` branch coverage 77% |
+| Task 8 报告披露补充（2026-08-22） | 报告/API/capability/候选源码入口 focused 集合：115 passed、1 warning；含 Task 8 数值/属性/strict 兼容/报告/候选源码入口的完整集合：839 passed、5 warnings；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告） |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 
@@ -35,7 +37,7 @@
 
 1. **当前质量快照仍未通过覆盖率门禁。** 在 `f8174ae` 修复每轮复用同一个 disposable copy 的交叉污染后，重新收集的 [current-baseline.json](current-baseline.json) 显示 trusted、serial、single-process、xdist 与 branch-coverage 五轮均以 0 退出，副本完整性均为真，且非串行计数一致；此前 branch-coverage 轮的 17 个打包测试错误已消失。真实 branch-coverage 仍为 **45.0%**，低于 60% 下限。随后新增的提交使该快照的 `source.commit` 也不再匹配当前 HEAD；在新的完整收集达到门槛前，`check_quality_snapshot.py` 必须继续 fail closed。旧的“97%”快照不再可作为当前代码证据。
 2. **发布级许可证门禁失败。** `check_notices.py --require-approved` 对 `empyrical`、`pyfolio`、`alphalens` 三项均 fail closed；这需要具名人工/法律审批，不能由测试代替。
-3. **计划中的核心工作流仍未完成验收。** `fincore/performance/cashflows.py` 现已覆盖有界的逐估值日净流与逐笔交易事件台账 TWR，但尚未接入性能报告/provenance，也未构成完整的多币种报告工作流；`fincore/risk/report.py`、`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在。PIT/FDR、成本容量、现金流报告和监管风险报告等 T8–T10 验收不能据此视为完成。
+3. **计划中的核心工作流仍未完成验收。** 现金流语义已接入增强报告与 manifest，但这不把它升级为完整的多币种报告工作流或 GIPS 认证；`fincore/risk/report.py`、`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在。PIT/FDR、成本容量和监管风险报告等 T9–T10 验收不能据此视为完成。
 4. **公开类型与发布证明未完成。** 仓库无 `.pyi`，且 `scripts/check_public_typing.py`、`scripts/verify_attestation.py` 不存在；没有 pyright/stubtest installed-wheel 证明、SBOM/provenance/attestation 的本地验收。
 5. **远端治理不能由本地 checkout 验收。** 受保护分支、required checks、PyPI environment reviewer、Actions SHA pin 和实际发布 provenance 需要仓库管理员在远端完成并提供当前证据。
 
@@ -43,7 +45,7 @@
 
 1. 已修复质量基线收集中的打包测试错误；下一步为新增/低覆盖模块补测试。不得降低 60% branch-coverage 门槛或用旧快照、`--skip-commit-check` 充当发布证据。
 2. 完成三方许可的人工审阅并让 release profile 继续 fail closed。
-3. 将现金流语义接入性能报告/provenance，并实施和独立验收风险报告、PIT/FDR、交易成本、容量和优化 KKT/残差等 T8–T10 项；每项需 oracle、property 与 adversarial fixture。
+3. 实施和独立验收风险报告、PIT/FDR、交易成本、容量和优化 KKT/残差等 T9–T10 项；每项需 oracle、property 与 adversarial fixture。绩效报告后续若要支持完整多币种台账，必须以带估值和 FX provenance 的端到端工作流验收，不能把 `DisclosureContext` 当作计算证据。
 4. 交付 `.pyi` / pyright / stubtest consumer gate、SBOM、provenance/attestation 检查，再由管理员完成远端分支与发布环境治理。
 5. 只有全部自动与人工 gate 为绿，才生成 1.0 readiness seal；本轮明确没有 merge、push、tag 或 publish。
 
@@ -55,5 +57,6 @@
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_notices.py --require-approved
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_quality_snapshot.py --snapshot docs/quality/current-baseline.json
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/numerical/test_performance_semantics.py tests/numerical/test_cashflow_performance.py tests/oracles/performance tests/property tests/compat/empyrical tests/compat/pyfolio tests/contracts/test_operation_catalog.py tests/contracts/test_public_api_snapshot.py tests/contracts/test_unified_invocation.py tests/docs/test_examples.py -q --tb=short --maxfail=0
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/test_report tests/contracts/test_disclosure_context_contract.py tests/contracts/test_public_api_snapshot.py tests/contracts/test_capabilities.py tests/quality/test_render_capability_inventory.py tests/quality/test_snapshot_public_api_source.py tests/quality/test_check_performance_source.py -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/numerical/test_cashflow_performance.py --cov=fincore.performance.cashflows --cov-branch --cov-report=term-missing -q --tb=short --maxfail=0
 ```

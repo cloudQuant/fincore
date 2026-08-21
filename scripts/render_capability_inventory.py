@@ -12,9 +12,24 @@ import argparse
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+
+
+# Direct ``python scripts/...`` execution places ``scripts/`` first on
+# sys.path, not the checkout root.  Always put this resolved checkout before
+# both installed packages and a potentially shadowing PYTHONPATH entry.
+def _is_checkout_path(entry: str) -> bool:
+    try:
+        return Path(entry or ".").resolve() == ROOT
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+sys.path[:] = [entry for entry in sys.path if not _is_checkout_path(entry)]
+sys.path.insert(0, str(ROOT))
+
 from fincore.capabilities import list_capabilities
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "docs" / "quality" / "capability-inventory.md"
 
 
