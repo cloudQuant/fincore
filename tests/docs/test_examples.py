@@ -112,6 +112,26 @@ def test_quickstart_flat_api_example() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Performance-return semantics guide
+# ---------------------------------------------------------------------------
+
+
+def test_performance_cashflow_semantics_example() -> None:
+    # mkdocs_docs/guide/performance-semantics.md "Cashflow-adjusted" block.
+    from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
+
+    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"])
+    valuations = pd.Series([100.0, 110.0, 121.0], index=dates)
+    cashflows = pd.Series([10.0], index=[dates[1]])
+
+    period_returns = cashflow_adjusted_returns(valuations, cashflows, timing="end")
+    total_return = cashflow_adjusted_twr(valuations, cashflows, timing="end")
+
+    assert period_returns.round(12).tolist() == [0.0, 0.1]
+    assert round(total_return, 12) == 0.1
+
+
+# ---------------------------------------------------------------------------
 # Quick Start: classic API (Empyrical class-level call)
 # ---------------------------------------------------------------------------
 
