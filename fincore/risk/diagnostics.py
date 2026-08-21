@@ -49,7 +49,9 @@ class WalkForwardVaRResult:
     the latest timestamp in ``refit_timestamps`` at or before it, using a
     fixed rolling window that ends *strictly before* that forecast timestamp.
     ``backtest`` is therefore calculated only from the returned out-of-sample
-    pairs; it is ``None`` when the path cannot be produced.
+    pairs; it is ``None`` when the path cannot be produced.  An ``"ok"``
+    result validates finite paths and recomputes its backtest evidence, so a
+    caller cannot pair a path with unrelated audit statistics.
     """
 
     spec: RiskModelSpec
@@ -91,6 +93,12 @@ class WalkForwardVaRResult:
     def _validate_ok_state(self) -> None:
         if self.forecast.empty or self.realized.empty:
             raise ValueError("ok result must contain a non-empty forecast path")
+        try:
+            path_values = np.concatenate((self.forecast.to_numpy(dtype=float), self.realized.to_numpy(dtype=float)))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("ok result forecast and realized must contain only finite values") from exc
+        if not np.isfinite(path_values).all():
+            raise ValueError("ok result forecast and realized must contain only finite values")
         if self.refit_timestamps.empty:
             raise ValueError("ok result must contain at least one refit timestamp")
         if not self.refit_timestamps.isin(self.forecast.index).all():
@@ -105,8 +113,17 @@ class WalkForwardVaRResult:
             raise ValueError("backtest aligned_index must equal forecast index")
         if self.backtest.observations != len(self.forecast):
             raise ValueError("backtest observations must equal forecast length")
+        if self.backtest.confidence_level != self.spec.confidence_level:
+            raise ValueError("backtest confidence_level must equal the specification")
         if not _is_sha256_hex_digest(self.backtest.inputs_digest):
             raise ValueError("backtest inputs_digest must be a lowercase SHA-256 hex digest")
+        expected_backtest = backtest_var(
+            self.forecast,
+            self.realized,
+            confidence_level=self.spec.confidence_level,
+        )
+        if not _backtest_matches_path(self.backtest, expected_backtest):
+            raise ValueError("backtest must match the forecast and realized path")
 
     def _validate_empty_state(self) -> None:
         if not self.forecast.empty or not self.realized.empty or not self.refit_timestamps.empty:
@@ -144,6 +161,16 @@ def walk_forward_var(returns: pd.Series, spec: RiskModelSpec) -> WalkForwardVaRR
         :func:`fincore.risk.backtest_var` result.  Unsupported contracts and
         insufficient history return an empty, structured result rather than
         estimating a forecast from the evaluation window.
+
+    Notes
+    -----
+    Historical forecasts use the finite-sample calibrated Hyndman-Fan type 6
+    (``"weibull"``) quantile.  For a rolling window of size ``n`` it is only
+    supported when ``1 / (n + 1) <= 1 - confidence_level <= n / (n + 1)``.
+    Outside that rank range NumPy clamps the quantile to an endpoint, which
+    cannot provide the requested iid coverage; this function returns a
+    structured ``"unsupported"`` result instead of silently overstating the
+    calibration claim.
     """
     clean_returns = _validate_returns(returns)
     if not isinstance(spec, RiskModelSpec):
@@ -244,6 +271,16 @@ def _unsupported_reason(spec: RiskModelSpec) -> str | None:
         return "walk_forward_var currently supports sign_convention='losses_negative' only"
     if spec.horizon != 1:
         return "walk_forward_var currently supports horizon=1 only"
+    if spec.distribution == "historical":
+        alpha = 1.0 - spec.confidence_level
+        rank = (spec.window + 1) * alpha
+        lower_rank_tolerance = 8.0 * float(np.spacing(1.0))
+        upper_rank = float(spec.window)
+        upper_rank_tolerance = 8.0 * float(np.spacing(upper_rank))
+        if rank < 1.0 - lower_rank_tolerance or rank > upper_rank + upper_rank_tolerance:
+            return (
+                "historical Weibull quantile requires 1 / (window + 1) <= 1 - confidence_level <= window / (window + 1)"
+            )
     return None
 
 
@@ -294,3 +331,39 @@ def _is_sha256_hex_digest(value: object) -> bool:
     return (
         isinstance(value, str) and len(value) == 64 and all("0" <= char <= "9" or "a" <= char <= "f" for char in value)
     )
+
+
+def _backtest_matches_path(actual: RiskBacktestResult, expected: RiskBacktestResult) -> bool:
+    """Return whether all auditable VaR backtest fields match a recomputation."""
+    if (
+        actual.method != expected.method
+        or actual.confidence_level != expected.confidence_level
+        or actual.observations != expected.observations
+        or actual.exceptions != expected.exceptions
+        or not actual.aligned_index.equals(expected.aligned_index)
+        or actual.inputs_digest != expected.inputs_digest
+        or actual.diagnostics != expected.diagnostics
+        or actual.status != expected.status
+    ):
+        return False
+    actual_values = np.array(
+        [
+            actual.expected_exceptions,
+            actual.exception_rate,
+            actual.kupiec_lr,
+            actual.kupiec_pvalue,
+            actual.christoffersen_lr,
+            actual.christoffersen_pvalue,
+        ]
+    )
+    expected_values = np.array(
+        [
+            expected.expected_exceptions,
+            expected.exception_rate,
+            expected.kupiec_lr,
+            expected.kupiec_pvalue,
+            expected.christoffersen_lr,
+            expected.christoffersen_pvalue,
+        ]
+    )
+    return bool(np.allclose(actual_values, expected_values, rtol=1e-12, atol=1e-15))

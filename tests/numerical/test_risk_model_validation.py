@@ -142,6 +142,48 @@ class TestWalkForward:
         assert result.forecast.iloc[0] == pytest.approx(11.65)
         assert result.diagnostics["quantile_method"] == "weibull"
 
+    @pytest.mark.parametrize("confidence_level", [0.9999, 0.0001])
+    def test_historical_weibull_rejects_confidence_outside_finite_sample_support(self, confidence_level: float) -> None:
+        idx = pd.date_range("2020-01-01", periods=4, freq="B", tz="UTC")
+        returns = pd.Series([-0.02, -0.01, 0.01, 0.02], index=idx)
+        spec = RiskModelSpec(confidence_level=confidence_level, distribution="historical", window=2)
+
+        result = walk_forward_var(returns, spec)
+
+        assert result.status == "unsupported"
+        assert result.forecast.empty
+        assert result.realized.empty
+        assert result.refit_timestamps.empty
+        assert result.backtest is None
+        assert "weibull" in result.diagnostics["reason"].lower()
+
+    @pytest.mark.parametrize("confidence_level", [1.0 / 3.0, 1.0 - 1.0 / 3.0])
+    def test_historical_weibull_accepts_finite_sample_support_boundaries(self, confidence_level: float) -> None:
+        idx = pd.date_range("2020-01-01", periods=4, freq="B", tz="UTC")
+        returns = pd.Series([-0.02, -0.01, 0.01, 0.02], index=idx)
+        spec = RiskModelSpec(confidence_level=confidence_level, distribution="historical", window=2)
+
+        result = walk_forward_var(returns, spec)
+
+        assert result.status == "ok"
+        assert result.diagnostics["quantile_method"] == "weibull"
+
+    def test_historical_weibull_rejects_material_rank_deficit_at_large_window(self) -> None:
+        window = 10_000_000
+        alpha = 9.9e-8
+        idx = pd.date_range("2020-01-01", periods=2, freq="B", tz="UTC")
+        returns = pd.Series([-0.02, 0.01], index=idx)
+        spec = RiskModelSpec(
+            confidence_level=1.0 - alpha,
+            distribution="historical",
+            window=window,
+        )
+
+        result = walk_forward_var(returns, spec)
+
+        assert result.status == "unsupported"
+        assert "weibull" in result.diagnostics["reason"].lower()
+
     def test_historical_walk_forward_has_calibrated_fixed_stream_coverage(self) -> None:
         """A deterministic iid normal probe independent of the quantile implementation."""
         rng = np.random.default_rng(20260821)
@@ -204,7 +246,7 @@ class TestWalkForward:
     def test_walk_forward_result_enforces_status_specific_state_invariants(self) -> None:
         idx = pd.date_range("2022-01-01", periods=8, freq="B", tz="UTC")
         returns = pd.Series(np.linspace(-0.02, 0.02, len(idx)), index=idx)
-        valid = walk_forward_var(returns, RiskModelSpec(window=3, distribution="historical"))
+        valid = walk_forward_var(returns, RiskModelSpec(window=3, distribution="normal"))
         insufficient = walk_forward_var(returns.iloc[:3], RiskModelSpec(window=3))
 
         assert valid.backtest is not None
@@ -218,6 +260,17 @@ class TestWalkForward:
             replace(valid, inputs_digest="not-a-digest")
         with pytest.raises(ValueError, match="backtest aligned_index must equal forecast index"):
             replace(valid, backtest=replace(valid.backtest, aligned_index=valid.backtest.aligned_index[1:]))
+        with pytest.raises(ValueError, match="ok result forecast and realized must contain only finite values"):
+            replace(valid, forecast=valid.forecast * np.nan, realized=valid.realized * np.nan)
+        with pytest.raises(ValueError, match="backtest confidence_level must equal the specification"):
+            replace(valid, backtest=replace(valid.backtest, confidence_level=0.5))
+        with pytest.raises(ValueError, match="backtest must match the forecast and realized path"):
+            replace(
+                valid,
+                backtest=replace(valid.backtest, diagnostics={"significance": 0.99, "small_sample": False}),
+            )
+        with pytest.raises(ValueError, match="backtest must match the forecast and realized path"):
+            replace(valid, forecast=valid.forecast + 0.001)
         with pytest.raises(ValueError, match="insufficient_data result must have an empty forecast path"):
             replace(valid, status="insufficient_data")
         with pytest.raises(ValueError, match="insufficient_data result must not contain a backtest"):
