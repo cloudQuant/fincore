@@ -124,12 +124,15 @@ oracle generation method, and the tolerance asserted by
 - **File:** `fincore/attribution/brinson.py::brinson_cumulative`
 - **Fix:** Carino geometric linking replaces arithmetic summation. Carino
   constant `k_t = [ln(1+rᵖ_t) − ln(1+rᵇ_t)] / (rᵖ_t − rᵇ_t)` (or `1/(1+rᵖ_t)`
-  when equal). Let `A = (1+R_p)/(1+R_b) − 1` and
-  `K = [ln(1+A) − ln(1+0)] / (A−0)` (with its equal-return limit); each
-  linked effect is `E_cum = Σ (k_t/K)·E_t`. The returned allocation,
-  selection, and interaction therefore sum directly to `A`.
+  when equal). For compounded portfolio and benchmark returns `R_p` and
+  `R_b`, `K = [ln(1+R_p) − ln(1+R_b)] / (R_p−R_b)` (with its equal-return
+  limit); each linked effect is `E_cum = Σ (k_t/K)·E_t`. The returned
+  allocation, selection, and interaction therefore sum directly to the
+  standard BHB cumulative active return `R_p−R_b`.
 - **Source:** Carino (1999), *Journal of Performance Measurement* 3(4), 5–14.
-- **Oracle:** `tests/oracles/attribution/brinson_oracle.py`.
+- **Oracle:** standalone NumPy/math BHB + Carino reference in
+  `tests/oracles/attribution/brinson_oracle.py`; it does not import `fincore`
+  or derive effects through production code.
 - **Tolerance:** reconciliation residual ≤ 1e-12.
 
 ### 9. Style beta and momentum

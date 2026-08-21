@@ -176,6 +176,12 @@ def _carino_k(rp: float, rb: float) -> float:
     return float((np.log1p(rp) - np.log1p(rb)) / (rp - rb))
 
 
+def _validate_carino_returns(values: np.ndarray, *, label: str) -> None:
+    """Reject values outside the domain of Carino's log-return transform."""
+    if not np.all(np.isfinite(values)) or np.any(values <= -1.0):
+        raise ValueError(f"{label} must be finite and greater than -1 for Carino linking.")
+
+
 def brinson_cumulative(
     portfolio_returns: pd.Series | np.ndarray,
     benchmark_returns: pd.Series | np.ndarray,
@@ -186,12 +192,12 @@ def brinson_cumulative(
 
     Multi-period attribution must compound geometrically.  The arithmetic
     per-period effects are scaled by the Carino period constants
-    ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)`` and by a single
-    global constant in relative-return space.  More specifically, if
-    ``A = (1 + R_p) / (1 + R_b) - 1`` is the relative geometric active
-    return, each effect is linked as ``sum_t (k_t / K) * effect_t``, where
-    ``K = [ln(1+A) - ln(1+0)] / (A-0)``.  The returned effects therefore
-    directly reconcile to ``A`` (rather than to its logarithm).
+    ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)`` and the global
+    constant ``K = [ln(1+R_p) - ln(1+R_b)] / (R_p-R_b)``, where ``R_p`` and
+    ``R_b`` are the compounded portfolio and benchmark returns.  Each effect
+    is linked as ``sum_t (k_t / K) * effect_t``.  The returned effects
+    therefore directly reconcile to the standard BHB cumulative active
+    return ``R_p - R_b``.
 
     Parameters
     ----------
@@ -225,8 +231,15 @@ def brinson_cumulative(
     if not (rp.shape == rb.shape == wp.shape == wb.shape):
         raise ValueError("portfolio_returns, benchmark_returns, and weights must have consistent shapes.")
 
+    _validate_carino_returns(rp, label="portfolio and benchmark returns")
+    _validate_carino_returns(rb, label="portfolio and benchmark returns")
+    if not np.all(np.isfinite(wp)) or not np.all(np.isfinite(wb)):
+        raise ValueError("portfolio and benchmark weights must be finite.")
+
     portfolio_period = np.sum(wp * rp, axis=1)
     benchmark_period = np.sum(wb * rb, axis=1)
+    _validate_carino_returns(portfolio_period, label="portfolio and benchmark period returns")
+    _validate_carino_returns(benchmark_period, label="portfolio and benchmark period returns")
 
     n_periods = rp.shape[0]
     allocation = np.empty(n_periods)
@@ -240,10 +253,9 @@ def brinson_cumulative(
 
     portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
     benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
-    relative_active = float((1.0 + portfolio_cum) / (1.0 + benchmark_cum) - 1.0)
 
     k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
-    global_k = _carino_k(relative_active, 0.0)
+    global_k = _carino_k(portfolio_cum, benchmark_cum)
     linked_scale = k / global_k
     alloc_cum = float(np.sum(linked_scale * allocation))
     sel_cum = float(np.sum(linked_scale * selection))

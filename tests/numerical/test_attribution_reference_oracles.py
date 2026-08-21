@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tests.oracles.attribution.brinson_oracle import carino_linking_reference
+from tests.oracles.attribution.brinson_oracle import brinson_carino_reference
 from tests.oracles.attribution.regression_oracle import ols_hac_reference, wls_reference
 
 
@@ -88,14 +88,12 @@ class TestFamaFrenchHAC:
 class TestBrinsonLinking:
     """Multi-period Brinson must reconcile via geometric (Carino) linking."""
 
-    def test_brinson_cumulative_reconciles_directly_to_relative_geometric_active_return(self) -> None:
-        """Linked effects must report the investor's relative, not log, active return.
+    def test_brinson_cumulative_reconciles_to_absolute_cumulative_active_return(self) -> None:
+        """BHB Carino linking reports cumulative portfolio minus benchmark return.
 
-        The period-level Brinson effects are arithmetic.  Carino's period
-        constants transform their sum into log relative return; a global
-        relative-return-space constant then maps that log return back to the
-        reported geometric active return.  This assertion intentionally uses
-        only NumPy operations and does not call the oracle under test.
+        This fixed numerical regression deliberately distinguishes the
+        standard absolute Carino target from the relative active return.  It
+        uses only NumPy operations and does not call the oracle under test.
         """
         from fincore.attribution.brinson import brinson_cumulative
 
@@ -110,13 +108,19 @@ class TestBrinsonLinking:
         benchmark_period = np.sum(wb * rb, axis=1)
         total = result["allocation"] + result["selection"] + result["interaction"]
 
-        geometric_active = np.prod(1.0 + portfolio_period) / np.prod(1.0 + benchmark_period) - 1.0
-        assert np.isclose(total, geometric_active, rtol=1e-12, atol=1e-12), (
-            f"linked total={total} vs relative geometric active {geometric_active}"
+        portfolio_cumulative = float(np.prod(1.0 + portfolio_period) - 1.0)
+        benchmark_cumulative = float(np.prod(1.0 + benchmark_period) - 1.0)
+        absolute_active = portfolio_cumulative - benchmark_cumulative
+        relative_active = (1.0 + portfolio_cumulative) / (1.0 + benchmark_cumulative) - 1.0
+
+        assert np.isclose(absolute_active, 0.030334920000000265, rtol=0.0, atol=1e-15)
+        assert not np.isclose(absolute_active, relative_active, rtol=1e-12, atol=1e-12)
+        assert np.isclose(total, absolute_active, rtol=1e-12, atol=1e-12), (
+            f"linked total={total} vs absolute cumulative active {absolute_active}"
         )
 
     def test_brinson_cumulative_matches_carino_oracle(self) -> None:
-        from fincore.attribution.brinson import brinson_attribution, brinson_cumulative
+        from fincore.attribution.brinson import brinson_cumulative
 
         rp = np.array([[0.05, 0.03], [0.02, -0.01], [0.04, 0.06]])
         rb = np.array([[0.03, 0.02], [0.01, 0.0], [0.03, 0.05]])
@@ -125,15 +129,7 @@ class TestBrinsonLinking:
 
         result = brinson_cumulative(rp, rb, wp, wb)
 
-        per_period = [brinson_attribution(rp[t], rb[t], wp[t], wb[t]) for t in range(3)]
-        effects = {
-            "allocation": np.array([e["allocation"] for e in per_period]),
-            "selection": np.array([e["selection"] for e in per_period]),
-            "interaction": np.array([e["interaction"] for e in per_period]),
-        }
-        portfolio_period = np.sum(wp * rp, axis=1)
-        benchmark_period = np.sum(wb * rb, axis=1)
-        ref = carino_linking_reference(effects, portfolio_period, benchmark_period)
+        ref = brinson_carino_reference(rp, rb, wp, wb)
 
         assert np.isclose(
             ref["allocation"] + ref["selection"] + ref["interaction"],
@@ -144,6 +140,7 @@ class TestBrinsonLinking:
         assert np.isclose(result["allocation"], ref["allocation"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["selection"], ref["selection"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["interaction"], ref["interaction"], rtol=1e-12, atol=1e-12)
+        assert np.isclose(result["total"], ref["active_return"], rtol=1e-12, atol=1e-12)
 
 
 class TestStyleBeta:
