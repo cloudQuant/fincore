@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from fincore.backends import NumPyBackend, get_backend
+from fincore.exceptions import NumericalError
+from fincore.metrics.drawdown import max_drawdown
 
 
 def test_numpy_backend_cum_returns_matches_reference() -> None:
@@ -14,11 +17,35 @@ def test_numpy_backend_cum_returns_matches_reference() -> None:
     np.testing.assert_allclose(backend.cum_returns(returns), expected)
 
 
-def test_numpy_backend_max_drawdown_is_non_positive() -> None:
+@pytest.mark.parametrize(
+    "returns",
+    [
+        pytest.param(np.array([-0.10, 0.05, -0.02]), id="first-period-loss"),
+        pytest.param(np.array([0.01, 0.02, 0.03]), id="all-positive"),
+        pytest.param(np.array([0.10, -1.0, 0.50]), id="ruin"),
+        pytest.param(np.array([0.10, -1.50, 0.20]), id="below-wealth-floor"),
+    ],
+)
+def test_numpy_backend_max_drawdown_matches_canonical_for_finite_returns(returns: np.ndarray) -> None:
     backend = NumPyBackend()
-    returns = np.array([0.01, -0.05, 0.02, -0.03])
-    dd = backend.max_drawdown(returns)
-    assert dd <= 0.0
+    expected = max_drawdown(returns)
+
+    actual = backend.max_drawdown(returns)
+
+    assert actual == pytest.approx(expected)
+
+
+def test_numpy_backend_max_drawdown_matches_canonical_nan_rejection() -> None:
+    backend = NumPyBackend()
+    returns = np.array([0.05, np.nan, -0.10, 0.02])
+
+    with pytest.raises(NumericalError) as canonical_error:
+        max_drawdown(returns)
+
+    with pytest.raises(NumericalError) as backend_error:
+        backend.max_drawdown(returns)
+
+    assert str(backend_error.value) == str(canonical_error.value)
 
 
 def test_numpy_backend_sharpe_matches_formula() -> None:

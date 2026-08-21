@@ -36,10 +36,18 @@ class NumPyBackend:
         return np.asarray(np.cumprod(1.0 + np.asarray(returns, dtype=float)) - 1.0, dtype=float)
 
     def max_drawdown(self, returns: np.ndarray) -> float:
-        cum = self.cum_returns(returns)
-        running_max = np.maximum.accumulate(cum)
-        drawdown = cum - running_max
-        return float(drawdown.min())
+        """Return maximum drawdown using the canonical reference semantics.
+
+        Drawdown is not the absolute drop in cumulative return.  Its public
+        contract includes an initial wealth baseline, finite-input validation,
+        and defined behaviour after a zero or negative wealth path.  Delegating
+        to the canonical metric keeps the reference backend on that contract
+        instead of maintaining a divergent dense approximation.
+        """
+
+        from fincore.metrics.drawdown import max_drawdown as canonical_max_drawdown
+
+        return float(canonical_max_drawdown(returns))
 
     def sharpe_ratio(self, returns: np.ndarray, periods_per_year: int = 252) -> float:
         r = np.asarray(returns, dtype=float)
