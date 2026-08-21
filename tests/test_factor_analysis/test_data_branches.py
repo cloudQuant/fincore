@@ -228,6 +228,4 @@ def test_prepare_rejects_bad_max_loss() -> None:
 def test_prepare_rejects_non_multiindex_forward_returns() -> None:
     factor = _factor_series(10)
     with pytest.raises(TypeError, match="MultiIndex pandas DataFrame"):
-        prepare_factor_data_from_forward_returns(
-            factor, pd.DataFrame({"1D": [0.01, 0.02]})
-        )
+        prepare_factor_data_from_forward_returns(factor, pd.DataFrame({"1D": [0.01, 0.02]}))

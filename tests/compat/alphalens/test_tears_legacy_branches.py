@@ -161,7 +161,7 @@ def test_deduplicated_forward_model_input_no_duplicates() -> None:
 
 def test_legacy_reject_duplicate_forward_columns_raises() -> None:
     data = _factor_data()
-    data["1D_dup"] = data["1D"]  # noqa: not a forward column, harmless
+    data["1D_dup"] = data["1D"]  # Intentionally not a forward column; harmless.
     # Build a genuine duplicate forward label.
     data = data.drop(columns=["1D_dup"])
     data.columns = [col if col != "1D" else "1D" for col in data.columns]

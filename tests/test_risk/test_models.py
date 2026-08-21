@@ -174,9 +174,7 @@ def test_forecast_var_rejects_non_series() -> None:
 
 
 def test_forecast_var_rejects_duplicate_index() -> None:
-    idx = pd.DatetimeIndex(
-        [pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-02")]
-    )
+    idx = pd.DatetimeIndex([pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-02")])
     with pytest.raises(ValueError, match="duplicate"):
         forecast_var(pd.Series([0.01, -0.01, 0.02], index=idx))
 

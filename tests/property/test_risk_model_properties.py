@@ -29,7 +29,9 @@ def test_expected_exceptions_linear(observations: int) -> None:
     assert np.isclose(expected_exception_count(observations, 0.99), observations * 0.01)
 
 
-@given(st.lists(st.floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False), min_size=48, max_size=96))
+@given(
+    st.lists(st.floats(min_value=-0.2, max_value=0.2, allow_nan=False, allow_infinity=False), min_size=48, max_size=96)
+)
 @settings(max_examples=50, deadline=None)
 def test_walk_forward_forecast_prefix_is_invariant_to_future_returns(values: list[float]) -> None:
     index = pd.date_range("2023-01-01", periods=len(values), freq="B", tz="UTC")

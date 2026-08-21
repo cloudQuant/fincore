@@ -64,9 +64,8 @@ def _decimal_carino_k(portfolio_return: Decimal, benchmark_return: Decimal) -> D
     """Decimal implementation of Carino's coefficient and equality limit."""
     if portfolio_return == benchmark_return:
         return Decimal(1) / (Decimal(1) + portfolio_return)
-    return (
-        ((Decimal(1) + portfolio_return).ln() - (Decimal(1) + benchmark_return).ln())
-        / (portfolio_return - benchmark_return)
+    return ((Decimal(1) + portfolio_return).ln() - (Decimal(1) + benchmark_return).ln()) / (
+        portfolio_return - benchmark_return
     )
 
 
@@ -188,11 +187,17 @@ def brinson_carino_decimal_reference(
         context.prec = 80
         decimal = Decimal.from_float
         portfolio_period = [
-            sum((decimal(float(weight)) * decimal(float(ret)) for weight, ret in zip(weights, returns, strict=True)), Decimal(0))
+            sum(
+                (decimal(float(weight)) * decimal(float(ret)) for weight, ret in zip(weights, returns, strict=True)),
+                Decimal(0),
+            )
             for weights, returns in zip(wp, rp, strict=True)
         ]
         benchmark_period = [
-            sum((decimal(float(weight)) * decimal(float(ret)) for weight, ret in zip(weights, returns, strict=True)), Decimal(0))
+            sum(
+                (decimal(float(weight)) * decimal(float(ret)) for weight, ret in zip(weights, returns, strict=True)),
+                Decimal(0),
+            )
             for weights, returns in zip(wb, rb, strict=True)
         ]
         _validate_decimal_carino_period_returns(portfolio_period, label="portfolio period returns")
@@ -201,7 +206,8 @@ def brinson_carino_decimal_reference(
         allocation = [
             sum(
                 (
-                    (decimal(float(portfolio_weight)) - decimal(float(benchmark_weight))) * decimal(float(benchmark_return))
+                    (decimal(float(portfolio_weight)) - decimal(float(benchmark_weight)))
+                    * decimal(float(benchmark_return))
                     for portfolio_weight, benchmark_weight, benchmark_return in zip(
                         portfolio_weights_row, benchmark_weights_row, benchmark_returns_row, strict=True
                     )
@@ -253,9 +259,15 @@ def brinson_carino_decimal_reference(
             _decimal_carino_k(portfolio_return, benchmark_return) / global_k
             for portfolio_return, benchmark_return in zip(portfolio_period, benchmark_period, strict=True)
         ]
-        allocation_cumulative = sum((factor * effect for factor, effect in zip(scale, allocation, strict=True)), Decimal(0))
-        selection_cumulative = sum((factor * effect for factor, effect in zip(scale, selection, strict=True)), Decimal(0))
-        interaction_cumulative = sum((factor * effect for factor, effect in zip(scale, interaction, strict=True)), Decimal(0))
+        allocation_cumulative = sum(
+            (factor * effect for factor, effect in zip(scale, allocation, strict=True)), Decimal(0)
+        )
+        selection_cumulative = sum(
+            (factor * effect for factor, effect in zip(scale, selection, strict=True)), Decimal(0)
+        )
+        interaction_cumulative = sum(
+            (factor * effect for factor, effect in zip(scale, interaction, strict=True)), Decimal(0)
+        )
         active_return = portfolio_cumulative - benchmark_cumulative
 
         return {

@@ -69,7 +69,7 @@ def _pandas_digest(value: pd.Series | pd.DataFrame) -> str:
 def _json_default(value: object) -> object:
     """Encode supported configuration values deterministically."""
     if is_dataclass(value):
-        return asdict(cast(Any, value))
+        return asdict(cast("Any", value))
     if isinstance(value, Path):
         return str(value)
     if isinstance(value, pd.Timestamp):

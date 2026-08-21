@@ -299,9 +299,7 @@ def test_numpy_array_from_payload_negative_shape() -> None:
 def test_numpy_array_from_payload_unknown_storage() -> None:
     dtype = {"__fincore_factor_analysis_type__": "numpy-dtype", "kind": "scalar", "dtype": "f8", "metadata": {}}
     with pytest.raises(ValueError, match="unknown.*NumPy array storage"):
-        _numpy_array_from_payload(
-            {_WIRE_TYPE: "numpy-array", "dtype": dtype, "shape": ["1"], "storage": "bogus"}
-        )
+        _numpy_array_from_payload({_WIRE_TYPE: "numpy-array", "dtype": dtype, "shape": ["1"], "storage": "bogus"})
 
 
 def test_numpy_array_from_payload_wrong_item_count() -> None:

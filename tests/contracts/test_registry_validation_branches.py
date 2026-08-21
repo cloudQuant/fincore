@@ -34,7 +34,8 @@ def test_pyfolio_make_strict_wrapper_unknown_manifest_key() -> None:
     from fincore.pyfolio import _make_strict_wrapper
 
     spec = next(
-        spec for (surface, _name, variant), spec in WORKFLOW_REGISTRY.items()
+        spec
+        for (surface, _name, variant), spec in WORKFLOW_REGISTRY.items()
         if surface == "pyfolio_module" and variant == "strict-0.9.6"
     )
     bad_spec = replace(spec, signature_manifest_key="no-such-key")
@@ -47,7 +48,8 @@ def test_pyfolio_make_strict_wrapper_name_mismatch() -> None:
     from fincore.pyfolio import _make_strict_wrapper
 
     spec = next(
-        spec for (surface, _name, variant), spec in WORKFLOW_REGISTRY.items()
+        spec
+        for (surface, _name, variant), spec in WORKFLOW_REGISTRY.items()
         if surface == "pyfolio_module" and variant == "strict-0.9.6"
     )
     bad_spec = replace(spec, public_name="some_other_name")

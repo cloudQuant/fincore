@@ -63,9 +63,7 @@ def _newey_west_covariance(X: np.ndarray, residuals: np.ndarray, nlags: int) -> 
     return np.asarray(XtX_inv @ S @ XtX_inv, dtype=float)
 
 
-def _wls_covariance(
-    X: np.ndarray, residuals: np.ndarray, weights: np.ndarray, n: int, k: int
-) -> np.ndarray:
+def _wls_covariance(X: np.ndarray, residuals: np.ndarray, weights: np.ndarray, n: int, k: int) -> np.ndarray:
     """Weighted-least-squares covariance ``scale * (X'WX)^{-1}``."""
     W = np.diag(weights)
     XtWX_inv = np.linalg.inv(X.T @ W @ X)
@@ -195,9 +193,7 @@ class FamaFrenchModel:
             if len(w) != len(y):
                 raise ValueError("weights length must match the number of observations")
             sqrt_w = np.sqrt(w)
-            beta_coeffs, _ss_res, _, _ = np.linalg.lstsq(
-                X_with_const * sqrt_w[:, None], y * sqrt_w, rcond=None
-            )
+            beta_coeffs, _ss_res, _, _ = np.linalg.lstsq(X_with_const * sqrt_w[:, None], y * sqrt_w, rcond=None)
         else:
             raise ValueError(f"Unknown method: {method}")
 
