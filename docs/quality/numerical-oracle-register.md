@@ -48,13 +48,20 @@ oracle generation method, and the tolerance asserted by
 - **File:** `fincore/risk/garch.py`
 - **Recursions:** GARCH(1,1) `s²_t = ω + α·ε²_{t−1} + β·s²_{t−1}`;
   GJR(1,1) `s²_t = ω + (α + γ·I(ε<0))·ε²_{t−1} + β·s²_{t−1}`;
-  EGARCH(1,1) `log s²_t = ω + α·|z| + γ·z + β·log s²_{t−1}`.
+  EGARCH(1,1) `log s²_t = ω + α·|z| + γ·z + β·log s²_{t−1}`, where
+  `z = ε_{t−1}/sqrt(s²_{t−1})` is the preceding conditional standardized
+  innovation used by both fitting and forecasting.
 - **Forecast:** one-step then persistence recursion; GJR persistence
   `α + 0.5γ + β`; EGARCH decays toward `ω/(1−β)` with drift `α·√(2/π)`.
 - **Source:** Engle (1982); Bollerslev (1986); Nelson (1991); Glosten,
   Jagannathan & Runkle (1993).
 - **Boundary:** only `(p, q) = (1, 1)` is exposed; other orders raise
-  `ValueError`. Unconverged optimizers never report `status="ok"`.
+  `ValueError`. A fit is marked `converged=False` unless the optimizer succeeds
+  and GARCH/GJR persistence is strictly below one (`α+β` or `α+0.5γ+β`), or
+  EGARCH has `|β|<1`; the enhanced adapter then emits `status="failed"` rather
+  than a seemingly valid forecast. Overflowing EGARCH optimizer probes receive
+  a finite likelihood penalty. EGARCH rejects non-finite, zero-variance and
+  overflow-variance return inputs before optimization.
 - **Oracle:** `tests/oracles/risk/garch_oracle.py` (independent recursions).
 - **Tolerance:** recursion `rtol ≤ 1e-12`; `arch` package is not importable in
   this environment, so convergence is validated by seeded fixtures rather than

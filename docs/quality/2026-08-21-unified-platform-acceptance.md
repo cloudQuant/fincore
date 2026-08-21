@@ -1,7 +1,7 @@
 # 0042 Unified Analytics Platform — 实施与验收记录
 
 日期：2026-08-21  
-验收对象：`codex/fincore-iteration0042-completion`，数值修复与验收提交至 `93fbf54d9a03b9f14b37bfb25ce5c3b821ef5710`。  
+验收对象：`codex/fincore-iteration0042-completion`；初始数值修复与验收基线提交为 `93fbf54d9a03b9f14b37bfb25ce5c3b821ef5710`，后续经验证的局部切片列于下表。
 结论：**BLOCKED — 不可宣称计划完成、不可作为 1.0 或发布候选。**
 
 本记录区分“本轮已验证的代码切片”与“0042 计划的全部完成定义”。局部通过的测试、候选 wheel 或性能数字不替代法律、供应链、治理、完整类型和所有金融工作流的验收。
@@ -33,6 +33,7 @@
 | Task 8 报告披露补充（2026-08-22） | 报告/API/capability/候选源码入口 focused 集合：115 passed、1 warning；含 Task 8 数值/属性/strict 兼容/报告/候选源码入口的完整集合：839 passed、5 warnings；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告） |
 | Task 9 walk-forward 风险报告补充（2026-08-22） | 风险数值/属性/`tests/test_risk`、新报告契约、能力/API snapshot 与文档示例：222 passed、1 warning；覆盖 event/refit/backtest digest、可变输入防御重验、DST 与 dateutil 时区、索引元数据重放；Ruff、Mypy、`mkdocs build --strict`、capability/API snapshot check 通过（MkDocs/Material 给出上游迁移警告） |
 | Task 0 EVT Hill 补充（2026-08-22） | 独立 NumPy threshold-Hill oracle、上下尾反射和阈值边界，加上现有 EVT/GARCH 风险回归：153 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这只关闭 Hill 公式切片，不替代剩余 EVT/GARCH 的 out-of-sample 验收。 |
+| Task 0 GARCH/EGARCH 补充（2026-08-22） | 独立条件标准化 EGARCH recursion oracle、溢出候选有限 penalty、EGARCH 的零/非有限/溢出方差输入 fail-closed、GARCH/GJR/EGARCH 平稳性 fail-closed 与增强适配器失败状态：161 passed、1 warning；完整 `tests/test_risk`：138 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这不替代 GARCH/EVT 的 out-of-sample calibration、残差或参数不确定性验收。 |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 

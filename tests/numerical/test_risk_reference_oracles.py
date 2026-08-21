@@ -8,6 +8,8 @@ invariant, and (c) a wrong-model counter-example where applicable.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -18,6 +20,7 @@ from fincore.risk.evt import hill_estimator
 from fincore.risk.garch import EGARCH, GARCH, GJRGARCH
 from fincore.risk.models import forecast_es, forecast_var
 from tests.oracles.risk.evt_oracle import hill_threshold_reference
+from tests.oracles.risk.garch_oracle import egarch_conditional_var_reference
 from tests.oracles.risk.kupiec_oracle import kupiec_lr_brute_reference, kupiec_lr_reference
 from tests.oracles.risk.normal_es_oracle import normal_es_reference, normal_var_reference
 
@@ -158,6 +161,52 @@ class TestGARCHFamilyIdentity:
         returns = rng.normal(0.0, 0.01, 500)
         with pytest.raises(ValueError):
             GJRGARCH(p=1, q=2).fit(returns)
+
+    def test_egarch_fit_uses_conditionally_standardized_innovations(self) -> None:
+        """Fitted EGARCH variance must obey its own conditional-z recursion."""
+        returns = np.random.default_rng(123).normal(0.0, 0.02, 300)
+        result = EGARCH().fit(returns)
+        params = result.params
+
+        expected = egarch_conditional_var_reference(
+            returns,
+            omega=params["omega"],
+            alpha=params["alpha"],
+            gamma=params["gamma"],
+            beta=params["beta"],
+        )
+
+        assert np.allclose(result.conditional_var, expected, rtol=1e-12, atol=1e-12)
+        assert np.allclose(result.residuals, returns / np.sqrt(expected), rtol=1e-12, atol=1e-12)
+
+    @pytest.mark.parametrize(
+        ("model_class", "parameters"),
+        [
+            (GARCH, np.array([1e-4, 0.6, 0.6])),
+            (EGARCH, np.array([-7.0, 0.1, -0.1, 1.0])),
+            (GJRGARCH, np.array([1e-4, 0.2, 0.8, 0.6])),
+        ],
+    )
+    def test_nonstationary_optimizer_result_never_reports_convergence(
+        self, monkeypatch, model_class, parameters
+    ) -> None:
+        """A successful optimizer flag is insufficient without stationarity."""
+        candidate = SimpleNamespace(x=parameters, fun=0.0, success=True)
+        monkeypatch.setattr("fincore.risk.garch.optimize.minimize", lambda *args, **kwargs: candidate)
+
+        result = model_class().fit(np.linspace(-0.02, 0.02, 20))
+
+        assert result.converged is False
+
+    def test_enhanced_garch_forecast_marks_nonstationary_fit_failed(self, monkeypatch) -> None:
+        """The enhanced adapter must not label a nonstationary fit as OK."""
+        candidate = SimpleNamespace(x=np.array([1e-4, 0.6, 0.6]), fun=0.0, success=True)
+        monkeypatch.setattr("fincore.risk.garch.optimize.minimize", lambda *args, **kwargs: candidate)
+
+        estimate = forecast_var(pd.Series(np.linspace(-0.02, 0.02, 20)), method="garch", confidence_level=0.95)
+
+        assert estimate.status == "failed"
+        assert estimate.diagnostics["note"] == "optimizer did not converge or stationarity checks failed"
 
 
 # --------------------------------------------------------------------------- #

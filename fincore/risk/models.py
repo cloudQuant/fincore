@@ -127,7 +127,7 @@ def forecast_var(
         converged = bool(result.get("converged", True))
         diagnostics = {"kernel": "conditional_var", "alpha": alpha, "horizon": horizon}
         if not converged:
-            diagnostics["note"] = "optimizer did not converge"
+            diagnostics["note"] = "optimizer did not converge or stationarity checks failed"
     else:
         raise ValueError(f"unknown method: {method}")
 
@@ -186,7 +186,7 @@ def forecast_es(
         converged = bool(result.get("converged", True))
         diagnostics = {"kernel": "conditional_es", "alpha": alpha, "horizon": horizon}
         if not converged:
-            diagnostics["note"] = "optimizer did not converge"
+            diagnostics["note"] = "optimizer did not converge or stationarity checks failed"
     else:
         raise ValueError(f"unknown method: {method}")
 

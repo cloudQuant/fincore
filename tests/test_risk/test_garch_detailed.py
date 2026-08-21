@@ -176,19 +176,37 @@ class TestEGARCH:
         with pytest.raises(ValueError, match="Insufficient data for EGARCH"):
             model.fit(returns)
 
+    @pytest.mark.parametrize(
+        "returns",
+        [
+            np.zeros(20),
+            np.tile(np.array([np.finfo(float).max, -np.finfo(float).max]), 10),
+        ],
+    )
+    def test_egarch_rejects_nonpositive_or_nonfinite_initial_variance(self, returns):
+        """A degenerate variance path is not a converged EGARCH fit."""
+        with pytest.raises(ValueError, match="finite returns with positive variance"):
+            EGARCH().fit(returns)
+
+    def test_egarch_likelihood_penalizes_an_overflowing_candidate(self):
+        """Optimizer probes outside the numerical domain must fail closed."""
+        returns = np.array([0.01, -0.02, 0.015, -0.01, 0.02, -0.015, 0.01, -0.02, 0.015, -0.01])
+
+        penalty = EGARCH()._neg_log_likelihood(np.array([1_000.0, 1.0, 1.0, 0.999]), returns)
+
+        assert np.isfinite(penalty)
+        assert penalty >= 1e90
+
     def test_egarch_forecast(self):
-        """Test EGARCH forecast method exists and runs."""
+        """EGARCH forecast follows the positive log-variance recursion."""
         np.random.seed(42)
         returns = np.random.randn(200) * 0.01
         model = EGARCH()
         result = model.fit(returns)
 
-        # The forecast method exists on GARCHResult but is designed for standard GARCH
-        # For EGARCH it will use a simplified formula that may produce negative values
         forecasts = result.forecast(horizon=5)
         assert len(forecasts) == 5
-        # Just verify the method runs; actual EGARCH forecasting would need
-        # log-variance specific logic which is out of scope for this test
+        assert (forecasts > 0.0).all()
 
 
 class TestGJRGARCH:

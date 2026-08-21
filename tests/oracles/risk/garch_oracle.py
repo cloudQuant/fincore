@@ -10,7 +10,9 @@ Recursions verified here (all with fixed, user-supplied parameters):
 
 * GARCH(1,1): ``s2[t] = omega + alpha*eps[t-1]^2 + beta*s2[t-1]``
 * GJR(1,1):   ``s2[t] = omega + alpha*eps[t-1]^2 + gamma*I(eps<0)*eps[t-1]^2 + beta*s2[t-1]``
-* EGARCH(1,1): ``log s2[t] = omega + alpha*|z| + gamma*z + beta*log s2[t-1]``
+* EGARCH(1,1): ``log s2[t] = omega + alpha*|z[t-1]| + gamma*z[t-1] + beta*log s2[t-1]``
+  where ``z[t-1] = eps[t-1] / sqrt(s2[t-1])`` is the previous **conditional**
+  standardized innovation.
 
 Forecast one-step and multi-step recurrences are also implemented so that the
 EGARCH/GJR forecast paths can be checked independently of the GARCH path.
@@ -56,17 +58,25 @@ def gjr_conditional_var_reference(eps: np.ndarray, omega: float, alpha: float, g
 def egarch_conditional_var_reference(
     eps: np.ndarray, omega: float, alpha: float, gamma: float, beta: float
 ) -> np.ndarray:
-    """EGARCH(1,1) log-variance recursion (independent reference)."""
+    """EGARCH(1,1) recursion with conditional standardized innovations."""
     eps = np.asarray(eps, dtype=float)
     t = len(eps)
+    if t == 0:
+        return np.empty(0, dtype=float)
+
+    initial_s2 = float(np.var(eps))
+    if initial_s2 <= 0.0:
+        raise ValueError("EGARCH reference requires non-zero sample variance")
+
     log_s2 = np.empty(t, dtype=float)
-    std = float(np.std(eps))
-    log_s2[0] = np.log(std**2) if std > 0 else 0.0
-    z = eps / std if std > 0 else eps
+    s2 = np.empty(t, dtype=float)
+    s2[0] = initial_s2
+    log_s2[0] = np.log(initial_s2)
     for i in range(1, t):
-        z_prev = z[i - 1]
+        z_prev = eps[i - 1] / np.sqrt(s2[i - 1])
         log_s2[i] = omega + alpha * np.abs(z_prev) + gamma * z_prev + beta * log_s2[i - 1]
-    return np.exp(log_s2)
+        s2[i] = np.exp(log_s2[i])
+    return s2
 
 
 def garch_forecast_reference(
