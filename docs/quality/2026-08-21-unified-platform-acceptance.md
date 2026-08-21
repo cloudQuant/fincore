@@ -32,6 +32,7 @@
 | 现金流绩效切片 | `tests/numerical/test_cashflow_performance.py --cov=fincore.performance.cashflows --cov-branch`：14 passed、1 warning；`cashflows.py` branch coverage 77% |
 | Task 8 报告披露补充（2026-08-22） | 报告/API/capability/候选源码入口 focused 集合：115 passed、1 warning；含 Task 8 数值/属性/strict 兼容/报告/候选源码入口的完整集合：839 passed、5 warnings；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告） |
 | Task 9 walk-forward 风险报告补充（2026-08-22） | 风险数值/属性/`tests/test_risk`、新报告契约、能力/API snapshot 与文档示例：222 passed、1 warning；覆盖 event/refit/backtest digest、可变输入防御重验、DST 与 dateutil 时区、索引元数据重放；Ruff、Mypy、`mkdocs build --strict`、capability/API snapshot check 通过（MkDocs/Material 给出上游迁移警告） |
+| Task 0 EVT Hill 补充（2026-08-22） | 独立 NumPy threshold-Hill oracle、上下尾反射和阈值边界，加上现有 EVT/GARCH 风险回归：153 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这只关闭 Hill 公式切片，不替代剩余 EVT/GARCH 的 out-of-sample 验收。 |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 

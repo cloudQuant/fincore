@@ -27,8 +27,19 @@ print(var.sign_convention)
 ```
 
 `method` can be `historical` (empirical quantile), `evt` (extreme-value
-theory) or `garch` (conditional volatility). The underlying EVT/GARCH kernels
-in `fincore.risk.evt` and `fincore.risk.garch` are unchanged.
+theory) or `garch` (conditional volatility). The underlying legacy EVT/GARCH
+kernels live in `fincore.risk.evt` and `fincore.risk.garch`; their enhanced
+adapters preserve the `losses_negative` sign convention.
+
+## EVT tail-index convention
+
+`hill_estimator` estimates the extreme-value tail index from positive tail
+magnitudes. With a positive threshold `u`, it returns the threshold Hill
+estimate `mean(log(x / u))` over observations `x > u`, together with those
+selected magnitudes. Lower return tails are reflected into positive loss
+magnitudes first. It is a legacy estimator rather than an out-of-sample
+validated risk model, so use its threshold and tail choice as explicit model
+assumptions.
 
 ## Backtesting VaR
 

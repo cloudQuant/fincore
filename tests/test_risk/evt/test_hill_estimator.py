@@ -48,3 +48,9 @@ class TestHillEstimator:
         data = np.array([1, 2, 3, 4, 5])  # Too few data points
         with pytest.raises(ValueError, match="Not enough exceedances"):
             hill_estimator(data, threshold=10, tail="upper")
+
+    @pytest.mark.parametrize("threshold", [0.0, -0.1, np.nan, np.inf])
+    def test_threshold_must_be_finite_and_positive(self, heavy_tailed_data, threshold):
+        """Hill is defined only for a positive finite tail threshold."""
+        with pytest.raises(ValueError, match="threshold must be finite and positive"):
+            hill_estimator(heavy_tailed_data, threshold=threshold, tail="upper")

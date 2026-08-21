@@ -60,21 +60,25 @@ oracle generation method, and the tolerance asserted by
   this environment, so convergence is validated by seeded fixtures rather than
   a second optimizer.
 
-### 4. EVT tail selection and GEV shape sign
+### 4. EVT tail selection, GEV shape sign and Hill tail index
 
 - **File:** `fincore/risk/evt.py`
 - **Fix:** `gpd_fit`/`gev_fit`/`evt_var`/`evt_cvar` honor the `tail` argument
   (lower → negated losses, upper → gains); `gev_fit` converts SciPy's
   `genextreme` shape `c` to the standard GEV shape `xi = −c` (SciPy `c > 0` is
-  bounded Weibull, standard `xi > 0` is heavy Fréchet).
+  bounded Weibull, standard `xi > 0` is heavy Fréchet). `hill_estimator` uses
+  the threshold Hill form `xi_hat = (1/k) Σ log(x_i / u)` for positive tail
+  magnitudes `x_i > u`; it does not take logarithms of excesses `x_i − u`.
 - **Source:** Embrechts, Klüppelberg & Mikosch (1997); McNeil, Frey &
   Embrechts (2015).
 - **Boundary:** lower-tail VaR/ES negative, upper-tail positive; standard
-  `xi > 0` for heavy-tailed (Student-t) data.
+  `xi > 0` for heavy-tailed (Student-t) data. Hill thresholds must be finite
+  and positive; lower-tail reflection preserves the tail index.
 - **Oracle:** `scipy.stats.genextreme.fit` sign convention verified against
-  Student-t(3) block maxima (standard `xi ≈ +0.33`).
+  Student-t(3) block maxima (standard `xi ≈ +0.33`), plus the standalone
+  NumPy threshold-Hill reference in `tests/oracles/risk/evt_oracle.py`.
 - **Tolerance:** tail identity `upper ≠ lower` on skewed data; `xi > 0` for
-  heavy tails.
+  heavy tails; threshold-Hill formula `rtol = atol = 1e-12`.
 
 ### 5. Deflated Sharpe Ratio
 

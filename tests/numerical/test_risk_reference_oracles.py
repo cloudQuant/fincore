@@ -14,8 +14,10 @@ import pytest
 from scipy import stats
 
 from fincore.risk.backtesting import kupiec_lr
+from fincore.risk.evt import hill_estimator
 from fincore.risk.garch import EGARCH, GARCH, GJRGARCH
 from fincore.risk.models import forecast_es, forecast_var
+from tests.oracles.risk.evt_oracle import hill_threshold_reference
 from tests.oracles.risk.kupiec_oracle import kupiec_lr_brute_reference, kupiec_lr_reference
 from tests.oracles.risk.normal_es_oracle import normal_es_reference, normal_var_reference
 
@@ -193,6 +195,26 @@ class TestEVTSemantics:
         params = gev_fit(heavy, block_size=100)
         # Standard GEV xi > 0 for a Frechet (heavy-tailed) distribution.
         assert params["xi"] > 0.0
+
+    def test_hill_matches_independent_threshold_formula(self) -> None:
+        """Hill uses log(tail observation / threshold), not log(excess)."""
+        magnitudes = np.array([1.10, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00, 6.00, 8.00])
+        expected, expected_observations = hill_threshold_reference(magnitudes, threshold=1.0, tail="upper")
+
+        actual, observations = hill_estimator(magnitudes, threshold=1.0, tail="upper")
+
+        assert np.isclose(actual, expected, rtol=1e-12, atol=1e-12)
+        assert np.array_equal(observations, expected_observations)
+
+    def test_hill_lower_tail_is_reflection_of_upper_tail(self) -> None:
+        """The same loss magnitudes have the same Hill index after reflection."""
+        magnitudes = np.array([1.10, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00, 3.50, 4.00, 5.00, 6.00, 8.00])
+        expected, expected_observations = hill_threshold_reference(-magnitudes, threshold=1.0, tail="lower")
+
+        actual, observations = hill_estimator(-magnitudes, threshold=1.0, tail="lower")
+
+        assert np.isclose(actual, expected, rtol=1e-12, atol=1e-12)
+        assert np.array_equal(observations, expected_observations)
 
 
 # --------------------------------------------------------------------------- #

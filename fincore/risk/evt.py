@@ -45,8 +45,8 @@ def hill_estimator(
     data : array-like
         Input data (returns or losses).
     threshold : float, optional
-        Threshold for selecting tail data.
-        If None, uses 90th percentile for upper tail.
+        Positive tail-magnitude threshold. If None, uses the 90th percentile
+        of the selected positive tail magnitudes.
     tail : str, default 'upper'
         Which tail to estimate: 'upper' (right/gains) or 'lower' (left/losses).
 
@@ -54,48 +54,47 @@ def hill_estimator(
     -------
     xi : float
         Estimated tail index (shape parameter).
-        xi > 0: Heavy-tailed (Pareto, Student-t)
-        xi = 0: Exponential tail
-        xi < 0: Bounded tail (Beta, Uniform)
-    excesses : ndarray
-        Data above threshold.
+        The Hill estimator is defined for regularly varying heavy tails, so
+        finite-sample estimates are non-negative. Values close to zero can
+        indicate a light/near-exponential tail; use a GPD/GEV model rather
+        than Hill for a bounded-tail (negative-shape) conclusion.
+    tail_observations : ndarray
+        Positive tail magnitudes strictly above ``threshold``. For a lower
+        return tail these are reflected loss magnitudes.
 
     Examples
     --------
     >>> returns = np.random.standard_t(3, 10000)
-    >>> xi, excesses = hill_estimator(returns, tail="lower")
+    >>> xi, tail_observations = hill_estimator(returns, tail="lower")
     >>> print(f"Tail index: {xi:.3f}")
     """
     data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
     data_arr = data_arr[~np.isnan(data_arr)]
 
-    # Select tail based on sign
     if tail == "upper":
-        tail_data = data_arr[data_arr > 0]
+        tail_data = data_arr[data_arr > 0.0]
     elif tail == "lower":
-        tail_data = -data_arr[data_arr < 0]  # Convert losses to positive
+        tail_data = -data_arr[data_arr < 0.0]
     else:
         raise ValueError("tail must be 'upper' or 'lower'")
 
-    # Set threshold if not provided
     if threshold is None:
         threshold = float(np.percentile(tail_data, 90))
+    else:
+        threshold = float(threshold)
+        if not np.isfinite(threshold) or threshold <= 0.0:
+            raise ValueError("threshold must be finite and positive")
 
-    # Get exceedances
-    excesses = tail_data[tail_data > threshold] - threshold
+    tail_observations = tail_data[tail_data > threshold]
 
-    if len(excesses) < 10:
+    if len(tail_observations) < 10:
         raise ValueError("Not enough exceedances for Hill estimation (need >= 10)")
 
-    # Sort log exceedances
-    log_excess = np.log(excesses)
-    log_excess = np.sort(log_excess)
+    # Threshold form of Hill's tail-index estimator.  The ratio uses observed
+    # tail magnitudes, not excesses (x - u): E[log(X / u) | X > u].
+    xi = float(np.mean(np.log(tail_observations / threshold)))
 
-    # Hill estimator
-    k = len(log_excess)
-    xi = float(1.0 / k * np.sum(log_excess - log_excess[0]))
-
-    return xi, excesses + threshold
+    return xi, tail_observations
 
 
 def gpd_fit(
