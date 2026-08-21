@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from fincore.backends import NumPyBackend, get_backend
+from fincore.backends.numpy_backend import NumPyBackend as ModuleNumPyBackend
 from fincore.exceptions import NumericalError
 from fincore.metrics.drawdown import max_drawdown
 
@@ -76,3 +77,7 @@ def test_numpy_backend_sharpe_matches_formula() -> None:
 def test_get_backend_falls_back_to_reference() -> None:
     assert get_backend("numpy").name == "numpy"
     assert get_backend("unknown").name == "numpy"
+
+
+def test_public_numpy_backend_is_the_explicit_reference_implementation() -> None:
+    assert NumPyBackend is ModuleNumPyBackend
