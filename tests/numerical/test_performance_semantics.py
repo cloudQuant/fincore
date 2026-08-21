@@ -48,21 +48,42 @@ class TestMWR:
 
         assert np.isclose(rate, 1.0e20 - 1.0, rtol=1e-12)
 
-    def test_mwr_enumerates_actual_roots_instead_of_rejecting_sign_changes(self) -> None:
-        """Three cashflow sign changes can still have exactly one admissible IRR."""
+    def test_mwr_rejects_non_conventional_cashflows_even_with_one_real_root(self) -> None:
+        """The scalar contract rejects multi-sign cashflows rather than choosing a root."""
         rate = mwr(np.array([2.0, -1.0, 2.0, -1.0]))
 
-        assert np.isclose(rate, -0.5, rtol=0.0, atol=1e-12)
+        assert np.isnan(rate)
 
-    def test_mwr_returns_a_unique_tangent_root(self) -> None:
-        """A repeated root is still unambiguous when it is the only representable rate."""
+    def test_mwr_rejects_non_conventional_tangent_root(self) -> None:
+        """A repeated root is not silently inferred from floating-point residuals."""
         rate = mwr(np.array([100.0, -200.0, 100.0]))
 
-        assert np.isclose(rate, 0.0, rtol=0.0, atol=1e-12)
+        assert np.isnan(rate)
+
+    def test_mwr_does_not_turn_a_near_stationary_value_into_a_tangent_root(self) -> None:
+        """A negative discriminant has no real IRR even when its NPV is tiny."""
+        # In q = 1 / (1 + r), this is 1 - 2q + (1 + eps)q².  Its
+        # discriminant is negative, so a root-tolerance heuristic must not
+        # manufacture a tiny positive IRR at the stationary point.
+        rate = mwr(np.array([1.0, -2.0, 1.0 + 1.0e-14]))
+
+        assert np.isnan(rate)
+
+    def test_mwr_avoids_python_recursion_depth_for_long_cashflow_stream(self) -> None:
+        """Several years of daily cashflows must not raise RecursionError."""
+        rate = mwr(np.r_[-100.0, np.ones(999)])
+
+        assert np.isfinite(rate)
 
     def test_mwr_returns_nan_when_root_enumeration_finds_multiple_roots(self) -> None:
         """Selecting one of several real IRRs would be economically misleading."""
         assert np.isnan(mwr(np.array([-100.0, 230.0, -132.0])))
+
+    def test_mwr_rejects_two_close_real_roots(self) -> None:
+        """Near-coincident roots must not collapse into a fictitious single IRR."""
+        cashflows = np.array([1.0 + 1.0e-10, -(2.0 + 1.0e-10), 1.0])
+
+        assert np.isnan(mwr(cashflows))
 
 
 class TestXIRR:

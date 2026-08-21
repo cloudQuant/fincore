@@ -22,7 +22,6 @@ __all__ = ["mwr", "twr", "xirr"]
 
 _LOG_GROSS_LOWER_BOUND = float(np.log1p(np.nextafter(-1.0, 0.0)))
 _LOG_GROSS_UPPER_BOUND = float(np.log(np.finfo(float).max))
-_ROOT_RELATIVE_TOLERANCE = 64.0 * np.finfo(float).eps
 
 
 def twr(returns: pd.Series | np.ndarray) -> float:
@@ -75,89 +74,45 @@ def _scaled_npv(cashflows: np.ndarray, periods: np.ndarray, log_gross_rate: floa
     return value, scale
 
 
-def _is_numerical_zero(value: float, scale: float) -> bool:
-    return bool(np.isfinite(value) and np.isfinite(scale) and abs(value) <= _ROOT_RELATIVE_TOLERANCE * scale)
+def _has_single_cashflow_sign_change(cashflows: np.ndarray) -> bool:
+    """Return whether a normalized cashflow stream is conventional.
 
-
-def _append_unique_root(roots: list[float], candidate: float) -> None:
-    tolerance = 32.0 * np.finfo(float).eps * max(1.0, abs(candidate))
-    if not any(abs(candidate - existing) <= tolerance for existing in roots):
-        roots.append(candidate)
-
-
-def _enumerate_log_rate_roots(
-    cashflows: np.ndarray,
-    periods: np.ndarray,
-    lower_bound: float = _LOG_GROSS_LOWER_BOUND,
-    upper_bound: float = _LOG_GROSS_UPPER_BOUND,
-) -> list[float]:
-    """Enumerate NPV roots by recursively locating derivative roots.
-
-    In log-gross-rate space, NPV is an exponential polynomial.  Its derivative
-    has one fewer nonzero term, so recursively locating stationary points
-    partitions the domain into monotone intervals.  Solving every interval and
-    checking the stationary points detects both crossing and tangent roots.
+    A conventional stream has exactly one sign transition after equal-period
+    cashflows have been aggregated.  This is a deliberately conservative
+    public contract: it gives the exponential NPV equation at most one real
+    root, whereas non-conventional streams can have zero, several, or repeated
+    roots that cannot be classified reliably from binary64 arithmetic alone.
     """
     if len(cashflows) < 2:
-        return []
+        return False
+    return bool(np.count_nonzero(np.signbit(cashflows[1:]) != np.signbit(cashflows[:-1])) == 1)
 
-    # Factoring out the earliest-period exponential preserves root locations
-    # and gives every recursive derivative a zero-period term to remove.
-    periods = periods - np.min(periods)
-    positive_periods = periods > 0.0
-    if np.count_nonzero(positive_periods) < 2:
-        stationary_points: list[float] = []
-    else:
-        time_scale = float(np.max(periods[positive_periods]))
-        derivative_cashflows = -(periods[positive_periods] / time_scale) * cashflows[positive_periods]
-        derivative_cashflows, derivative_periods = _normalise_cashflow_polynomial(
-            derivative_cashflows,
-            periods[positive_periods],
+
+def _solve_conventional_irr(cashflows: np.ndarray, periods: np.ndarray) -> float:
+    """Solve a conventional cashflow stream over the full representable domain."""
+    lower_value, _ = _scaled_npv(cashflows, periods, _LOG_GROSS_LOWER_BOUND)
+    upper_value, _ = _scaled_npv(cashflows, periods, _LOG_GROSS_UPPER_BOUND)
+    if not (np.isfinite(lower_value) and np.isfinite(upper_value)):
+        return float("nan")
+
+    # A conventional stream has opposite asymptotic signs.  Do not treat a
+    # merely *small* endpoint residual as a root: that was the source of a
+    # previous false-tangent-root bug.  brentq's sign-changing bracket is the
+    # certificate of existence used by this scalar API.
+    if np.signbit(lower_value) == np.signbit(upper_value):
+        return float("nan")
+    try:
+        root = optimize.brentq(
+            lambda log_rate: _scaled_npv(cashflows, periods, log_rate)[0],
+            _LOG_GROSS_LOWER_BOUND,
+            _LOG_GROSS_UPPER_BOUND,
+            xtol=np.finfo(float).eps,
+            rtol=4.0 * np.finfo(float).eps,
+            maxiter=256,
         )
-        stationary_points = _enumerate_log_rate_roots(
-            derivative_cashflows,
-            derivative_periods,
-            lower_bound,
-            upper_bound,
-        )
-
-    boundaries = [lower_bound, *stationary_points, upper_bound]
-    evaluations = [_scaled_npv(cashflows, periods, boundary) for boundary in boundaries]
-    roots: list[float] = []
-
-    for boundary, (value, scale) in zip(boundaries, evaluations, strict=True):
-        if _is_numerical_zero(value, scale):
-            _append_unique_root(roots, boundary)
-
-    for left, right, left_evaluation, right_evaluation in zip(
-        boundaries[:-1],
-        boundaries[1:],
-        evaluations[:-1],
-        evaluations[1:],
-        strict=True,
-    ):
-        left_value, left_scale = left_evaluation
-        right_value, right_scale = right_evaluation
-        if _is_numerical_zero(left_value, left_scale) or _is_numerical_zero(right_value, right_scale):
-            continue
-        if not (np.isfinite(left_value) and np.isfinite(right_value)):
-            continue
-        if np.signbit(left_value) == np.signbit(right_value):
-            continue
-        try:
-            root = optimize.brentq(
-                lambda log_rate: _scaled_npv(cashflows, periods, log_rate)[0],
-                left,
-                right,
-                xtol=np.finfo(float).eps,
-                rtol=4.0 * np.finfo(float).eps,
-                maxiter=256,
-            )
-        except (RuntimeError, ValueError):
-            continue
-        _append_unique_root(roots, float(root))
-
-    return roots
+    except (RuntimeError, ValueError):
+        return float("nan")
+    return _rate_from_log_gross(float(root))
 
 
 def _rate_from_log_gross(log_gross_rate: float) -> float:
@@ -168,11 +123,12 @@ def _rate_from_log_gross(log_gross_rate: float) -> float:
 
 
 def _irr(cashflows: np.ndarray, periods: np.ndarray) -> float:
-    """Solve ``sum CF_t / (1+r)^period_t = 0`` when exactly one rate exists.
+    """Solve a conventional ``sum CF_t / (1+r)^period_t = 0`` equation.
 
-    Candidate roots are enumerated over the full representable ``r > -1``
-    domain in log-gross-rate space.  ``nan`` is returned only when no root or
-    more than one distinct representable root is found.
+    The scalar API intentionally rejects non-conventional flows (anything
+    other than exactly one post-aggregation sign transition) with ``nan``.
+    Such inputs require an explicit multi-root analysis rather than selecting
+    or inferring a root from a tolerance-sensitive numerical search.
     """
     cashflows = np.asarray(cashflows, dtype=float).reshape(-1)
     periods = np.asarray(periods, dtype=float).reshape(-1)
@@ -186,11 +142,9 @@ def _irr(cashflows: np.ndarray, periods: np.ndarray) -> float:
         raise ValueError("periods must be finite and non-negative")
 
     cashflows, periods = _normalise_cashflow_polynomial(cashflows, periods)
-    roots = _enumerate_log_rate_roots(cashflows, periods)
-    if len(roots) != 1:
+    if not _has_single_cashflow_sign_change(cashflows):
         return float("nan")
-
-    rate = _rate_from_log_gross(roots[0])
+    rate = _solve_conventional_irr(cashflows, periods)
     return rate if rate > -1.0 else float("nan")
 
 
@@ -274,8 +228,9 @@ def mwr(cashflows: pd.Series | np.ndarray, periods: float | None = None) -> floa
     ``cashflows`` is a sequence of net contributions (negative for outflow).
     ``periods`` is the length of each interval in years; when omitted, each
     cashflow is assumed one period apart.  The return is ``nan`` when there is
-    no unique representable real IRR.  It is determined by enumerating actual
-    NPV roots, not by cashflow sign counts.
+    no conventional representable real IRR.  After same-period aggregation,
+    non-conventional cashflows (anything other than one sign transition) are
+    rejected with ``nan`` instead of choosing a tolerance-dependent root.
     """
     cf = _as_cashflow_array(cashflows)
     n = len(cf)
@@ -304,8 +259,9 @@ def xirr(
     earliest date is time zero and subsequent cashflows are discounted by
     calendar days divided by 365.
 
-    The return is ``nan`` when actual root enumeration finds zero or multiple
-    distinct representable real IRRs.
+    The return is ``nan`` for no conventional real IRR or a non-conventional
+    cashflow stream.  The latter is deliberately rejected rather than choosing
+    a tolerance-dependent root from a potentially multi-root equation.
     """
     cf, dt = _normalise_xirr_inputs(cashflows, dates)
     years = np.asarray((dt - dt[0]).days, dtype=float) / 365.0
