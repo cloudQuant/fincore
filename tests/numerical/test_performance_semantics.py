@@ -44,6 +44,75 @@ class TestXIRR:
         rate = xirr(cashflows, dates)
         assert np.isclose(rate, 0.10, rtol=1e-6)
 
+    def test_xirr_supports_matching_non_default_series_indexes(self) -> None:
+        """A label-based date series must not be accessed as though it were positional."""
+        cashflows = pd.Series([-100.0, 10.0, 110.0], index=[101, 205, 309])
+        dates = pd.Series(
+            pd.to_datetime(["2018-01-01", "2019-01-01", "2020-01-01"]),
+            index=[101, 205, 309],
+        )
+
+        assert np.isclose(xirr(cashflows, dates), 0.10, rtol=1e-6)
+
+    def test_xirr_aligns_unsorted_labeled_date_series(self) -> None:
+        """Date-series labels, rather than their accidental storage order, pair cashflows."""
+        cashflows = pd.Series([110.0, -100.0, 10.0], index=["close", "open", "income"])
+        dates = pd.Series(
+            pd.to_datetime(["2019-01-01", "2020-01-01", "2018-01-01"]),
+            index=["income", "close", "open"],
+        )
+
+        assert np.isclose(xirr(cashflows, dates), 0.10, rtol=1e-6)
+
+    def test_xirr_rejects_non_matching_date_series_index(self) -> None:
+        cashflows = pd.Series([-100.0, 110.0], index=["open", "close"])
+        dates = pd.Series(
+            pd.to_datetime(["2019-01-01", "2020-01-01"]),
+            index=["open", "settlement"],
+        )
+
+        with pytest.raises(ValueError, match="same index labels"):
+            xirr(cashflows, dates)
+
+    def test_xirr_rejects_duplicate_labelled_indexes(self) -> None:
+        cashflows = pd.Series([-100.0, 110.0], index=["open", "open"])
+        dates = pd.Series(
+            pd.to_datetime(["2019-01-01", "2020-01-01"]),
+            index=["open", "open"],
+        )
+
+        with pytest.raises(ValueError, match="indexes must be unique"):
+            xirr(cashflows, dates)
+
+    def test_xirr_rejects_missing_dates(self) -> None:
+        cashflows = pd.Series([-100.0, 110.0])
+        dates = pd.Series([pd.Timestamp("2019-01-01"), pd.NaT])
+
+        with pytest.raises(ValueError, match="valid, non-missing dates"):
+            xirr(cashflows, dates)
+
+    def test_xirr_combines_duplicate_cashflow_dates(self) -> None:
+        cashflows = pd.Series([-100.0, 50.0, 60.0])
+        dates = pd.to_datetime(["2018-01-01", "2019-01-01", "2019-01-01"])
+
+        assert np.isclose(xirr(cashflows, dates), 0.10, rtol=1e-6)
+
+    def test_xirr_returns_nan_when_cashflow_signs_make_irr_ambiguous(self) -> None:
+        cashflows = pd.Series([-100.0, 230.0, -132.0])
+        dates = pd.to_datetime(["2018-01-01", "2019-01-01", "2020-01-01"])
+
+        assert np.isnan(xirr(cashflows, dates))
+
+
+class TestMWRInputValidation:
+    def test_mwr_rejects_non_finite_cashflows(self) -> None:
+        with pytest.raises(ValueError, match="finite"):
+            mwr(np.array([-100.0, np.nan, 110.0]))
+
+    def test_mwr_rejects_non_positive_interval(self) -> None:
+        with pytest.raises(ValueError, match="positive finite"):
+            mwr(np.array([-100.0, 110.0]), periods=0)
+
 
 class TestSharpeInference:
     def test_sharpe_se_is_positive_and_finite(self) -> None:
