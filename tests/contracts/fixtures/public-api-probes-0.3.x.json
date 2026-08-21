@@ -1,0 +1,37 @@
+{
+  "baseline": "0.3.x",
+  "coverage": "Representative strict-façade C0-C4 probes. Full callable-by-callable coverage remains a release-readiness requirement.",
+  "probes": [
+    {
+      "categories": ["C0", "C1"],
+      "id": "empyrical.sharpe_ratio.success",
+      "public_path": "fincore.empyrical.sharpe_ratio",
+      "test": "test_empyrical_sharpe_ratio_success_shape"
+    },
+    {
+      "categories": ["C1", "C2"],
+      "id": "empyrical.sharpe_ratio.empty",
+      "public_path": "fincore.empyrical.sharpe_ratio",
+      "test": "test_empyrical_sharpe_ratio_empty_is_nan"
+    },
+    {
+      "categories": ["C0", "C1"],
+      "id": "empyrical.max_drawdown.success",
+      "public_path": "fincore.empyrical.max_drawdown",
+      "test": "test_empyrical_max_drawdown_success_shape"
+    },
+    {
+      "categories": ["C0", "C1"],
+      "id": "empyrical.cum_returns.success",
+      "public_path": "fincore.empyrical.cum_returns",
+      "test": "test_empyrical_cum_returns_shape"
+    },
+    {
+      "categories": ["C0", "C3", "C4"],
+      "id": "empyrical.facade.isolation",
+      "public_path": "fincore.empyrical",
+      "test": "test_empyrical_does_not_expose_enhanced_stateful_class"
+    }
+  ],
+  "schema_version": 1
+}

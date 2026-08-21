@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.snapshot_public_api import SURFACE_PROFILES, build_snapshot
+from scripts.snapshot_public_api import SURFACE_PROFILES, build_snapshot, main
 
 FIXTURE = Path(__file__).parent / "fixtures" / "public-api-0.3.x.json"
 
@@ -28,6 +28,10 @@ def test_snapshot_matches_checked_in_fixture() -> None:
     snapshot = build_snapshot()
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
     assert snapshot == fixture, "public API snapshot drifted from the checked-in fixture"
+
+
+def test_snapshot_check_uses_the_checked_in_fixture_by_default() -> None:
+    assert main(["--check"]) == 0
 
 
 def test_every_surface_has_a_known_profile() -> None:

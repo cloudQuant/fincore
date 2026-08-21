@@ -25,6 +25,7 @@ PACKAGE = ROOT / "fincore"
 
 SCHEMA_VERSION = 1
 SNAPSHOT_BASELINE = "0.3.x"
+DEFAULT_FIXTURE = ROOT / "tests" / "contracts" / "fixtures" / "public-api-0.3.x.json"
 
 #: Each public surface maps to exactly one semantic profile.
 SURFACE_PROFILES = {
@@ -91,7 +92,7 @@ def _signature(node: ast.AST) -> str | None:
     return None
 
 
-def _extract_all(tree: ast.AST) -> list[str] | None:
+def _extract_all(tree: ast.Module) -> list[str] | None:
     for node in tree.body:
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
@@ -107,7 +108,7 @@ def _extract_all(tree: ast.AST) -> list[str] | None:
     return None
 
 
-def _public_definitions(tree: ast.AST) -> dict[str, str]:
+def _public_definitions(tree: ast.Module) -> dict[str, str]:
     definitions: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not node.name.startswith("_"):
@@ -183,7 +184,13 @@ def build_snapshot() -> dict[str, object]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default=None, help="write the snapshot to this JSON path")
-    parser.add_argument("--check", default=None, help="compare against this fixture JSON and fail on drift")
+    parser.add_argument(
+        "--check",
+        nargs="?",
+        const=str(DEFAULT_FIXTURE),
+        default=None,
+        help="compare against a fixture JSON (defaults to the checked-in public API fixture)",
+    )
     args = parser.parse_args(argv)
 
     snapshot = build_snapshot()
