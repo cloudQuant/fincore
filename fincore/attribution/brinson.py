@@ -170,14 +170,27 @@ def brinson_results(
 
 
 def _carino_k(rp: float, rb: float) -> float:
-    """Carino linking constant for a single period."""
-    if abs(rp - rb) < 1e-15:
+    """Return a numerically stable Carino linking constant.
+
+    Algebraically, the log-return difference is
+    ``log1p((rp - rb) / (1 + rb))``.  Evaluating that expression avoids the
+    catastrophic cancellation caused by subtracting two nearly equal logs.
+    The equality branch is the analytic limit, not a tolerance-based shortcut,
+    so distinguishable close returns still use the stable difference formula.
+    """
+    if rp == rb:
         return 1.0 / (1.0 + rp)
-    return float((np.log1p(rp) - np.log1p(rb)) / (rp - rb))
+    return float(np.log1p((rp - rb) / (1.0 + rb)) / (rp - rb))
 
 
-def _validate_carino_returns(values: np.ndarray, *, label: str) -> None:
-    """Reject values outside the domain of Carino's log-return transform."""
+def _validate_finite(values: np.ndarray, *, label: str) -> None:
+    """Reject non-finite component data before aggregate calculation."""
+    if not np.all(np.isfinite(values)):
+        raise ValueError(f"{label} must be finite.")
+
+
+def _validate_carino_period_returns(values: np.ndarray, *, label: str) -> None:
+    """Validate the aggregate returns used by Carino's log transform."""
     if not np.all(np.isfinite(values)) or np.any(values <= -1.0):
         raise ValueError(f"{label} must be finite and greater than -1 for Carino linking.")
 
@@ -231,15 +244,15 @@ def brinson_cumulative(
     if not (rp.shape == rb.shape == wp.shape == wb.shape):
         raise ValueError("portfolio_returns, benchmark_returns, and weights must have consistent shapes.")
 
-    _validate_carino_returns(rp, label="portfolio and benchmark returns")
-    _validate_carino_returns(rb, label="portfolio and benchmark returns")
-    if not np.all(np.isfinite(wp)) or not np.all(np.isfinite(wb)):
-        raise ValueError("portfolio and benchmark weights must be finite.")
+    _validate_finite(rp, label="portfolio and benchmark returns")
+    _validate_finite(rb, label="portfolio and benchmark returns")
+    _validate_finite(wp, label="portfolio and benchmark weights")
+    _validate_finite(wb, label="portfolio and benchmark weights")
 
     portfolio_period = np.sum(wp * rp, axis=1)
     benchmark_period = np.sum(wb * rb, axis=1)
-    _validate_carino_returns(portfolio_period, label="portfolio and benchmark period returns")
-    _validate_carino_returns(benchmark_period, label="portfolio and benchmark period returns")
+    _validate_carino_period_returns(portfolio_period, label="portfolio and benchmark period returns")
+    _validate_carino_period_returns(benchmark_period, label="portfolio and benchmark period returns")
 
     n_periods = rp.shape[0]
     allocation = np.empty(n_periods)
@@ -253,6 +266,9 @@ def brinson_cumulative(
 
     portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
     benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
+    _validate_carino_period_returns(
+        np.array([portfolio_cum, benchmark_cum]), label="cumulative portfolio and benchmark returns"
+    )
 
     k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
     global_k = _carino_k(portfolio_cum, benchmark_cum)

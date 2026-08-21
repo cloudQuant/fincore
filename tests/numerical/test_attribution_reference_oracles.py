@@ -6,7 +6,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tests.oracles.attribution.brinson_oracle import brinson_carino_reference
+from tests.oracles.attribution.brinson_oracle import (
+    brinson_carino_decimal_reference,
+    brinson_carino_reference,
+    carino_k_decimal_reference,
+)
 from tests.oracles.attribution.regression_oracle import ols_hac_reference, wls_reference
 
 
@@ -141,6 +145,34 @@ class TestBrinsonLinking:
         assert np.isclose(result["selection"], ref["selection"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["interaction"], ref["interaction"], rtol=1e-12, atol=1e-12)
         assert np.isclose(result["total"], ref["active_return"], rtol=1e-12, atol=1e-12)
+
+    def test_carino_coefficient_near_equal_returns_matches_decimal_reference(self) -> None:
+        """Near-equal returns must not lose precision through log subtraction."""
+        from fincore.attribution.brinson import _carino_k
+
+        portfolio_return = 0.123456789012345
+        benchmark_return = 0.123456789012355
+
+        expected = carino_k_decimal_reference(portfolio_return, benchmark_return)
+        observed = _carino_k(portfolio_return, benchmark_return)
+
+        assert np.isclose(observed, expected, rtol=1e-12, atol=0.0)
+
+    def test_brinson_cumulative_near_loss_boundary_matches_decimal_reference(self) -> None:
+        """A two-period loss-boundary fixture must reconcile to 80-digit Carino math."""
+        from fincore.attribution.brinson import brinson_cumulative
+
+        # The rebound keeps the global linking coefficient well-conditioned,
+        # isolating cancellation in the near-total-loss period coefficient.
+        rp = np.array([[-0.999999, 0.0], [1_000_000.0, 0.0]], dtype=float)
+        rb = np.array([[-0.99999899999999, 0.0], [1_000_000.0, 0.0]], dtype=float)
+        weights = np.array([[1.0, 0.0], [1.0, 0.0]], dtype=float)
+
+        expected = brinson_carino_decimal_reference(rp, rb, weights, weights)
+        observed = brinson_cumulative(rp, rb, weights, weights)
+
+        for effect in ("allocation", "selection", "interaction", "total"):
+            assert np.isclose(observed[effect], expected[effect], rtol=1e-12, atol=1e-23), effect
 
 
 class TestStyleBeta:

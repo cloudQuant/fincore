@@ -141,14 +141,16 @@ def test_brinson_cumulative_handles_equal_return_period_without_nan():
 
 
 def test_brinson_cumulative_zero_cumulative_active_return_is_finite():
-    rp = np.array([[0.10], [-1.0 / 11.0]], dtype=float)
+    # The two exactly representable gross returns multiply to one, ensuring an
+    # exact zero-active fixture instead of relying on an approximate tolerance.
+    rp = np.array([[1.0], [-0.5]], dtype=float)
     rb = np.array([[0.00], [0.00]], dtype=float)
     weights = np.ones((2, 1), dtype=float)
 
     result = brinson_cumulative(rp, rb, weights, weights)
 
     assert np.isfinite(result["total"])
-    assert np.isclose(result["total"], 0.0, rtol=0.0, atol=1e-12)
+    assert np.isclose(result["total"], 0.0, rtol=0.0, atol=0.0)
 
 
 def test_brinson_cumulative_near_loss_boundary_preserves_absolute_active_return():
@@ -162,9 +164,26 @@ def test_brinson_cumulative_near_loss_boundary_preserves_absolute_active_return(
     assert np.isclose(result["total"], -0.000001, rtol=0.0, atol=1e-12)
 
 
-@pytest.mark.parametrize("bad_return", [np.nan, np.inf, -np.inf, -1.0, -1.01])
+def test_brinson_cumulative_accepts_total_loss_components_when_aggregate_returns_are_valid():
+    """Carino is defined on aggregate returns, not individual sector returns."""
+    rp = np.array([[-1.0, 0.04], [0.02, -1.0]], dtype=float)
+    rb = np.array([[-1.0, 0.01], [0.01, -1.0]], dtype=float)
+    weights = np.array([[0.1, 0.9], [0.9, 0.1]], dtype=float)
+
+    result = brinson_cumulative(rp, rb, weights, weights)
+
+    assert np.isfinite(result["total"])
+    assert np.isclose(
+        result["total"],
+        result["portfolio_cumulative"] - result["benchmark_cumulative"],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize("bad_return", [np.nan, np.inf, -np.inf])
 @pytest.mark.parametrize("target", ["portfolio", "benchmark"])
-def test_brinson_cumulative_rejects_nonfinite_or_total_loss_returns(target, bad_return):
+def test_brinson_cumulative_rejects_nonfinite_component_returns(target, bad_return):
     rp = np.array([[0.02, bad_return]], dtype=float)
     rb = np.array([[0.01, 0.00]], dtype=float)
     if target == "benchmark":
@@ -172,7 +191,7 @@ def test_brinson_cumulative_rejects_nonfinite_or_total_loss_returns(target, bad_
         rb[0, 1] = bad_return
     weights = np.array([[0.5, 0.5]], dtype=float)
 
-    with pytest.raises(ValueError, match="finite and greater than -1"):
+    with pytest.raises(ValueError, match="must be finite"):
         brinson_cumulative(rp, rb, weights, weights)
 
 
