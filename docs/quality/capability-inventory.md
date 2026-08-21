@@ -6,6 +6,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `risk.evt` | risk | `stable` | `fincore.risk.evt` | A returns Series/array (excess or simple) with optional tail probability. | Tail-risk estimates (VaR/CVaR) with the fitted EVT parameters attached. | `api/risk.md` |
 | `risk.garch` | risk | `experimental` | `fincore.risk.garch` | A returns Series/array and model order parameters (p, q) — only (1, 1) is implemented. | Fitted conditional-volatility model with forecast and conditional VaR/ES. | `api/risk.md` |
+| `risk.walk_forward_validation` | risk | `experimental` | `fincore.risk.build_risk_validation_report` | A RiskModelSpec plus finite, sorted returns passed through walk_forward_var; only one-step, lower-tail VaR is currently supported. | A JSON-serializable event ledger containing every out-of-sample forecast, exception, refit, fit parameters, and input/backtest digests. | `guide/risk-validation.md` |
 | `compat.empyrical` | compat | `stable` | `fincore.empyrical` | empyrical 0.6.0 call signatures and return shapes. | Numerically verified empyrical 0.6.0 results (C0-C3 gates). | `development/compatibility.md` |
 | `compat.pyfolio` | compat | `stable` | `fincore.pyfolio` | pyfolio 0.9.6 tear-sheet workflow signatures. | pyfolio 0.9.6-profile tear-sheet workflows (C1/C4 gates). | `development/compatibility.md` |
 | `compat.alphalens` | compat | `experimental` | `fincore.alphalens` | alphalens 0.4.0 source-shaped call signatures. | Source-shaped alphalens strict façade (Beta integration). | `development/compatibility.md` |

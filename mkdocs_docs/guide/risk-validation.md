@@ -56,6 +56,43 @@ Both are likelihood-ratio tests with an explicit null hypothesis. When the
 sample is too small to be meaningful (fewer than 3 observations, or fewer than
 5 expected exceptions), the result is `inconclusive` rather than a silent pass.
 
+## Auditable walk-forward VaR (experimental)
+
+For the enhanced walk-forward boundary, use `RiskModelSpec` and
+`walk_forward_var`. Each forecast uses only data strictly before its timestamp.
+`walk_forward_var` returns a `WalkForwardVaRResult`; pass that result to
+`build_risk_validation_report` to write every forecast, realised return,
+exception, refit parameters, timestamp index name/timezone, and both
+input/backtest digests to a deterministic JSON artifact. When a VaR backtest
+is available, the artifact also contains a traffic-light zone together with
+the observations and confidence level used to derive that reference field.
+Timezone metadata is emitted only as a portable IANA name or fixed UTC-offset
+token; a timezone that cannot be represented and replayed that way is rejected
+when the report is built. Timestamp index names must likewise be native JSON
+scalars so the backtest digest can be replayed exactly.
+
+```python
+import numpy as np
+import pandas as pd
+
+from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+
+returns = pd.Series(
+    np.linspace(-0.02, 0.02, 60),
+    index=pd.date_range("2024-01-02", periods=60, freq="B", tz="UTC"),
+)
+spec = RiskModelSpec(confidence_level=0.95, distribution="normal", window=40, refit_cadence=5)
+walk_forward = walk_forward_var(returns, spec)
+audit_report = build_risk_validation_report(walk_forward)
+audit_report.write_json("risk-validation.json")
+```
+
+This surface is **experimental**. It currently validates one-step lower-tail
+VaR with Normal or finite-sample calibrated historical forecasts; it does not
+turn legacy EVT/GARCH estimates into an out-of-sample validated model. Its
+Basel traffic-light and backtest fields are reference aids, not regulatory
+approval or a compliance certification.
+
 ## Backtesting ES (experimental)
 
 Expected Shortfall backtesting is an open problem. The first fincore

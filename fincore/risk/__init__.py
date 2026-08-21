@@ -41,19 +41,28 @@ from fincore.risk.models import (
     forecast_es,
     forecast_var,
 )
+from fincore.risk.report import (
+    BASEL_REFERENCE_DISCLOSURE,
+    RISK_VALIDATION_REPORT_SCHEMA_VERSION,
+    RiskValidationReport,
+    build_risk_validation_report,
+)
 from fincore.risk.specs import RiskModelSpec
 
 __all__ = [
+    "BASEL_REFERENCE_DISCLOSURE",
     "EGARCH",
-    # GARCH classes
     "GARCH",
     "GJRGARCH",
+    "RISK_VALIDATION_REPORT_SCHEMA_VERSION",
     "RiskBacktestResult",
     "RiskEstimate",
     "RiskModelSpec",
+    "RiskValidationReport",
     "WalkForwardVaRResult",
     "backtest_es",
     "backtest_var",
+    "build_risk_validation_report",
     "conditional_var",
     "evt_cvar",
     "evt_var",
@@ -63,7 +72,6 @@ __all__ = [
     "forecast_volatility",
     "gev_fit",
     "gpd_fit",
-    # EVT functions
     "hill_estimator",
     "walk_forward_var",
 ]

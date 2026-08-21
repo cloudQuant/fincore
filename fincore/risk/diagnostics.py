@@ -15,9 +15,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
+from numbers import Real
 from statistics import NormalDist
-from typing import Any, Final, Literal, Mapping
+from typing import Any, Final, Literal
 
 import numpy as np
 import pandas as pd
@@ -70,6 +72,8 @@ class WalkForwardVaRResult:
             raise TypeError("forecast and realized must be pandas Series")
         if not self.forecast.index.equals(self.realized.index):
             raise ValueError("forecast and realized must have the same index")
+        if self.forecast.index.name != self.realized.index.name:
+            raise ValueError("forecast and realized indexes must have the same name")
         if not isinstance(self.forecast.index, pd.DatetimeIndex) or not isinstance(
             self.realized.index, pd.DatetimeIndex
         ):
@@ -80,6 +84,8 @@ class WalkForwardVaRResult:
             raise ValueError("status must be ok, insufficient_data, or unsupported")
         if not _is_sha256_hex_digest(self.inputs_digest):
             raise ValueError("inputs_digest must be a lowercase SHA-256 hex digest")
+        if not isinstance(self.diagnostics, Mapping):
+            raise TypeError("diagnostics must be a mapping")
         if not isinstance(self.refit_timestamps, pd.DatetimeIndex):
             raise ValueError("refit_timestamps must be a DatetimeIndex")
         if self.refit_timestamps.has_duplicates or not self.refit_timestamps.is_monotonic_increasing:
@@ -105,6 +111,10 @@ class WalkForwardVaRResult:
             raise ValueError("refit_timestamps must belong to the forecast index")
         if self.refit_timestamps[0] != self.forecast.index[0]:
             raise ValueError("the first refit timestamp must equal the first forecast timestamp")
+        expected_refits = self.forecast.index[:: self.spec.refit_cadence]
+        if not self.refit_timestamps.equals(expected_refits):
+            raise ValueError("refit_timestamps must follow the configured refit cadence")
+        self._validate_fit_parameters()
         if self.backtest is None:
             raise ValueError("ok result must contain a backtest")
         if not isinstance(self.backtest, RiskBacktestResult):
@@ -124,6 +134,7 @@ class WalkForwardVaRResult:
         )
         if not _backtest_matches_path(self.backtest, expected_backtest):
             raise ValueError("backtest must match the forecast and realized path")
+        self._validate_ok_diagnostics()
 
     def _validate_empty_state(self) -> None:
         if not self.forecast.empty or not self.realized.empty or not self.refit_timestamps.empty:
@@ -132,6 +143,85 @@ class WalkForwardVaRResult:
             )
         if self.backtest is not None:
             raise ValueError(f"{self.status} result must not contain a backtest")
+        reason = self.diagnostics.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"{self.status} result must include a non-empty diagnostic reason")
+
+    def _validate_fit_parameters(self) -> None:
+        fit_parameters = self.diagnostics.get("fit_parameters")
+        if not isinstance(fit_parameters, Mapping):
+            raise ValueError("ok result must record fit_parameters for every refit")
+
+        expected_keys = {timestamp.isoformat() for timestamp in self.refit_timestamps}
+        if set(fit_parameters) != expected_keys:
+            raise ValueError("fit_parameters must have exactly one entry for each refit")
+
+        for timestamp in self.refit_timestamps:
+            key = timestamp.isoformat()
+            parameters = fit_parameters[key]
+            if not isinstance(parameters, Mapping):
+                raise ValueError(f"fit_parameters for refit {key} must be a mapping")
+            if self.spec.distribution == "normal":
+                forecast = self._validate_normal_fit_parameters(parameters, key)
+            else:
+                forecast = self._validate_historical_fit_parameters(parameters, key)
+            self._validate_refit_forecast_segment(timestamp, forecast)
+
+    def _validate_ok_diagnostics(self) -> None:
+        if self.diagnostics.get("method") != self.spec.distribution:
+            raise ValueError("diagnostics method must equal the specification distribution")
+        expected_quantile_method = (
+            HISTORICAL_QUANTILE_METHOD if self.spec.distribution == "historical" else "normal_ppf"
+        )
+        if self.diagnostics.get("quantile_method") != expected_quantile_method:
+            raise ValueError("diagnostics quantile_method must match the specification distribution")
+        if self.diagnostics.get("window") != self.spec.window:
+            raise ValueError("diagnostics window must equal the specification window")
+        if self.diagnostics.get("refit_cadence") != self.spec.refit_cadence:
+            raise ValueError("diagnostics refit_cadence must equal the specification refit_cadence")
+        if self.diagnostics.get("forecast_count") != len(self.forecast):
+            raise ValueError("diagnostics forecast_count must equal the forecast length")
+        assert self.backtest is not None
+        if self.diagnostics.get("backtest_status") != self.backtest.status:
+            raise ValueError("diagnostics backtest_status must equal the backtest status")
+
+    def _validate_normal_fit_parameters(self, parameters: Mapping[str, Any], refit_key: str) -> float:
+        required = ("mean", "standard_deviation", "n_observations", "forecast")
+        if not all(key in parameters for key in required):
+            raise ValueError(
+                f"fit_parameters for refit {refit_key} must include mean, standard_deviation, n_observations, and forecast"
+            )
+        mean = _finite_fit_parameter(parameters["mean"], "mean", refit_key)
+        standard_deviation = _finite_fit_parameter(parameters["standard_deviation"], "standard_deviation", refit_key)
+        if standard_deviation < 0.0:
+            raise ValueError(f"fit_parameters for refit {refit_key} standard_deviation must be non-negative")
+        _validate_fit_observation_count(parameters["n_observations"], self.spec.window, refit_key)
+        forecast = _finite_fit_parameter(parameters["forecast"], "forecast", refit_key)
+        alpha = 1.0 - self.spec.confidence_level
+        expected = mean if standard_deviation == 0.0 else NormalDist(mu=mean, sigma=standard_deviation).inv_cdf(alpha)
+        if not np.isclose(forecast, expected, rtol=1e-12, atol=1e-15):
+            raise ValueError(f"fit_parameters for refit {refit_key} must reproduce the forecast segment")
+        return forecast
+
+    def _validate_historical_fit_parameters(self, parameters: Mapping[str, Any], refit_key: str) -> float:
+        if not {"n_observations", "quantile_method", "forecast"}.issubset(parameters):
+            raise ValueError(
+                f"fit_parameters for refit {refit_key} must include n_observations, quantile_method, and forecast"
+            )
+        _validate_fit_observation_count(parameters["n_observations"], self.spec.window, refit_key)
+        if parameters["quantile_method"] != HISTORICAL_QUANTILE_METHOD:
+            raise ValueError(
+                f"fit_parameters for refit {refit_key} quantile_method must be {HISTORICAL_QUANTILE_METHOD!r}"
+            )
+        return _finite_fit_parameter(parameters["forecast"], "forecast", refit_key)
+
+    def _validate_refit_forecast_segment(self, timestamp: pd.Timestamp, forecast: float) -> None:
+        position = self.forecast.index.get_loc(timestamp)
+        assert isinstance(position, int)
+        end = min(position + self.spec.refit_cadence, len(self.forecast))
+        segment = self.forecast.iloc[position:end].to_numpy(dtype=float)
+        if not np.allclose(segment, forecast, rtol=1e-12, atol=1e-15):
+            raise ValueError(f"fit_parameters for refit {timestamp.isoformat()} must reproduce the forecast segment")
 
 
 def walk_forward_var(returns: pd.Series, spec: RiskModelSpec) -> WalkForwardVaRResult:
@@ -244,6 +334,21 @@ def walk_forward_var(returns: pd.Series, spec: RiskModelSpec) -> WalkForwardVaRR
     )
 
 
+def _finite_fit_parameter(value: object, name: str, refit_key: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(f"fit_parameters for refit {refit_key} {name} must be a finite real number")
+    normalized = float(value)
+    if not np.isfinite(normalized):
+        raise ValueError(f"fit_parameters for refit {refit_key} {name} must be a finite real number")
+    return normalized
+
+
+def _validate_fit_observation_count(value: object, window: int, refit_key: str) -> None:
+    count = _finite_fit_parameter(value, "n_observations", refit_key)
+    if count != float(window):
+        raise ValueError(f"fit_parameters for refit {refit_key} n_observations must equal the specification window")
+
+
 def _validate_returns(returns: pd.Series) -> pd.Series:
     if not isinstance(returns, pd.Series):
         raise TypeError("returns must be a pandas Series")
@@ -288,15 +393,22 @@ def _fit_one_step_var(returns: pd.Series, spec: RiskModelSpec) -> tuple[float, M
     values = returns.to_numpy(dtype=float)
     alpha = 1.0 - spec.confidence_level
     if spec.distribution == "historical":
-        return float(np.quantile(values, alpha, method=HISTORICAL_QUANTILE_METHOD)), {
+        forecast = float(np.quantile(values, alpha, method=HISTORICAL_QUANTILE_METHOD))
+        return forecast, {
             "n_observations": float(len(values)),
             "quantile_method": HISTORICAL_QUANTILE_METHOD,
+            "forecast": forecast,
         }
 
     mean = float(np.mean(values))
     standard_deviation = float(np.std(values, ddof=1))
-    value = mean if standard_deviation == 0.0 else NormalDist(mu=mean, sigma=standard_deviation).inv_cdf(alpha)
-    return value, {"mean": mean, "standard_deviation": standard_deviation, "n_observations": float(len(values))}
+    forecast = mean if standard_deviation == 0.0 else NormalDist(mu=mean, sigma=standard_deviation).inv_cdf(alpha)
+    return forecast, {
+        "mean": mean,
+        "standard_deviation": standard_deviation,
+        "n_observations": float(len(values)),
+        "forecast": forecast,
+    }
 
 
 def _empty_result(

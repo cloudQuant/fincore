@@ -59,6 +59,25 @@ _CAPABILITIES: tuple[Capability, ...] = (
         docs_path="api/risk.md",
         rationale="GARCH/EGARCH/GJR-GARCH (1,1) kernels with corrected forecast recursions and convergence checks; higher orders unsupported until fully verified.",
     ),
+    Capability(
+        id="risk.walk_forward_validation",
+        public_path="fincore.risk.build_risk_validation_report",
+        domain="risk",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "A RiskModelSpec plus finite, sorted returns passed through walk_forward_var; only one-step, "
+            "lower-tail VaR is currently supported."
+        ),
+        output_contract=(
+            "A JSON-serializable event ledger containing every out-of-sample forecast, exception, refit, "
+            "fit parameters, and input/backtest digests."
+        ),
+        docs_path="guide/risk-validation.md",
+        rationale=(
+            "The walk-forward VaR boundary has independent calibration and no-look-ahead checks, but it is "
+            "experimental until broader risk-model validation and release gates are complete."
+        ),
+    ),
     # --- strict compatibility façades --------------------------------------
     Capability(
         id="compat.empyrical",

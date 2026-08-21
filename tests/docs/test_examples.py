@@ -149,6 +149,28 @@ def test_performance_transaction_ledger_example() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Risk-validation guide
+# ---------------------------------------------------------------------------
+
+
+def test_risk_validation_report_example(tmp_path: Path) -> None:
+    # mkdocs_docs/guide/risk-validation.md "Auditable walk-forward VaR" block.
+    from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+
+    returns = pd.Series(
+        np.linspace(-0.02, 0.02, 60),
+        index=pd.date_range("2024-01-02", periods=60, freq="B", tz="UTC"),
+    )
+    spec = RiskModelSpec(confidence_level=0.95, distribution="normal", window=40, refit_cadence=5)
+    walk_forward = walk_forward_var(returns, spec)
+    audit_report = build_risk_validation_report(walk_forward)
+    output = audit_report.write_json(tmp_path / "risk-validation.json")
+
+    assert audit_report.status == "ok"
+    assert json.loads(output.read_text(encoding="utf-8"))["inputs_digest"] == walk_forward.inputs_digest
+
+
+# ---------------------------------------------------------------------------
 # Quick Start: classic API (Empyrical class-level call)
 # ---------------------------------------------------------------------------
 

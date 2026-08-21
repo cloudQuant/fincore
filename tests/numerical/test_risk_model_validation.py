@@ -16,6 +16,18 @@ from fincore.risk.calibration import basel_traffic_light, es_calibration_score, 
 from fincore.risk.specs import RiskModelSpec
 
 
+def _normal_walk_forward_result():
+    index = pd.date_range("2024-01-02", periods=12, freq="B", tz="UTC")
+    returns = pd.Series(
+        [-0.03, 0.01, -0.02, 0.02, -0.01, 0.03, -0.04, 0.01, -0.02, 0.02, -0.01, 0.01],
+        index=index,
+    )
+    return walk_forward_var(
+        returns,
+        RiskModelSpec(confidence_level=0.95, distribution="normal", window=4, refit_cadence=2),
+    )
+
+
 class TestRiskModelSpec:
     def test_defaults(self) -> None:
         spec = RiskModelSpec()
@@ -243,23 +255,38 @@ class TestWalkForward:
         assert unsupported.forecast.empty
         assert unsupported.backtest is None
 
+    def test_insufficient_data_keeps_its_structured_status_for_a_named_datetime_index(self) -> None:
+        index = pd.date_range("2022-01-01", periods=4, freq="B", tz="UTC", name=42)
+        returns = pd.Series(np.linspace(-0.02, 0.02, len(index)), index=index)
+
+        result = walk_forward_var(returns, RiskModelSpec(window=4))
+
+        assert result.status == "insufficient_data"
+        assert result.forecast.empty
+        assert result.realized.empty
+
     def test_walk_forward_result_enforces_status_specific_state_invariants(self) -> None:
         idx = pd.date_range("2022-01-01", periods=8, freq="B", tz="UTC")
         returns = pd.Series(np.linspace(-0.02, 0.02, len(idx)), index=idx)
         valid = walk_forward_var(returns, RiskModelSpec(window=3, distribution="normal"))
         insufficient = walk_forward_var(returns.iloc[:3], RiskModelSpec(window=3))
+        unsupported = walk_forward_var(returns, RiskModelSpec(forecast_target="es", window=3))
 
         assert valid.backtest is not None
         with pytest.raises(ValueError, match="ok result must contain a non-empty forecast path"):
             replace(valid, forecast=valid.forecast.iloc[:0], realized=valid.realized.iloc[:0])
         with pytest.raises(ValueError, match="ok result must contain at least one refit timestamp"):
             replace(valid, refit_timestamps=valid.refit_timestamps[:0])
+        with pytest.raises(ValueError, match="refit_timestamps must follow the configured refit cadence"):
+            replace(valid, refit_timestamps=valid.refit_timestamps[:1])
         with pytest.raises(ValueError, match="ok result must contain a backtest"):
             replace(valid, backtest=None)
         with pytest.raises(ValueError, match="inputs_digest must be a lowercase SHA-256 hex digest"):
             replace(valid, inputs_digest="not-a-digest")
         with pytest.raises(ValueError, match="backtest aligned_index must equal forecast index"):
             replace(valid, backtest=replace(valid.backtest, aligned_index=valid.backtest.aligned_index[1:]))
+        with pytest.raises(ValueError, match="forecast and realized indexes must have the same name"):
+            replace(valid, realized=valid.realized.rename_axis("different_name"))
         with pytest.raises(ValueError, match="ok result forecast and realized must contain only finite values"):
             replace(valid, forecast=valid.forecast * np.nan, realized=valid.realized * np.nan)
         with pytest.raises(ValueError, match="backtest confidence_level must equal the specification"):
@@ -269,12 +296,59 @@ class TestWalkForward:
                 valid,
                 backtest=replace(valid.backtest, diagnostics={"significance": 0.99, "small_sample": False}),
             )
-        with pytest.raises(ValueError, match="backtest must match the forecast and realized path"):
+        fit_parameters = dict(valid.diagnostics["fit_parameters"])
+        fit_parameters[valid.refit_timestamps[0].isoformat()] = {}
+        with pytest.raises(ValueError, match="must include mean, standard_deviation, n_observations, and forecast"):
+            replace(valid, diagnostics={**valid.diagnostics, "fit_parameters": fit_parameters})
+        with pytest.raises(ValueError, match="diagnostics method must equal the specification distribution"):
+            replace(valid, diagnostics={**valid.diagnostics, "method": "historical"})
+        with pytest.raises(ValueError, match="must reproduce the forecast segment"):
             replace(valid, forecast=valid.forecast + 0.001)
         with pytest.raises(ValueError, match="insufficient_data result must have an empty forecast path"):
             replace(valid, status="insufficient_data")
         with pytest.raises(ValueError, match="insufficient_data result must not contain a backtest"):
             replace(insufficient, backtest=valid.backtest)
+        with pytest.raises(ValueError, match="must include a non-empty diagnostic reason"):
+            replace(insufficient, diagnostics={})
+        with pytest.raises(ValueError, match="must include a non-empty diagnostic reason"):
+            replace(unsupported, diagnostics={})
+
+    def test_refit_parameters_reproduce_the_recorded_normal_forecast_segments(self) -> None:
+        result = _normal_walk_forward_result()
+        fit_parameters = result.diagnostics["fit_parameters"]
+
+        for position, timestamp in enumerate(result.refit_timestamps):
+            parameters = fit_parameters[timestamp.isoformat()]
+            segment_end = result.refit_timestamps[position + 1] if position + 1 < len(result.refit_timestamps) else None
+            segment = (
+                result.forecast.loc[timestamp:]
+                if segment_end is None
+                else result.forecast.loc[timestamp:segment_end].iloc[:-1]
+            )
+            assert parameters["forecast"] == pytest.approx(segment.iloc[0])
+            assert segment.eq(parameters["forecast"]).all()
+
+    def test_refit_parameters_record_the_historical_forecast_threshold(self) -> None:
+        index = pd.date_range("2024-01-02", periods=10, freq="B", tz="UTC")
+        returns = pd.Series(np.linspace(-0.03, 0.03, len(index)), index=index)
+        result = walk_forward_var(
+            returns,
+            RiskModelSpec(confidence_level=0.8, distribution="historical", window=4, refit_cadence=2),
+        )
+
+        for timestamp in result.refit_timestamps:
+            parameters = result.diagnostics["fit_parameters"][timestamp.isoformat()]
+            assert parameters["quantile_method"] == "weibull"
+            assert parameters["forecast"] == pytest.approx(result.forecast.loc[timestamp])
+
+    def test_rejects_refit_parameters_that_do_not_reproduce_normal_forecasts(self) -> None:
+        valid = _normal_walk_forward_result()
+        fit_parameters = {key: dict(value) for key, value in valid.diagnostics["fit_parameters"].items()}
+        first_key = valid.refit_timestamps[0].isoformat()
+        fit_parameters[first_key]["mean"] += 0.5
+
+        with pytest.raises(ValueError, match="must reproduce the forecast segment"):
+            replace(valid, diagnostics={**valid.diagnostics, "fit_parameters": fit_parameters})
 
     def test_forecast_uses_only_past_data(self) -> None:
         rng = np.random.default_rng(7)
