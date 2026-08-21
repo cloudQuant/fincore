@@ -31,7 +31,7 @@
 
 ## 阻断项与失败门禁
 
-1. **当前质量快照失败。** 重新收集的 [current-baseline.json](current-baseline.json) 绑定干净源码提交 `93fbf54`，但 branch-coverage 为 **45.0%**，低于 60% 下限；branch-coverage 轮还出现 17 个打包测试错误。其余 trusted、serial、single-process 和 xdist 运行均通过且计数一致。旧的“97%”快照不再可作为当前代码证据。
+1. **当前质量快照仍未通过覆盖率门禁。** 在 `f8174ae` 修复每轮复用同一个 disposable copy 的交叉污染后，重新收集的 [current-baseline.json](current-baseline.json) 显示 trusted、serial、single-process、xdist 与 branch-coverage 五轮均以 0 退出，副本完整性均为真，且非串行计数一致；此前 branch-coverage 轮的 17 个打包测试错误已消失。真实 branch-coverage 仍为 **45.0%**，低于 60% 下限，因此 `check_quality_snapshot.py` 继续 fail closed。旧的“97%”快照不再可作为当前代码证据。
 2. **发布级许可证门禁失败。** `check_notices.py --require-approved` 对 `empyrical`、`pyfolio`、`alphalens` 三项均 fail closed；这需要具名人工/法律审批，不能由测试代替。
 3. **计划中的核心工作流仍缺失或未完成验收。** `fincore/performance/cashflows.py`、`fincore/risk/report.py`、`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 不存在；PIT/FDR、成本容量、现金流多币种报告、监管风险报告等 T8–T10 验收不能据此视为完成。
 4. **公开类型与发布证明未完成。** 仓库无 `.pyi`，且 `scripts/check_public_typing.py`、`scripts/verify_attestation.py` 不存在；没有 pyright/stubtest installed-wheel 证明、SBOM/provenance/attestation 的本地验收。
@@ -39,7 +39,7 @@
 
 ## 后续收口顺序
 
-1. 先修复质量基线收集中的打包测试错误，并为新增/低覆盖模块补测试；不得降低 60% branch-coverage 门槛或用旧快照、`--skip-commit-check` 充当发布证据。
+1. 已修复质量基线收集中的打包测试错误；下一步为新增/低覆盖模块补测试。不得降低 60% branch-coverage 门槛或用旧快照、`--skip-commit-check` 充当发布证据。
 2. 完成三方许可的人工审阅并让 release profile 继续 fail closed。
 3. 实施并独立验收现金流、风险报告、PIT/FDR、交易成本、容量和优化 KKT/残差等 T8–T10 项；每项需 oracle、property 与 adversarial fixture。
 4. 交付 `.pyi` / pyright / stubtest consumer gate、SBOM、provenance/attestation 检查，再由管理员完成远端分支与发布环境治理。
