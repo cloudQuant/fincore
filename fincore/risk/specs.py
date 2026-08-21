@@ -9,7 +9,10 @@ contract until the corresponding out-of-sample validation path exists.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
+from decimal import Decimal
+from numbers import Real
 from typing import Final
 
 __all__ = [
@@ -45,6 +48,11 @@ class RiskModelSpec:
         as a return threshold and an exception is a realized return below it.
     ``model_version``
         ``"1.0"`` is the currently supported enhanced contract version.
+    ``confidence_level``
+        A finite real number in ``(0, 1)``.  It is normalized to a built-in
+        :class:`float` before validation so the immutable specification can
+        always be serialized into its audit digest.  Booleans, strings, and
+        non-finite values are rejected.
 
     ``forecast_target`` may express ``"var"``, ``"es"`` or ``"pair"`` for
     cross-component metadata.  The public walk-forward path currently returns
@@ -65,8 +73,7 @@ class RiskModelSpec:
 
     def __post_init__(self) -> None:
         _require_supported("forecast_target", self.forecast_target, SUPPORTED_FORECAST_TARGETS)
-        if isinstance(self.confidence_level, bool) or not 0.0 < self.confidence_level < 1.0:
-            raise ValueError("confidence_level must be in (0, 1)")
+        object.__setattr__(self, "confidence_level", _normalize_confidence_level(self.confidence_level))
         _require_positive_int("horizon", self.horizon, minimum=1)
         _require_supported("distribution", self.distribution, SUPPORTED_DISTRIBUTIONS)
         _require_supported("tail", self.tail, SUPPORTED_TAILS)
@@ -79,6 +86,19 @@ class RiskModelSpec:
 def _require_positive_int(name: str, value: object, *, minimum: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
         raise ValueError(f"{name} must be an integer at least {minimum}")
+
+
+def _normalize_confidence_level(value: object) -> float:
+    """Return a JSON-safe finite coverage level or raise a contract error."""
+    if isinstance(value, bool) or not isinstance(value, (Real, Decimal)):
+        raise ValueError("confidence_level must be a finite real number in (0, 1)")
+    try:
+        normalized = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise ValueError("confidence_level must be a finite real number in (0, 1)") from exc
+    if not math.isfinite(normalized) or not 0.0 < normalized < 1.0:
+        raise ValueError("confidence_level must be a finite real number in (0, 1)")
+    return normalized
 
 
 def _require_supported(name: str, value: object, supported: tuple[str, ...]) -> None:

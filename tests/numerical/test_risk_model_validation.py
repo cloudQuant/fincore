@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+from decimal import Decimal
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -24,6 +27,26 @@ class TestRiskModelSpec:
     def test_rejects_invalid_confidence(self) -> None:
         with pytest.raises(ValueError, match="confidence_level"):
             RiskModelSpec(confidence_level=1.5)
+
+    @pytest.mark.parametrize(
+        "confidence_level",
+        [float("nan"), float("inf"), float("-inf"), Decimal("NaN"), Decimal("Infinity"), "0.95"],
+    )
+    def test_rejects_non_finite_or_non_numeric_confidence(self, confidence_level: object) -> None:
+        with pytest.raises(ValueError, match="confidence_level"):
+            RiskModelSpec(confidence_level=confidence_level)  # type: ignore[arg-type]
+
+    def test_normalizes_finite_decimal_confidence_before_digest_serialization(self) -> None:
+        spec = RiskModelSpec(confidence_level=Decimal("0.95"))
+        idx = pd.date_range("2022-01-01", periods=3, freq="B", tz="UTC")
+        returns = pd.Series([-0.02, 0.01, -0.01], index=idx)
+
+        result = walk_forward_var(returns, replace(spec, window=2))
+
+        assert type(spec.confidence_level) is float
+        assert spec.confidence_level == pytest.approx(0.95)
+        assert result.inputs_digest.isascii()
+        assert len(result.inputs_digest) == 64
 
     def test_rejects_invalid_target(self) -> None:
         with pytest.raises(ValueError, match="forecast_target"):
@@ -90,7 +113,14 @@ class TestWalkForward:
 
         result = walk_forward_var(returns, spec)
 
-        expected_first = float(np.quantile(returns.iloc[:40].to_numpy(), 0.05))
+        ordered_window = np.sort(returns.iloc[:40].to_numpy())
+        rank = (len(ordered_window) + 1) * 0.05
+        lower_index = int(np.floor(rank)) - 1
+        upper_index = lower_index + 1
+        expected_first = float(
+            ordered_window[lower_index]
+            + (rank - np.floor(rank)) * (ordered_window[upper_index] - ordered_window[lower_index])
+        )
         assert result.status == "ok"
         assert result.forecast.index.equals(idx[40:])
         assert result.realized.index.equals(result.forecast.index)
@@ -100,6 +130,30 @@ class TestWalkForward:
         assert len(result.inputs_digest) == 64
         assert result.backtest is not None
         assert result.backtest.observations == len(result.forecast)
+
+    def test_historical_forecast_uses_weibull_finite_sample_quantile(self) -> None:
+        idx = pd.date_range("2020-01-01", periods=253, freq="B", tz="UTC")
+        returns = pd.Series(np.arange(253, dtype=float), index=idx)
+        spec = RiskModelSpec(confidence_level=0.95, distribution="historical", window=252)
+
+        result = walk_forward_var(returns, spec)
+
+        # Hyndman-Fan type 6 / NumPy ``weibull``: h = (n + 1) * p = 12.65.
+        assert result.forecast.iloc[0] == pytest.approx(11.65)
+        assert result.diagnostics["quantile_method"] == "weibull"
+
+    def test_historical_walk_forward_has_calibrated_fixed_stream_coverage(self) -> None:
+        """A deterministic iid normal probe independent of the quantile implementation."""
+        rng = np.random.default_rng(20260821)
+        idx = pd.date_range("2000-01-03", periods=5_000, freq="B", tz="UTC")
+        returns = pd.Series(rng.normal(size=len(idx)), index=idx)
+        spec = RiskModelSpec(confidence_level=0.99, distribution="historical", window=252)
+
+        result = walk_forward_var(returns, spec)
+
+        assert result.backtest is not None
+        assert result.backtest.exception_rate == pytest.approx(0.01095, abs=0.001)
+        assert abs(result.backtest.exception_rate - 0.01) < 0.002
 
     def test_normal_forecast_reuses_fit_until_the_next_deterministic_refit(self) -> None:
         idx = pd.date_range("2021-01-01", periods=80, freq="B", tz="UTC")
@@ -146,6 +200,28 @@ class TestWalkForward:
         assert unsupported.status == "unsupported"
         assert unsupported.forecast.empty
         assert unsupported.backtest is None
+
+    def test_walk_forward_result_enforces_status_specific_state_invariants(self) -> None:
+        idx = pd.date_range("2022-01-01", periods=8, freq="B", tz="UTC")
+        returns = pd.Series(np.linspace(-0.02, 0.02, len(idx)), index=idx)
+        valid = walk_forward_var(returns, RiskModelSpec(window=3, distribution="historical"))
+        insufficient = walk_forward_var(returns.iloc[:3], RiskModelSpec(window=3))
+
+        assert valid.backtest is not None
+        with pytest.raises(ValueError, match="ok result must contain a non-empty forecast path"):
+            replace(valid, forecast=valid.forecast.iloc[:0], realized=valid.realized.iloc[:0])
+        with pytest.raises(ValueError, match="ok result must contain at least one refit timestamp"):
+            replace(valid, refit_timestamps=valid.refit_timestamps[:0])
+        with pytest.raises(ValueError, match="ok result must contain a backtest"):
+            replace(valid, backtest=None)
+        with pytest.raises(ValueError, match="inputs_digest must be a lowercase SHA-256 hex digest"):
+            replace(valid, inputs_digest="not-a-digest")
+        with pytest.raises(ValueError, match="backtest aligned_index must equal forecast index"):
+            replace(valid, backtest=replace(valid.backtest, aligned_index=valid.backtest.aligned_index[1:]))
+        with pytest.raises(ValueError, match="insufficient_data result must have an empty forecast path"):
+            replace(valid, status="insufficient_data")
+        with pytest.raises(ValueError, match="insufficient_data result must not contain a backtest"):
+            replace(insufficient, backtest=valid.backtest)
 
     def test_forecast_uses_only_past_data(self) -> None:
         rng = np.random.default_rng(7)
