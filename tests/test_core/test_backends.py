@@ -48,6 +48,23 @@ def test_numpy_backend_max_drawdown_matches_canonical_nan_rejection() -> None:
     assert str(backend_error.value) == str(canonical_error.value)
 
 
+def test_numpy_backend_max_drawdown_matches_canonical_for_multiple_assets() -> None:
+    backend = NumPyBackend()
+    returns = np.array(
+        [
+            [-0.10, 0.02],
+            [0.05, -1.00],
+            [-0.02, 0.50],
+        ]
+    )
+    expected = max_drawdown(returns)
+
+    actual = backend.max_drawdown(returns)
+
+    assert isinstance(actual, np.ndarray)
+    np.testing.assert_allclose(actual, expected)
+
+
 def test_numpy_backend_sharpe_matches_formula() -> None:
     backend = NumPyBackend()
     returns = np.array([0.001, -0.002, 0.003, 0.001])
