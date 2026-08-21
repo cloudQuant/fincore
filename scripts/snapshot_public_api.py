@@ -24,8 +24,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "fincore"
 
 SCHEMA_VERSION = 1
-SNAPSHOT_BASELINE = "0.3.x"
-DEFAULT_FIXTURE = ROOT / "tests" / "contracts" / "fixtures" / "public-api-0.3.x.json"
+SNAPSHOT_BASELINE = "0.4.0.dev0"
+DEFAULT_FIXTURE = ROOT / "tests" / "contracts" / "fixtures" / "public-api-0.4.0.dev0.json"
 
 #: Each public surface maps to exactly one semantic profile.
 SURFACE_PROFILES = {
@@ -34,6 +34,7 @@ SURFACE_PROFILES = {
     "fincore.pyfolio": "strict_pyfolio_0_9_6",
     "fincore.alphalens": "strict_alphalens_cloudquant_0_4_0",
     "fincore.metrics": "enhanced_v1",
+    "fincore.performance": "enhanced_v1",
     "fincore.risk": "enhanced_v1",
     "fincore.simulation": "enhanced_v1",
     "fincore.attribution": "enhanced_v1",
@@ -48,6 +49,7 @@ SURFACE_PROFILES = {
 _PACKAGE_SURFACES = {
     "fincore.alphalens",
     "fincore.metrics",
+    "fincore.performance",
     "fincore.risk",
     "fincore.simulation",
     "fincore.attribution",

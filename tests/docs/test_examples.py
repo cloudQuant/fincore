@@ -1,8 +1,8 @@
 """Executable documentation examples.
 
 Every code block shown in README.md, docs/MIGRATION.md, and the MkDocs
-getting-started pages that claims to run against fincore 0.3.0 is mirrored
-here as a real test.  Documentation code must never be written first and
+getting-started pages that claims to run against the current fincore release is
+mirrored here as a real test. Documentation code must never be written first and
 guessed later: this file is the executable contract for those snippets.
 
 Keep each test aligned with the corresponding documentation block.  When a
@@ -120,7 +120,7 @@ def test_performance_cashflow_semantics_example() -> None:
     # mkdocs_docs/guide/performance-semantics.md "Cashflow-adjusted" block.
     from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
 
-    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"])
+    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
     valuations = pd.Series([100.0, 110.0, 121.0], index=dates)
     cashflows = pd.Series([10.0], index=[dates[1]])
 
@@ -129,6 +129,23 @@ def test_performance_cashflow_semantics_example() -> None:
 
     assert period_returns.round(12).tolist() == [0.0, 0.1]
     assert round(total_return, 12) == 0.1
+
+
+def test_performance_transaction_ledger_example() -> None:
+    # mkdocs_docs/guide/performance-semantics.md transaction ledger block.
+    from fincore.performance import cashflow_adjusted_twr
+
+    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
+    ledger = pd.DataFrame(
+        {"amount": [10.0, -5.0], "timing": ["start", "end"]},
+        index=[dates[1], dates[1]],
+    )
+    one_period = cashflow_adjusted_twr(
+        pd.Series([100.0, 116.0], index=dates[:2]),
+        ledger,
+    )
+
+    assert round(one_period, 12) == 0.1
 
 
 # ---------------------------------------------------------------------------

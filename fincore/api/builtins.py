@@ -1,9 +1,10 @@
-"""Build the builtin OperationCatalog from the frozen registries.
+"""Build the builtin OperationCatalog from registries and explicit enhanced APIs.
 
 This is a read-only projection: ``METRIC_REGISTRY`` and ``WORKFLOW_REGISTRY``
-remain the source of truth during the migration, and the catalog is rebuilt
-from them.  The mapping collapses each registry entry into one ``PublicBinding``
-and merges bindings of the same logical operation into one
+remain the source of truth for their surfaces.  Enhanced APIs that do not have
+a legacy registry receive an explicit catalog specification here, so every
+public operation remains discoverable by profile, provenance, and stability.
+The mapping collapses bindings of the same logical operation into one
 ``OperationDefinition``.
 """
 
@@ -14,7 +15,13 @@ from fincore.api.catalog import OperationCatalog
 from fincore.api.specs import OperationDefinition, PublicBinding
 from fincore.contracts.workflows import WORKFLOW_REGISTRY
 
-__all__ = ["SURFACE_DOMAIN", "SURFACE_PATH", "VARIANT_PROFILE", "build_builtin_catalog"]
+__all__ = [
+    "PERFORMANCE_OPERATION_SPECS",
+    "SURFACE_DOMAIN",
+    "SURFACE_PATH",
+    "VARIANT_PROFILE",
+    "build_builtin_catalog",
+]
 
 VARIANT_PROFILE = {
     "strict-0.6.0": "strict_empyrical_0_6_0",
@@ -46,6 +53,43 @@ SURFACE_DOMAIN = {
 }
 
 _STRICT_PROFILES = frozenset({"strict_empyrical_0_6_0", "strict_pyfolio_0_9_6"})
+
+# This package is enhanced-only and intentionally not routed through the
+# frozen metric registry.  Keep a source-level specification rather than
+# importing it: catalog construction must remain light and deterministic.
+PERFORMANCE_OPERATION_SPECS = (
+    (
+        "cashflow_adjusted_returns",
+        "fincore.performance.cashflows:cashflow_adjusted_returns",
+        "(valuations, cashflows=None, *, fees=None, timing='end', cashflow_timings=None, "
+        "fee_treatment='net', cashflow_currency=None, reporting_currency='USD', fx_rates=None)",
+        "series",
+    ),
+    (
+        "cashflow_adjusted_twr",
+        "fincore.performance.cashflows:cashflow_adjusted_twr",
+        "(valuations, cashflows=None, *, fees=None, timing='end', cashflow_timings=None, "
+        "fee_treatment='net', cashflow_currency=None, reporting_currency='USD', fx_rates=None)",
+        "scalar",
+    ),
+    ("mwr", "fincore.performance.returns:mwr", "(cashflows, periods=None)", "scalar"),
+    ("render_disclosure", "fincore.performance.disclosures:render_disclosure", "(context)", "scalar"),
+    (
+        "sharpe_confidence_interval",
+        "fincore.performance.inference:sharpe_confidence_interval",
+        "(returns, risk_free=0.0, *, z=1.96)",
+        "legacy_tuple",
+    ),
+    (
+        "sharpe_standard_error",
+        "fincore.performance.inference:sharpe_standard_error",
+        "(returns, risk_free=0.0)",
+        "scalar",
+    ),
+    ("standard_error_of_mean", "fincore.performance.inference:standard_error_of_mean", "(values)", "scalar"),
+    ("twr", "fincore.performance.returns:twr", "(returns)", "scalar"),
+    ("xirr", "fincore.performance.returns:xirr", "(cashflows, dates)", "scalar"),
+)
 
 
 def _stability(semantic_profile: str) -> str:
@@ -119,6 +163,33 @@ def build_builtin_catalog() -> OperationCatalog:
                 adapter_ref=wspec.adapter_ref,
                 result_projection=wspec.result_projection,
                 introduced_in="0.3.0",
+            )
+        )
+
+    for public_name, kernel_ref, signature, result_projection in PERFORMANCE_OPERATION_SPECS:
+        definitions.append(
+            OperationDefinition(
+                operation_id=public_name,
+                semantic_profile="enhanced_v1",
+                domain="performance",
+                canonical_name=public_name,
+                kernel_ref=kernel_ref,
+                stability="experimental",
+                deterministic=True,
+                provenance="surface=fincore.performance enhanced-v1",
+            )
+        )
+        bindings.append(
+            PublicBinding(
+                binding_id=f"performance.{public_name}.enhanced",
+                operation_id=public_name,
+                semantic_profile="enhanced_v1",
+                public_path=f"fincore.performance.{public_name}",
+                surface="performance",
+                signature=signature,
+                adapter_ref="fincore.performance",
+                result_projection=result_projection,
+                introduced_in="0.4.0.dev0",
             )
         )
 
