@@ -67,7 +67,7 @@ oracle generation method, and the tolerance asserted by
   this environment, so convergence is validated by seeded fixtures rather than
   a second optimizer.
 
-### 4. EVT tail selection, GEV shape sign and Hill tail index
+### 4. EVT tail selection, GPD PWM / threshold domain, GEV ES and Hill tail index
 
 - **File:** `fincore/risk/evt.py`
 - **Fix:** `gpd_fit`/`gev_fit`/`evt_var`/`evt_cvar` honor the `tail` argument
@@ -76,16 +76,32 @@ oracle generation method, and the tolerance asserted by
   bounded Weibull, standard `xi > 0` is heavy Fréchet). `hill_estimator` uses
   the threshold Hill form `xi_hat = (1/k) Σ log(x_i / u)` for positive tail
   magnitudes `x_i > u`; it does not take logarithms of excesses `x_i − u`.
+  GPD PWM now derives the first two sample L-moments (`l1=b0`,
+  `l2=2*b1-b0`) and uses `xi=2-l1/l2`, `beta=l1*(1-xi)`, rejecting an
+  invalid non-positive scale. GPD VaR/ES never applies a conditional-excess
+  model below its fitted threshold: an explicit threshold requires
+  `alpha <= n_exceed/n_total`; an automatic VaR/ES threshold retains the
+  90th tail percentile when it covers `alpha` and otherwise lowers only far
+  enough to retain the requested empirical tail mass. GEV ES is the
+  conditional tail mean `alpha^-1 integral_(1-alpha)^1 Q(p) dp`, evaluated by
+  the lower-incomplete-gamma expression (or its Gumbel/E1 limit), rather than
+  a fixed additive offset from VaR. The GEV quantile uses `log1p(-alpha)` and
+  the Gumbel small-tail branch divides its E1-series terms before summing, so
+  representable subnormal `alpha` values do not round away or cancel to zero.
 - **Source:** Embrechts, Klüppelberg & Mikosch (1997); McNeil, Frey &
   Embrechts (2015).
 - **Boundary:** lower-tail VaR/ES negative, upper-tail positive; standard
-  `xi > 0` for heavy-tailed (Student-t) data. Hill thresholds must be finite
-  and positive; lower-tail reflection preserves the tail index.
+  `xi > 0` for heavy-tailed (Student-t) data. `alpha` is finite and in
+  `(0,1)`; GPD requires the target tail probability to be covered by the POT
+  threshold; GEV ES is finite only for `xi < 1`. Hill thresholds must be
+  finite and positive; lower-tail reflection preserves the tail index.
 - **Oracle:** `scipy.stats.genextreme.fit` sign convention verified against
-  Student-t(3) block maxima (standard `xi ≈ +0.33`), plus the standalone
-  NumPy threshold-Hill reference in `tests/oracles/risk/evt_oracle.py`.
+  Student-t(3) block maxima (standard `xi ≈ +0.33`), a standalone NumPy
+  threshold-Hill/L-moment PWM reference, and independent SciPy-PDF quadrature
+  for GEV ES in `tests/oracles/risk/evt_oracle.py`.
 - **Tolerance:** tail identity `upper ≠ lower` on skewed data; `xi > 0` for
-  heavy tails; threshold-Hill formula `rtol = atol = 1e-12`.
+  heavy tails; threshold-Hill/PWM formula `rtol = atol = 1e-12`; GEV ES PDF
+  quadrature `rtol = atol = 1e-10`.
 
 ### 5. Deflated Sharpe Ratio
 

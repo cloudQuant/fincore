@@ -41,6 +41,25 @@ magnitudes first. It is a legacy estimator rather than an out-of-sample
 validated risk model, so use its threshold and tail choice as explicit model
 assumptions.
 
+## EVT threshold and Expected Shortfall semantics
+
+For a GPD peaks-over-threshold (POT) estimate, `alpha` is an unconditional
+return-tail probability. An explicit `threshold` is accepted only when the
+fitted exceedance fraction covers it: `alpha <= n_exceed / n_total`. Otherwise
+the body of the return distribution is not modelled by the conditional GPD and
+the function raises `ValueError` rather than silently extrapolating below the
+threshold. When `evt_var` or `evt_cvar` receives no threshold, it keeps the
+usual 90th percentile of the selected tail if that covers `alpha`; otherwise
+it selects the highest empirical threshold that still does. `gpd_fit` on its own
+continues to use the 90th tail percentile because it fits parameters rather
+than answering a particular VaR/ES query.
+
+GEV estimates are for the selected **block-extreme** distribution, so their
+`alpha` is a block-tail probability, not automatically a daily probability.
+GEV Expected Shortfall is the conditional tail mean beyond GEV VaR and is
+defined only for `xi < 1`; it is not an arbitrary constant increment from
+VaR. These legacy estimators are still not out-of-sample validated models.
+
 ## Backtesting VaR
 
 ```python

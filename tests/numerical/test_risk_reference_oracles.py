@@ -16,10 +16,14 @@ import pytest
 from scipy import stats
 
 from fincore.risk.backtesting import kupiec_lr
-from fincore.risk.evt import hill_estimator
+from fincore.risk.evt import evt_cvar, evt_var, gpd_fit, hill_estimator
 from fincore.risk.garch import EGARCH, GARCH, GJRGARCH
 from fincore.risk.models import forecast_es, forecast_var
-from tests.oracles.risk.evt_oracle import hill_threshold_reference
+from tests.oracles.risk.evt_oracle import (
+    gev_upper_tail_cvar_quadrature_reference,
+    gpd_pwm_reference,
+    hill_threshold_reference,
+)
 from tests.oracles.risk.garch_oracle import egarch_conditional_var_reference
 from tests.oracles.risk.kupiec_oracle import kupiec_lr_brute_reference, kupiec_lr_reference
 from tests.oracles.risk.normal_es_oracle import normal_es_reference, normal_var_reference
@@ -264,6 +268,62 @@ class TestEVTSemantics:
 
         assert np.isclose(actual, expected, rtol=1e-12, atol=1e-12)
         assert np.array_equal(observations, expected_observations)
+
+    def test_gpd_pwm_matches_independent_l_moment_estimator(self) -> None:
+        """PWM must return a positive GPD scale and the standard L-moment fit."""
+        rng = np.random.default_rng(20260822)
+        excesses = stats.genpareto.rvs(c=0.2, scale=2.0, size=2000, random_state=rng)
+        expected_xi, expected_beta = gpd_pwm_reference(excesses)
+
+        actual = gpd_fit(-(0.5 + excesses), threshold=0.5, method="pwm", tail="lower")
+
+        assert actual["beta"] > 0.0
+        assert np.isclose(actual["xi"], expected_xi, rtol=1e-12, atol=1e-12)
+        assert np.isclose(actual["beta"], expected_beta, rtol=1e-12, atol=1e-12)
+        # Fixed GPD-generated fixture: a recovery guard in addition to the
+        # exact empirical L-moment identity above.
+        assert np.isclose(actual["xi"], 0.2, atol=0.1)
+        assert np.isclose(actual["beta"], 2.0, atol=0.25)
+
+    @pytest.mark.parametrize("xi", [-0.2, 0.0, 0.2])
+    def test_gev_cvar_matches_independent_pdf_quadrature(self, monkeypatch, xi: float) -> None:
+        """GEV ES must equal the conditional tail mean, not a VaR offset."""
+        parameters = {"xi": xi, "mu": 1.0, "sigma": 2.0, "n_blocks": 50}
+        monkeypatch.setattr("fincore.risk.evt.gev_fit", lambda *args, **kwargs: parameters)
+        alpha = 0.05
+
+        actual = evt_cvar(np.linspace(-0.1, 0.1, 100), alpha=alpha, model="gev", tail="upper")
+        expected = gev_upper_tail_cvar_quadrature_reference(
+            alpha=alpha,
+            xi=parameters["xi"],
+            mu=parameters["mu"],
+            sigma=parameters["sigma"],
+        )
+
+        assert np.isclose(actual, expected, rtol=1e-10, atol=1e-10)
+
+    def test_gpd_refuses_probability_outside_fitted_pot_tail(self, monkeypatch) -> None:
+        """A POT model must not silently extrapolate below its threshold."""
+        parameters = {"xi": 0.1, "beta": 0.2, "threshold": 1.0, "n_exceed": 10}
+        monkeypatch.setattr("fincore.risk.evt.gpd_fit", lambda *args, **kwargs: parameters)
+
+        with pytest.raises(ValueError, match="threshold exceedance probability"):
+            evt_var(np.linspace(-1.0, 1.0, 100), alpha=0.2, model="gpd", tail="upper", threshold=1.0)
+
+    def test_gev_gumbel_tail_remains_stable_at_smallest_float_alpha(self, monkeypatch) -> None:
+        """A representable tiny alpha must not lose Gumbel ES to cancellation."""
+        parameters = {"xi": 0.0, "mu": 0.0, "sigma": 1.0, "n_blocks": 10}
+        monkeypatch.setattr("fincore.risk.evt.gev_fit", lambda *args, **kwargs: parameters)
+        alpha = np.nextafter(0.0, 1.0)
+
+        var = evt_var(np.linspace(-0.1, 0.1, 20), alpha=alpha, model="gev")
+        cvar = evt_cvar(np.linspace(-0.1, 0.1, 20), alpha=alpha, model="gev")
+
+        expected_upper_tail_mean = -np.log(alpha) + 1.0
+        assert np.isfinite(var)
+        assert np.isfinite(cvar)
+        assert cvar < var
+        assert np.isclose(-cvar, expected_upper_tail_mean, rtol=1e-12, atol=1e-12)
 
 
 # --------------------------------------------------------------------------- #

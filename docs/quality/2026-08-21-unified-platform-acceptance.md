@@ -34,6 +34,7 @@
 | Task 9 walk-forward 风险报告补充（2026-08-22） | 风险数值/属性/`tests/test_risk`、新报告契约、能力/API snapshot 与文档示例：222 passed、1 warning；覆盖 event/refit/backtest digest、可变输入防御重验、DST 与 dateutil 时区、索引元数据重放；Ruff、Mypy、`mkdocs build --strict`、capability/API snapshot check 通过（MkDocs/Material 给出上游迁移警告） |
 | Task 0 EVT Hill 补充（2026-08-22） | 独立 NumPy threshold-Hill oracle、上下尾反射和阈值边界，加上现有 EVT/GARCH 风险回归：153 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这只关闭 Hill 公式切片，不替代剩余 EVT/GARCH 的 out-of-sample 验收。 |
 | Task 0 GARCH/EGARCH 补充（2026-08-22） | 独立条件标准化 EGARCH recursion oracle、溢出候选有限 penalty、EGARCH 的零/非有限/溢出方差输入 fail-closed、GARCH/GJR/EGARCH 平稳性 fail-closed 与增强适配器失败状态：161 passed、1 warning；完整 `tests/test_risk`：138 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这不替代 GARCH/EVT 的 out-of-sample calibration、残差或参数不确定性验收。 |
+| Task 0 EVT GPD/GEV 补充（2026-08-22） | 独立 GPD sample-L-moment/PWM oracle、GEV PDF quadrature ES oracle（含 bounded/Gumbel/heavy-tail 三种 `xi`）、POT 概率域与最小浮点 `alpha` 的 Gumbel 稳定性反例：风险数值/属性/验证/`tests/test_risk` 集合 229 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这只关闭公式、数值稳定性和阈值域切片，不替代 EVT out-of-sample calibration 或阈值不确定性验收。 |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 
