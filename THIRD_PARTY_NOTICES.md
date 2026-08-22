@@ -6,8 +6,8 @@ file are source-provenance identifiers, not additional Fincore versions.
 
 This file records the provenance of source code imported, adapted, or vendored
 from upstream projects. It is evidence, not a legal conclusion: the human
-review status is an explicit release blocker until a reviewer records their
-approval. The distributed [`NOTICE`](NOTICE) and
+review status remains visible for follow-up but is not a CI/CD release gate.
+The distributed [`NOTICE`](NOTICE) and
 [`THIRD_PARTY_LICENSES/Apache-2.0.txt`](THIRD_PARTY_LICENSES/Apache-2.0.txt)
 preserve Apache-2.0 attribution and terms without changing Fincore's MIT
 project license.

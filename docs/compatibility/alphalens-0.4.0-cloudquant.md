@@ -336,6 +336,7 @@ The root `LICENSE` observed at this commit is MIT text, while each of the four
 core source modules carries a Quantopian Apache-2.0 header. Repository history
 also contains a commit described as copying code from the official site. These
 are engineering provenance facts, not a legal determination. Human/license
-review remains pending before copying, adapting, notices, SPDX text, or a
-release claim. It is a release blocker: no Alphalens NOTICE decision is
-invented here. See [upstream provenance](../upstream-provenance.md).
+review remains pending. The distribution preserves the observed attribution,
+NOTICE, and Apache-2.0 text; CI/CD verifies those artifacts without treating
+pending review as a legal approval. See
+[upstream provenance](../upstream-provenance.md).

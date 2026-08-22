@@ -91,9 +91,9 @@ blocks the release; it must never be replaced by an assertion.
 |---|------|-------------------|-------------|
 | 7.1 | Upstream source register (files, headers, commits, transformations) | `docs/upstream-provenance.md` | human review |
 | 7.1a | Machine-readable third-party notice inventory (Fincore MIT identity, pinned commits/artifact digest, review status) | `THIRD_PARTY_NOTICES.md`; `scripts/check_notices.py`; `tests/packaging/test_notices.py` | `python scripts/check_notices.py` |
-| 7.2 | Third-party notice decision (pyfolio root LICENSE = MIT text vs Apache-2.0 headers in source; terms are distributed but final conclusion is pending) | `docs/upstream-provenance.md`; `docs/compatibility/pyfolio-0.9.6.md` | **human/license review — pending** |
+| 7.2 | Third-party notice decision (pyfolio root LICENSE = MIT text vs Apache-2.0 headers in source; terms are distributed but final conclusion is pending) | `docs/upstream-provenance.md`; `docs/compatibility/pyfolio-0.9.6.md` | **advisory human/license follow-up — not a CI/CD gate** |
 | 7.3 | Historical 1.0-era claims quarantined as snapshots | `CHANGELOG.md` "Historical snapshots"; `docs/迭代计划/README.md`; header note in `docs/已实现函数索引.md` | local |
-| 7.4 | Alphalens notice decision (root MIT text vs file-level Quantopian Apache-2.0 headers; Fincore MIT license and Apache notices are distributed, final attribution review pending) | `docs/upstream-provenance.md`; `docs/compatibility/alphalens-0.4.0-cloudquant.md` | **human/license review — pending** |
+| 7.4 | Alphalens notice decision (root MIT text vs file-level Quantopian Apache-2.0 headers; Fincore MIT license and Apache notices are distributed, final attribution review pending) | `docs/upstream-provenance.md`; `docs/compatibility/alphalens-0.4.0-cloudquant.md` | **advisory human/license follow-up — not a CI/CD gate** |
 
 ## 8. Version / claim consistency
 
@@ -109,6 +109,6 @@ The final acceptance run (controller-owned) re-runs the wheel/consistency
 gates, the strict/enhanced/bridge and upstream-migration gates (items 1.11–1.21),
 and regenerates `docs/quality/current-baseline.*`. Until every item above has
 evidence, the release candidate stays Beta and version 0.4.0.dev0. Alphalens
-license review (7.4) and the factor benchmark baseline approval (6.5) remain
-explicit human gates; neither blocks the engineering implementation, but the
-release stays blocked until they are closed.
+license review (7.4) remains an explicit advisory follow-up; the factor
+benchmark baseline approval (6.5) keeps its own documented policy. Neither
+notice-review status is treated as a CI/CD approval or release gate.

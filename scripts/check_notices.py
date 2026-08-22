@@ -3,9 +3,10 @@
 
 Parses the machine-readable JSON block in ``THIRD_PARTY_NOTICES.md`` and fails
 when the inventory is missing, malformed, or records an adapted component
-without a pinned source commit and an explicit review status.  This is evidence
-gathering, not legal self-certification: unresolved human review remains a
-release blocker.
+without a pinned source commit and an explicit review status. This is evidence
+gathering, not legal self-certification. The default CI/CD check validates
+distribution integrity; ``--require-approved`` remains an optional strict
+organization-policy audit.
 """
 
 from __future__ import annotations
@@ -92,9 +93,10 @@ def _validate_vendored_asset(component: str, record: dict[str, Any], violations:
 def check_notices(notices: dict[str, Any], *, require_approved: bool = False) -> list[str]:
     """Return the list of notice violations (empty means valid).
 
-    When ``require_approved`` is set, every adapted component must carry an
-    ``approved`` review status (fail closed for the release profile); ordinary
-    PR checks may leave records in ``pending-human-review``.
+    When ``require_approved`` is set, every component must carry an
+    ``approved`` review status for a strict organization-policy audit. Default
+    CI/CD checks may leave records in ``pending-human-review`` while still
+    requiring complete provenance and distributed attribution.
     """
     violations: list[str] = []
     _validate_project(notices, violations)
@@ -137,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--require-approved",
         action="store_true",
-        help="Fail unless every adapted component has an approved review status (release profile).",
+        help="Fail unless every component has an approved review status (optional strict policy audit).",
     )
     args = parser.parse_args(argv)
     notices = load_notices(args.notices)

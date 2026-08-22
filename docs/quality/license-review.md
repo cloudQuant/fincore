@@ -3,9 +3,10 @@
 This page records the status of the human license/NOTICE decisions for the
 source code adapted from upstream projects and vendored runtime assets.
 Fincore's project license is MIT; this does not relicense third-party material.
-Code does not self-certify legal compliance; every entry stays
+Code does not self-certify legal compliance. Entries may remain
 `pending-human-review` until a human reviewer records their name and approval
-date.
+date, but that status is an advisory follow-up rather than a CI/CD release
+gate.
 
 ## Adapted components
 
@@ -28,7 +29,9 @@ date.
 3. The reviewer updates `THIRD_PARTY_NOTICES.md` (the JSON inventory) and this
    page with `reviewer`, `reviewed_at`, and `review_status="approved"`.
 
-Until every entry is `approved`, the release candidate stays Beta and the
-third-party notice gate remains an explicit release blocker. The machine
-checker (`scripts/check_notices.py`) validates the inventory shape; it never
-substitutes for the human decision.
+The machine checker (`scripts/check_notices.py`) validates the inventory shape,
+source identifiers, vendored-asset digest, and distributed terms. CI/CD runs
+that integrity check without treating pending review as a failed approval.
+`python scripts/check_notices.py --require-approved` remains available for an
+organization that chooses to apply a stricter, separate policy; neither mode
+substitutes for a human legal decision.

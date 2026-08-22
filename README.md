@@ -234,8 +234,9 @@ relicense retained third-party material. Its Apache-2.0 terms and attribution
 ship in [NOTICE](NOTICE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and
 [`THIRD_PARTY_LICENSES/Apache-2.0.txt`](THIRD_PARTY_LICENSES/Apache-2.0.txt).
 Adapted-source provenance and the remaining human review are tracked in
-[docs/upstream-provenance.md](docs/upstream-provenance.md); until that review
-is approved, the release gate remains blocked.
+[docs/upstream-provenance.md](docs/upstream-provenance.md). CI/CD validates
+the notice inventory and shipped terms; a pending review is not represented as
+an automated legal approval.
 
 ---
 

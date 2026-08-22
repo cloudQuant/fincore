@@ -100,7 +100,8 @@ is not a full standalone compatibility claim. No top-level `import alphalens`,
 notebook/HTML, or interactive-backend workflow is supported in this first
 integration. Use `fincore[factor-analysis]` for compute-only analysis and
 `fincore[alphalens]` for rendering or strict migration calls. The human
-third-party license/NOTICE decision remains a release blocker.
+third-party license/NOTICE decision remains an advisory follow-up, not a
+CI/CD gate or automated legal approval.
 
 | Surface | Status |
 | --- | --- |

@@ -368,5 +368,6 @@ pip install fincore[alphalens]
 Compatibility wording is deliberately limited to the executable strict-path,
 signature, kernel, and workflow tests currently present in this repository.
 See `docs/compatibility/alphalens-0.4.0-cloudquant.md` for the pinned source
-identity and scope. The required human license/NOTICE decision remains a
-release blocker; this guide makes no legal conclusion.
+identity and scope. The human license/NOTICE decision remains an advisory
+follow-up, not a CI/CD gate or automated legal approval; this guide makes no
+legal conclusion.

@@ -78,5 +78,6 @@ ctx.to_json(path="report.json")
 
 Pyfolio's pinned checkout has MIT text in its root `LICENSE` and Apache-2.0
 headers in inspected source files. Human/license review is pending. The project
-does not infer a legal conclusion or generate a third-party notice until that
-review decides what is required.
+does not infer a legal conclusion, but it does distribute the retained
+third-party NOTICE and Apache-2.0 terms. CI/CD validates that inventory and
+does not treat the pending review as an automated approval.

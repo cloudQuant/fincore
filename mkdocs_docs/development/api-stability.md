@@ -33,7 +33,8 @@ not Stable surfaces. Their source identity is pinned to commit
 ambiguous historical version strings. Claims are limited to the strict-path,
 signature, kernel, and workflow behavior exercised by current executable
 tests, not full standalone Alphalens parity. The unresolved human
-third-party license/NOTICE decision is a release blocker.
+third-party license/NOTICE decision is an advisory follow-up, not a CI/CD gate
+or automated legal approval.
 
 - `Empyrical`/`Pyfolio` methods beyond the frozen verified surface;
 - enhanced-vs-legacy equality (documented divergences exist by design);

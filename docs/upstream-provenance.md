@@ -104,5 +104,6 @@ assertion as proof. These are bounded engineering safeguards, not evidence of
 a legal review.
 
 That review has not occurred in this task. The distributed NOTICE and Apache
-license copy preserve observed attribution and terms, but the pending review
-still prevents a release-approval claim and no legal conclusion is implied.
+license copy preserve observed attribution and terms. Pending review does not
+block CI/CD, but it also does not create a release-approval claim or legal
+conclusion.

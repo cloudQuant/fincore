@@ -7,6 +7,10 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+WORKFLOWS = (
+    ROOT / ".github" / "workflows" / "ci.yml",
+    ROOT / ".github" / "workflows" / "publish.yml",
+)
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -68,6 +72,28 @@ def test_notice_checker_passes_the_checked_in_inventory() -> None:
     notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
 
     assert check_notices(notices) == []
+
+
+def test_strict_notice_policy_audit_remains_available_but_is_not_the_default() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+
+    violations = check_notices(notices, require_approved=True)
+
+    assert {violation.split(":", 1)[0] for violation in violations} == {
+        "alphalens",
+        "echarts",
+        "empyrical",
+        "pyfolio",
+    }
+    assert all("review_status must be approved" in violation for violation in violations)
+
+
+def test_ci_and_publish_validate_notice_integrity_without_claiming_human_approval() -> None:
+    for workflow_path in WORKFLOWS:
+        workflow = workflow_path.read_text(encoding="utf-8")
+
+        assert "run: python scripts/check_notices.py" in workflow
+        assert "python scripts/check_notices.py --require-approved" not in workflow
 
 
 def test_notice_checker_rejects_missing_commit() -> None:

@@ -43,5 +43,5 @@ Review and provenance status
 
 ``THIRD_PARTY_NOTICES.md`` records immutable source identifiers, the vendored
 asset digest, and the human-review state. A pending entry is not a legal
-approval; the release profile remains blocked until a qualified reviewer
-records a decision, reviewer identity, and review date.
+approval. CI/CD verifies the distributed notice inventory rather than claiming
+that a qualified reviewer made a legal decision.

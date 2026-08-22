@@ -47,8 +47,9 @@ The local pyfolio root `LICENSE` contains MIT text while inspected source files
 carry Apache-2.0 headers. This inconsistency requires human/license review; no
 final license conclusion is made here. The distribution now carries
 `THIRD_PARTY_NOTICES.md`, `NOTICE`, and the Apache-2.0 text while that review
-remains pending. See [upstream provenance](../upstream-provenance.md) for file
-hashes and audit scope.
+remains pending. CI/CD verifies that provenance and attribution inventory but
+does not report it as an automated legal approval. See
+[upstream provenance](../upstream-provenance.md) for file hashes and audit scope.
 
 The optional isolated environment is described by
 `tests/compat/oracle/requirements-pyfolio-0.9.6.txt`. Oracle mode imports from a

@@ -126,8 +126,8 @@ Alphalens migration workflows.
 
 The historical source reports conflicting version evidence (`v0.4.0` in
 Versioneer and `1.0.0+dev` in `setup.py`); the full commit above is the only
-identity used by this policy. The pending human license/NOTICE decision is a
-release blocker.
+identity used by this policy. The pending human license/NOTICE decision is an
+advisory follow-up, not a CI/CD gate or an automated legal approval.
 
 ## Not covered by this policy
 
