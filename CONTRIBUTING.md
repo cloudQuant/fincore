@@ -156,4 +156,6 @@ def sharpe_ratio(
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).
+By contributing, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+This does not alter the separate terms that apply to preserved third-party
+material; see [NOTICE](NOTICE).

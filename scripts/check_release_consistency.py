@@ -29,7 +29,7 @@ import tarfile
 import tomllib
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
@@ -57,6 +57,12 @@ _BANNED_ARTIFACT_FRAGMENTS = (
 _BANNED_ARTIFACT_SUFFIXES = (".ipynb", ".png")
 _CONTRIBUTOR_REQUIREMENT_ARTIFACTS = {"requirements.txt", "requirements-test.txt"}
 _PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
+_REQUIRED_LEGAL_FILES = {
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_LICENSES/Apache-2.0.txt",
+}
 _REQUIRED_RUNTIME_MODULES = {
     "fincore/alphalens/__init__.py",
     "fincore/alphalens/performance.py",
@@ -70,9 +76,12 @@ _REQUIRED_RUNTIME_MODULES = {
 }
 
 
-def _project() -> dict:
+def _project() -> dict[str, Any]:
     with PYPROJECT.open("rb") as fh:
-        return tomllib.load(fh)["project"]
+        project = tomllib.load(fh)["project"]
+    if not isinstance(project, dict):
+        raise ValueError("pyproject.toml [project] must be a table")
+    return cast("dict[str, Any]", project)
 
 
 def _scrubbed_env() -> dict[str, str]:
@@ -100,7 +109,7 @@ def _check_artifact_layout(
     label: str,
     prefix: str = "",
 ) -> None:
-    """Check source-free runtime layout and the approved Apache-only license."""
+    """Check source-free runtime layout and retained legal material."""
     relative_names = {name.removeprefix(prefix) for name in names if name.startswith(prefix)}
     required = {prefix + module for module in _REQUIRED_RUNTIME_MODULES}
     check(required <= names, f"{label} contains Alphalens and factor-analysis runtime modules")
@@ -120,12 +129,40 @@ def _check_artifact_layout(
         ),
         f"{label} excludes sibling paths, contributor requirements, Versioneer, notebooks, PNGs, and oracle requirements",
     )
-    notice_files = [name for name in relative_names if "THIRD_PARTY_NOTICES" in name]
-    check(not notice_files, f"{label} has no unapproved third-party notice file")
-    license_names = [name for name in names if name.endswith("/LICENSE") or name == prefix + "LICENSE"]
-    check(len(license_names) == 1, f"{label} includes exactly one LICENSE")
-    if len(license_names) == 1:
-        check("Apache License" in read_text(license_names[0]), f"{label} LICENSE is Apache-2.0")
+
+    def legal_relative_path(name: str) -> str | None:
+        marker = ".dist-info/licenses/"
+        if marker in name:
+            return name.rsplit(marker, 1)[1]
+        if name in _REQUIRED_LEGAL_FILES:
+            return name
+        return None
+
+    legal_names = {path for name in relative_names if (path := legal_relative_path(name)) is not None}
+    check(legal_names == _REQUIRED_LEGAL_FILES, f"{label} includes the MIT license and third-party legal files")
+
+    def artifact_name(relative_path: str) -> str | None:
+        if prefix:
+            candidate = prefix + relative_path
+            return candidate if candidate in names else None
+        suffix = f".dist-info/licenses/{relative_path}"
+        return next((name for name in names if name.endswith(suffix)), None)
+
+    mit_license = artifact_name("LICENSE")
+    notice = artifact_name("NOTICE")
+    third_party_inventory = artifact_name("THIRD_PARTY_NOTICES.md")
+    apache_license = artifact_name("THIRD_PARTY_LICENSES/Apache-2.0.txt")
+    if mit_license is not None:
+        check(read_text(mit_license).startswith("MIT License"), f"{label} LICENSE is MIT")
+    if notice is not None:
+        check("Apache-2.0" in read_text(notice), f"{label} NOTICE retains Apache-2.0 attribution")
+    if third_party_inventory is not None:
+        check("upstream_version" in read_text(third_party_inventory), f"{label} ships third-party provenance inventory")
+    if apache_license is not None:
+        check(
+            read_text(apache_license).startswith("                                 Apache License"),
+            f"{label} ships Apache-2.0 text",
+        )
 
 
 def _is_allowed_compatibility_requirement(requirement: Requirement) -> bool:
@@ -235,6 +272,11 @@ def _failures(dist_dir: Path | None) -> list[str]:
                     label=wheel.name,
                 )
             check(metadata["Version"] == version, f"wheel METADATA version for {wheel.name}")
+            check(metadata["License-Expression"] == "MIT", f"wheel METADATA license expression for {wheel.name}")
+            check(
+                set(metadata.get_all("License-File", [])) == _REQUIRED_LEGAL_FILES,
+                f"wheel METADATA lists all legal files for {wheel.name}",
+            )
             requires = metadata.get_all("Requires-Dist", [])
             self_deps = [req for req in requires if _SELF_DEP_RE.match(req)]
             check(not self_deps, f"no self-dependency in {wheel.name} ({self_deps or 'clean'})")
@@ -264,6 +306,13 @@ def _failures(dist_dir: Path | None) -> list[str]:
                     prefix=package_root,
                 )
             check(pkg_info_metadata["Version"] == version, f"sdist PKG-INFO version for {sdist.name}")
+            check(
+                pkg_info_metadata["License-Expression"] == "MIT", f"sdist PKG-INFO license expression for {sdist.name}"
+            )
+            check(
+                set(pkg_info_metadata.get_all("License-File", [])) == _REQUIRED_LEGAL_FILES,
+                f"sdist PKG-INFO lists all legal files for {sdist.name}",
+            )
             _check_artifact_requirements(check, pkg_info_metadata.get_all("Requires-Dist", []), label=sdist.name)
     else:
         print("NOTE: no --dist directory given; skipping built-artifact checks")

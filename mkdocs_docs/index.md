@@ -66,4 +66,4 @@ pip install "fincore[all]"
 | Quality numbers | machine-generated | [current-baseline.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/current-baseline.md) |
 | Release readiness | itemized checklist | [release-candidate-checklist.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/release-candidate-checklist.md) |
 | Platforms | macOS, Linux, Windows | CI matrix |
-| License | Apache 2.0 | [LICENSE](https://github.com/cloudQuant/fincore/blob/master/LICENSE) |
+| License | MIT for Fincore; third-party notices retained | [LICENSE](https://github.com/cloudQuant/fincore/blob/master/LICENSE) / [NOTICE](https://github.com/cloudQuant/fincore/blob/master/NOTICE) |

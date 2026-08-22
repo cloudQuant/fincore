@@ -1,7 +1,9 @@
 # Governance
 
-fincore is a community-maintained project under the Apache License 2.0.  This
-document records how decisions are made and how the release is governed.
+fincore is a community-maintained project under the MIT License. This document
+records how decisions are made and how the release is governed. Third-party
+Apache-2.0 attribution and terms remain in [NOTICE](NOTICE) and do not change
+the Fincore project license.
 
 ## Roles
 

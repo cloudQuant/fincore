@@ -1,0 +1,47 @@
+Fincore Third-Party Notices
+============================
+
+Fincore's own project license is the MIT License in ``LICENSE``. This NOTICE
+records retained third-party attribution and terms. It does not relicense any
+third-party material, and it does not change the Fincore project license.
+
+Quantopian-derived portions
+---------------------------
+
+Portions of this distribution are derived from or retain notices originating
+with Empyrical, Pyfolio, and Alphalens. Relevant source files carry the
+following Apache-2.0 attribution:
+
+  Copyright 2016 Quantopian, Inc.
+  Copyright 2017 Quantopian, Inc.
+  Copyright 2018 Quantopian, Inc.
+
+Those portions are available under the Apache License, Version 2.0. A copy is
+included in ``THIRD_PARTY_LICENSES/Apache-2.0.txt``. Fincore modifications do
+not remove the original copyright or attribution notices.
+
+Apache ECharts
+--------------
+
+The vendored ``fincore/report/assets/echarts.min.js`` asset is Apache ECharts
+5.5.0 and carries an Apache-2.0 header. Its Apache-2.0 terms are included in
+``THIRD_PARTY_LICENSES/Apache-2.0.txt``.
+
+Apache ECharts
+Copyright 2017-2024 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (https://www.apache.org/).
+
+The unchanged vendored asset also retains its embedded Microsoft Corporation
+permission notice. Its source reference and immutable digest are recorded in
+``THIRD_PARTY_NOTICES.md``; this NOTICE does not relabel that embedded material
+as Fincore-owned code.
+
+Review and provenance status
+----------------------------
+
+``THIRD_PARTY_NOTICES.md`` records immutable source identifiers, the vendored
+asset digest, and the human-review state. A pending entry is not a legal
+approval; the release profile remains blocked until a qualified reviewer
+records a decision, reviewer identity, and review date.

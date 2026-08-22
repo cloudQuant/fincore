@@ -167,17 +167,32 @@ def test_runtime_assets_ship_in_wheel(wheel_path: Path) -> None:
     assert required_modules <= names, f"Alphalens runtime modules missing: {sorted(required_modules - names)}"
 
 
-def test_wheel_includes_the_approved_apache_license_only(wheel_path: Path) -> None:
-    """The artifact carries SPDX metadata and the project license file."""
+def test_wheel_includes_mit_project_license_and_third_party_notices(wheel_path: Path) -> None:
+    """The artifact separates Fincore's MIT license from third-party terms."""
     with zipfile.ZipFile(wheel_path) as zf:
-        license_files = [name for name in zf.namelist() if name.endswith(".dist-info/licenses/LICENSE")]
-        assert len(license_files) == 1, f"expected one bundled LICENSE, found {license_files}"
-        license_text = zf.read(license_files[0]).decode("utf-8")
-    assert "Apache License" in license_text
-    assert _metadata(wheel_path)["License-Expression"] == "Apache-2.0"
-    assert not [name for name in _names(wheel_path) if "THIRD_PARTY_NOTICES" in name], (
-        "third-party notice files require a separate human license decision"
-    )
+        license_files = {
+            name.rsplit(".dist-info/licenses/", 1)[1] for name in zf.namelist() if ".dist-info/licenses/" in name
+        }
+        assert license_files == {
+            "LICENSE",
+            "NOTICE",
+            "THIRD_PARTY_NOTICES.md",
+            "THIRD_PARTY_LICENSES/Apache-2.0.txt",
+        }
+        dist_info = next(name.rsplit("/", 1)[0] for name in zf.namelist() if name.endswith(".dist-info/METADATA"))
+        license_text = zf.read(f"{dist_info}/licenses/LICENSE").decode("utf-8")
+        notice_text = zf.read(f"{dist_info}/licenses/NOTICE").decode("utf-8")
+        third_party_text = zf.read(f"{dist_info}/licenses/THIRD_PARTY_NOTICES.md").decode("utf-8")
+        apache_text = zf.read(f"{dist_info}/licenses/THIRD_PARTY_LICENSES/Apache-2.0.txt").decode("utf-8")
+    assert license_text.startswith("MIT License")
+    assert "Apache-2.0" in notice_text
+    assert "Copyright 2017-2024 The Apache Software Foundation" in notice_text
+    assert "Microsoft Corporation" in notice_text
+    assert "upstream_version" in third_party_text
+    assert apache_text.startswith("                                 Apache License")
+    metadata = _metadata(wheel_path)
+    assert metadata["License-Expression"] == "MIT"
+    assert set(metadata.get_all("License-File", [])) == license_files
 
 
 def test_no_stray_assets_in_wheel(wheel_path: Path) -> None:

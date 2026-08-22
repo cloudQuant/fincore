@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/status-Beta-orange.svg" alt="Status: Beta"/>
     <img src="https://img.shields.io/badge/platform-mac%7Clinux%7Cwin-yellow.svg" alt="Platforms"/>
     <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-brightgreen.svg" alt="Python Versions"/>
-    <img src="https://img.shields.io/badge/license-Apache%202.0-orange" alt="License: Apache 2.0"/>
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT"/>
 </p>
 
 <p align="center">
@@ -229,11 +229,13 @@ More details on how these projects fit together:
 
 ### License
 
-The fincore repository declares Apache License 2.0; see [LICENSE](LICENSE).
-Adapted-source provenance and unresolved upstream notice questions are tracked
-in [docs/upstream-provenance.md](docs/upstream-provenance.md). The required
-human Alphalens license/NOTICE decision remains a release blocker; no
-third-party notice or legal conclusion is implied by this integration.
+fincore's own project license is MIT; see [LICENSE](LICENSE). This does not
+relicense retained third-party material. Its Apache-2.0 terms and attribution
+ship in [NOTICE](NOTICE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and
+[`THIRD_PARTY_LICENSES/Apache-2.0.txt`](THIRD_PARTY_LICENSES/Apache-2.0.txt).
+Adapted-source provenance and the remaining human review are tracked in
+[docs/upstream-provenance.md](docs/upstream-provenance.md); until that review
+is approved, the release gate remains blocked.
 
 ---
 
@@ -415,6 +417,9 @@ fincore 是 cloudQuant 量化研究生态的一部分。生态中的其他成员
 
 ### 许可证
 
-fincore 仓库声明采用 Apache License 2.0，详见 [LICENSE](LICENSE)。
-改编来源与尚待人工确认的上游 notice 问题记录于
-[docs/upstream-provenance.md](docs/upstream-provenance.md)。
+fincore 自有项目代码采用 MIT 许可证，详见 [LICENSE](LICENSE)。这并不改变
+保留的第三方代码适用的独立许可：其 Apache-2.0 条款与归属见 [NOTICE](NOTICE)、
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与
+[`THIRD_PARTY_LICENSES/Apache-2.0.txt`](THIRD_PARTY_LICENSES/Apache-2.0.txt)。
+改编来源与仍待人工确认的上游 notice 问题记录于
+[docs/upstream-provenance.md](docs/upstream-provenance.md)；审批完成前，发布门禁保持阻断。

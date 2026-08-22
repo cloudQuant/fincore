@@ -1,6 +1,6 @@
 # API Stability Policy
 
-This document describes the API stability guarantees for fincore 0.3.0.
+This document describes the API stability guarantees for fincore 0.4.0.dev0.
 
 Stability is claimed **only** for surfaces whose compatibility level (C0-C4)
 has been verified by the executable gates in `tests/compat/`. A surface not
@@ -44,7 +44,7 @@ workflow methods keep the frozen signatures.
 
 ### Flat API functions
 
-The flat API (`from fincore import ...`) is stable within 0.3.x **as an
+The flat API (`from fincore import ...`) is stable within the current pre-1.0 series **as an
 enhanced surface** — bound to `fincore.metrics` implementations, not to
 empyrical equality:
 
@@ -177,7 +177,7 @@ versions.
 
 Optional dependencies (the functional extras: `pyfolio`, `interactive`,
 `report-pdf`, `report-xlsx`, `bayesian`, `data-*`) may have their version
-requirements updated in patch versions. The 0.3.x aliases `viz` and
+requirements updated in patch versions. The pre-1.0 compatibility aliases `viz` and
 `datareader` are retained for at least one documented minor cycle.
 
 ## Feedback

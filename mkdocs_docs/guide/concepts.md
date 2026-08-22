@@ -11,7 +11,7 @@ Most APIs operate on daily (or intraday) return series:
 
 ## Three API surfaces
 
-fincore 0.3.0 exposes three clearly separated surfaces. Equal names do not
+fincore 0.4.0.dev0 exposes three clearly separated surfaces. Equal names do not
 imply equal semantics across them:
 
 ### 1. Enhanced semantics — flat API and `AnalysisContext` (Recommended)

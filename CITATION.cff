@@ -5,7 +5,7 @@ authors:
   - name: "cloudQuant"
     email: "yunjinqi@gmail.com"
 repository-code: "https://github.com/cloudQuant/fincore"
-license: Apache-2.0
+license: MIT
 version: 0.4.0.dev0
 keywords:
   - quantitative-finance

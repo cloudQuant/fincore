@@ -1,6 +1,6 @@
-# Release Candidate Checklist — fincore 0.3.0
+# Release Candidate Checklist — fincore 0.4.0.dev0
 
-This checklist itemizes the evidence required before a 0.3.0 release can be
+This checklist itemizes the evidence required before a 0.4.0.dev0-derived release can be
 declared. Each item links to the real evidence location. Items whose evidence
 lives in CI artifacts are marked **[CI artifact]** and cannot be verified from
 a checkout alone.
@@ -60,7 +60,7 @@ blocks the release; it must never be replaced by an assertion.
 
 | # | Item | Evidence location | Status gate |
 |---|------|-------------------|-------------|
-| 4.1 | Single metadata source: `pyproject.toml` (version 0.3.0, classifiers incl. Beta, Python >=3.11) | `pyproject.toml`; `scripts/check_release_consistency.py` | `python scripts/check_release_consistency.py --dist dist/` |
+| 4.1 | Single metadata source: `pyproject.toml` (version 0.4.0.dev0, MIT project license, classifiers incl. Beta, Python >=3.11) | `pyproject.toml`; `scripts/check_release_consistency.py` | `python scripts/check_release_consistency.py --dist dist/` |
 | 4.2 | sdist + wheel build; `twine check` clean | CI job `build` | **[CI artifact]** |
 | 4.3 | Fresh-consumer wheel matrix (core pyfolio interactive bayesian report-pdf alphalens alphalens-pyfolio factor-analysis all) | `scripts/test_installed_wheel.py`; CI job `build` | **[CI artifact]** |
 | 4.4 | Packaging contract tests | `tests/packaging/`; CI job `build` | **[CI artifact]** |
@@ -90,16 +90,16 @@ blocks the release; it must never be replaced by an assertion.
 | # | Item | Evidence location | Status gate |
 |---|------|-------------------|-------------|
 | 7.1 | Upstream source register (files, headers, commits, transformations) | `docs/upstream-provenance.md` | human review |
-| 7.1a | Machine-readable third-party notice inventory (pinned commits, review status) | `THIRD_PARTY_NOTICES.md`; `scripts/check_notices.py`; `tests/packaging/test_notices.py` | `python scripts/check_notices.py` |
-| 7.2 | Third-party notice decision (pyfolio root LICENSE = MIT text vs Apache-2.0 headers in source; no conclusion made here) | `docs/upstream-provenance.md`; `docs/compatibility/pyfolio-0.9.6.md` | **human/license review — pending** |
+| 7.1a | Machine-readable third-party notice inventory (Fincore MIT identity, pinned commits/artifact digest, review status) | `THIRD_PARTY_NOTICES.md`; `scripts/check_notices.py`; `tests/packaging/test_notices.py` | `python scripts/check_notices.py` |
+| 7.2 | Third-party notice decision (pyfolio root LICENSE = MIT text vs Apache-2.0 headers in source; terms are distributed but final conclusion is pending) | `docs/upstream-provenance.md`; `docs/compatibility/pyfolio-0.9.6.md` | **human/license review — pending** |
 | 7.3 | Historical 1.0-era claims quarantined as snapshots | `CHANGELOG.md` "Historical snapshots"; `docs/迭代计划/README.md`; header note in `docs/已实现函数索引.md` | local |
-| 7.4 | Alphalens notice decision (root MIT text vs file-level Quantopian Apache-2.0 headers; destination file headers/NOTICE unresolved) | `docs/upstream-provenance.md`; `docs/compatibility/alphalens-0.4.0-cloudquant.md` | **human/license review — pending** |
+| 7.4 | Alphalens notice decision (root MIT text vs file-level Quantopian Apache-2.0 headers; Fincore MIT license and Apache notices are distributed, final attribution review pending) | `docs/upstream-provenance.md`; `docs/compatibility/alphalens-0.4.0-cloudquant.md` | **human/license review — pending** |
 
 ## 8. Version / claim consistency
 
 | # | Item | Evidence location | Status gate |
 |---|------|-------------------|-------------|
-| 8.1 | README, MkDocs, CHANGELOG, tag, runtime version, and wheel metadata all say 0.3.0 | `pyproject.toml`, `fincore/__init__.py` (single source), `scripts/check_release_consistency.py` | same as 4.1 |
+| 8.1 | README, MkDocs, CHANGELOG, tag, runtime version, and wheel metadata all say 0.4.0.dev0 (or the approved release derived from it) | `pyproject.toml`, `fincore/__init__.py` (single source), `scripts/check_release_consistency.py` | same as 4.1 |
 | 8.2 | No Stable/1.0/100%-coverage claims anywhere in release-facing docs | README, CHANGELOG, `mkdocs_docs/`, `docs/MIGRATION.md`, `docs/API_STABILITY.md` | human review |
 | 8.3 | Docs deploy triggers on master push | `.github/workflows/docs.yml` (branches: master; paths: mkdocs_docs/**, mkdocs.yml, fincore/**, README.md, CHANGELOG.md) | local |
 
@@ -108,7 +108,7 @@ blocks the release; it must never be replaced by an assertion.
 The final acceptance run (controller-owned) re-runs the wheel/consistency
 gates, the strict/enhanced/bridge and upstream-migration gates (items 1.11–1.21),
 and regenerates `docs/quality/current-baseline.*`. Until every item above has
-evidence, the release candidate stays Beta and version 0.3.0. Alphalens
+evidence, the release candidate stays Beta and version 0.4.0.dev0. Alphalens
 license review (7.4) and the factor benchmark baseline approval (6.5) remain
 explicit human gates; neither blocks the engineering implementation, but the
 release stays blocked until they are closed.

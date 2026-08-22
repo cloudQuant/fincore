@@ -15,7 +15,7 @@ below carries no broader guarantee.
   all entries C1; risk/returns/perf-attrib/full-sheet main chains C4. The
   `Pyfolio` class (requires `fincore[pyfolio]`) is enhanced OO convenience
   over the same workflows.
-- **Flat API** (`from fincore import ...`) — stable within 0.3.x as an
+- **Flat API** (`from fincore import ...`) — stable within the current pre-1.0 series as an
   **enhanced** surface bound to `fincore.metrics`, not as empyrical equality.
 - **`AnalysisContext`** — `fincore.analyze(...)`, metric properties,
   `perf_stats()`, `to_dict()`, `to_json()`, `to_json(path=...)`,
@@ -33,7 +33,7 @@ not Stable surfaces. Their source identity is pinned to commit
 ambiguous historical version strings. Claims are limited to the strict-path,
 signature, kernel, and workflow behavior exercised by current executable
 tests, not full standalone Alphalens parity. The unresolved human
-license/NOTICE decision is a release blocker.
+third-party license/NOTICE decision is a release blocker.
 
 - `Empyrical`/`Pyfolio` methods beyond the frozen verified surface;
 - enhanced-vs-legacy equality (documented divergences exist by design);

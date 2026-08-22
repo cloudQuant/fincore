@@ -15,7 +15,7 @@ replacement. The frozen source of truth is
 
 ## Profile and current status
 
-All entries start as unverified against fincore 0.3.0. Static signatures here
+All entries start as unverified against fincore 0.4.0.dev0. Static signatures here
 describe the pinned upstream target only. Restricted AST resolution evaluates
 known constants and safe arithmetic (`last_n_days=126`) and the portable
 `FACTOR_PARTITIONS` dictionary while retaining each `default_expression`.
@@ -45,9 +45,10 @@ presented as exact side-effect compatibility. Enhanced report APIs and the
 
 The local pyfolio root `LICENSE` contains MIT text while inspected source files
 carry Apache-2.0 headers. This inconsistency requires human/license review; no
-license conclusion is made here and no `THIRD_PARTY_NOTICES.md` has been
-created. See [upstream provenance](../upstream-provenance.md) for file hashes
-and audit scope.
+final license conclusion is made here. The distribution now carries
+`THIRD_PARTY_NOTICES.md`, `NOTICE`, and the Apache-2.0 text while that review
+remains pending. See [upstream provenance](../upstream-provenance.md) for file
+hashes and audit scope.
 
 The optional isolated environment is described by
 `tests/compat/oracle/requirements-pyfolio-0.9.6.txt`. Oracle mode imports from a

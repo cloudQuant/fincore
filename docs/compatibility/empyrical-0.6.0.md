@@ -1,6 +1,6 @@
 # Empyrical 0.6.0 compatibility baseline
 
-This page defines the target; it is not a claim that fincore 0.3.0 already
+This page defines the target; it is not a claim that fincore 0.4.0.dev0 already
 implements it. The machine-readable source of truth is
 [`tests/compat/fixtures/empyrical-0.6.0-api.json`](../../tests/compat/fixtures/empyrical-0.6.0-api.json).
 

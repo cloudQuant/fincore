@@ -16,7 +16,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Core Language
 - **Python**: 3.11+ (supports 3.11, 3.12, 3.13)
-- **License**: Apache-2.0
+- **License**: MIT for Fincore; retained third-party Apache-2.0 material is recorded in NOTICE
 
 ### Core Dependencies
 - numpy >= 1.17.0

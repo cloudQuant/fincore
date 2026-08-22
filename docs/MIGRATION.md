@@ -1,6 +1,6 @@
-# Migrating from empyrical to fincore 0.3.0
+# Migrating from empyrical to fincore 0.4.0.dev0
 
-Fincore's current package version is **0.3.0**. Do not add
+Fincore's current package version is **0.4.0.dev0**. Do not add
 `fincore>=1.0.0`: that release does not exist in the repository's current
 version history.
 
@@ -75,16 +75,16 @@ pip install "fincore[interactive]" # Plotly/Bokeh backends
 pip install "fincore[report-pdf]"  # PDF rendering
 ```
 
-For repository development, install the checked-out 0.3.0 source:
+For repository development, install the checked-out 0.4.0.dev0 source:
 
 ```bash
 pip install -e ".[dev,viz]"
 ```
 
-## 0.3.x flat API policy
+## Pre-1.0 flat API policy
 
 The existing `from fincore import ...` mappings remain unchanged throughout
-0.3.x. They point to enhanced `fincore.metrics` implementations and are not
+the current pre-1.0 series. They point to enhanced `fincore.metrics` implementations and are not
 automatically identical to empyrical signatures or edge-case behavior. The
 complete generated mapping, including `current_target`, `recommended_target`,
 `deprecate_in`, and `remove_or_switch_in`, is in
@@ -108,7 +108,7 @@ explicit deprecation period first.
    across the strict and enhanced surfaces.
 
 For code that intentionally uses the current enhanced flat API, this example
-executes on fincore 0.3.0:
+executes on fincore 0.4.0.dev0:
 
 ```python
 import pandas as pd
@@ -256,7 +256,7 @@ Each divergence has an executable registration in `tests/compat/`:
 
 ## Frequently asked questions
 
-### Is fincore 0.3.0 a drop-in replacement for empyrical?
+### Is fincore a drop-in replacement for empyrical?
 
 The frozen surface is verified at C0/C1 for every symbol, with C3 numeric
 verification for the core callables, and the pyfolio main chains at C4. That
@@ -284,7 +284,7 @@ C0, C1, C2, C3, or C4.
 - `fincore.empyrical` is the strict-compatibility surface; nine rolling
   callables created by upstream factories carry `needs_dynamic_review=true`
   until an isolated oracle run is reviewed by a person.
-- `fincore.metrics` and the 0.3.x flat API are enhanced surfaces with
+- `fincore.metrics` and the pre-1.0 flat API are enhanced surfaces with
   semver-managed differences.
 - The pyfolio profile covers only the 11 listed functional workflows, not the
   entire upstream package or the enhanced `Pyfolio` class.

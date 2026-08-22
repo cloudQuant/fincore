@@ -1,4 +1,7 @@
 include LICENSE
+include NOTICE
+include THIRD_PARTY_NOTICES.md
+include THIRD_PARTY_LICENSES/Apache-2.0.txt
 include README.md
 include pyproject.toml
 # Contributor and test requirements are deliberately not distribution inputs.

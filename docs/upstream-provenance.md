@@ -71,6 +71,20 @@ file-level-Quantopian-Apache notices, inspect the historical `ff4d582` commit
 message indicating a copy from the official site, and decide which headers or
 notices apply to any future clean-room reimplementation versus adaptation.
 
+## 2026-08-22 Fincore project-license decision
+
+Fincore's own project license is MIT. This decision applies to Fincore-owned
+contributions and project metadata only; it does not relicense retained
+third-party source or vendored assets. Every source file that already carries
+a Quantopian Apache-2.0 header retains that header. The distributable package
+contains one Fincore `LICENSE` (MIT), plus `NOTICE`, this provenance inventory,
+and `THIRD_PARTY_LICENSES/Apache-2.0.txt` for the independent Apache-2.0
+obligations.
+
+The version in `pyproject.toml` is the only Fincore product version. Entries
+such as `empyrical 0.6.0` and `pyfolio 0.9.6` above are immutable upstream
+source identifiers and must remain available for traceability.
+
 The pinned upstream test inventory is engineering evidence, not a legal
 conclusion about test text, derived fixtures, or target rewrites. Its 141-row
 migration map is intentionally a deferred handoff to future test tasks; it
@@ -89,5 +103,6 @@ reachable-AST evidence rather than treating a nested or demonstrably dead
 assertion as proof. These are bounded engineering safeguards, not evidence of
 a legal review.
 
-That review has not occurred in this task. Consequently no optional notice file
-is generated and no legal conclusion is implied.
+That review has not occurred in this task. The distributed NOTICE and Apache
+license copy preserve observed attribution and terms, but the pending review
+still prevents a release-approval claim and no legal conclusion is implied.

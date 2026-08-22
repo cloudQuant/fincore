@@ -112,8 +112,8 @@ retains its source-shaped options. See the [factor research protocol](../concept
 for the event-time contract, validation boundaries, and remaining scope.
 
 The compatibility status is limited to current executable strict-path,
-signature, kernel, and workflow tests. The human license/NOTICE review remains
-a release blocker; this page makes no legal conclusion. See the full
+signature, kernel, and workflow tests. The human third-party license/NOTICE
+review remains a release blocker; this page makes no legal conclusion. See the full
 [migration guide](../getting-started/migration.md) and the repository
 [`docs/MIGRATION.md`](https://github.com/cloudQuant/fincore/blob/master/docs/MIGRATION.md)
 for the detailed map.

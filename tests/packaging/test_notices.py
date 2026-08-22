@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,11 +13,29 @@ if str(ROOT) not in sys.path:
 from scripts.check_notices import check_notices, load_notices
 
 
+def _fincore_version() -> str:
+    with (ROOT / "pyproject.toml").open("rb") as file:
+        return str(tomllib.load(file)["project"]["version"])
+
+
+def test_fincore_project_identity_uses_one_project_license_and_version() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+
+    assert notices["schema_version"] == 2
+    assert notices["project"] == {
+        "name": "fincore",
+        "version": _fincore_version(),
+        "license": "MIT",
+    }
+
+
 def test_copied_or_adapted_component_has_notice_and_license_status() -> None:
     notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
 
     assert notices["alphalens"]["review_status"] in {"pending-human-review", "approved"}
     assert notices["alphalens"]["source_commit"]
+    assert notices["pyfolio"]["license_header"] == "mixed"
+    assert notices["alphalens"]["license_header"] == "mixed"
 
 
 def test_empyrical_notice_records_pinned_commit() -> None:
@@ -32,6 +51,17 @@ def test_all_adapted_components_have_pinned_commits() -> None:
         record = notices[name]
         assert len(record["source_commit"]) == 40
         assert record["adapted"] is True
+        assert "upstream_version" in record
+
+
+def test_vendored_echarts_is_recorded_with_its_artifact_digest() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+
+    record = notices["echarts"]
+    assert record["adapted"] is False
+    assert record["license"] == "Apache-2.0"
+    assert len(record["source_sha256"]) == 64
+    assert record["embedded_attributions"] == ["Copyright (c) Microsoft Corporation."]
 
 
 def test_notice_checker_passes_the_checked_in_inventory() -> None:
@@ -47,3 +77,30 @@ def test_notice_checker_rejects_missing_commit() -> None:
     violations = check_notices(notices)
 
     assert any("source_commit" in v for v in violations)
+
+
+def test_notice_checker_rejects_project_identity_drift() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+    notices["project"]["version"] = "0.0.0"
+
+    violations = check_notices(notices)
+
+    assert "project.version must equal pyproject.toml" in violations
+
+
+def test_notice_checker_rejects_vendored_asset_digest_drift() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+    notices["echarts"]["source_sha256"] = "0" * 64
+
+    violations = check_notices(notices)
+
+    assert any("vendored asset digest" in violation for violation in violations)
+
+
+def test_notice_checker_rejects_missing_vendored_embedded_attribution() -> None:
+    notices = load_notices(ROOT / "THIRD_PARTY_NOTICES.md")
+    del notices["echarts"]["embedded_attributions"]
+
+    violations = check_notices(notices)
+
+    assert "echarts: embedded_attributions must be a list of non-empty strings" in violations
