@@ -8,7 +8,7 @@ inference, not just point estimates.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -125,36 +125,59 @@ def benjamini_hochberg(
     )
 
 
+def _clean_ic_observations(ic_series: pd.Series | np.ndarray) -> np.ndarray:
+    """Drop missing IC observations but reject unbounded inference inputs."""
+    try:
+        values = np.asarray(ic_series, dtype=float)
+    except (TypeError, ValueError) as error:
+        raise ValueError("IC observations must be numeric") from error
+    if values.ndim != 1:
+        raise ValueError("IC observations must be one-dimensional")
+    if np.isinf(values).any():
+        raise ValueError("IC observations must not contain infinite values")
+    return cast("np.ndarray", values[~np.isnan(values)])
+
+
 def ic_mean(ic_series: pd.Series | np.ndarray) -> float:
     """Mean information coefficient over time."""
-    ic = np.asarray(ic_series, dtype=float)
-    ic = ic[~np.isnan(ic)]
+    ic = _clean_ic_observations(ic_series)
     return float(np.mean(ic)) if len(ic) else float("nan")
 
 
 def ic_t_stat(ic_series: pd.Series | np.ndarray) -> float:
     """t-statistic of the mean IC (Newey-West-free, i.i.d. assumption)."""
-    ic = np.asarray(ic_series, dtype=float)
-    ic = ic[~np.isnan(ic)]
+    ic = _clean_ic_observations(ic_series)
     n = len(ic)
     if n < 2:
         return float("nan")
     se = np.std(ic, ddof=1) / np.sqrt(n)
     if se < 1e-15:
-        return float("inf") if np.mean(ic) > 0 else float("-inf")
+        mean = float(np.mean(ic))
+        if mean > 0.0:
+            return float("inf")
+        if mean < 0.0:
+            return float("-inf")
+        return 0.0
     return float(np.mean(ic) / se)
 
 
 def ic_confidence_interval(ic_series: pd.Series | np.ndarray, *, z: float = 1.96) -> tuple[float, float]:
     """95% (by default) confidence interval for the mean IC."""
-    ic = np.asarray(ic_series, dtype=float)
-    ic = ic[~np.isnan(ic)]
+    if isinstance(z, bool):
+        raise ValueError("z must be a finite positive multiplier")
+    try:
+        z_value = float(z)
+    except (TypeError, ValueError) as error:
+        raise ValueError("z must be a finite positive multiplier") from error
+    if not np.isfinite(z_value) or z_value <= 0.0:
+        raise ValueError("z must be a finite positive multiplier")
+    ic = _clean_ic_observations(ic_series)
     n = len(ic)
     if n < 2:
         return (float("nan"), float("nan"))
     se = np.std(ic, ddof=1) / np.sqrt(n)
     mean = float(np.mean(ic))
-    return (mean - z * se, mean + z * se)
+    return (mean - z_value * se, mean + z_value * se)
 
 
 def fama_macbeth(

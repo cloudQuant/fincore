@@ -219,6 +219,24 @@ oracle generation method, and the tolerance asserted by
 - **Tolerance:** exact boolean decisions; adjusted values `rtol = atol =
   1e-12`.
 
+### 12. IC t-statistic and confidence-interval boundaries
+
+- **File:** `fincore/factor_analysis/inference.py::ic_mean`,
+  `ic_t_stat`, and `ic_confidence_interval`
+- **Method:** missing (`NaN`) IC observations are omitted; the t-statistic uses
+  the sample standard error `s / sqrt(n)` with `ddof=1`, and the interval is
+  `mean ± z*SE` under the explicitly documented i.i.d. assumption.
+- **Boundary:** infinite observations are rejected instead of producing a
+  warning/undefined statistic. Fewer than two usable observations return
+  `NaN`; a zero-mean, zero-variance sample has t-statistic zero, while a
+  nonzero constant sample has the corresponding signed infinity. The interval
+  multiplier must be finite and strictly positive.
+- **Oracle:** `scipy.stats.ttest_1samp` supplies the non-degenerate t-statistic
+  reference; zero-variance limits and invalid-input behavior use explicit
+  adversarial fixtures.
+- **Tolerance:** non-degenerate t-statistic `rtol = atol = 1e-12`; boundary
+  outputs exact.
+
 ## Regeneration
 
 Re-run the numerical gate with:

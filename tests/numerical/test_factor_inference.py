@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import statsmodels.api as sm
+from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
 from fincore.factor_analysis.inference import (
@@ -118,6 +119,24 @@ class TestIC:
         ic = rng.normal(0.05, 0.01, 100)
         lo, hi = ic_confidence_interval(ic)
         assert lo < np.mean(ic) < hi
+
+    def test_t_stat_matches_scipy_and_zero_constant_sample_is_zero(self) -> None:
+        values = np.array([-0.02, 0.01, 0.03, 0.04, -0.01])
+
+        assert np.isclose(ic_t_stat(values), stats.ttest_1samp(values, popmean=0.0).statistic, rtol=1e-12)
+        assert ic_t_stat(np.zeros(5)) == 0.0
+
+    def test_rejects_infinite_ic_observations_and_invalid_interval_multiplier(self) -> None:
+        infinite = np.array([0.01, np.inf])
+
+        with pytest.raises(ValueError, match="infinite"):
+            ic_mean(infinite)
+        with pytest.raises(ValueError, match="infinite"):
+            ic_t_stat(infinite)
+        with pytest.raises(ValueError, match="infinite"):
+            ic_confidence_interval(infinite)
+        with pytest.raises(ValueError, match="z"):
+            ic_confidence_interval(np.array([0.01, 0.02]), z=0.0)
 
 
 class TestBenjaminiHochberg:
