@@ -750,6 +750,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.factor_weights"
         },
+        "fama_macbeth": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.fama_macbeth"
+        },
         "get_forward_returns_columns": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.get_forward_returns_columns"
@@ -867,6 +871,7 @@
         "factor_rank_autocorrelation",
         "factor_returns",
         "factor_weights",
+        "fama_macbeth",
         "get_forward_returns_columns",
         "infer_trading_calendar",
         "materialize_pit_factor",

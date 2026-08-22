@@ -194,6 +194,42 @@ factor family before viewing results, retain the returned audit table, and
 state any dependence correction or trial policy that is not yet supplied by
 the platform.
 
+## Fama-MacBeth cross-sectional inference
+
+`fama_macbeth(returns, exposures)` estimates one intercept and one exposure
+slope for each usable date, then reports their time-series means, standard
+errors, and t-statistics. Asset columns are matched by label, not input
+position; a one-row exposure panel is an explicitly static cross-section and
+is broadcast over the return dates.
+
+The default covariance profile remains `"iid"` for backward compatibility.
+For a serially dependent sequence of fitted cross-sections, opt in explicitly
+to Bartlett Newey-West covariance and retain the returned metadata:
+
+```python
+from fincore.factor_analysis import fama_macbeth
+
+result = fama_macbeth(
+    returns,
+    exposures,
+    covariance="newey-west",
+    newey_west_lags=3,
+)
+assert result.attrs["covariance"] == "newey-west"
+assert result.attrs["newey_west_lags"] == 3
+assert result.attrs["n_cross_sections"] >= 4
+```
+
+Newey-West requires returns in chronological order and a non-negative lag
+count smaller than the number of fitted cross-sections. A skipped
+cross-section is not silently re-dated: serial lags refer to the retained,
+chronologically ordered coefficient sequence. The implementation uses the
+standard uncorrected intercept-only Bartlett HAC covariance, independently
+checked against `statsmodels.OLS(..., cov_type="HAC")`; this supplies HAC for
+the Fama-MacBeth coefficient sequence only. It does not provide clustered
+standard errors, a multi-factor cross-section, automatic lag selection, or a
+research-trial registry.
+
 ## Required research evidence
 
 For each strategy or factor study, retain the source snapshot identity,

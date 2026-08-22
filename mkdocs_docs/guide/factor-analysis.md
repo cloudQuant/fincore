@@ -70,6 +70,12 @@ Artifacts are not shown or closed automatically.
   is an experimental accounting model, not an execution simulator. See the
   [factor research protocol](../concepts/factor-research-protocol.md#explicit-factor-cost-borrow-slippage-and-capacity-ledger)
   for formulas and fail-closed boundaries.
+- `fama_macbeth` keeps its i.i.d. standard-error default. Enhanced research
+  may opt into `covariance="newey-west"` with an explicit lag count when the
+  fitted cross-sections are chronologically ordered; inspect the returned
+  DataFrame's `covariance`, `newey_west_lags`, and `n_cross_sections` attrs.
+  It is HAC for the coefficient sequence, not a clustered or multi-factor
+  inference claim.
 
 ## Causal PIT inputs for enhanced research
 

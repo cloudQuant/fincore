@@ -17,6 +17,7 @@ from fincore.factor_analysis.inference import (
     ic_t_stat,
 )
 from fincore.factor_analysis.pit import PITPoint, validate_pit_alignment
+from tests.oracles.factor.newey_west_oracle import newey_west_mean_reference
 
 
 class TestFamaMacBeth:
@@ -105,6 +106,66 @@ class TestFamaMacBeth:
             rtol=1e-12,
             atol=1e-12,
         )
+
+    @pytest.mark.parametrize("lag", (0, 1, 3, 8))
+    def test_newey_west_standard_errors_match_statsmodels_time_series_oracle(self, lag: int) -> None:
+        """HAC applies to the serial cross-sectional coefficient sequence."""
+        rng = np.random.default_rng(37)
+        dates = pd.date_range("2024-01-02", periods=36, freq="B", tz="UTC")
+        assets = [f"asset-{item}" for item in range(9)]
+        exposure = np.linspace(-1.0, 1.0, len(assets))
+        slope_noise = np.empty(len(dates))
+        slope_noise[0] = rng.normal(scale=0.03)
+        for position in range(1, len(slope_noise)):
+            slope_noise[position] = 0.75 * slope_noise[position - 1] + rng.normal(scale=0.02)
+        slopes = 0.4 + slope_noise
+        intercepts = -0.01 + 0.5 * slope_noise
+        returns = pd.DataFrame(
+            [intercepts[position] + slopes[position] * exposure for position in range(len(dates))],
+            index=dates,
+            columns=assets,
+        )
+        exposures = pd.DataFrame(np.tile(exposure, (len(dates), 1)), index=dates, columns=assets)
+
+        result = fama_macbeth(returns, exposures, covariance="newey-west", newey_west_lags=lag)
+        expected_intercept, expected_intercept_se = newey_west_mean_reference(intercepts, nlags=lag)
+        expected_slope, expected_slope_se = newey_west_mean_reference(slopes, nlags=lag)
+
+        assert result.attrs["covariance"] == "newey-west"
+        assert result.attrs["newey_west_lags"] == lag
+        assert np.isclose(result.loc["intercept", "mean"], expected_intercept, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "mean"], expected_slope, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["intercept", "std_error"], expected_intercept_se, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "std_error"], expected_slope_se, rtol=1e-12, atol=1e-12)
+
+    def test_newey_west_requires_chronological_coefficients_and_valid_lags(self) -> None:
+        dates = pd.date_range("2024-01-02", periods=4, freq="B", tz="UTC")
+        assets = ["a", "b", "c"]
+        exposure = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+        returns = pd.DataFrame(np.tile([-0.01, 0.0, 0.01], (len(dates), 1)), index=dates, columns=assets)
+
+        with pytest.raises(ValueError, match="chronological"):
+            fama_macbeth(returns.iloc[::-1], exposure.iloc[::-1], covariance="newey-west", newey_west_lags=1)
+        with pytest.raises(ValueError, match="newey_west_lags"):
+            fama_macbeth(returns, exposure, covariance="newey-west", newey_west_lags=len(dates))
+        with pytest.raises(ValueError, match="newey_west_lags"):
+            fama_macbeth(returns * np.nan, exposure, covariance="newey-west", newey_west_lags=0)
+
+    def test_default_iid_inference_remains_identical_to_the_explicit_profile(self) -> None:
+        dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
+        assets = ["a", "b", "c"]
+        exposure = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+        returns = pd.DataFrame(
+            [[-0.02, 0.01, 0.04], [-0.01, 0.0, 0.01], [-0.03, 0.01, 0.05], [-0.02, 0.0, 0.02], [-0.01, 0.02, 0.05]],
+            index=dates,
+            columns=assets,
+        )
+
+        default = fama_macbeth(returns, exposure)
+        explicit = fama_macbeth(returns, exposure, covariance="iid")
+
+        pd.testing.assert_frame_equal(default, explicit)
+        assert default.attrs == {"covariance": "iid", "newey_west_lags": None, "n_cross_sections": len(dates)}
 
 
 class TestIC:

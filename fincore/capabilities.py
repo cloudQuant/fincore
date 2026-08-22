@@ -293,7 +293,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
         docs_path="concepts/factor-research-protocol.md",
         rationale=(
             "Causal PIT materialization is independently timeline-tested, but corporate-action/calendar provenance, "
-            "costs, capacity, and complete workflow integration remain unsealed."
+            "liquidity/borrow provenance, execution calibration, and complete workflow integration remain unsealed."
         ),
     ),
     Capability(
@@ -310,8 +310,27 @@ _CAPABILITIES: tuple[Capability, ...] = (
         ),
         docs_path="concepts/factor-research-protocol.md",
         rationale=(
-            "Statsmodels/SciPy-oracle-tested IC/FDR post-analysis, but the i.i.d. assumption, trial registry, "
-            "HAC/cluster inference, and report integration remain incomplete."
+            "Statsmodels/SciPy-oracle-tested IC/FDR post-analysis; IC tests remain i.i.d., while the separate "
+            "Fama-MacBeth helper supports Newey-West. Trial registry, clustered inference, and report integration remain incomplete."
+        ),
+    ),
+    Capability(
+        id="factor_analysis.fama_macbeth",
+        public_path="fincore.factor_analysis.fama_macbeth",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Labelled return and exposure panels with at least two assets; optional Newey-West requires a "
+            "chronologically ordered returns index and an explicit lag count."
+        ),
+        output_contract=(
+            "Cross-sectional intercept/exposure means, standard errors and t-statistics; DataFrame attrs disclose "
+            "the i.i.d. or Newey-West covariance profile, lags, and fitted cross-section count."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Asset-label alignment and Bartlett Newey-West standard errors are independently statsmodels-tested, "
+            "but multi-factor, clustered, trial-registry, and report integration remain incomplete."
         ),
     ),
     Capability(

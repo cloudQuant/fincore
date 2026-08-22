@@ -190,16 +190,25 @@ oracle generation method, and the tolerance asserted by
   matched by row position. Duplicate labels are rejected, preventing a
   silently inverted coefficient when callers reorder assets.
 - **Method:** each usable date fits `R_i = alpha + beta X_i` by least squares;
-  the reported coefficient is the time-series mean and the reported standard
-  error is the i.i.d. time-series standard error. It is intentionally not a
-  HAC or clustered inference claim.
+  the reported coefficient is the time-series mean. The default `"iid"`
+  standard error is `ddof=1 / sqrt(n)`. The explicit
+  `covariance="newey-west"` profile applies the uncorrected Bartlett HAC
+  covariance to each chronological sequence of fitted intercepts/slopes:
+  `Var(mean) = [S_0 + Σ_(j=1)^L (1-j/(L+1)) (S_j+S'_j)] / n²`.
+- **Boundary:** Newey-West requires a chronological returns index and
+  `0 <= L < n_fitted_cross_sections`; retained fitted cross-sections preserve
+  chronological order, while skipped dates are not silently re-dated. The result attrs record
+  the covariance profile, lag count and fitted count. It is not a clustered or
+  multi-factor cross-sectional covariance claim.
 - **Oracle:** `statsmodels.api.OLS` independently fits each cross-section in
   `tests/numerical/test_factor_inference.py`; its coefficient means and
-  `ddof=1 / sqrt(n)` standard errors are compared without importing the
-  production routine.
-- **Tolerance:** `rtol = atol = 1e-12` for the deterministic fixture. Static
-  exposure and shuffled asset-label regressions are separate adversarial
-  fixtures.
+  i.i.d. standard errors are compared without importing the production
+  routine. `tests/oracles/factor/newey_west_oracle.py` separately compares the
+  deterministic serial-coefficient fixture to
+  `OLS(coefficients, ones).fit(cov_type="HAC")`.
+- **Tolerance:** `rtol = atol = 1e-12` for the deterministic fixtures. Static
+  exposure, shuffled asset-label, non-chronological and invalid-lag inputs are
+  separate adversarial fixtures.
 
 ### 11. Benjamini-Hochberg false-discovery-rate correction
 

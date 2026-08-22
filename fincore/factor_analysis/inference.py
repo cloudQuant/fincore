@@ -351,6 +351,9 @@ def ic_confidence_interval(ic_series: pd.Series | np.ndarray, *, z: float = 1.96
 def fama_macbeth(
     returns: pd.DataFrame,
     exposures: pd.DataFrame,
+    *,
+    covariance: Literal["iid", "newey-west"] = "iid",
+    newey_west_lags: int = 1,
 ) -> pd.DataFrame:
     """Fama-MacBeth cross-sectional regression.
 
@@ -363,17 +366,27 @@ def fama_macbeth(
 
     For each usable period a cross-sectional regression ``R_i = alpha + beta
     * X_i`` is estimated. The reported coefficient is the time-series mean of
-    those slopes with an i.i.d. time-series standard error. This routine does
-    not claim a HAC or clustered standard error.
+    those slopes with an i.i.d. time-series standard error by default. Set
+    ``covariance="newey-west"`` to report Bartlett-kernel HAC standard errors
+    over the chronologically ordered fitted cross-sections. ``newey_west_lags``
+    is explicit and must be smaller than the number of fitted cross-sections;
+    the returned DataFrame records both choices in ``.attrs``. This routine
+    does not provide clustered standard errors.
     """
     if not isinstance(returns, pd.DataFrame) or not isinstance(exposures, pd.DataFrame):
         raise TypeError("returns and exposures must be pandas DataFrames")
+    if covariance not in ("iid", "newey-west"):
+        raise ValueError("covariance must be 'iid' or 'newey-west'")
+    if not isinstance(newey_west_lags, int) or isinstance(newey_west_lags, bool) or newey_west_lags < 0:
+        raise ValueError("newey_west_lags must be a non-negative integer")
     if returns.empty or returns.shape[1] < 2:
         raise ValueError("returns must contain at least two asset columns")
     if returns.index.has_duplicates or exposures.index.has_duplicates:
         raise ValueError("returns and exposures indices must not contain duplicates")
     if returns.columns.has_duplicates or exposures.columns.has_duplicates:
         raise ValueError("returns and exposures columns must not contain duplicates")
+    if covariance == "newey-west" and not returns.index.is_monotonic_increasing:
+        raise ValueError("newey-west covariance requires chronological returns index")
 
     missing_assets = returns.columns.difference(exposures.columns)
     if len(missing_assets):
@@ -404,15 +417,28 @@ def fama_macbeth(
         alphas.append(float(coefficients[0]))
         estimates.append(float(coefficients[1]))
 
+    if covariance == "newey-west" and newey_west_lags >= len(estimates):
+        raise ValueError("newey_west_lags must be smaller than the fitted cross-section count")
+
     if not estimates:
-        return pd.DataFrame(columns=["mean", "std_error", "t_stat"], index=["intercept", "exposure"])
+        empty = pd.DataFrame(columns=["mean", "std_error", "t_stat"], index=["intercept", "exposure"])
+        empty.attrs["covariance"] = covariance
+        empty.attrs["newey_west_lags"] = newey_west_lags if covariance == "newey-west" else None
+        empty.attrs["n_cross_sections"] = 0
+        return empty
 
     slopes = np.asarray(estimates, dtype=float)
     intercepts = np.asarray(alphas, dtype=float)
     mean_slope = float(np.mean(slopes))
     mean_intercept = float(np.mean(intercepts))
-    se_slope = float(np.std(slopes, ddof=1) / np.sqrt(len(slopes))) if len(slopes) > 1 else float("nan")
-    se_intercept = float(np.std(intercepts, ddof=1) / np.sqrt(len(intercepts))) if len(intercepts) > 1 else float("nan")
+    if covariance == "newey-west":
+        se_slope = _newey_west_mean_standard_error(slopes, newey_west_lags)
+        se_intercept = _newey_west_mean_standard_error(intercepts, newey_west_lags)
+    else:
+        se_slope = float(np.std(slopes, ddof=1) / np.sqrt(len(slopes))) if len(slopes) > 1 else float("nan")
+        se_intercept = (
+            float(np.std(intercepts, ddof=1) / np.sqrt(len(intercepts))) if len(intercepts) > 1 else float("nan")
+        )
 
     def t_stat(mean: float, se: float) -> float:
         if not np.isfinite(se):
@@ -425,7 +451,7 @@ def fama_macbeth(
             return float("-inf")
         return 0.0
 
-    return pd.DataFrame(
+    result = pd.DataFrame(
         {
             "mean": [mean_intercept, mean_slope],
             "std_error": [se_intercept, se_slope],
@@ -433,3 +459,36 @@ def fama_macbeth(
         },
         index=["intercept", "exposure"],
     )
+    result.attrs["covariance"] = covariance
+    result.attrs["newey_west_lags"] = newey_west_lags if covariance == "newey-west" else None
+    result.attrs["n_cross_sections"] = len(slopes)
+    return result
+
+
+def _newey_west_mean_standard_error(values: np.ndarray, nlags: int) -> float:
+    """Return an uncorrected Bartlett Newey-West standard error for a mean.
+
+    This is the intercept-only equivalent of
+    ``statsmodels.OLS(values, ones).fit(cov_type="HAC")`` with its default
+    uncorrected covariance. The separate implementation keeps the enhanced
+    kernel free of a runtime statsmodels import while its numerical tests use
+    statsmodels as the independent oracle.
+    """
+
+    observations = np.asarray(values, dtype=float)
+    if observations.ndim != 1 or len(observations) < 2:  # pragma: no cover - public caller guards this
+        return float("nan")
+    if nlags < 0 or nlags >= len(observations):  # pragma: no cover - public caller guards this
+        raise ValueError("newey_west_lags must be smaller than the fitted cross-section count")
+    centered = observations - np.mean(observations)
+    long_run_variance = float(centered @ centered)
+    for lag in range(1, nlags + 1):
+        bartlett_weight = 1.0 - lag / (nlags + 1.0)
+        long_run_variance += float(2.0 * bartlett_weight * (centered[lag:] @ centered[:-lag]))
+    variance_of_mean = long_run_variance / len(observations) ** 2
+    if variance_of_mean < 0.0:
+        if np.isclose(variance_of_mean, 0.0, rtol=0.0, atol=float(np.finfo(float).eps)):
+            variance_of_mean = 0.0
+        else:  # pragma: no cover - Bartlett HAC is positive semidefinite; defensive numerical guard
+            raise ValueError("newey-west variance must be non-negative")
+    return float(np.sqrt(variance_of_mean))

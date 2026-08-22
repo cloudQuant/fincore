@@ -42,6 +42,7 @@ from fincore.factor_analysis.exceptions import (
 from fincore.factor_analysis.inference import (
     ICInferenceResult,
     factor_model_inference,
+    fama_macbeth,
 )
 from fincore.factor_analysis.models import (
     EventAnalysisModel,
@@ -136,6 +137,7 @@ __all__ = [
     "factor_rank_autocorrelation",
     "factor_returns",
     "factor_weights",
+    "fama_macbeth",
     "get_forward_returns_columns",
     "infer_trading_calendar",
     "materialize_pit_factor",

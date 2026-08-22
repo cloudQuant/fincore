@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import inspect
+
 import pandas as pd
 import pytest
 
@@ -79,3 +81,15 @@ def test_portfolio_semantics_defaults() -> None:
     ps = PortfolioSemantics()
     assert ps.weight_timestamp_convention == "as_of"
     assert ps.gross_net == "net"
+
+
+def test_fama_macbeth_preserves_the_iid_default_and_exposes_newey_west_keywords() -> None:
+    from fincore.factor_analysis import fama_macbeth
+
+    parameters = inspect.signature(fama_macbeth).parameters
+
+    assert list(parameters) == ["returns", "exposures", "covariance", "newey_west_lags"]
+    assert parameters["covariance"].default == "iid"
+    assert parameters["newey_west_lags"].default == 1
+    assert parameters["covariance"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert parameters["newey_west_lags"].kind is inspect.Parameter.KEYWORD_ONLY

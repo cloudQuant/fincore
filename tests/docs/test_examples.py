@@ -491,3 +491,28 @@ def test_factor_cost_and_capacity_ledger_example() -> None:
 
     assert (ledger.participation <= ledger.model.max_participation).all().all()
     pd.testing.assert_series_equal(ledger.net_returns, ledger.gross_returns - ledger.total_cost, check_names=False)
+
+
+def test_fama_macbeth_newey_west_example() -> None:
+    # mkdocs_docs/concepts/factor-research-protocol.md Newey-West block.
+    from fincore.factor_analysis import fama_macbeth
+
+    dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
+    assets = ["a", "b", "c"]
+    exposures = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+    returns = pd.DataFrame(
+        [[-0.02, 0.01, 0.04], [-0.01, 0.0, 0.01], [-0.03, 0.01, 0.05], [-0.02, 0.0, 0.02], [-0.01, 0.02, 0.05]],
+        index=dates,
+        columns=assets,
+    )
+
+    result = fama_macbeth(
+        returns,
+        exposures,
+        covariance="newey-west",
+        newey_west_lags=3,
+    )
+
+    assert result.attrs["covariance"] == "newey-west"
+    assert result.attrs["newey_west_lags"] == 3
+    assert result.attrs["n_cross_sections"] >= 4
