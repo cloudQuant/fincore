@@ -355,7 +355,7 @@ jobs:
       # still enforces the structural gates (superlinearity, window RSS
       # scaling, round-trip share-amount scaling).
       - name: Restore previous benchmark baseline
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .benchmarks/
           key: perf-baseline-${{ runner.os }}-${{ runner.arch }}
