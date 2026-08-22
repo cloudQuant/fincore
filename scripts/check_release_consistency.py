@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
+from packaging.version import InvalidVersion, Version
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -41,8 +42,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 
-_VERSION_RE = re.compile(r"reports version \*\*(\d+\.\d+\.\d+)\*\*")
-_RELEASE_SECTION_RE = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
+# Changelog versions follow PEP 440.  Development candidates (for example
+# ``0.4.0.dev0``) intentionally have no release tag, but they must still be
+# cross-checked against project metadata before a candidate can be built.
+_VERSION_RE = re.compile(r"reports version \*\*([^*\s]+)\*\*")
+_RELEASE_SECTION_RE = re.compile(r"^## \[([^\]]+)\]", re.MULTILINE)
 _SELF_DEP_RE = re.compile(r"^\s*fincore(\[|\s*$|$)", re.IGNORECASE)
 _BANNED_ARTIFACT_FRAGMENTS = (
     "versioneer",
@@ -76,9 +80,16 @@ def _scrubbed_env() -> dict[str, str]:
 
 
 def _gt(a: str, b: str) -> bool:
-    from packaging.version import Version
-
     return Version(a) > Version(b)
+
+
+def _valid_version(value: str) -> bool:
+    """Return whether a changelog label is a PEP 440 version."""
+    try:
+        Version(value)
+    except InvalidVersion:
+        return False
+    return True
 
 
 def _check_artifact_layout(
@@ -194,7 +205,11 @@ def _failures(dist_dir: Path | None) -> list[str]:
         check(bool(stated), "CHANGELOG states a package version")
         if stated:
             check(stated[-1] == version, f"CHANGELOG version statement ({stated[-1]}) equals pyproject ({version})")
-        future = [v for v in _RELEASE_SECTION_RE.findall(changelog) if _gt(v, version)]
+        future = [
+            candidate
+            for candidate in _RELEASE_SECTION_RE.findall(changelog)
+            if _valid_version(candidate) and _gt(candidate, version)
+        ]
         check(not future, f"CHANGELOG has no release section newer than {version} (found {future})")
     else:
         failures.append("CHANGELOG.md missing")
@@ -282,7 +297,9 @@ def _failures(dist_dir: Path | None) -> list[str]:
         print(f"NOTE: git unavailable ({exc}); skipping tag check")
     else:
         tags = {t.strip() for t in tags_proc.stdout.splitlines() if t.strip()}
-        if not tags:
+        if Version(version).is_devrelease:
+            print(f"NOTE: {version} is a development version; skipping release-tag check")
+        elif not tags:
             print("NOTE: no git tags present in checkout (shallow clone); skipping tag check")
         else:
             check(version in tags or f"v{version}" in tags, f"git tag for version {version} exists")

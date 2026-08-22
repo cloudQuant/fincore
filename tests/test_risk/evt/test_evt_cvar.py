@@ -107,6 +107,7 @@ class TestEVTCVArEdgeCases:
                 alpha=0.05,
                 model="gpd",
                 tail="lower",
+                threshold=0.001,
             )
 
     def test_evt_cvar_gev_xi_ge_1_raises_line_445(self):

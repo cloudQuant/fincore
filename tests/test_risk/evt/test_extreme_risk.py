@@ -40,6 +40,16 @@ class TestExtremeRisk:
         assert "location" in risk.columns
         assert "scale" in risk.columns
 
+    def test_gpd_default_threshold_covers_requested_tail_probability(self):
+        """The report path must use the same valid automatic POT threshold as VaR/ES."""
+        rng = np.random.default_rng(22)
+        returns = pd.Series(np.concatenate([rng.normal(-0.01, 0.003, 80), rng.exponential(0.01, 20)]))
+
+        risk = extreme_risk(returns, alpha=0.05, model="gpd", tail="upper")
+
+        assert risk.loc[0.05, "n_exceedances"] / len(returns) >= 0.05
+        assert risk.loc[0.05, "CVaR"] >= risk.loc[0.05, "VaR"]
+
     def test_unknown_model(self, heavy_tailed_data):
         """Test that unknown model raises ValueError."""
         returns = pd.Series(heavy_tailed_data)

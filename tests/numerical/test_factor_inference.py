@@ -5,9 +5,19 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+import statsmodels.api as sm
+from scipy import stats
+from statsmodels.stats.multitest import multipletests
 
-from fincore.factor_analysis.inference import fama_macbeth, ic_confidence_interval, ic_mean, ic_t_stat
+from fincore.factor_analysis.inference import (
+    benjamini_hochberg,
+    fama_macbeth,
+    ic_confidence_interval,
+    ic_mean,
+    ic_t_stat,
+)
 from fincore.factor_analysis.pit import PITPoint, validate_pit_alignment
+from tests.oracles.factor.newey_west_oracle import newey_west_mean_reference
 
 
 class TestFamaMacBeth:
@@ -32,6 +42,131 @@ class TestFamaMacBeth:
         assert abs(result.loc["intercept", "mean"] - true_alpha) < 0.01
         assert result.loc["exposure", "t_stat"] > 10.0
 
+    def test_broadcasts_one_row_static_exposure_across_return_dates(self) -> None:
+        """A documented static cross-section must not disappear in an index intersection."""
+        dates = pd.date_range("2024-01-01", periods=8)
+        assets = ["a", "b", "c"]
+        exposure = np.array([-1.0, 0.0, 1.0])
+        returns = pd.DataFrame([0.01 + 2.0 * exposure for _ in dates], index=dates, columns=assets)
+        static_exposure = pd.DataFrame([exposure], index=[pd.Timestamp("2000-01-01")], columns=assets)
+
+        result = fama_macbeth(returns, static_exposure)
+
+        assert np.isclose(result.loc["intercept", "mean"], 0.01, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "mean"], 2.0, atol=1e-12)
+
+    def test_aligns_exposures_by_asset_label_not_input_column_position(self) -> None:
+        """Reordering an exposure panel must not invert a cross-sectional beta."""
+        dates = pd.date_range("2024-01-01", periods=8)
+        assets = ["a", "b", "c"]
+        exposure = np.array([-1.0, 0.0, 1.0])
+        returns = pd.DataFrame([0.01 + 2.0 * exposure for _ in dates], index=dates, columns=assets)
+        shuffled_exposures = pd.DataFrame(
+            [exposure[::-1] for _ in dates],
+            index=dates,
+            columns=["c", "b", "a"],
+        )
+
+        result = fama_macbeth(returns, shuffled_exposures)
+
+        assert np.isclose(result.loc["intercept", "mean"], 0.01, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "mean"], 2.0, atol=1e-12)
+
+    def test_matches_statsmodels_cross_sectional_oracle(self) -> None:
+        """The panel mean and i.i.d. Fama-MacBeth SE agree with OLS fixtures."""
+        rng = np.random.default_rng(31)
+        dates = pd.date_range("2024-01-01", periods=12)
+        assets = ["a", "b", "c", "d", "e"]
+        exposures = pd.DataFrame(rng.normal(size=(len(dates), len(assets))), index=dates, columns=assets)
+        returns = (
+            0.003
+            + 1.25 * exposures
+            + pd.DataFrame(rng.normal(scale=0.02, size=exposures.shape), index=dates, columns=assets)
+        )
+
+        expected_coefficients = []
+        for date in dates:
+            design = sm.add_constant(exposures.loc[date].to_numpy(dtype=float), has_constant="add")
+            expected_coefficients.append(sm.OLS(returns.loc[date].to_numpy(dtype=float), design).fit().params)
+        expected = np.asarray(expected_coefficients)
+
+        result = fama_macbeth(returns, exposures)
+
+        assert np.isclose(result.loc["intercept", "mean"], expected[:, 0].mean(), rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "mean"], expected[:, 1].mean(), rtol=1e-12, atol=1e-12)
+        assert np.isclose(
+            result.loc["intercept", "std_error"],
+            expected[:, 0].std(ddof=1) / np.sqrt(len(expected)),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+        assert np.isclose(
+            result.loc["exposure", "std_error"],
+            expected[:, 1].std(ddof=1) / np.sqrt(len(expected)),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+
+    @pytest.mark.parametrize("lag", (0, 1, 3, 8))
+    def test_newey_west_standard_errors_match_statsmodels_time_series_oracle(self, lag: int) -> None:
+        """HAC applies to the serial cross-sectional coefficient sequence."""
+        rng = np.random.default_rng(37)
+        dates = pd.date_range("2024-01-02", periods=36, freq="B", tz="UTC")
+        assets = [f"asset-{item}" for item in range(9)]
+        exposure = np.linspace(-1.0, 1.0, len(assets))
+        slope_noise = np.empty(len(dates))
+        slope_noise[0] = rng.normal(scale=0.03)
+        for position in range(1, len(slope_noise)):
+            slope_noise[position] = 0.75 * slope_noise[position - 1] + rng.normal(scale=0.02)
+        slopes = 0.4 + slope_noise
+        intercepts = -0.01 + 0.5 * slope_noise
+        returns = pd.DataFrame(
+            [intercepts[position] + slopes[position] * exposure for position in range(len(dates))],
+            index=dates,
+            columns=assets,
+        )
+        exposures = pd.DataFrame(np.tile(exposure, (len(dates), 1)), index=dates, columns=assets)
+
+        result = fama_macbeth(returns, exposures, covariance="newey-west", newey_west_lags=lag)
+        expected_intercept, expected_intercept_se = newey_west_mean_reference(intercepts, nlags=lag)
+        expected_slope, expected_slope_se = newey_west_mean_reference(slopes, nlags=lag)
+
+        assert result.attrs["covariance"] == "newey-west"
+        assert result.attrs["newey_west_lags"] == lag
+        assert np.isclose(result.loc["intercept", "mean"], expected_intercept, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "mean"], expected_slope, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["intercept", "std_error"], expected_intercept_se, rtol=1e-12, atol=1e-12)
+        assert np.isclose(result.loc["exposure", "std_error"], expected_slope_se, rtol=1e-12, atol=1e-12)
+
+    def test_newey_west_requires_chronological_coefficients_and_valid_lags(self) -> None:
+        dates = pd.date_range("2024-01-02", periods=4, freq="B", tz="UTC")
+        assets = ["a", "b", "c"]
+        exposure = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+        returns = pd.DataFrame(np.tile([-0.01, 0.0, 0.01], (len(dates), 1)), index=dates, columns=assets)
+
+        with pytest.raises(ValueError, match="chronological"):
+            fama_macbeth(returns.iloc[::-1], exposure.iloc[::-1], covariance="newey-west", newey_west_lags=1)
+        with pytest.raises(ValueError, match="newey_west_lags"):
+            fama_macbeth(returns, exposure, covariance="newey-west", newey_west_lags=len(dates))
+        with pytest.raises(ValueError, match="newey_west_lags"):
+            fama_macbeth(returns * np.nan, exposure, covariance="newey-west", newey_west_lags=0)
+
+    def test_default_iid_inference_remains_identical_to_the_explicit_profile(self) -> None:
+        dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
+        assets = ["a", "b", "c"]
+        exposure = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+        returns = pd.DataFrame(
+            [[-0.02, 0.01, 0.04], [-0.01, 0.0, 0.01], [-0.03, 0.01, 0.05], [-0.02, 0.0, 0.02], [-0.01, 0.02, 0.05]],
+            index=dates,
+            columns=assets,
+        )
+
+        default = fama_macbeth(returns, exposure)
+        explicit = fama_macbeth(returns, exposure, covariance="iid")
+
+        pd.testing.assert_frame_equal(default, explicit)
+        assert default.attrs == {"covariance": "iid", "newey_west_lags": None, "n_cross_sections": len(dates)}
+
 
 class TestIC:
     def test_ic_mean_and_t_stat(self) -> None:
@@ -45,6 +180,80 @@ class TestIC:
         ic = rng.normal(0.05, 0.01, 100)
         lo, hi = ic_confidence_interval(ic)
         assert lo < np.mean(ic) < hi
+
+    def test_t_stat_matches_scipy_and_zero_constant_sample_is_zero(self) -> None:
+        values = np.array([-0.02, 0.01, 0.03, 0.04, -0.01])
+
+        assert np.isclose(ic_t_stat(values), stats.ttest_1samp(values, popmean=0.0).statistic, rtol=1e-12)
+        assert ic_t_stat(np.zeros(5)) == 0.0
+
+    def test_rejects_infinite_ic_observations_and_invalid_interval_multiplier(self) -> None:
+        infinite = np.array([0.01, np.inf])
+
+        with pytest.raises(ValueError, match="infinite"):
+            ic_mean(infinite)
+        with pytest.raises(ValueError, match="infinite"):
+            ic_t_stat(infinite)
+        with pytest.raises(ValueError, match="infinite"):
+            ic_confidence_interval(infinite)
+        with pytest.raises(ValueError, match="z"):
+            ic_confidence_interval(np.array([0.01, 0.02]), z=0.0)
+
+
+class TestBenjaminiHochberg:
+    def test_matches_statsmodels_and_preserves_factor_labels(self) -> None:
+        """FDR decisions and q-values agree with an independent implementation."""
+        p_values = pd.Series(
+            [0.049, 0.001, 0.01, 0.01, 0.2, 0.9],
+            index=pd.Index(["value", "quality", "momentum", "size", "low_vol", "noise"], name="factor"),
+            name="p_value",
+        )
+        expected_rejected, expected_adjusted, _, _ = multipletests(p_values.to_numpy(), alpha=0.05, method="fdr_bh")
+
+        result = benjamini_hochberg(p_values, alpha=0.05)
+
+        assert result.method == "benjamini-hochberg"
+        assert result.alpha == 0.05
+        pd.testing.assert_series_equal(result.p_values, p_values.astype(float))
+        pd.testing.assert_series_equal(
+            result.adjusted_p_values,
+            pd.Series(expected_adjusted, index=p_values.index, name="adjusted_p_value"),
+        )
+        pd.testing.assert_series_equal(
+            result.rejected,
+            pd.Series(expected_rejected, index=p_values.index, name="rejected"),
+        )
+
+    @pytest.mark.parametrize(
+        ("p_values", "alpha"),
+        [
+            (np.array([0.1, np.nan]), 0.05),
+            (np.array([-0.1, 0.1]), 0.05),
+            (np.array([0.1, 1.1]), 0.05),
+            (np.array([[0.1, 0.2]]), 0.05),
+            (np.array([0.1, 0.2]), 0.0),
+            (np.array([0.1, 0.2]), 1.1),
+        ],
+    )
+    def test_rejects_invalid_probabilities_and_alpha(self, p_values: np.ndarray, alpha: float) -> None:
+        with pytest.raises(ValueError):
+            benjamini_hochberg(p_values, alpha=alpha)
+
+    def test_empty_series_has_an_explicit_empty_audit_result(self) -> None:
+        empty = pd.Series([], dtype=float, index=pd.Index([], name="factor"), name="p_value")
+
+        result = benjamini_hochberg(empty)
+
+        assert result.n_tests == 0
+        assert result.p_values.empty
+        assert result.adjusted_p_values.empty
+        assert result.rejected.empty
+
+    def test_rejects_duplicate_factor_labels(self) -> None:
+        duplicate_labels = pd.Series([0.01, 0.02], index=["value", "value"])
+
+        with pytest.raises(ValueError, match="duplicate"):
+            benjamini_hochberg(duplicate_labels)
 
 
 class TestPIT:

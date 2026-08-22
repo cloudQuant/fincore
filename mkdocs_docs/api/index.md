@@ -15,6 +15,7 @@ fincore/
 ├── optimization/        # Portfolio optimization
 ├── simulation/          # Monte Carlo, bootstrap
 ├── attribution/         # Brinson, Fama-French
+├── performance/         # Enhanced cashflow and return semantics
 ├── risk/                # EVT, GARCH
 └── report/              # HTML/PDF reports
 ```
@@ -28,6 +29,7 @@ fincore/
 - [fincore.optimization](optimization.md) — Portfolio optimization
 - [fincore.simulation](simulation.md) — Monte Carlo simulation
 - [fincore.attribution](attribution.md) — Performance attribution
+- [fincore.performance](performance.md) — Enhanced return and cashflow semantics
 - [fincore.risk](risk.md) — Risk models
 - [fincore.report](report.md) — Report generation
 - [Factor-analysis](factor-analysis.md) — Strict Alphalens migration and enhanced factor analysis

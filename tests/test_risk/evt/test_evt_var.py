@@ -93,7 +93,7 @@ class TestEVTVarEdgeCases:
         returns = -np.abs(data)  # Need negative returns for lower tail
 
         # Mock gpd_fit to return xi very close to 0
-        mock_params = {"xi": 1e-12, "beta": 0.02, "threshold": 0.05, "n_exceed": 100}
+        mock_params = {"xi": 1e-12, "beta": 0.02, "threshold": 0.05, "n_exceed": 1000}
 
         with patch("fincore.risk.evt.gpd_fit", return_value=mock_params):
             var = evt_var(returns, alpha=0.05, model="gpd", tail="lower")

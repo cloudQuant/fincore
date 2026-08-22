@@ -21,13 +21,84 @@ from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
-from scipy import optimize, stats
+from scipy import optimize, special, stats
 
 __all__ = ["evt_cvar", "evt_var", "extreme_risk", "gev_fit", "gpd_fit", "hill_estimator"]
 
 
 if TYPE_CHECKING:
     ArrayLike = Union[np.ndarray, pd.Series, pd.DataFrame]
+
+
+def _validate_alpha(alpha: float) -> float:
+    """Return a finite tail probability strictly between zero and one."""
+    value = float(alpha)
+    if not np.isfinite(value) or not 0.0 < value < 1.0:
+        raise ValueError("alpha must be finite and in (0, 1)")
+    return value
+
+
+def _default_pot_threshold(data: np.ndarray, *, tail: str, alpha: float) -> float:
+    """Choose an automatic POT threshold whose fitted tail contains ``alpha``.
+
+    ``gpd_fit`` retains its direct 90th-percentile default for callers who are
+    fitting a tail model.  A VaR/ES query, however, cannot validly use a GPD
+    conditional-excess model below its fitted threshold.  It retains the
+    ordinary 90th-percentile tail threshold when that has enough support; only
+    when it does not does it fall back to an empirical order statistic that
+    leaves at least ``max(10, floor(alpha*n)+1)`` observations strictly above
+    it.
+    """
+    if tail == "lower":
+        magnitudes = -data[data < 0.0]
+    elif tail == "upper":
+        magnitudes = data[data > 0.0]
+    else:
+        raise ValueError("tail must be 'lower' or 'upper'")
+
+    required_exceedances = max(10, int(np.floor(alpha * len(data))) + 1)
+    if len(magnitudes) < required_exceedances:
+        raise ValueError("Not enough observations in the selected tail to choose a GPD threshold covering alpha")
+
+    sorted_magnitudes = np.sort(magnitudes)
+    conventional_threshold = float(np.percentile(sorted_magnitudes, 90.0))
+    if np.count_nonzero(sorted_magnitudes > conventional_threshold) >= required_exceedances:
+        return conventional_threshold
+
+    selected = float(sorted_magnitudes[-required_exceedances])
+    # A strict exceedance convention means using the selected order statistic
+    # itself would exclude every tied observation at that value.  Moving one
+    # representable step below it preserves the required probability mass.
+    threshold = float(np.nextafter(selected, -np.inf))
+    if not np.isfinite(threshold) or threshold <= 0.0:
+        raise ValueError("automatic GPD threshold must be finite and positive")
+    return threshold
+
+
+def _gumbel_expected_shortfall(mu: float, sigma: float, alpha: float) -> float:
+    """Return upper-tail Gumbel ES without losing tiny-tail precision.
+
+    The direct ``gamma + exp(-t)*log(t) + E1(t)`` form has catastrophic
+    cancellation as ``t = -log1p(-alpha)`` approaches zero.  The small-``t``
+    branch substitutes the convergent E1 series before dividing by ``alpha``.
+    """
+    t = -np.log1p(-alpha)
+    if t < 1e-5:
+        # -sum_{k>=1} (-t)^k / (k*k!) in the E1 expansion.  Sixteen terms put
+        # the omitted t^17 contribution far below float precision here.
+        series = 0.0
+        power = 1.0
+        factorial = 1.0
+        for order in range(1, 17):
+            power *= -t
+            factorial *= order
+            series -= power / (order * factorial)
+        # Divide each term before summing: the numerator itself can be a
+        # subnormal number even though the conditional mean is representable.
+        scaled_mean = np.expm1(-t) / alpha * np.log(t) + series / alpha
+        return float(mu + sigma * scaled_mean)
+    numerator = np.euler_gamma + np.exp(-t) * np.log(t) + special.exp1(t)
+    return float(mu + sigma * numerator / alpha)
 
 
 def hill_estimator(
@@ -45,8 +116,8 @@ def hill_estimator(
     data : array-like
         Input data (returns or losses).
     threshold : float, optional
-        Threshold for selecting tail data.
-        If None, uses 90th percentile for upper tail.
+        Positive tail-magnitude threshold. If None, uses the 90th percentile
+        of the selected positive tail magnitudes.
     tail : str, default 'upper'
         Which tail to estimate: 'upper' (right/gains) or 'lower' (left/losses).
 
@@ -54,48 +125,47 @@ def hill_estimator(
     -------
     xi : float
         Estimated tail index (shape parameter).
-        xi > 0: Heavy-tailed (Pareto, Student-t)
-        xi = 0: Exponential tail
-        xi < 0: Bounded tail (Beta, Uniform)
-    excesses : ndarray
-        Data above threshold.
+        The Hill estimator is defined for regularly varying heavy tails, so
+        finite-sample estimates are non-negative. Values close to zero can
+        indicate a light/near-exponential tail; use a GPD/GEV model rather
+        than Hill for a bounded-tail (negative-shape) conclusion.
+    tail_observations : ndarray
+        Positive tail magnitudes strictly above ``threshold``. For a lower
+        return tail these are reflected loss magnitudes.
 
     Examples
     --------
     >>> returns = np.random.standard_t(3, 10000)
-    >>> xi, excesses = hill_estimator(returns, tail="lower")
+    >>> xi, tail_observations = hill_estimator(returns, tail="lower")
     >>> print(f"Tail index: {xi:.3f}")
     """
     data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
-    data_arr = data_arr[~np.isnan(data_arr)]
+    data_arr = data_arr[np.isfinite(data_arr)]
 
-    # Select tail based on sign
     if tail == "upper":
-        tail_data = data_arr[data_arr > 0]
+        tail_data = data_arr[data_arr > 0.0]
     elif tail == "lower":
-        tail_data = -data_arr[data_arr < 0]  # Convert losses to positive
+        tail_data = -data_arr[data_arr < 0.0]
     else:
         raise ValueError("tail must be 'upper' or 'lower'")
 
-    # Set threshold if not provided
     if threshold is None:
         threshold = float(np.percentile(tail_data, 90))
+    else:
+        threshold = float(threshold)
+        if not np.isfinite(threshold) or threshold <= 0.0:
+            raise ValueError("threshold must be finite and positive")
 
-    # Get exceedances
-    excesses = tail_data[tail_data > threshold] - threshold
+    tail_observations = tail_data[tail_data > threshold]
 
-    if len(excesses) < 10:
+    if len(tail_observations) < 10:
         raise ValueError("Not enough exceedances for Hill estimation (need >= 10)")
 
-    # Sort log exceedances
-    log_excess = np.log(excesses)
-    log_excess = np.sort(log_excess)
+    # Threshold form of Hill's tail-index estimator.  The ratio uses observed
+    # tail magnitudes, not excesses (x - u): E[log(X / u) | X > u].
+    xi = float(np.mean(np.log(tail_observations / threshold)))
 
-    # Hill estimator
-    k = len(log_excess)
-    xi = float(1.0 / k * np.sum(log_excess - log_excess[0]))
-
-    return xi, excesses + threshold
+    return xi, tail_observations
 
 
 def gpd_fit(
@@ -134,7 +204,7 @@ def gpd_fit(
     >>> print(f"xi={params['xi']:.3f}, beta={params['beta']:.3f}")
     """
     data_arr: np.ndarray = np.asarray(data, dtype=float).flatten()
-    data_arr = data_arr[~np.isnan(data_arr)]
+    data_arr = data_arr[np.isfinite(data_arr)]
 
     if tail == "lower":
         # Losses: positive tail of negated negative returns.
@@ -152,6 +222,10 @@ def gpd_fit(
     # Set threshold
     if threshold is None:
         threshold = float(np.percentile(tail_data, 90))
+    else:
+        threshold = float(threshold)
+        if not np.isfinite(threshold) or threshold <= 0.0:
+            raise ValueError("threshold must be finite and positive")
 
     # Get exceedances
     excesses = tail_data[tail_data > threshold] - threshold
@@ -199,21 +273,29 @@ def gpd_fit(
         n = len(excesses)
         excesses_sorted = np.sort(excesses)
 
-        # L-moments estimators
-        m1 = np.mean(excesses)
-        m2 = 2 / n * np.sum([(i + 1) * excesses_sorted[i] / n for i in range(n)])
+        # Probability-weighted moments and the first two L-moments.  For GPD
+        # excesses, l1 = beta/(1-xi) and l2 = beta/((1-xi)*(2-xi)); therefore
+        # xi = 2 - l1/l2 and beta = l1*(1-xi).  ``m2`` in the legacy branch
+        # was neither b1 nor l2, which could manufacture a negative scale for
+        # ordinary positive-shape GPD samples.
+        b0 = float(np.mean(excesses_sorted))
+        b1 = float(np.mean((np.arange(n, dtype=float) / (n - 1.0)) * excesses_sorted))
+        l2 = 2.0 * b1 - b0
+        if not np.isfinite(l2) or l2 <= 0.0:
+            raise ValueError("GPD PWM requires a positive finite second L-moment")
 
-        # PWM estimators
-        xi = (m1 / (m1 - 2 * m2) - 2) / 3
-        beta = (2 * m1 * m2) / (m1 - 2 * m2)
+        xi = 2.0 - b0 / l2
+        beta = b0 * (1.0 - xi)
+        if not np.isfinite(xi) or not np.isfinite(beta) or beta <= 0.0:
+            raise ValueError("GPD PWM produced an invalid finite-scale fit")
 
     else:
         raise ValueError(f"Unknown method: {method}")
 
     return {
-        "xi": xi,
-        "beta": beta,
-        "threshold": threshold,
+        "xi": float(xi),
+        "beta": float(beta),
+        "threshold": float(threshold),
         "n_exceed": len(excesses),
     }
 
@@ -304,13 +386,19 @@ def evt_var(
     data : array-like
         Input return data.
     alpha : float, default 0.05
-        Significance level (e.g., 0.05 for 95% VaR).
+        Finite tail probability in ``(0, 1)`` (e.g., 0.05 for 95% VaR). For
+        GPD this is an unconditional return-tail probability; for GEV it is a
+        block-extreme tail probability.
     model : str, default 'gpd'
         EVT model: 'gpd' (POT) or 'gev' (block maxima).
     tail : str, default 'lower'
         Tail to estimate: 'lower' for losses, 'upper' for gains.
     threshold : float, optional
-        Threshold for GPD fitting.
+        Threshold for GPD fitting. An explicit threshold must leave an
+        empirical exceedance probability at least ``alpha``; otherwise the
+        conditional GPD model would be used below its fitted threshold and a
+        ``ValueError`` is raised. Without one, the 90th tail percentile is
+        retained when valid or lowered just enough to cover ``alpha``.
     block_size : int, optional
         Block size for GEV fitting.
 
@@ -325,44 +413,63 @@ def evt_var(
     >>> var_95 = evt_var(returns, alpha=0.05, model="gpd")
     >>> print(f"95% EVT-VaR: {var_95:.2%}")
     """
-    data = np.asarray(data).flatten()
-    data = data[~np.isnan(data)]
+    alpha = _validate_alpha(alpha)
+    values: np.ndarray = np.asarray(data, dtype=float).flatten()
+    values = values[np.isfinite(values)]
 
     var: float = np.nan  # Initialize var
 
     if model == "gpd":
-        params = gpd_fit(data, threshold=threshold, tail=tail)
+        pot_threshold = _default_pot_threshold(values, tail=tail, alpha=alpha) if threshold is None else threshold
+        params = gpd_fit(values, threshold=pot_threshold, tail=tail)
 
         xi = params["xi"]
         beta = params["beta"]
         u = params["threshold"]
+        if not np.all(np.isfinite((xi, beta, u))) or beta <= 0.0 or u <= 0.0:
+            raise ValueError("GPD fit returned non-finite parameters or non-positive scale/threshold")
 
         # Number of exceedances
         n_exceed = params["n_exceed"]
-        n_total = len(data)
+        n_total = len(values)
         exceed_prob = n_exceed / n_total
+        if alpha > exceed_prob:
+            raise ValueError(
+                "GPD POT alpha exceeds the fitted threshold exceedance probability; "
+                "choose alpha <= n_exceed / n_total or fit a lower threshold"
+            )
 
         # GPD-based VaR (in tail magnitude space, positive)
         ratio = alpha / exceed_prob
-        var_mag = u - beta * np.log(ratio) if np.abs(xi) < 1e-10 else u + (beta / xi) * (ratio ** (-xi) - 1)
+        with np.errstate(over="ignore", invalid="ignore"):
+            var_mag = u - beta * np.log(ratio) if np.abs(xi) < 1e-10 else u + (beta / xi) * (ratio ** (-xi) - 1)
+        if not np.isfinite(var_mag):
+            raise ValueError("GPD VaR is not finite for the fitted parameters and alpha")
 
         # Convert to return-space: negative for lower tail, positive for upper.
         var = -var_mag if tail == "lower" else var_mag
 
     elif model == "gev":
         # Fit GEV
-        params = gev_fit(data, block_size=block_size, tail=tail)
+        params = gev_fit(values, block_size=block_size, tail=tail)
 
         xi = params["xi"]
         mu = params["mu"]
         sigma = params["sigma"]
+        if not np.all(np.isfinite((xi, mu, sigma))) or sigma <= 0.0:
+            raise ValueError("GEV fit returned non-finite parameters or non-positive scale")
 
-        # GEV quantile of the (1 - alpha) upper quantile in tail-magnitude space.
-        q = 1.0 - alpha
-        if np.abs(xi) < 1e-10:
-            var_mag = mu - sigma * np.log(-np.log(q))
-        else:
-            var_mag = mu + (sigma / xi) * ((-np.log(q)) ** (-xi) - 1)
+        # GEV quantile of the (1 - alpha) upper quantile in tail-magnitude
+        # space.  log1p preserves tiny representable alpha values that would
+        # otherwise round ``1 - alpha`` to exactly one.
+        tail_log_probability = -np.log1p(-alpha)
+        with np.errstate(over="ignore", invalid="ignore"):
+            if np.abs(xi) < 1e-10:
+                var_mag = mu - sigma * np.log(tail_log_probability)
+            else:
+                var_mag = mu + (sigma / xi) * (tail_log_probability ** (-xi) - 1)
+        if not np.isfinite(var_mag):
+            raise ValueError("GEV VaR is not finite for the fitted parameters and alpha")
 
         var = -var_mag if tail == "lower" else var_mag
     else:
@@ -388,20 +495,23 @@ def evt_cvar(
     data : array-like
         Input return data.
     alpha : float, default 0.05
-        Significance level.
+        Finite tail probability in ``(0, 1)``. It is an unconditional return
+        tail probability for GPD and a block-extreme tail probability for GEV.
     model : str, default 'gpd'
         EVT model: 'gpd' or 'gev'.
     tail : str, default 'lower'
         Tail to estimate.
     threshold : float, optional
-        Threshold for GPD fitting.
+        GPD threshold with the same domain requirement and automatic policy as
+        :func:`evt_var`.
     block_size : int, optional
         Block size for GEV fitting.
 
     Returns
     -------
     float
-        EVT-based CVaR estimate (negative value for losses).
+        EVT-based conditional tail mean (negative value for losses). GEV ES is
+        finite only for ``xi < 1``.
 
     Examples
     --------
@@ -409,16 +519,22 @@ def evt_cvar(
     >>> cvar_95 = evt_cvar(returns, alpha=0.05, model="gpd")
     >>> print(f"95% EVT-CVaR: {cvar_95:.2%}")
     """
-    data = np.asarray(data).flatten()
-    data = data[~np.isnan(data)]
+    alpha = _validate_alpha(alpha)
+    values: np.ndarray = np.asarray(data, dtype=float).flatten()
+    values = values[np.isfinite(values)]
 
-    var = evt_var(data, alpha, model, tail, threshold=threshold, block_size=block_size)
+    pot_threshold = (
+        _default_pot_threshold(values, tail=tail, alpha=alpha) if model == "gpd" and threshold is None else threshold
+    )
+    var = evt_var(values, alpha, model, tail, threshold=pot_threshold, block_size=block_size)
 
     if model == "gpd":
-        params = gpd_fit(data, threshold=threshold, tail=tail)
+        params = gpd_fit(values, threshold=pot_threshold, tail=tail)
         xi = params["xi"]
         beta = params["beta"]
         u = params["threshold"]
+        if not np.all(np.isfinite((xi, beta, u))) or beta <= 0.0 or u <= 0.0:
+            raise ValueError("GPD fit returned non-finite parameters or non-positive scale/threshold")
 
         var_mag = -var if tail == "lower" else var
 
@@ -432,19 +548,28 @@ def evt_cvar(
         cvar = -cvar_mag if tail == "lower" else cvar_mag
 
     elif model == "gev":
-        params = gev_fit(data, block_size=block_size, tail=tail)
+        params = gev_fit(values, block_size=block_size, tail=tail)
         xi = params["xi"]
+        mu = params["mu"]
         sigma = params["sigma"]
 
-        var_mag = -var if tail == "lower" else var
-        t = -np.log(1.0 - alpha)
+        if not np.all(np.isfinite((xi, mu, sigma))) or sigma <= 0.0:
+            raise ValueError("GEV fit returned non-finite parameters or non-positive scale")
 
+        # For the standard GEV quantile Q(p), ES = (1/alpha) *
+        # integral_(1-alpha)^1 Q(p) dp.  The xi != 0 branch uses the lower
+        # incomplete gamma form; the Gumbel limit uses its stable E1 form.
+        t = -np.log1p(-alpha)
         if np.abs(xi) < 1e-10:
-            cvar_mag = var_mag + sigma * (1 + np.euler_gamma)
+            cvar_mag = _gumbel_expected_shortfall(mu, sigma, alpha)
         elif xi < 1:
-            cvar_mag = var_mag + (sigma / xi) * (1 - 1 / (1 - xi) + t ** (-xi) / (1 - xi))
+            lower_incomplete_gamma = special.gammainc(1.0 - xi, t) * special.gamma(1.0 - xi)
+            cvar_mag = mu + (sigma / xi) * (lower_incomplete_gamma / alpha - 1.0)
         else:
             raise ValueError("CVaR infinite for xi >= 1")
+
+        if not np.isfinite(cvar_mag):
+            raise ValueError("GEV CVaR is not finite for the fitted parameters")
 
         cvar = -cvar_mag if tail == "lower" else cvar_mag
     else:
@@ -490,11 +615,14 @@ def extreme_risk(
     >>> risk = extreme_risk(returns, alpha=0.05)
     >>> print(risk)
     """
+    alpha = _validate_alpha(alpha)
     data = returns.to_numpy(dtype=float)
+    data = data[np.isfinite(data)]
 
     # Fit model
     if model == "gpd":
-        params = gpd_fit(data, threshold=threshold, tail=tail)
+        pot_threshold = _default_pot_threshold(data, tail=tail, alpha=alpha) if threshold is None else threshold
+        params = gpd_fit(data, threshold=pot_threshold, tail=tail)
 
         var = evt_var(data, alpha, model, tail, threshold=params["threshold"])
         cvar = evt_cvar(data, alpha, model, tail, threshold=params["threshold"])

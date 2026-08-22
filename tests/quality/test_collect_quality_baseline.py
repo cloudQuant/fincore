@@ -216,6 +216,26 @@ def test_disposable_baseline_copy_has_an_isolated_git_head(tmp_path) -> None:
     assert len(revision.stdout.strip()) == 40
 
 
+def test_disposable_copies_are_fresh_between_quality_runs(tmp_path) -> None:
+    """One baseline run cannot leave source state for the next run to inherit."""
+
+    collector = _collector_module()
+    source = tmp_path / "source"
+    source.mkdir()
+    tracked = source / "project.toml"
+    tracked.write_text("name = 'fincore'\n", encoding="utf-8")
+    manifest = {"project.toml": "test-hash"}
+
+    first = tmp_path / "first-run"
+    collector._prepare_disposable_copy(source, first, manifest)
+    (first / "project.toml").write_text("poisoned = true\n", encoding="utf-8")
+
+    second = tmp_path / "second-run"
+    collector._prepare_disposable_copy(source, second, manifest)
+
+    assert (second / "project.toml").read_text(encoding="utf-8") == "name = 'fincore'\n"
+
+
 def test_baseline_environment_forces_the_headless_matplotlib_backend(monkeypatch) -> None:
     """Quality collection cannot inherit a macOS GUI backend from the shell."""
 

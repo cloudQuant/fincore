@@ -14,9 +14,10 @@ def test_public_capabilities_have_unique_ids_and_actionable_statuses() -> None:
     assert all(row.domain for row in rows)
 
 
-def test_brinson_hood_is_not_implemented() -> None:
+def test_brinson_hood_is_a_stable_bhb_alias() -> None:
     cap = get_capability("attribution.brinson_hood")
-    assert cap.status == "not_implemented"
+    assert cap.status == "stable"
+    assert cap.public_path == "fincore.attribution.BrinsonAttribution.calculate"
 
 
 def test_provider_entry_points_are_provider_required() -> None:
@@ -34,6 +35,46 @@ def test_provider_entry_points_are_provider_required() -> None:
 def test_strict_facades_are_stable() -> None:
     assert get_capability("compat.empyrical").status == "stable"
     assert get_capability("compat.pyfolio").status == "stable"
+
+
+def test_pit_factor_preparation_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.pit_prepare")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.prepare_pit_factor_data"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
+def test_per_horizon_factor_preparation_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.prepare_by_horizon")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.prepare_factor_data_by_horizon"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
+def test_factor_cost_and_capacity_ledger_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.costs")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.apply_factor_costs"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
+def test_factor_model_inference_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.inference")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.factor_model_inference"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
+def test_fama_macbeth_inference_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.fama_macbeth")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.fama_macbeth"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
 
 
 def test_get_capability_raises_for_unknown_id() -> None:

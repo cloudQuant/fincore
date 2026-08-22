@@ -1061,6 +1061,14 @@
           "kind": "unknown",
           "public_path": "fincore.risk.RiskEstimate"
         },
+        "RiskModelSpec": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.RiskModelSpec"
+        },
+        "WalkForwardVaRResult": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.WalkForwardVaRResult"
+        },
         "backtest_es": {
           "kind": "unknown",
           "public_path": "fincore.risk.backtest_es"
@@ -1108,6 +1116,10 @@
         "hill_estimator": {
           "kind": "unknown",
           "public_path": "fincore.risk.hill_estimator"
+        },
+        "walk_forward_var": {
+          "kind": "unknown",
+          "public_path": "fincore.risk.walk_forward_var"
         }
       },
       "profile": "enhanced_v1",
@@ -1117,6 +1129,8 @@
         "GJRGARCH",
         "RiskBacktestResult",
         "RiskEstimate",
+        "RiskModelSpec",
+        "WalkForwardVaRResult",
         "backtest_es",
         "backtest_var",
         "conditional_var",
@@ -1128,7 +1142,8 @@
         "forecast_volatility",
         "gev_fit",
         "gpd_fit",
-        "hill_estimator"
+        "hill_estimator",
+        "walk_forward_var"
       ]
     },
     "fincore.simulation": {

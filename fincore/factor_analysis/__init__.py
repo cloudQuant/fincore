@@ -14,12 +14,22 @@ from fincore.factor_analysis.calendar import (
     timedelta_strings_to_integers,
     timedelta_to_string,
 )
+from fincore.factor_analysis.costs import (
+    FactorCapacityResult,
+    FactorCostModel,
+    FactorCostResult,
+    apply_factor_costs,
+    estimate_factor_capacity,
+)
 from fincore.factor_analysis.data import (
     FactorLossReport,
+    MultiHorizonPreparedFactorData,
     PreparedFactorData,
     compute_forward_returns,
     prepare_factor_data,
+    prepare_factor_data_by_horizon,
     prepare_factor_data_from_forward_returns,
+    prepare_pit_factor_data,
     quantize_factor,
 )
 from fincore.factor_analysis.exceptions import (
@@ -28,6 +38,11 @@ from fincore.factor_analysis.exceptions import (
     FactorLossExceededError,
     MaxLossExceededError,
     NonMatchingTimezoneError,
+)
+from fincore.factor_analysis.inference import (
+    ICInferenceResult,
+    factor_model_inference,
+    fama_macbeth,
 )
 from fincore.factor_analysis.models import (
     EventAnalysisModel,
@@ -49,6 +64,7 @@ from fincore.factor_analysis.performance import (
     mean_return_by_quantile,
     quantile_turnover,
 )
+from fincore.factor_analysis.pit import PITPoint, materialize_pit_factor, validate_pit_alignment
 from fincore.factor_analysis.portfolio import (
     PyfolioFactorInputs,
     create_pyfolio_input,
@@ -75,6 +91,9 @@ __all__ = [
     "EventAnalysisModel",
     "FactorAnalysisConfig",
     "FactorAnalysisModel",
+    "FactorCapacityResult",
+    "FactorCostModel",
+    "FactorCostResult",
     "FactorDataError",
     "FactorFunctionSpec",
     "FactorGroupAnalysis",
@@ -83,12 +102,16 @@ __all__ = [
     "FactorTearSheetArtifacts",
     "FactorWorkflowSpec",
     "GridFigure",
+    "ICInferenceResult",
     "MaxLossExceededError",
+    "MultiHorizonPreparedFactorData",
     "NonMatchingTimezoneError",
+    "PITPoint",
     "PreparedFactorData",
     "PyfolioFactorInputs",
     "add_custom_calendar_timedelta",
     "analyze_factor",
+    "apply_factor_costs",
     "average_cumulative_return_by_quantile",
     "backshift_returns_series",
     "close_owned_figures",
@@ -105,23 +128,30 @@ __all__ = [
     "create_turnover_tear_sheet",
     "cumulative_returns",
     "diff_custom_calendar_timedeltas",
+    "estimate_factor_capacity",
     "factor_alpha_beta",
     "factor_cumulative_returns",
     "factor_information_coefficient",
+    "factor_model_inference",
     "factor_positions",
     "factor_rank_autocorrelation",
     "factor_returns",
     "factor_weights",
+    "fama_macbeth",
     "get_forward_returns_columns",
     "infer_trading_calendar",
+    "materialize_pit_factor",
     "mean_information_coefficient",
     "mean_return_by_quantile",
     "positions",
     "prepare_factor_data",
+    "prepare_factor_data_by_horizon",
     "prepare_factor_data_from_forward_returns",
+    "prepare_pit_factor_data",
     "quantile_turnover",
     "quantize_factor",
     "show_owned_figures",
     "timedelta_strings_to_integers",
     "timedelta_to_string",
+    "validate_pit_alignment",
 ]

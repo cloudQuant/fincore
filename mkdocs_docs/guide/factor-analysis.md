@@ -57,6 +57,59 @@ Artifacts are not shown or closed automatically.
   observations.
 - Treat `max_loss` as a data-quality threshold. Inspect the loss report and
   justify any increase rather than accepting dropped observations silently.
+- For new enhanced research with multiple return horizons, use
+  `prepare_factor_data_by_horizon`. It creates one prepared table and one loss
+  report per horizon, so missing long-horizon returns do not silently delete
+  usable short-horizon observations. The strict Alphalens route intentionally
+  keeps its source-shaped all-horizon cleanup behavior.
+- Build transaction assumptions explicitly after deriving enhanced factor
+  weights. `apply_factor_costs` records entry/rebalance turnover, spread and
+  temporary-impact slippage, short-borrow availability/rates, participation,
+  and a hard capacity bound in one gross-to-net ledger. It requires complete
+  same-currency dollar-volume and borrow inputs rather than imputing them; it
+  is an experimental accounting model, not an execution simulator. See the
+  [factor research protocol](../concepts/factor-research-protocol.md#explicit-factor-cost-borrow-slippage-and-capacity-ledger)
+  for formulas and fail-closed boundaries.
+- `fama_macbeth` keeps its i.i.d. standard-error default. Enhanced research
+  may opt into `covariance="newey-west"` with an explicit lag count when the
+  fitted cross-sections are chronologically ordered; inspect the returned
+  DataFrame's `covariance`, `newey_west_lags`, and `n_cross_sections` attrs.
+  It is HAC for the coefficient sequence, not a clustered or multi-factor
+  inference claim.
+
+## Causal PIT inputs for enhanced research
+
+New enhanced research should materialize factor values from a point-in-time
+ledger instead of passing a prebuilt series whose availability cannot be
+audited. `materialize_pit_factor` requires `asset`, `as_of`, `known_at`,
+`effective_from`, `value`, and `in_universe` columns. On each evaluation date
+it selects only the latest revision that was both known and effective on that
+date; a later `in_universe=False` observation removes the asset rather than
+leaking a stale value forward.
+
+```python
+import pandas as pd
+
+from fincore.factor_analysis import materialize_pit_factor
+
+observations = pd.DataFrame(
+    {
+        "asset": ["A", "B"],
+        "as_of": pd.to_datetime(["2024-01-01", "2024-01-01"], utc=True),
+        "known_at": pd.to_datetime(["2024-01-02", "2024-01-02"], utc=True),
+        "effective_from": pd.to_datetime(["2024-01-02", "2024-01-02"], utc=True),
+        "value": [1.0, -1.0],
+        "in_universe": [True, True],
+    }
+)
+factor = materialize_pit_factor(observations, pd.date_range("2024-01-02", periods=2, tz="UTC"))
+```
+
+Use `prepare_pit_factor_data` to materialize that ledger before forward-return
+preparation. It deliberately rejects `filter_zscore`: a full-sample return
+filter is not causal. The strict `fincore.alphalens` facade is unchanged and
+retains its source-shaped options. See the [factor research protocol](../concepts/factor-research-protocol.md)
+for the event-time contract, validation boundaries, and remaining scope.
 
 The compatibility status is limited to current executable strict-path,
 signature, kernel, and workflow tests. The human license/NOTICE review remains

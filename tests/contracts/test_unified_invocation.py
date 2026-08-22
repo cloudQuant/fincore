@@ -31,6 +31,18 @@ def test_invoke_enhanced_returns_analysis_result() -> None:
     assert result.value is not None
 
 
+def test_invoke_cashflow_performance_operation_uses_the_enhanced_catalog() -> None:
+    catalog = _catalog()
+    dates = pd.date_range("2024-01-31", periods=2, freq="ME", tz="UTC")
+    valuations = pd.Series([100.0, 110.0], index=dates)
+    cashflows = pd.Series([10.0], index=[dates[1]])
+
+    result = invoke(catalog, "cashflow_adjusted_twr", "enhanced_v1", valuations, cashflows)
+
+    assert result.ok
+    assert result.value == pytest.approx(0.0, abs=1e-12)
+
+
 def test_invoke_unknown_operation_raises() -> None:
     catalog = _catalog()
     with pytest.raises(KeyError, match="unknown operation"):

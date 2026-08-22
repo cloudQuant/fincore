@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pandas as pd
 
 from fincore.core.execution import DAGExecutor
@@ -34,6 +36,100 @@ def test_snapshot_cache_key_changes_with_overlay_generation() -> None:
     a = AnalysisSnapshot.from_data(returns, overlay_generation=0)
     b = AnalysisSnapshot.from_data(returns, overlay_generation=1)
     assert a.cache_key != b.cache_key
+
+
+def test_snapshot_cache_key_changes_with_every_analysis_input() -> None:
+    """A snapshot key must not reuse a result after auxiliary data changes."""
+    returns = pd.Series([0.01, -0.02], index=pd.date_range("2024-01-01", periods=2))
+    benchmark = pd.Series([0.0, 0.0], index=returns.index)
+    positions = pd.DataFrame({"asset": [1.0, 0.5]}, index=returns.index)
+    transactions = pd.DataFrame({"amount": [1.0, -1.0]}, index=returns.index)
+
+    baseline = AnalysisSnapshot.from_data(
+        returns,
+        benchmark=benchmark,
+        positions=positions,
+        transactions=transactions,
+        backend="pandas",
+        overlay_digest="overlay-a",
+        operation_version="2",
+        config={"annualization": 252},
+    )
+
+    variants = (
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark + 0.001,
+            positions=positions,
+            transactions=transactions,
+            backend="pandas",
+            overlay_digest="overlay-a",
+            operation_version="2",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions.assign(asset=[0.9, 0.5]),
+            transactions=transactions,
+            backend="pandas",
+            overlay_digest="overlay-a",
+            operation_version="2",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions,
+            transactions=transactions.assign(amount=[1.0, -2.0]),
+            backend="pandas",
+            overlay_digest="overlay-a",
+            operation_version="2",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions,
+            transactions=transactions,
+            backend="numpy",
+            overlay_digest="overlay-a",
+            operation_version="2",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions,
+            transactions=transactions,
+            backend="pandas",
+            overlay_digest="overlay-b",
+            operation_version="2",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions,
+            transactions=transactions,
+            backend="pandas",
+            overlay_digest="overlay-a",
+            operation_version="3",
+            config={"annualization": 252},
+        ),
+        AnalysisSnapshot.from_data(
+            returns,
+            benchmark=benchmark,
+            positions=positions,
+            transactions=transactions,
+            backend="pandas",
+            overlay_digest="overlay-a",
+            operation_version="2",
+            config={"annualization": 365},
+        ),
+    )
+
+    assert all(variant.cache_key != baseline.cache_key for variant in variants)
 
 
 def test_dag_executes_dependencies_once() -> None:
@@ -83,3 +179,24 @@ def test_dag_shares_intermediate_values() -> None:
 
     assert calls["shared"] == 1
     assert executor.computed() == frozenset({"shared", "left", "right"})
+
+
+def test_dag_cache_uses_node_semantic_key_not_only_node_id() -> None:
+    """Changing a node semantic key must invalidate an existing executor cache."""
+    calls: list[str] = []
+
+    def first(**kwargs: object) -> str:
+        calls.append("first")
+        return "first"
+
+    def second(**kwargs: object) -> str:
+        calls.append("second")
+        return "second"
+
+    original = ExecutionPlan((DAGNode("metric", cache_key="semantic-v1", compute=first),))
+    executor = DAGExecutor(original)
+    assert executor.execute("metric") == "first"
+
+    executor.plan = replace(original, nodes=(DAGNode("metric", cache_key="semantic-v2", compute=second),))
+    assert executor.execute("metric") == "second"
+    assert calls == ["first", "second"]

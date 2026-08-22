@@ -9,6 +9,7 @@ workload across commits and platforms.  Sizes are ``small``, ``medium`` and
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,8 +23,67 @@ SIZES: dict[str, dict[str, int]] = {
 }
 
 
-def _sha256_payload(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+def _pandas_value_digest(value: pd.Series | pd.DataFrame) -> str:
+    """Digest values *and* label semantics for a benchmark input.
+
+    A benchmark with the same row count but different returns, labels, dtypes,
+    or business calendar is a different financial workload.  ``hash_pandas_object``
+    covers indexed values while the explicit JSON header preserves column and
+    dtype order, index names, and calendar metadata that row hashes alone do
+    not make obvious in an artifact review.
+    """
+    if isinstance(value, pd.Series):
+        header: dict[str, Any] = {
+            "kind": "series",
+            "name": str(value.name),
+            "dtype": str(value.dtype),
+        }
+    else:
+        header = {
+            "kind": "dataframe",
+            "columns": [str(column) for column in value.columns],
+            "dtypes": [str(dtype) for dtype in value.dtypes],
+        }
+
+    index = value.index
+    header["shape"] = list(value.shape)
+    header["index_type"] = type(index).__name__
+    header["index_names"] = [str(name) for name in index.names]
+    header["index_dtypes"] = (
+        [str(level.dtype) for level in index.levels] if isinstance(index, pd.MultiIndex) else [str(index.dtype)]
+    )
+    frequency = getattr(index, "freqstr", None)
+    if frequency is not None:
+        header["calendar_frequency"] = frequency
+
+    hasher = hashlib.sha256(json.dumps(header, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    hashes = pd.util.hash_pandas_object(value, index=True, categorize=True).to_numpy(dtype=np.uint64, copy=False)
+    hasher.update(hashes.tobytes())
+    return hasher.hexdigest()
+
+
+def workload_input_digest(
+    name: str,
+    size: str,
+    seed: int,
+    *,
+    factor: pd.DataFrame | None = None,
+    returns: pd.Series | None = None,
+    transactions: pd.DataFrame | None = None,
+) -> str:
+    """Return the semantic digest of every concrete input supplied to a workload."""
+    hasher = hashlib.sha256(
+        json.dumps({"name": name, "size": size, "seed": seed}, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    )
+    for field_name, value in (
+        ("factor", factor),
+        ("returns", returns),
+        ("transactions", transactions),
+    ):
+        if value is not None:
+            hasher.update(field_name.encode("utf-8"))
+            hasher.update(_pandas_value_digest(value).encode("ascii"))
+    return hasher.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -60,7 +120,7 @@ def factor_panel_workload(size: str = "medium", seed: int = 20260817) -> Workloa
         size=size,
         seed=seed,
         expected_rows=expected_rows,
-        input_digest=_sha256_payload(f"factor_panel:{size}:{seed}:{expected_rows}"),
+        input_digest=workload_input_digest("factor_panel", size, seed, factor=factor),
         factor=factor,
     )
 
@@ -78,7 +138,7 @@ def single_series_workload(size: str = "medium", seed: int = 20260817) -> Worklo
         size=size,
         seed=seed,
         expected_rows=shape["dates"],
-        input_digest=_sha256_payload(f"single_series:{size}:{seed}:{shape['dates']}"),
+        input_digest=workload_input_digest("single_series", size, seed, returns=returns),
         returns=returns,
     )
 
@@ -96,7 +156,7 @@ def rolling_returns_workload(size: str = "medium", seed: int = 20260817) -> Work
         size=size,
         seed=seed,
         expected_rows=shape["dates"],
-        input_digest=_sha256_payload(f"rolling_returns:{size}:{seed}:{shape['dates']}"),
+        input_digest=workload_input_digest("rolling_returns", size, seed, returns=returns),
         returns=returns,
     )
 
@@ -122,7 +182,7 @@ def transactions_workload(size: str = "medium", seed: int = 20260817) -> Workloa
         size=size,
         seed=seed,
         expected_rows=rows,
-        input_digest=_sha256_payload(f"transactions:{size}:{seed}:{rows}"),
+        input_digest=workload_input_digest("transactions", size, seed, transactions=transactions),
         transactions=transactions,
     )
 
@@ -140,7 +200,7 @@ def report_workload(size: str = "medium", seed: int = 20260817) -> Workload:
         size=size,
         seed=seed,
         expected_rows=shape["dates"],
-        input_digest=_sha256_payload(f"report:{size}:{seed}:{shape['dates']}"),
+        input_digest=workload_input_digest("report", size, seed, returns=returns),
         returns=returns,
     )
 
@@ -165,4 +225,5 @@ __all__ = [
     "rolling_returns_workload",
     "single_series_workload",
     "transactions_workload",
+    "workload_input_digest",
 ]

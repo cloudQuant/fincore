@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import inspect
+
+import fincore.performance as performance
 from fincore._registry import METRIC_REGISTRY
 from fincore.api import OperationCatalog, build_builtin_catalog
+from fincore.api.builtins import PERFORMANCE_OPERATION_SPECS
 from fincore.contracts.workflows import WORKFLOW_REGISTRY
 
 
 def test_catalog_contains_all_registry_entries() -> None:
     catalog = build_builtin_catalog()
-    expected = len(METRIC_REGISTRY) + len(WORKFLOW_REGISTRY)
+    expected = len(METRIC_REGISTRY) + len(WORKFLOW_REGISTRY) + len(PERFORMANCE_OPERATION_SPECS)
     assert len(catalog.bindings) == expected, f"catalog has {len(catalog.bindings)} bindings, expected {expected}"
 
 
@@ -56,3 +60,22 @@ def test_catalog_is_an_immutable_dataclass() -> None:
         raise AssertionError("catalog should be frozen")
     except (AttributeError, TypeError):
         pass
+
+
+def test_catalog_includes_enhanced_cashflow_operations() -> None:
+    catalog = build_builtin_catalog()
+
+    for name in ("cashflow_adjusted_returns", "cashflow_adjusted_twr"):
+        binding = catalog.resolve_binding(f"fincore.performance.{name}")
+        definition = catalog.resolve_definition(name, "enhanced_v1")
+
+        assert binding.operation_id == name
+        assert definition.domain == "performance"
+        assert definition.kernel_ref == f"fincore.performance.cashflows:{name}"
+
+
+def test_catalog_covers_every_public_performance_function() -> None:
+    cataloged = {name for name, *_ in PERFORMANCE_OPERATION_SPECS}
+    public_functions = {name for name in performance.__all__ if inspect.isfunction(getattr(performance, name))}
+
+    assert cataloged == public_functions

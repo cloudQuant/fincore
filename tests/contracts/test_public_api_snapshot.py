@@ -11,9 +11,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.snapshot_public_api import SURFACE_PROFILES, build_snapshot
+from scripts.snapshot_public_api import SNAPSHOT_BASELINE, SURFACE_PROFILES, build_snapshot, main
 
-FIXTURE = Path(__file__).parent / "fixtures" / "public-api-0.3.x.json"
+FIXTURE = Path(__file__).parent / "fixtures" / "public-api-0.4.0.dev0.json"
 
 PROFILES = {
     "strict_empyrical_0_6_0",
@@ -28,6 +28,11 @@ def test_snapshot_matches_checked_in_fixture() -> None:
     snapshot = build_snapshot()
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
     assert snapshot == fixture, "public API snapshot drifted from the checked-in fixture"
+    assert fixture["baseline"] == SNAPSHOT_BASELINE
+
+
+def test_snapshot_check_uses_the_checked_in_fixture_by_default() -> None:
+    assert main(["--check"]) == 0
 
 
 def test_every_surface_has_a_known_profile() -> None:
@@ -41,6 +46,14 @@ def test_no_duplicate_public_paths_across_surfaces() -> None:
     snapshot = build_snapshot()
     paths = [f"{surface}.{name}" for surface, data in snapshot["surfaces"].items() for name in data["public_symbols"]]
     assert len(paths) == len(set(paths)), "duplicate public paths detected"
+
+
+def test_performance_surface_is_versioned_as_enhanced_api() -> None:
+    snapshot = build_snapshot()
+    performance = snapshot["surfaces"]["fincore.performance"]
+
+    assert performance["profile"] == "enhanced_v1"
+    assert {"cashflow_adjusted_returns", "cashflow_adjusted_twr"}.issubset(performance["public_symbols"])
 
 
 def test_strict_surfaces_are_distinct_from_enhanced() -> None:

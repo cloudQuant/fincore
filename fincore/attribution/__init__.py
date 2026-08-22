@@ -4,9 +4,9 @@ Provides Brinson attribution, Fama-French multi-factor models,
 style analysis, and timing attribution.
 
 Public capability states are declared in :mod:`fincore.capabilities` and
-rendered into ``docs/quality/capability-inventory.md``.  The Brinson-Hood-Faber
-method is exposed as ``BrinsonAttribution.calculate(method="brinson_hood")``
-but is ``not_implemented`` until a verified implementation ships.
+rendered into ``docs/quality/capability-inventory.md``.  The historical
+``BrinsonAttribution.calculate(method="brinson_hood")`` spelling is a verified
+alias for the standard Brinson--Hood--Beebower (BHB) decomposition.
 """
 
 from __future__ import annotations

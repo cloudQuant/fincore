@@ -162,30 +162,22 @@ def _named_kernel(name: str):
 class TestLegacyAdapters:
     def test_legacy_capture_adapter_capture(self):
         kernel = _named_kernel("capture")
-        result = _legacy_capture_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_capture_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert np.isfinite(result)
 
     def test_legacy_capture_adapter_up_capture(self):
         kernel = _named_kernel("up_capture")
-        result = _legacy_capture_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_capture_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert np.isfinite(result)
 
     def test_legacy_capture_adapter_down_capture(self):
         kernel = _named_kernel("down_capture")
-        result = _legacy_capture_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_capture_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert np.isfinite(result)
 
     def test_legacy_capture_adapter_up_down_capture(self):
         kernel = _named_kernel("up_down_capture")
-        result = _legacy_capture_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_capture_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert np.isfinite(result)
 
     def test_legacy_capture_adapter_unexpected_kwarg(self):
@@ -214,31 +206,23 @@ class TestLegacyAdapters:
 
     def test_legacy_conditional_alpha_beta_adapter_up(self):
         kernel = _named_kernel("up_alpha_beta")
-        result = _legacy_conditional_alpha_beta_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_conditional_alpha_beta_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert result is not None
 
     def test_legacy_conditional_alpha_beta_adapter_down(self):
         kernel = _named_kernel("down_alpha_beta")
-        result = _legacy_conditional_alpha_beta_adapter(
-            kernel, {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_conditional_alpha_beta_adapter(kernel, {"returns": _returns(), "factor_returns": _factor()})
         assert result is not None
 
     def test_legacy_beta_adapter(self):
-        result = _legacy_beta_adapter(
-            _named_kernel("beta"), {"returns": _returns(), "factor_returns": _factor()}
-        )
+        result = _legacy_beta_adapter(_named_kernel("beta"), {"returns": _returns(), "factor_returns": _factor()})
         assert result is not None
 
     def test_legacy_calmar_adapter(self):
         def calmar_kernel(returns, period, annualization):
             return returns.mean()
 
-        result = _legacy_calmar_adapter(
-            calmar_kernel, {"returns": _returns()}
-        )
+        result = _legacy_calmar_adapter(calmar_kernel, {"returns": _returns()})
         assert np.isfinite(result)
 
     def test_legacy_aligned_binary_adapter_unknown_name(self):

@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +19,7 @@ from workloads import (
     rolling_returns_workload,
     single_series_workload,
     transactions_workload,
+    workload_input_digest,
 )
 
 
@@ -37,6 +39,17 @@ def test_factor_workload_is_deterministic_for_a_fixed_seed() -> None:
     assert a.input_digest == b.input_digest
     assert a.input_digest != c.input_digest
     assert a.factor.equals(b.factor)
+
+
+def test_workload_digest_changes_for_content_and_calendar_changes() -> None:
+    case = single_series_workload("small", seed=42)
+    changed_values = case.returns.copy()
+    changed_values.iloc[0] += 1.0
+    changed_calendar = case.returns.copy()
+    changed_calendar.index = changed_calendar.index + pd.offsets.BDay(1)
+
+    assert workload_input_digest("single_series", "small", 42, returns=changed_values) != case.input_digest
+    assert workload_input_digest("single_series", "small", 42, returns=changed_calendar) != case.input_digest
 
 
 def test_workload_sizes_cover_three_scales() -> None:

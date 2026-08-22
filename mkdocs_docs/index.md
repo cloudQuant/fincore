@@ -1,11 +1,12 @@
 # fincore | Quantitative Performance & Risk Analytics
 
-**fincore** is a Python library for calculating common financial risk and performance metrics. It continues the empyrical analytics stack under active maintenance by cloudQuant. Current version: **0.3.0** (Beta), Python 3.11+.
+**fincore** is a Python library for calculating common financial risk and performance metrics. It continues the empyrical analytics stack under active maintenance by cloudQuant. Current development version: **0.4.0.dev0** (Beta), Python 3.11+.
 
-## Three API surfaces
+## Four API surfaces
 
 - **Strict compatibility** — `fincore.empyrical`: the frozen empyrical 0.6.0 surface (54/54 C0, 49/49 C1, core callables C3).
 - **pyfolio façade** — `fincore.pyfolio`: the frozen pyfolio 0.9.6 profile of 11 workflows (C1 all, main chains C4). Requires `fincore[pyfolio]`.
+- **Alphalens façade** — `fincore.alphalens`: the strict cloudQuant-local Alphalens surface. Requires `fincore[alphalens]` for analysis/plotting dependencies.
 - **Enhanced semantics** — `fincore.metrics`, the flat API, and `AnalysisContext`: fincore's own interfaces with documented divergences.
 
 See [Compatibility](development/compatibility.md) for the full C0–C4 matrix.
@@ -60,7 +61,7 @@ pip install "fincore[all]"
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| Version | 0.3.0 (Beta) | `pyproject.toml` (single metadata source) |
+| Version | 0.4.0.dev0 (Beta) | `pyproject.toml` (single metadata source) |
 | Python | 3.11, 3.12, 3.13 | `requires-python = ">=3.11"` |
 | Quality numbers | machine-generated | [current-baseline.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/current-baseline.md) |
 | Release readiness | itemized checklist | [release-candidate-checklist.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/release-candidate-checklist.md) |

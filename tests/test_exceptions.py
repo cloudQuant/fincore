@@ -63,9 +63,7 @@ def test_validation_error_to_dict() -> None:
 
 
 def test_validation_error_from_dict_roundtrip() -> None:
-    err = ValidationError.from_dict(
-        {"error_type": "ValidationError", "message": "m", "param_name": "p", "value": "v"}
-    )
+    err = ValidationError.from_dict({"error_type": "ValidationError", "message": "m", "param_name": "p", "value": "v"})
     assert err.message == "m"
     assert err.param_name == "p"
 
@@ -208,9 +206,7 @@ def test_dependency_error_str() -> None:
 
 
 def test_dependency_error_roundtrip() -> None:
-    err = DependencyError.from_dict(
-        {"error_type": "DependencyError", "message": "m", "dependency": "d", "extra": "e"}
-    )
+    err = DependencyError.from_dict({"error_type": "DependencyError", "message": "m", "dependency": "d", "extra": "e"})
     assert err.dependency == "d"
     assert err.extra == "e"
 

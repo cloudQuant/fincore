@@ -90,7 +90,7 @@ def test_brinson_results_single_period_from_1d_inputs():
     assert df["period"].tolist() == ["0"]
 
 
-def test_brinson_cumulative_uses_carino_linking_and_reports_geometric_returns():
+def test_brinson_cumulative_uses_carino_linking_and_reports_absolute_cumulative_active_return():
     rp = np.array([[0.02, 0.01], [0.00, 0.03]], dtype=float)
     rb = np.array([[0.01, 0.005], [0.01, 0.02]], dtype=float)
     wp = np.array([[0.6, 0.4], [0.5, 0.5]], dtype=float)
@@ -101,21 +101,108 @@ def test_brinson_cumulative_uses_carino_linking_and_reports_geometric_returns():
     port_period = np.sum(wp * rp, axis=1)
     bench_period = np.sum(wb * rb, axis=1)
 
-    def carino_k(a: float, b: float) -> float:
-        if abs(a - b) < 1e-15:
-            return 1.0 / (1.0 + a)
-        return (np.log1p(a) - np.log1p(b)) / (a - b)
-
-    K = float(sum(carino_k(a, b) for a, b in zip(port_period, bench_period, strict=True)))
     total = cum["allocation"] + cum["selection"] + cum["interaction"]
 
-    # Carino identity: exp(K * total) - 1 == geometric active return.
-    geometric_active = np.prod(1.0 + port_period) / np.prod(1.0 + bench_period) - 1.0
-    assert np.isclose(np.expm1(K * total), geometric_active, rtol=1e-12, atol=1e-12)
-
     # Geometric cumulative of per-period weighted returns is preserved.
-    assert np.isclose(cum["portfolio_cumulative"], float(np.prod(1.0 + port_period) - 1.0))
-    assert np.isclose(cum["benchmark_cumulative"], float(np.prod(1.0 + bench_period) - 1.0))
+    portfolio_cumulative = float(np.prod(1.0 + port_period) - 1.0)
+    benchmark_cumulative = float(np.prod(1.0 + bench_period) - 1.0)
+    assert np.isclose(cum["portfolio_cumulative"], portfolio_cumulative)
+    assert np.isclose(cum["benchmark_cumulative"], benchmark_cumulative)
+    assert np.isclose(total, portfolio_cumulative - benchmark_cumulative, rtol=1e-12, atol=1e-12)
+
+
+def test_brinson_cumulative_single_period_preserves_absolute_active_return():
+    rp = np.array([0.04, 0.01], dtype=float)
+    rb = np.array([0.02, 0.00], dtype=float)
+    wp = np.array([0.7, 0.3], dtype=float)
+    wb = np.array([0.5, 0.5], dtype=float)
+
+    result = brinson_cumulative(rp, rb, wp, wb)
+
+    portfolio_return = float(np.sum(wp * rp))
+    benchmark_return = float(np.sum(wb * rb))
+    expected_active = portfolio_return - benchmark_return
+    assert np.isclose(result["total"], expected_active, rtol=1e-12, atol=1e-12)
+
+
+def test_brinson_cumulative_handles_equal_return_period_without_nan():
+    rp = np.array([[0.03, 0.01], [0.04, 0.00]], dtype=float)
+    rb = np.array([[0.02, 0.02], [0.01, 0.01]], dtype=float)
+    wp = np.array([[0.5, 0.5], [0.7, 0.3]], dtype=float)
+    wb = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=float)
+
+    result = brinson_cumulative(rp, rb, wp, wb)
+
+    portfolio_period = np.sum(wp * rp, axis=1)
+    benchmark_period = np.sum(wb * rb, axis=1)
+    expected_active = np.prod(1.0 + portfolio_period) - np.prod(1.0 + benchmark_period)
+    assert np.isfinite(result["total"])
+    assert np.isclose(result["total"], expected_active, rtol=1e-12, atol=1e-12)
+
+
+def test_brinson_cumulative_zero_cumulative_active_return_is_finite():
+    # The two exactly representable gross returns multiply to one, ensuring an
+    # exact zero-active fixture instead of relying on an approximate tolerance.
+    rp = np.array([[1.0], [-0.5]], dtype=float)
+    rb = np.array([[0.00], [0.00]], dtype=float)
+    weights = np.ones((2, 1), dtype=float)
+
+    result = brinson_cumulative(rp, rb, weights, weights)
+
+    assert np.isfinite(result["total"])
+    assert np.isclose(result["total"], 0.0, rtol=0.0, atol=0.0)
+
+
+def test_brinson_cumulative_near_loss_boundary_preserves_absolute_active_return():
+    rp = np.array([[-0.999999, 0.0]], dtype=float)
+    rb = np.array([[-0.999998, 0.0]], dtype=float)
+    weights = np.array([[1.0, 0.0]], dtype=float)
+
+    result = brinson_cumulative(rp, rb, weights, weights)
+
+    assert np.isfinite(result["total"])
+    assert np.isclose(result["total"], -0.000001, rtol=0.0, atol=1e-12)
+
+
+def test_brinson_cumulative_accepts_total_loss_components_when_aggregate_returns_are_valid():
+    """Carino is defined on aggregate returns, not individual sector returns."""
+    rp = np.array([[-1.0, 0.04], [0.02, -1.0]], dtype=float)
+    rb = np.array([[-1.0, 0.01], [0.01, -1.0]], dtype=float)
+    weights = np.array([[0.1, 0.9], [0.9, 0.1]], dtype=float)
+
+    result = brinson_cumulative(rp, rb, weights, weights)
+
+    assert np.isfinite(result["total"])
+    assert np.isclose(
+        result["total"],
+        result["portfolio_cumulative"] - result["benchmark_cumulative"],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize("bad_return", [np.nan, np.inf, -np.inf])
+@pytest.mark.parametrize("target", ["portfolio", "benchmark"])
+def test_brinson_cumulative_rejects_nonfinite_component_returns(target, bad_return):
+    rp = np.array([[0.02, bad_return]], dtype=float)
+    rb = np.array([[0.01, 0.00]], dtype=float)
+    if target == "benchmark":
+        rp[0, 1] = 0.00
+        rb[0, 1] = bad_return
+    weights = np.array([[0.5, 0.5]], dtype=float)
+
+    with pytest.raises(ValueError, match="must be finite"):
+        brinson_cumulative(rp, rb, weights, weights)
+
+
+def test_brinson_cumulative_rejects_weighted_period_return_at_or_below_total_loss():
+    rp = np.array([[-0.75, 0.00]], dtype=float)
+    rb = np.array([[0.00, 0.00]], dtype=float)
+    portfolio_weights = np.array([[2.0, -1.0]], dtype=float)
+    benchmark_weights = np.array([[1.0, 0.0]], dtype=float)
+
+    with pytest.raises(ValueError, match="period returns must be finite and greater than -1"):
+        brinson_cumulative(rp, rb, portfolio_weights, benchmark_weights)
 
 
 def test_brinson_cumulative_single_period_from_1d_inputs():
@@ -151,8 +238,44 @@ def test_brinson_attribution_class_method_validation():
     ba = BrinsonAttribution()
     with pytest.raises(ValueError, match="Unknown attribution method"):
         ba.calculate(returns, method="nope")
-    with pytest.raises(NotImplementedError, match="not implemented"):
-        ba.calculate(returns, method="brinson_hood")
+
+
+def test_brinson_hood_method_is_a_bhb_alias_with_independent_oracle():
+    """The historical alias must be an implemented BHB decomposition, not a stub."""
+    from tests.oracles.attribution.brinson_oracle import brinson_bhb_reference
+
+    idx = pd.date_range("2024-01-31", periods=2, freq="ME")
+    returns = pd.DataFrame({"A": [0.04, -0.01], "B": [0.01, 0.03]}, index=idx)
+    benchmark_returns = pd.DataFrame({"A": [0.02, 0.00], "B": [0.00, 0.01]}, index=idx)
+    weights = pd.DataFrame({"A": [0.65, 0.40], "B": [0.35, 0.60]}, index=idx)
+
+    result = BrinsonAttribution().calculate(
+        returns,
+        benchmark_returns=benchmark_returns,
+        weights=weights,
+        method="brinson_hood",
+    )
+    canonical = BrinsonAttribution().calculate(
+        returns,
+        benchmark_returns=benchmark_returns,
+        weights=weights,
+        method="brinson",
+    )
+    pd.testing.assert_frame_equal(result, canonical)
+
+    benchmark_weights = np.full(2, 0.5)
+    for row, portfolio_row, benchmark_row, weight_row in zip(
+        result.itertuples(index=False),
+        returns.to_numpy(),
+        benchmark_returns.to_numpy(),
+        weights.to_numpy(),
+        strict=True,
+    ):
+        expected = brinson_bhb_reference(portfolio_row, benchmark_row, weight_row, benchmark_weights)
+        assert row.allocation == pytest.approx(expected["allocation"], abs=1e-15)
+        assert row.selection == pytest.approx(expected["selection"], abs=1e-15)
+        assert row.interaction == pytest.approx(expected["interaction"], abs=1e-15)
+        assert row.total == pytest.approx(expected["total"], abs=1e-15)
 
 
 def test_brinson_attribution_class_sector_mapping_aggregates_columns():

@@ -76,7 +76,8 @@ def _profile_workload(workload) -> tuple[float, list[dict]]:
             factor = workload.factor["factor"]
             prepare_factor_data(factor, prices, groupby=groups, periods=(1, 5), quantiles=5, max_loss=1)
         elif workload.returns is not None:
-            from fincore.metrics.risk import annual_volatility, sharpe_ratio
+            from fincore.metrics.ratios import sharpe_ratio
+            from fincore.metrics.risk import annual_volatility
 
             sharpe_ratio(workload.returns)
             annual_volatility(workload.returns)

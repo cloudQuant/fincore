@@ -21,10 +21,26 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+# ``python scripts/snapshot_public_api.py`` otherwise puts ``scripts/`` (not
+# the checkout root) on sys.path and may inspect an unrelated installed or
+# PYTHONPATH-shadowed fincore at runtime.  The AST scan and dynamic ``__all__``
+# probe must agree on this candidate source tree.
+def _is_checkout_path(entry: str) -> bool:
+    try:
+        return Path(entry or ".").resolve() == ROOT
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+sys.path[:] = [entry for entry in sys.path if not _is_checkout_path(entry)]
+sys.path.insert(0, str(ROOT))
 PACKAGE = ROOT / "fincore"
 
 SCHEMA_VERSION = 1
-SNAPSHOT_BASELINE = "0.3.x"
+SNAPSHOT_BASELINE = "0.4.0.dev0"
+DEFAULT_FIXTURE = ROOT / "tests" / "contracts" / "fixtures" / "public-api-0.4.0.dev0.json"
 
 #: Each public surface maps to exactly one semantic profile.
 SURFACE_PROFILES = {
@@ -33,6 +49,7 @@ SURFACE_PROFILES = {
     "fincore.pyfolio": "strict_pyfolio_0_9_6",
     "fincore.alphalens": "strict_alphalens_cloudquant_0_4_0",
     "fincore.metrics": "enhanced_v1",
+    "fincore.performance": "enhanced_v1",
     "fincore.risk": "enhanced_v1",
     "fincore.simulation": "enhanced_v1",
     "fincore.attribution": "enhanced_v1",
@@ -47,6 +64,7 @@ SURFACE_PROFILES = {
 _PACKAGE_SURFACES = {
     "fincore.alphalens",
     "fincore.metrics",
+    "fincore.performance",
     "fincore.risk",
     "fincore.simulation",
     "fincore.attribution",
@@ -91,7 +109,7 @@ def _signature(node: ast.AST) -> str | None:
     return None
 
 
-def _extract_all(tree: ast.AST) -> list[str] | None:
+def _extract_all(tree: ast.Module) -> list[str] | None:
     for node in tree.body:
         if isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
@@ -107,7 +125,7 @@ def _extract_all(tree: ast.AST) -> list[str] | None:
     return None
 
 
-def _public_definitions(tree: ast.AST) -> dict[str, str]:
+def _public_definitions(tree: ast.Module) -> dict[str, str]:
     definitions: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and not node.name.startswith("_"):
@@ -183,7 +201,13 @@ def build_snapshot() -> dict[str, object]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default=None, help="write the snapshot to this JSON path")
-    parser.add_argument("--check", default=None, help="compare against this fixture JSON and fail on drift")
+    parser.add_argument(
+        "--check",
+        nargs="?",
+        const=str(DEFAULT_FIXTURE),
+        default=None,
+        help="compare against a fixture JSON (defaults to the checked-in public API fixture)",
+    )
     args = parser.parse_args(argv)
 
     snapshot = build_snapshot()

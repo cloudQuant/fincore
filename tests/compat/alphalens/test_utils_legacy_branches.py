@@ -51,9 +51,16 @@ def test_strict_empty_factor_projection_not_all_nan() -> None:
 def test_strict_empty_factor_projection_non_dataframe_forward() -> None:
     idx = pd.MultiIndex.from_product([["2024-01-01"], ["A"]], names=("date", "asset"))
     factor = pd.Series([np.nan], index=idx)
-    assert _strict_empty_factor_projection(
-        factor, pd.Series([0.01]), groupby=None, groupby_labels=None, max_loss=0.35  # type: ignore[arg-type]
-    ) is None
+    assert (
+        _strict_empty_factor_projection(
+            factor,
+            pd.Series([0.01]),
+            groupby=None,
+            groupby_labels=None,
+            max_loss=0.35,  # type: ignore[arg-type]
+        )
+        is None
+    )
 
 
 def test_strict_empty_factor_projection_bad_max_loss() -> None:

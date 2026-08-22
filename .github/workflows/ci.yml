@@ -505,6 +505,19 @@ jobs:
       - name: Verify release candidate digest
         run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json
 
+      # These are real candidate installs, not a check that two text files
+      # contain plausible version strings.  The command logs the versions seen
+      # inside each new venv, runs pip check, and imports the installed wheel.
+      - name: Verify candidate with oldest-resolvable dependencies
+        run: >-
+          python scripts/check_dependency_matrix.py
+          --wheel "$(find dist -name '*.whl' -print -quit)" --lane minimum
+
+      - name: Verify candidate with newest dependency floors
+        run: >-
+          python scripts/check_dependency_matrix.py
+          --wheel "$(find dist -name '*.whl' -print -quit)" --lane latest
+
       # Wheel-consumer smoke: pip --target installs the wheel (plus extras)
       # into isolated targets and fresh ``-S -E`` subprocesses assert package
       # provenance, star-import safety, and DependencyError gates.  The full

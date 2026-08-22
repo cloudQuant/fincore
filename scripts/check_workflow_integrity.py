@@ -16,6 +16,7 @@ installed).
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -66,6 +67,22 @@ def _missing_needs(doc: object, workflow_name: str) -> list[str]:
     return missing
 
 
+def _unsupported_gh_download_options(text: str, workflow_name: str) -> list[str]:
+    """Reject GitHub CLI options that cannot select a candidate artifact.
+
+    ``gh run download`` accepts a run id (or an interactive choice), not a
+    ``--workflow`` selector.  A release workflow must resolve an exact CI run
+    id first; otherwise it either fails at runtime or downloads an unrelated
+    candidate.  Join shell continuations before scanning so multiline steps
+    are handled the same way as one-line commands.
+    """
+    normalized = text.replace("\\\n", " ")
+    pattern = re.compile(r"\bgh\s+run\s+download\b[^\n]*\s--workflow(?:=|\s)")
+    if pattern.search(normalized):
+        return [f"{workflow_name}: gh run download does not support --workflow; resolve an exact run id first"]
+    return []
+
+
 def check_workflow(path: Path) -> list[str]:
     """Return violations for a single workflow file (empty means valid)."""
     text = path.read_text(encoding="utf-8")
@@ -79,6 +96,10 @@ def check_workflow(path: Path) -> list[str]:
     # 2. Missing needs references.
     doc = yaml.safe_load(text)
     violations.extend(_missing_needs(doc, path.name))
+
+    # 3. Shell-level candidate-artifact misuse that YAML schema validation
+    # cannot see.
+    violations.extend(_unsupported_gh_download_options(text, path.name))
 
     return violations
 

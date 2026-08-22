@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   # Release gate: every blocking check (tests, lint, type, security,
   # coverage, docs, wheel consumers) must pass before the PyPI publish job
@@ -11,9 +14,12 @@ jobs:
   # release can never ship from a tree that failed any of them.
   verify:
     runs-on: ubuntu-latest
+    outputs:
+      ci_run_id: ${{ steps.candidate.outputs.ci_run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -92,12 +98,21 @@ jobs:
       - name: Docs build (strict)
         run: python -m mkdocs build --strict
 
-      - name: Download CI candidate
+      - name: Resolve and download the exact CI candidate
+        id: candidate
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          gh run download --name dist --dir dist/ \
-            --workflow ci.yml --repo ${{ github.repository }}
+          release_sha="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          ci_run_id="$(gh run list --repo "${{ github.repository }}" --workflow ci.yml \
+            --commit "${release_sha}" --status success --limit 1 --json databaseId --jq '.[0].databaseId')"
+          if [[ -z "${ci_run_id}" || "${ci_run_id}" == "null" ]]; then
+            echo "No successful CI candidate exists for ${RELEASE_TAG} (${release_sha})" >&2
+            exit 1
+          fi
+          echo "ci_run_id=${ci_run_id}" >> "${GITHUB_OUTPUT}"
+          gh run download "${ci_run_id}" --name dist --dir dist/ --repo "${{ github.repository }}"
 
       - name: Check dist
         run: twine check dist/*.whl dist/*.tar.gz
@@ -116,23 +131,27 @@ jobs:
       - name: Packaging contract tests
         run: pytest -o addopts='' tests/packaging -q --maxfail=0
 
+      - name: Check third-party notice inventory (release profile)
+        run: python scripts/check_notices.py --require-approved
+
   publish:
     runs-on: ubuntu-latest
     needs: [verify]
     environment:
       name: pypi
     permissions:
+      contents: read
       id-token: write  # Required for trusted publishing
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download CI candidate
+      - name: Download verified CI candidate
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download --name dist --dir dist/ \
-            --workflow ci.yml --repo ${{ github.repository }}
+          gh run download "${{ needs.verify.outputs.ci_run_id }}" \
+            --name dist --dir dist/ --repo "${{ github.repository }}"
 
       - name: Verify candidate digest
         run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json

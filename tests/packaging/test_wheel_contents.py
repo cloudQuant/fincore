@@ -168,12 +168,13 @@ def test_runtime_assets_ship_in_wheel(wheel_path: Path) -> None:
 
 
 def test_wheel_includes_the_approved_apache_license_only(wheel_path: Path) -> None:
-    """The artifact carries the project license; notices need a separate approval."""
+    """The artifact carries SPDX metadata and the project license file."""
     with zipfile.ZipFile(wheel_path) as zf:
         license_files = [name for name in zf.namelist() if name.endswith(".dist-info/licenses/LICENSE")]
         assert len(license_files) == 1, f"expected one bundled LICENSE, found {license_files}"
         license_text = zf.read(license_files[0]).decode("utf-8")
     assert "Apache License" in license_text
+    assert _metadata(wheel_path)["License-Expression"] == "Apache-2.0"
     assert not [name for name in _names(wheel_path) if "THIRD_PARTY_NOTICES" in name], (
         "third-party notice files require a separate human license decision"
     )

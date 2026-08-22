@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from fincore.performance import DisclosureContext
     from fincore.report.model import ReportModel
 
 __all__ = ["generate_pdf"]
@@ -32,6 +33,7 @@ def generate_pdf(
     period="daily",
     *,
     model: ReportModel | None = None,
+    disclosure_context: DisclosureContext | None = None,
 ):
     """Generate a PDF report by rendering the HTML report via Playwright.
 
@@ -59,6 +61,7 @@ def generate_pdf(
             rolling_window=rolling_window,
             period=period,
             model=model,
+            disclosure_context=disclosure_context,
         )
 
         # 2) Render HTML to PDF via Playwright.

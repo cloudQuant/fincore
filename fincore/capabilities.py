@@ -59,6 +59,25 @@ _CAPABILITIES: tuple[Capability, ...] = (
         docs_path="api/risk.md",
         rationale="GARCH/EGARCH/GJR-GARCH (1,1) kernels with corrected forecast recursions and convergence checks; higher orders unsupported until fully verified.",
     ),
+    Capability(
+        id="risk.walk_forward_validation",
+        public_path="fincore.risk.build_risk_validation_report",
+        domain="risk",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "A RiskModelSpec plus finite, sorted returns passed through walk_forward_var; only one-step, "
+            "lower-tail VaR is currently supported."
+        ),
+        output_contract=(
+            "A JSON-serializable event ledger containing every out-of-sample forecast, exception, refit, "
+            "fit parameters, and input/backtest digests."
+        ),
+        docs_path="guide/risk-validation.md",
+        rationale=(
+            "The walk-forward VaR boundary has independent calibration and no-look-ahead checks, but it is "
+            "experimental until broader risk-model validation and release gates are complete."
+        ),
+    ),
     # --- strict compatibility façades --------------------------------------
     Capability(
         id="compat.empyrical",
@@ -105,11 +124,11 @@ _CAPABILITIES: tuple[Capability, ...] = (
         id="attribution.brinson_hood",
         public_path="fincore.attribution.BrinsonAttribution.calculate",
         domain="attribution",
-        status=STATUS_NOT_IMPLEMENTED,
-        input_contract="(unavailable) would be portfolio/benchmark returns and weights.",
-        output_contract="(unavailable) would be Brinson-Hood-Faber attribution by period.",
+        status=STATUS_STABLE,
+        input_contract="Portfolio/benchmark return panels and optional portfolio weights.",
+        output_contract="Per-period Brinson--Hood--Beebower allocation, selection and interaction effects.",
         docs_path="api/attribution.md",
-        rationale="Public option that raises NotImplementedError until a verified implementation ships.",
+        rationale="Historical method alias for the formula-tested BHB decomposition; it no longer exposes a stub.",
     ),
     Capability(
         id="attribution.fama_french_model",
@@ -198,10 +217,16 @@ _CAPABILITIES: tuple[Capability, ...] = (
         public_path="fincore.report.create_strategy_report",
         domain="report",
         status=STATUS_STABLE,
-        input_contract="Returns Series (required) plus optional benchmark/positions/transactions/trades.",
-        output_contract="An HTML or PDF strategy report at the caller-selected path.",
+        input_contract=(
+            "Validated periodic returns plus optional benchmark/positions/transactions/trades; "
+            "an enhanced DisclosureContext declares cashflow, fee and unit semantics."
+        ),
+        output_contract=(
+            "An HTML or PDF strategy report with calculation, units, sample and data-quality disclosure; "
+            "optional provenance sidecar."
+        ),
         docs_path="api/report.md",
-        rationale="Compute-once/render-many report pipeline with deterministic sections.",
+        rationale="Compute-once/render-many report pipeline with deterministic sections and explicit performance context.",
     ),
     # --- factor analysis ---------------------------------------------------
     Capability(
@@ -213,6 +238,100 @@ _CAPABILITIES: tuple[Capability, ...] = (
         output_contract="A PreparedFactorData container with documented loss accounting.",
         docs_path="api/factor-analysis.md",
         rationale="Enhanced prepare/analyze/render workflow; Beta integration.",
+    ),
+    Capability(
+        id="factor_analysis.prepare_by_horizon",
+        public_path="fincore.factor_analysis.prepare_factor_data_by_horizon",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Factor, prices, and unique forward periods; full-sample filter_zscore is rejected on this causal "
+            "enhanced route."
+        ),
+        output_contract=(
+            "A MultiHorizonPreparedFactorData mapping whose per-period PreparedFactorData and loss report retain "
+            "observations available for that horizon."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Per-horizon availability prevents long-horizon missing returns from removing short-horizon evidence, "
+            "but costs, capacity, corporate-action/calendar provenance, and full workflow integration remain unsealed."
+        ),
+    ),
+    Capability(
+        id="factor_analysis.costs",
+        public_path="fincore.factor_analysis.apply_factor_costs",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Gross-normalized enhanced factor weights, same-currency dollar-volume panel, simple gross returns, "
+            "an explicit FactorCostModel, and complete borrow ledgers whenever weights are short."
+        ),
+        output_contract=(
+            "An immutable gross-to-net cost ledger with entry/rebalance trade weights, spread/impact/borrow costs, "
+            "participation, and the binding hard capacity inequality."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "A labelled arithmetic accounting boundary with independent reconciliation fixtures; it is not an "
+            "execution simulator, calibrated market-impact model, or complete research-trial workflow."
+        ),
+    ),
+    Capability(
+        id="factor_analysis.pit_prepare",
+        public_path="fincore.factor_analysis.prepare_pit_factor_data",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "A point-in-time factor ledger with asset/as_of/known_at/effective_from/value/in_universe, "
+            "prices, and sorted evaluation dates."
+        ),
+        output_contract=(
+            "PreparedFactorData from revisions known and effective at each evaluation date; "
+            "full-sample filter_zscore is rejected."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Causal PIT materialization is independently timeline-tested, but corporate-action/calendar provenance, "
+            "liquidity/borrow provenance, execution calibration, and complete workflow integration remain unsealed."
+        ),
+    ),
+    Capability(
+        id="factor_analysis.inference",
+        public_path="fincore.factor_analysis.factor_model_inference",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "An enhanced FactorAnalysisModel plus an FDR alpha; uses its stored aggregate date-by-period IC snapshot."
+        ),
+        output_contract=(
+            "ICInferenceResult with sample counts, two-sided Student-t p-values, BH q-values, "
+            "discoveries, and an explicit untestable-period marker."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Statsmodels/SciPy-oracle-tested IC/FDR post-analysis; IC tests remain i.i.d., while the separate "
+            "Fama-MacBeth helper supports Newey-West. Trial registry, clustered inference, and report integration remain incomplete."
+        ),
+    ),
+    Capability(
+        id="factor_analysis.fama_macbeth",
+        public_path="fincore.factor_analysis.fama_macbeth",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Labelled return and exposure panels with at least two assets; optional Newey-West requires a "
+            "chronologically ordered returns index and an explicit lag count."
+        ),
+        output_contract=(
+            "Cross-sectional intercept/exposure means, standard errors and t-statistics; DataFrame attrs disclose "
+            "the i.i.d. or Newey-West covariance profile, lags, and fitted cross-section count."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Asset-label alignment and Bartlett Newey-West standard errors are independently statsmodels-tested, "
+            "but multi-factor, clustered, trial-registry, and report integration remain incomplete."
+        ),
     ),
     Capability(
         id="factor_analysis.analyze",

@@ -27,8 +27,38 @@ print(var.sign_convention)
 ```
 
 `method` can be `historical` (empirical quantile), `evt` (extreme-value
-theory) or `garch` (conditional volatility). The underlying EVT/GARCH kernels
-in `fincore.risk.evt` and `fincore.risk.garch` are unchanged.
+theory) or `garch` (conditional volatility). The underlying legacy EVT/GARCH
+kernels live in `fincore.risk.evt` and `fincore.risk.garch`; their enhanced
+adapters preserve the `losses_negative` sign convention.
+
+## EVT tail-index convention
+
+`hill_estimator` estimates the extreme-value tail index from positive tail
+magnitudes. With a positive threshold `u`, it returns the threshold Hill
+estimate `mean(log(x / u))` over observations `x > u`, together with those
+selected magnitudes. Lower return tails are reflected into positive loss
+magnitudes first. It is a legacy estimator rather than an out-of-sample
+validated risk model, so use its threshold and tail choice as explicit model
+assumptions.
+
+## EVT threshold and Expected Shortfall semantics
+
+For a GPD peaks-over-threshold (POT) estimate, `alpha` is an unconditional
+return-tail probability. An explicit `threshold` is accepted only when the
+fitted exceedance fraction covers it: `alpha <= n_exceed / n_total`. Otherwise
+the body of the return distribution is not modelled by the conditional GPD and
+the function raises `ValueError` rather than silently extrapolating below the
+threshold. When `evt_var` or `evt_cvar` receives no threshold, it keeps the
+usual 90th percentile of the selected tail if that covers `alpha`; otherwise
+it selects the highest empirical threshold that still does. `gpd_fit` on its own
+continues to use the 90th tail percentile because it fits parameters rather
+than answering a particular VaR/ES query.
+
+GEV estimates are for the selected **block-extreme** distribution, so their
+`alpha` is a block-tail probability, not automatically a daily probability.
+GEV Expected Shortfall is the conditional tail mean beyond GEV VaR and is
+defined only for `xi < 1`; it is not an arbitrary constant increment from
+VaR. These legacy estimators are still not out-of-sample validated models.
 
 ## Backtesting VaR
 
@@ -55,6 +85,43 @@ assert result.exceptions == 1
 Both are likelihood-ratio tests with an explicit null hypothesis. When the
 sample is too small to be meaningful (fewer than 3 observations, or fewer than
 5 expected exceptions), the result is `inconclusive` rather than a silent pass.
+
+## Auditable walk-forward VaR (experimental)
+
+For the enhanced walk-forward boundary, use `RiskModelSpec` and
+`walk_forward_var`. Each forecast uses only data strictly before its timestamp.
+`walk_forward_var` returns a `WalkForwardVaRResult`; pass that result to
+`build_risk_validation_report` to write every forecast, realised return,
+exception, refit parameters, timestamp index name/timezone, and both
+input/backtest digests to a deterministic JSON artifact. When a VaR backtest
+is available, the artifact also contains a traffic-light zone together with
+the observations and confidence level used to derive that reference field.
+Timezone metadata is emitted only as a portable IANA name or fixed UTC-offset
+token; a timezone that cannot be represented and replayed that way is rejected
+when the report is built. Timestamp index names must likewise be native JSON
+scalars so the backtest digest can be replayed exactly.
+
+```python
+import numpy as np
+import pandas as pd
+
+from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+
+returns = pd.Series(
+    np.linspace(-0.02, 0.02, 60),
+    index=pd.date_range("2024-01-02", periods=60, freq="B", tz="UTC"),
+)
+spec = RiskModelSpec(confidence_level=0.95, distribution="normal", window=40, refit_cadence=5)
+walk_forward = walk_forward_var(returns, spec)
+audit_report = build_risk_validation_report(walk_forward)
+audit_report.write_json("risk-validation.json")
+```
+
+This surface is **experimental**. It currently validates one-step lower-tail
+VaR with Normal or finite-sample calibrated historical forecasts; it does not
+turn legacy EVT/GARCH estimates into an out-of-sample validated model. Its
+Basel traffic-light and backtest fields are reference aids, not regulatory
+approval or a compliance certification.
 
 ## Backtesting ES (experimental)
 

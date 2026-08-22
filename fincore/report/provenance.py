@@ -13,8 +13,9 @@ import json
 import platform
 import subprocess
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePath, PureWindowsPath
 from typing import Any, Mapping
+from urllib.parse import urlsplit
 
 import pandas as pd
 
@@ -32,6 +33,8 @@ _SECRET_KEY_MARKERS = (
     "credential",
     "authorization",
 )
+_OMIT = object()
+_REDACTED = "[redacted]"
 
 
 def _sha256_pandas(obj: pd.Series | pd.DataFrame) -> str:
@@ -39,15 +42,69 @@ def _sha256_pandas(obj: pd.Series | pd.DataFrame) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _contains_secret_marker(value: str) -> bool:
+    return any(marker in value.lower() for marker in _SECRET_KEY_MARKERS)
+
+
+def _is_absolute_local_path(value: str) -> bool:
+    """Recognize local absolute paths independently of the host platform."""
+
+    text = value.strip()
+    if text.startswith(("/", "\\", "~")):
+        return True
+    if PureWindowsPath(text).is_absolute():
+        return True
+    return urlsplit(text).scheme.lower() == "file"
+
+
+def _sanitize_configuration_value(value: Any) -> Any:
+    """Return a JSON-safe configuration value or ``_OMIT``.
+
+    Configuration now includes structured report disclosures.  Sanitize every
+    nested level so a note or field cannot bypass the manifest's credential and
+    local-path guarantees.
+    """
+
+    if isinstance(value, Mapping):
+        result: dict[str, Any] = {}
+        for key, nested_value in value.items():
+            name = str(key)
+            if _contains_secret_marker(name):
+                continue
+            sanitized = _sanitize_configuration_value(nested_value)
+            if sanitized is not _OMIT:
+                result[name] = sanitized
+        return result
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [sanitized for item in value if (sanitized := _sanitize_configuration_value(item)) is not _OMIT]
+    if isinstance(value, PurePath):
+        return _OMIT
+    if isinstance(value, str):
+        if _is_absolute_local_path(value):
+            return _OMIT
+        if _contains_secret_marker(value):
+            return _REDACTED
+        return value
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+
+    item = getattr(value, "item", None)
+    if callable(item):
+        scalar = item()
+        if scalar is not value:
+            return _sanitize_configuration_value(scalar)
+    return _sanitize_configuration_value(str(value))
+
+
 def _sanitize_configuration(configuration: Mapping[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in configuration.items():
-        lowered = str(key).lower()
-        if any(marker in lowered for marker in _SECRET_KEY_MARKERS):
+        name = str(key)
+        if _contains_secret_marker(name):
             continue
-        if isinstance(value, str) and value.startswith(("/", "\\", "~")):
-            continue
-        result[key] = value
+        sanitized = _sanitize_configuration_value(value)
+        if sanitized is not _OMIT:
+            result[name] = sanitized
     return result
 
 

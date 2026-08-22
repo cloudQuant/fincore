@@ -170,10 +170,29 @@ def brinson_results(
 
 
 def _carino_k(rp: float, rb: float) -> float:
-    """Carino linking constant for a single period."""
-    if abs(rp - rb) < 1e-15:
+    """Return a numerically stable Carino linking constant.
+
+    Algebraically, the log-return difference is
+    ``log1p((rp - rb) / (1 + rb))``.  Evaluating that expression avoids the
+    catastrophic cancellation caused by subtracting two nearly equal logs.
+    The equality branch is the analytic limit, not a tolerance-based shortcut,
+    so distinguishable close returns still use the stable difference formula.
+    """
+    if rp == rb:
         return 1.0 / (1.0 + rp)
-    return float((np.log1p(rp) - np.log1p(rb)) / (rp - rb))
+    return float(np.log1p((rp - rb) / (1.0 + rb)) / (rp - rb))
+
+
+def _validate_finite(values: np.ndarray, *, label: str) -> None:
+    """Reject non-finite component data before aggregate calculation."""
+    if not np.all(np.isfinite(values)):
+        raise ValueError(f"{label} must be finite.")
+
+
+def _validate_carino_period_returns(values: np.ndarray, *, label: str) -> None:
+    """Validate the aggregate returns used by Carino's log transform."""
+    if not np.all(np.isfinite(values)) or np.any(values <= -1.0):
+        raise ValueError(f"{label} must be finite and greater than -1 for Carino linking.")
 
 
 def brinson_cumulative(
@@ -184,10 +203,14 @@ def brinson_cumulative(
 ) -> dict[str, float]:
     """Calculate cumulative Brinson attribution using Carino geometric linking.
 
-    Multi-period attribution must compound geometrically: the arithmetic
-    per-period effects are mapped onto the geometric active return via the
-    Carino linking constant ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)``
-    so the linked effects reconcile to ``(1+R_p)/(1+R_b) - 1``.
+    Multi-period attribution must compound geometrically.  The arithmetic
+    per-period effects are scaled by the Carino period constants
+    ``k_t = [ln(1+r^p_t) - ln(1+r^b_t)] / (r^p_t - r^b_t)`` and the global
+    constant ``K = [ln(1+R_p) - ln(1+R_b)] / (R_p-R_b)``, where ``R_p`` and
+    ``R_b`` are the compounded portfolio and benchmark returns.  Each effect
+    is linked as ``sum_t (k_t / K) * effect_t``.  The returned effects
+    therefore directly reconcile to the standard BHB cumulative active
+    return ``R_p - R_b``.
 
     Parameters
     ----------
@@ -221,8 +244,15 @@ def brinson_cumulative(
     if not (rp.shape == rb.shape == wp.shape == wb.shape):
         raise ValueError("portfolio_returns, benchmark_returns, and weights must have consistent shapes.")
 
+    _validate_finite(rp, label="portfolio and benchmark returns")
+    _validate_finite(rb, label="portfolio and benchmark returns")
+    _validate_finite(wp, label="portfolio and benchmark weights")
+    _validate_finite(wb, label="portfolio and benchmark weights")
+
     portfolio_period = np.sum(wp * rp, axis=1)
     benchmark_period = np.sum(wb * rb, axis=1)
+    _validate_carino_period_returns(portfolio_period, label="portfolio and benchmark period returns")
+    _validate_carino_period_returns(benchmark_period, label="portfolio and benchmark period returns")
 
     n_periods = rp.shape[0]
     allocation = np.empty(n_periods)
@@ -234,19 +264,18 @@ def brinson_cumulative(
         selection[t] = float(attr["selection"])
         interaction[t] = float(attr["interaction"])
 
-    k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
-    ksum = float(k.sum())
-
-    if ksum == 0.0:
-        alloc_cum = sel_cum = inter_cum = 0.0
-    else:
-        w_k = k / ksum
-        alloc_cum = float(np.sum(w_k * allocation))
-        sel_cum = float(np.sum(w_k * selection))
-        inter_cum = float(np.sum(w_k * interaction))
-
     portfolio_cum = float(np.prod(1.0 + portfolio_period) - 1.0)
     benchmark_cum = float(np.prod(1.0 + benchmark_period) - 1.0)
+    _validate_carino_period_returns(
+        np.array([portfolio_cum, benchmark_cum]), label="cumulative portfolio and benchmark returns"
+    )
+
+    k = np.array([_carino_k(a, b) for a, b in zip(portfolio_period, benchmark_period, strict=True)])
+    global_k = _carino_k(portfolio_cum, benchmark_cum)
+    linked_scale = k / global_k
+    alloc_cum = float(np.sum(linked_scale * allocation))
+    sel_cum = float(np.sum(linked_scale * selection))
+    inter_cum = float(np.sum(linked_scale * interaction))
 
     return {
         "allocation": alloc_cum,
@@ -298,16 +327,16 @@ class BrinsonAttribution:
         weights : pd.DataFrame, optional
             Portfolio weights. If None, uses equal weights.
         method : str, default "brinson"
-            Attribution method. Options: 'brinson', 'brinson_hood'.
+            Attribution method. ``"brinson"`` and the historical
+            ``"brinson_hood"`` alias both select the standard
+            Brinson--Hood--Beebower (BHB) arithmetic decomposition.
 
         Returns
         -------
         pd.DataFrame
             Attribution results by period.
         """
-        if method == "brinson_hood":
-            raise NotImplementedError("brinson_hood method is not implemented yet.")
-        if method != "brinson":
+        if method not in {"brinson", "brinson_hood"}:
             raise ValueError("Unknown attribution method. Use: 'brinson' or 'brinson_hood'.")
 
         # Apply sector mapping if provided

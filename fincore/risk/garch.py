@@ -54,7 +54,8 @@ class GARCHResult:
         One of ``garch``, ``egarch`` or ``gjrgarch``; controls the forecast
         recursion.
     converged : bool
-        Whether the optimizer reported successful convergence.
+        Whether the optimizer reported success and the fitted parameters pass
+        the finite/stationarity checks for the selected GARCH family.
     """
 
     params: dict[str, float]
@@ -230,13 +231,20 @@ class GARCH:
         # Standardized residuals
         residuals = (y - mu) / np.sqrt(cond_var)
 
+        is_stationary = bool(
+            np.all(np.isfinite((omega, alpha, beta)))
+            and omega > 0.0
+            and alpha >= 0.0
+            and beta >= 0.0
+            and alpha + beta < 1.0
+        )
         return GARCHResult(
             params={"mu": mu, "omega": omega, "alpha": alpha, "beta": beta},
             conditional_var=cond_var,
             residuals=residuals,
             log_likelihood=-result.fun,
             model_type="garch",
-            converged=bool(result.success),
+            converged=bool(result.success) and is_stationary,
         )
 
     def _neg_log_likelihood(
@@ -329,7 +337,8 @@ class EGARCH:
         Parameters
         ----------
         returns : Series or ndarray
-            Return series.
+            Return series with at least ten finite observations and strictly
+            positive finite sample variance.
 
         Returns
         -------
@@ -342,6 +351,10 @@ class EGARCH:
 
         if T < 10:
             raise ValueError("Insufficient data for EGARCH estimation")
+        with np.errstate(over="ignore", invalid="ignore"):
+            initial_variance = float(np.var(y))
+        if not np.all(np.isfinite(y)) or not np.isfinite(initial_variance) or initial_variance <= 0.0:
+            raise ValueError("EGARCH estimation requires finite returns with positive variance")
 
         # Initialize EGARCH params: omega, alpha, gamma, beta
         init_params = [0.01, 0.1, -0.1, 0.95]
@@ -363,17 +376,14 @@ class EGARCH:
 
         omega, alpha, gamma, beta = result.x
 
-        # Compute conditional variances
-        log_var = np.zeros(T)
-        eps = y / np.std(y)  # Initial standardization
-
-        for t in range(1, T):
-            z_prev = eps[t - 1]
-            log_var[t] = omega + alpha * np.abs(z_prev) + gamma * z_prev + beta * log_var[t - 1]
-
-        cond_var = np.exp(log_var)
+        # Compute the same conditional-innovation recursion used by the
+        # likelihood.  Forecasting consumes these standardized residuals, so
+        # substituting a whole-sample standard deviation here would make the
+        # fitted variance path and forecast model inconsistent.
+        cond_var = self._compute_conditional_var(y, omega, alpha, gamma, beta)
         residuals = y / np.sqrt(cond_var)
 
+        is_stationary = bool(np.all(np.isfinite((omega, alpha, gamma, beta))) and alpha >= 0.0 and abs(beta) < 1.0)
         return GARCHResult(
             params={
                 "omega": omega,
@@ -385,7 +395,7 @@ class EGARCH:
             residuals=residuals,
             log_likelihood=-result.fun,
             model_type="egarch",
-            converged=bool(result.success),
+            converged=bool(result.success) and is_stationary,
         )
 
     def _neg_log_likelihood(
@@ -395,17 +405,16 @@ class EGARCH:
     ) -> float:
         """Negative log-likelihood for EGARCH."""
         omega, alpha, gamma, beta = params
-        T = len(y)
-
-        # Compute log variances
-        log_var = np.zeros(T)
-        eps = y / np.std(y)  # Standardize
-
-        for t in range(1, T):
-            z_prev = eps[t - 1]
-            log_var[t] = omega + alpha * np.abs(z_prev) + gamma * z_prev + beta * log_var[t - 1]
-
-        sigma2 = np.exp(log_var)
+        with np.errstate(over="ignore", invalid="ignore"):
+            initial_variance = float(np.var(y))
+        if not np.all(np.isfinite(y)) or not np.isfinite(initial_variance) or initial_variance <= 0.0:
+            return 1e100
+        sigma2 = self._compute_conditional_var(y, omega, alpha, gamma, beta)
+        if not np.all(np.isfinite(sigma2)) or np.any(sigma2 <= 0.0):
+            # L-BFGS-B probes parameters outside the finite likelihood domain.
+            # Return a finite penalty so its numerical derivative remains
+            # defined instead of leaking an overflow warning to callers.
+            return 1e100
 
         # Suppress numerical warnings during optimization
         # These warnings are expected during early iterations and don't affect final results
@@ -414,7 +423,40 @@ class EGARCH:
             sigma2_valid = sigma2[1:]
             loglik = -0.5 * np.sum(np.log(2 * np.pi * sigma2_valid) + eps_valid**2)
 
+        if not np.isfinite(loglik):
+            return 1e100
         return float(-loglik)
+
+    @staticmethod
+    def _compute_conditional_var(
+        y: np.ndarray,
+        omega: float,
+        alpha: float,
+        gamma: float,
+        beta: float,
+    ) -> np.ndarray:
+        """Return the EGARCH(1,1) variance path with conditional shocks.
+
+        ``z[t-1]`` is standardized by its own preceding conditional variance,
+        matching the model equation and the residuals exposed in
+        :class:`GARCHResult`.
+        """
+        t = len(y)
+        sigma2 = np.empty(t, dtype=float)
+        with np.errstate(over="ignore", invalid="ignore"):
+            initial_variance = float(np.var(y))
+        if not np.isfinite(initial_variance) or initial_variance <= 0.0:
+            return np.full(t, np.nan, dtype=float)
+        sigma2[0] = initial_variance
+        log_variance = np.log(initial_variance)
+
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            for index in range(1, t):
+                z_previous = y[index - 1] / np.sqrt(sigma2[index - 1])
+                log_variance = omega + alpha * np.abs(z_previous) + gamma * z_previous + beta * log_variance
+                sigma2[index] = np.exp(log_variance)
+
+        return sigma2
 
 
 class GJRGARCH:
@@ -500,6 +542,14 @@ class GJRGARCH:
 
         residuals = y / np.sqrt(cond_var)
 
+        is_stationary = bool(
+            np.all(np.isfinite((omega, alpha, gamma, beta)))
+            and omega > 0.0
+            and alpha >= 0.0
+            and gamma >= 0.0
+            and beta >= 0.0
+            and alpha + 0.5 * gamma + beta < 1.0
+        )
         return GARCHResult(
             params={
                 "omega": omega,
@@ -511,7 +561,7 @@ class GJRGARCH:
             residuals=residuals,
             log_likelihood=-result.fun,
             model_type="gjrgarch",
-            converged=bool(result.success),
+            converged=bool(result.success) and is_stationary,
         )
 
     def _neg_log_likelihood(

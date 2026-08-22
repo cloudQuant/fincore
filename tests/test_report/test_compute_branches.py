@@ -204,8 +204,6 @@ def test_compute_trades_minimal_columns() -> None:
 
 
 def test_compute_trades_all_long() -> None:
-    trades = pd.DataFrame(
-        {"pnlcomm": [10.0, -5.0, 20.0], "long": [1, 1, 1]}
-    )
+    trades = pd.DataFrame({"pnlcomm": [10.0, -5.0, 20.0], "long": [1, 1, 1]})
     result = _compute_trades(trades)
     assert "Short Win Rate" not in result["trade_stats"]

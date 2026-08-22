@@ -165,9 +165,7 @@ class TestRegisteredRollingTargets:
     def test_direct_rolling_beta(self, returns, factor_returns):
         from fincore.core.engine import _rolling_beta
 
-        result = _rolling_beta(
-            returns, factor_returns=factor_returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0)
-        )
+        result = _rolling_beta(returns, factor_returns=factor_returns, window=60, ann=252.0, sqrt_ann=np.sqrt(252.0))
         assert len(result) > 0
 
     def test_direct_rolling_beta_requires_factor(self, returns):

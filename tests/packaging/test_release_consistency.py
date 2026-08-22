@@ -113,3 +113,13 @@ def test_release_consistency_rejects_prohibited_artifact_requirements(
     assert result.returncode == 1, f"release consistency accepted {artifact} metadata: {requirement!r}"
     assert requirement in result.stdout
     assert "Traceback" not in result.stdout + result.stderr
+
+
+@pytest.mark.p3
+def test_release_consistency_accepts_current_pep440_development_version(clean_dist: Path) -> None:
+    """A development build has a PEP 440 version but deliberately no release tag."""
+    result = _release_check(clean_dist)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "CHANGELOG version statement (0.4.0.dev0) equals pyproject (0.4.0.dev0)" in result.stdout
+    assert "development version; skipping release-tag check" in result.stdout

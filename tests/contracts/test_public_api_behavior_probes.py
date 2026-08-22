@@ -8,11 +8,17 @@ unchanged.  Probes use minimal fixtures and never touch the enhanced profiles.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from fincore import empyrical
+from scripts.snapshot_public_api import SURFACE_PROFILES, build_snapshot
+
+PROBE_FIXTURE = Path(__file__).parent / "fixtures" / "public-api-probes-0.3.x.json"
 
 
 def _returns(values: list[float]) -> pd.Series:
@@ -61,3 +67,19 @@ def test_empyrical_public_symbols_present() -> None:
 def test_empyrical_does_not_expose_enhanced_stateful_class() -> None:
     assert not hasattr(empyrical, "AnalysisContext")
     assert not hasattr(empyrical, "RollingEngine")
+
+
+def test_probe_registry_references_only_frozen_strict_public_paths() -> None:
+    registry = json.loads(PROBE_FIXTURE.read_text(encoding="utf-8"))
+    snapshot = build_snapshot()
+    public_paths = {
+        entry["public_path"]
+        for surface in snapshot["surfaces"]
+        for entry in snapshot["surfaces"][surface]["entries"].values()
+        if SURFACE_PROFILES[surface].startswith("strict_")
+    }
+
+    assert registry["probes"]
+    for probe in registry["probes"]:
+        path = probe["public_path"]
+        assert path == "fincore.empyrical" or path in public_paths

@@ -1,8 +1,8 @@
 """Executable documentation examples.
 
 Every code block shown in README.md, docs/MIGRATION.md, and the MkDocs
-getting-started pages that claims to run against fincore 0.3.0 is mirrored
-here as a real test.  Documentation code must never be written first and
+getting-started pages that claims to run against the current fincore release is
+mirrored here as a real test. Documentation code must never be written first and
 guessed later: this file is the executable contract for those snippets.
 
 Keep each test aligned with the corresponding documentation block.  When a
@@ -109,6 +109,65 @@ def test_quickstart_flat_api_example() -> None:
     assert np.isfinite(sr)
     assert md < 0
     assert np.isfinite(ar)
+
+
+# ---------------------------------------------------------------------------
+# Performance-return semantics guide
+# ---------------------------------------------------------------------------
+
+
+def test_performance_cashflow_semantics_example() -> None:
+    # mkdocs_docs/guide/performance-semantics.md "Cashflow-adjusted" block.
+    from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
+
+    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
+    valuations = pd.Series([100.0, 110.0, 121.0], index=dates)
+    cashflows = pd.Series([10.0], index=[dates[1]])
+
+    period_returns = cashflow_adjusted_returns(valuations, cashflows, timing="end")
+    total_return = cashflow_adjusted_twr(valuations, cashflows, timing="end")
+
+    assert period_returns.round(12).tolist() == [0.0, 0.1]
+    assert round(total_return, 12) == 0.1
+
+
+def test_performance_transaction_ledger_example() -> None:
+    # mkdocs_docs/guide/performance-semantics.md transaction ledger block.
+    from fincore.performance import cashflow_adjusted_twr
+
+    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
+    ledger = pd.DataFrame(
+        {"amount": [10.0, -5.0], "timing": ["start", "end"]},
+        index=[dates[1], dates[1]],
+    )
+    one_period = cashflow_adjusted_twr(
+        pd.Series([100.0, 116.0], index=dates[:2]),
+        ledger,
+    )
+
+    assert round(one_period, 12) == 0.1
+
+
+# ---------------------------------------------------------------------------
+# Risk-validation guide
+# ---------------------------------------------------------------------------
+
+
+def test_risk_validation_report_example(tmp_path: Path) -> None:
+    # mkdocs_docs/guide/risk-validation.md "Auditable walk-forward VaR" block.
+    from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+
+    returns = pd.Series(
+        np.linspace(-0.02, 0.02, 60),
+        index=pd.date_range("2024-01-02", periods=60, freq="B", tz="UTC"),
+    )
+    spec = RiskModelSpec(confidence_level=0.95, distribution="normal", window=40, refit_cadence=5)
+    walk_forward = walk_forward_var(returns, spec)
+    audit_report = build_risk_validation_report(walk_forward)
+    output = audit_report.write_json(tmp_path / "risk-validation.json")
+
+    assert audit_report.status == "ok"
+    assert json.loads(output.read_text(encoding="utf-8"))["inputs_digest"] == walk_forward.inputs_digest
 
 
 # ---------------------------------------------------------------------------
@@ -399,3 +458,61 @@ def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch:
     with pytest.raises(DependencyError, match=r"pip install fincore\[alphalens\]"):
         render_matplotlib._plot_dependencies()
     assert example["OPTIONAL_EXTRA_INSTALL"] == "fincore[alphalens]"
+
+
+def test_factor_cost_and_capacity_ledger_example() -> None:
+    # mkdocs_docs/concepts/factor-research-protocol.md cost/capacity block.
+    from fincore.factor_analysis import FactorCostModel, apply_factor_costs
+
+    dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
+    weights = pd.Series(
+        [0.60, -0.40, 0.20, -0.80],
+        index=pd.MultiIndex.from_product((dates, ("A", "B")), names=("date", "asset")),
+    )
+    gross_returns = pd.Series([0.010, -0.005], index=dates)
+    dollar_volume = pd.DataFrame({"A": [1_000.0, 1_500.0], "B": [2_000.0, 1_000.0]}, index=dates)
+    borrow_rates = pd.DataFrame({"A": [0.0, 0.0], "B": [0.002, 0.003]}, index=dates)
+    borrow_available = pd.DataFrame(True, index=dates, columns=("A", "B"))
+
+    ledger = apply_factor_costs(
+        gross_returns,
+        weights,
+        dollar_volume,
+        portfolio_value=250.0,
+        model=FactorCostModel(
+            half_spread_bps=10.0,
+            impact_coefficient=0.01,
+            impact_exponent=0.5,
+            max_participation=0.50,
+        ),
+        borrow_rates=borrow_rates,
+        borrow_available=borrow_available,
+    )
+
+    assert (ledger.participation <= ledger.model.max_participation).all().all()
+    pd.testing.assert_series_equal(ledger.net_returns, ledger.gross_returns - ledger.total_cost, check_names=False)
+
+
+def test_fama_macbeth_newey_west_example() -> None:
+    # mkdocs_docs/concepts/factor-research-protocol.md Newey-West block.
+    from fincore.factor_analysis import fama_macbeth
+
+    dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
+    assets = ["a", "b", "c"]
+    exposures = pd.DataFrame(np.tile([-1.0, 0.0, 1.0], (len(dates), 1)), index=dates, columns=assets)
+    returns = pd.DataFrame(
+        [[-0.02, 0.01, 0.04], [-0.01, 0.0, 0.01], [-0.03, 0.01, 0.05], [-0.02, 0.0, 0.02], [-0.01, 0.02, 0.05]],
+        index=dates,
+        columns=assets,
+    )
+
+    result = fama_macbeth(
+        returns,
+        exposures,
+        covariance="newey-west",
+        newey_west_lags=3,
+    )
+
+    assert result.attrs["covariance"] == "newey-west"
+    assert result.attrs["newey_west_lags"] == 3
+    assert result.attrs["n_cross_sections"] >= 4

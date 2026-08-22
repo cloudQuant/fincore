@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.check_dependency_matrix import load_matrix, probe_import
+from scripts.check_dependency_matrix import check_installed_versions, load_matrix, probe_import
 
 
 def test_constraints_cover_each_supported_python_environment() -> None:
@@ -45,3 +45,17 @@ def test_import_probe_records_failure_for_missing_module() -> None:
 
     assert not result["success"]
     assert result["error"]
+
+
+def test_minimum_lane_requires_exact_installed_versions() -> None:
+    expected = {"numpy": "1.24.0", "pandas": "1.5.3"}
+
+    assert not check_installed_versions(expected, expected, lane="minimum")
+    assert check_installed_versions({"numpy": "1.24.1", "pandas": "1.5.3"}, expected, lane="minimum")
+
+
+def test_latest_lane_accepts_newer_installed_versions_but_not_old_ones() -> None:
+    expected = {"numpy": "1.24.0", "pandas": "1.5.3"}
+
+    assert not check_installed_versions({"numpy": "2.0.0", "pandas": "1.5.3"}, expected, lane="latest")
+    assert check_installed_versions({"numpy": "1.23.0", "pandas": "1.5.3"}, expected, lane="latest")

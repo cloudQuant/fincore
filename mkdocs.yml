@@ -72,6 +72,8 @@ nav:
     - Visualization: guide/visualization.md
     - Portfolio Optimization: guide/optimization.md
     - Factor-analysis Migration: guide/factor-analysis.md
+    - Factor Research Protocol: concepts/factor-research-protocol.md
+    - Performance Return Semantics: guide/performance-semantics.md
     - Risk Validation: guide/risk-validation.md
     - Reproducible Research: guide/reproducible-research.md
     - Performance: guide/performance.md
@@ -86,6 +88,7 @@ nav:
     - fincore.attribution: api/attribution.md
     - fincore.risk: api/risk.md
     - fincore.report: api/report.md
+    - fincore.performance: api/performance.md
     - Factor-analysis: api/factor-analysis.md
   - Development:
     - Contributing: development/contributing.md

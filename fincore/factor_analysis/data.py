@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, cast
 
 import numpy as np
@@ -21,6 +22,7 @@ from fincore.factor_analysis.calendar import (
     timedelta_to_string,
 )
 from fincore.factor_analysis.exceptions import EnhancedNonMatchingTimezoneError, FactorLossExceededError
+from fincore.factor_analysis.pit import materialize_pit_factor
 
 
 @dataclass(frozen=True)
@@ -52,6 +54,31 @@ class PreparedFactorData:
     data: pd.DataFrame
     loss_report: FactorLossReport
     calendar: Any
+
+
+@dataclass(frozen=True)
+class MultiHorizonPreparedFactorData:
+    """Enhanced prepared factor tables with availability accounted for per horizon.
+
+    ``by_horizon`` is read-only at the mapping boundary.  Each value retains a
+    normal :class:`PreparedFactorData` contract, including a loss report whose
+    forward-return count applies only to that one period.  This is intentionally
+    additive: the strict Alphalens-compatible multi-column cleaner continues to
+    use its source-shaped all-horizon row filtering.
+    """
+
+    by_horizon: Mapping[str, PreparedFactorData]
+    calendar: Any
+
+    def __post_init__(self) -> None:
+        entries = dict(self.by_horizon)
+        if not entries:
+            raise ValueError("by_horizon must contain at least one prepared horizon")
+        if any(not isinstance(label, str) or not label for label in entries):
+            raise ValueError("by_horizon labels must be non-empty strings")
+        if not all(isinstance(prepared, PreparedFactorData) for prepared in entries.values()):
+            raise TypeError("by_horizon values must be PreparedFactorData instances")
+        object.__setattr__(self, "by_horizon", MappingProxyType(entries))
 
 
 def _require_factor_series(factor: pd.Series) -> pd.Series:
@@ -411,6 +438,155 @@ def prepare_factor_data(
     )
 
 
+def prepare_factor_data_by_horizon(
+    factor: pd.Series,
+    prices: pd.DataFrame,
+    *,
+    groupby: Mapping[Hashable, Hashable] | pd.Series | None = None,
+    quantiles: int | Sequence[float] | None = 5,
+    bins: int | Sequence[float] | None = None,
+    periods: Sequence[int] = (1, 5, 10),
+    max_loss: float = 0.35,
+    binning_by_group: bool = False,
+    filter_zscore: float | None = None,
+    groupby_labels: Mapping[Hashable, Hashable] | None = None,
+    zero_aware: bool = False,
+    cumulative_returns: bool = True,
+) -> MultiHorizonPreparedFactorData:
+    """Prepare one enhanced factor table and loss report for each forward horizon.
+
+    Unlike :func:`prepare_factor_data`, this enhanced-only route never drops a
+    factor observation merely because a *different* forward horizon is
+    unavailable.  Factor binning is calculated from the finite factor/universe
+    panel before return availability is considered, so a later long-horizon
+    price cannot change a previously available short-horizon bucket.
+
+    Full-sample ``filter_zscore`` is rejected because it would make the
+    eligibility of an earlier observation depend on future returns.  The
+    strict Alphalens-compatible API remains unchanged and retains its
+    source-shaped option.
+    """
+
+    if not isinstance(max_loss, (int, float)) or not 0 <= float(max_loss) <= 1:
+        raise ValueError("max_loss must be a number between 0 and 1")
+    if filter_zscore is not None:
+        raise ValueError("per-horizon factor preparation does not allow full-sample filter_zscore")
+
+    factor_copy = _require_factor_series(factor)
+    prices_copy = _require_prices(prices, pd.Index(factor_copy.index.get_level_values("asset")))
+    forward_returns = compute_forward_returns(
+        factor_copy,
+        prices_copy,
+        periods=periods,
+        filter_zscore=None,
+        cumulative_returns=cumulative_returns,
+    )
+    if forward_returns.columns.has_duplicates:
+        raise ValueError("per-horizon preparation requires unique computed horizon labels")
+    if any(not isinstance(label, str) or not label for label in forward_returns.columns):
+        raise ValueError("per-horizon preparation requires non-empty string horizon labels")
+
+    input_count = len(factor_copy)
+    finite_mask = np.isfinite(factor_copy.to_numpy(dtype=float, copy=False))
+    finite_factor = factor_copy.loc[finite_mask]
+    if finite_factor.empty:
+        raise ValueError("factor must contain at least one finite observation")
+    groups = _normalize_groupby(groupby, finite_factor.index, groupby_labels)
+
+    binning_source = pd.DataFrame({"factor": finite_factor}, index=finite_factor.index)
+    if groups is not None:
+        binning_source["group"] = groups.reindex(binning_source.index)
+    factor_quantiles = quantize_factor(
+        binning_source,
+        quantiles=quantiles,
+        bins=bins,
+        by_group=binning_by_group,
+        no_raise=float(max_loss) != 0,
+        zero_aware=zero_aware,
+    )
+
+    calendar = infer_trading_calendar(_factor_dates(factor_copy), prices_copy.index)
+    prepared_by_horizon: dict[str, PreparedFactorData] = {}
+    for horizon in forward_returns.columns:
+        horizon_label = cast("str", horizon)
+        forward = pd.to_numeric(forward_returns[horizon_label].reindex(finite_factor.index), errors="raise")
+        available = np.isfinite(forward.to_numpy(dtype=float, copy=False))
+        forward_count = int(np.count_nonzero(available))
+
+        data = pd.DataFrame(
+            {horizon_label: forward.loc[available], "factor": finite_factor.loc[available]},
+            index=finite_factor.index[available],
+        )
+        if groups is not None:
+            data["group"] = groups.reindex(data.index)
+        data["factor_quantile"] = factor_quantiles.reindex(data.index)
+        required_columns = ["factor_quantile"]
+        if groups is not None:
+            required_columns.append("group")
+        data = data.dropna(subset=required_columns)
+        data.index = data.index.set_names(("date", "asset"))
+
+        report = _loss_report(input_count, len(finite_factor), forward_count, len(data))
+        if report.total_loss > float(max_loss):
+            message = (
+                f"max_loss ({float(max_loss) * 100:.1f}%) exceeded {report.total_loss * 100:.1f}% "
+                f"for horizon {horizon_label}, consider increasing it."
+            )
+            raise FactorLossExceededError(message, report)
+        prepared_by_horizon[horizon_label] = PreparedFactorData(
+            data=data.copy(deep=True),
+            loss_report=report,
+            calendar=calendar,
+        )
+
+    return MultiHorizonPreparedFactorData(by_horizon=prepared_by_horizon, calendar=calendar)
+
+
+def prepare_pit_factor_data(
+    observations: pd.DataFrame,
+    prices: pd.DataFrame,
+    evaluation_dates: pd.DatetimeIndex | Sequence[object],
+    *,
+    groupby: Mapping[Hashable, Hashable] | pd.Series | None = None,
+    quantiles: int | Sequence[float] | None = 5,
+    bins: int | Sequence[float] | None = None,
+    periods: Sequence[int] = (1, 5, 10),
+    max_loss: float = 0.35,
+    binning_by_group: bool = False,
+    filter_zscore: float | None = None,
+    groupby_labels: Mapping[Hashable, Hashable] | None = None,
+    zero_aware: bool = False,
+    cumulative_returns: bool = True,
+) -> PreparedFactorData:
+    """Prepare enhanced factor data from a causal PIT observation ledger.
+
+    This additive enhanced entry point materializes only values known and
+    effective on each requested date before calculating forward returns.  The
+    legacy full-sample ``filter_zscore`` option is deliberately unavailable so
+    this path cannot introduce look-ahead filtering; strict Alphalens retains
+    its source-compatible behavior through its separate facade.
+    """
+    if filter_zscore is not None:
+        raise ValueError("PIT factor preparation does not allow full-sample filter_zscore")
+    factor = materialize_pit_factor(observations, evaluation_dates)
+    if factor.empty:
+        raise ValueError("PIT observations produced no eligible factor values for evaluation_dates")
+    return prepare_factor_data(
+        factor,
+        prices,
+        groupby=groupby,
+        quantiles=quantiles,
+        bins=bins,
+        periods=periods,
+        max_loss=max_loss,
+        binning_by_group=binning_by_group,
+        filter_zscore=None,
+        groupby_labels=groupby_labels,
+        zero_aware=zero_aware,
+        cumulative_returns=cumulative_returns,
+    )
+
+
 def prepare_factor_data_from_forward_returns(
     factor: pd.Series,
     forward_returns: pd.DataFrame,
@@ -441,9 +617,12 @@ def prepare_factor_data_from_forward_returns(
 __all__ = [
     "FactorLossExceededError",
     "FactorLossReport",
+    "MultiHorizonPreparedFactorData",
     "PreparedFactorData",
     "compute_forward_returns",
     "prepare_factor_data",
+    "prepare_factor_data_by_horizon",
     "prepare_factor_data_from_forward_returns",
+    "prepare_pit_factor_data",
     "quantize_factor",
 ]

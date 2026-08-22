@@ -158,6 +158,13 @@ def _initialize_copy_git_repository(copy_root: Path) -> None:
             raise RuntimeError(f"could not initialize disposable Git repository: {result.stdout}{result.stderr}")
 
 
+def _prepare_disposable_copy(source_root: Path, copy_root: Path, manifest: dict[str, str]) -> None:
+    """Create one pristine, self-contained tree for exactly one pytest run."""
+
+    _copy_source_tree(source_root, copy_root, manifest)
+    _initialize_copy_git_repository(copy_root)
+
+
 def _parse_count(output: str, name: str) -> int:
     matches = re.findall(rf"(?:^|, |\s)(\d+) {name}(?:,|\s|$)", output, flags=re.MULTILINE)
     return int(matches[-1]) if matches else 0
@@ -458,10 +465,7 @@ def main() -> int:
     }
     failure: str | None = None
     with tempfile.TemporaryDirectory(prefix="fincore-quality-baseline-") as temp_dir:
-        copy_root = Path(temp_dir) / "fincore"
-        _copy_source_tree(source_root, copy_root, included_manifest)
-        _initialize_copy_git_repository(copy_root)
-        data["copy_manifest_sha256"] = _copy_manifest_sha256(_inventory(copy_root))
+        data["copy_manifest_sha256"] = _copy_manifest_sha256(included_manifest)
         specifications = [
             ("trusted-baseline", TRUSTED_SELECTOR, [BENCHMARKS_IGNORE, "-m", TRUSTED_SELECTOR]),
             ("serial", "serial", [BENCHMARKS_IGNORE, "-m", "serial"]),
@@ -485,7 +489,9 @@ def main() -> int:
             ),
         ]
         try:
-            for label, selector, pytest_args in specifications:
+            for index, (label, selector, pytest_args) in enumerate(specifications, start=1):
+                copy_root = Path(temp_dir) / f"run-{index:02d}-{label}"
+                _prepare_disposable_copy(source_root, copy_root, included_manifest)
                 data["runs"].append(
                     _run_checked(
                         copy_root,
