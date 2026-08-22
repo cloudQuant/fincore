@@ -36,6 +36,14 @@ def test_strict_facades_are_stable() -> None:
     assert get_capability("compat.pyfolio").status == "stable"
 
 
+def test_pit_factor_preparation_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.pit_prepare")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.prepare_pit_factor_data"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
 def test_get_capability_raises_for_unknown_id() -> None:
     import pytest
 

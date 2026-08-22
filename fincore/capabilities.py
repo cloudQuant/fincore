@@ -240,6 +240,25 @@ _CAPABILITIES: tuple[Capability, ...] = (
         rationale="Enhanced prepare/analyze/render workflow; Beta integration.",
     ),
     Capability(
+        id="factor_analysis.pit_prepare",
+        public_path="fincore.factor_analysis.prepare_pit_factor_data",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "A point-in-time factor ledger with asset/as_of/known_at/effective_from/value/in_universe, "
+            "prices, and sorted evaluation dates."
+        ),
+        output_contract=(
+            "PreparedFactorData from revisions known and effective at each evaluation date; "
+            "full-sample filter_zscore is rejected."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Causal PIT materialization is independently timeline-tested, but corporate-action/calendar provenance, "
+            "costs, capacity, and complete workflow integration remain unsealed."
+        ),
+    ),
+    Capability(
         id="factor_analysis.analyze",
         public_path="fincore.factor_analysis.analyze_factor",
         domain="factor_analysis",
