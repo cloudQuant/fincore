@@ -44,6 +44,14 @@ def test_pit_factor_preparation_is_discoverable_as_experimental() -> None:
     assert capability.docs_path == "concepts/factor-research-protocol.md"
 
 
+def test_factor_model_inference_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.inference")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.factor_model_inference"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
 def test_get_capability_raises_for_unknown_id() -> None:
     import pytest
 

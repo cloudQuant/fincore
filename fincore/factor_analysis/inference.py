@@ -8,18 +8,22 @@ inference, not just point estimates.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 __all__ = [
     "FDRResult",
+    "ICInferenceResult",
     "benjamini_hochberg",
+    "factor_model_inference",
     "fama_macbeth",
     "ic_confidence_interval",
     "ic_mean",
     "ic_t_stat",
+    "information_coefficient_inference",
 ]
 
 
@@ -41,6 +45,70 @@ class FDRResult:
     def n_tests(self) -> int:
         """Number of hypotheses corrected together."""
         return len(self.p_values)
+
+
+@dataclass(frozen=True, slots=True)
+class ICInferenceResult:
+    """Auditable two-sided IC tests with Benjamini-Hochberg correction.
+
+    ``hypotheses`` is indexed by forward-return period and contains
+    ``n_observations``, ``mean_ic``, ``t_stat``, ``p_value``,
+    ``adjusted_p_value``, ``rejected``, and ``testable``. Untestable periods
+    (fewer than two finite IC observations) retain their sample information
+    but receive ``NaN`` p/q values and are never treated as discoveries.
+    """
+
+    alpha: float
+    hypotheses: pd.DataFrame
+    method: Literal["two-sided-student-t+benjamini-hochberg"] = "two-sided-student-t+benjamini-hochberg"
+
+    def __post_init__(self) -> None:
+        """Own a validated, schema-stable result table for downstream audit."""
+
+        alpha = _normalize_alpha(self.alpha)
+        if not isinstance(self.hypotheses, pd.DataFrame):
+            raise TypeError("hypotheses must be a pandas DataFrame")
+        expected_columns = (
+            "n_observations",
+            "mean_ic",
+            "t_stat",
+            "p_value",
+            "adjusted_p_value",
+            "rejected",
+            "testable",
+        )
+        if tuple(self.hypotheses.columns) != expected_columns:
+            raise ValueError(f"hypotheses must use columns {expected_columns!r}")
+        if self.hypotheses.index.has_duplicates:
+            raise ValueError("hypotheses index must contain unique forward-period labels")
+        object.__setattr__(self, "alpha", alpha)
+        object.__setattr__(self, "hypotheses", self.hypotheses.copy(deep=True))
+
+    @property
+    def n_hypotheses(self) -> int:
+        """Number of forward-period hypotheses represented in the table."""
+
+        return len(self.hypotheses)
+
+    @property
+    def n_tested(self) -> int:
+        """Number of finite, two-sided tests included in the BH family."""
+
+        return int(self.hypotheses["testable"].sum())
+
+
+def _normalize_alpha(alpha: object) -> float:
+    """Normalize an FDR target while rejecting boolean and non-finite inputs."""
+
+    if isinstance(alpha, bool):
+        raise ValueError("alpha must be a finite probability in (0, 1]")
+    try:
+        alpha_value = float(cast("Any", alpha))
+    except (TypeError, ValueError) as error:
+        raise ValueError("alpha must be a finite probability in (0, 1]") from error
+    if not np.isfinite(alpha_value) or not 0.0 < alpha_value <= 1.0:
+        raise ValueError("alpha must be a finite probability in (0, 1]")
+    return alpha_value
 
 
 def benjamini_hochberg(
@@ -65,14 +133,7 @@ def benjamini_hochberg(
         decision. Inputs with duplicate Series labels are rejected because an
         audit result cannot identify a unique hypothesis.
     """
-    if isinstance(alpha, bool):
-        raise ValueError("alpha must be a finite probability in (0, 1]")
-    try:
-        alpha_value = float(alpha)
-    except (TypeError, ValueError) as error:
-        raise ValueError("alpha must be a finite probability in (0, 1]") from error
-    if not np.isfinite(alpha_value) or not 0.0 < alpha_value <= 1.0:
-        raise ValueError("alpha must be a finite probability in (0, 1]")
+    alpha_value = _normalize_alpha(alpha)
 
     if isinstance(p_values, pd.Series):
         if p_values.index.has_duplicates:
@@ -123,6 +184,113 @@ def benjamini_hochberg(
         adjusted_p_values=pd.Series(adjusted, index=source.index, name="adjusted_p_value"),
         rejected=pd.Series(rejected, index=source.index, name="rejected"),
     )
+
+
+def information_coefficient_inference(
+    information_coefficient: pd.DataFrame,
+    *,
+    alpha: float = 0.05,
+) -> ICInferenceResult:
+    """Test per-period factor IC means and correct the resulting p-values.
+
+    The input is the date-by-period IC snapshot produced by the enhanced
+    factor workflow. Each period uses a two-sided Student t test of mean IC
+    against zero under the explicit i.i.d. time-series assumption. Only
+    periods with at least two finite observations enter the
+    Benjamini-Hochberg family; untestable periods remain visible but cannot be
+    reported as discoveries.
+    """
+
+    alpha_value = _normalize_alpha(alpha)
+    if not isinstance(information_coefficient, pd.DataFrame):
+        raise TypeError("information_coefficient must be a pandas DataFrame")
+    if information_coefficient.columns.has_duplicates:
+        raise ValueError("information_coefficient columns must not contain duplicate forward-period labels")
+
+    periods = information_coefficient.columns.copy()
+    records: list[dict[str, object]] = []
+    p_values: dict[object, float] = {}
+    for period in periods:
+        observations = _clean_ic_observations(information_coefficient[period])
+        n_observations = len(observations)
+        mean_ic = float(np.mean(observations)) if n_observations else float("nan")
+        if n_observations < 2:
+            records.append(
+                {
+                    "n_observations": n_observations,
+                    "mean_ic": mean_ic,
+                    "t_stat": float("nan"),
+                    "p_value": float("nan"),
+                    "adjusted_p_value": float("nan"),
+                    "rejected": False,
+                    "testable": False,
+                }
+            )
+            continue
+        t_statistic = ic_t_stat(observations)
+        p_value = _two_sided_student_t_p_value(t_statistic, n_observations)
+        p_values[period] = p_value
+        records.append(
+            {
+                "n_observations": n_observations,
+                "mean_ic": mean_ic,
+                "t_stat": t_statistic,
+                "p_value": p_value,
+                "adjusted_p_value": float("nan"),
+                "rejected": False,
+                "testable": True,
+            }
+        )
+
+    hypotheses = pd.DataFrame(
+        records,
+        index=periods.rename(periods.name or "forward_period"),
+        columns=(
+            "n_observations",
+            "mean_ic",
+            "t_stat",
+            "p_value",
+            "adjusted_p_value",
+            "rejected",
+            "testable",
+        ),
+    )
+    if p_values:
+        correction = benjamini_hochberg(pd.Series(p_values, name="p_value"), alpha=alpha_value)
+        hypotheses.loc[correction.p_values.index, "adjusted_p_value"] = correction.adjusted_p_values
+        hypotheses.loc[correction.p_values.index, "rejected"] = correction.rejected
+    hypotheses["n_observations"] = hypotheses["n_observations"].astype(int)
+    hypotheses["rejected"] = hypotheses["rejected"].astype(bool)
+    hypotheses["testable"] = hypotheses["testable"].astype(bool)
+    return ICInferenceResult(alpha=alpha_value, hypotheses=hypotheses)
+
+
+def factor_model_inference(model: object, *, alpha: float = 0.05) -> ICInferenceResult:
+    """Run auditable IC/FDR inference on an enhanced ``FactorAnalysisModel``.
+
+    This is an additive post-analysis step. It consumes the model's stored
+    aggregate IC snapshot rather than recomputing factor returns, so a caller
+    can retain a deterministic prepare → analyze → infer research trail.
+    """
+
+    from fincore.factor_analysis.models import FactorAnalysisModel
+
+    if not isinstance(model, FactorAnalysisModel):
+        raise TypeError("model must be a FactorAnalysisModel")
+    return information_coefficient_inference(model.aggregate_information_coefficient, alpha=alpha)
+
+
+def _two_sided_student_t_p_value(t_statistic: float, n_observations: int) -> float:
+    """Return the exact two-sided Student-t tail probability for a finite sample."""
+
+    if n_observations < 2:  # pragma: no cover - protected by the public boundary
+        raise ValueError("at least two observations are required for a t-test")
+    if np.isnan(t_statistic):  # pragma: no cover - protected by ic_t_stat contract
+        raise ValueError("t-statistic must not be NaN for a testable IC series")
+    p_value = float(2.0 * stats.t.sf(abs(t_statistic), df=n_observations - 1))
+    if not np.isfinite(p_value):  # pragma: no cover - scipy distribution contract guard
+        raise ValueError("Student-t p-value must be finite")
+    return float(np.clip(p_value, 0.0, 1.0))
 
 
 def _clean_ic_observations(ic_series: pd.Series | np.ndarray) -> np.ndarray:

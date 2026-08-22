@@ -62,6 +62,34 @@ to affect historical eligibility. The returned `PreparedFactorData` still has
 ordinary forward-return availability loss, so callers must inspect
 `loss_report` and document the selection protocol.
 
+## Post-analysis IC inference and FDR
+
+After enhanced analysis, run the explicit post-analysis step rather than
+reading a raw IC average as a discovery claim:
+
+```python
+from fincore.factor_analysis import analyze_factor, factor_model_inference
+
+model = analyze_factor(prepared.data, periods=("1D", "5D"), include_pyfolio=False)
+inference = factor_model_inference(model, alpha=0.05)
+audit_table = inference.hypotheses
+```
+
+`factor_model_inference` consumes the model's stored aggregate date-by-period
+IC snapshot; it does not recompute returns or weights. For each forward
+period, the audit table records finite sample count, mean IC, a two-sided
+Student-t statistic and p-value, Benjamini-Hochberg adjusted p-value, and the
+rejection decision. The BH family includes only rows with at least two finite
+IC observations. Untestable rows remain visible with `testable=False`, `NaN`
+p/q values, and `rejected=False`; they must not be reported as non-findings.
+
+This inference path assumes independent IC observations. It is not HAC or
+clustered inference, does not pre-register a hypothesis family, and does not
+replace a research-trial register. Callers must define the tested horizons and
+factor family before viewing results, retain the returned audit table, and
+state any dependence correction or trial policy that is not yet supplied by
+the platform.
+
 ## Required research evidence
 
 For each strategy or factor study, retain the source snapshot identity,

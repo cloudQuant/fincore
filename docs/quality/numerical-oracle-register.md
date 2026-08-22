@@ -264,6 +264,27 @@ oracle generation method, and the tolerance asserted by
   versioned corporate actions/calendars, research-trial tracking, transaction
   costs, borrow, capacity, or integration into every factor report.
 
+### 14. Enhanced factor-model IC/FDR post-analysis
+
+- **File:** `fincore/factor_analysis/inference.py::factor_model_inference` and
+  `information_coefficient_inference`
+- **Method:** consume the immutable model's aggregate date-by-period IC table.
+  For every forward period with at least two finite observations, compute the
+  i.i.d. two-sided Student-t p-value for mean IC equal to zero, then apply BH
+  jointly to those testable periods. Periods with fewer than two observations
+  retain their count and mean but have `testable=False`, `NaN` p/q values, and
+  no rejection.
+- **Oracle:** `scipy.stats.ttest_1samp` provides independent p-values and
+  `statsmodels.stats.multitest.multipletests(method="fdr_bh")` provides BH
+  decisions/q-values in `tests/numerical/test_factor_model_inference.py`.
+  The model-wrapper test verifies that the enhanced workflow consumes the
+  stored aggregate IC snapshot rather than recomputing an alternate series.
+- **Tolerance:** Student-t p-values and adjusted values `rtol = atol =
+  1e-12`; exact testability and rejection flags.
+- **Scope:** intentionally i.i.d. only. It is not a HAC/cluster claim and does
+  not provide a pre-registered factor family, trial registry, cost/capacity
+  model, or report-level disclosure workflow.
+
 ## Regeneration
 
 Re-run the numerical gate with:

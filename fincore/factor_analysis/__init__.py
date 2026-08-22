@@ -30,6 +30,10 @@ from fincore.factor_analysis.exceptions import (
     MaxLossExceededError,
     NonMatchingTimezoneError,
 )
+from fincore.factor_analysis.inference import (
+    ICInferenceResult,
+    factor_model_inference,
+)
 from fincore.factor_analysis.models import (
     EventAnalysisModel,
     FactorAnalysisConfig,
@@ -85,6 +89,7 @@ __all__ = [
     "FactorTearSheetArtifacts",
     "FactorWorkflowSpec",
     "GridFigure",
+    "ICInferenceResult",
     "MaxLossExceededError",
     "NonMatchingTimezoneError",
     "PITPoint",
@@ -111,6 +116,7 @@ __all__ = [
     "factor_alpha_beta",
     "factor_cumulative_returns",
     "factor_information_coefficient",
+    "factor_model_inference",
     "factor_positions",
     "factor_rank_autocorrelation",
     "factor_returns",

@@ -598,6 +598,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.GridFigure"
         },
+        "ICInferenceResult": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.ICInferenceResult"
+        },
         "MaxLossExceededError": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.MaxLossExceededError"
@@ -702,6 +706,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.factor_information_coefficient"
         },
+        "factor_model_inference": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.factor_model_inference"
+        },
         "factor_positions": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.factor_positions"
@@ -793,6 +801,7 @@
         "FactorTearSheetArtifacts",
         "FactorWorkflowSpec",
         "GridFigure",
+        "ICInferenceResult",
         "MaxLossExceededError",
         "NonMatchingTimezoneError",
         "PITPoint",
@@ -819,6 +828,7 @@
         "factor_alpha_beta",
         "factor_cumulative_returns",
         "factor_information_coefficient",
+        "factor_model_inference",
         "factor_positions",
         "factor_rank_autocorrelation",
         "factor_returns",

@@ -259,6 +259,24 @@ _CAPABILITIES: tuple[Capability, ...] = (
         ),
     ),
     Capability(
+        id="factor_analysis.inference",
+        public_path="fincore.factor_analysis.factor_model_inference",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "An enhanced FactorAnalysisModel plus an FDR alpha; uses its stored aggregate date-by-period IC snapshot."
+        ),
+        output_contract=(
+            "ICInferenceResult with sample counts, two-sided Student-t p-values, BH q-values, "
+            "discoveries, and an explicit untestable-period marker."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Statsmodels/SciPy-oracle-tested IC/FDR post-analysis, but the i.i.d. assumption, trial registry, "
+            "HAC/cluster inference, and report integration remain incomplete."
+        ),
+    ),
+    Capability(
         id="factor_analysis.analyze",
         public_path="fincore.factor_analysis.analyze_factor",
         domain="factor_analysis",
