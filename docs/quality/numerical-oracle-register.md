@@ -201,6 +201,24 @@ oracle generation method, and the tolerance asserted by
   exposure and shuffled asset-label regressions are separate adversarial
   fixtures.
 
+### 11. Benjamini-Hochberg false-discovery-rate correction
+
+- **File:** `fincore/factor_analysis/inference.py::benjamini_hochberg`
+- **Method:** sort the `m` p-values increasingly, reject through the largest
+  rank `k` satisfying `p_(k) <= alpha*k/m`, and compute monotone adjusted
+  values with the reverse cumulative minimum of `m*p_(k)/k`.
+- **Source:** Benjamini & Hochberg (1995), *Journal of the Royal Statistical
+  Society, Series B* 57(1), 289–300.
+- **Boundary:** `alpha` is finite and in `(0, 1]`; p-values are finite and in
+  `[0, 1]`. A labelled Series must have unique hypothesis labels, and an empty
+  input returns an explicit empty audit result rather than an implicit
+  no-discovery claim.
+- **Oracle:** `statsmodels.stats.multitest.multipletests(method="fdr_bh")`
+  independently supplies the rejection decisions and adjusted p-values for
+  shuffled, tied factor hypotheses.
+- **Tolerance:** exact boolean decisions; adjusted values `rtol = atol =
+  1e-12`.
+
 ## Regeneration
 
 Re-run the numerical gate with:

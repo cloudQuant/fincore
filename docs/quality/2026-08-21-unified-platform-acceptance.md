@@ -36,6 +36,7 @@
 | Task 0 GARCH/EGARCH 补充（2026-08-22） | 独立条件标准化 EGARCH recursion oracle、溢出候选有限 penalty、EGARCH 的零/非有限/溢出方差输入 fail-closed、GARCH/GJR/EGARCH 平稳性 fail-closed 与增强适配器失败状态：161 passed、1 warning；完整 `tests/test_risk`：138 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这不替代 GARCH/EVT 的 out-of-sample calibration、残差或参数不确定性验收。 |
 | Task 0 EVT GPD/GEV 补充（2026-08-22） | 独立 GPD sample-L-moment/PWM oracle、GEV PDF quadrature ES oracle（含 bounded/Gumbel/heavy-tail 三种 `xi`）、POT 概率域与最小浮点 `alpha` 的 Gumbel 稳定性反例：风险数值/属性/验证/`tests/test_risk` 集合 229 passed、1 warning；Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这只关闭公式、数值稳定性和阈值域切片，不替代 EVT out-of-sample calibration 或阈值不确定性验收。 |
 | Task 10 Fama–MacBeth 对齐补充（2026-08-22） | 单行静态暴露会按 return dates 广播，时变暴露按资产标签而非输入列位置对齐；新增独立 statsmodels OLS cross-sectional oracle、静态截面和乱序资产 adversarial fixtures。`tests/numerical/test_factor_inference.py tests/test_factor_analysis tests/compat/alphalens`：1,076 passed、61 warnings；Ruff、Mypy 通过。该修复只收敛既有 Fama–MacBeth 例程，不构成 PIT、FDR、HAC/cluster SE、成本或容量工作流的完成证据。 |
+| Task 10 Benjamini–Hochberg FDR 补充（2026-08-22） | 新增可审计的独立推断函数：保留唯一 factor label、返回原始 p 值、BH adjusted p-value 与 step-up 决策；无效概率、重复标签及无效 `alpha` fail closed，空输入返回显式空结果。它与 `statsmodels.stats.multitest.multipletests(method="fdr_bh")` 的乱序/tie fixture 一致。`tests/numerical/test_factor_inference.py tests/test_factor_analysis tests/compat/alphalens`：1,085 passed、61 warnings；Ruff、Mypy 通过。该函数尚未接入所有 enhanced factor 报告或研究者 trials 记录。 |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 
@@ -43,7 +44,7 @@
 
 1. **当前质量快照仍未通过覆盖率门禁。** 在 `f8174ae` 修复每轮复用同一个 disposable copy 的交叉污染后，重新收集的 [current-baseline.json](current-baseline.json) 显示 trusted、serial、single-process、xdist 与 branch-coverage 五轮均以 0 退出，副本完整性均为真，且非串行计数一致；此前 branch-coverage 轮的 17 个打包测试错误已消失。真实 branch-coverage 仍为 **45.0%**，低于 60% 下限。随后新增的提交使该快照的 `source.commit` 也不再匹配当前 HEAD；在新的完整收集达到门槛前，`check_quality_snapshot.py` 必须继续 fail closed。旧的“97%”快照不再可作为当前代码证据。
 2. **发布级许可证门禁失败。** `check_notices.py --require-approved` 对 `empyrical`、`pyfolio`、`alphalens` 三项均 fail closed；这需要具名人工/法律审批，不能由测试代替。
-3. **计划中的核心工作流仍未完成验收。** 现金流语义已接入增强报告与 manifest，但这不把它升级为完整的多币种报告工作流或 GIPS 认证；`fincore/risk/report.py` 已为现有 one-step walk-forward VaR 提供可复现的 reference 报告，却不覆盖 GARCH/EVT 的完整 out-of-sample calibration、convergence/residual/parameter-uncertainty 诊断或监管认证。`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在。PIT/FDR、成本容量和其余 T9–T10 验收不能据此视为完成。
+3. **计划中的核心工作流仍未完成验收。** 现金流语义已接入增强报告与 manifest，但这不把它升级为完整的多币种报告工作流或 GIPS 认证；`fincore/risk/report.py` 已为现有 one-step walk-forward VaR 提供可复现的 reference 报告，却不覆盖 GARCH/EVT 的完整 out-of-sample calibration、convergence/residual/parameter-uncertainty 诊断或监管认证。`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在。PIT、FDR 向 enhanced factor 工作流的整合、成本容量和其余 T9–T10 验收不能据此视为完成。
 4. **公开类型与发布证明未完成。** 仓库无 `.pyi`，且 `scripts/check_public_typing.py`、`scripts/verify_attestation.py` 不存在；没有 pyright/stubtest installed-wheel 证明、SBOM/provenance/attestation 的本地验收。
 5. **远端治理不能由本地 checkout 验收。** 受保护分支、required checks、PyPI environment reviewer、Actions SHA pin 和实际发布 provenance 需要仓库管理员在远端完成并提供当前证据。
 
@@ -51,7 +52,7 @@
 
 1. 已修复质量基线收集中的打包测试错误；下一步为新增/低覆盖模块补测试。不得降低 60% branch-coverage 门槛或用旧快照、`--skip-commit-check` 充当发布证据。
 2. 完成三方许可的人工审阅并让 release profile 继续 fail closed。
-3. 扩展并独立验收剩余风险模型（GARCH/EVT 的 out-of-sample calibration、convergence/residual/parameter-uncertainty）、PIT/FDR、交易成本、容量和优化 KKT/残差等 T9–T10 项；每项需 oracle、property 与 adversarial fixture。绩效报告后续若要支持完整多币种台账，必须以带估值和 FX provenance 的端到端工作流验收，不能把 `DisclosureContext` 当作计算证据。
+3. 扩展并独立验收剩余风险模型（GARCH/EVT 的 out-of-sample calibration、convergence/residual/parameter-uncertainty）、PIT/FDR 向 enhanced factor workflow 的整合、交易成本、容量和优化 KKT/残差等 T9–T10 项；每项需 oracle、property 与 adversarial fixture。绩效报告后续若要支持完整多币种台账，必须以带估值和 FX provenance 的端到端工作流验收，不能把 `DisclosureContext` 当作计算证据。
 4. 交付 `.pyi` / pyright / stubtest consumer gate、SBOM、provenance/attestation 检查，再由管理员完成远端分支与发布环境治理。
 5. 只有全部自动与人工 gate 为绿，才生成 1.0 readiness seal；本轮明确没有 merge、push、tag 或 publish。
 

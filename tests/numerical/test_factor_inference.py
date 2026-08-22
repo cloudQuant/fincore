@@ -6,8 +6,15 @@ import numpy as np
 import pandas as pd
 import pytest
 import statsmodels.api as sm
+from statsmodels.stats.multitest import multipletests
 
-from fincore.factor_analysis.inference import fama_macbeth, ic_confidence_interval, ic_mean, ic_t_stat
+from fincore.factor_analysis.inference import (
+    benjamini_hochberg,
+    fama_macbeth,
+    ic_confidence_interval,
+    ic_mean,
+    ic_t_stat,
+)
 from fincore.factor_analysis.pit import PITPoint, validate_pit_alignment
 
 
@@ -111,6 +118,62 @@ class TestIC:
         ic = rng.normal(0.05, 0.01, 100)
         lo, hi = ic_confidence_interval(ic)
         assert lo < np.mean(ic) < hi
+
+
+class TestBenjaminiHochberg:
+    def test_matches_statsmodels_and_preserves_factor_labels(self) -> None:
+        """FDR decisions and q-values agree with an independent implementation."""
+        p_values = pd.Series(
+            [0.049, 0.001, 0.01, 0.01, 0.2, 0.9],
+            index=pd.Index(["value", "quality", "momentum", "size", "low_vol", "noise"], name="factor"),
+            name="p_value",
+        )
+        expected_rejected, expected_adjusted, _, _ = multipletests(p_values.to_numpy(), alpha=0.05, method="fdr_bh")
+
+        result = benjamini_hochberg(p_values, alpha=0.05)
+
+        assert result.method == "benjamini-hochberg"
+        assert result.alpha == 0.05
+        pd.testing.assert_series_equal(result.p_values, p_values.astype(float))
+        pd.testing.assert_series_equal(
+            result.adjusted_p_values,
+            pd.Series(expected_adjusted, index=p_values.index, name="adjusted_p_value"),
+        )
+        pd.testing.assert_series_equal(
+            result.rejected,
+            pd.Series(expected_rejected, index=p_values.index, name="rejected"),
+        )
+
+    @pytest.mark.parametrize(
+        ("p_values", "alpha"),
+        [
+            (np.array([0.1, np.nan]), 0.05),
+            (np.array([-0.1, 0.1]), 0.05),
+            (np.array([0.1, 1.1]), 0.05),
+            (np.array([[0.1, 0.2]]), 0.05),
+            (np.array([0.1, 0.2]), 0.0),
+            (np.array([0.1, 0.2]), 1.1),
+        ],
+    )
+    def test_rejects_invalid_probabilities_and_alpha(self, p_values: np.ndarray, alpha: float) -> None:
+        with pytest.raises(ValueError):
+            benjamini_hochberg(p_values, alpha=alpha)
+
+    def test_empty_series_has_an_explicit_empty_audit_result(self) -> None:
+        empty = pd.Series([], dtype=float, index=pd.Index([], name="factor"), name="p_value")
+
+        result = benjamini_hochberg(empty)
+
+        assert result.n_tests == 0
+        assert result.p_values.empty
+        assert result.adjusted_p_values.empty
+        assert result.rejected.empty
+
+    def test_rejects_duplicate_factor_labels(self) -> None:
+        duplicate_labels = pd.Series([0.01, 0.02], index=["value", "value"])
+
+        with pytest.raises(ValueError, match="duplicate"):
+            benjamini_hochberg(duplicate_labels)
 
 
 class TestPIT:

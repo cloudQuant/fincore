@@ -7,15 +7,122 @@ inference, not just point estimates.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 
 __all__ = [
+    "FDRResult",
+    "benjamini_hochberg",
     "fama_macbeth",
     "ic_confidence_interval",
     "ic_mean",
     "ic_t_stat",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class FDRResult:
+    """Audit-friendly result of a Benjamini-Hochberg correction.
+
+    The three series retain the input factor labels. ``adjusted_p_values`` are
+    the monotone BH q-values and ``rejected`` is the decision at ``alpha``.
+    """
+
+    alpha: float
+    p_values: pd.Series
+    adjusted_p_values: pd.Series
+    rejected: pd.Series
+    method: Literal["benjamini-hochberg"] = "benjamini-hochberg"
+
+    @property
+    def n_tests(self) -> int:
+        """Number of hypotheses corrected together."""
+        return len(self.p_values)
+
+
+def benjamini_hochberg(
+    p_values: pd.Series | np.ndarray,
+    *,
+    alpha: float = 0.05,
+) -> FDRResult:
+    """Apply Benjamini-Hochberg false-discovery-rate correction.
+
+    Parameters
+    ----------
+    p_values
+        One-dimensional, finite p-values in ``[0, 1]``. A Series preserves
+        its factor labels; an ndarray receives a RangeIndex.
+    alpha
+        Target false-discovery rate in ``(0, 1]``.
+
+    Returns
+    -------
+    FDRResult
+        Original p-values, adjusted BH q-values, and the step-up rejection
+        decision. Inputs with duplicate Series labels are rejected because an
+        audit result cannot identify a unique hypothesis.
+    """
+    if isinstance(alpha, bool):
+        raise ValueError("alpha must be a finite probability in (0, 1]")
+    try:
+        alpha_value = float(alpha)
+    except (TypeError, ValueError) as error:
+        raise ValueError("alpha must be a finite probability in (0, 1]") from error
+    if not np.isfinite(alpha_value) or not 0.0 < alpha_value <= 1.0:
+        raise ValueError("alpha must be a finite probability in (0, 1]")
+
+    if isinstance(p_values, pd.Series):
+        if p_values.index.has_duplicates:
+            raise ValueError("p_values index must not contain duplicate hypothesis labels")
+        source = p_values.astype(float).copy()
+    elif isinstance(p_values, np.ndarray):
+        try:
+            values = np.asarray(p_values, dtype=float)
+        except (TypeError, ValueError) as error:
+            raise ValueError("p_values must be numeric") from error
+        source = pd.Series(values, name="p_value")
+    else:
+        raise TypeError("p_values must be a pandas Series or numpy ndarray")
+
+    values = source.to_numpy(dtype=float)
+    if values.ndim != 1:
+        raise ValueError("p_values must be one-dimensional")
+    if not np.isfinite(values).all() or np.any((values < 0.0) | (values > 1.0)):
+        raise ValueError("p_values must be finite probabilities in [0, 1]")
+
+    if not len(values):
+        return FDRResult(
+            alpha=alpha_value,
+            p_values=source,
+            adjusted_p_values=pd.Series([], index=source.index, dtype=float, name="adjusted_p_value"),
+            rejected=pd.Series([], index=source.index, dtype=bool, name="rejected"),
+        )
+
+    order = np.argsort(values, kind="mergesort")
+    sorted_values = values[order]
+    ranks = np.arange(1, len(values) + 1, dtype=float)
+    thresholds = alpha_value * ranks / len(values)
+    accepted = sorted_values <= thresholds
+    sorted_rejected = np.zeros(len(values), dtype=bool)
+    if accepted.any():
+        sorted_rejected[: np.flatnonzero(accepted)[-1] + 1] = True
+
+    sorted_adjusted = np.minimum.accumulate((len(values) * sorted_values / ranks)[::-1])[::-1]
+    sorted_adjusted = np.clip(sorted_adjusted, 0.0, 1.0)
+    adjusted = np.empty(len(values), dtype=float)
+    rejected = np.empty(len(values), dtype=bool)
+    adjusted[order] = sorted_adjusted
+    rejected[order] = sorted_rejected
+
+    return FDRResult(
+        alpha=alpha_value,
+        p_values=source,
+        adjusted_p_values=pd.Series(adjusted, index=source.index, name="adjusted_p_value"),
+        rejected=pd.Series(rejected, index=source.index, name="rejected"),
+    )
 
 
 def ic_mean(ic_series: pd.Series | np.ndarray) -> float:
