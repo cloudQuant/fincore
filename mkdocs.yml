@@ -72,6 +72,7 @@ nav:
     - Visualization: guide/visualization.md
     - Portfolio Optimization: guide/optimization.md
     - Factor-analysis Migration: guide/factor-analysis.md
+    - Factor Research Protocol: concepts/factor-research-protocol.md
     - Performance Return Semantics: guide/performance-semantics.md
     - Risk Validation: guide/risk-validation.md
     - Reproducible Research: guide/reproducible-research.md

@@ -38,6 +38,7 @@
 | Task 10 Fama–MacBeth 对齐补充（2026-08-22） | 单行静态暴露会按 return dates 广播，时变暴露按资产标签而非输入列位置对齐；新增独立 statsmodels OLS cross-sectional oracle、静态截面和乱序资产 adversarial fixtures。`tests/numerical/test_factor_inference.py tests/test_factor_analysis tests/compat/alphalens`：1,076 passed、61 warnings；Ruff、Mypy 通过。该修复只收敛既有 Fama–MacBeth 例程，不构成 PIT、FDR、HAC/cluster SE、成本或容量工作流的完成证据。 |
 | Task 10 Benjamini–Hochberg FDR 补充（2026-08-22） | 新增可审计的独立推断函数：保留唯一 factor label、返回原始 p 值、BH adjusted p-value 与 step-up 决策；无效概率、重复标签及无效 `alpha` fail closed，空输入返回显式空结果。它与 `statsmodels.stats.multitest.multipletests(method="fdr_bh")` 的乱序/tie fixture 一致。`tests/numerical/test_factor_inference.py tests/test_factor_analysis tests/compat/alphalens`：1,085 passed、61 warnings；Ruff、Mypy 通过。该函数尚未接入所有 enhanced factor 报告或研究者 trials 记录。 |
 | Task 10 IC inference 边界补充（2026-08-22） | IC mean/t-stat/interval 现在丢弃 `NaN`、拒绝 infinite observation，零均值常数样本返回 `0.0`（不再伪造 `-inf`）；`z` 必须为有限正数。普通样本 t-stat 与 `scipy.stats.ttest_1samp` 一致。`tests/numerical/test_factor_inference.py tests/test_factor_analysis tests/compat/alphalens`：1,087 passed、61 warnings；Ruff、Mypy 通过。该 i.i.d. helper 不构成 HAC/cluster inference 或 factor workflow 的完成证据。 |
+| Task 10 PIT 因果物化补充（2026-08-22） | enhanced 层新增 `materialize_pit_factor` 与 `prepare_pit_factor_data`：账本强制 `as_of <= known_at <= effective_from`、统一时区、有限值及显式 universe；每个评估日只选择当时已知且生效的最新修订，`in_universe=False` 会撤出资产，空可用集明确 fail closed；包装入口拒绝全样本 `filter_zscore`，strict Alphalens 未改。手写 timeline oracle 和未来数据扰动 fixture 覆盖“不影响此前因子值”。`tests/numerical/test_factor_inference.py tests/numerical/test_factor_pit_materialization.py tests/numerical/test_optimization_feasibility.py tests/test_factor_analysis tests/test_attribution tests/test_optimization tests/compat/alphalens`：1,398 passed、61 warnings，306.91s；public API snapshot、Ruff、Mypy、`mkdocs build --strict` 通过（MkDocs/Material 给出上游迁移警告）。这是增强数据准备路径，不替代 corporate-action/calendar provenance、研究 trial 记录、成本、borrow、容量或所有 factor workflow 的完成证据。 |
 
 这些命令均在 `/Users/yunjinqi/opt/anaconda3` 的 `base` 环境中执行；候选构建目录为临时目录，未上传、未发布。
 
@@ -45,7 +46,7 @@
 
 1. **当前质量快照仍未通过覆盖率门禁。** 在 `f8174ae` 修复每轮复用同一个 disposable copy 的交叉污染后，重新收集的 [current-baseline.json](current-baseline.json) 显示 trusted、serial、single-process、xdist 与 branch-coverage 五轮均以 0 退出，副本完整性均为真，且非串行计数一致；此前 branch-coverage 轮的 17 个打包测试错误已消失。真实 branch-coverage 仍为 **45.0%**，低于 60% 下限。随后新增的提交使该快照的 `source.commit` 也不再匹配当前 HEAD；在新的完整收集达到门槛前，`check_quality_snapshot.py` 必须继续 fail closed。旧的“97%”快照不再可作为当前代码证据。
 2. **发布级许可证门禁失败。** `check_notices.py --require-approved` 对 `empyrical`、`pyfolio`、`alphalens` 三项均 fail closed；这需要具名人工/法律审批，不能由测试代替。
-3. **计划中的核心工作流仍未完成验收。** 现金流语义已接入增强报告与 manifest，但这不把它升级为完整的多币种报告工作流或 GIPS 认证；`fincore/risk/report.py` 已为现有 one-step walk-forward VaR 提供可复现的 reference 报告，却不覆盖 GARCH/EVT 的完整 out-of-sample calibration、convergence/residual/parameter-uncertainty 诊断或监管认证。`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在。PIT、FDR 向 enhanced factor 工作流的整合、成本容量和其余 T9–T10 验收不能据此视为完成。
+3. **计划中的核心工作流仍未完成验收。** 现金流语义已接入增强报告与 manifest，但这不把它升级为完整的多币种报告工作流或 GIPS 认证；`fincore/risk/report.py` 已为现有 one-step walk-forward VaR 提供可复现的 reference 报告，却不覆盖 GARCH/EVT 的完整 out-of-sample calibration、convergence/residual/parameter-uncertainty 诊断或监管认证。PIT 因果物化已接入 enhanced 数据准备入口，但 corporate-action/calendar provenance、研究 trial 记录及完整 factor workflow 仍未验收；FDR 也尚未接入所有 enhanced 报告或 trials。`fincore/factor_analysis/costs.py` 与 `fincore/factor_analysis/capacity.py` 仍不存在，因此成本容量和其余 T9–T10 验收不能据此视为完成。
 4. **公开类型与发布证明未完成。** 仓库无 `.pyi`，且 `scripts/check_public_typing.py`、`scripts/verify_attestation.py` 不存在；没有 pyright/stubtest installed-wheel 证明、SBOM/provenance/attestation 的本地验收。
 5. **远端治理不能由本地 checkout 验收。** 受保护分支、required checks、PyPI environment reviewer、Actions SHA pin 和实际发布 provenance 需要仓库管理员在远端完成并提供当前证据。
 
@@ -53,7 +54,7 @@
 
 1. 已修复质量基线收集中的打包测试错误；下一步为新增/低覆盖模块补测试。不得降低 60% branch-coverage 门槛或用旧快照、`--skip-commit-check` 充当发布证据。
 2. 完成三方许可的人工审阅并让 release profile 继续 fail closed。
-3. 扩展并独立验收剩余风险模型（GARCH/EVT 的 out-of-sample calibration、convergence/residual/parameter-uncertainty）、PIT/FDR 向 enhanced factor workflow 的整合、交易成本、容量和优化 KKT/残差等 T9–T10 项；每项需 oracle、property 与 adversarial fixture。绩效报告后续若要支持完整多币种台账，必须以带估值和 FX provenance 的端到端工作流验收，不能把 `DisclosureContext` 当作计算证据。
+3. 扩展并独立验收剩余风险模型（GARCH/EVT 的 out-of-sample calibration、convergence/residual/parameter-uncertainty）、PIT 的 corporate-action/calendar provenance 与完整 enhanced workflow 整合、FDR 的报告/trials 记录、交易成本、容量和优化 KKT/残差等 T9–T10 项；每项需 oracle、property 与 adversarial fixture。绩效报告后续若要支持完整多币种台账，必须以带估值和 FX provenance 的端到端工作流验收，不能把 `DisclosureContext` 当作计算证据。
 4. 交付 `.pyi` / pyright / stubtest consumer gate、SBOM、provenance/attestation 检查，再由管理员完成远端分支与发布环境治理。
 5. 只有全部自动与人工 gate 为绿，才生成 1.0 readiness seal；本轮明确没有 merge、push、tag 或 publish。
 
@@ -68,6 +69,7 @@
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/test_report tests/contracts/test_disclosure_context_contract.py tests/contracts/test_public_api_snapshot.py tests/contracts/test_capabilities.py tests/quality/test_render_capability_inventory.py tests/quality/test_snapshot_public_api_source.py tests/quality/test_check_performance_source.py -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/numerical/test_cashflow_performance.py --cov=fincore.performance.cashflows --cov-branch --cov-report=term-missing -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/numerical/test_risk_model_validation.py tests/numerical/test_risk_validation_report.py tests/property/test_risk_model_properties.py tests/test_risk tests/contracts/test_capabilities.py tests/contracts/test_public_api_snapshot.py tests/docs/test_examples.py -q --tb=short --maxfail=0
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' tests/numerical/test_factor_inference.py tests/numerical/test_factor_pit_materialization.py tests/numerical/test_optimization_feasibility.py tests/test_factor_analysis tests/test_attribution tests/test_optimization tests/compat/alphalens -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/render_capability_inventory.py --check
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/snapshot_public_api.py --check
 ```

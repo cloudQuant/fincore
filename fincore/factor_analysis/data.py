@@ -21,6 +21,7 @@ from fincore.factor_analysis.calendar import (
     timedelta_to_string,
 )
 from fincore.factor_analysis.exceptions import EnhancedNonMatchingTimezoneError, FactorLossExceededError
+from fincore.factor_analysis.pit import materialize_pit_factor
 
 
 @dataclass(frozen=True)
@@ -411,6 +412,51 @@ def prepare_factor_data(
     )
 
 
+def prepare_pit_factor_data(
+    observations: pd.DataFrame,
+    prices: pd.DataFrame,
+    evaluation_dates: pd.DatetimeIndex | Sequence[object],
+    *,
+    groupby: Mapping[Hashable, Hashable] | pd.Series | None = None,
+    quantiles: int | Sequence[float] | None = 5,
+    bins: int | Sequence[float] | None = None,
+    periods: Sequence[int] = (1, 5, 10),
+    max_loss: float = 0.35,
+    binning_by_group: bool = False,
+    filter_zscore: float | None = None,
+    groupby_labels: Mapping[Hashable, Hashable] | None = None,
+    zero_aware: bool = False,
+    cumulative_returns: bool = True,
+) -> PreparedFactorData:
+    """Prepare enhanced factor data from a causal PIT observation ledger.
+
+    This additive enhanced entry point materializes only values known and
+    effective on each requested date before calculating forward returns.  The
+    legacy full-sample ``filter_zscore`` option is deliberately unavailable so
+    this path cannot introduce look-ahead filtering; strict Alphalens retains
+    its source-compatible behavior through its separate facade.
+    """
+    if filter_zscore is not None:
+        raise ValueError("PIT factor preparation does not allow full-sample filter_zscore")
+    factor = materialize_pit_factor(observations, evaluation_dates)
+    if factor.empty:
+        raise ValueError("PIT observations produced no eligible factor values for evaluation_dates")
+    return prepare_factor_data(
+        factor,
+        prices,
+        groupby=groupby,
+        quantiles=quantiles,
+        bins=bins,
+        periods=periods,
+        max_loss=max_loss,
+        binning_by_group=binning_by_group,
+        filter_zscore=None,
+        groupby_labels=groupby_labels,
+        zero_aware=zero_aware,
+        cumulative_returns=cumulative_returns,
+    )
+
+
 def prepare_factor_data_from_forward_returns(
     factor: pd.Series,
     forward_returns: pd.DataFrame,
@@ -445,5 +491,6 @@ __all__ = [
     "compute_forward_returns",
     "prepare_factor_data",
     "prepare_factor_data_from_forward_returns",
+    "prepare_pit_factor_data",
     "quantize_factor",
 ]

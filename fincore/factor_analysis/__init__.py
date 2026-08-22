@@ -20,6 +20,7 @@ from fincore.factor_analysis.data import (
     compute_forward_returns,
     prepare_factor_data,
     prepare_factor_data_from_forward_returns,
+    prepare_pit_factor_data,
     quantize_factor,
 )
 from fincore.factor_analysis.exceptions import (
@@ -49,6 +50,7 @@ from fincore.factor_analysis.performance import (
     mean_return_by_quantile,
     quantile_turnover,
 )
+from fincore.factor_analysis.pit import PITPoint, materialize_pit_factor, validate_pit_alignment
 from fincore.factor_analysis.portfolio import (
     PyfolioFactorInputs,
     create_pyfolio_input,
@@ -85,6 +87,7 @@ __all__ = [
     "GridFigure",
     "MaxLossExceededError",
     "NonMatchingTimezoneError",
+    "PITPoint",
     "PreparedFactorData",
     "PyfolioFactorInputs",
     "add_custom_calendar_timedelta",
@@ -114,14 +117,17 @@ __all__ = [
     "factor_weights",
     "get_forward_returns_columns",
     "infer_trading_calendar",
+    "materialize_pit_factor",
     "mean_information_coefficient",
     "mean_return_by_quantile",
     "positions",
     "prepare_factor_data",
     "prepare_factor_data_from_forward_returns",
+    "prepare_pit_factor_data",
     "quantile_turnover",
     "quantize_factor",
     "show_owned_figures",
     "timedelta_strings_to_integers",
     "timedelta_to_string",
+    "validate_pit_alignment",
 ]

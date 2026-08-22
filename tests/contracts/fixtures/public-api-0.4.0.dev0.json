@@ -606,6 +606,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.NonMatchingTimezoneError"
         },
+        "PITPoint": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.PITPoint"
+        },
         "PreparedFactorData": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.PreparedFactorData"
@@ -722,6 +726,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.infer_trading_calendar"
         },
+        "materialize_pit_factor": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.materialize_pit_factor"
+        },
         "mean_information_coefficient": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.mean_information_coefficient"
@@ -742,6 +750,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.prepare_factor_data_from_forward_returns"
         },
+        "prepare_pit_factor_data": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.prepare_pit_factor_data"
+        },
         "quantile_turnover": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.quantile_turnover"
@@ -761,6 +773,10 @@
         "timedelta_to_string": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.timedelta_to_string"
+        },
+        "validate_pit_alignment": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.validate_pit_alignment"
         }
       },
       "profile": "enhanced_v1",
@@ -779,6 +795,7 @@
         "GridFigure",
         "MaxLossExceededError",
         "NonMatchingTimezoneError",
+        "PITPoint",
         "PreparedFactorData",
         "PyfolioFactorInputs",
         "add_custom_calendar_timedelta",
@@ -808,16 +825,19 @@
         "factor_weights",
         "get_forward_returns_columns",
         "infer_trading_calendar",
+        "materialize_pit_factor",
         "mean_information_coefficient",
         "mean_return_by_quantile",
         "positions",
         "prepare_factor_data",
         "prepare_factor_data_from_forward_returns",
+        "prepare_pit_factor_data",
         "quantile_turnover",
         "quantize_factor",
         "show_owned_figures",
         "timedelta_strings_to_integers",
-        "timedelta_to_string"
+        "timedelta_to_string",
+        "validate_pit_alignment"
       ]
     },
     "fincore.optimization": {

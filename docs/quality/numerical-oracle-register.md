@@ -237,6 +237,33 @@ oracle generation method, and the tolerance asserted by
 - **Tolerance:** non-degenerate t-statistic `rtol = atol = 1e-12`; boundary
   outputs exact.
 
+### 13. Causal PIT factor materialization
+
+- **File:** `fincore/factor_analysis/pit.py::materialize_pit_factor` and
+  `fincore/factor_analysis/data.py::prepare_pit_factor_data`
+- **Method:** an enhanced factor ledger contains `asset`, `as_of`, `known_at`,
+  `effective_from`, `value`, and `in_universe`. For each requested evaluation
+  date, select only revisions satisfying
+  `as_of <= known_at <= effective_from <= evaluation_date`; choose the latest
+  eligible revision per asset by `(effective_from, known_at, as_of)`. A latest
+  `in_universe=False` record removes the asset. The PIT preparation wrapper
+  rejects the legacy full-sample `filter_zscore` option before computing
+  forward returns.
+- **Boundary:** timestamps must use one timezone (or all be naive), evaluation
+  dates are sorted and unique, values are finite, revision tuples are unique,
+  and causal ordering is enforced. Invalid data fails closed instead of being
+  re-timestamped or silently carried forward.
+- **Oracle:** hand-specified event-time timeline plus an adversarial future
+  perturbation fixture in `tests/numerical/test_factor_pit_materialization.py`.
+  This is a deterministic selection contract, not a fitted numerical model:
+  the expected `(date, asset)` series is written independently of production
+  helper calls, and an observation known after the tested horizon must leave
+  that horizon unchanged.
+- **Tolerance:** exact labels and values; no tolerance-based causal exception.
+- **Scope:** this is an additive enhanced input path. It does not yet prove
+  versioned corporate actions/calendars, research-trial tracking, transaction
+  costs, borrow, capacity, or integration into every factor report.
+
 ## Regeneration
 
 Re-run the numerical gate with:
