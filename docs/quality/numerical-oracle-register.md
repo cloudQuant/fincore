@@ -146,7 +146,7 @@ oracle generation method, and the tolerance asserted by
 - **Oracle:** `statsmodels` `OLS(cov_type="HAC")` and `WLS` (0.14.6).
 - **Tolerance:** HAC `rtol = atol = 1e-10`; WLS coefficients `rtol = atol = 1e-8`.
 
-### 8. Multi-period Brinson linking
+### 8. Brinson--Hood--Beebower attribution and multi-period linking
 
 - **File:** `fincore/attribution/brinson.py::brinson_cumulative`
 - **Fix:** Carino geometric linking replaces arithmetic summation. Carino
@@ -167,6 +167,14 @@ oracle generation method, and the tolerance asserted by
   reference for the two-period near-total-loss fixture; it does not import
   `fincore` or derive effects through production code.
 - **Tolerance:** reconciliation residual ≤ 1e-12.
+
+The historical
+``BrinsonAttribution.calculate(method="brinson_hood")`` spelling is now an
+implemented alias for this BHB arithmetic decomposition rather than a public
+``NotImplementedError`` branch.  Its per-period allocation, selection,
+interaction, total, portfolio return and benchmark return are checked against
+the standalone ``brinson_bhb_reference`` before the multi-period linker is
+applied.
 
 ### 9. Style beta and momentum
 

@@ -35,7 +35,12 @@ from decimal import Decimal, localcontext
 
 import numpy as np
 
-__all__ = ["brinson_carino_decimal_reference", "brinson_carino_reference", "carino_k_decimal_reference"]
+__all__ = [
+    "brinson_bhb_reference",
+    "brinson_carino_decimal_reference",
+    "brinson_carino_reference",
+    "carino_k_decimal_reference",
+]
 
 
 def _carino_k(rp: float, rb: float) -> float:
@@ -82,6 +87,44 @@ def _validate_carino_period_returns(values: np.ndarray, *, label: str) -> None:
 def _validate_decimal_carino_period_returns(values: list[Decimal], *, label: str) -> None:
     if any(not value.is_finite() or value <= Decimal(-1) for value in values):
         raise ValueError(f"{label} must be finite and greater than -1 for Carino linking.")
+
+
+def brinson_bhb_reference(
+    portfolio_returns: np.ndarray,
+    benchmark_returns: np.ndarray,
+    portfolio_weights: np.ndarray,
+    benchmark_weights: np.ndarray,
+) -> dict[str, float]:
+    """Return an independent one-period Brinson--Hood--Beebower decomposition.
+
+    This intentionally uses a standalone NumPy calculation rather than the
+    production helper.  The three effects are the BHB arithmetic components;
+    their sum must equal the portfolio-minus-benchmark return for the period.
+    """
+    rp = np.asarray(portfolio_returns, dtype=float).reshape(-1)
+    rb = np.asarray(benchmark_returns, dtype=float).reshape(-1)
+    wp = np.asarray(portfolio_weights, dtype=float).reshape(-1)
+    wb = np.asarray(benchmark_weights, dtype=float).reshape(-1)
+    if not (rp.shape == rb.shape == wp.shape == wb.shape):
+        raise ValueError("portfolio returns, benchmark returns, and weights must have the same shape.")
+    _validate_finite(rp, label="portfolio returns")
+    _validate_finite(rb, label="benchmark returns")
+    _validate_finite(wp, label="portfolio weights")
+    _validate_finite(wb, label="benchmark weights")
+
+    allocation = float(np.sum((wp - wb) * rb))
+    selection = float(np.sum(wb * (rp - rb)))
+    interaction = float(np.sum((wp - wb) * (rp - rb)))
+    portfolio_return = float(np.sum(wp * rp))
+    benchmark_return = float(np.sum(wb * rb))
+    return {
+        "allocation": allocation,
+        "selection": selection,
+        "interaction": interaction,
+        "total": allocation + selection + interaction,
+        "portfolio_return": portfolio_return,
+        "benchmark_return": benchmark_return,
+    }
 
 
 def brinson_carino_reference(

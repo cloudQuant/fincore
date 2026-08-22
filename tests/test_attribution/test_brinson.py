@@ -238,8 +238,44 @@ def test_brinson_attribution_class_method_validation():
     ba = BrinsonAttribution()
     with pytest.raises(ValueError, match="Unknown attribution method"):
         ba.calculate(returns, method="nope")
-    with pytest.raises(NotImplementedError, match="not implemented"):
-        ba.calculate(returns, method="brinson_hood")
+
+
+def test_brinson_hood_method_is_a_bhb_alias_with_independent_oracle():
+    """The historical alias must be an implemented BHB decomposition, not a stub."""
+    from tests.oracles.attribution.brinson_oracle import brinson_bhb_reference
+
+    idx = pd.date_range("2024-01-31", periods=2, freq="ME")
+    returns = pd.DataFrame({"A": [0.04, -0.01], "B": [0.01, 0.03]}, index=idx)
+    benchmark_returns = pd.DataFrame({"A": [0.02, 0.00], "B": [0.00, 0.01]}, index=idx)
+    weights = pd.DataFrame({"A": [0.65, 0.40], "B": [0.35, 0.60]}, index=idx)
+
+    result = BrinsonAttribution().calculate(
+        returns,
+        benchmark_returns=benchmark_returns,
+        weights=weights,
+        method="brinson_hood",
+    )
+    canonical = BrinsonAttribution().calculate(
+        returns,
+        benchmark_returns=benchmark_returns,
+        weights=weights,
+        method="brinson",
+    )
+    pd.testing.assert_frame_equal(result, canonical)
+
+    benchmark_weights = np.full(2, 0.5)
+    for row, portfolio_row, benchmark_row, weight_row in zip(
+        result.itertuples(index=False),
+        returns.to_numpy(),
+        benchmark_returns.to_numpy(),
+        weights.to_numpy(),
+        strict=True,
+    ):
+        expected = brinson_bhb_reference(portfolio_row, benchmark_row, weight_row, benchmark_weights)
+        assert row.allocation == pytest.approx(expected["allocation"], abs=1e-15)
+        assert row.selection == pytest.approx(expected["selection"], abs=1e-15)
+        assert row.interaction == pytest.approx(expected["interaction"], abs=1e-15)
+        assert row.total == pytest.approx(expected["total"], abs=1e-15)
 
 
 def test_brinson_attribution_class_sector_mapping_aggregates_columns():

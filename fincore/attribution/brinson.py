@@ -327,16 +327,16 @@ class BrinsonAttribution:
         weights : pd.DataFrame, optional
             Portfolio weights. If None, uses equal weights.
         method : str, default "brinson"
-            Attribution method. Options: 'brinson', 'brinson_hood'.
+            Attribution method. ``"brinson"`` and the historical
+            ``"brinson_hood"`` alias both select the standard
+            Brinson--Hood--Beebower (BHB) arithmetic decomposition.
 
         Returns
         -------
         pd.DataFrame
             Attribution results by period.
         """
-        if method == "brinson_hood":
-            raise NotImplementedError("brinson_hood method is not implemented yet.")
-        if method != "brinson":
+        if method not in {"brinson", "brinson_hood"}:
             raise ValueError("Unknown attribution method. Use: 'brinson' or 'brinson_hood'.")
 
         # Apply sector mapping if provided

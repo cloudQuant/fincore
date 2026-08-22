@@ -14,9 +14,10 @@ def test_public_capabilities_have_unique_ids_and_actionable_statuses() -> None:
     assert all(row.domain for row in rows)
 
 
-def test_brinson_hood_is_not_implemented() -> None:
+def test_brinson_hood_is_a_stable_bhb_alias() -> None:
     cap = get_capability("attribution.brinson_hood")
-    assert cap.status == "not_implemented"
+    assert cap.status == "stable"
+    assert cap.public_path == "fincore.attribution.BrinsonAttribution.calculate"
 
 
 def test_provider_entry_points_are_provider_required() -> None:
