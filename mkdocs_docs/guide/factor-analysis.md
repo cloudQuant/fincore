@@ -57,6 +57,11 @@ Artifacts are not shown or closed automatically.
   observations.
 - Treat `max_loss` as a data-quality threshold. Inspect the loss report and
   justify any increase rather than accepting dropped observations silently.
+- For new enhanced research with multiple return horizons, use
+  `prepare_factor_data_by_horizon`. It creates one prepared table and one loss
+  report per horizon, so missing long-horizon returns do not silently delete
+  usable short-horizon observations. The strict Alphalens route intentionally
+  keeps its source-shaped all-horizon cleanup behavior.
 
 ## Causal PIT inputs for enhanced research
 

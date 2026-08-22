@@ -240,6 +240,25 @@ _CAPABILITIES: tuple[Capability, ...] = (
         rationale="Enhanced prepare/analyze/render workflow; Beta integration.",
     ),
     Capability(
+        id="factor_analysis.prepare_by_horizon",
+        public_path="fincore.factor_analysis.prepare_factor_data_by_horizon",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Factor, prices, and unique forward periods; full-sample filter_zscore is rejected on this causal "
+            "enhanced route."
+        ),
+        output_contract=(
+            "A MultiHorizonPreparedFactorData mapping whose per-period PreparedFactorData and loss report retain "
+            "observations available for that horizon."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "Per-horizon availability prevents long-horizon missing returns from removing short-horizon evidence, "
+            "but costs, capacity, corporate-action/calendar provenance, and full workflow integration remain unsealed."
+        ),
+    ),
+    Capability(
         id="factor_analysis.pit_prepare",
         public_path="fincore.factor_analysis.prepare_pit_factor_data",
         domain="factor_analysis",

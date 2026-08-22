@@ -62,6 +62,29 @@ to affect historical eligibility. The returned `PreparedFactorData` still has
 ordinary forward-return availability loss, so callers must inspect
 `loss_report` and document the selection protocol.
 
+## Preserve availability separately for each forward horizon
+
+For a multi-horizon enhanced study, use
+`prepare_factor_data_by_horizon(factor, prices, periods=(1, 5, 20))` rather
+than treating the legacy all-column cleanup result as a single research panel.
+It returns `MultiHorizonPreparedFactorData.by_horizon`, an immutable mapping
+from each computed forward-return label (for example, `"1D"`) to its own
+`PreparedFactorData`.
+
+Each period's `loss_report` counts forward-return availability and final
+binning only for that period. A missing 20-day outcome must not remove an
+otherwise usable 1-day observation, and a price change that affects only a
+later long horizon cannot rebucket an already available short-horizon row.
+The API therefore computes factor bins from the finite factor/universe panel
+before applying each horizon's return-availability mask.
+
+This is an enhanced-only API. The strict `fincore.alphalens` route deliberately
+retains its source-shaped all-horizon cleaning semantics. Horizon labels must
+be unique, every horizon separately enforces `max_loss`, and full-sample
+`filter_zscore` is rejected to keep this route causal. The API does not yet
+provide corporate-action/calendar provenance, costs, borrow availability,
+slippage, capacity, or a complete research-trial workflow.
+
 ## Post-analysis IC inference and FDR
 
 After enhanced analysis, run the explicit post-analysis step rather than

@@ -606,6 +606,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.MaxLossExceededError"
         },
+        "MultiHorizonPreparedFactorData": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.MultiHorizonPreparedFactorData"
+        },
         "NonMatchingTimezoneError": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.NonMatchingTimezoneError"
@@ -754,6 +758,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.prepare_factor_data"
         },
+        "prepare_factor_data_by_horizon": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.prepare_factor_data_by_horizon"
+        },
         "prepare_factor_data_from_forward_returns": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.prepare_factor_data_from_forward_returns"
@@ -803,6 +811,7 @@
         "GridFigure",
         "ICInferenceResult",
         "MaxLossExceededError",
+        "MultiHorizonPreparedFactorData",
         "NonMatchingTimezoneError",
         "PITPoint",
         "PreparedFactorData",
@@ -840,6 +849,7 @@
         "mean_return_by_quantile",
         "positions",
         "prepare_factor_data",
+        "prepare_factor_data_by_horizon",
         "prepare_factor_data_from_forward_returns",
         "prepare_pit_factor_data",
         "quantile_turnover",

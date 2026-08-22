@@ -16,9 +16,11 @@ from fincore.factor_analysis.calendar import (
 )
 from fincore.factor_analysis.data import (
     FactorLossReport,
+    MultiHorizonPreparedFactorData,
     PreparedFactorData,
     compute_forward_returns,
     prepare_factor_data,
+    prepare_factor_data_by_horizon,
     prepare_factor_data_from_forward_returns,
     prepare_pit_factor_data,
     quantize_factor,
@@ -91,6 +93,7 @@ __all__ = [
     "GridFigure",
     "ICInferenceResult",
     "MaxLossExceededError",
+    "MultiHorizonPreparedFactorData",
     "NonMatchingTimezoneError",
     "PITPoint",
     "PreparedFactorData",
@@ -128,6 +131,7 @@ __all__ = [
     "mean_return_by_quantile",
     "positions",
     "prepare_factor_data",
+    "prepare_factor_data_by_horizon",
     "prepare_factor_data_from_forward_returns",
     "prepare_pit_factor_data",
     "quantile_turnover",

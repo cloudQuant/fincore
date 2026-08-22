@@ -285,6 +285,28 @@ oracle generation method, and the tolerance asserted by
   not provide a pre-registered factor family, trial registry, cost/capacity
   model, or report-level disclosure workflow.
 
+### 15. Per-horizon enhanced factor-data availability
+
+- **File:** `fincore/factor_analysis/data.py::prepare_factor_data_by_horizon`
+- **Method:** calculate factor bins from the finite factor/universe panel once,
+  then create a separate table for every unique computed forward-return label.
+  Each table admits only finite returns for its own horizon and carries a
+  standalone `FactorLossReport`; it must not inherit availability loss from a
+  different horizon.
+- **Boundary:** duplicate computed horizon labels fail closed; full-sample
+  `filter_zscore` is rejected; every horizon enforces `max_loss` independently.
+  The strict Alphalens-compatible all-column cleaner is deliberately not
+  modified.
+- **Oracle:** a hand-specified three-date/four-asset price panel in
+  `tests/numerical/test_factor_multihorizon_preparation.py` has twelve valid
+  `1D` rows and eight valid `3D` rows. Mutating only the terminal price changes
+  the eligible `3D` table but must leave the complete `1D` table byte-for-byte
+  unchanged.
+- **Tolerance:** row counts, labels, loss ratios, and short-horizon frame are
+  exact; no floating tolerance is used for availability decisions.
+- **Scope:** this establishes data-availability isolation, not corporate-action
+  or calendar provenance, costs, borrow, slippage, capacity, or trial tracking.
+
 ## Regeneration
 
 Re-run the numerical gate with:
