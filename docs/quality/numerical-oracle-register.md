@@ -179,6 +179,28 @@ oracle generation method, and the tolerance asserted by
 - **Oracle:** `np.cov/np.var` direct computation.
 - **Tolerance:** beta `rtol = atol = 1e-6`.
 
+## Factor research
+
+### 10. Fama-MacBeth cross-sectional label alignment
+
+- **File:** `fincore/factor_analysis/inference.py::fama_macbeth`
+- **Fix:** a one-row exposure panel is a static cross-section and is broadcast
+  over each return date; a time-varying panel is aligned by asset label before
+  every cross-sectional fit. Missing exposure dates are skipped rather than
+  matched by row position. Duplicate labels are rejected, preventing a
+  silently inverted coefficient when callers reorder assets.
+- **Method:** each usable date fits `R_i = alpha + beta X_i` by least squares;
+  the reported coefficient is the time-series mean and the reported standard
+  error is the i.i.d. time-series standard error. It is intentionally not a
+  HAC or clustered inference claim.
+- **Oracle:** `statsmodels.api.OLS` independently fits each cross-section in
+  `tests/numerical/test_factor_inference.py`; its coefficient means and
+  `ddof=1 / sqrt(n)` standard errors are compared without importing the
+  production routine.
+- **Tolerance:** `rtol = atol = 1e-12` for the deterministic fixture. Static
+  exposure and shuffled asset-label regressions are separate adversarial
+  fixtures.
+
 ## Regeneration
 
 Re-run the numerical gate with:

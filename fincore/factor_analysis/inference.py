@@ -57,31 +57,54 @@ def fama_macbeth(
     """Fama-MacBeth cross-sectional regression.
 
     ``returns`` is a ``(n_periods, n_assets)`` panel and ``exposures`` a panel
-    of cross-sectional characteristics (same shape, or a single ``(n_assets,)``
-    row broadcast across periods).  For each period a cross-sectional regression
-    ``R_i = alpha + beta * X_i`` is estimated; the reported coefficient is the
-    time-series mean of those cross-sectional slopes, with a time-series
-    standard error.
+    of cross-sectional characteristics with asset labels matching
+    ``returns.columns``. A single ``(n_assets,)`` exposure row is treated as a
+    static cross-section and broadcast across all return dates. For a panel,
+    unavailable exposure dates become missing rows and are skipped; values are
+    always reindexed by *asset label*, never by input column position.
+
+    For each usable period a cross-sectional regression ``R_i = alpha + beta
+    * X_i`` is estimated. The reported coefficient is the time-series mean of
+    those slopes with an i.i.d. time-series standard error. This routine does
+    not claim a HAC or clustered standard error.
     """
-    common_index = returns.index.intersection(exposures.index)
-    returns = returns.loc[common_index]
-    exposures = exposures.loc[common_index]
-    if len(exposures.columns) != 1 and exposures.shape[1] != returns.shape[1]:
-        raise ValueError("exposures must be a single-characteristic panel aligned with returns")
+    if not isinstance(returns, pd.DataFrame) or not isinstance(exposures, pd.DataFrame):
+        raise TypeError("returns and exposures must be pandas DataFrames")
+    if returns.empty or returns.shape[1] < 2:
+        raise ValueError("returns must contain at least two asset columns")
+    if returns.index.has_duplicates or exposures.index.has_duplicates:
+        raise ValueError("returns and exposures indices must not contain duplicates")
+    if returns.columns.has_duplicates or exposures.columns.has_duplicates:
+        raise ValueError("returns and exposures columns must not contain duplicates")
+
+    missing_assets = returns.columns.difference(exposures.columns)
+    if len(missing_assets):
+        raise ValueError(f"exposures are missing return asset columns: {list(missing_assets)!r}")
+
+    if len(exposures) == 1:
+        static = exposures.iloc[0].reindex(returns.columns)
+        aligned_exposures = pd.DataFrame(
+            np.tile(static.to_numpy(dtype=float), (len(returns), 1)),
+            index=returns.index,
+            columns=returns.columns,
+        )
+    else:
+        aligned_exposures = exposures.reindex(index=returns.index, columns=returns.columns)
 
     estimates: list[float] = []
     alphas: list[float] = []
     for t in returns.index:
         y = returns.loc[t].to_numpy(dtype=float)
-        x = exposures.loc[t].to_numpy(dtype=float).flatten()
-        if x.shape[0] != y.shape[0]:
-            x = np.tile(x, y.shape[0] // max(x.shape[0], 1))
-        mask = ~(np.isnan(y) | np.isnan(x))
+        x = aligned_exposures.loc[t].to_numpy(dtype=float)
+        mask = np.isfinite(y) & np.isfinite(x)
         if mask.sum() < 2 or np.std(x[mask]) < 1e-15:
             continue
-        slope, intercept = np.polyfit(x[mask], y[mask], 1)
-        estimates.append(float(slope))
-        alphas.append(float(intercept))
+        design = np.column_stack((np.ones(mask.sum()), x[mask]))
+        coefficients, _, rank, _ = np.linalg.lstsq(design, y[mask], rcond=None)
+        if rank < 2:  # pragma: no cover - protected by the variance guard
+            continue
+        alphas.append(float(coefficients[0]))
+        estimates.append(float(coefficients[1]))
 
     if not estimates:
         return pd.DataFrame(columns=["mean", "std_error", "t_stat"], index=["intercept", "exposure"])
@@ -89,12 +112,20 @@ def fama_macbeth(
     slopes = np.asarray(estimates, dtype=float)
     intercepts = np.asarray(alphas, dtype=float)
     mean_slope = float(np.mean(slopes))
-    se_slope = float(np.std(slopes, ddof=1) / np.sqrt(len(slopes)))
     mean_intercept = float(np.mean(intercepts))
-    se_intercept = float(np.std(intercepts, ddof=1) / np.sqrt(len(intercepts)))
+    se_slope = float(np.std(slopes, ddof=1) / np.sqrt(len(slopes))) if len(slopes) > 1 else float("nan")
+    se_intercept = float(np.std(intercepts, ddof=1) / np.sqrt(len(intercepts))) if len(intercepts) > 1 else float("nan")
 
     def t_stat(mean: float, se: float) -> float:
-        return mean / se if se > 1e-15 else float("inf") if mean > 0 else float("-inf")
+        if not np.isfinite(se):
+            return float("nan")
+        if se > 1e-15:
+            return mean / se
+        if mean > 0.0:
+            return float("inf")
+        if mean < 0.0:
+            return float("-inf")
+        return 0.0
 
     return pd.DataFrame(
         {
