@@ -458,3 +458,36 @@ def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch:
     with pytest.raises(DependencyError, match=r"pip install fincore\[alphalens\]"):
         render_matplotlib._plot_dependencies()
     assert example["OPTIONAL_EXTRA_INSTALL"] == "fincore[alphalens]"
+
+
+def test_factor_cost_and_capacity_ledger_example() -> None:
+    # mkdocs_docs/concepts/factor-research-protocol.md cost/capacity block.
+    from fincore.factor_analysis import FactorCostModel, apply_factor_costs
+
+    dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
+    weights = pd.Series(
+        [0.60, -0.40, 0.20, -0.80],
+        index=pd.MultiIndex.from_product((dates, ("A", "B")), names=("date", "asset")),
+    )
+    gross_returns = pd.Series([0.010, -0.005], index=dates)
+    dollar_volume = pd.DataFrame({"A": [1_000.0, 1_500.0], "B": [2_000.0, 1_000.0]}, index=dates)
+    borrow_rates = pd.DataFrame({"A": [0.0, 0.0], "B": [0.002, 0.003]}, index=dates)
+    borrow_available = pd.DataFrame(True, index=dates, columns=("A", "B"))
+
+    ledger = apply_factor_costs(
+        gross_returns,
+        weights,
+        dollar_volume,
+        portfolio_value=250.0,
+        model=FactorCostModel(
+            half_spread_bps=10.0,
+            impact_coefficient=0.01,
+            impact_exponent=0.5,
+            max_participation=0.50,
+        ),
+        borrow_rates=borrow_rates,
+        borrow_available=borrow_available,
+    )
+
+    assert (ledger.participation <= ledger.model.max_participation).all().all()
+    pd.testing.assert_series_equal(ledger.net_returns, ledger.gross_returns - ledger.total_cost, check_names=False)

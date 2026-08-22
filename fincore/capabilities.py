@@ -259,6 +259,25 @@ _CAPABILITIES: tuple[Capability, ...] = (
         ),
     ),
     Capability(
+        id="factor_analysis.costs",
+        public_path="fincore.factor_analysis.apply_factor_costs",
+        domain="factor_analysis",
+        status=STATUS_EXPERIMENTAL,
+        input_contract=(
+            "Gross-normalized enhanced factor weights, same-currency dollar-volume panel, simple gross returns, "
+            "an explicit FactorCostModel, and complete borrow ledgers whenever weights are short."
+        ),
+        output_contract=(
+            "An immutable gross-to-net cost ledger with entry/rebalance trade weights, spread/impact/borrow costs, "
+            "participation, and the binding hard capacity inequality."
+        ),
+        docs_path="concepts/factor-research-protocol.md",
+        rationale=(
+            "A labelled arithmetic accounting boundary with independent reconciliation fixtures; it is not an "
+            "execution simulator, calibrated market-impact model, or complete research-trial workflow."
+        ),
+    ),
+    Capability(
         id="factor_analysis.pit_prepare",
         public_path="fincore.factor_analysis.prepare_pit_factor_data",
         domain="factor_analysis",

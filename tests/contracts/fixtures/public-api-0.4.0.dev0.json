@@ -566,6 +566,18 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.FactorAnalysisModel"
         },
+        "FactorCapacityResult": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorCapacityResult"
+        },
+        "FactorCostModel": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorCostModel"
+        },
+        "FactorCostResult": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.FactorCostResult"
+        },
         "FactorDataError": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.FactorDataError"
@@ -634,6 +646,10 @@
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.analyze_factor"
         },
+        "apply_factor_costs": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.apply_factor_costs"
+        },
         "average_cumulative_return_by_quantile": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.average_cumulative_return_by_quantile"
@@ -697,6 +713,10 @@
         "diff_custom_calendar_timedeltas": {
           "kind": "unknown",
           "public_path": "fincore.factor_analysis.diff_custom_calendar_timedeltas"
+        },
+        "estimate_factor_capacity": {
+          "kind": "unknown",
+          "public_path": "fincore.factor_analysis.estimate_factor_capacity"
         },
         "factor_alpha_beta": {
           "kind": "unknown",
@@ -801,6 +821,9 @@
         "EventAnalysisModel",
         "FactorAnalysisConfig",
         "FactorAnalysisModel",
+        "FactorCapacityResult",
+        "FactorCostModel",
+        "FactorCostResult",
         "FactorDataError",
         "FactorFunctionSpec",
         "FactorGroupAnalysis",
@@ -818,6 +841,7 @@
         "PyfolioFactorInputs",
         "add_custom_calendar_timedelta",
         "analyze_factor",
+        "apply_factor_costs",
         "average_cumulative_return_by_quantile",
         "backshift_returns_series",
         "close_owned_figures",
@@ -834,6 +858,7 @@
         "create_turnover_tear_sheet",
         "cumulative_returns",
         "diff_custom_calendar_timedeltas",
+        "estimate_factor_capacity",
         "factor_alpha_beta",
         "factor_cumulative_returns",
         "factor_information_coefficient",

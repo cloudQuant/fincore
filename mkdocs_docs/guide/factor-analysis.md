@@ -62,6 +62,14 @@ Artifacts are not shown or closed automatically.
   report per horizon, so missing long-horizon returns do not silently delete
   usable short-horizon observations. The strict Alphalens route intentionally
   keeps its source-shaped all-horizon cleanup behavior.
+- Build transaction assumptions explicitly after deriving enhanced factor
+  weights. `apply_factor_costs` records entry/rebalance turnover, spread and
+  temporary-impact slippage, short-borrow availability/rates, participation,
+  and a hard capacity bound in one gross-to-net ledger. It requires complete
+  same-currency dollar-volume and borrow inputs rather than imputing them; it
+  is an experimental accounting model, not an execution simulator. See the
+  [factor research protocol](../concepts/factor-research-protocol.md#explicit-factor-cost-borrow-slippage-and-capacity-ledger)
+  for formulas and fail-closed boundaries.
 
 ## Causal PIT inputs for enhanced research
 

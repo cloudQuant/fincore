@@ -261,8 +261,9 @@ oracle generation method, and the tolerance asserted by
   that horizon unchanged.
 - **Tolerance:** exact labels and values; no tolerance-based causal exception.
 - **Scope:** this is an additive enhanced input path. It does not yet prove
-  versioned corporate actions/calendars, research-trial tracking, transaction
-  costs, borrow, capacity, or integration into every factor report.
+  versioned corporate actions/calendars, research-trial tracking, integration
+  with every factor report, or liquidity/borrow provenance and execution
+  calibration for the separate cost ledger.
 
 ### 14. Enhanced factor-model IC/FDR post-analysis
 
@@ -282,8 +283,8 @@ oracle generation method, and the tolerance asserted by
 - **Tolerance:** Student-t p-values and adjusted values `rtol = atol =
   1e-12`; exact testability and rejection flags.
 - **Scope:** intentionally i.i.d. only. It is not a HAC/cluster claim and does
-  not provide a pre-registered factor family, trial registry, cost/capacity
-  model, or report-level disclosure workflow.
+  not provide a pre-registered factor family, trial registry, integration with
+  the separate cost/capacity ledger, or report-level disclosure workflow.
 
 ### 15. Per-horizon enhanced factor-data availability
 
@@ -305,7 +306,39 @@ oracle generation method, and the tolerance asserted by
 - **Tolerance:** row counts, labels, loss ratios, and short-horizon frame are
   exact; no floating tolerance is used for availability decisions.
 - **Scope:** this establishes data-availability isolation, not corporate-action
-  or calendar provenance, costs, borrow, slippage, capacity, or trial tracking.
+  or calendar provenance, trial tracking, or integration with the separate
+  cost/borrow/slippage/capacity ledger.
+
+### 16. Enhanced factor cost, borrow and capacity accounting
+
+- **File:** `fincore/factor_analysis/costs.py::apply_factor_costs` and
+  `estimate_factor_capacity`
+- **Method:** for gross-normalized factor holdings `w[t,i]`, begin with zero
+  holdings and calculate one-way trade weight `q[t,i] = |w[t,i]-w[t-1,i]|`.
+  The ledger reports turnover `0.5 * sum(q)`, spread
+  `sum(q) * half_spread_bps / 10_000`, temporary impact
+  `sum(q * coefficient * participation**exponent)`, borrow
+  `sum(max(-w,0) * per_period_borrow_rate)`, and
+  `net = gross - spread - impact - borrow`. Participation is
+  `q * portfolio_value / dollar_volume`; the hard capacity is the minimum
+  nonzero-trade inequality `max_participation * dollar_volume / q`.
+- **Boundary:** sparse `(date, asset)` positions are explicit zero holdings so
+  entry/exit trades cannot become `NaN`. Gross normalization, complete labels,
+  positive dollar volume, finite numeric values, and same-currency portfolio
+  value/volume are mandatory. Any short requires both finite per-period borrow
+  rates and boolean availability; unavailable/missing borrow and an
+  over-capacity portfolio raise instead of emitting a net return.
+- **Oracle:** `tests/oracles/factor/costs_oracle.py` is a NumPy-only ledger;
+  it never imports `fincore`. The labelled fixture in
+  `tests/numerical/test_factor_costs.py` compares every ledger component and
+  the binding capacity to that oracle, then separately adversarially tests
+  label reordering, unavailable borrow, capacity rejection, sparse exits, and
+  defensive output snapshots.
+- **Tolerance:** arithmetic ledger and capacity use `rtol = atol = 1e-12` in
+  the reference comparison; availability/capacity rejection is exact.
+- **Scope:** an explicit research accounting convention, not calibrated market
+  impact, FX conversion, an order-level execution simulator, or a replacement
+  for retained liquidity/borrow source provenance.
 
 ## Regeneration
 

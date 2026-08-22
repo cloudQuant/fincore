@@ -9,9 +9,10 @@ workflow.
 
 The current PIT route establishes causal factor materialization and causal
 factor-data preparation. It does not by itself certify a research result,
-replace a versioned corporate-action source, model transaction costs or
-capacity, or record every research trial. Those controls must be supplied by
-the calling research protocol until their dedicated workflows are available.
+replace a versioned corporate-action source, or record every research trial.
+The separate cost/capacity ledger below provides explicit arithmetic, but its
+liquidity and borrow provenance and any execution calibration remain caller
+responsibilities.
 
 ## Event-time ledger
 
@@ -82,8 +83,88 @@ This is an enhanced-only API. The strict `fincore.alphalens` route deliberately
 retains its source-shaped all-horizon cleaning semantics. Horizon labels must
 be unique, every horizon separately enforces `max_loss`, and full-sample
 `filter_zscore` is rejected to keep this route causal. The API does not yet
-provide corporate-action/calendar provenance, costs, borrow availability,
-slippage, capacity, or a complete research-trial workflow.
+provide corporate-action/calendar provenance or a complete research-trial
+workflow.
+
+## Explicit factor cost, borrow, slippage and capacity ledger
+
+Use `apply_factor_costs` after constructing the enhanced factor portfolio.
+It is deliberately a separate, labelled accounting step: the strict
+`fincore.alphalens` facade is not changed, and the API does not silently choose
+an execution, liquidity, FX, or borrow policy for the caller.
+
+```python
+import pandas as pd
+
+from fincore.factor_analysis import FactorCostModel, apply_factor_costs
+
+dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
+weights = pd.Series(
+    [0.60, -0.40, 0.20, -0.80],
+    index=pd.MultiIndex.from_product((dates, ("A", "B")), names=("date", "asset")),
+)
+gross_returns = pd.Series([0.010, -0.005], index=dates)
+dollar_volume = pd.DataFrame({"A": [1_000.0, 1_500.0], "B": [2_000.0, 1_000.0]}, index=dates)
+borrow_rates = pd.DataFrame({"A": [0.0, 0.0], "B": [0.002, 0.003]}, index=dates)
+borrow_available = pd.DataFrame(True, index=dates, columns=("A", "B"))
+
+ledger = apply_factor_costs(
+    gross_returns,
+    weights,
+    dollar_volume,
+    portfolio_value=250.0,
+    model=FactorCostModel(
+        half_spread_bps=10.0,
+        impact_coefficient=0.01,
+        impact_exponent=0.5,
+        max_participation=0.50,
+    ),
+    borrow_rates=borrow_rates,
+    borrow_available=borrow_available,
+)
+
+assert (ledger.participation <= ledger.model.max_participation).all().all()
+assert (ledger.net_returns == ledger.gross_returns - ledger.total_cost).all()
+```
+
+The `weights` input is a two-level `(date, asset)` Series whose absolute
+weights sum to one on every date. It is normally produced by
+`factor_weights`; `group_adjust=True` is the existing enhanced route for
+group-neutral weights. Missing `(date, asset)` entries in this sparse ledger
+mean a zero position, so an entry or exit creates a real trade rather than an
+unknown value. `gross_returns`, dollar volume and weights must cover exactly
+the same rebalance dates; dollar volume must cover every asset and be strictly
+positive. Dollar volume and `portfolio_value` must use the same reporting
+currency—this API performs no FX conversion.
+
+For weight `w[t, i]`, initial `w[-1, i] = 0`, and portfolio value `V`, the
+ledger uses:
+
+```text
+q[t, i]          = abs(w[t, i] - w[t-1, i])
+turnover[t]       = 0.5 * sum_i q[t, i]
+participation[t,i]= q[t, i] * V / dollar_volume[t, i]
+spread[t]         = sum_i q[t, i] * half_spread_bps / 10_000
+impact[t]         = sum_i q[t, i] * impact_coefficient * participation[t,i] ** impact_exponent
+borrow[t]         = sum_i max(-w[t, i], 0) * borrow_rate[t, i]
+net[t]            = gross[t] - spread[t] - impact[t] - borrow[t]
+capacity          = min_(t,i:q[t,i]>0) max_participation * dollar_volume[t,i] / q[t,i]
+```
+
+`max_participation` is a hard inequality, not a warning: a supplied portfolio
+value above `capacity` fails closed. Any short exposure requires both a finite
+per-period `borrow_rates` panel and a boolean `borrow_available` panel; an
+unavailable borrow, missing asset/date, non-finite value, or invalid capacity
+input also fails closed. Returned ledgers use defensive snapshots so changing a
+returned pandas object cannot modify the stored result.
+
+This is an arithmetic research ledger, not an execution simulator or a claim
+that `impact_coefficient` is calibrated for a venue. Calibrate its assumptions
+against the market, order type, and frequency being studied; retain that
+calibration and the source/liquidity snapshot with the research record. The
+temporary-impact form is compatible with the modelling family introduced by
+[Almgren and Chriss](https://doi.org/10.21314/JOR.2001.041), but this API does
+not implement their optimal execution model.
 
 ## Post-analysis IC inference and FDR
 
@@ -124,6 +205,6 @@ adversarial fixture for this property in
 `tests/numerical/test_factor_pit_materialization.py`.
 
 PIT materialization does not remove the need for out-of-sample validation,
-multiple-testing control, cost/slippage/borrow assumptions, capacity analysis,
-or an explicit trial register. Treat an omitted control as undisclosed, not as
-passing by default.
+multiple-testing control, calibrated cost/slippage/borrow assumptions,
+capacity interpretation, or an explicit trial register. Treat an omitted
+control as undisclosed, not as passing by default.

@@ -52,6 +52,14 @@ def test_per_horizon_factor_preparation_is_discoverable_as_experimental() -> Non
     assert capability.docs_path == "concepts/factor-research-protocol.md"
 
 
+def test_factor_cost_and_capacity_ledger_is_discoverable_as_experimental() -> None:
+    capability = get_capability("factor_analysis.costs")
+
+    assert capability.status == "experimental"
+    assert capability.public_path == "fincore.factor_analysis.apply_factor_costs"
+    assert capability.docs_path == "concepts/factor-research-protocol.md"
+
+
 def test_factor_model_inference_is_discoverable_as_experimental() -> None:
     capability = get_capability("factor_analysis.inference")
 
