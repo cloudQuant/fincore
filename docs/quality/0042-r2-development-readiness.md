@@ -15,13 +15,16 @@ decision)`.  It does not mark D0, D-TECH, or release as passed.
 | Recorded pre-document baseline | `2bcb65773f01dd836b5fb4d928741ff1b072179e` |
 | Required preflight identity | caller supplies `FINCORE_R2_ROOT` and a full-SHA `FINCORE_R2_EXPECTED_HEAD`; the actual clean `dev` HEAD must equal that SHA |
 | R2 plan | [`docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md`](../plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md) |
-| R2 plan SHA256 | `77ed30b1accfc65e048b0e0fc5f1c34e903c4d9bb9c710a5f0d0e28a45dbb7bc` |
+| R2 plan SHA256 | `65ea04508d354293257dde609e02a9fe01ec6d10b64fa8b7d9d51481a68f4e8d` |
+| R2 plan-containing commit | `58ab613a3d975f47a3797143acc288a64e3adf85` |
 | Target version | `0.5.0.dev0` |
 | Decision ADR | [`ADR-0042-R2`](../architecture/adr/0042-r2-breaking-unified-core.md) |
 
-The plan SHA256 identifies the byte-for-byte plan copy used for this
-preflight.  It is not a D0 baseline or a substitute for the later
-containing-commit and provenance evidence.
+The recorded commit contains the byte-for-byte plan blob identified by the
+SHA256 above.  The preflight proves that this commit is an ancestor of the
+caller-supplied expected HEAD and that both its blob and the checked-out plan
+match the recorded digest.  This identity proof is not a D0 baseline or a
+substitute for later provenance evidence.
 
 ## Local decision and technical state
 
@@ -58,7 +61,8 @@ FINCORE_R2_PREFLIGHT_RESULT=0
 FINCORE_R2_EXPECTED_BRANCH=dev
 FINCORE_R2_PRE_DOC_BASE=2bcb65773f01dd836b5fb4d928741ff1b072179e
 FINCORE_R2_PLAN=docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md
-FINCORE_R2_PLAN_SHA256=77ed30b1accfc65e048b0e0fc5f1c34e903c4d9bb9c710a5f0d0e28a45dbb7bc
+FINCORE_R2_PLAN_SHA256=65ea04508d354293257dde609e02a9fe01ec6d10b64fa8b7d9d51481a68f4e8d
+FINCORE_R2_PLAN_COMMIT=58ab613a3d975f47a3797143acc288a64e3adf85
 
 FINCORE_R2_ROOT_VALID=0
 if test -z "${FINCORE_R2_ROOT:-}"; then
@@ -95,6 +99,19 @@ if test "$FINCORE_R2_ROOT_VALID" -eq 1; then
     printf '%s\n' 'BLOCKED: R2 plan SHA256 does not match the recorded preflight plan' >&2
     FINCORE_R2_PREFLIGHT_RESULT=1
   fi
+  if ! FINCORE_R2_RESOLVED_PLAN_COMMIT=$(git -C "$FINCORE_R2_ROOT" rev-parse --verify "$FINCORE_R2_PLAN_COMMIT^{commit}" 2>/dev/null); then
+    printf '%s\n' 'BLOCKED: R2 plan-containing commit does not resolve to a commit' >&2
+    FINCORE_R2_PREFLIGHT_RESULT=1
+  elif ! git -C "$FINCORE_R2_ROOT" merge-base --is-ancestor "$FINCORE_R2_RESOLVED_PLAN_COMMIT" "$FINCORE_R2_ACTUAL_HEAD"; then
+    printf '%s\n' 'BLOCKED: R2 plan-containing commit is not an ancestor of actual HEAD' >&2
+    FINCORE_R2_PREFLIGHT_RESULT=1
+  elif ! FINCORE_R2_RECORDED_PLAN_SHA=$(git -C "$FINCORE_R2_ROOT" show "$FINCORE_R2_RESOLVED_PLAN_COMMIT:$FINCORE_R2_PLAN" 2>/dev/null | shasum -a 256 | awk '{print $1}'); then
+    printf '%s\n' 'BLOCKED: R2 plan-containing commit does not contain the recorded plan path' >&2
+    FINCORE_R2_PREFLIGHT_RESULT=1
+  elif test "$FINCORE_R2_RECORDED_PLAN_SHA" != "$FINCORE_R2_PLAN_SHA256"; then
+    printf '%s\n' 'BLOCKED: recorded plan blob SHA256 does not match the preflight plan' >&2
+    FINCORE_R2_PREFLIGHT_RESULT=1
+  fi
   if test -z "${FINCORE_R2_EXPECTED_HEAD:-}"; then
     printf '%s\n' 'BLOCKED: FINCORE_R2_EXPECTED_HEAD was not supplied' >&2
     FINCORE_R2_PREFLIGHT_RESULT=1
@@ -120,8 +137,9 @@ exit "$FINCORE_R2_PREFLIGHT_RESULT"
 ## Task 0 entry conditions
 
 1. Supply a clean R2 `dev` worktree root and its exact full expected HEAD to
-   the preflight above; retain the successful identity output with the Task 0
-   evidence.
+   the preflight above; retain the successful identity output proving the
+   plan-containing commit, plan blob, checkout plan, and baseline ancestry
+   with the Task 0 evidence.
 2. Capture D0 only from that clean exact-SHA worktree.  The Task 0 ledger,
    independent oracle/golden inputs, same-wheel checks, quality, performance,
    architecture, and provenance gates remain mandatory.
