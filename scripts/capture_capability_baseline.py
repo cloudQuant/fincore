@@ -156,6 +156,16 @@ def _validate_inventory_document(document: dict[str, Any]) -> None:
         raise CaptureValidationError("inventory explicitly marked not_for_d0 cannot enter baseline capture")
 
 
+def _validate_ledger_document(document: dict[str, Any]) -> None:
+    """Reject scoped ledger artifacts until their capability coverage is complete."""
+    if document.get("decision_status") == "scoped":
+        raise CaptureValidationError(
+            "ledger decision_status scoped is a preparatory non-D0 artifact and cannot enter baseline capture"
+        )
+    if document.get("not_for_d0") is True:
+        raise CaptureValidationError("ledger explicitly marked not_for_d0 cannot enter baseline capture")
+
+
 def _require_string(entry: dict[str, Any], key: str, subject: str) -> str:
     value = entry.get(key)
     if not _non_empty_string(value):
@@ -619,6 +629,7 @@ def capture(
     _validate_inventory_document(documents["inventory"])
     _validate_disposition_document(documents["module_disposition"], input_labels["module_disposition"])
     _validate_disposition_document(documents["test_disposition"], input_labels["test_disposition"])
+    _validate_ledger_document(documents["ledger"])
     ledger_entries = validate_ledger(documents["ledger"])
     repository_surface_summary = _validate_repository_surface_inputs(
         payloads["repository_surface_facts"],

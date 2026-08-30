@@ -354,6 +354,29 @@ def test_disposition_documents_must_not_be_empty(tmp_path: Path, document_name: 
 
 
 @pytest.mark.parametrize(
+    ("marker", "value", "expected_error"),
+    [
+        ("decision_status", "scoped", "preparatory non-D0 artifact"),
+        ("not_for_d0", True, "not_for_d0"),
+    ],
+    ids=["scoped-decision-status", "explicit-not-for-d0"],
+)
+def test_scoped_ledger_cannot_enter_baseline_capture(
+    tmp_path: Path, marker: str, value: object, expected_error: str
+) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    ledger = json.loads(paths["ledger"].read_text(encoding="utf-8"))
+    ledger[marker] = value
+    _write_json(paths["ledger"], ledger)
+    _commit_source(source_root)
+
+    result = _capture(source_root, paths, tmp_path / "capture.json")
+
+    assert result.returncode != 0
+    assert expected_error in result.stderr
+
+
+@pytest.mark.parametrize(
     ("field", "value"),
     [
         ("target_operation_id", None),
