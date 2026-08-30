@@ -16344,6 +16344,104 @@
     },
     {
       "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_baseline_with_wrong_artifact_type_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_baseline_with_wrong_artifact_type_is_a_usage_error"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_baseline_without_capability_section_is_blocked",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_baseline_without_capability_section_is_blocked"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_capability_absent_from_baseline_fails_as_missing",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_capability_absent_from_baseline_fails_as_missing"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_committed_scoped_ledger_is_blocked_for_families_with_gaps",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_committed_scoped_ledger_is_blocked_for_families_with_gaps"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_complete_ledger_with_ok_baseline_passes_and_writes_evidence",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_complete_ledger_with_ok_baseline_passes_and_writes_evidence"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_dist_directory_without_a_wheel_is_blocked",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_dist_directory_without_a_wheel_is_blocked"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_divergent_capability_fails_with_unresolved_difference",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_divergent_capability_fails_with_unresolved_difference"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_family_outside_ledger_scope_is_blocked",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_family_outside_ledger_scope_is_blocked"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_family_without_ledger_capabilities_is_blocked",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_family_without_ledger_capabilities_is_blocked"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_missing_baseline_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_missing_baseline_is_a_usage_error"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_missing_dist_directory_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_missing_dist_directory_is_a_usage_error"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_pending_baseline_is_blocked",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_pending_baseline_is_blocked"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_scoped_ledger_without_gaps_still_cannot_sign_parity",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_scoped_ledger_without_gaps_still_cannot_sign_parity"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_unknown_family_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_check_feature_parity.py::test_unknown_family_is_a_usage_error"
+    },
+    {
+      "disposition": "retain",
       "nodeid": "tests/quality/test_check_performance_source.py::test_direct_performance_gate_prefers_its_checkout_source",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
@@ -39832,13 +39930,13 @@
   "schema_version": 1,
   "scope": "non_online_functional_collection_only",
   "source_facts": {
-    "node_count": 5579,
+    "node_count": 5593,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "cd7598f64d97bed7ccd8f2a1c59dca61b7d80551aba248602ca21fabfc77a307",
+    "sha256": "c275f6245f8a548912f607c6f1650f4b9a891e4dc548551c408760594a73f75a",
     "source_provenance": {
       "clean": true,
-      "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
-      "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
+      "commit": "92484d776d6b6f622fb494092f8b157b330f78e3",
+      "tree": "250337e1e9f74b84ee8f6e1d365b8f299e1be6b2"
     }
   }
 }

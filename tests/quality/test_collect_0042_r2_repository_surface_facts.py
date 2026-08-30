@@ -40,7 +40,7 @@ EXPECTED_FROZEN_CATEGORY_COUNTS = {
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
-    "script_candidate": 52,
+    "script_candidate": 53,
     "template": 1,
     "type_stub": 1,
 }
@@ -197,7 +197,7 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert len(artifact["source_provenance"]["tree"]) == 40
     assert artifact["source_archive"]["verified_against_regular_blobs"] is True
     assert artifact["record_count"] == len(artifact["records"])
-    assert artifact["record_count"] == 321
+    assert artifact["record_count"] == 322
     assert artifact["category_counts"] == EXPECTED_FROZEN_CATEGORY_COUNTS
     assert artifact["records"] == sorted(artifact["records"], key=lambda item: item["path"])
 
@@ -220,6 +220,7 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
         "scripts/capture_capability_baseline.py",
         "scripts/check_0042_r2_legacy_surface_inventory.py",
         "scripts/run_0042_r2_acceptance.py",
+        "scripts/check_feature_parity.py",
         "scripts/profile_workloads.py",
     } <= set(records_by_path)
     assert {
@@ -471,7 +472,7 @@ def test_committed_fixture_is_byte_identical_to_its_recorded_clean_source(tmp_pa
     assert fixture["artifact_type"] == "repository_surface_facts_discovery"
     assert fixture["discovery_status"] == "partial"
     assert fixture["not_for_d0"] is True
-    assert fixture["record_count"] == 321
+    assert fixture["record_count"] == 322
     assert fixture["category_counts"] == EXPECTED_FROZEN_CATEGORY_COUNTS
     recorded_commit = fixture["source_provenance"]["commit"]
     assert isinstance(recorded_commit, str) and recorded_commit

@@ -160,7 +160,7 @@ def test_committed_disposition_maps_each_frozen_fact_exactly_once() -> None:
 
     result = checker.validate_disposition(FACTS, DISPOSITION)
 
-    assert result["record_count"] == 321
+    assert result["record_count"] == 322
     assert result["unmapped_paths"] == []
     assert result["duplicate_paths"] == []
     assert result["not_for_d0"] is True

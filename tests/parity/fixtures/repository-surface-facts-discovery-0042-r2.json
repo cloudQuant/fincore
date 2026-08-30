@@ -17,14 +17,14 @@
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
-    "script_candidate": 52,
+    "script_candidate": 53,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
   "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Every tracked path beneath scripts/ is included as a script candidate fact, while generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
-  "record_count": 321,
+  "record_count": 322,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -9593,6 +9593,37 @@
       }
     },
     {
+      "blob_sha256": "6551be608857382dae24263107f77f02eccfe0848d0f995e66b346dce558d013",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "cc8b22664e5713f30c6006b5b87ca26ed71d4689",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_feature_parity.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "hashlib",
+          "json",
+          "pathlib.Path",
+          "sys"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
       "blob_sha256": "8b19eb99381ef281f481c4c5894d93206b36e493e0372058ee735248b5a31313",
       "category_tags": [
         "packaging_release_script",
@@ -11492,7 +11523,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
-    "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
+    "commit": "92484d776d6b6f622fb494092f8b157b330f78e3",
+    "tree": "250337e1e9f74b84ee8f6e1d365b8f299e1be6b2"
   }
 }
