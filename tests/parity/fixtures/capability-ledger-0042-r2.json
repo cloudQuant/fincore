@@ -2,6 +2,122 @@
   "artifact_type": "capability_ledger",
   "coverage_gaps": [
     {
+      "capability_id": "factor.analysis.apply_factor_costs",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.estimate_factor_capacity",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.event_analysis_model",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_capacity_result",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_cost_model",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_cost_result",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_function_spec",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_group_analysis",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_tear_sheet_artifacts",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.factor_workflow_spec",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.fama_macbeth",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.ic_inference_result",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.analysis.pyfolio_factor_inputs",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.fama_macbeth",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.inference",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.pit_prepare",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.enhanced_non_matching_timezone_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.factor_analysis_config",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.factor_data_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.factor_loss_exceeded_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.factor_loss_report",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.materialize_pit_factor",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.max_loss_exceeded_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.multi_horizon_prepared_factor_data",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.non_matching_timezone_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.prepare_factor_data_by_horizon",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.prepare_factor_data_from_forward_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare.validate_pit_alignment",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "factor.prepare_by_horizon",
+      "reason": "no_source_nodeid"
+    },
+    {
       "capability_id": "metrics.gross_leverage",
       "reason": "no_source_nodeid"
     },
@@ -58,6 +174,1241 @@
     "legacy_zero"
   ],
   "entries": [
+    {
+      "capability_id": "factor.analysis.analyze_factor",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.analyze_factor.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.analyze_factor"
+          },
+          "oracle_reference": "invariant contract factor.analysis.analyze_factor.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_analysis.py::test_analyze_factor_accepts_clean_data_without_recleaning",
+        "tests/test_factor_analysis/test_analysis.py::test_analyze_factor_is_exported_from_the_enhanced_namespace",
+        "tests/test_factor_analysis/test_analysis.py::test_analyze_factor_rejects_integer_capital_that_cannot_survive_float_math",
+        "tests/test_factor_analysis/test_analysis.py::test_analyze_factor_rejects_unknown_or_empty_forward_period_selection",
+        "tests/test_factor_analysis/test_analysis_branches.py::test_analyze_factor_legacy_event_windows_type_error",
+        "tests/test_factor_analysis/test_analysis_branches.py::test_analyze_factor_rejects_non_numeric_capital",
+        "tests/test_factor_analysis/test_analysis_branches.py::test_analyze_factor_rejects_non_string_benchmark_period",
+        "tests/test_factor_analysis/test_models.py::test_analyze_factor_computes_ic_once_and_owns_input_snapshot"
+      ],
+      "target_operation_id": "factor.analysis.analyze_factor",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_analyze_factor"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.average_cumulative_return_by_quantile",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.average_cumulative_return_by_quantile",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.average_cumulative_return_by_quantile",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:average_cumulative_return_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:average_cumulative_return_by_quantile:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:average_cumulative_return_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:average_cumulative_return_by_quantile]",
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#00]",
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#01]",
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#02]",
+        "tests/test_factor_analysis/test_events.py::test_average_cumulative_return_by_quantile_2_upstream_case[tests/test_performance.py::PerformanceTestCase::test_average_cumulative_return_by_quantile_2#03]"
+      ],
+      "target_operation_id": "factor.analysis.average_cumulative_return_by_quantile",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_average_cumulative_return_by_quantile"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.common_start_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.common_start_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.common_start_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:common_start_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:common_start_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:common_start_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:common_start_returns]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_common_start_returns_legacy_type_error",
+        "tests/test_factor_analysis/test_performance_branches.py::test_common_start_returns_rejects_duplicate_index",
+        "tests/test_factor_analysis/test_performance_branches.py::test_common_start_returns_rejects_missing_assets",
+        "tests/test_factor_analysis/test_performance_branches.py::test_common_start_returns_rejects_non_dataframe_returns"
+      ],
+      "target_operation_id": "factor.analysis.common_start_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_common_start_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.compute_mean_returns_spread",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.compute_mean_returns_spread",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.compute_mean_returns_spread",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:compute_mean_returns_spread]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:compute_mean_returns_spread:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:compute_mean_returns_spread]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:compute_mean_returns_spread]"
+      ],
+      "target_operation_id": "factor.analysis.compute_mean_returns_spread",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_compute_mean_returns_spread"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.create_pyfolio_input",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.create_pyfolio_input",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.create_pyfolio_input",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_date_level_validation_keeps_period_and_filter_priority[create_pyfolio_input]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[create_pyfolio_input-index_names0]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[create_pyfolio_input-index_names1]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_group_neutral_missing_group_preserves_source_key_error[create_pyfolio_input]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_period_validation_precedes_missing_group_and_empty_filter_projections[create_pyfolio_input]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_portfolio_public_signatures[create_pyfolio_input-(factor_data, period, capital=None, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None, benchmark_period='1D')]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_source_validation_orders_filters_and_group_before_duplicate_main_period[create_pyfolio_input]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:create_pyfolio_input]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:create_pyfolio_input:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:create_pyfolio_input]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:create_pyfolio_input]"
+      ],
+      "target_operation_id": "factor.analysis.create_pyfolio_input",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_create_pyfolio_input"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.cumulative_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.cumulative_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.cumulative_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_projects_nan_as_a_zero_return",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:cumulative_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:cumulative_returns]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_cumulative_returns",
+        "tests/test_factor_analysis/test_matplotlib_renderer.py::test_every_chart_has_auto_and_caller_axes_artist_contracts[cumulative_returns]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_cumulative_returns_dataframe",
+        "tests/test_factor_analysis/test_performance_branches.py::test_cumulative_returns_ndarray",
+        "tests/test_pyfolio/perf_attrib/test_cumulative_returns.py::TestCumulativeReturnsWithCosts::test_cumulative_returns_less_costs"
+      ],
+      "target_operation_id": "factor.analysis.cumulative_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_cumulative_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_alpha_beta",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_alpha_beta",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_alpha_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_alpha_beta]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_alpha_beta:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_alpha_beta]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_alpha_beta]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_factor_alpha_beta_insufficient_valid_rows",
+        "tests/test_factor_analysis/test_performance_branches.py::test_factor_alpha_beta_rejects_bad_returns_type",
+        "tests/test_factor_analysis/test_performance_branches.py::test_factor_alpha_beta_rejects_non_forward_column",
+        "tests/test_factor_analysis/test_performance_branches.py::test_factor_alpha_beta_rejects_series_with_multiple_columns"
+      ],
+      "target_operation_id": "factor.analysis.factor_alpha_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_alpha_beta"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_analysis_model",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_analysis_model.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_analysis_model"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_analysis_model.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_models.py::test_factor_analysis_model_declares_every_renderer_required_field"
+      ],
+      "target_operation_id": "factor.analysis.factor_analysis_model",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_analysis_model"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_cumulative_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_cumulative_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_cumulative_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_date_level_validation_keeps_period_and_filter_priority[factor_cumulative_returns]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[factor_cumulative_returns-index_names0]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[factor_cumulative_returns-index_names1]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_group_neutral_missing_group_preserves_source_key_error[factor_cumulative_returns]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_period_validation_precedes_missing_group_and_empty_filter_projections[factor_cumulative_returns]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_portfolio_public_signatures[factor_cumulative_returns-(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_source_validation_orders_filters_and_group_before_duplicate_main_period[factor_cumulative_returns]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_cumulative_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_cumulative_returns]"
+      ],
+      "target_operation_id": "factor.analysis.factor_cumulative_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_cumulative_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_information_coefficient",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_information_coefficient",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_information_coefficient",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_performance.py::test_strict_by_group_without_group_projects_the_source_keyerror[factor_information_coefficient]",
+        "tests/compat/alphalens/test_performance.py::test_strict_group_adjusted_empty_factor_data_projects_the_source_concat_error[factor_information_coefficient]",
+        "tests/compat/alphalens/test_performance.py::test_strict_group_adjusted_empty_factor_data_without_group_preserves_source_priority[factor_information_coefficient]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_information_coefficient]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_information_coefficient:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_information_coefficient]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_information_coefficient]"
+      ],
+      "target_operation_id": "factor.analysis.factor_information_coefficient",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_information_coefficient"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_model_inference",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_model_inference.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_model_inference"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_model_inference.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_model_inference.py::test_factor_model_inference_consumes_the_aggregate_enhanced_ic_snapshot"
+      ],
+      "target_operation_id": "factor.analysis.factor_model_inference",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_model_inference"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_positions",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_positions",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_positions",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_date_level_validation_keeps_period_and_filter_priority[factor_positions]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[factor_positions-index_names0]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_factor_portfolio_apis_require_the_pinned_date_level_name[factor_positions-index_names1]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_group_neutral_missing_group_preserves_source_key_error[factor_positions]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_period_validation_precedes_missing_group_and_empty_filter_projections[factor_positions]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_portfolio_public_signatures[factor_positions-(factor_data, period, long_short=True, group_neutral=False, equal_weight=False, quantiles=None, groups=None)]",
+        "tests/compat/alphalens/test_portfolio.py::test_strict_source_validation_orders_filters_and_group_before_duplicate_main_period[factor_positions]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_positions]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_positions:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_positions]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_positions]"
+      ],
+      "target_operation_id": "factor.analysis.factor_positions",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_positions"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_rank_autocorrelation",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_rank_autocorrelation",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_rank_autocorrelation",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_rank_autocorrelation]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_rank_autocorrelation:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_rank_autocorrelation]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_rank_autocorrelation]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_factor_rank_autocorrelation_rejects_non_positive_period"
+      ],
+      "target_operation_id": "factor.analysis.factor_rank_autocorrelation",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_rank_autocorrelation"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_returns]",
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_returns_projects_an_all_nan_weighted_period_to_zero"
+      ],
+      "target_operation_id": "factor.analysis.factor_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_weights",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.factor_weights",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.factor_weights",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:factor_weights]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:factor_weights:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:factor_weights]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:factor_weights]",
+        "tests/test_factor_analysis/test_weights_returns.py::test_factor_weights_enhanced_gross_net_and_nan_contract"
+      ],
+      "target_operation_id": "factor.analysis.factor_weights",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_weights"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.mean_information_coefficient",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.mean_information_coefficient",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.mean_information_coefficient",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_performance.py::test_strict_by_group_without_group_projects_the_source_keyerror[mean_information_coefficient]",
+        "tests/compat/alphalens/test_performance.py::test_strict_group_adjusted_empty_factor_data_projects_the_source_concat_error[mean_information_coefficient]",
+        "tests/compat/alphalens/test_performance.py::test_strict_group_adjusted_empty_factor_data_without_group_preserves_source_priority[mean_information_coefficient]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:mean_information_coefficient]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:mean_information_coefficient:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:mean_information_coefficient]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:mean_information_coefficient]"
+      ],
+      "target_operation_id": "factor.analysis.mean_information_coefficient",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_mean_information_coefficient"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.mean_return_by_quantile",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.mean_return_by_quantile",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.mean_return_by_quantile",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:mean_return_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:mean_return_by_quantile:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:mean_return_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:mean_return_by_quantile]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_mean_return_by_quantile_rejects_by_group_without_group",
+        "tests/test_factor_analysis/test_performance_branches.py::test_mean_return_by_quantile_rejects_missing_quantile_column"
+      ],
+      "target_operation_id": "factor.analysis.mean_return_by_quantile",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_mean_return_by_quantile"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.positions",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.positions",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.positions",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_portfolio.py::test_strict_portfolio_public_signatures[positions-(weights, period, freq=None)]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:positions]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:positions:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:positions]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:positions]",
+        "tests/test_core/test_context_cache_contract.py::test_positions_and_transactions_contribute_leverage_and_turnover_outputs",
+        "tests/test_factor_analysis/test_portfolio.py::test_positions_holds_intraday_weights_and_expires_on_calendar_boundary",
+        "tests/test_factor_analysis/test_portfolio.py::test_positions_uses_implicit_business_calendar_and_explicit_custom_calendar",
+        "tests/test_factor_analysis/test_portfolio_branches.py::test_positions_rejects_non_datetime_date_level",
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "factor.analysis.positions",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_positions"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.quantile_turnover",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.performance.quantile_turnover",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.performance.quantile_turnover",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:quantile_turnover]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:quantile_turnover:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:quantile_turnover]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:quantile_turnover]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_quantile_turnover_rejects_non_multiindex",
+        "tests/test_factor_analysis/test_performance_branches.py::test_quantile_turnover_rejects_non_positive_period",
+        "tests/test_factor_analysis/test_performance_branches.py::test_quantile_turnover_rejects_non_series"
+      ],
+      "target_operation_id": "factor.analysis.quantile_turnover",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_quantile_turnover"
+      ]
+    },
+    {
+      "capability_id": "factor.analyze",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analyze.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analyze"
+          },
+          "oracle_reference": "invariant contract factor.analyze.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context.py::TestAnalyzeConvenience::test_analyze_returns_context",
+        "tests/test_core/test_context.py::TestAnalyzeConvenience::test_analyze_with_factor_returns",
+        "tests/test_utils/test_common_data.py::test_analyze_dataframe_differences_prints_for_identical_and_different",
+        "tests/test_utils/test_common_data.py::test_analyze_dataframe_differences_prints_index_columns_dtype_and_metadata_differences",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_different_freq",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_prints_for_identical_and_different",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_prints_index_dtype_and_metadata_differences"
+      ],
+      "target_operation_id": "factor.analyze",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_analyze"
+      ]
+    },
+    {
+      "capability_id": "factor.costs",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.costs.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.costs"
+          },
+          "oracle_reference": "invariant contract factor.costs.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_costs_and_capacity_reconcile_to_a_hand_computed_ledger"
+      ],
+      "target_operation_id": "factor.costs",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_costs"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare"
+          },
+          "oracle_reference": "invariant contract factor.prepare.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_data_branches.py::test_prepare_rejects_bad_max_loss",
+        "tests/test_factor_analysis/test_data_branches.py::test_prepare_rejects_non_multiindex_forward_returns"
+      ],
+      "target_operation_id": "factor.prepare",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.add_custom_calendar_timedelta",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.add_custom_calendar_timedelta",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.add_custom_calendar_timedelta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:add_custom_calendar_timedelta]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:add_custom_calendar_timedelta:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:add_custom_calendar_timedelta]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:add_custom_calendar_timedelta]"
+      ],
+      "target_operation_id": "factor.prepare.add_custom_calendar_timedelta",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_add_custom_calendar_timedelta"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.backshift_returns_series",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.backshift_returns_series",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.backshift_returns_series",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:backshift_returns_series]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:backshift_returns_series:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:backshift_returns_series]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:backshift_returns_series]"
+      ],
+      "target_operation_id": "factor.prepare.backshift_returns_series",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_backshift_returns_series"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.compute_forward_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.compute_forward_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.compute_forward_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_forward_returns.py::test_compute_forward_returns_index_out_of_bound_upstream_case[tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_index_out_of_bound#00]",
+        "tests/compat/alphalens/test_forward_returns.py::test_compute_forward_returns_non_cum_upstream_case[tests/test_utils.py::UtilsTestCase::test_compute_forward_returns_non_cum#00]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:compute_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:compute_forward_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:compute_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:compute_forward_returns]",
+        "tests/test_factor_analysis/test_data_branches.py::test_compute_forward_returns_rejects_bad_filter_zscore",
+        "tests/test_factor_analysis/test_data_branches.py::test_compute_forward_returns_rejects_disjoint_dates",
+        "tests/test_factor_analysis/test_data_branches.py::test_compute_forward_returns_rejects_non_positive_periods"
+      ],
+      "target_operation_id": "factor.prepare.compute_forward_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_compute_forward_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.demean_forward_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.demean_forward_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.demean_forward_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:demean_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:demean_forward_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:demean_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:demean_forward_returns]",
+        "tests/compat/alphalens/test_strict_utils_helpers.py::test_demean_forward_returns_copies_input_and_demeans_each_date",
+        "tests/compat/alphalens/test_strict_utils_helpers.py::test_demean_forward_returns_honors_explicit_grouping"
+      ],
+      "target_operation_id": "factor.prepare.demean_forward_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_demean_forward_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.diff_custom_calendar_timedeltas",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.diff_custom_calendar_timedeltas",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.diff_custom_calendar_timedeltas",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:diff_custom_calendar_timedeltas]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:diff_custom_calendar_timedeltas:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:diff_custom_calendar_timedeltas]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:diff_custom_calendar_timedeltas]",
+        "tests/test_factor_analysis/test_calendar_branches.py::test_diff_custom_calendar_timedeltas_aware_negative",
+        "tests/test_factor_analysis/test_calendar_branches.py::test_diff_custom_calendar_timedeltas_business_day",
+        "tests/test_factor_analysis/test_calendar_branches.py::test_diff_custom_calendar_timedeltas_custom_business_day",
+        "tests/test_factor_analysis/test_calendar_branches.py::test_diff_custom_calendar_timedeltas_day_offset"
+      ],
+      "target_operation_id": "factor.prepare.diff_custom_calendar_timedeltas",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_diff_custom_calendar_timedeltas"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.get_clean_factor",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.get_clean_factor",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.get_clean_factor",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:get_clean_factor]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:get_clean_factor:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:get_clean_factor]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:get_clean_factor]"
+      ],
+      "target_operation_id": "factor.prepare.get_clean_factor",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_get_clean_factor"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.get_clean_factor_and_forward_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.get_clean_factor_and_forward_returns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.get_clean_factor_and_forward_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_1_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_1#00]",
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_2_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_2#00]",
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_3_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_3#00]",
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_4_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_4#00]",
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_5_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_5#00]",
+        "tests/compat/alphalens/test_factor_cleaning.py::test_get_clean_factor_and_forward_returns_6_upstream_case[tests/test_utils.py::UtilsTestCase::test_get_clean_factor_and_forward_returns_6#00]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:get_clean_factor_and_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:get_clean_factor_and_forward_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:get_clean_factor_and_forward_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:get_clean_factor_and_forward_returns]"
+      ],
+      "target_operation_id": "factor.prepare.get_clean_factor_and_forward_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_get_clean_factor_and_forward_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.get_forward_returns_columns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.get_forward_returns_columns",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.get_forward_returns_columns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:get_forward_returns_columns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:get_forward_returns_columns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:get_forward_returns_columns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:get_forward_returns_columns]"
+      ],
+      "target_operation_id": "factor.prepare.get_forward_returns_columns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_get_forward_returns_columns"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.infer_trading_calendar",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.infer_trading_calendar",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.infer_trading_calendar",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:infer_trading_calendar]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:infer_trading_calendar:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:infer_trading_calendar]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:infer_trading_calendar]",
+        "tests/test_factor_analysis/test_calendar_branches.py::test_infer_trading_calendar_empty_indexes"
+      ],
+      "target_operation_id": "factor.prepare.infer_trading_calendar",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_infer_trading_calendar"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.non_unique_bin_edges_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.non_unique_bin_edges_error",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.non_unique_bin_edges_error",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:non_unique_bin_edges_error]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:non_unique_bin_edges_error:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:non_unique_bin_edges_error]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:non_unique_bin_edges_error]"
+      ],
+      "target_operation_id": "factor.prepare.non_unique_bin_edges_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_non_unique_bin_edges_error"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.pit_point",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.pit_point.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.pit_point"
+          },
+          "oracle_reference": "invariant contract factor.prepare.pit_point.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_pit_point_enforces_the_event_time_contract"
+      ],
+      "target_operation_id": "factor.prepare.pit_point",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_pit_point"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.prepare_factor_data",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.prepare_factor_data.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.prepare_factor_data"
+          },
+          "oracle_reference": "invariant contract factor.prepare.prepare_factor_data.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_contracts.py::test_prepare_factor_data_returns_structured_loss_report_without_stdout",
+        "tests/test_factor_analysis/test_data.py::test_prepare_factor_data_handles_group_mapping_labels_and_all_nan_factor"
+      ],
+      "target_operation_id": "factor.prepare.prepare_factor_data",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_factor_data"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.prepare_pit_factor_data",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.prepare_pit_factor_data.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.prepare_pit_factor_data"
+          },
+          "oracle_reference": "invariant contract factor.prepare.prepare_pit_factor_data.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_prepare_pit_factor_data_fails_closed_when_no_observation_is_yet_eligible",
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_prepare_pit_factor_data_uses_causal_materialization_and_forbids_global_zscore_filter"
+      ],
+      "target_operation_id": "factor.prepare.prepare_pit_factor_data",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_pit_factor_data"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.prepared_factor_data",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.prepared_factor_data.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.prepared_factor_data"
+          },
+          "oracle_reference": "invariant contract factor.prepare.prepared_factor_data.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_contracts.py::test_prepared_factor_data_copies_public_inputs"
+      ],
+      "target_operation_id": "factor.prepare.prepared_factor_data",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepared_factor_data"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.quantize_factor",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.quantize_factor",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.quantize_factor",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:quantize_factor]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:quantize_factor:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_quantize_factor_reports_generic_legacy_signature_but_binds_source_grammar",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:quantize_factor]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:quantize_factor]",
+        "tests/property/test_factor_invariants.py::test_quantize_factor_does_not_mutate_input",
+        "tests/property/test_factor_invariants.py::test_quantize_factor_labels_stay_within_bucket_range",
+        "tests/property/test_factor_invariants.py::test_quantize_factor_preserves_index",
+        "tests/test_factor_analysis/test_data.py::test_quantize_factor_handles_edges_groups_and_zero_aware",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_both_quantiles_and_bins",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_by_group_without_group",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_missing_factor_column",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_non_dataframe",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_non_multiindex",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_zero_aware_non_int",
+        "tests/test_factor_analysis/test_data_branches.py::test_quantize_factor_rejects_zero_aware_too_few"
+      ],
+      "target_operation_id": "factor.prepare.quantize_factor",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_quantize_factor"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.rate_of_return",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.rate_of_return",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.rate_of_return",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:rate_of_return]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:rate_of_return:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:rate_of_return]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:rate_of_return]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_rate_of_return_empty"
+      ],
+      "target_operation_id": "factor.prepare.rate_of_return",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_rate_of_return"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.rethrow",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.rethrow",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.rethrow",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:rethrow]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:rethrow:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:rethrow]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:rethrow]",
+        "tests/compat/alphalens/test_strict_utils_helpers.py::test_rethrow_appends_context_to_the_original_exception",
+        "tests/compat/alphalens/test_utils_legacy_branches.py::test_rethrow_with_empty_args"
+      ],
+      "target_operation_id": "factor.prepare.rethrow",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_rethrow"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.std_conversion",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.std_conversion",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.std_conversion",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:std_conversion]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:std_conversion:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:std_conversion]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:std_conversion]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_std_conversion_empty"
+      ],
+      "target_operation_id": "factor.prepare.std_conversion",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_std_conversion"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.timedelta_strings_to_integers",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.timedelta_strings_to_integers",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.timedelta_strings_to_integers",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:timedelta_strings_to_integers]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:timedelta_strings_to_integers:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:timedelta_strings_to_integers]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:timedelta_strings_to_integers]"
+      ],
+      "target_operation_id": "factor.prepare.timedelta_strings_to_integers",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_timedelta_strings_to_integers"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.timedelta_to_string",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:3fa17ad4c3edb025d1410de7aeba9673cba7791c",
+            "kind": "pinned_upstream_oracle",
+            "reference": "alphalens.utils.timedelta_to_string",
+            "source_project": "alphalens",
+            "version": "0.4.0"
+          },
+          "oracle_reference": "alphalens@3fa17ad4c3ed:alphalens.utils.timedelta_to_string",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:timedelta_to_string]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:timedelta_to_string:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:timedelta_to_string]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:timedelta_to_string]"
+      ],
+      "target_operation_id": "factor.prepare.timedelta_to_string",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_timedelta_to_string"
+      ]
+    },
     {
       "capability_id": "metrics.aggregate_returns",
       "disposition": "required",
@@ -918,6 +2269,9 @@
         "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:cumulative_returns]",
         "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:cumulative_returns]",
         "tests/test_core/test_context.py::TestAnalysisContextBasic::test_cumulative_returns",
+        "tests/test_factor_analysis/test_matplotlib_renderer.py::test_every_chart_has_auto_and_caller_axes_artist_contracts[cumulative_returns]",
+        "tests/test_factor_analysis/test_performance_branches.py::test_cumulative_returns_dataframe",
+        "tests/test_factor_analysis/test_performance_branches.py::test_cumulative_returns_ndarray",
         "tests/test_pyfolio/perf_attrib/test_cumulative_returns.py::TestCumulativeReturnsWithCosts::test_cumulative_returns_less_costs"
       ],
       "target_operation_id": "metrics.cumulative_returns",
@@ -1220,7 +2574,9 @@
       "source_nodeids": [
         "tests/compat/empyrical/test_index_contracts.py::test_legacy_calendar_aggregation_periods[monthly-expected_index0-expected_values0]",
         "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[monthly-0.07681145747868608]",
-        "tests/test_empyrical/test_continued_indicators.py::TestVarExcessReturn::test_monthly_annualization"
+        "tests/test_empyrical/test_continued_indicators.py::TestVarExcessReturn::test_monthly_annualization",
+        "tests/test_factor_analysis/test_matplotlib_renderer.py::test_monthly_heatmap_keeps_source_year_rows_and_month_columns",
+        "tests/test_factor_analysis/test_pandas3_regressions.py::test_monthly_alias_is_normalized_without_warning"
       ],
       "target_operation_id": "metrics.frequency.monthly",
       "wheel_nodeids": [
@@ -3100,7 +4456,9 @@
         }
       ],
       "source_nodeids": [
-        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[turnover-create_turnover_tear_sheet-{'turnover_periods': ['1D', '5D']}-1]"
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[turnover-create_turnover_tear_sheet-{'turnover_periods': ['1D', '5D']}-1]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_turnover_tear_sheet",
+        "tests/test_factor_analysis/test_turnover.py::test_turnover_empty_and_tie_boundary_contract"
       ],
       "target_operation_id": "metrics.turnover",
       "wheel_nodeids": [
@@ -3405,8 +4763,10 @@
   ],
   "not_for_d0": true,
   "schema_version": 1,
-  "scope": "metrics_and_performance_families_only",
+  "scope": "metrics_performance_factor_families_only",
   "source_contract": {
+    "alphalens_manifest_path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
+    "alphalens_manifest_sha256": "715ad55ae9483210938dfc6ffe1efb36690b7739a6b584383a9403d70b4f2125",
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "01b4d18f45fef50caf8d9100f8aca9797e353847daa0fb7f9e1f882ba3e75007",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",

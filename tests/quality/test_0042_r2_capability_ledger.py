@@ -20,9 +20,10 @@ LEDGER = FIXTURES / "capability-ledger-0042-r2.json"
 INVENTORY = FIXTURES / "legacy-surface-inventory-0042-r2.json"
 NODE_FACTS = FIXTURES / "test-node-facts-discovery-0042-r2.json"
 UPSTREAM_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "empyrical-0.6.0-api.json"
+ALPHALENS_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "alphalens-0.4.0-cloudquant-api.json"
 CAPTURE_SCRIPT = REPOSITORY_ROOT / "scripts" / "capture_capability_baseline.py"
 
-_COVERED_OWNERS = ("metrics", "performance")
+_COVERED_OWNERS = ("metrics", "performance", "factor")
 _REQUIRED_NON_ASSERTIONS = frozenset({"D0", "D-TECH", "installed_wheel_behavior", "legacy_zero"})
 
 
@@ -59,7 +60,7 @@ def test_ledger_header_is_scoped_and_fail_closed() -> None:
 
     assert ledger["schema_version"] == 1
     assert ledger["artifact_type"] == "capability_ledger"
-    assert ledger["scope"] == "metrics_and_performance_families_only"
+    assert ledger["scope"] == "metrics_performance_factor_families_only"
     assert ledger["decision_status"] == "scoped"
     assert ledger["not_for_d0"] is True
     assert set(ledger["does_not_assert"]) >= _REQUIRED_NON_ASSERTIONS
@@ -105,6 +106,7 @@ def test_ledger_source_contract_binds_the_committed_input_bytes() -> None:
     assert contract["inventory_sha256"] == hashlib.sha256(INVENTORY.read_bytes()).hexdigest()
     assert contract["node_facts_sha256"] == hashlib.sha256(NODE_FACTS.read_bytes()).hexdigest()
     assert contract["upstream_manifest_sha256"] == hashlib.sha256(UPSTREAM_MANIFEST.read_bytes()).hexdigest()
+    assert contract["alphalens_manifest_sha256"] == hashlib.sha256(ALPHALENS_MANIFEST.read_bytes()).hexdigest()
 
 
 def test_upstream_capabilities_use_the_pinned_empyrical_oracle() -> None:
@@ -121,6 +123,28 @@ def test_upstream_capabilities_use_the_pinned_empyrical_oracle() -> None:
             assert reference_symbol in upstream_symbols, entry["capability_id"]
             assert authority["artifact_digest"] == f"git-commit:{pinned_commit}", entry["capability_id"]
             assert authority["version"] == "0.6.0", entry["capability_id"]
+
+
+def test_factor_capabilities_use_the_pinned_alphalens_oracle() -> None:
+    ledger = _load()
+    manifest = json.loads(ALPHALENS_MANIFEST.read_text(encoding="utf-8"))
+    pinned_commit = manifest["identity"]["value"]
+    upstream_symbols = {item["symbol"] for item in manifest["entries"] if item.get("kind") in {"function", "class"}}
+
+    alphalens_references = 0
+    for entry in ledger["entries"]:
+        if entry["owner"] != "factor":
+            continue
+        scenario = entry["scenarios"][0]
+        authority = scenario["authority"]
+        if authority["kind"] == "pinned_upstream_oracle" and authority["source_project"] == "alphalens":
+            reference_symbol = authority["reference"].rsplit(".", 1)[1]
+            assert reference_symbol in upstream_symbols, entry["capability_id"]
+            assert authority["artifact_digest"] == f"git-commit:{pinned_commit}", entry["capability_id"]
+            assert authority["version"] == "0.4.0", entry["capability_id"]
+            alphalens_references += 1
+
+    assert alphalens_references > 0, "factor tranche must bind alphalens-derived capabilities to the pinned oracle"
 
 
 def test_coverage_gaps_declare_only_missing_source_evidence() -> None:
