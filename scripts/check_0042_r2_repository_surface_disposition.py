@@ -349,13 +349,22 @@ def _validate_historical_allowlist(value: object, expected: list[dict[str, Any]]
         raise DispositionValidationError("historical_provenance_allowlist must exactly project historical dispositions")
 
 
-def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, Any]:
-    """Validate exact one-to-one dispositions and return a non-D0 summary."""
-    facts_payload = _read_regular_file(facts_path, "facts")
-    disposition_payload = _read_regular_file(disposition_path, "disposition")
+def validate_disposition_payloads(
+    facts_payload: bytes,
+    disposition_payload: bytes,
+    *,
+    facts_filename: str,
+) -> dict[str, Any]:
+    """Validate frozen repository-surface bytes and return a non-D0 summary.
+
+    Callers that already captured immutable Git blobs should use this entry
+    point so validation and reported hashes apply to the exact same bytes.
+    """
     facts = _load_json_bytes(facts_payload, "facts")
     disposition = _load_json_bytes(disposition_payload, "disposition")
     records_by_path, provenance = _parse_facts(facts)
+    facts_sha256 = hashlib.sha256(facts_payload).hexdigest()
+    disposition_sha256 = hashlib.sha256(disposition_payload).hexdigest()
 
     if _require_exact_int(disposition.get("schema_version"), "schema_version", "disposition") != SCHEMA_VERSION:
         raise DispositionValidationError(f"disposition schema_version must be {SCHEMA_VERSION}")
@@ -374,8 +383,8 @@ def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, 
     _validate_source_contract(disposition, facts)
     _validate_source_facts(
         disposition,
-        facts_path.name,
-        hashlib.sha256(facts_payload).hexdigest(),
+        facts_filename,
+        facts_sha256,
         facts,
         provenance,
     )
@@ -415,7 +424,20 @@ def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, 
         "source_provenance": provenance,
         "unmapped_paths": [],
         "duplicate_paths": [],
+        "facts_sha256": facts_sha256,
+        "disposition_sha256": disposition_sha256,
     }
+
+
+def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, Any]:
+    """Validate protected files by delegating their frozen bytes to the core."""
+    facts_payload = _read_regular_file(facts_path, "facts")
+    disposition_payload = _read_regular_file(disposition_path, "disposition")
+    return validate_disposition_payloads(
+        facts_payload,
+        disposition_payload,
+        facts_filename=facts_path.name,
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:

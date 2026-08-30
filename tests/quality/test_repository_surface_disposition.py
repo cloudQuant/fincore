@@ -166,6 +166,21 @@ def test_committed_disposition_maps_each_frozen_fact_exactly_once() -> None:
     assert result["not_for_d0"] is True
 
 
+def test_byte_contract_matches_the_protected_path_wrapper() -> None:
+    checker = _load_checker()
+
+    from_paths = checker.validate_disposition(FACTS, DISPOSITION)
+    from_payloads = checker.validate_disposition_payloads(
+        FACTS.read_bytes(),
+        DISPOSITION.read_bytes(),
+        facts_filename=FACTS.name,
+    )
+
+    assert from_payloads == from_paths
+    assert from_payloads["facts_sha256"] == checker.sha256_file(FACTS)
+    assert from_payloads["disposition_sha256"] == checker.sha256_file(DISPOSITION)
+
+
 def test_rejects_missing_record_mapping_before_claiming_success(tmp_path: Path) -> None:
     checker = _load_checker()
     facts_path, disposition_path = _write_minimal_pair(tmp_path)
