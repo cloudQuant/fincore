@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -17,6 +18,8 @@ if TYPE_CHECKING:
 SCRIPT = Path(__file__).parents[2] / "scripts" / "collect_0042_r2_test_node_facts.py"
 REPOSITORY_ROOT = SCRIPT.parents[1]
 FIXTURE = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "test-node-facts-discovery-0042-r2.json"
+
+_TEST_REPLACE_REF_BASE = "refs/fincore-0042-r2-test-replace"
 
 
 def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
@@ -44,13 +47,16 @@ def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
     return source_root
 
 
-def _collect(source_root: Path, output: Path) -> subprocess.CompletedProcess[str]:
+def _collect(
+    source_root: Path, output: Path, *, environment: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(SCRIPT), "--output", str(output)],
         cwd=source_root,
         capture_output=True,
         check=False,
         text=True,
+        env=environment,
     )
 
 
@@ -71,6 +77,62 @@ def _selected_test_python_paths(source_root: Path) -> list[str]:
     return sorted(
         path for path in result.stdout.splitlines() if path.endswith(".py") and not path.startswith("tests/benchmarks/")
     )
+
+
+def _install_replaced_head(source_root: Path, path: str) -> tuple[str, str, bytes, bytes]:
+    """Leave a clean canonical A checkout with an A-to-B replace mapping."""
+    commit = subprocess.run(
+        ["git", "--no-replace-objects", "rev-parse", "HEAD"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    tree = subprocess.run(
+        ["git", "--no-replace-objects", "rev-parse", "HEAD^{tree}"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    source_path = source_root / path
+    canonical_payload = source_path.read_bytes()
+    source_path.write_bytes(canonical_payload + b"\n# 0042-r2 provenance replacement test\n")
+    subprocess.run(["git", "config", "user.email", "test-node-facts@example.invalid"], cwd=source_root, check=True)
+    subprocess.run(["git", "config", "user.name", "Test Node Facts"], cwd=source_root, check=True)
+    subprocess.run(["git", "add", path], cwd=source_root, check=True)
+    subprocess.run(["git", "commit", "--quiet", "-m", "replacement B"], cwd=source_root, check=True)
+    replacement_commit = subprocess.run(
+        ["git", "--no-replace-objects", "rev-parse", "HEAD"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    replacement_payload = source_path.read_bytes()
+    subprocess.run(["git", "--no-replace-objects", "reset", "--hard", "--quiet", commit], cwd=source_root, check=True)
+    subprocess.run(["git", "replace", commit, replacement_commit], cwd=source_root, check=True)
+    subprocess.run(
+        ["git", "--no-replace-objects", "update-ref", f"{_TEST_REPLACE_REF_BASE}/{commit}", replacement_commit],
+        cwd=source_root,
+        check=True,
+    )
+    return commit, tree, canonical_payload, replacement_payload
+
+
+def _poisoned_git_environment(tmp_path: Path) -> dict[str, str]:
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "GIT_DIR": str(tmp_path / "poisoned-git-dir"),
+            "GIT_WORK_TREE": str(tmp_path / "poisoned-worktree"),
+            "GIT_INDEX_FILE": str(tmp_path / "poisoned-index"),
+            "GIT_REPLACE_REF_BASE": _TEST_REPLACE_REF_BASE,
+            "GIT_CONFIG_GLOBAL": str(tmp_path / "poisoned-global-config"),
+            "GIT_CONFIG_NOSYSTEM": "0",
+        }
+    )
+    return environment
 
 
 def _walk_mapping_keys(value: object) -> set[str]:
@@ -256,6 +318,25 @@ def test_rejects_dirty_source_before_overwriting_output(tmp_path: Path) -> None:
     assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
 
 
+def test_ignores_replacement_and_environment_redirection_for_canonical_source(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    commit, tree, canonical_payload, replacement_payload = _install_replaced_head(
+        source_root, "tests/compat/empyrical/test_public_api.py"
+    )
+    output = tmp_path / "test-node-facts.json"
+
+    result = _collect(source_root, output, environment=_poisoned_git_environment(tmp_path))
+
+    assert result.returncode == 0, result.stderr
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    assert artifact["source_provenance"] == {"commit": commit, "tree": tree, "clean": True}
+    blob = next(
+        item for item in artifact["source_test_blobs"] if item["path"] == "tests/compat/empyrical/test_public_api.py"
+    )
+    assert blob["sha256"] == hashlib.sha256(canonical_payload).hexdigest()
+    assert blob["sha256"] != hashlib.sha256(replacement_payload).hexdigest()
+
+
 def test_rejects_output_inside_source_worktree_before_collection(tmp_path: Path) -> None:
     source_root = _clone_clean_source(tmp_path)
     output = source_root / "test-node-facts.json"
@@ -308,6 +389,7 @@ def test_collection_environment_excludes_ambient_pytest_plugins(
 ) -> None:
     collector = _load_collector_module()
     monkeypatch.setenv("PYTEST_PLUGINS", "untrusted_plugin")
+    monkeypatch.setenv("GIT_DIR", "/untrusted/git-dir")
 
     environment = collector._collection_environment(
         tmp_path / "plugin",
@@ -317,6 +399,8 @@ def test_collection_environment_excludes_ambient_pytest_plugins(
 
     assert environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] == "1"
     assert "PYTEST_PLUGINS" not in environment
+    assert environment["GIT_NO_REPLACE_OBJECTS"] == "1"
+    assert "GIT_DIR" not in environment
 
 
 def test_rejects_non_regular_test_blob_before_overwriting_output(tmp_path: Path) -> None:

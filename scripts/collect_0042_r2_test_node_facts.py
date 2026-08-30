@@ -104,14 +104,29 @@ def _sha256_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _controlled_git_environment() -> dict[str, str]:
+    """Keep Git discovery rooted at ``cwd`` instead of inherited Git state."""
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment.update(
+        {
+            "GIT_ATTR_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_NO_REPLACE_OBJECTS": "1",
+        }
+    )
+    return environment
+
+
 def _git_bytes(source_root: Path, *arguments: str) -> bytes:
     try:
         result = subprocess.run(
-            ["git", *arguments],
+            ["git", "--no-replace-objects", "-c", "core.fsmonitor=false", *arguments],
             cwd=source_root,
             capture_output=True,
             check=False,
             timeout=30,
+            env=_controlled_git_environment(),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise DiscoveryError(f"cannot inspect source Git worktree: {exc}") from exc
@@ -326,7 +341,7 @@ def _collection_argv() -> list[str]:
 
 
 def _collection_environment(plugin_directory: Path, snapshot_root: Path, report_path: Path) -> dict[str, str]:
-    environment = os.environ.copy()
+    environment = _controlled_git_environment()
     environment.pop("PYTHONPATH", None)
     environment.pop("PYTEST_ADDOPTS", None)
     environment.pop("PYTEST_PLUGINS", None)
