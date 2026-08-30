@@ -31,7 +31,7 @@ def _make_clean_source(tmp_path: Path) -> Path:
     )
     (package / "__init__.py").write_text("from . import first\n", encoding="utf-8")
     (package / "first.py").write_text(
-        """try:\n    import optlib\nexcept ImportError:\n    optlib = None\n\nfrom . import second\n\ndef distinctive(value):\n    intermediate = value + 1\n    return intermediate * 2\n\ndef duplicate_one(value):\n    temporary = value + 42\n    return temporary\n""",
+        """try:\n    import optlib\nexcept ImportError:\n    import optlib as fallback_optlib\nelse:\n    import optlib as else_optlib\nfinally:\n    import optlib as final_optlib\n\nfrom . import second\n\ndef distinctive(value):\n    intermediate = value + 1\n    return intermediate * 2\n\ndef duplicate_one(value):\n    temporary = value + 42\n    return temporary\n""",
         encoding="utf-8",
     )
     (package / "second.py").write_text(
@@ -111,7 +111,7 @@ def test_capture_is_deterministic_and_collects_all_required_measurement_facts(tm
     assert measurements["summary"]["physical_loc"] > 0
     assert measurements["summary"]["logical_loc"] > 0
     assert measurements["summary"]["internal_cycle_count"] == 1
-    assert measurements["summary"]["optional_import_leakage_count"] == 1
+    assert measurements["summary"]["optional_import_leakage_count"] == 4
     assert measurements["summary"]["duplicate_body_occurrences"] >= 1
     assert [item["path"] for item in measurements["files"]] == [
         "samplepkg/__init__.py",
@@ -119,7 +119,11 @@ def test_capture_is_deterministic_and_collects_all_required_measurement_facts(tm
         "samplepkg/second.py",
     ]
     assert measurements["optional_import_policy"]["effective_module_roots"] == ["optlib"]
-    assert measurements["optional_import_leakage"][0]["path"] == "samplepkg/second.py"
+    assert {fact["path"] for fact in measurements["optional_import_leakage"]} == {
+        "samplepkg/first.py",
+        "samplepkg/second.py",
+    }
+    assert len([fact for fact in measurements["optional_imports"] if fact["guarded"]]) == 1
     assert all(
         "samplepkg" in edge["from"] and "samplepkg" in edge["to"]
         for edge in measurements["internal_import_graph"]["edges"]

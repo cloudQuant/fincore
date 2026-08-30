@@ -447,13 +447,17 @@ class _ImportCollector(ast.NodeVisitor):
             return
         self._optional_guard_depth += 1
         try:
-            for statement in [*node.body, *node.orelse, *node.finalbody]:
+            # An ImportError handler only protects the try suite.  Imports in
+            # ``else``, ``finally``, or handler suites can still raise an
+            # unhandled ImportError and must remain visible as leakage.
+            for statement in node.body:
                 self.visit(statement)
-            for handler in node.handlers:
-                for statement in handler.body:
-                    self.visit(statement)
         finally:
             self._optional_guard_depth -= 1
+        for handler in node.handlers:
+            self.visit(handler)
+        for statement in [*node.orelse, *node.finalbody]:
+            self.visit(statement)
 
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
