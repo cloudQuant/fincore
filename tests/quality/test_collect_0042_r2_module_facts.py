@@ -14,14 +14,17 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 SCRIPT = Path(__file__).parents[2] / "scripts" / "collect_0042_r2_module_facts.py"
 REPOSITORY_ROOT = SCRIPT.parents[1]
+FIXTURE = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "module-facts-discovery-0042-r2.json"
 
 
-def _clone_clean_source(tmp_path: Path) -> Path:
-    """Clone the current repository HEAD without inheriting its worktree state."""
+def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
+    """Clone one reachable revision without inheriting its worktree state."""
     expected_head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", revision],
         cwd=REPOSITORY_ROOT,
         capture_output=True,
         check=True,
@@ -156,6 +159,11 @@ def test_collects_complete_deterministic_raw_module_facts_from_clean_head(tmp_pa
         for module in modules
         for fact in module["ast_facts"]["imports"]
     )
+    conditional_exports = by_path["fincore/viz/interactive/__init__.py"]["risk_facts"]["all_assignments"]
+    assert any(
+        assignment["module_scope"] == "conditional" and "BokehBackend" in assignment["static_values"]
+        for assignment in conditional_exports
+    )
 
     forbidden_decision_fields = {
         "decision",
@@ -172,6 +180,25 @@ def test_collects_complete_deterministic_raw_module_facts_from_clean_head(tmp_pa
     assert str(source_root) not in serialized
     assert "generated_at" not in _walk_mapping_keys(artifact)
     assert "timestamp" not in _walk_mapping_keys(artifact)
+
+
+def test_committed_fixture_is_byte_identical_to_its_recorded_clean_source(tmp_path: Path) -> None:
+    """The frozen module facts must stay reproducible from their own source commit."""
+    expected_bytes = FIXTURE.read_bytes()
+    fixture = json.loads(expected_bytes)
+    assert fixture["artifact_type"] == "module_facts_discovery"
+    assert fixture["discovery_status"] == "partial"
+    assert fixture["not_for_d0"] is True
+    recorded_commit = fixture["source_provenance"]["commit"]
+    assert isinstance(recorded_commit, str) and recorded_commit
+
+    source_root = _clone_clean_source(tmp_path, recorded_commit)
+    output = tmp_path / "regenerated.json"
+
+    result = _collect(source_root, output)
+
+    assert result.returncode == 0, result.stderr
+    assert output.read_bytes() == expected_bytes
 
 
 def test_rejects_dirty_source_before_overwriting_output(tmp_path: Path) -> None:
@@ -210,3 +237,17 @@ def test_rejects_python_symlink_in_initial_head_before_overwriting_output(tmp_pa
     assert result.returncode != 0
     assert "regular git blob" in result.stderr.lower()
     assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
+
+
+@pytest.mark.parametrize("output_argument", [".git", ".git/HEAD"])
+def test_rejects_git_control_directory_as_output_before_overwriting(tmp_path: Path, output_argument: str) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    git_path = source_root / output_argument
+    original = git_path.read_bytes() if git_path.is_file() else None
+
+    result = _collect(source_root, Path(output_argument))
+
+    assert result.returncode != 0
+    assert "git control" in result.stderr.lower()
+    if original is not None:
+        assert git_path.read_bytes() == original

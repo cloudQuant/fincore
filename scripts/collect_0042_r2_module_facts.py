@@ -96,6 +96,38 @@ def _require_worktree_root(source_root: Path) -> Path:
     return top_level
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    """Return whether a resolved path is a root or descendant of ``root``."""
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
+    """Resolve every Git administration root that must never be an output target."""
+    raw_paths = (
+        source_root / ".git",
+        Path(_git_text(source_root, "rev-parse", "--git-dir")),
+        Path(_git_text(source_root, "rev-parse", "--git-common-dir")),
+    )
+    resolved_paths: list[Path] = []
+    for raw_path in raw_paths:
+        candidate = raw_path if raw_path.is_absolute() else source_root / raw_path
+        resolved = candidate.resolve()
+        if resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+    return tuple(resolved_paths)
+
+
+def _reject_git_control_output(source_root: Path, output: Path) -> None:
+    """Fail before writing anywhere in the worktree's Git administration data."""
+    for control_path in _git_control_paths(source_root):
+        if _is_within(output, control_path):
+            raise DiscoveryError("output must not target the Git control directory")
+
+
 def _provenance(source_root: Path) -> dict[str, Any]:
     _require_worktree_root(source_root)
     dirty = _git_text(source_root, "status", "--porcelain=v1", "--untracked-files=all")
@@ -273,9 +305,33 @@ def _static_string_sequence(node: ast.expr) -> tuple[list[str], bool]:
     return values, has_dynamic_parts
 
 
+def _module_scope_statements(
+    statements: Sequence[ast.stmt],
+    *,
+    conditional: bool = False,
+) -> Sequence[tuple[ast.stmt, bool]]:
+    """Yield module-scope statements while excluding function and class bodies."""
+    collected: list[tuple[ast.stmt, bool]] = []
+    for statement in statements:
+        collected.append((statement, conditional))
+        if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        for field_name in ("body", "orelse", "finalbody"):
+            nested = getattr(statement, field_name, None)
+            if isinstance(nested, list) and all(isinstance(node, ast.stmt) for node in nested):
+                collected.extend(_module_scope_statements(nested, conditional=True))
+        if isinstance(statement, ast.Try | ast.TryStar):
+            for handler in statement.handlers:
+                collected.extend(_module_scope_statements(handler.body, conditional=True))
+        if isinstance(statement, ast.Match):
+            for case in statement.cases:
+                collected.extend(_module_scope_statements(case.body, conditional=True))
+    return collected
+
+
 def _module_all_assignments(tree: ast.Module) -> list[dict[str, Any]]:
     assignments: list[dict[str, Any]] = []
-    for node in tree.body:
+    for node, conditional in _module_scope_statements(tree.body):
         target: ast.expr | None = None
         value: ast.expr | None = None
         assignment_kind: str | None = None
@@ -301,6 +357,7 @@ def _module_all_assignments(tree: ast.Module) -> list[dict[str, Any]]:
                 "expression_kind": type(value).__name__,
                 "static_values": static_values,
                 "has_dynamic_parts": has_dynamic_parts,
+                "module_scope": "conditional" if conditional else "top_level",
             }
         )
     return assignments
@@ -527,6 +584,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     output = output.resolve()
     try:
         _require_worktree_root(source_root)
+        _reject_git_control_output(source_root, output)
         artifact = _collect_artifact(source_root)
         _atomic_write(output, artifact)
     except DiscoveryError as exc:
