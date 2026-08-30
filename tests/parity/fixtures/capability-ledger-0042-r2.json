@@ -4768,9 +4768,9 @@
     "alphalens_manifest_path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
     "alphalens_manifest_sha256": "715ad55ae9483210938dfc6ffe1efb36690b7739a6b584383a9403d70b4f2125",
     "inventory_artifact_type": "legacy_surface_inventory",
-    "inventory_sha256": "01b4d18f45fef50caf8d9100f8aca9797e353847daa0fb7f9e1f882ba3e75007",
+    "inventory_sha256": "7a9d4218a3aefdf82bb5ab6615461b75d6533820a368a376933cfc2b7b8beb50",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "3b6213e8ac964b335f5701187229e9d9296626d096dfd6bc16a653d61a3d7041",
+    "node_facts_sha256": "04cbc81411262a3027c12187056203b3eb893f909994ca7b01c8f82555ebd778",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }

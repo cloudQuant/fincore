@@ -15819,6 +15819,13 @@
     },
     {
       "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle"
+    },
+    {
+      "disposition": "retain",
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
@@ -15956,6 +15963,48 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_0042_r2_module_disposition.py::test_runtime_targets_only_bind_the_runtime_owner_before_d_runtime"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_entry_models_freeze_the_three_allowed_call_models",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_entry_models_freeze_the_three_allowed_call_models"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_planned_api_header_is_scoped_and_targets_0_5_0",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_planned_api_header_is_scoped_and_targets_0_5_0"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_removed_surfaces_match_the_module_disposition_decisions",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_removed_surfaces_match_the_module_disposition_decisions"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_root_shape_is_namespace_only_without_flat_callables",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_root_shape_is_namespace_only_without_flat_callables"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_source_contract_binds_the_plan_and_disposition_documents",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_source_contract_binds_the_plan_and_disposition_documents"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_target_namespaces_are_disjoint_from_removed_surfaces",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_planned_api.py::test_target_namespaces_are_disjoint_from_removed_surfaces"
     },
     {
       "disposition": "retain",
@@ -39986,13 +40035,13 @@
   "schema_version": 1,
   "scope": "non_online_functional_collection_only",
   "source_facts": {
-    "node_count": 5601,
+    "node_count": 5608,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "3b6213e8ac964b335f5701187229e9d9296626d096dfd6bc16a653d61a3d7041",
+    "sha256": "04cbc81411262a3027c12187056203b3eb893f909994ca7b01c8f82555ebd778",
     "source_provenance": {
       "clean": true,
-      "commit": "b9fc112336d5467e74077fd0f3a330a8c628564a",
-      "tree": "39ed5adff57377d7fe4156a40477aeafc2dc774e"
+      "commit": "526154a5b4a0331fa0d7169a1863e31d6129372d",
+      "tree": "55110019c86dae8e5d623b01029bb23daec46486"
     }
   }
 }

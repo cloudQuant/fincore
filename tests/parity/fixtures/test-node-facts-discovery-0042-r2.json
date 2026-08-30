@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 248,
+        "count": 255,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3107,
+        "count": 3114,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2751,
+        "count": 2757,
         "group": "<unmarked>"
       },
       {
@@ -283,7 +283,7 @@
         "group": "integration_offline"
       },
       {
-        "count": 668,
+        "count": 669,
         "group": "p0"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5601,
+  "node_count": 5608,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20967,7 +20967,17 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [
+        "p0"
+      ],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20975,7 +20985,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20983,7 +20993,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20991,7 +21001,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_passes_the_frozen_capture_schema",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20999,7 +21009,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_contract_binds_the_committed_input_bytes",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21007,7 +21017,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21015,7 +21025,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_upstream_capabilities_use_the_pinned_empyrical_oracle",
-      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_blob_sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21129,6 +21139,54 @@
       "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_runtime_targets_only_bind_the_runtime_owner_before_d_runtime",
       "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
       "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_entry_models_freeze_the_three_allowed_call_models",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_planned_api_header_is_scoped_and_targets_0_5_0",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_removed_surfaces_match_the_module_disposition_decisions",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_root_shape_is_namespace_only_without_flat_callables",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_source_contract_binds_the_plan_and_disposition_documents",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_planned_api.py::test_target_namespaces_are_disjoint_from_removed_surfaces",
+      "test_blob_sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079",
+      "test_path": "tests/quality/test_0042_r2_planned_api.py"
     },
     {
       "directory_group": "tests/quality",
@@ -51597,16 +51655,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1095,
+    "regular_blob_count": 1097,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "b9fc112336d5467e74077fd0f3a330a8c628564a",
-    "tree": "39ed5adff57377d7fe4156a40477aeafc2dc774e"
+    "commit": "526154a5b4a0331fa0d7169a1863e31d6129372d",
+    "tree": "55110019c86dae8e5d623b01029bb23daec46486"
   },
-  "source_test_blob_count": 479,
+  "source_test_blob_count": 480,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -52144,9 +52202,9 @@
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
     },
     {
-      "git_object_id": "a49320b550d26d2cebd6ece8f12228ee5b3acbef",
+      "git_object_id": "ffcd594e79dc883c0976f9cd737b31213639b2ca",
       "path": "tests/quality/test_0042_r2_capability_ledger.py",
-      "sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798"
+      "sha256": "6a2688b050dc745dff5d3d3d4919f90635a399c36858749e4cfe3c701c51f5e2"
     },
     {
       "git_object_id": "7baf2dfc9819f4fe8c02766267dbb62363db2d91",
@@ -52157,6 +52215,11 @@
       "git_object_id": "09bf570fad0527d6663fea2ee11416f569acbdff",
       "path": "tests/quality/test_0042_r2_module_disposition.py",
       "sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7"
+    },
+    {
+      "git_object_id": "1bf854d0b38eb19510773c46b5eef9c7de0f9c6c",
+      "path": "tests/quality/test_0042_r2_planned_api.py",
+      "sha256": "104907a3462f4ff500496b8845ae94436756baf1c7ccf0fb5a6a2ee04cefc079"
     },
     {
       "git_object_id": "7821bcde3bbe993d695c14e4a97076ca9098f5f0",
