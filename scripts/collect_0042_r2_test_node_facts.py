@@ -44,6 +44,7 @@ class SourceBlob:
     """One regular Git blob used to make the isolated pytest snapshot."""
 
     path: str
+    git_object_id: str
     sha256: str
     payload: bytes
 
@@ -169,9 +170,23 @@ def _require_external_output(source_root: Path, output: Path) -> None:
     raise DiscoveryError("output path must be outside the source Git worktree")
 
 
-def _regular_git_blob_paths(source_root: Path, commit: str) -> set[str]:
+def _git_object_format(source_root: Path) -> str:
+    object_format = _git_text(source_root, "rev-parse", "--show-object-format")
+    if object_format not in {"sha1", "sha256"}:
+        raise DiscoveryError(f"unsupported Git object format: {object_format!r}")
+    return object_format
+
+
+def _git_blob_object_id(payload: bytes, object_format: str) -> str:
+    digest = hashlib.new(object_format)
+    digest.update(b"blob " + str(len(payload)).encode("ascii") + b"\0")
+    digest.update(payload)
+    return digest.hexdigest()
+
+
+def _regular_git_blob_ids(source_root: Path, commit: str) -> dict[str, str]:
     records = [record for record in _git_bytes(source_root, "ls-tree", "-r", "-z", commit).split(b"\0") if record]
-    paths: set[str] = set()
+    blob_ids: dict[str, str] = {}
     for record in records:
         try:
             metadata, raw_path = record.split(b"\t", 1)
@@ -180,17 +195,22 @@ def _regular_git_blob_paths(source_root: Path, commit: str) -> set[str]:
         except (UnicodeDecodeError, ValueError) as exc:
             raise DiscoveryError("cannot inspect initial HEAD tree") from exc
         _validate_repository_path(path)
-        if path in paths:
+        if path in blob_ids:
             raise DiscoveryError(f"initial HEAD contains duplicate source path: {path}")
         if object_type != "blob" or not mode.startswith("100") or not _GIT_OBJECT_ID.fullmatch(object_id):
             raise DiscoveryError(f"initial HEAD path must be a regular Git blob, not a link or tree: {path}")
-        paths.add(path)
-    if not paths:
+        blob_ids[path] = object_id
+    if not blob_ids:
         raise DiscoveryError("initial HEAD contains no regular Git blobs")
-    return paths
+    return blob_ids
 
 
-def _archive_regular_blobs(source_root: Path, commit: str, expected_paths: set[str]) -> dict[str, SourceBlob]:
+def _archive_regular_blobs(
+    source_root: Path,
+    commit: str,
+    expected_blob_ids: Mapping[str, str],
+    object_format: str,
+) -> dict[str, SourceBlob]:
     archive = _git_bytes(source_root, "archive", "--format=tar", commit)
     blobs: dict[str, SourceBlob] = {}
     try:
@@ -199,7 +219,7 @@ def _archive_regular_blobs(source_root: Path, commit: str, expected_paths: set[s
                 _validate_repository_path(member.name)
                 if member.isdir():
                     continue
-                if member.name not in expected_paths:
+                if member.name not in expected_blob_ids:
                     raise DiscoveryError(f"initial HEAD archive contains an unexpected source path: {member.name}")
                 if not member.isfile():
                     raise DiscoveryError(f"source archive member must be regular, not a link or device: {member.name}")
@@ -209,12 +229,21 @@ def _archive_regular_blobs(source_root: Path, commit: str, expected_paths: set[s
                 if source is None:
                     raise DiscoveryError(f"cannot read source from initial HEAD archive: {member.name}")
                 payload = source.read()
-                blobs[member.name] = SourceBlob(member.name, _sha256_bytes(payload), payload)
+                expected_object_id = expected_blob_ids[member.name]
+                actual_object_id = _git_blob_object_id(payload, object_format)
+                if actual_object_id != expected_object_id:
+                    raise DiscoveryError(f"initial HEAD archive blob differs from Git object: {member.name}")
+                blobs[member.name] = SourceBlob(
+                    member.name,
+                    actual_object_id,
+                    _sha256_bytes(payload),
+                    payload,
+                )
     except tarfile.TarError as exc:
         raise DiscoveryError("cannot read initial HEAD Git archive") from exc
-    if set(blobs) != expected_paths:
-        missing = sorted(expected_paths - set(blobs))
-        extra = sorted(set(blobs) - expected_paths)
+    if set(blobs) != set(expected_blob_ids):
+        missing = sorted(set(expected_blob_ids) - set(blobs))
+        extra = sorted(set(blobs) - set(expected_blob_ids))
         detail = ", ".join([*(f"missing {path}" for path in missing), *(f"unexpected {path}" for path in extra)])
         raise DiscoveryError(f"initial HEAD archive does not match regular Git blob paths: {detail}")
     return blobs
@@ -262,7 +291,7 @@ def _collection_argv() -> list[str]:
         "--tb=short",
         "--maxfail=0",
         "-m",
-        "not integration_online",
+        "not integration_online and not benchmark",
         "--ignore=tests/benchmarks",
     ]
 
@@ -271,7 +300,6 @@ def _collection_environment(plugin_directory: Path, snapshot_root: Path, report_
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
     environment.pop("PYTEST_ADDOPTS", None)
-    environment.pop("PYTEST_DISABLE_PLUGIN_AUTOLOAD", None)
     environment.update(
         {
             "FINCORE_0042_R2_NODE_REPORT": str(report_path),
@@ -279,6 +307,7 @@ def _collection_environment(plugin_directory: Path, snapshot_root: Path, report_
             "MPLBACKEND": "Agg",
             "PYTHONDONTWRITEBYTECODE": "1",
             "PYTHONPATH": str(plugin_directory),
+            "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
         }
     )
     return environment
@@ -359,8 +388,10 @@ def _normalize_nodes(raw_nodes: Sequence[object], test_sha256_by_path: Mapping[s
         ):
             raise DiscoveryError(f"pytest collection node {nodeid!r} has malformed marker facts")
         marker_names = sorted(set(marker_values))
-        if "integration_online" in marker_names:
-            raise DiscoveryError(f"pytest selection retained integration_online node {nodeid!r}")
+        forbidden_markers = {"integration_online", "benchmark"} & set(marker_names)
+        if forbidden_markers:
+            joined = ", ".join(sorted(forbidden_markers))
+            raise DiscoveryError(f"pytest selection retained excluded marker(s) {joined}: {nodeid!r}")
         if nodeid in seen_nodeids:
             raise DiscoveryError(f"pytest collection repeats nodeid {nodeid!r}")
         seen_nodeids.add(nodeid)
@@ -406,8 +437,14 @@ def _group_counts(nodes: Sequence[Mapping[str, Any]]) -> dict[str, list[dict[str
 
 def _collect_artifact(source_root: Path) -> dict[str, Any]:
     initial = _provenance(source_root)
-    expected_paths = _regular_git_blob_paths(source_root, str(initial["commit"]))
-    archived_blobs = _archive_regular_blobs(source_root, str(initial["commit"]), expected_paths)
+    object_format = _git_object_format(source_root)
+    expected_blob_ids = _regular_git_blob_ids(source_root, str(initial["commit"]))
+    archived_blobs = _archive_regular_blobs(
+        source_root,
+        str(initial["commit"]),
+        expected_blob_ids,
+        object_format,
+    )
     test_blobs = _source_test_blobs(archived_blobs)
     test_sha256_by_path = {blob.path: blob.sha256 for blob in test_blobs}
     with tempfile.TemporaryDirectory(prefix="fincore-0042-r2-test-node-") as temporary_directory:
@@ -431,16 +468,19 @@ def _collect_artifact(source_root: Path) -> dict[str, Any]:
             "scope": "full_repository",
             "regular_blob_count": len(archived_blobs),
             "verified_against_regular_blobs": True,
+            "git_object_format": object_format,
         },
         "collection": {
             "status": "passed",
             "argv": _collection_argv(),
-            "marker_expression": "not integration_online",
+            "marker_expression": "not integration_online and not benchmark",
             "ignored_paths": ["tests/benchmarks"],
             "collection_errors": [],
         },
         "source_test_blob_count": len(test_blobs),
-        "source_test_blobs": [{"path": blob.path, "sha256": blob.sha256} for blob in test_blobs],
+        "source_test_blobs": [
+            {"path": blob.path, "git_object_id": blob.git_object_id, "sha256": blob.sha256} for blob in test_blobs
+        ],
         "node_count": len(nodes),
         "nodes": nodes,
         "group_counts": _group_counts(nodes),

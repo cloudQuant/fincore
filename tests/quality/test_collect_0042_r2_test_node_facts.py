@@ -19,9 +19,9 @@ REPOSITORY_ROOT = SCRIPT.parents[1]
 FIXTURE = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "test-node-facts-discovery-0042-r2.json"
 
 
-def _clone_clean_source(tmp_path: Path) -> Path:
+def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
     expected_head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", revision],
         cwd=REPOSITORY_ROOT,
         capture_output=True,
         check=True,
@@ -106,9 +106,13 @@ def test_cli_describes_raw_test_node_discovery() -> None:
 def test_collects_deterministic_raw_test_node_facts_from_clean_head(tmp_path: Path) -> None:
     source_root = _clone_clean_source(tmp_path)
     first_output = tmp_path / "first.json"
+    second_output = tmp_path / "second.json"
 
     artifact = _load_artifact(source_root, first_output)
+    second = _load_artifact(source_root, second_output)
 
+    assert first_output.read_bytes() == second_output.read_bytes()
+    assert artifact == second
     assert artifact["schema_version"] == 1
     assert artifact["artifact_type"] == "test_node_facts_discovery"
     assert artifact["discovery_status"] == "partial"
@@ -127,7 +131,7 @@ def test_collects_deterministic_raw_test_node_facts_from_clean_head(tmp_path: Pa
     collection = artifact["collection"]
     assert collection["status"] == "passed"
     assert collection["collection_errors"] == []
-    assert collection["marker_expression"] == "not integration_online"
+    assert collection["marker_expression"] == "not integration_online and not benchmark"
     assert collection["ignored_paths"] == ["tests/benchmarks"]
     assert collection["argv"][:3] == ["<python>", "-m", "pytest"]
     assert "--collect-only" in collection["argv"]
@@ -147,6 +151,14 @@ def test_collects_deterministic_raw_test_node_facts_from_clean_head(tmp_path: Pa
             check=True,
         ).stdout
         assert blob_sha_by_path[path] == hashlib.sha256(payload).hexdigest()
+        object_id = subprocess.run(
+            ["git", "rev-parse", f"{provenance['commit']}:{path}"],
+            cwd=source_root,
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.strip()
+        assert next(item for item in source_test_blobs if item["path"] == path)["git_object_id"] == object_id
 
     nodes = artifact["nodes"]
     assert artifact["node_count"] == len(nodes) > 0
@@ -156,6 +168,7 @@ def test_collects_deterministic_raw_test_node_facts_from_clean_head(tmp_path: Pa
     assert all(item["test_blob_sha256"] == blob_sha_by_path[item["test_path"]] for item in nodes)
     assert all(not item["test_path"].startswith("tests/benchmarks/") for item in nodes)
     assert all("integration_online" not in item["markers"] for item in nodes)
+    assert all("benchmark" not in item["markers"] for item in nodes)
     assert {item["legacy_family"] for item in nodes} >= {"empyrical", "pyfolio", "alphalens", "other"}
     assert all(item["directory_group"] == "tests" or item["directory_group"].startswith("tests/") for item in nodes)
     assert all(not Path(item["test_path"]).is_absolute() for item in nodes)
@@ -308,3 +321,22 @@ def test_frozen_fixture_is_raw_partial_not_d0_test_node_evidence() -> None:
     assert artifact["collection"]["status"] == "passed"
     assert artifact["collection"]["collection_errors"] == []
     assert not (_walk_mapping_keys(artifact) & {"owner", "disposition", "capability_id", "target_operation_id"})
+
+
+def test_committed_fixture_is_byte_identical_to_its_recorded_clean_source(tmp_path: Path) -> None:
+    """The frozen raw test-node facts must stay reproducible from their own source commit."""
+    expected_bytes = FIXTURE.read_bytes()
+    fixture = json.loads(expected_bytes)
+    assert fixture["artifact_type"] == "test_node_facts_discovery"
+    assert fixture["discovery_status"] == "partial"
+    assert fixture["not_for_d0"] is True
+    recorded_commit = fixture["source_provenance"]["commit"]
+    assert isinstance(recorded_commit, str) and recorded_commit
+
+    source_root = _clone_clean_source(tmp_path, recorded_commit)
+    output = tmp_path / "regenerated.json"
+
+    result = _collect(source_root, output)
+
+    assert result.returncode == 0, result.stderr
+    assert output.read_bytes() == expected_bytes
