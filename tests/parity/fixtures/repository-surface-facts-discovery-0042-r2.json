@@ -2935,7 +2935,7 @@
       }
     },
     {
-      "blob_sha256": "e1ff841291a3af138358f19ff5e9ab6db5eaae041d5246979b0a54b8563a6dce",
+      "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
       "category_tags": [
         "historical_provenance_candidate"
       ],
@@ -2945,7 +2945,7 @@
           "rule_id": "historical_provenance_path"
         }
       ],
-      "git_blob_id": "455508c6c59ad7e8ab0a90257ac9b6051041b7b3",
+      "git_blob_id": "1b5c408464c4b454e0d03c7b6c09d47406fc3caa",
       "git_mode": "100644",
       "kind": "historical_provenance_candidate",
       "path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
@@ -2989,6 +2989,7 @@
           "fincore.v2",
           "scripts/",
           "scripts/capture_capability_baseline.py",
+          "scripts/check_0042_r2_repository_surface_disposition.py",
           "scripts/check_alphalens_upstream_test_migration.py",
           "scripts/check_architecture_convergence.py",
           "scripts/check_feature_parity.py",
@@ -3028,6 +3029,7 @@
           "tests/parity/fixtures/module-disposition-0042-r2.json",
           "tests/parity/fixtures/planned-api-0.5.0.json",
           "tests/parity/fixtures/repository-surface-disposition-0042-r2.json",
+          "tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json",
           "tests/parity/fixtures/test-node-disposition-0042-r2.json",
           "tests/parity/goldens/0042-r2",
           "tests/parity/goldens/0042-r2/",
@@ -9279,7 +9281,7 @@
       }
     },
     {
-      "blob_sha256": "b3f35df2277c11c2bab47356ba12c06a81c1cd0beba3f40f85cde3f9ce080b26",
+      "blob_sha256": "fbcdeaaa81ada640ee2b03bba69cb54ce517a9857cef8efba92d6ad64274fd7c",
       "category_tags": [
         "script_candidate"
       ],
@@ -9289,7 +9291,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "b9ce8cc3df75077298fb2d880e0ffc1064261d17",
+      "git_blob_id": "8b592ae66db31073cbbc6f735a562b784609a3cb",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/check_0042_r2_repository_surface_disposition.py",
@@ -9303,6 +9305,7 @@
           "argparse",
           "hashlib",
           "json",
+          "os",
           "pathlib.Path",
           "pathlib.PurePosixPath",
           "re",
@@ -11380,7 +11383,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "a374fedcba88a2603e9b53292ea27abab8b72940",
-    "tree": "012c2a638c05fdb344f9a1bd8244022355c832da"
+    "commit": "1b574244bca2fe1ec4e4f4d4343cc40c21766913",
+    "tree": "e318a69f38ae82d9f73dfd2a14805da36a5e5b8c"
   }
 }

@@ -1817,7 +1817,7 @@
       "rationale": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "rule_id": "historical-provenance",
       "source": {
-        "blob_sha256": "e1ff841291a3af138358f19ff5e9ab6db5eaae041d5246979b0a54b8563a6dce",
+        "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
         "category_tags": [
           "historical_provenance_candidate"
         ],
@@ -6227,7 +6227,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "b3f35df2277c11c2bab47356ba12c06a81c1cd0beba3f40f85cde3f9ce080b26",
+        "blob_sha256": "fbcdeaaa81ada640ee2b03bba69cb54ce517a9857cef8efba92d6ad64274fd7c",
         "category_tags": [
           "script_candidate"
         ],
@@ -7704,7 +7704,7 @@
       "text_only": true
     },
     {
-      "blob_sha256": "e1ff841291a3af138358f19ff5e9ab6db5eaae041d5246979b0a54b8563a6dce",
+      "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
       "path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
       "reason": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "text_only": true
@@ -8306,11 +8306,11 @@
   "source_facts": {
     "path": "repository-surface-facts-discovery-0042-r2.json",
     "record_count": 319,
-    "sha256": "9fa41095f9a7bf206ca01e31a22fb831608d0cbc21b60b672c65e778f4316744",
+    "sha256": "74ea252a841479056ed50686c553742b1b335f6ee01a81422ab34e5c0ff27fff",
     "source_provenance": {
       "clean": true,
-      "commit": "a374fedcba88a2603e9b53292ea27abab8b72940",
-      "tree": "012c2a638c05fdb344f9a1bd8244022355c832da"
+      "commit": "1b574244bca2fe1ec4e4f4d4343cc40c21766913",
+      "tree": "e318a69f38ae82d9f73dfd2a14805da36a5e5b8c"
     }
   }
 }
