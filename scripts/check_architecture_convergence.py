@@ -36,6 +36,7 @@ import tokenize
 from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
+from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 from io import StringIO
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
@@ -53,6 +54,8 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.11 is the supported c
 SCHEMA_VERSION = 1
 ARTIFACT_TYPE = "fincore_0042_r2_architecture_measurement"
 MEASUREMENT_CONTRACT_VERSION = 1
+THRESHOLD_POLICY_ARTIFACT_TYPE = "fincore_0042_r2_architecture_threshold_policy"
+THRESHOLD_POLICY_SCHEMA_VERSION = 1
 _GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40,64}$")
 _PACKAGE_NAME = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
 _OPTIONAL_DEPENDENCY_NAME = re.compile(r"^([A-Za-z0-9][A-Za-z0-9_.-]*)")
@@ -65,6 +68,11 @@ _THRESHOLD_TO_SUMMARY = {
     "max_optional_import_leakage_count": "optional_import_leakage_count",
     "max_physical_loc": "physical_loc",
 }
+_THRESHOLD_POLICY_KEYS = frozenset({"artifact_type", "policy_state", "rules", "schema_version"})
+_RELATIVE_REDUCTION_SUMMARIES = frozenset(
+    {"duplicate_body_occurrences", "implementation_fingerprint_count", "logical_loc", "physical_loc"}
+)
+_ZERO_MAXIMUM_SUMMARIES = frozenset({"internal_cycle_count", "optional_import_leakage_count"})
 _MEASUREMENT_COLLECTION_KEYS = frozenset(
     {
         "files",
@@ -472,6 +480,57 @@ class _ImportCollector(ast.NodeVisitor):
             names=(alias.name for alias in node.names),
         )
 
+    def _visit_deferred_scope(
+        self,
+        *,
+        arguments: ast.arguments,
+        body: Iterable[ast.stmt] | ast.expr,
+        decorators: Iterable[ast.expr] = (),
+        returns: ast.expr | None = None,
+    ) -> None:
+        """Visit definition-time expressions under the current import guard.
+
+        Function/lambda bodies execute later, potentially long after an outer
+        ``try/except ImportError`` has completed.  Their imports must not
+        inherit that outer guard.  Decorators, annotations, and defaults are
+        evaluated while the definition itself is executed, so they do retain
+        the current guard state.
+        """
+        for decorator in decorators:
+            self.visit(decorator)
+        self.visit(arguments)
+        if returns is not None:
+            self.visit(returns)
+        prior_depth = self._optional_guard_depth
+        self._optional_guard_depth = 0
+        try:
+            if isinstance(body, ast.expr):
+                self.visit(body)
+            else:
+                for statement in body:
+                    self.visit(statement)
+        finally:
+            self._optional_guard_depth = prior_depth
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_deferred_scope(
+            arguments=node.args,
+            body=node.body,
+            decorators=node.decorator_list,
+            returns=node.returns,
+        )
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_deferred_scope(
+            arguments=node.args,
+            body=node.body,
+            decorators=node.decorator_list,
+            returns=node.returns,
+        )
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        self._visit_deferred_scope(arguments=node.args, body=node.body)
+
     def visit_Call(self, node: ast.Call) -> None:
         function_name = _dotted_expression_name(node.func)
         if function_name in {"__import__", "importlib.import_module"} and node.args:
@@ -507,7 +566,11 @@ def _relative_import_base(source: SourceModule, level: int) -> str | None:
 def _internal_import_targets(occurrence: ImportOccurrence, source_by_module: Mapping[str, SourceModule]) -> list[str]:
     modules = set(source_by_module)
     if occurrence.kind in {"import", "dynamic_import"}:
-        return [occurrence.target] if occurrence.target in modules else []
+        return (
+            [occurrence.target]
+            if occurrence.target in modules and occurrence.target != occurrence.source_module
+            else []
+        )
     source = source_by_module[occurrence.source_module]
     if occurrence.level:
         base = _relative_import_base(source, occurrence.level)
@@ -519,13 +582,17 @@ def _internal_import_targets(occurrence: ImportOccurrence, source_by_module: Map
     if not target:
         return []
     candidates: set[str] = set()
-    if occurrence.target and target in modules and target != source.module.split(".")[0]:
+    # ``from package import API`` is an edge to the package module itself and
+    # can complete a real root-to-submodule cycle.  Suppress only a literal
+    # self-edge such as ``package.__init__: from . import child``; child
+    # module edges are added below from the imported names.
+    if occurrence.target and target in modules and target != occurrence.source_module:
         candidates.add(target)
     for name in occurrence.names:
         if name == "*":
             continue
         child = f"{target}.{name}"
-        if child in modules:
+        if child in modules and child != occurrence.source_module:
             candidates.add(child)
     return sorted(candidates)
 
@@ -916,6 +983,158 @@ def _validate_thresholds(baseline: Mapping[str, Any]) -> dict[str, int]:
     return thresholds
 
 
+def _read_initial_head_regular_blob(
+    source_root: Path,
+    commit: str,
+    path: Path,
+    *,
+    label: str,
+) -> tuple[str, str, bytes]:
+    """Read one source-local regular blob from the initially observed tree."""
+    if path.is_symlink():
+        raise ArchitectureContractError(f"{label} must not be a symbolic link")
+    try:
+        relative = path.absolute().relative_to(source_root)
+    except ValueError as exc:
+        raise ArchitectureContractError(f"{label} must be inside the clean source worktree") from exc
+    relative_path = relative.as_posix()
+    _validate_repo_relative_path(relative_path)
+    records = [
+        record
+        for record in _git_bytes(source_root, "ls-tree", "-z", commit, "--", relative_path).split(b"\0")
+        if record
+    ]
+    if len(records) != 1:
+        raise ArchitectureContractError(f"{label} must be one regular file in the initial HEAD tree")
+    try:
+        metadata, raw_path = records[0].split(b"\t", 1)
+        mode, object_type, object_id = metadata.decode("ascii", errors="strict").split()
+        discovered_path = raw_path.decode("utf-8", errors="strict")
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise ArchitectureContractError(f"cannot inspect initial HEAD {label}") from exc
+    if (
+        discovered_path != relative_path
+        or mode not in {"100644", "100755"}
+        or object_type != "blob"
+        or not _GIT_OBJECT_ID.fullmatch(object_id)
+    ):
+        raise ArchitectureContractError(f"{label} must be a regular Git blob in the initial HEAD tree")
+    return relative_path, object_id, _git_bytes(source_root, "cat-file", "blob", object_id)
+
+
+def _validate_frozen_threshold_policy_rules(policy: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_rules = _require_mapping(policy.get("rules"), "threshold policy rules")
+    if set(raw_rules) != set(_THRESHOLD_TO_SUMMARY):
+        raise ArchitectureContractError("threshold policy rules must contain the complete frozen threshold schema")
+    rules: dict[str, dict[str, Any]] = {}
+    for threshold_name, summary_name in _THRESHOLD_TO_SUMMARY.items():
+        rule = _require_mapping(raw_rules.get(threshold_name), f"threshold policy rule {threshold_name}")
+        kind = rule.get("kind")
+        if summary_name in _RELATIVE_REDUCTION_SUMMARIES:
+            if set(rule) != {"kind", "reduction"} or kind != "relative_reduction":
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} must be a relative_reduction rule"
+                )
+            reduction = rule.get("reduction")
+            if isinstance(reduction, bool) or not isinstance(reduction, (int, float)):
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} reduction must be a number between zero and one"
+                )
+            try:
+                normalized_reduction = Decimal(str(reduction))
+            except (InvalidOperation, ValueError) as exc:
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} reduction must be a number between zero and one"
+                ) from exc
+            if (
+                not normalized_reduction.is_finite()
+                or normalized_reduction < Decimal("0")
+                or normalized_reduction > Decimal("1")
+            ):
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} reduction must be a number between zero and one"
+                )
+            if summary_name in {"physical_loc", "logical_loc"} and normalized_reduction < Decimal("0.12"):
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} must require at least 0.12 reduction"
+                )
+            if summary_name == "duplicate_body_occurrences" and normalized_reduction < Decimal("0.60"):
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} must require at least 0.60 reduction"
+                )
+            rules[threshold_name] = {"kind": "relative_reduction", "reduction": str(normalized_reduction)}
+            continue
+        if summary_name in _ZERO_MAXIMUM_SUMMARIES:
+            if set(rule) != {"kind", "maximum"} or kind != "absolute_maximum" or rule.get("maximum") != 0:
+                raise ArchitectureContractError(
+                    f"threshold policy rule {threshold_name} must require an absolute maximum of zero"
+                )
+            rules[threshold_name] = {"kind": "absolute_maximum", "maximum": 0}
+            continue
+        raise ArchitectureContractError(f"threshold policy has no rule policy for {threshold_name}")
+    return rules
+
+
+def _load_frozen_threshold_policy(
+    source_root: Path,
+    commit: str,
+    path: Path,
+) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+    relative_path, object_id, payload = _read_initial_head_regular_blob(
+        source_root,
+        commit,
+        path,
+        label="threshold policy",
+    )
+    try:
+        policy = json.loads(payload.decode("utf-8", errors="strict"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ArchitectureContractError(f"cannot read threshold policy JSON: {exc}") from exc
+    if not isinstance(policy, dict) or set(policy) != _THRESHOLD_POLICY_KEYS:
+        raise ArchitectureContractError("threshold policy has an incompatible frozen schema")
+    if policy.get("schema_version") != THRESHOLD_POLICY_SCHEMA_VERSION:
+        raise ArchitectureContractError("threshold policy schema_version does not match this checker")
+    if policy.get("artifact_type") != THRESHOLD_POLICY_ARTIFACT_TYPE:
+        raise ArchitectureContractError("threshold policy artifact_type does not match this checker")
+    if policy.get("policy_state") != "frozen":
+        raise ArchitectureContractError("threshold policy must be frozen")
+    rules = _validate_frozen_threshold_policy_rules(policy)
+    return rules, {
+        "git_object_id": object_id,
+        "path": relative_path,
+        "sha256": _sha256_bytes(payload),
+    }
+
+
+def _seal_architecture_baseline(
+    captured: Mapping[str, Any],
+    threshold_rules: Mapping[str, Mapping[str, Any]],
+    threshold_policy: Mapping[str, str],
+) -> dict[str, Any]:
+    """Turn a clean measurement into a threshold-governed baseline artifact."""
+    sealed = copy.deepcopy(dict(captured))
+    measurements = _require_mapping(sealed.get("measurements"), "captured measurements")
+    summary = _require_mapping(measurements.get("summary"), "captured measurement summary")
+    thresholds: dict[str, int] = {}
+    for threshold_name, summary_name in _THRESHOLD_TO_SUMMARY.items():
+        value = summary.get(summary_name)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ArchitectureContractError(f"captured summary {summary_name} must be a non-negative integer")
+        rule = threshold_rules[threshold_name]
+        if rule["kind"] == "absolute_maximum":
+            thresholds[threshold_name] = int(rule["maximum"])
+        else:
+            reduction = Decimal(str(rule["reduction"]))
+            thresholds[threshold_name] = int(
+                (Decimal(value) * (Decimal("1") - reduction)).to_integral_value(rounding=ROUND_FLOOR)
+            )
+    sealed["baseline_state"] = "frozen"
+    sealed["threshold_policy"] = dict(threshold_policy)
+    sealed["thresholds"] = dict(thresholds)
+    sealed["verdict"] = "architecture_baseline"
+    return sealed
+
+
 def _validate_measurement_shape(document: Mapping[str, Any], label: str) -> dict[str, int]:
     tool_provenance = _require_mapping(document.get("tool_provenance"), f"{label} tool_provenance")
     if set(tool_provenance) != {"measurement_contract_version", "script", "script_sha256"}:
@@ -982,6 +1201,22 @@ def _validate_measurement_shape(document: Mapping[str, Any], label: str) -> dict
     return summary
 
 
+def _validate_threshold_policy_provenance(baseline: Mapping[str, Any]) -> None:
+    policy = _require_mapping(baseline.get("threshold_policy"), "baseline threshold_policy")
+    if set(policy) != {"git_object_id", "path", "sha256"}:
+        raise ArchitectureContractError("baseline threshold_policy has an incompatible schema")
+    path = policy.get("path")
+    if not isinstance(path, str):
+        raise ArchitectureContractError("baseline threshold_policy path must be a repository-relative POSIX path")
+    _validate_repo_relative_path(path)
+    object_id = policy.get("git_object_id")
+    if not isinstance(object_id, str) or not _GIT_OBJECT_ID.fullmatch(object_id):
+        raise ArchitectureContractError("baseline threshold_policy git_object_id must be an object identifier")
+    digest = policy.get("sha256")
+    if not isinstance(digest, str) or not _SHA256.fullmatch(digest):
+        raise ArchitectureContractError("baseline threshold_policy sha256 must be a SHA256 digest")
+
+
 def _validate_baseline_contract(baseline: Mapping[str, Any], actual: Mapping[str, Any]) -> dict[str, int]:
     if baseline.get("schema_version") != SCHEMA_VERSION:
         raise ArchitectureContractError(f"baseline schema_version must be {SCHEMA_VERSION}")
@@ -997,6 +1232,7 @@ def _validate_baseline_contract(baseline: Mapping[str, Any], actual: Mapping[str
         raise ArchitectureContractError("baseline package does not match the measured package")
     _validate_measurement_shape(baseline, "baseline")
     _validate_measurement_shape(actual, "actual")
+    _validate_threshold_policy_provenance(baseline)
     baseline_tool = _require_mapping(baseline.get("tool_provenance"), "baseline tool_provenance")
     actual_tool = _require_mapping(actual.get("tool_provenance"), "actual tool_provenance")
     if baseline_tool["script_sha256"] != actual_tool["script_sha256"]:
@@ -1106,6 +1342,16 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--capture", type=Path, help="write deterministic measurement JSON outside source-root")
     parser.add_argument("--baseline", type=Path, help="frozen architecture baseline JSON to validate")
     parser.add_argument(
+        "--seal-baseline",
+        action="store_true",
+        help="seal --capture as a threshold-governed architecture baseline; requires --threshold-policy",
+    )
+    parser.add_argument(
+        "--threshold-policy",
+        type=Path,
+        help="frozen source-tree threshold-policy JSON required by --seal-baseline",
+    )
+    parser.add_argument(
         "--optional-module",
         action="append",
         default=[],
@@ -1125,6 +1371,15 @@ def _parser() -> argparse.ArgumentParser:
 def _run(arguments: argparse.Namespace) -> dict[str, Any]:
     if arguments.capture is None and arguments.baseline is None:
         raise ArchitectureContractError("provide --capture, --baseline, or both")
+    if arguments.seal_baseline:
+        if arguments.capture is None:
+            raise ArchitectureContractError("--seal-baseline requires --capture")
+        if arguments.baseline is not None:
+            raise ArchitectureContractError("--seal-baseline cannot be combined with --baseline")
+        if arguments.threshold_policy is None:
+            raise ArchitectureContractError("--seal-baseline requires --threshold-policy")
+    elif arguments.threshold_policy is not None:
+        raise ArchitectureContractError("--threshold-policy is only valid with --seal-baseline")
     package = _validate_package_name(arguments.package)
     try:
         source_root = arguments.source_root.resolve(strict=True)
@@ -1132,9 +1387,28 @@ def _run(arguments: argparse.Namespace) -> dict[str, Any]:
         raise ArchitectureContractError("source-root must be an existing directory") from exc
     if not source_root.is_dir():
         raise ArchitectureContractError("source-root must be a directory")
+    capture_path = _validate_capture_path(source_root, arguments.capture) if arguments.capture is not None else None
+    baseline_path = _validate_baseline_path(arguments.baseline) if arguments.baseline is not None else None
+    if capture_path is not None and baseline_path is not None:
+        same_file = capture_path == baseline_path
+        if capture_path.exists():
+            try:
+                same_file = same_file or capture_path.samefile(baseline_path)
+            except OSError as exc:
+                raise ArchitectureContractError(f"cannot compare capture output and baseline: {exc}") from exc
+        if same_file:
+            raise ArchitectureContractError("capture output must not replace the baseline input")
     artifact, provenance = _build_measurement(source_root, package, arguments.optional_module)
-    if arguments.baseline is not None:
-        baseline, baseline_sha256 = _load_baseline(arguments.baseline)
+    if arguments.seal_baseline:
+        assert arguments.threshold_policy is not None
+        threshold_rules, threshold_policy = _load_frozen_threshold_policy(
+            source_root,
+            str(provenance["commit"]),
+            arguments.threshold_policy,
+        )
+        artifact = _seal_architecture_baseline(artifact, threshold_rules, threshold_policy)
+    elif baseline_path is not None:
+        baseline, baseline_sha256 = _load_baseline(baseline_path)
         artifact["baseline_validation"] = _validate_against_baseline(
             artifact,
             baseline,
@@ -1149,13 +1423,12 @@ def _run(arguments: argparse.Namespace) -> dict[str, Any]:
     elif arguments.require_legacy_zero:
         _validate_legacy_zero_contract({})
     serialized = _serialize_artifact(artifact)
-    if arguments.capture is not None:
-        output = _validate_capture_path(source_root, arguments.capture)
-        _write_capture_atomically(output, serialized, source_root, provenance)
+    if capture_path is not None:
+        _write_capture_atomically(capture_path, serialized, source_root, provenance)
     return {
         "capture_sha256": _sha256_bytes(serialized),
         "package": package,
-        "result": "validated" if arguments.baseline is not None else "captured",
+        "result": "sealed" if arguments.seal_baseline else "validated" if baseline_path is not None else "captured",
         "source_commit": provenance["commit"],
     }
 

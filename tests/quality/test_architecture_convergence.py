@@ -29,13 +29,13 @@ def _make_clean_source(tmp_path: Path) -> Path:
         """[project]\nname = \"samplepkg\"\nversion = \"0.0.0\"\n\n[project.optional-dependencies]\nviz = [\"optlib>=1\"]\n""",
         encoding="utf-8",
     )
-    (package / "__init__.py").write_text("from . import first\n", encoding="utf-8")
+    (package / "__init__.py").write_text("from . import first\nAPI = 'sample-api'\n", encoding="utf-8")
     (package / "first.py").write_text(
-        """try:\n    import optlib\nexcept ImportError:\n    import optlib as fallback_optlib\nelse:\n    import optlib as else_optlib\nfinally:\n    import optlib as final_optlib\n\nfrom . import second\n\ndef distinctive(value):\n    intermediate = value + 1\n    return intermediate * 2\n\ndef duplicate_one(value):\n    temporary = value + 42\n    return temporary\n""",
+        """try:\n    import optlib\n\n    def delayed(default=__import__(\"optlib\")):\n        import optlib as delayed_optlib\n        return default\n\n    class Deferred:\n        def method(self):\n            import optlib as method_optlib\n            return method_optlib\n\n    deferred_lambda = lambda: importlib.import_module(\"optlib\")\nexcept ImportError:\n    import optlib as fallback_optlib\nelse:\n    import optlib as else_optlib\nfinally:\n    import optlib as final_optlib\n\nfrom . import second\nfrom samplepkg import API, first\n\ndef distinctive(value):\n    intermediate = value + 1\n    return intermediate * 2\n\ndef duplicate_one(value):\n    temporary = value + 42\n    return temporary\n""",
         encoding="utf-8",
     )
     (package / "second.py").write_text(
-        """import optlib\nfrom .first import duplicate_one\n\ndef duplicate_two(item):\n    other_name = item + 9\n    return other_name\n""",
+        """import optlib\nimport samplepkg.second\nfrom .first import duplicate_one\n\ndef duplicate_two(item):\n    other_name = item + 9\n    return other_name\n""",
         encoding="utf-8",
     )
     for command in (
@@ -44,6 +44,32 @@ def _make_clean_source(tmp_path: Path) -> Path:
         ["git", "config", "user.name", "Architecture Checker"],
         ["git", "add", "."],
         ["git", "commit", "--quiet", "-m", "test source"],
+    ):
+        completed = _run(command, cwd=source_root)
+        assert completed.returncode == 0, completed.stderr
+    return source_root
+
+
+def _make_reduced_candidate(tmp_path: Path) -> Path:
+    """Create a smaller candidate without the D0 cycle, duplication, or optional leakage."""
+    source_root = tmp_path / "candidate"
+    package = source_root / "samplepkg"
+    package.mkdir(parents=True)
+    (source_root / "pyproject.toml").write_text(
+        '[project]\nname = "samplepkg"\nversion = "0.0.1"\n',
+        encoding="utf-8",
+    )
+    (package / "__init__.py").write_text("from .first import distinctive\n", encoding="utf-8")
+    (package / "first.py").write_text(
+        "def distinctive(value):\n    return (value + 1) * 2\n",
+        encoding="utf-8",
+    )
+    for command in (
+        ["git", "init", "--quiet"],
+        ["git", "config", "user.email", "architecture@example.invalid"],
+        ["git", "config", "user.name", "Architecture Checker"],
+        ["git", "add", "."],
+        ["git", "commit", "--quiet", "-m", "reduced candidate"],
     ):
         completed = _run(command, cwd=source_root)
         assert completed.returncode == 0, completed.stderr
@@ -80,7 +106,49 @@ def _freeze_baseline(captured: dict[str, Any]) -> dict[str, Any]:
         "max_optional_import_leakage_count": metrics["optional_import_leakage_count"],
         "max_physical_loc": metrics["physical_loc"],
     }
+    baseline["threshold_policy"] = {
+        "git_object_id": "0" * 40,
+        "path": "architecture-threshold-policy.json",
+        "sha256": "0" * 64,
+    }
     return baseline
+
+
+def _commit_threshold_policy(
+    source_root: Path,
+    *,
+    policy_state: str = "frozen",
+    loc_reduction: float = 0.12,
+) -> Path:
+    """Add one source-tracked policy whose limits derive from the clean D0 facts."""
+    policy_path = source_root / "architecture-threshold-policy.json"
+    policy_path.write_text(
+        json.dumps(
+            {
+                "artifact_type": "fincore_0042_r2_architecture_threshold_policy",
+                "policy_state": policy_state,
+                "rules": {
+                    "max_duplicate_body_occurrences": {"kind": "relative_reduction", "reduction": 0.60},
+                    "max_implementation_fingerprint_count": {"kind": "relative_reduction", "reduction": 0.0},
+                    "max_internal_cycle_count": {"kind": "absolute_maximum", "maximum": 0},
+                    "max_logical_loc": {"kind": "relative_reduction", "reduction": loc_reduction},
+                    "max_optional_import_leakage_count": {"kind": "absolute_maximum", "maximum": 0},
+                    "max_physical_loc": {"kind": "relative_reduction", "reduction": loc_reduction},
+                },
+                "schema_version": 1,
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    for command in (
+        ["git", "add", policy_path.name],
+        ["git", "commit", "--quiet", "-m", "add frozen threshold policy"],
+    ):
+        completed = _run(command, cwd=source_root)
+        assert completed.returncode == 0, completed.stderr
+    return policy_path
 
 
 def test_capture_is_deterministic_and_collects_all_required_measurement_facts(tmp_path: Path) -> None:
@@ -111,7 +179,7 @@ def test_capture_is_deterministic_and_collects_all_required_measurement_facts(tm
     assert measurements["summary"]["physical_loc"] > 0
     assert measurements["summary"]["logical_loc"] > 0
     assert measurements["summary"]["internal_cycle_count"] == 1
-    assert measurements["summary"]["optional_import_leakage_count"] == 4
+    assert measurements["summary"]["optional_import_leakage_count"] == 7
     assert measurements["summary"]["duplicate_body_occurrences"] >= 1
     assert [item["path"] for item in measurements["files"]] == [
         "samplepkg/__init__.py",
@@ -123,12 +191,14 @@ def test_capture_is_deterministic_and_collects_all_required_measurement_facts(tm
         "samplepkg/first.py",
         "samplepkg/second.py",
     }
-    assert len([fact for fact in measurements["optional_imports"] if fact["guarded"]]) == 1
+    assert len([fact for fact in measurements["optional_imports"] if fact["guarded"]]) == 2
+    assert "dynamic_import" in {fact["import_kind"] for fact in measurements["optional_import_leakage"]}
     assert all(
         "samplepkg" in edge["from"] and "samplepkg" in edge["to"]
         for edge in measurements["internal_import_graph"]["edges"]
     )
-    assert measurements["internal_import_graph"]["cycles"] == [["samplepkg.first", "samplepkg.second"]]
+    assert measurements["internal_import_graph"]["cycles"] == [["samplepkg", "samplepkg.first", "samplepkg.second"]]
+    assert not any(edge["from"] == edge["to"] for edge in measurements["internal_import_graph"]["edges"])
 
     duplicate_groups = measurements["normalized_ast_duplication"]["groups"]
     assert any(
@@ -247,6 +317,89 @@ def test_baseline_validation_fails_closed_for_missing_pending_platform_schema_an
     threshold_result = _collect(source_root, tmp_path / "threshold.json", "--baseline", str(baseline_path))
     assert threshold_result.returncode != 0
     assert "logical_loc" in threshold_result.stderr
+
+
+def test_seal_derives_candidate_thresholds_from_a_frozen_source_policy(tmp_path: Path) -> None:
+    source_root = _make_clean_source(tmp_path)
+    policy_path = _commit_threshold_policy(source_root)
+    sealed_path = tmp_path / "sealed-baseline.json"
+
+    sealed_result = _collect(
+        source_root,
+        sealed_path,
+        "--seal-baseline",
+        "--threshold-policy",
+        str(policy_path),
+    )
+
+    assert sealed_result.returncode == 0, sealed_result.stderr
+    sealed = json.loads(sealed_path.read_text(encoding="utf-8"))
+    assert sealed["baseline_state"] == "frozen"
+    assert sealed["verdict"] == "architecture_baseline"
+    assert sealed["threshold_policy"]["path"] == policy_path.name
+    summary = sealed["measurements"]["summary"]
+    assert sealed["thresholds"]["max_physical_loc"] == summary["physical_loc"] * 88 // 100
+    assert sealed["thresholds"]["max_logical_loc"] == summary["logical_loc"] * 88 // 100
+    assert sealed["thresholds"]["max_duplicate_body_occurrences"] == summary["duplicate_body_occurrences"] * 40 // 100
+    assert sealed["thresholds"]["max_internal_cycle_count"] == 0
+    assert sealed["thresholds"]["max_optional_import_leakage_count"] == 0
+
+    candidate_root = _make_reduced_candidate(tmp_path)
+    validated_path = tmp_path / "validated.json"
+    validated_result = _collect(candidate_root, validated_path, "--baseline", str(sealed_path))
+    assert validated_result.returncode == 0, validated_result.stderr
+    assert json.loads(validated_path.read_text(encoding="utf-8"))["baseline_validation"]["status"] == "passed"
+
+    unsealed_path = tmp_path / "unsealed.json"
+    missing_policy = _collect(source_root, unsealed_path, "--seal-baseline")
+    assert missing_policy.returncode != 0
+    assert "threshold-policy" in missing_policy.stderr
+    assert not unsealed_path.exists()
+
+    pending_source = _make_clean_source(tmp_path / "pending")
+    pending_policy = _commit_threshold_policy(pending_source, policy_state="pending")
+    pending_path = tmp_path / "pending.json"
+    pending_result = _collect(
+        pending_source,
+        pending_path,
+        "--seal-baseline",
+        "--threshold-policy",
+        str(pending_policy),
+    )
+    assert pending_result.returncode != 0
+    assert "frozen" in pending_result.stderr
+    assert not pending_path.exists()
+
+    nonfinite_source = _make_clean_source(tmp_path / "nonfinite")
+    nonfinite_policy = _commit_threshold_policy(nonfinite_source, loc_reduction=float("nan"))
+    nonfinite_path = tmp_path / "nonfinite.json"
+    nonfinite_result = _collect(
+        nonfinite_source,
+        nonfinite_path,
+        "--seal-baseline",
+        "--threshold-policy",
+        str(nonfinite_policy),
+    )
+    assert nonfinite_result.returncode != 0
+    assert "number" in nonfinite_result.stderr
+    assert not nonfinite_path.exists()
+
+
+def test_rejects_capture_path_that_would_replace_its_baseline_input(tmp_path: Path) -> None:
+    source_root = _make_clean_source(tmp_path)
+    captured_path = tmp_path / "captured.json"
+    assert _collect(source_root, captured_path).returncode == 0
+    baseline_path = tmp_path / "baseline.json"
+    baseline_path.write_text(
+        json.dumps(_freeze_baseline(json.loads(captured_path.read_text(encoding="utf-8")))), encoding="utf-8"
+    )
+    original = baseline_path.read_bytes()
+
+    result = _collect(source_root, baseline_path, "--baseline", str(baseline_path))
+
+    assert result.returncode != 0
+    assert "replace" in result.stderr.lower()
+    assert baseline_path.read_bytes() == original
 
 
 def test_strict_flags_require_explicit_evidence_instead_of_claiming_task8_results(tmp_path: Path) -> None:
