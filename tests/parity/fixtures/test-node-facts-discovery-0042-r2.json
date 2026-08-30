@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 190,
+        "count": 203,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3047,
+        "count": 3060,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2693,
+        "count": 2706,
         "group": "<unmarked>"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5541,
+  "node_count": 5554,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20941,6 +20941,110 @@
       "nodeid": "tests/property/test_time_series_contracts.py::test_sharpe_ratio_is_scale_invariant",
       "test_blob_sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc",
       "test_path": "tests/property/test_time_series_contracts.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_maps_each_module_fact_exactly_once",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_source_facts_bind_the_committed_module_facts_bytes",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_pure_legacy_deletions_are_marked_delete",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_runtime_targets_only_bind_the_runtime_owner_before_d_runtime",
+      "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
+      "test_path": "tests/quality/test_0042_r2_module_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_maps_each_collected_node_exactly_once",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_source_facts_bind_the_committed_node_facts_bytes",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_legacy_compat_nodes_never_claim_retention",
+      "test_blob_sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601",
+      "test_path": "tests/quality/test_0042_r2_test_node_disposition.py"
     },
     {
       "directory_group": "tests/quality",
@@ -51113,16 +51217,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1079,
+    "regular_blob_count": 1083,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "739081686808445065d681cc7c5e9a8032f261a8",
-    "tree": "6c9b19cfc0ac03bf9cd19fec5b4990a91fefa3c4"
+    "commit": "eef1be234edd058281d4be58dee9282b2a8c5949",
+    "tree": "0fddbac2d78a563e6c69d39ff80fd7a65dd54c47"
   },
-  "source_test_blob_count": 472,
+  "source_test_blob_count": 474,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -51658,6 +51762,16 @@
       "git_object_id": "353eca70cba8644ac5c00d83f9367d1da822521b",
       "path": "tests/property/test_time_series_contracts.py",
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
+    },
+    {
+      "git_object_id": "09bf570fad0527d6663fea2ee11416f569acbdff",
+      "path": "tests/quality/test_0042_r2_module_disposition.py",
+      "sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7"
+    },
+    {
+      "git_object_id": "a70bb7bb43a765af0d9e5ec1cd17bb148ee9894c",
+      "path": "tests/quality/test_0042_r2_test_node_disposition.py",
+      "sha256": "a77302e531edec2cebd752ab3ffb191016b18bfa2b2935b1b54136ce60c2e601"
     },
     {
       "git_object_id": "f3dbb175fee82f9e11d5573a6b8b88716f4d202c",

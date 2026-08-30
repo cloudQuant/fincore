@@ -15798,6 +15798,97 @@
     },
     {
       "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_maps_each_module_fact_exactly_once",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_maps_each_module_fact_exactly_once"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_source_facts_bind_the_committed_module_facts_bytes",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_source_facts_bind_the_committed_module_facts_bytes"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_pure_legacy_deletions_are_marked_delete",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_pure_legacy_deletions_are_marked_delete"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_runtime_targets_only_bind_the_runtime_owner_before_d_runtime",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_module_disposition.py::test_runtime_targets_only_bind_the_runtime_owner_before_d_runtime"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_entries_follow_the_controlled_vocabulary"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_maps_each_collected_node_exactly_once",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_maps_each_collected_node_exactly_once"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_source_facts_bind_the_committed_node_facts_bytes",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_disposition_source_facts_bind_the_committed_node_facts_bytes"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_every_entry_carries_a_non_empty_disposition_for_capture_input"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_test_node_disposition.py::test_legacy_compat_nodes_never_claim_retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_test_node_disposition.py::test_legacy_compat_nodes_never_claim_retention"
+    },
+    {
+      "disposition": "retain",
       "nodeid": "tests/quality/test_architecture_convergence.py::test_baseline_validation_fails_closed_for_missing_pending_platform_schema_and_threshold_errors",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
@@ -39566,13 +39657,13 @@
   "schema_version": 1,
   "scope": "non_online_functional_collection_only",
   "source_facts": {
-    "node_count": 5541,
+    "node_count": 5554,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "a8a90544dbaaf8b0dc00d6397e99864b5654fb132b9fc04972010f5fc47cdeb9",
+    "sha256": "f85725c975c7da45fcfb613bdcb144202618b061754069afaa377011e91f5d13",
     "source_provenance": {
       "clean": true,
-      "commit": "739081686808445065d681cc7c5e9a8032f261a8",
-      "tree": "6c9b19cfc0ac03bf9cd19fec5b4990a91fefa3c4"
+      "commit": "eef1be234edd058281d4be58dee9282b2a8c5949",
+      "tree": "0fddbac2d78a563e6c69d39ff80fd7a65dd54c47"
     }
   }
 }
