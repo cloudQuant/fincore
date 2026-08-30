@@ -1,0 +1,3417 @@
+{
+  "artifact_type": "capability_ledger",
+  "coverage_gaps": [
+    {
+      "capability_id": "metrics.gross_leverage",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "metrics.second_max_drawdown",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "metrics.third_max_drawdown",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.cashflow.cashflow_adjusted_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.cashflow.cashflow_adjusted_twr",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.cashflow.cashflow_timing",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.cashflow.fee_treatment",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.disclosure.disclosure_context",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.disclosure.render_disclosure",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.inference.sharpe_confidence_interval",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.inference.sharpe_standard_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "performance.inference.standard_error_of_mean",
+      "reason": "no_source_nodeid"
+    }
+  ],
+  "decision_status": "scoped",
+  "does_not_assert": [
+    "D-TECH",
+    "D0",
+    "installed_wheel_behavior",
+    "legacy_zero"
+  ],
+  "entries": [
+    {
+      "capability_id": "metrics.aggregate_returns",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.aggregate_returns",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:aggregate_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[aggregate_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[aggregate_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[aggregate_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[aggregate_returns]",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_0",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_1",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_2",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_3",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_4",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_5",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_6",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_aggregate_returns_7",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_empty",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_invalid_convert_to",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_monthly",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_non_datetime_index",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_quarterly",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_weekly",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_aggregate_returns_yearly"
+      ],
+      "target_operation_id": "metrics.aggregate_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_aggregate_returns"
+      ]
+    },
+    {
+      "capability_id": "metrics.alpha",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.alpha",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:alpha",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[alpha]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[alpha]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[alpha]",
+        "tests/test_core/test_context_cache_contract.py::test_alpha_and_beta_share_one_cached_alpha_beta_calculation",
+        "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_alpha_empty",
+        "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_alpha_mismatched_length",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_0",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_1",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_2",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_3",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_4",
+        "tests/test_empyrical/test_ranking_and_cornell.py::TestRankingAndCornell::test_alpha_percentile_rank",
+        "tests/test_empyrical/test_ranking_and_cornell.py::TestRankingAndCornell::test_alpha_percentile_rank_best",
+        "tests/test_empyrical/test_ranking_and_cornell.py::TestRankingAndCornell::test_alpha_percentile_rank_empty",
+        "tests/test_empyrical/test_ranking_and_cornell.py::TestRankingAndCornell::test_alpha_percentile_rank_worst",
+        "tests/test_metrics/alpha_beta_edge/test_alpha.py::TestAlphaEdgeCases::test_alpha_with_returns_dataframe",
+        "tests/test_metrics/alpha_beta_edge/test_percentile_rank.py::TestAlphaPercentileRankEdgeCases::test_alpha_percentile_rank_returns_nan_for_insufficient_data",
+        "tests/test_metrics/alpha_beta_edge/test_percentile_rank.py::TestAlphaPercentileRankEdgeCases::test_alpha_percentile_rank_returns_nan_for_nan_strategy_alpha",
+        "tests/test_metrics/alpha_beta_edge/test_percentile_rank.py::TestAlphaPercentileRankEdgeCases::test_alpha_percentile_rank_returns_nan_for_no_valid_peer_alphas",
+        "tests/test_metrics/alpha_beta_edge/test_percentile_rank.py::TestAlphaPercentileRankEdgeCases::test_alpha_percentile_rank_skips_insufficient_peer_returns"
+      ],
+      "target_operation_id": "metrics.alpha",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_alpha"
+      ]
+    },
+    {
+      "capability_id": "metrics.alpha_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.alpha_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:alpha_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[alpha_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[alpha_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[alpha_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[alpha_aligned]"
+      ],
+      "target_operation_id": "metrics.alpha_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_alpha_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.alpha_beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.alpha_beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:alpha_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[alpha_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[alpha_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[alpha_beta]",
+        "tests/test_core/test_context.py::TestAnalysisContextFactorMetrics::test_alpha_beta_with_factor_returns",
+        "tests/test_core/test_context.py::TestAnalysisContextFactorMetrics::test_alpha_beta_without_factor_returns",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_0",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_1",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_2",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_3",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_4",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_0",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_1",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_2",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_3",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_4",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_beta_equality_5",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestAlphaBetaNaN::test_alpha_beta_with_nan_inputs_0",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestAlphaBetaProperties::test_alpha_beta_correlation_0",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestAlphaBetaProperties::test_alpha_beta_translation_0",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestAlphaBetaProperties::test_alpha_beta_translation_1"
+      ],
+      "target_operation_id": "metrics.alpha_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_alpha_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.alpha_beta_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.alpha_beta_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:alpha_beta_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[alpha_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[alpha_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[alpha_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[alpha_beta_aligned]",
+        "tests/test_metrics/alpha_beta_edge/test_aligned_coverage.py::TestAlphaBetaAlignedAdditionalCoverage::test_alpha_beta_aligned_returns_nan_after_alignment_empty",
+        "tests/test_metrics/alpha_beta_edge/test_aligned_coverage.py::TestAlphaBetaAlignedAdditionalCoverage::test_alpha_beta_aligned_returns_nan_for_zero_variance_in_array",
+        "tests/test_metrics/alpha_beta_edge/test_alpha_beta_aligned.py::TestAlphaBetaAlignedEdgeCases::test_alpha_beta_aligned_returns_nan_for_all_nan_data",
+        "tests/test_metrics/alpha_beta_edge/test_alpha_beta_aligned.py::TestAlphaBetaAlignedEdgeCases::test_alpha_beta_aligned_returns_nan_for_insufficient_clean_data",
+        "tests/test_metrics/alpha_beta_edge/test_alpha_beta_aligned.py::TestAlphaBetaAlignedEdgeCases::test_alpha_beta_aligned_returns_nan_for_zero_factor_var",
+        "tests/test_metrics/alpha_beta_edge/test_alpha_beta_aligned.py::TestAlphaBetaAlignedEdgeCases::test_alpha_beta_aligned_with_nan_factor_variance",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_alpha_beta_aligned_insufficient_data",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_alpha_beta_aligned_zero_factor_variance"
+      ],
+      "target_operation_id": "metrics.alpha_beta_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_alpha_beta_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.annual_active_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.annual_active_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.annual_active_return"
+          },
+          "oracle_reference": "invariant contract metrics.annual_active_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[annual_active_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[annual_active_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_each_metric_family_rejects_partial_labels_under_strict[annual_active_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[annual_active_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[annual_active_return]",
+        "tests/test_coverage_gaps.py::TestAnnualActiveReturnEdgeCases::test_annual_active_return_empty",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_annual_active_return_0",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_annual_active_return_1",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_annual_active_return_2",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_annual_active_return_3",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_annual_active_return_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_5",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_annual_active_return_6",
+        "tests/test_final_coverage_edges.py::TestAnnualActiveReturnFinalEdgeCase::test_annual_active_return_nan_benchmark_annual",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_active_return_with_nan_annual_values",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_active_return_with_nan_result",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestYearlyMissingCoverage::test_annual_active_return_nan_result",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestYearlyMissingCoverage::test_annual_active_return_with_single_value"
+      ],
+      "target_operation_id": "metrics.annual_active_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annual_active_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.annual_active_return_by_year",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.annual_active_return_by_year.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.annual_active_return_by_year"
+          },
+          "oracle_reference": "invariant contract metrics.annual_active_return_by_year.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_dependent_binary_metric_exposes_and_forwards_strict_alignment[annual_active_return_by_year]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[annual_active_return_by_year]",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annual_active_return_by_year",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annual_active_return_by_year_consistency",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annual_active_return_by_year_empty",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annual_active_return_by_year_values",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_active_return_by_year_empty_result",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_active_return_by_year_non_datetime_index"
+      ],
+      "target_operation_id": "metrics.annual_active_return_by_year",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annual_active_return_by_year"
+      ]
+    },
+    {
+      "capability_id": "metrics.annual_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.annual_return",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:annual_return",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[annual_return]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[annual_return]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[annual_return]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[annual_return]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_annual_return",
+        "tests/test_edge_cases.py::TestAllZeros::test_annual_return_all_zeros",
+        "tests/test_edge_cases.py::TestEmptyReturns::test_annual_return_empty",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_return_by_year_0",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_return_by_year_1",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_return_by_year_2",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_return_with_dataframe",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_return_with_numpy_array_negative_ending",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyModuleAdditionalCoverageTestCase::test_annual_return_with_series_negative_ending_value",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyReturnsMissingCoverageTestCase::test_annual_return_empty",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestYearlyEdgeCases::test_annual_return_empty_series"
+      ],
+      "target_operation_id": "metrics.annual_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annual_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.annual_volatility",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.annual_volatility",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:annual_volatility",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[annual_volatility]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[annual_volatility]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[annual_volatility]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[annual_volatility]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_annual_volatility",
+        "tests/test_edge_cases.py::TestAllZeros::test_annual_volatility_all_zeros",
+        "tests/test_edge_cases.py::TestEmptyReturns::test_annual_volatility_empty",
+        "tests/test_edge_cases.py::TestSingleValue::test_annual_volatility_single",
+        "tests/test_edge_cases.py::TestZeroVolatility::test_annual_volatility_zero_vol",
+        "tests/test_metrics/test_coverage_branches.py::test_annual_volatility_alpha_deprecation_warns",
+        "tests/test_metrics/test_risk_complete.py::TestAnnualVolatilityEdgeCases::test_annual_volatility_normal_case",
+        "tests/test_metrics/test_risk_complete.py::TestAnnualVolatilityEdgeCases::test_annual_volatility_short_returns",
+        "tests/test_metrics/test_risk_complete.py::TestAnnualVolatilityEdgeCases::test_annual_volatility_with_output_buffer"
+      ],
+      "target_operation_id": "metrics.annual_volatility",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annual_volatility"
+      ]
+    },
+    {
+      "capability_id": "metrics.annual_volatility_by_year",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.annual_volatility_by_year.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.annual_volatility_by_year"
+          },
+          "oracle_reference": "invariant contract metrics.annual_volatility_by_year.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_volatility_by_year_0",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_volatility_by_year_1",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_annual_volatility_by_year_2",
+        "tests/test_metrics/missing_coverage/test_yearly.py::YearlyReturnsMissingCoverageTestCase::test_annual_volatility_by_year_with_datetime",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestYearlyEdgeCases::test_annual_volatility_by_year_non_datetime_index"
+      ],
+      "target_operation_id": "metrics.annual_volatility_by_year",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annual_volatility_by_year"
+      ]
+    },
+    {
+      "capability_id": "metrics.annualized_cumulative_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.annualized_cumulative_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.annualized_cumulative_return"
+          },
+          "oracle_reference": "invariant contract metrics.annualized_cumulative_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annualized_cumulative_return",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annualized_cumulative_return_empty",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annualized_cumulative_return_negative",
+        "tests/test_empyrical/test_return_metrics.py::TestReturnMetrics::test_annualized_cumulative_return_vs_cagr"
+      ],
+      "target_operation_id": "metrics.annualized_cumulative_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_annualized_cumulative_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_each_metric_family_rejects_partial_labels_under_strict[beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[beta]",
+        "tests/compat/empyrical/test_out_contract.py::test_beta_fourth_positional_argument_is_out",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[beta]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[beta]",
+        "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_beta_empty",
+        "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_beta_zero_factor_vol",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_beta_0",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_beta_1",
+        "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_beta_2",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestBetaScaling::test_beta_scaling_0",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestBetaScaling::test_beta_scaling_1",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestBetaScaling::test_beta_scaling_2",
+        "tests/test_empyrical/stats/test_alpha_beta_properties.py::TestBetaScaling::test_beta_scaling_3",
+        "tests/test_metrics/test_risk_complete.py::TestBetaFragilityHeuristicAlignedEdgeCases::test_beta_fragility_aligned_short_returns",
+        "tests/test_metrics/test_risk_complete.py::TestBetaFragilityHeuristicEdgeCases::test_beta_fragility_aligned_short_returns",
+        "tests/test_metrics/test_risk_complete.py::TestBetaFragilityHeuristicEdgeCases::test_beta_fragility_extreme_returns",
+        "tests/test_metrics/test_risk_complete.py::TestBetaFragilityHeuristicEdgeCases::test_beta_fragility_short_factor_returns",
+        "tests/test_pyfolio/test_timeseries.py::TestStats::test_beta_0"
+      ],
+      "target_operation_id": "metrics.beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.beta_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.beta_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:beta_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[beta_aligned]"
+      ],
+      "target_operation_id": "metrics.beta_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_beta_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.beta_fragility_heuristic",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.beta_fragility_heuristic",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:beta_fragility_heuristic",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[beta_fragility_heuristic]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[beta_fragility_heuristic]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_beta_fragility_heuristic",
+        "tests/test_metrics/test_risk_more_coverage.py::test_beta_fragility_heuristic_returns_nan_when_alignment_too_short"
+      ],
+      "target_operation_id": "metrics.beta_fragility_heuristic",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_beta_fragility_heuristic"
+      ]
+    },
+    {
+      "capability_id": "metrics.beta_fragility_heuristic_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.beta_fragility_heuristic_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:beta_fragility_heuristic_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[beta_fragility_heuristic_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[beta_fragility_heuristic_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[beta_fragility_heuristic_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[beta_fragility_heuristic_aligned]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_beta_fragility_heuristic_aligned"
+      ],
+      "target_operation_id": "metrics.beta_fragility_heuristic_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_beta_fragility_heuristic_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.burke_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.burke_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.burke_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.burke_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalRatiosAndTiming::test_burke_ratio_instance_method",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_burke_ratio",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_burke_ratio_empty",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_burke_ratio_positive_returns",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_burke_ratio_with_risk_free",
+        "tests/test_metrics/test_ratios_complete.py::TestBurkeRatioEdgeCases::test_burke_ratio_no_drawdowns",
+        "tests/test_metrics/test_ratios_complete.py::TestBurkeRatioEdgeCases::test_burke_ratio_short_returns"
+      ],
+      "target_operation_id": "metrics.burke_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_burke_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.cagr",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.cagr",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:cagr",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_public_api.py::test_strict_wrapper_rejects_out_policy_signature_mismatch[cagr-write_and_return]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[cagr]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[cagr]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[cagr]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[cagr]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_cagr",
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_cagr_alias",
+        "tests/test_metrics/test_stats_missing_coverage.py::TestEmpyricalEdgeCases::test_cagr_empty_dataframe",
+        "tests/test_metrics/test_stats_missing_coverage.py::TestEmpyricalEdgeCases::test_cagr_single_value"
+      ],
+      "target_operation_id": "metrics.cagr",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_cagr"
+      ]
+    },
+    {
+      "capability_id": "metrics.calmar_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.calmar_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:calmar_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[calmar_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[calmar_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[calmar_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[calmar_ratio]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_calmar_ratio",
+        "tests/test_coverage_gaps.py::TestCalmarRatioEdgeCases::test_calmar_ratio_all_nan_returns",
+        "tests/test_metrics/test_ratios_additional.py::test_calmar_ratio_returns_nan_when_temp_infinite",
+        "tests/test_metrics/test_ratios_additional.py::test_calmar_ratio_with_all_nan_returns",
+        "tests/test_metrics/test_ratios_additional.py::test_calmar_ratio_with_empty_returns_after_nan_removal",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestRatiosEdgeCases::test_calmar_ratio_zero_drawdown"
+      ],
+      "target_operation_id": "metrics.calmar_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_calmar_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.capm_r_squared",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.capm_r_squared.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.capm_r_squared"
+          },
+          "oracle_reference": "invariant contract metrics.capm_r_squared.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[capm_r_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[capm_r_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[capm_r_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[capm_r_squared]",
+        "tests/test_metrics/test_stats_additional.py::test_capm_r_squared_edge_cases"
+      ],
+      "target_operation_id": "metrics.capm_r_squared",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_capm_r_squared"
+      ]
+    },
+    {
+      "capability_id": "metrics.capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_forwards_period_kwargs_to_scalar_capture",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_invalid_windows_keep_utils_roll_shapes[roll_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_invalid_windows_keep_utils_roll_shapes[roll_up_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_invalid_windows_keep_utils_roll_shapes[roll_up_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_misaligned_series_keeps_pinned_indexing_error[roll_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_misaligned_series_keeps_pinned_indexing_error[roll_up_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_misaligned_series_keeps_pinned_indexing_error[roll_up_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_negative_series_window_keeps_pinned_duplicate_labels",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_rejects_mixed_input_types[roll_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_rejects_mixed_input_types[roll_up_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_rejects_mixed_input_types[roll_up_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_short_series_returns_empty_series[roll_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_short_series_returns_empty_series[roll_up_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_capture_roll_short_series_returns_empty_series[roll_up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[capture]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_capture_ratio_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_capture_ratio_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_capture_ratio_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_capture_ratio_3",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_capture_short_returns"
+      ],
+      "target_operation_id": "metrics.capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.common_sense_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.common_sense_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.common_sense_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.common_sense_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalRatiosAndTiming::test_common_sense_ratio_instance_method",
+        "tests/test_metrics/test_ratios_additional.py::test_common_sense_ratio_and_stability_and_capture_edge_cases",
+        "tests/test_metrics/test_ratios_complete.py::TestCommonSenseRatioEdgeCases::test_common_sense_ratio_nan_tail_ratio",
+        "tests/test_metrics/test_ratios_complete.py::TestCommonSenseRatioEdgeCases::test_common_sense_ratio_short_returns",
+        "tests/test_metrics/test_ratios_complete.py::TestCommonSenseRatioEdgeCases::test_common_sense_ratio_zero_win_rate",
+        "tests/test_metrics/test_stats_additional.py::test_common_sense_ratio_and_normalize_wrappers"
+      ],
+      "target_operation_id": "metrics.common_sense_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_common_sense_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.cum_returns",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.cum_returns",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:cum_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[cum_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[cum_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[cum_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[cum_returns]",
+        "tests/property/test_time_series_contracts.py::test_cum_returns_handles_bounded_return_values",
+        "tests/property/test_time_series_contracts.py::test_cum_returns_matches_numpy_oracle",
+        "tests/test_edge_cases.py::TestCumReturnsEdgeCases::test_cum_returns_all_zeros",
+        "tests/test_edge_cases.py::TestCumReturnsEdgeCases::test_cum_returns_empty",
+        "tests/test_edge_cases.py::TestCumReturnsEdgeCases::test_cum_returns_with_nan",
+        "tests/test_edge_cases.py::TestNaNValues::test_cum_returns_with_nan",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_0",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_1",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_2",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsDataFrames::test_cum_returns_df_0",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsDataFrames::test_cum_returns_df_1",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsDataFrames::test_cum_returns_df_2",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStats::test_cum_returns_df_0",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStats::test_cum_returns_df_1",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStats::test_cum_returns_df_2",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_0",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_1",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_df_2",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_0",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_1",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_2",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_3"
+      ],
+      "target_operation_id": "metrics.cum_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_cum_returns"
+      ]
+    },
+    {
+      "capability_id": "metrics.cum_returns_final",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.cum_returns_final",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:cum_returns_final",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[cum_returns_final]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[cum_returns_final]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[cum_returns_final]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[cum_returns_final]",
+        "tests/property/test_time_series_contracts.py::test_cum_returns_final_matches_compounded_product",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_final_df_0",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_final_df_1",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsDataFrames::test_cum_returns_final_df_0",
+        "tests/test_empyrical/stats/helpers/test_2d_stats.py::Test2DStatsDataFrames::test_cum_returns_final_df_1",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStats::test_cum_returns_final_df_0",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStats::test_cum_returns_final_df_1",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_final_df_0",
+        "tests/test_empyrical/stats/test_2d_stats.py::Test2DStatsArrays::test_cum_returns_final_df_1",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_final_0",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_final_1",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_final_2",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_final_3",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_cum_returns_final_4",
+        "tests/test_metrics/missing_coverage/test_returns.py::ReturnsMissingCoverageTestCase::test_cum_returns_final_with_start_value"
+      ],
+      "target_operation_id": "metrics.cum_returns_final",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_cum_returns_final"
+      ]
+    },
+    {
+      "capability_id": "metrics.cumulative_returns",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.cumulative_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.cumulative_returns"
+          },
+          "oracle_reference": "invariant contract metrics.cumulative_returns.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_performance.py::test_cumulative_returns_projects_nan_as_a_zero_return",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[performance:cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[performance:cumulative_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[performance:cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[performance:cumulative_returns]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_cumulative_returns",
+        "tests/test_pyfolio/perf_attrib/test_cumulative_returns.py::TestCumulativeReturnsWithCosts::test_cumulative_returns_less_costs"
+      ],
+      "target_operation_id": "metrics.cumulative_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_cumulative_returns"
+      ]
+    },
+    {
+      "capability_id": "metrics.deflated_sharpe_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.deflated_sharpe_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.deflated_sharpe_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.deflated_sharpe_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_ratios_additional.py::test_deflated_sharpe_ratio_logN_tiny_branch_and_denom_nonpositive"
+      ],
+      "target_operation_id": "metrics.deflated_sharpe_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_deflated_sharpe_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.down_alpha_beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.down_alpha_beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:down_alpha_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_dependent_binary_metric_exposes_and_forwards_strict_alignment[down_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[down_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[down_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[down_alpha_beta]",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_down_alpha_beta_0",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_down_alpha_beta_1",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_down_alpha_beta_2",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_down_alpha_beta_3",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_down_alpha_beta_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_down_alpha_beta_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_down_alpha_beta_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_down_alpha_beta_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_down_alpha_beta_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_down_alpha_beta_4",
+        "tests/test_metrics/alpha_beta_edge/test_conditional.py::TestConditionalAlphaBetaEdgeCases::test_down_alpha_beta_with_mostly_nan_after_condition",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_down_alpha_beta_insufficient_clean_data",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_down_alpha_beta_no_down_periods",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_down_alpha_beta_zero_variance"
+      ],
+      "target_operation_id": "metrics.down_alpha_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_down_alpha_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.down_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.down_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:down_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[down_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_down_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_down_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_down_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_down_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_down_capture_4",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_down_capture_no_negative_benchmark"
+      ],
+      "target_operation_id": "metrics.down_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_down_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.down_capture_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.down_capture_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.down_capture_return"
+          },
+          "oracle_reference": "invariant contract metrics.down_capture_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[down_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[down_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[down_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[down_capture_return]",
+        "tests/test_empyrical/test_new_indicators.py::TestCaptureReturn::test_down_capture_return_negative_market",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_down_capture_return_no_negative_benchmark"
+      ],
+      "target_operation_id": "metrics.down_capture_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_down_capture_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.downside_risk",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.downside_risk",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:downside_risk",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[downside_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[downside_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[downside_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[downside_risk]",
+        "tests/test_edge_cases.py::TestZeroVolatility::test_downside_risk_zero_vol",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_00",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_01",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_02",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_03",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_04",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_05",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_06",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_07",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_08",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_09",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_10",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_11",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_noisy_0",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_noisy_1",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_std_0",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_std_1",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_std_2",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_trans_0",
+        "tests/test_empyrical/stats/test_downside_risk.py::TestDownsideRisk::test_downside_risk_trans_1",
+        "tests/test_metrics/test_coverage_branches.py::test_downside_risk_empty_2d",
+        "tests/test_metrics/test_coverage_branches.py::test_downside_risk_nonfinite_required_return_dataframe",
+        "tests/test_metrics/test_coverage_branches.py::test_downside_risk_nonfinite_required_return_scalar",
+        "tests/test_metrics/test_risk_complete.py::TestDownsideRiskEdgeCases::test_downside_risk_dataframe_input",
+        "tests/test_metrics/test_risk_complete.py::TestDownsideRiskEdgeCases::test_downside_risk_short_returns",
+        "tests/test_metrics/test_risk_complete.py::TestDownsideRiskEdgeCases::test_downside_risk_with_output_buffer"
+      ],
+      "target_operation_id": "metrics.downside_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_downside_risk"
+      ]
+    },
+    {
+      "capability_id": "metrics.excess_sharpe",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.excess_sharpe",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:excess_sharpe",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[excess_sharpe]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[excess_sharpe]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[excess_sharpe]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[excess_sharpe]",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_0",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_1",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_2",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_3",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_4",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_noisy_0",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_noisy_1",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_noisy_2",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_trans_0",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_trans_1",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_trans_2",
+        "tests/test_empyrical/stats/test_excess_sharpe.py::TestExcessSharpe::test_excess_sharpe_trans_3",
+        "tests/test_metrics/test_ratios_complete.py::TestExcessSharpeEdgeCases::test_excess_sharpe_normal_case",
+        "tests/test_metrics/test_ratios_complete.py::TestExcessSharpeEdgeCases::test_excess_sharpe_short_returns",
+        "tests/test_metrics/test_ratios_complete.py::TestExcessSharpeEdgeCases::test_excess_sharpe_with_output_buffer"
+      ],
+      "target_operation_id": "metrics.excess_sharpe",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_excess_sharpe"
+      ]
+    },
+    {
+      "capability_id": "metrics.extract_interesting_date_ranges",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.extract_interesting_date_ranges.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.extract_interesting_date_ranges"
+          },
+          "oracle_reference": "invariant contract metrics.extract_interesting_date_ranges.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalRatiosAndTiming::test_extract_interesting_date_ranges_instance_method",
+        "tests/test_metrics/test_timing_additional.py::test_extract_interesting_date_ranges_adds_non_empty_range",
+        "tests/test_metrics/test_timing_additional.py::test_extract_interesting_date_ranges_continue_and_exception"
+      ],
+      "target_operation_id": "metrics.extract_interesting_date_ranges",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_extract_interesting_date_ranges"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.daily",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.daily.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.daily"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.daily.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[daily-0.3519943181359608]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_daily_value_at_risk",
+        "tests/test_metrics/test_drawdown_detailed.py::TestMaxDrawdown::test_daily_returns",
+        "tests/test_pyfolio/test_capacity.py::CapacityTestCase::test_daily_txns_with_bar_data"
+      ],
+      "target_operation_id": "metrics.frequency.daily",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_daily"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.monthly",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.monthly.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.monthly"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.monthly.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_index_contracts.py::test_legacy_calendar_aggregation_periods[monthly-expected_index0-expected_values0]",
+        "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[monthly-0.07681145747868608]",
+        "tests/test_empyrical/test_continued_indicators.py::TestVarExcessReturn::test_monthly_annualization"
+      ],
+      "target_operation_id": "metrics.frequency.monthly",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_monthly"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.quarterly",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.quarterly.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.quarterly"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.quarterly.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_index_contracts.py::test_legacy_calendar_aggregation_periods[quarterly-expected_index1-expected_values1]",
+        "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[quarterly-0.0443471156521669]"
+      ],
+      "target_operation_id": "metrics.frequency.quarterly",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_quarterly"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.weekly",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.weekly.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.weekly"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.weekly.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[weekly-0.15989579940281942]"
+      ],
+      "target_operation_id": "metrics.frequency.weekly",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_weekly"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.yearly",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.yearly.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.yearly"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.yearly.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_index_contracts.py::test_legacy_calendar_aggregation_periods[yearly-expected_index2-expected_values2]",
+        "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[yearly-0.02217355782608345]"
+      ],
+      "target_operation_id": "metrics.frequency.yearly",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_yearly"
+      ]
+    },
+    {
+      "capability_id": "metrics.frequency.zipline",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.frequency.zipline.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.frequency.zipline"
+          },
+          "oracle_reference": "invariant contract metrics.frequency.zipline.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_review_fixes.py::test_zipline_mapping_key_is_ignored_in_favor_of_embedded_transaction_dt",
+        "tests/compat/pyfolio/test_transactions.py::test_empty_transaction_inputs_return_the_fixed_empty_schema[zipline-series]",
+        "tests/compat/pyfolio/test_transactions.py::test_unsorted_transactions_are_sorted_by_dt_stably[zipline]",
+        "tests/compat/pyfolio/test_transactions.py::test_zipline_date_to_list_transactions_match_flat_transactions",
+        "tests/test_empyrical/test_empyrical_zipline_coverage.py::TestEmpyricalZiplineImport::test_zipline_import_sets_global",
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_zipline_constant_exists"
+      ],
+      "target_operation_id": "metrics.frequency.zipline",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_zipline"
+      ]
+    },
+    {
+      "capability_id": "metrics.futures_market_correlation",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.futures_market_correlation.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.futures_market_correlation"
+          },
+          "oracle_reference": "invariant contract metrics.futures_market_correlation.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_correlation_analysis.py::TestCorrelationAnalysis::test_futures_market_correlation"
+      ],
+      "target_operation_id": "metrics.futures_market_correlation",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_futures_market_correlation"
+      ]
+    },
+    {
+      "capability_id": "metrics.get_max_drawdown_period",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.get_max_drawdown_period.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.get_max_drawdown_period"
+          },
+          "oracle_reference": "invariant contract metrics.get_max_drawdown_period.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/coverage/test_getattr_coverage.py::TestEmpyricalDrawdownPeriod::test_get_max_drawdown_period_class_method",
+        "tests/test_empyrical/coverage/test_getattr_coverage.py::TestEmpyricalDrawdownPeriod::test_get_max_drawdown_period_with_returns",
+        "tests/test_metrics/test_drawdown_additional.py::test_get_max_drawdown_period_happy_path",
+        "tests/test_metrics/test_drawdown_additional.py::test_get_max_drawdown_period_returns_none_when_empty",
+        "tests/test_metrics/test_drawdown_additional.py::test_get_max_drawdown_period_returns_none_when_input_not_series"
+      ],
+      "target_operation_id": "metrics.get_max_drawdown_period",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_get_max_drawdown_period"
+      ]
+    },
+    {
+      "capability_id": "metrics.information_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.information_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.information_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.information_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[information_ratio]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[information_ratio]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_each_metric_family_rejects_partial_labels_under_strict[information_ratio]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[information_ratio]",
+        "tests/test_core/test_context.py::TestAnalysisContextFactorMetrics::test_information_ratio_with_factor_returns",
+        "tests/test_core/test_context.py::TestAnalysisContextFactorMetrics::test_information_ratio_without_factor_returns",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_information_ratio_0",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_information_ratio_1",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_information_ratio_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_information_ratio_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_information_ratio_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_information_ratio_2",
+        "tests/test_metrics/test_ratios_complete.py::TestInformationRatioEdgeCases::test_information_ratio_short_returns",
+        "tests/test_metrics/test_ratios_complete.py::TestInformationRatioEdgeCases::test_information_ratio_zero_tracking_error"
+      ],
+      "target_operation_id": "metrics.information_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_information_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.information_ratio_by_year",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.information_ratio_by_year.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.information_ratio_by_year"
+          },
+          "oracle_reference": "invariant contract metrics.information_ratio_by_year.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[information_ratio_by_year]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[information_ratio_by_year]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[information_ratio_by_year]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[information_ratio_by_year]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_information_ratio_by_year_uses_strict_policy_after_timezone_normalization",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_information_ratio_by_year_0",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_information_ratio_by_year_1",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_information_ratio_by_year_2"
+      ],
+      "target_operation_id": "metrics.information_ratio_by_year",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_information_ratio_by_year"
+      ]
+    },
+    {
+      "capability_id": "metrics.kappa_three_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.kappa_three_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.kappa_three_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.kappa_three_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_kappa_three_ratio",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_kappa_three_ratio_empty",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_kappa_three_ratio_positive_returns",
+        "tests/test_metrics/test_ratios_additional.py::test_kappa_three_ratio_nan_when_not_enough_clean_obs",
+        "tests/test_metrics/test_ratios_complete.py::TestKappaThreeRatioEdgeCases::test_kappa_three_ratio_all_nan",
+        "tests/test_metrics/test_ratios_complete.py::TestKappaThreeRatioEdgeCases::test_kappa_three_ratio_insufficient_data",
+        "tests/test_metrics/test_ratios_complete.py::TestKappaThreeRatioEdgeCases::test_kappa_three_ratio_short_returns"
+      ],
+      "target_operation_id": "metrics.kappa_three_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_kappa_three_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.kurtosis",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.kurtosis.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.kurtosis"
+          },
+          "oracle_reference": "invariant contract metrics.kurtosis.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_kurtosis",
+        "tests/test_empyrical/test_statistical_properties.py::TestStatisticalProperties::test_kurtosis_0",
+        "tests/test_empyrical/test_statistical_properties.py::TestStatisticalProperties::test_kurtosis_1",
+        "tests/test_empyrical/test_statistical_properties.py::TestStatisticalProperties::test_kurtosis_empty",
+        "tests/test_empyrical/test_statistical_properties.py::TestStatisticalProperties::test_kurtosis_high",
+        "tests/test_metrics/test_stats_missing_coverage.py::TestStatsEdgeCases::test_kurtosis_with_nan"
+      ],
+      "target_operation_id": "metrics.kurtosis",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_kurtosis"
+      ]
+    },
+    {
+      "capability_id": "metrics.loss_rate",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.loss_rate.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.loss_rate"
+          },
+          "oracle_reference": "invariant contract metrics.loss_rate.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_0",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_1",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_2",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_3",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_4",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_loss_rate_5"
+      ],
+      "target_operation_id": "metrics.loss_rate",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_loss_rate"
+      ]
+    },
+    {
+      "capability_id": "metrics.m_squared",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.m_squared.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.m_squared"
+          },
+          "oracle_reference": "invariant contract metrics.m_squared.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[m_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[m_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[m_squared]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[m_squared]",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_m_squared_0",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_m_squared_1",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_m_squared_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_5",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_6",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_m_squared_7",
+        "tests/test_metrics/test_ratios_additional.py::test_m_squared_returns_nan_when_volatility_zero",
+        "tests/test_metrics/test_ratios_complete.py::TestCalTreynorRatioEdgeCases::test_m_squared_normal_case",
+        "tests/test_metrics/test_ratios_complete.py::TestCalTreynorRatioEdgeCases::test_m_squared_zero_portfolio_vol"
+      ],
+      "target_operation_id": "metrics.m_squared",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_m_squared"
+      ]
+    },
+    {
+      "capability_id": "metrics.mar_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.mar_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.mar_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.mar_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_final_coverage_edges.py::TestMarRatioFinalEdgeCase::test_mar_ratio_all_nan_after_cleaning",
+        "tests/test_metrics/test_ratios_additional.py::test_mar_ratio_nan_when_all_nan_and_when_infinite",
+        "tests/test_metrics/test_ratios_additional.py::test_mar_ratio_nan_when_no_clean_returns",
+        "tests/test_metrics/test_ratios_complete.py::TestConditionalSharpeRatioEdgeCases::test_mar_ratio_all_nan",
+        "tests/test_metrics/test_ratios_complete.py::TestConditionalSharpeRatioEdgeCases::test_mar_ratio_non_negative_drawdown",
+        "tests/test_metrics/test_ratios_line_417.py::TestMarRatioLine417::test_mar_ratio_all_nan_normal_flow",
+        "tests/test_metrics/test_ratios_line_417.py::TestMarRatioLine417::test_mar_ratio_line_417_with_mock",
+        "tests/test_metrics/test_ratios_line_417.py::TestMarRatioLine417::test_mar_ratio_normal_case",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestRatiosMissingCoverage::test_mar_ratio_empty_after_nan_removal"
+      ],
+      "target_operation_id": "metrics.mar_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_mar_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_down_end_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_down_end_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_down_end_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_down_end_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_down_end_date"
+      ],
+      "target_operation_id": "metrics.max_consecutive_down_end_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_down_end_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_down_months",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_down_months.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_down_months"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_down_months.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_down_months"
+      ],
+      "target_operation_id": "metrics.max_consecutive_down_months",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_down_months"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_down_start_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_down_start_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_down_start_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_down_start_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_down_start_date"
+      ],
+      "target_operation_id": "metrics.max_consecutive_down_start_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_down_start_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_down_weeks",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_down_weeks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_down_weeks"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_down_weeks.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_down_weeks"
+      ],
+      "target_operation_id": "metrics.max_consecutive_down_weeks",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_down_weeks"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_up_end_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_up_end_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_up_end_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_up_end_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_up_end_date"
+      ],
+      "target_operation_id": "metrics.max_consecutive_up_end_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_up_end_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_up_months",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_up_months.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_up_months"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_up_months.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_up_months"
+      ],
+      "target_operation_id": "metrics.max_consecutive_up_months",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_up_months"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_up_start_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_up_start_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_up_start_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_up_start_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_up_start_date"
+      ],
+      "target_operation_id": "metrics.max_consecutive_up_start_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_up_start_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_consecutive_up_weeks",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_consecutive_up_weeks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_consecutive_up_weeks"
+          },
+          "oracle_reference": "invariant contract metrics.max_consecutive_up_weeks.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_consecutive_up_weeks"
+      ],
+      "target_operation_id": "metrics.max_consecutive_up_weeks",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_consecutive_up_weeks"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.max_drawdown",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:max_drawdown",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[max_drawdown]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[max_drawdown]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[max_drawdown]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[max_drawdown]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_max_drawdown",
+        "tests/test_edge_cases.py::TestEmptyReturns::test_max_drawdown_empty",
+        "tests/test_edge_cases.py::TestExtremeValues::test_max_drawdown_extreme",
+        "tests/test_edge_cases.py::TestInfiniteValues::test_max_drawdown_infinite",
+        "tests/test_edge_cases.py::TestNaNValues::test_max_drawdown_all_nan",
+        "tests/test_edge_cases.py::TestSingleValue::test_max_drawdown_single",
+        "tests/test_edge_cases.py::TestTwoValues::test_max_drawdown_two_values",
+        "tests/test_edge_cases.py::TestZeroVolatility::test_max_drawdown_zero_vol",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_0",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_1",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_2",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_3",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_4",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_5",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_6",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_7",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_translation_0",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_translation_1",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_translation_2",
+        "tests/test_empyrical/stats/test_drawdown.py::TestDrawdown::test_max_drawdown_translation_3",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_max_drawdown_by_year_0",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_max_drawdown_by_year_1",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_max_drawdown_by_year_2",
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_2d_ndarray",
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_empty_2d",
+        "tests/test_metrics/test_drawdown_additional.py::test_max_drawdown_dataframe_returns_series_when_output_allocated"
+      ],
+      "target_operation_id": "metrics.max_drawdown",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_days"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_drawdown_additional.py::test_max_drawdown_days_non_datetime_index_returns_positional_distance"
+      ],
+      "target_operation_id": "metrics.max_drawdown_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_months",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_months.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_months"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_months.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_max_drawdown_months",
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_months_finite"
+      ],
+      "target_operation_id": "metrics.max_drawdown_months",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_months"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_recovery_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_recovery_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_recovery_days"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_recovery_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_recovery_days_ndarray"
+      ],
+      "target_operation_id": "metrics.max_drawdown_recovery_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_recovery_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_recovery_months",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_recovery_months.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_recovery_months"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_recovery_months.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_max_drawdown_recovery_months",
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_recovery_months_finite"
+      ],
+      "target_operation_id": "metrics.max_drawdown_recovery_months",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_recovery_months"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_recovery_weeks",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_recovery_weeks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_recovery_weeks"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_recovery_weeks.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_max_drawdown_recovery_weeks",
+        "tests/test_metrics/test_coverage_branches.py::test_max_drawdown_recovery_weeks_finite"
+      ],
+      "target_operation_id": "metrics.max_drawdown_recovery_weeks",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_recovery_weeks"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_drawdown_weeks",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_drawdown_weeks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_drawdown_weeks"
+          },
+          "oracle_reference": "invariant contract metrics.max_drawdown_weeks.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_max_drawdown_weeks"
+      ],
+      "target_operation_id": "metrics.max_drawdown_weeks",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_drawdown_weeks"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_single_day_gain_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_single_day_gain_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_single_day_gain_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_single_day_gain_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_single_day_gain_date"
+      ],
+      "target_operation_id": "metrics.max_single_day_gain_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_single_day_gain_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.max_single_day_loss_date",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.max_single_day_loss_date.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.max_single_day_loss_date"
+          },
+          "oracle_reference": "invariant contract metrics.max_single_day_loss_date.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_continuous_stats.py::TestContinuousStats::test_max_single_day_loss_date"
+      ],
+      "target_operation_id": "metrics.max_single_day_loss_date",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_max_single_day_loss_date"
+      ]
+    },
+    {
+      "capability_id": "metrics.omega_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.omega_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:omega_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[omega_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[omega_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[omega_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[omega_ratio]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_omega_ratio",
+        "tests/test_metrics/test_ratios_additional.py::test_omega_ratio_annualization_one_and_required_return_invalid"
+      ],
+      "target_operation_id": "metrics.omega_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_omega_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.r_cubed",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.r_cubed.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.r_cubed"
+          },
+          "oracle_reference": "invariant contract metrics.r_cubed.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[r_cubed]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[r_cubed]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_each_metric_family_rejects_partial_labels_under_strict[r_cubed]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[r_cubed]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[r_cubed]",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_r_cubed",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_r_cubed_empty",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_r_cubed_perfect_fit"
+      ],
+      "target_operation_id": "metrics.r_cubed",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_r_cubed"
+      ]
+    },
+    {
+      "capability_id": "metrics.r_cubed_turtle",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.r_cubed_turtle.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.r_cubed_turtle"
+          },
+          "oracle_reference": "invariant contract metrics.r_cubed_turtle.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_coverage_gaps.py::TestRCubedTurtleEdgeCases::test_r_cubed_turtle_empty_returns",
+        "tests/test_coverage_gaps.py::TestRCubedTurtleEdgeCases::test_r_cubed_turtle_ndarray_input",
+        "tests/test_coverage_gaps.py::TestRCubedTurtleEdgeCases::test_r_cubed_turtle_plain_series_no_datetime",
+        "tests/test_final_coverage_edges.py::TestRCubedTurtleFinalEdgeCases::test_r_cubed_turtle_empty_max_drawdowns",
+        "tests/test_final_coverage_edges.py::TestRCubedTurtleFinalEdgeCases::test_r_cubed_turtle_empty_years",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestStatsMissingCoverage::test_r_cubed_turtle_empty_max_drawdowns",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestStatsMissingCoverage::test_r_cubed_turtle_no_years",
+        "tests/test_metrics/test_stats_additional.py::test_r_cubed_turtle_empty_max_dds",
+        "tests/test_metrics/test_stats_additional.py::test_r_cubed_turtle_empty_years",
+        "tests/test_metrics/test_stats_additional.py::test_r_cubed_turtle_mask_sum_lt_two",
+        "tests/test_metrics/test_stats_additional.py::test_r_cubed_turtle_numpy_chunk_path_and_infinite_when_no_drawdown",
+        "tests/test_metrics/test_stats_missing_coverage.py::TestRCubedTurtleMissingCoverage::test_r_cubed_turtle_insufficient_data",
+        "tests/test_metrics/test_stats_missing_coverage.py::TestRCubedTurtleMissingCoverage::test_r_cubed_turtle_short_series",
+        "tests/test_metrics/test_stats_missing_lines.py::TestRCubedTurtleLine604::test_r_cubed_turtle_empty_years",
+        "tests/test_metrics/test_stats_missing_lines.py::TestRCubedTurtleLine604::test_r_cubed_turtle_non_datetime_empty",
+        "tests/test_metrics/test_stats_missing_lines.py::TestRCubedTurtleLine625::test_r_cubed_turtle_empty_max_drawdowns",
+        "tests/test_metrics/test_stats_unreachable.py::TestRCubedTurtleUnreachableLines::test_r_cubed_turtle_line_604_analysis",
+        "tests/test_metrics/test_stats_unreachable.py::TestRCubedTurtleUnreachableLines::test_r_cubed_turtle_line_625_analysis",
+        "tests/test_metrics/test_stats_unreachable.py::TestRCubedTurtleUnreachableLines::test_r_cubed_turtle_normal_operation"
+      ],
+      "target_operation_id": "metrics.r_cubed_turtle",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_r_cubed_turtle"
+      ]
+    },
+    {
+      "capability_id": "metrics.relative_win_rate",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.relative_win_rate.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.relative_win_rate"
+          },
+          "oracle_reference": "invariant contract metrics.relative_win_rate.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[relative_win_rate]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[relative_win_rate]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[relative_win_rate]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[relative_win_rate]"
+      ],
+      "target_operation_id": "metrics.relative_win_rate",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_relative_win_rate"
+      ]
+    },
+    {
+      "capability_id": "metrics.residual_risk",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.residual_risk.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.residual_risk"
+          },
+          "oracle_reference": "invariant contract metrics.residual_risk.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[residual_risk]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[residual_risk]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[residual_risk]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[residual_risk]",
+        "tests/test_empyrical/test_annual_alpha_beta.py::TestAnnualAlphaBeta::test_residual_risk",
+        "tests/test_empyrical/test_annual_alpha_beta.py::TestAnnualAlphaBeta::test_residual_risk_empty",
+        "tests/test_empyrical/test_annual_alpha_beta.py::TestAnnualAlphaBeta::test_residual_risk_perfect_correlation",
+        "tests/test_empyrical/test_annual_alpha_beta.py::TestAnnualAlphaBeta::test_residual_risk_short_series",
+        "tests/test_metrics/test_risk_complete.py::TestResidualRiskEdgeCases::test_residual_risk_all_nan",
+        "tests/test_metrics/test_risk_complete.py::TestResidualRiskEdgeCases::test_residual_risk_short_returns",
+        "tests/test_metrics/test_risk_complete.py::TestResidualRiskEdgeCases::test_residual_risk_zero_volatility",
+        "tests/test_metrics/test_risk_more_coverage.py::test_residual_risk_ndarray_computes_for_perfect_correlation",
+        "tests/test_metrics/test_risk_more_coverage.py::test_residual_risk_ndarray_returns_nan_when_fewer_than_two_finite_pairs",
+        "tests/test_metrics/test_risk_more_coverage.py::test_residual_risk_returns_nan_when_aligned_observations_less_than_two"
+      ],
+      "target_operation_id": "metrics.residual_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_residual_risk"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_alpha",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_alpha",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_alpha",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[roll_alpha]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[roll_alpha]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[roll_alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_alpha]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_alpha]",
+        "tests/test_empyrical/coverage/test_rolling_coverage.py::TestEmpyricalRollingMetrics::test_roll_alpha_instance_with_stored_factor",
+        "tests/test_empyrical/coverage/test_rolling_coverage.py::TestEmpyricalRollingMetrics::test_roll_alpha_with_factor_returns",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_alpha",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_ndarray_input_converts_to_series_and_returns_ndarray",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_returns_empty_for_short_input_ndarray",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_returns_empty_for_short_input_series_with_datetime_index",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_returns_empty_for_short_input_series_with_nondatetime_index",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_series_input_returns_series_with_expected_index"
+      ],
+      "target_operation_id": "metrics.roll_alpha",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_alpha"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_alpha_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_alpha_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_alpha_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_alpha_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_alpha_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_alpha_aligned]"
+      ],
+      "target_operation_id": "metrics.roll_alpha_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_alpha_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_alpha_beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_alpha_beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_alpha_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[roll_alpha_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[roll_alpha_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[roll_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_alpha_beta]",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_alpha_beta_0",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_alpha_beta_1",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_alpha_beta_2",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_alpha_beta_3",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_alpha_beta_4",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_alpha_beta",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_beta_returns_empty_dataframe_for_short_input_datetime_index",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_beta_returns_empty_dataframe_for_short_input_ndarray",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_alpha_beta_returns_empty_dataframe_for_short_input_nondatetime_index"
+      ],
+      "target_operation_id": "metrics.roll_alpha_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_alpha_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_alpha_beta_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_alpha_beta_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_alpha_beta_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_alpha_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_alpha_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_alpha_beta_aligned]"
+      ],
+      "target_operation_id": "metrics.roll_alpha_beta_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_alpha_beta_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_annual_volatility",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_annual_volatility",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_annual_volatility",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_factory_rolls_use_minimum_of_length_and_window[roll_annual_volatility-args1-expected1]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_annual_volatility]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_annual_volatility]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_annual_volatility]"
+      ],
+      "target_operation_id": "metrics.roll_annual_volatility",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_annual_volatility"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[roll_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[roll_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_each_metric_family_rejects_partial_labels_under_strict[roll_beta]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[roll_beta]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_factory_rolls_use_minimum_of_length_and_window[roll_beta-args0-expected0]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_beta]",
+        "tests/test_empyrical/coverage/test_rolling_coverage.py::TestEmpyricalRollingMetrics::test_roll_beta_instance_with_stored_factor",
+        "tests/test_empyrical/coverage/test_rolling_coverage.py::TestEmpyricalRollingMetrics::test_roll_beta_with_factor_returns",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_beta",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_beta_ndarray_input_returns_ndarray_values",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_beta_returns_empty_for_short_input",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_beta_returns_empty_for_short_input_ndarray",
+        "tests/test_metrics/test_rolling_additional.py::test_roll_beta_returns_empty_for_short_input_series_with_nondatetime_index"
+      ],
+      "target_operation_id": "metrics.roll_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_beta_aligned",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_beta_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_beta_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_beta_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_beta_aligned]"
+      ],
+      "target_operation_id": "metrics.roll_beta_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_beta_aligned"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_down_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_down_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_down_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[roll_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[roll_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[roll_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_strict_capture_roll_unknown_keyword_uses_pinned_capture_message[roll_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_capture_family_keeps_legacy_empty_result[roll_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_down_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_down_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_down_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_down_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_down_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_down_capture_4",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_down_capture"
+      ],
+      "target_operation_id": "metrics.roll_down_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_down_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_max_drawdown",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_max_drawdown",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_max_drawdown",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_factory_rolls_use_minimum_of_length_and_window[roll_max_drawdown-args2-expected2]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_max_drawdown]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_max_drawdown]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_max_drawdown]",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_max_drawdown_0",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_max_drawdown_1",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_max_drawdown"
+      ],
+      "target_operation_id": "metrics.roll_max_drawdown",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_max_drawdown"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_sharpe_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_sharpe_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_sharpe_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_factory_rolls_use_minimum_of_length_and_window[roll_sharpe_ratio-args3-expected3]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_sharpe_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_sharpe_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_sharpe_ratio]",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_sharpe_ratio_0",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_sharpe_ratio_1",
+        "tests/test_empyrical/stats/test_rolling_metrics.py::TestRollingMetrics::test_roll_sharpe_ratio_2",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_sharpe_ratio"
+      ],
+      "target_operation_id": "metrics.roll_sharpe_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_sharpe_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_sortino_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_sortino_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_sortino_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_factory_rolls_use_minimum_of_length_and_window[roll_sortino_ratio-args4-expected4]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_sortino_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_sortino_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_sortino_ratio]"
+      ],
+      "target_operation_id": "metrics.roll_sortino_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_sortino_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_up_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_up_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_up_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[roll_up_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[roll_up_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[roll_up_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_strict_capture_roll_unknown_keyword_uses_pinned_capture_message[roll_up_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_capture_family_keeps_legacy_empty_result[roll_up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_up_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_capture_4",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_up_capture"
+      ],
+      "target_operation_id": "metrics.roll_up_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_up_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.roll_up_down_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.roll_up_down_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:roll_up_down_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_dependent_binary_metric_exposes_and_forwards_strict_alignment[roll_up_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_strict_capture_roll_unknown_keyword_uses_pinned_capture_message[roll_up_down_capture]",
+        "tests/compat/empyrical/test_rolling_contracts.py::test_short_capture_family_keeps_legacy_empty_result[roll_up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[roll_up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[roll_up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[roll_up_down_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_down_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_down_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_down_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_down_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_roll_up_down_capture_4",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_roll_up_down_capture"
+      ],
+      "target_operation_id": "metrics.roll_up_down_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_roll_up_down_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.second_max_drawdown_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.second_max_drawdown_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.second_max_drawdown_days"
+          },
+          "oracle_reference": "invariant contract metrics.second_max_drawdown_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_second_max_drawdown_days"
+      ],
+      "target_operation_id": "metrics.second_max_drawdown_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_second_max_drawdown_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.second_max_drawdown_recovery_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.second_max_drawdown_recovery_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.second_max_drawdown_recovery_days"
+          },
+          "oracle_reference": "invariant contract metrics.second_max_drawdown_recovery_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_second_max_drawdown_recovery_days",
+        "tests/test_metrics/test_drawdown_additional.py::test_second_max_drawdown_recovery_days_returns_nan_when_no_recovery_for_second_worst"
+      ],
+      "target_operation_id": "metrics.second_max_drawdown_recovery_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_second_max_drawdown_recovery_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.serial_correlation",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.serial_correlation.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.serial_correlation"
+          },
+          "oracle_reference": "invariant contract metrics.serial_correlation.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_correlation_analysis.py::TestCorrelationAnalysis::test_serial_correlation_constant_returns_no_warning",
+        "tests/test_empyrical/test_correlation_analysis.py::TestCorrelationAnalysis::test_serial_correlation_default",
+        "tests/test_empyrical/test_correlation_analysis.py::TestCorrelationAnalysis::test_serial_correlation_insufficient_data",
+        "tests/test_empyrical/test_correlation_analysis.py::TestCorrelationAnalysis::test_serial_correlation_one_week",
+        "tests/test_metrics/test_stats_additional.py::test_serial_correlation_guard_rails"
+      ],
+      "target_operation_id": "metrics.serial_correlation",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_serial_correlation"
+      ]
+    },
+    {
+      "capability_id": "metrics.sharpe_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.sharpe_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:sharpe_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_public_api.py::test_strict_wrapper_rejects_out_policy_signature_mismatch[sharpe_ratio-unsupported]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[sharpe_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[sharpe_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[sharpe_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[sharpe_ratio]",
+        "tests/property/test_time_series_contracts.py::test_sharpe_ratio_is_scale_invariant",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_sharpe_ratio_cached",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_sharpe_ratio_is_float",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_sharpe_ratio_nan_for_too_short_series",
+        "tests/test_edge_cases.py::TestAllZeros::test_sharpe_ratio_all_zeros",
+        "tests/test_edge_cases.py::TestDataFrameEdgeCases::test_sharpe_ratio_empty_dataframe",
+        "tests/test_edge_cases.py::TestDataFrameEdgeCases::test_sharpe_ratio_mixed_columns",
+        "tests/test_edge_cases.py::TestDataFrameEdgeCases::test_sharpe_ratio_single_column",
+        "tests/test_edge_cases.py::TestEmptyReturns::test_sharpe_ratio_empty",
+        "tests/test_edge_cases.py::TestExtremeValues::test_sharpe_ratio_extreme",
+        "tests/test_edge_cases.py::TestInfiniteValues::test_sharpe_ratio_infinite",
+        "tests/test_edge_cases.py::TestMixedNaNInf::test_sharpe_ratio_mixed",
+        "tests/test_edge_cases.py::TestNaNValues::test_sharpe_ratio_all_nan",
+        "tests/test_edge_cases.py::TestNaNValues::test_sharpe_ratio_mostly_nan",
+        "tests/test_edge_cases.py::TestSingleValue::test_sharpe_ratio_single",
+        "tests/test_edge_cases.py::TestTwoValues::test_sharpe_ratio_two_values",
+        "tests/test_edge_cases.py::TestZeroVolatility::test_sharpe_ratio_zero_vol",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_0",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_1",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_2",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_3",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_4",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_5",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_6",
+        "tests/test_empyrical/stats/split/test_sharpe.py::TestSharpeRatio::test_sharpe_ratio_7",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_0",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_1",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_2",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_3",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_4",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_5",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_6",
+        "tests/test_empyrical/stats/test_sharpe_sortino.py::TestSharpeSortino::test_sharpe_ratio_7",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_sharpe_ratio_by_year_0",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_sharpe_ratio_by_year_1",
+        "tests/test_empyrical/stats/test_yearly_breakdown.py::TestYearlyBreakdown::test_sharpe_ratio_by_year_2"
+      ],
+      "target_operation_id": "metrics.sharpe_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_sharpe_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.simple_returns",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.simple_returns",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:simple_returns",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[simple_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[simple_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[simple_returns]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[simple_returns]",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_simple_returns_0",
+        "tests/test_empyrical/stats/test_returns.py::TestReturns::test_simple_returns_1"
+      ],
+      "target_operation_id": "metrics.simple_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_simple_returns"
+      ]
+    },
+    {
+      "capability_id": "metrics.skew",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.skew.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.skew"
+          },
+          "oracle_reference": "invariant contract metrics.skew.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_skew"
+      ],
+      "target_operation_id": "metrics.skew",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_skew"
+      ]
+    },
+    {
+      "capability_id": "metrics.sortino_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.sortino_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:sortino_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[sortino_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[sortino_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[sortino_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[sortino_ratio]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_sortino_ratio",
+        "tests/test_edge_cases.py::TestZeroVolatility::test_sortino_ratio_zero_vol",
+        "tests/test_metrics/test_ratios_additional.py::test_sortino_ratio_uses_precomputed_downside_risk_branch",
+        "tests/test_metrics/test_remaining_missing_coverage.py::TestRatiosEdgeCases::test_sortino_ratio_zero_downside_deviation"
+      ],
+      "target_operation_id": "metrics.sortino_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_sortino_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.stability",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.stability_of_timeseries",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:stability_of_timeseries",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[stability_of_timeseries]"
+      ],
+      "target_operation_id": "metrics.stability",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_stability"
+      ]
+    },
+    {
+      "capability_id": "metrics.stability_of_timeseries",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.stability_of_timeseries",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:stability_of_timeseries",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[stability_of_timeseries]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[stability_of_timeseries]"
+      ],
+      "target_operation_id": "metrics.stability_of_timeseries",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_stability_of_timeseries"
+      ]
+    },
+    {
+      "capability_id": "metrics.sterling_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.sterling_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.sterling_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.sterling_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalRatiosAndTiming::test_sterling_ratio_instance_method",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_sterling_ratio",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_sterling_ratio_empty",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_sterling_ratio_positive_returns",
+        "tests/test_empyrical/test_advanced_ratios.py::TestAdvancedRatios::test_sterling_ratio_with_risk_free",
+        "tests/test_metrics/test_ratios_additional.py::test_sterling_ratio_and_burke_ratio_fallback_branches",
+        "tests/test_metrics/test_ratios_complete.py::TestSterlingRatioEdgeCases::test_sterling_ratio_all_zero_drawdowns",
+        "tests/test_metrics/test_ratios_complete.py::TestSterlingRatioEdgeCases::test_sterling_ratio_no_drawdowns",
+        "tests/test_metrics/test_ratios_complete.py::TestSterlingRatioEdgeCases::test_sterling_ratio_short_returns"
+      ],
+      "target_operation_id": "metrics.sterling_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_sterling_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.tail_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.tail_ratio",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:tail_ratio",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[tail_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[tail_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[tail_ratio]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[tail_ratio]",
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_tail_ratio",
+        "tests/test_metrics/test_risk_complete.py::TestTailRatioEdgeCases::test_tail_ratio_all_nan",
+        "tests/test_metrics/test_risk_complete.py::TestTailRatioEdgeCases::test_tail_ratio_no_observations",
+        "tests/test_metrics/test_risk_complete.py::TestTailRatioEdgeCases::test_tail_ratio_single_observation",
+        "tests/test_metrics/test_risk_complete.py::TestTailRatioEdgeCases::test_tail_ratio_zero_left_tail",
+        "tests/test_metrics/test_risk_more_coverage.py::test_tail_ratio_all_nan_returns_nan"
+      ],
+      "target_operation_id": "metrics.tail_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_tail_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.third_max_drawdown_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.third_max_drawdown_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.third_max_drawdown_days"
+          },
+          "oracle_reference": "invariant contract metrics.third_max_drawdown_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_third_max_drawdown_days"
+      ],
+      "target_operation_id": "metrics.third_max_drawdown_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_third_max_drawdown_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.third_max_drawdown_recovery_days",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.third_max_drawdown_recovery_days.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.third_max_drawdown_recovery_days"
+          },
+          "oracle_reference": "invariant contract metrics.third_max_drawdown_recovery_days.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_third_max_drawdown_recovery_days"
+      ],
+      "target_operation_id": "metrics.third_max_drawdown_recovery_days",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_third_max_drawdown_recovery_days"
+      ]
+    },
+    {
+      "capability_id": "metrics.tracking_difference",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.tracking_difference.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.tracking_difference"
+          },
+          "oracle_reference": "invariant contract metrics.tracking_difference.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[tracking_difference]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[tracking_difference]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[tracking_difference]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[tracking_difference]",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_tracking_difference_0",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_tracking_difference_1",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_tracking_difference_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_tracking_difference_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_tracking_difference_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_tracking_difference_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_tracking_difference_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_tracking_difference_4",
+        "tests/test_metrics/test_stats_additional.py::test_tracking_difference_items_non_scalar"
+      ],
+      "target_operation_id": "metrics.tracking_difference",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_tracking_difference"
+      ]
+    },
+    {
+      "capability_id": "metrics.treynor_ratio",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.treynor_ratio.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.treynor_ratio"
+          },
+          "oracle_reference": "invariant contract metrics.treynor_ratio.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_dependent_binary_metric_exposes_and_forwards_strict_alignment[treynor_ratio]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[treynor_ratio]",
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalTreynorRatio::test_treynor_ratio_impl_acceptance_test",
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalTreynorRatio::test_treynor_ratio_instance_method",
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalTreynorRatio::test_treynor_ratio_with_nan_benchmark_return",
+        "tests/test_empyrical/coverage/test_ratios_coverage.py::TestEmpyricalTreynorRatio::test_treynor_ratio_with_nan_beta",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_0",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_1",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_2",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_3",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_4",
+        "tests/test_empyrical/stats/split/test_tracking_metrics.py::TestTrackingRisk::test_treynor_ratio_5",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_5",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_6",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_treynor_ratio_7",
+        "tests/test_empyrical/test_treynor_coverage.py::TestTreynorRatioCoverage::test_treynor_ratio_nan_benchmark_annual",
+        "tests/test_empyrical/test_treynor_coverage.py::TestTreynorRatioCoverage::test_treynor_ratio_zero_beta"
+      ],
+      "target_operation_id": "metrics.treynor_ratio",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_treynor_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.turnover",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.turnover.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.turnover"
+          },
+          "oracle_reference": "invariant contract metrics.turnover.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[turnover-create_turnover_tear_sheet-{'turnover_periods': ['1D', '5D']}-1]"
+      ],
+      "target_operation_id": "metrics.turnover",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_turnover"
+      ]
+    },
+    {
+      "capability_id": "metrics.up_alpha_beta",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.up_alpha_beta",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:up_alpha_beta",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_dependent_binary_metric_exposes_and_forwards_strict_alignment[up_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[up_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[up_alpha_beta]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[up_alpha_beta]",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_up_alpha_beta_0",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_up_alpha_beta_1",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_up_alpha_beta_2",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_up_alpha_beta_3",
+        "tests/test_empyrical/stats/split/test_up_down_alpha_beta.py::TestUpDownAlphaBeta::test_up_alpha_beta_4",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_up_alpha_beta_0",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_up_alpha_beta_1",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_up_alpha_beta_2",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_up_alpha_beta_3",
+        "tests/test_empyrical/stats/test_tracking_risk.py::TestTrackingRisk::test_up_alpha_beta_4",
+        "tests/test_metrics/alpha_beta_edge/test_conditional.py::TestConditionalAlphaBetaEdgeCases::test_up_alpha_beta_with_mostly_nan_after_condition",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_up_alpha_beta_insufficient_clean_data",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_up_alpha_beta_no_up_periods",
+        "tests/test_metrics/missing_coverage/test_alpha_beta.py::AlphaBetaMissingCoverageTestCase::test_up_alpha_beta_zero_variance"
+      ],
+      "target_operation_id": "metrics.up_alpha_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_up_alpha_beta"
+      ]
+    },
+    {
+      "capability_id": "metrics.up_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.up_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:up_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[up_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[up_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[up_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[up_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_capture_4",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_up_capture_no_positive_benchmark"
+      ],
+      "target_operation_id": "metrics.up_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_up_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.up_capture_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.up_capture_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.up_capture_return"
+          },
+          "oracle_reference": "invariant contract metrics.up_capture_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[up_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[up_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_empyrical_dual_binary_method_exposes_alignment_on_class_and_instance[up_capture_return]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[up_capture_return]",
+        "tests/test_empyrical/test_new_indicators.py::TestCaptureReturn::test_up_capture_return_positive_market",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_up_capture_return_no_positive_benchmark"
+      ],
+      "target_operation_id": "metrics.up_capture_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_up_capture_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.up_down_capture",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.up_down_capture",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:up_down_capture",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_reject_mixed_positional_and_labelled_inputs[up_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_all_direct_binary_metrics_route_duplicate_labels_through_contract[up_down_capture]",
+        "tests/compat/empyrical/test_enhanced_binary_alignment.py::test_enhanced_binary_metric_exposes_keyword_only_alignment_contract[up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[up_down_capture]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[up_down_capture]",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_down_capture_0",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_down_capture_1",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_down_capture_2",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_down_capture_3",
+        "tests/test_empyrical/stats/test_capture_ratios.py::TestCaptureRatios::test_up_down_capture_4",
+        "tests/test_metrics/test_ratios_additional.py::test_up_down_capture_returns_nan_when_down_cap_zero",
+        "tests/test_metrics/test_ratios_complete.py::TestCaptureRatiosEdgeCases::test_up_down_capture_zero_down_capture"
+      ],
+      "target_operation_id": "metrics.up_down_capture",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_up_down_capture"
+      ]
+    },
+    {
+      "capability_id": "metrics.var_excess_return",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.var_excess_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.var_excess_return"
+          },
+          "oracle_reference": "invariant contract metrics.var_excess_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_var_excess_return",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_var_excess_return_custom_cutoff",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_var_excess_return_empty",
+        "tests/test_empyrical/test_special_indicators.py::TestSpecialIndicators::test_var_excess_return_extreme",
+        "tests/test_metrics/test_risk_complete.py::TestVarExcessReturnEdgeCases::test_var_excess_return_nan_var",
+        "tests/test_metrics/test_risk_complete.py::TestVarExcessReturnEdgeCases::test_var_excess_return_no_observations",
+        "tests/test_metrics/test_risk_complete.py::TestVarExcessReturnEdgeCases::test_var_excess_return_zero_var",
+        "tests/test_metrics/test_risk_more_coverage.py::test_var_excess_return_returns_nan_when_var_is_zero"
+      ],
+      "target_operation_id": "metrics.var_excess_return",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_var_excess_return"
+      ]
+    },
+    {
+      "capability_id": "metrics.win_rate",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.win_rate.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for metrics.win_rate"
+          },
+          "oracle_reference": "invariant contract metrics.win_rate.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_0",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_1",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_2",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_3",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_4",
+        "tests/test_empyrical/stats/test_win_loss_rate.py::TestWinLossRate::test_win_rate_5"
+      ],
+      "target_operation_id": "metrics.win_rate",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_win_rate"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.mwr",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Global Investment Performance Standards (GIPS), CFA Institute",
+            "reference": "money-weighted return definition",
+            "version": "2020"
+          },
+          "oracle_reference": "money-weighted return definition",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_avoids_python_recursion_depth_for_long_cashflow_stream",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_does_not_turn_a_near_stationary_value_into_a_tangent_root",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_finds_a_representable_root_near_negative_one",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_finds_a_very_large_representable_root",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_known_value",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_rejects_non_conventional_cashflows_even_with_one_real_root",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_rejects_non_conventional_tangent_root",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_rejects_two_close_real_roots",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_returns_nan_when_root_enumeration_finds_multiple_roots",
+        "tests/numerical/test_performance_semantics.py::TestMWR::test_mwr_satisfies_npv_zero",
+        "tests/numerical/test_performance_semantics.py::TestMWRInputValidation::test_mwr_rejects_non_finite_cashflows",
+        "tests/numerical/test_performance_semantics.py::TestMWRInputValidation::test_mwr_rejects_non_positive_interval"
+      ],
+      "target_operation_id": "performance.cashflow.mwr",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_mwr"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.twr",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Global Investment Performance Standards (GIPS), CFA Institute",
+            "reference": "time-weighted return definition",
+            "version": "2020"
+          },
+          "oracle_reference": "time-weighted return definition",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_performance_semantics.py::TestTWR::test_twr_ignores_nan",
+        "tests/numerical/test_performance_semantics.py::TestTWR::test_twr_matches_hand_computed"
+      ],
+      "target_operation_id": "performance.cashflow.twr",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_twr"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.xirr",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Standard internal-rate-of-return equation for dated cashflows",
+            "reference": "cashflow-weighted internal rate of return root",
+            "version": "textbook"
+          },
+          "oracle_reference": "cashflow-weighted internal rate of return root",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_aggregates_same_local_date_for_one_timezone",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_aligns_unsorted_labeled_date_series",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_combines_duplicate_cashflow_dates",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_matches_mwr_for_annual_dates",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_rejects_duplicate_labelled_indexes",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_rejects_missing_dates",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_rejects_mixed_timezones",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_rejects_non_matching_date_series_index",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_returns_nan_when_cashflow_signs_make_irr_ambiguous",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_supports_matching_non_default_series_indexes",
+        "tests/numerical/test_performance_semantics.py::TestXIRR::test_xirr_uses_local_calendar_dates_not_timestamp_instants"
+      ],
+      "target_operation_id": "performance.cashflow.xirr",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_xirr"
+      ]
+    }
+  ],
+  "not_for_d0": true,
+  "schema_version": 1,
+  "scope": "metrics_and_performance_families_only",
+  "source_contract": {
+    "inventory_artifact_type": "legacy_surface_inventory",
+    "inventory_sha256": "34bc05411d127e12e74b241ce38aa76a19ca8271675a758a4ec59efa964b2d0b",
+    "node_facts_path": "test-node-facts-discovery-0042-r2.json",
+    "node_facts_sha256": "ff26d3c0da8e9497b9ac0aecca8967134ac43c2247d5be617e91642c0f8ff1c8",
+    "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
+    "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
+  }
+}
