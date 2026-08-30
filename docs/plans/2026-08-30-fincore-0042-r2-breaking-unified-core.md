@@ -6,7 +6,7 @@
 
 **Architecture:** 采用“一个领域内核、一个 Operation Catalog、每项能力一个 canonical 计算路径、一个结果与产物模型”。领域函数就是唯一计算与领域验证实现；直接调用返回自然值，`runtime.run` 解析后调用同一个函数并增加编排、缓存、provenance 与 Result 包装，不复制公式或领域验证。旧 façade、profile、registry、动态 wrapper、重复工作流和兼容测试只作为迁移期 oracle，最终从源码、wheel、文档、extras 和 Catalog 中全部删除。
 
-**Tech Stack:** Python 3.11–3.14（最终支持窗口由 D-BREAK/D0 依赖矩阵冻结）、NumPy、pandas、SciPy、statsmodels、Matplotlib、Plotly/Bokeh、pytest、Hypothesis、Ruff、mypy、setuptools/build、MkDocs。
+**Tech Stack:** Python 3.11–3.14（最终支持窗口由 D0 依赖矩阵冻结）、NumPy、pandas、SciPy、statsmodels、Matplotlib、Plotly/Bokeh、pytest、Hypothesis、Ruff、mypy、setuptools/build、MkDocs。
 
 ---
 
@@ -544,7 +544,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 13. 将 installed-wheel profiles 从旧项目名改成能力名，并增加 visualization、report-xlsx 和逐 data-provider offline profile；先更新 profile contract tests，再改脚本。
 14. 实现独立 acceptance runner：只接受 candidate root、唯一 wheel、gate 和仓库外 D0 bundle；expected、schema、tolerance、tool argv 均来自 runner 所在的冻结 tooling SHA，candidate 只能提供 actual。
 15. 冻结 required gate manifest：`tests`（全部非在线 functional，含 slow/serial/offline integration）、`static`、`package`、`quality`、`parity`、`architecture`、`performance`、`report`、`installed`、`matrix-cell`、`matrix-aggregate`、`final`、`evidence-child`；`final` 缺任一技术 gate evidence 都 fail closed，`evidence-child` 单独验证 verdict 文档的 parent/allowlist。
-16. 冻结 matrix cell schema：candidate commit/tree、同一 wheel SHA256、D0 tooling/bundle digest、OS/runner image、Python full version、dependency lane/profile、固定 argv digest、test/output digest、时间和 verdict。`matrix-aggregate` 要求 Linux/macOS/Windows × D-BREAK 批准的完整 Python 支持窗口（目标 3.11–3.14）全部 cell。
+16. 冻结 matrix cell schema，并在 D0 bundle 中记录精确、有序的 `python_support_window`（目标为 3.11–3.14，实际集合以 D0 依赖矩阵为准）：candidate commit/tree、同一 wheel SHA256、D0 tooling/bundle digest、OS/runner image、Python full version、dependency lane/profile、固定 argv digest、test/output digest、时间和 verdict。`matrix-aggregate` 只接受 Linux/macOS/Windows × 该 D0-frozen Python 支持窗口的全部 cell；bundle 缺少该字段、字段为空或 cell 不完整均 fail closed。
 17. 先提交并冻结 `D0_TOOLING_SHA`；从该 SHA 的 detached worktree 执行工具测试，之后不允许 Tasks 1–9 修改 runner、checker、profiler、measurement schema 或 threshold。
 18. 若 fresh coverage 仍低于 60%，启动独立 Task 0B coverage-gap sub-tranche：Quality owner 分配 domain test owners，只新增真实 branch/error/boundary 测试，不改生产语义、不使用无断言执行；发现 defect 时先交回独立 `fix:` tranche，修复和测试都落到 clean named commit 后再重测。
 19. Task 0B 达到 overall branch `>=60%`、critical modules `>=90%` 后，再从 clean exact-SHA worktree 执行 Task 0C D0 capture；证据先写到仓库外目录，再作为单独、可审查的 baseline commit materialize 到上述 `docs/quality/0042-r2-*` 文件。记录 `D0_TOOLING_SHA`、baseline source SHA、acceptance lock digest 和外部 bundle digest。
@@ -974,7 +974,7 @@ test -n "$FINCORE_0042R2_D0_BUNDLE"
 8. source 与 wheel 运行 old import negative、legacy reference gate、METADATA/contents inspection。
 9. 只有 test-node disposition 100% 且新 source/wheel nodeid 已验证，才删除旧 compat assets。
 10. 更新 release consistency、CHANGELOG、active workflows、issue/PR templates 和 maintained docs；CI/publish 不再运行 compat-alphalens、alphalens/alphalens-pyfolio profiles 或要求旧 runtime modules。历史 ADR/acceptance/provenance 文件保持 digest 不变。
-11. 配置不依赖 Ruleset 的技术 matrix：一个 build job 产出唯一 wheel，Linux/macOS/Windows × D-BREAK 批准的 Python 支持窗口（目标 3.11–3.14）cells 下载并核对同一 SHA256，以冻结 runner 的 `matrix-cell` gate 输出 schema 化证据；远端不可用时允许使用预登记 self-hosted matrix，但 schema 和 cell 集相同，缺 cell 时 D-TECH 保持 BLOCKED。
+11. 配置不依赖 Ruleset 的技术 matrix：一个 build job 产出唯一 wheel，Linux/macOS/Windows × D0-frozen `python_support_window`（目标 3.11–3.14）cells 下载并核对同一 SHA256，以冻结 runner 的 `matrix-cell` gate 输出 schema 化证据；远端不可用时允许使用预登记 self-hosted matrix，但 schema 和 cell 集相同，缺 cell 时 D-TECH 保持 BLOCKED。
 12. cutover 后重跑完整非在线测试；红色时回滚整个 commit，不部分恢复 façade。
 
 **Verify:**
@@ -1023,7 +1023,7 @@ test -n "$FINCORE_0042R2_D0_BUNDLE"
 6. 执行 core、factor-analysis、visualization、report-pdf、report-xlsx、bayesian、每个 data provider offline profile 与 all。
 7. 扫描最终 wheel 的 LICENSE/NOTICE/provenance；删除旧代码不等于自动解除归属义务。
 8. acceptance 文档明确区分 D-TECH 与 D-RELEASE；本地全绿不自动授权 merge/tag/publish。
-9. matrix evidence 可来自现有 CI artifact 或预登记 self-hosted runners，但两者都必须执行冻结 `matrix-cell` contract；aggregate 只接受完整 3 OS × D-BREAK-approved Python support window cell 集和同一 wheel digest，不依赖 Ruleset/required-check 配置。
+9. matrix evidence 可来自现有 CI artifact 或预登记 self-hosted runners，但两者都必须执行冻结 `matrix-cell` contract；aggregate 只接受完整 3 OS × D0-frozen `python_support_window` cell 集和同一 wheel digest，不依赖 Ruleset/required-check 配置。
 10. 在运行任何 gate 前冻结 `TECHNICAL_CANDIDATE_SHA`；所有 evidence 和构件绑定该 parent，不允许 acceptance 过程中修改 candidate tree。
 11. final PASS 后才创建 evidence-only child commit，allowlist 仅为 `docs/quality/0042-r2-acceptance.md` 与外部证据 digest 索引。该 commit 必须记录 `tested_parent_sha=TECHNICAL_CANDIDATE_SHA`；D-TECH verdict 和 wheel 仍属于 tested parent，evidence child 不得被描述为重新测试过的 candidate，也不得重建 wheel。
 
@@ -1121,7 +1121,7 @@ FINCORE_0042R2_EVIDENCE_HEAD=$(git rev-parse HEAD)
 - 同一 wheel 的 profiles、minimum/latest、真实 report/browser 和 data offline lanes 全绿。
 - 唯一 sdist 与 tested source 的内容/metadata/license/provenance/legacy-zero contract 等价，且未生成第二个候选 wheel。
 - acceptance manifest 绑定 exact SHA 与 artifact digests，证据目录不可由 candidate 运行时覆盖。
-- matrix aggregate 覆盖批准支持窗口的全部 OS/Python cells；缺 cell、wheel digest 不同或 schema/argv 漂移均为 BLOCKED。
+- matrix aggregate 覆盖 D0-frozen `python_support_window` 的全部 OS/Python cells；缺 cell、wheel digest 不同或 schema/argv 漂移均为 BLOCKED。
 - evidence-only child 的 parent 恰好是 tested candidate，diff 只含 acceptance 文档/证据索引；D-TECH 明确归属于 parent SHA。
 
 **Rollback:** D-TECH 失败时保持 BLOCKED，回到对应 owner 的最后一个绿色 tranche；不修改 baseline、删失败测试或降低门槛。
