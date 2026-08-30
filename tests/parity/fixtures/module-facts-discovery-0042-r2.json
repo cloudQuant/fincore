@@ -304,6 +304,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 70,
+            "module_scope": "top_level",
             "static_values": [
               "Empyrical",
               "aggregate_returns",
@@ -399,6 +400,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 11,
+            "module_scope": "top_level",
             "static_values": []
           }
         ],
@@ -703,6 +705,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "context_alpha_adapter",
               "context_beta_adapter",
@@ -2498,6 +2501,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 259,
+            "module_scope": "top_level",
             "static_values": [
               "DisplayFunc",
               "MarkdownFunc",
@@ -2827,6 +2831,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 7,
+            "module_scope": "top_level",
             "static_values": [
               "performance",
               "plotting",
@@ -3099,6 +3104,7 @@
             "expression_kind": "Name",
             "has_dynamic_parts": true,
             "line": 817,
+            "module_scope": "top_level",
             "static_values": []
           }
         ],
@@ -3375,6 +3381,7 @@
             "expression_kind": "Name",
             "has_dynamic_parts": true,
             "line": 718,
+            "module_scope": "top_level",
             "static_values": []
           }
         ],
@@ -3886,6 +3893,7 @@
             "expression_kind": "Tuple",
             "has_dynamic_parts": true,
             "line": 1052,
+            "module_scope": "top_level",
             "static_values": [
               "GridFigure"
             ]
@@ -4222,6 +4230,7 @@
             "expression_kind": "Tuple",
             "has_dynamic_parts": true,
             "line": 436,
+            "module_scope": "top_level",
             "static_values": [
               "MaxLossExceededError",
               "NonMatchingTimezoneError"
@@ -4349,6 +4358,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 15,
+            "module_scope": "top_level",
             "static_values": [
               "OperationCatalog",
               "OperationDefinition",
@@ -4512,6 +4522,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "is_strict_profile",
               "route"
@@ -4648,6 +4659,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "PERFORMANCE_OPERATION_SPECS",
               "SURFACE_DOMAIN",
@@ -4770,6 +4782,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "OperationCatalog"
             ]
@@ -4945,6 +4958,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "InvocationResult",
               "invoke",
@@ -5025,6 +5039,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 13,
+            "module_scope": "top_level",
             "static_values": [
               "OperationDefinition",
               "PublicBinding"
@@ -5168,6 +5183,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 29,
+            "module_scope": "top_level",
             "static_values": [
               "BrinsonAttribution",
               "FamaFrenchModel",
@@ -5262,6 +5278,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 14,
+            "module_scope": "top_level",
             "static_values": [
               "BrinsonAttribution",
               "brinson_attribution",
@@ -5413,6 +5430,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "FF3_FACTORS",
               "FF4MOM_FACTORS",
@@ -5471,6 +5489,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 24,
+            "module_scope": "top_level",
             "static_values": [
               "FamaFrenchModelPatch"
             ]
@@ -5604,6 +5623,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "StyleFactorProvider",
               "StyleResult",
@@ -5726,6 +5746,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "Backend",
               "NumPyBackend",
@@ -5835,6 +5856,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 9,
+            "module_scope": "top_level",
             "static_values": [
               "NumPyBackend"
             ]
@@ -5922,6 +5944,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 372,
+            "module_scope": "top_level",
             "static_values": [
               "STATUSES",
               "STATUS_EXPERIMENTAL",
@@ -6184,6 +6207,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 44,
+            "module_scope": "top_level",
             "static_values": [
               "ANNUALIZATION_FACTORS",
               "APPROX_BDAYS_PER_MONTH",
@@ -6289,6 +6313,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 9,
+            "module_scope": "top_level",
             "static_values": [
               "COLORMAP",
               "COLORS"
@@ -6378,6 +6403,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 24,
+            "module_scope": "top_level",
             "static_values": [
               "PERIODS"
             ]
@@ -6466,6 +6492,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 8,
+            "module_scope": "top_level",
             "static_values": [
               "ANNUALIZATION_FACTORS",
               "APPROX_BDAYS_PER_MONTH",
@@ -6583,6 +6610,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 14,
+            "module_scope": "top_level",
             "static_values": [
               "CAPACITY_CAPITAL_BASE",
               "CAPACITY_SWEEP_MAX_PV",
@@ -6808,6 +6836,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "ALPHALENS_FUNCTION_SPECS",
               "ALPHALENS_WORKFLOW_SPECS",
@@ -6973,6 +7002,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "AnalysisInput",
               "PortfolioSemantics",
@@ -7108,6 +7138,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 453,
+            "module_scope": "top_level",
             "static_values": [
               "ALPHALENS_FUNCTION_SPECS",
               "FactorFunctionSpec",
@@ -7267,6 +7298,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 69,
+            "module_scope": "top_level",
             "static_values": [
               "ALPHALENS_WORKFLOW_SPECS",
               "FactorWorkflowSpec"
@@ -7396,6 +7428,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "ExposureBundle",
               "ExposureTuple",
@@ -7449,6 +7482,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 34,
+            "module_scope": "top_level",
             "static_values": [
               "ALL_PROFILES",
               "ENHANCED_V1",
@@ -7587,6 +7621,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 15,
+            "module_scope": "top_level",
             "static_values": [
               "AlignmentPolicy",
               "align_binary_metric_inputs",
@@ -7841,6 +7876,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 23,
+            "module_scope": "top_level",
             "static_values": [
               "ContextInputs",
               "ValidationProfile",
@@ -7982,6 +8018,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 173,
+            "module_scope": "top_level",
             "static_values": [
               "PYFOLIO_SIGNATURES",
               "PYFOLIO_SIGNATURE_MANIFEST",
@@ -8056,6 +8093,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 5,
+            "module_scope": "top_level",
             "static_values": [
               "AnalysisContext",
               "analyze"
@@ -8497,6 +8535,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 24,
+            "module_scope": "top_level",
             "static_values": [
               "AnalysisContext",
               "analyze"
@@ -8779,6 +8818,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 53,
+            "module_scope": "top_level",
             "static_values": [
               "RollingEngine"
             ]
@@ -8895,6 +8935,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "DAGExecutor"
             ]
@@ -8992,6 +9033,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 14,
+            "module_scope": "top_level",
             "static_values": [
               "DAGNode",
               "ExecutionPlan"
@@ -9158,6 +9200,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 25,
+            "module_scope": "top_level",
             "static_values": [
               "MOMENT_NEEDS",
               "RollingMoments",
@@ -9371,6 +9414,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "AnalysisSnapshot"
             ]
@@ -9467,6 +9511,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 28,
+            "module_scope": "top_level",
             "static_values": [
               "AkShareProvider",
               "AlphaVantageProvider",
@@ -9540,6 +9585,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 46,
+            "module_scope": "top_level",
             "static_values": [
               "RequestPolicy"
             ]
@@ -9789,6 +9835,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 23,
+            "module_scope": "top_level",
             "static_values": [
               "AkShareProvider",
               "AlphaVantageProvider",
@@ -9926,6 +9973,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 94,
+            "module_scope": "top_level",
             "static_values": [
               "SCHEMA_VERSION",
               "DataSnapshot"
@@ -10219,6 +10267,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": true,
             "line": 476,
+            "module_scope": "top_level",
             "static_values": [
               "DAILY",
               "WEEKLY",
@@ -10401,6 +10450,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 15,
+            "module_scope": "top_level",
             "static_values": [
               "AlignmentError",
               "DataAlignmentError",
@@ -10983,6 +11033,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 89,
+            "module_scope": "top_level",
             "static_values": [
               "EnhancedNonMatchingTimezoneError",
               "EventAnalysisModel",
@@ -11312,6 +11363,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 792,
+            "module_scope": "top_level",
             "static_values": [
               "analyze_factor"
             ]
@@ -11513,6 +11565,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 275,
+            "module_scope": "top_level",
             "static_values": [
               "add_custom_calendar_timedelta",
               "backshift_returns_series",
@@ -11663,6 +11716,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "FactorCapacityResult",
               "FactorCostModel",
@@ -11917,6 +11971,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 617,
+            "module_scope": "top_level",
             "static_values": [
               "FactorLossExceededError",
               "FactorLossReport",
@@ -12019,6 +12074,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 44,
+            "module_scope": "top_level",
             "static_values": [
               "EnhancedNonMatchingTimezoneError",
               "FactorDataError",
@@ -12198,6 +12254,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "FDRResult",
               "ICInferenceResult",
@@ -12753,6 +12810,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 1710,
+            "module_scope": "top_level",
             "static_values": [
               "EventAnalysisModel",
               "FactorAnalysisConfig",
@@ -12914,6 +12972,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 678,
+            "module_scope": "top_level",
             "static_values": [
               "average_cumulative_return_by_quantile",
               "common_start_returns",
@@ -13081,6 +13140,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "PITPoint",
               "materialize_pit_factor",
@@ -13284,6 +13344,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 282,
+            "module_scope": "top_level",
             "static_values": [
               "PyfolioFactorInputs",
               "create_pyfolio_input",
@@ -13510,6 +13571,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 816,
+            "module_scope": "top_level",
             "static_values": [
               "DECIMAL_TO_BPS",
               "axes_style",
@@ -13795,6 +13857,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 774,
+            "module_scope": "top_level",
             "static_values": [
               "FactorTearSheetArtifacts",
               "GridFigure",
@@ -13971,6 +14034,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 44,
+            "module_scope": "top_level",
             "static_values": [
               "_EVENT_HOOKS",
               "AnalysisContext",
@@ -14141,6 +14205,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 43,
+            "module_scope": "top_level",
             "static_values": [
               "AnalysisContext",
               "AnalysisHookContext",
@@ -14472,6 +14537,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 35,
+            "module_scope": "top_level",
             "static_values": [
               "alpha",
               "alpha_aligned",
@@ -14638,6 +14704,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 29,
+            "module_scope": "top_level",
             "static_values": [
               "adjust_returns",
               "aligned_series",
@@ -14901,6 +14968,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 28,
+            "module_scope": "top_level",
             "static_values": [
               "compute_bayes_cone",
               "compute_consistency_score",
@@ -15092,6 +15160,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 32,
+            "module_scope": "top_level",
             "static_values": [
               "consecutive_stats",
               "max_consecutive_down_days",
@@ -15275,6 +15344,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 32,
+            "module_scope": "top_level",
             "static_values": [
               "gen_drawdown_table",
               "get_all_drawdowns",
@@ -15637,6 +15707,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 30,
+            "module_scope": "top_level",
             "static_values": [
               "align_and_warn",
               "compute_exposures",
@@ -16135,6 +16206,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 37,
+            "module_scope": "top_level",
             "static_values": [
               "calc_bootstrap",
               "calc_distribution_stats",
@@ -16357,6 +16429,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 31,
+            "module_scope": "top_level",
             "static_values": [
               "compute_cap_exposures",
               "compute_sector_exposures",
@@ -17015,6 +17088,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 36,
+            "module_scope": "top_level",
             "static_values": [
               "adjusted_sharpe_ratio",
               "burke_ratio",
@@ -17264,6 +17338,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 36,
+            "module_scope": "top_level",
             "static_values": [
               "aggregate_returns",
               "cum_returns",
@@ -17634,6 +17709,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 35,
+            "module_scope": "top_level",
             "static_values": [
               "annual_volatility",
               "beta_fragility_heuristic",
@@ -17920,6 +17996,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 33,
+            "module_scope": "top_level",
             "static_values": [
               "roll_alpha",
               "roll_alpha_aligned",
@@ -18136,6 +18213,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 27,
+            "module_scope": "top_level",
             "static_values": [
               "add_closing_transactions",
               "agg_all_long_short",
@@ -18533,6 +18611,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 32,
+            "module_scope": "top_level",
             "static_values": [
               "bond_market_correlation",
               "capm_r_squared",
@@ -18741,6 +18820,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 33,
+            "module_scope": "top_level",
             "static_values": [
               "cornell_timing",
               "extract_interesting_date_ranges",
@@ -18994,6 +19074,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 28,
+            "module_scope": "top_level",
             "static_values": [
               "adjust_returns_for_slippage",
               "apply_slippage_penalty",
@@ -19306,6 +19387,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 34,
+            "module_scope": "top_level",
             "static_values": [
               "annual_active_return",
               "annual_active_return_by_year",
@@ -19449,6 +19531,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 29,
+            "module_scope": "top_level",
             "static_values": [
               "OptimizationError",
               "efficient_frontier",
@@ -19726,6 +19809,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "efficient_frontier"
             ]
@@ -19872,6 +19956,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "optimize"
             ]
@@ -20024,6 +20109,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 16,
+            "module_scope": "top_level",
             "static_values": [
               "risk_parity"
             ]
@@ -20189,6 +20275,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "CashflowTiming",
               "DisclosureContext",
@@ -20313,6 +20400,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 22,
+            "module_scope": "top_level",
             "static_values": [
               "CashflowTiming",
               "FeeTreatment",
@@ -20384,6 +20472,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 13,
+            "module_scope": "top_level",
             "static_values": [
               "DisclosureContext",
               "render_disclosure"
@@ -20493,6 +20582,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 16,
+            "module_scope": "top_level",
             "static_values": [
               "sharpe_confidence_interval",
               "sharpe_standard_error",
@@ -20660,6 +20750,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "mwr",
               "twr",
@@ -20825,6 +20916,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 43,
+            "module_scope": "top_level",
             "static_values": [
               "DEFAULT_METRIC_FAMILY",
               "ROLLING_FAMILY",
@@ -20929,6 +21021,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 14,
+            "module_scope": "top_level",
             "static_values": [
               "ENTRY_POINT_GROUPS",
               "DiscoveredPlugin",
@@ -21144,6 +21237,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 47,
+            "module_scope": "top_level",
             "static_values": [
               "ExtensionRegistry",
               "clear_registry",
@@ -21267,6 +21361,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 15,
+            "module_scope": "top_level",
             "static_values": [
               "DEFAULT_METRIC_FAMILY",
               "ROLLING_FAMILY",
@@ -21465,6 +21560,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": true,
             "line": 86,
+            "module_scope": "top_level",
             "static_values": [
               "Pyfolio"
             ]
@@ -21747,6 +21843,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 206,
+            "module_scope": "top_level",
             "static_values": [
               "ReportArtifacts",
               "create_strategy_report"
@@ -21927,6 +22024,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 13,
+            "module_scope": "top_level",
             "static_values": [
               "ReportArtifacts"
             ]
@@ -22200,6 +22298,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "ReportModel",
               "compute_sections"
@@ -22356,6 +22455,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 22,
+            "module_scope": "top_level",
             "static_values": [
               "HTML_CSS",
               "css_cls",
@@ -22511,6 +22611,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 22,
+            "module_scope": "top_level",
             "static_values": [
               "ReportModel",
               "SectionModel",
@@ -22810,6 +22911,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 196,
+            "module_scope": "top_level",
             "static_values": [
               "SCHEMA_VERSION",
               "ReportProvenance"
@@ -23115,6 +23217,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 37,
+            "module_scope": "top_level",
             "static_values": [
               "generate_html",
               "load_echarts_js"
@@ -23349,6 +23452,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 21,
+            "module_scope": "top_level",
             "static_values": [
               "generate_pdf"
             ]
@@ -23489,6 +23593,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 15,
+            "module_scope": "top_level",
             "static_values": [
               "SCHEMA_VERSION",
               "STATUS_FAILED",
@@ -23571,6 +23676,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 12,
+            "module_scope": "top_level",
             "static_values": [
               "ArtifactBundle",
               "IdempotentCloseMixin"
@@ -23698,6 +23804,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 21,
+            "module_scope": "top_level",
             "static_values": [
               "STATUS_FAILED",
               "STATUS_SUCCESS",
@@ -23874,6 +23981,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 22,
+            "module_scope": "top_level",
             "static_values": [
               "SCHEMA_VERSION",
               "from_json",
@@ -24140,6 +24248,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 52,
+            "module_scope": "top_level",
             "static_values": [
               "BASEL_REFERENCE_DISCLOSURE",
               "EGARCH",
@@ -24374,6 +24483,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 240,
+            "module_scope": "top_level",
             "static_values": [
               "STATUS_EXPERIMENTAL",
               "STATUS_FAIL",
@@ -24471,6 +24581,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 12,
+            "module_scope": "top_level",
             "static_values": [
               "basel_traffic_light",
               "es_calibration_score",
@@ -24755,6 +24866,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 35,
+            "module_scope": "top_level",
             "static_values": [
               "HISTORICAL_QUANTILE_METHOD",
               "STATUS_INSUFFICIENT_DATA",
@@ -24900,6 +25012,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 26,
+            "module_scope": "top_level",
             "static_values": [
               "evt_cvar",
               "evt_var",
@@ -25056,6 +25169,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 28,
+            "module_scope": "top_level",
             "static_values": [
               "EGARCH",
               "GARCH",
@@ -25303,6 +25417,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 213,
+            "module_scope": "top_level",
             "static_values": [
               "SIGN_LOSSES_NEGATIVE",
               "STATUS_FAILED",
@@ -25675,6 +25790,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 38,
+            "module_scope": "top_level",
             "static_values": [
               "BASEL_REFERENCE_DISCLOSURE",
               "RISK_VALIDATION_REPORT_SCHEMA_VERSION",
@@ -25822,6 +25938,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 18,
+            "module_scope": "top_level",
             "static_values": [
               "SUPPORTED_DISTRIBUTIONS",
               "SUPPORTED_FORECAST_TARGETS",
@@ -25923,6 +26040,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 28,
+            "module_scope": "top_level",
             "static_values": [
               "MonteCarlo",
               "bootstrap",
@@ -26010,6 +26128,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 8,
+            "module_scope": "top_level",
             "static_values": [
               "SimResult",
               "annualize",
@@ -26142,6 +26261,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "bootstrap",
               "bootstrap_ci",
@@ -26348,6 +26468,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "MonteCarlo"
             ]
@@ -26477,6 +26598,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 20,
+            "module_scope": "top_level",
             "static_values": [
               "antithetic_variates",
               "gbm_from_returns",
@@ -26567,6 +26689,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 11,
+            "module_scope": "top_level",
             "static_values": [
               "generate_correlation_breakdown",
               "scenario_table",
@@ -26656,6 +26779,7 @@
             "expression_kind": "Call",
             "has_dynamic_parts": true,
             "line": 110,
+            "module_scope": "top_level",
             "static_values": []
           }
         ],
@@ -26831,6 +26955,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 16,
+            "module_scope": "top_level",
             "static_values": [
               "plot_bayes_cone",
               "plot_best",
@@ -27058,6 +27183,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 25,
+            "module_scope": "top_level",
             "static_values": [
               "plot_capacity_sweep",
               "plot_cones"
@@ -27209,6 +27335,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 16,
+            "module_scope": "top_level",
             "static_values": [
               "plot_alpha_returns",
               "plot_factor_contribution_to_perf",
@@ -27346,6 +27473,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 12,
+            "module_scope": "top_level",
             "static_values": [
               "plot_exposures",
               "plot_gross_leverage",
@@ -27638,6 +27766,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 29,
+            "module_scope": "top_level",
             "static_values": [
               "plot_annual_returns",
               "plot_drawdown_periods",
@@ -27810,6 +27939,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "plot_cap_exposures_gross",
               "plot_cap_exposures_longshort",
@@ -27966,6 +28096,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 13,
+            "module_scope": "top_level",
             "static_values": [
               "plot_prob_profit_trade",
               "plot_round_trip_lifetimes",
@@ -28405,6 +28536,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 66,
+            "module_scope": "top_level",
             "static_values": [
               "DisplayFunc",
               "MarkdownFunc",
@@ -28615,6 +28747,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "plot_daily_turnover_hist",
               "plot_daily_volume",
@@ -28667,6 +28800,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 8,
+            "module_scope": "top_level",
             "static_values": [
               "axes_style",
               "plotting_context"
@@ -28949,6 +29083,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 67,
+            "module_scope": "top_level",
             "static_values": [
               "SETTINGS",
               "ExportConfig",
@@ -29462,6 +29597,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 22,
+            "module_scope": "top_level",
             "static_values": [
               "HAS_IPYTHON",
               "SETTINGS",
@@ -29608,6 +29744,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 200,
+            "module_scope": "top_level",
             "static_values": [
               "down",
               "roll",
@@ -29660,6 +29797,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 5,
+            "module_scope": "top_level",
             "static_values": [
               "timer"
             ]
@@ -29728,6 +29866,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 6,
+            "module_scope": "top_level",
             "static_values": [
               "deprecated"
             ]
@@ -29815,6 +29954,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 64,
+            "module_scope": "top_level",
             "static_values": [
               "nanargmax",
               "nanargmin",
@@ -30059,6 +30199,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 26,
+            "module_scope": "top_level",
             "static_values": [
               "validate_alignment",
               "validate_input",
@@ -30122,6 +30263,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 17,
+            "module_scope": "top_level",
             "static_values": [
               "VizBackend",
               "get_backend"
@@ -30371,6 +30513,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 21,
+            "module_scope": "top_level",
             "static_values": [
               "RenderModel",
               "VizBackend",
@@ -30545,6 +30688,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "HtmlReportBuilder"
             ]
@@ -30656,8 +30800,19 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 12,
+            "module_scope": "top_level",
             "static_values": [
               "PlotlyBackend"
+            ]
+          },
+          {
+            "assignment_kind": "aug_assign",
+            "expression_kind": "List",
+            "has_dynamic_parts": false,
+            "line": 21,
+            "module_scope": "conditional",
+            "static_values": [
+              "BokehBackend"
             ]
           }
         ],
@@ -30994,6 +31149,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 16,
+            "module_scope": "top_level",
             "static_values": [
               "BokehBackend",
               "PrintfTickFormatter"
@@ -31207,6 +31363,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 19,
+            "module_scope": "top_level",
             "static_values": [
               "PlotlyBackend"
             ]
@@ -31356,6 +31513,7 @@
             "expression_kind": "List",
             "has_dynamic_parts": false,
             "line": 14,
+            "module_scope": "top_level",
             "static_values": [
               "MatplotlibBackend"
             ]
@@ -31379,7 +31537,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "c247d7be4a340b5f673aed33ccd7cc600e4a1234",
-    "tree": "c96c512ca58933f88f0cf731cee754f02de01e4b"
+    "commit": "748808111c4e1306e56e9d45fe5a63d393131193",
+    "tree": "f84965c0d56c8229b493fe82ba30890c663a3393"
   }
 }
