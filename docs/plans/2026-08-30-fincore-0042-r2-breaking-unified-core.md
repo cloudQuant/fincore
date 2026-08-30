@@ -495,6 +495,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create: `tests/parity/fixtures/legacy-surface-inventory-0042-r2.json`
 - Create: `tests/parity/fixtures/module-disposition-0042-r2.json`
 - Create: `tests/parity/fixtures/test-node-disposition-0042-r2.json`
+- Create: `tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json`
 - Create: `tests/parity/fixtures/repository-surface-disposition-0042-r2.json`
 - Create: `tests/parity/fixtures/planned-api-0.5.0.json`
 - Create: `tests/parity/fixtures/0042-r2-gate-manifest.json`
@@ -534,7 +535,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 1. 先写失败测试，要求 inventory 取所有公开定义、registries、manifests、docs、examples、benchmarks、extras 与 wheel contents 的并集。
 2. 为每个 surface 登记 capability、场景、owner、target operation、source nodeid、wheel nodeid、oracle/golden 和 disposition。
 3. 为每个 `fincore/**/*.py` 登记 keep/move/delete、目标模块、consumer count 和 capability IDs，0 unmapped。
-4. 为 active workflows、packaging/release scripts、maintained docs/templates、examples、type stubs、compat generators/checkers 建立 repository-surface disposition；每项逐路径绑定 raw Git blob、kind/category tags、受控 owner、lifecycle、completion gate、target contract/capability 与 rule ID，不能从 shell token 启发式推断决策。historical/provenance candidate 必须双向映射到单独 allowlist 并记录原始 digest；只允许受限文本后缀的纯文本记录标为 `text_only`，HTML、rendered 或 binary artifact 必须以非文本 provenance 条目保存，不能借 allowlist 作为可执行兼容示例。该 scoped mapping 的成功仍标记 `not_for_d0`，只能在后续与其他完整输入共同封入 D0。
+4. 为 active workflows、packaging/release scripts、maintained docs/templates、examples、type stubs、compat generators/checkers 建立 repository-surface disposition；每项逐路径绑定 raw Git blob、kind/category tags、受控 owner、lifecycle、completion gate、target contract/capability 与 rule ID，不能从 shell token 启发式推断决策。historical/provenance candidate 必须双向映射到单独 allowlist 并记录原始 digest；只允许受限文本后缀的纯文本记录标为 `text_only`，HTML、rendered 或 binary artifact 必须以非文本 provenance 条目保存，不能借 allowlist 作为可执行兼容示例。capability baseline capture 必须从初始 clean `HEAD` 的同一组 Git blobs 读取 facts/disposition，并调用冻结 tooling 的字节级校验器；不得重新读取 mutable worktree。该 scoped mapping 的成功仍标记 `not_for_d0`，只能在后续与其他完整输入共同封入 D0。
 5. 冻结全部 257 个现有 Catalog binding（Empyrical class 100、Empyrical module 49、metrics 50、flat API 20、context 18、performance 9、Pyfolio module 11），另行盘点 Pyfolio 类的 69 个 methods（其中 67 个 non-private）、Alphalens 61 个 function specs + 7 个 workflows，以及所有未入 Catalog 的增强领域能力；这些是 legacy surfaces，不得直接等同为 257 个独立 capabilities，alias/quirk 必须逐项 disposition。
 6. 每个数值 scenario 登记 expected authority、来源版本/digest、tolerance 和 `preserve/correction_required`；候选或当前输出不能成为唯一 oracle。
 7. 把旧 compatibility tests 中真实 numerical/container/error/plot/report 断言迁成独立 golden 或 invariant；纯签名/MRO/alias 断言仅进入 disposition。
@@ -565,14 +566,15 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 set -euo pipefail
 FINCORE_0042R2_D0_DIR=$(mktemp -d /tmp/fincore-0042-r2-d0.XXXXXX)
 FINCORE_0042R2_MPL_DIR=$(mktemp -d /tmp/fincore-0042-r2-mpl.XXXXXX)
-PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/capture_capability_baseline.py --inventory tests/parity/fixtures/legacy-surface-inventory-0042-r2.json --module-disposition tests/parity/fixtures/module-disposition-0042-r2.json --test-disposition tests/parity/fixtures/test-node-disposition-0042-r2.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --fixture-dir tests/parity/goldens/0042-r2 --output "$FINCORE_0042R2_D0_DIR/capability-baseline.json" --deny-network
+test -n "$FINCORE_0042R2_D0_TOOLING_ROOT"
+PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -I "$FINCORE_0042R2_D0_TOOLING_ROOT/scripts/capture_capability_baseline.py" --inventory tests/parity/fixtures/legacy-surface-inventory-0042-r2.json --module-disposition tests/parity/fixtures/module-disposition-0042-r2.json --test-disposition tests/parity/fixtures/test-node-disposition-0042-r2.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --repository-surface-facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --repository-surface-disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json --tooling-root "$FINCORE_0042R2_D0_TOOLING_ROOT" --fixture-dir tests/parity/goldens/0042-r2 --output "$FINCORE_0042R2_D0_DIR/capability-baseline.json" --deny-network
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --capture "$FINCORE_0042R2_D0_DIR/architecture-baseline.json" --seal-baseline --threshold-policy tests/parity/fixtures/0042-r2-architecture-threshold-policy.json
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/profile_workloads.py --sizes small medium large --kinds metrics rolling transactions factor risk report --warmups 2 --repeats 5 --require-output-digest --output "$FINCORE_0042R2_D0_DIR/performance-baseline.json"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/collect_quality_baseline.py --json "$FINCORE_0042R2_D0_DIR/current-baseline.json" --markdown "$FINCORE_0042R2_D0_DIR/current-baseline.md"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_quality_snapshot.py --snapshot "$FINCORE_0042R2_D0_DIR/current-baseline.json"
 ```
 
-上述 committed fixture/golden 输入必须在 clean exact-SHA 内存在，并将每个输入及其 include/exclude manifest 的 digest 写入 D0 bundle；`FINCORE_0042R2_D0_DIR` 只承载本次 clean capture 的输出，不得把空临时目录当作账本、disposition 或 golden 的来源。tooling SHA、baseline source SHA、clean status、平台和依赖 provenance 仍须按本任务的 D0 要求一并冻结。
+上述 committed fixture/golden 输入必须在 clean exact-SHA 内存在，并将每个输入及其 include/exclude manifest 的 digest 写入 D0 bundle；`FINCORE_0042R2_D0_DIR` 只承载本次 clean capture 的输出，不得把空临时目录当作账本、disposition 或 golden 的来源。`FINCORE_0042R2_D0_TOOLING_ROOT` 必须是与 candidate source root 分离的 clean detached tooling worktree；capture 会记录其 commit/tree 以及 capture/checker Git-blob SHA256，并拒绝 candidate 作为 tooling root。tooling SHA、baseline source SHA、clean status、平台和依赖 provenance 仍须按本任务的 D0 要求一并冻结。
 
 上述 `check_feature_parity.py`、`check_architecture_convergence.py` 和扩展后的 profiler CLI 只有在本任务实现并通过测试后才可执行；它们不是当前仓库已存在的能力。
 

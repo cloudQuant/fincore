@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from tests.support.frozen_capture_tooling import create_frozen_capture_tooling_root
+from tests.support.repository_surface_inputs import write_minimal_repository_surface_inputs
+
 SCRIPT = Path(__file__).parents[2] / "scripts" / "capture_capability_baseline.py"
 
 
@@ -48,7 +51,9 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         "test_disposition": source_root / "test-disposition.json",
         "ledger": source_root / "ledger.json",
         "fixture_dir": fixture_dir,
+        "tooling_root": create_frozen_capture_tooling_root(tmp_path / "frozen-tooling", SCRIPT.parent),
     }
+    paths.update(write_minimal_repository_surface_inputs(source_root))
     _write_json(paths["inventory"], {"entries": [{"item_id": "metrics.annual_return", "disposition": "required"}]})
     _write_json(paths["module_disposition"], {"entries": [{"module": "fincore.metrics", "disposition": "keep"}]})
     _write_json(
@@ -91,7 +96,8 @@ def _capture(source_root: Path, paths: dict[str, Path], output: Path) -> subproc
     return subprocess.run(
         [
             sys.executable,
-            str(SCRIPT),
+            "-I",
+            str(paths["tooling_root"] / "scripts" / "capture_capability_baseline.py"),
             "--inventory",
             str(paths["inventory"]),
             "--module-disposition",
@@ -100,6 +106,12 @@ def _capture(source_root: Path, paths: dict[str, Path], output: Path) -> subproc
             str(paths["test_disposition"]),
             "--ledger",
             str(paths["ledger"]),
+            "--repository-surface-facts",
+            str(paths["repository_surface_facts"]),
+            "--repository-surface-disposition",
+            str(paths["repository_surface_disposition"]),
+            "--tooling-root",
+            str(paths["tooling_root"]),
             "--fixture-dir",
             str(paths["fixture_dir"]),
             "--output",

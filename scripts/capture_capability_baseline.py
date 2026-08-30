@@ -31,7 +31,9 @@ a kind do not substitute for that kind's required provenance fields.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
-All input and fixture bytes are read from immutable blobs in the initially
+Repository-surface facts and their reviewed disposition are separately
+validated as scoped, explicitly non-D0 inputs.  All input and fixture bytes
+are read from immutable blobs in the initially
 recorded clean ``HEAD`` tree, never from the mutable working tree.  Each
 ``golden_path`` is a portable fixture-relative POSIX path: it cannot be
 absolute, contain ``.``, ``..`` or empty segments, or contain a backslash.  The
@@ -40,6 +42,11 @@ rejected rather than being followed through the mutable worktree.  The
 initial and final Git provenance must match before ``--output`` is atomically
 replaced.  This binds every recorded SHA256 to the original commit/tree even if
 the worktree is changed and restored while capture is running.
+
+The capture command itself must run from the supplied clean tooling worktree.
+Its capture/checker blobs and Git provenance are recorded separately from the
+candidate source, so a later review can identify the exact static checker that
+validated the scoped repository-surface inputs.
 """
 
 from __future__ import annotations
@@ -52,6 +59,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import types
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Sequence
@@ -71,6 +79,8 @@ _INDEPENDENT_AUTHORITY_KINDS = (
 _EXTERNAL_ARTIFACT_FIELDS = ("version", "artifact_digest")
 _PUBLICATION_TRACEABILITY_FIELDS = ("publication", "doi", "version", "digest")
 _RESERVED_SOURCE_PROJECT_IDENTIFIERS = ("fincore", "candidate", "current")
+_CAPTURE_TOOL_RELATIVE = "scripts/capture_capability_baseline.py"
+_REPOSITORY_SURFACE_CHECKER_RELATIVE = "scripts/check_0042_r2_repository_surface_disposition.py"
 
 
 class CaptureValidationError(ValueError):
@@ -350,6 +360,47 @@ def _initial_head_blob_bytes(source_root: Path, commit: str, relative_path: str,
     return _git_blob_bytes(source_root, blobs[relative_path])
 
 
+def _frozen_tooling_identity(tooling_root: Path) -> tuple[Path, bytes, dict[str, Any]]:
+    """Return the clean static tooling root, checker bytes, and immutable identity."""
+    resolved_root = tooling_root.resolve()
+    expected_capture_path = resolved_root / _CAPTURE_TOOL_RELATIVE
+    actual_capture_path = Path(__file__).resolve()
+    if expected_capture_path.resolve() != actual_capture_path:
+        raise CaptureValidationError("capture must execute from the supplied frozen tooling root")
+    tooling_provenance = _source_provenance(resolved_root)
+    tooling_commit = tooling_provenance["commit"]
+    if not isinstance(tooling_commit, str):
+        raise CaptureValidationError("capture requires a string frozen tooling commit")
+    capture_payload = _initial_head_blob_bytes(
+        resolved_root,
+        tooling_commit,
+        _CAPTURE_TOOL_RELATIVE,
+        "frozen capture tooling",
+    )
+    checker_payload = _initial_head_blob_bytes(
+        resolved_root,
+        tooling_commit,
+        _REPOSITORY_SURFACE_CHECKER_RELATIVE,
+        "frozen repository-surface disposition checker",
+    )
+    return (
+        resolved_root,
+        checker_payload,
+        {
+            "root": str(resolved_root),
+            "source": tooling_provenance,
+            "capture": {
+                "path": _CAPTURE_TOOL_RELATIVE,
+                "sha256": _sha256_bytes(capture_payload),
+            },
+            "repository_surface_disposition_checker": {
+                "path": _REPOSITORY_SURFACE_CHECKER_RELATIVE,
+                "sha256": _sha256_bytes(checker_payload),
+            },
+        },
+    )
+
+
 def _portable_fixture_relative_path(value: str, subject: str) -> str:
     """Return one canonical, non-escaping POSIX fixture-manifest key."""
     parts = value.split("/")
@@ -408,6 +459,38 @@ def _validate_ledger_fixture_paths(
                 )
 
 
+def _validate_repository_surface_inputs(
+    facts_payload: bytes,
+    disposition_payload: bytes,
+    *,
+    facts_filename: str,
+    checker_payload: bytes,
+    checker_filename: str,
+) -> dict[str, Any]:
+    """Validate inputs with the exact checker bytes recorded from frozen tooling."""
+    checker = types.ModuleType("fincore_0042_r2_repository_surface_checker")
+    checker.__file__ = checker_filename
+    try:
+        checker_code = compile(checker_payload, checker_filename, "exec")
+        exec(checker_code, checker.__dict__)
+    except (ImportError, SyntaxError, TypeError, ValueError) as exc:
+        raise CaptureValidationError(f"cannot load static repository-surface disposition checker: {exc}") from exc
+    validator = getattr(checker, "validate_disposition_payloads", None)
+    if not callable(validator):
+        raise CaptureValidationError("static repository-surface disposition checker lacks byte validation")
+    try:
+        summary = validator(
+            facts_payload,
+            disposition_payload,
+            facts_filename=facts_filename,
+        )
+    except (TypeError, ValueError) as exc:
+        raise CaptureValidationError(f"repository-surface disposition validation failed: {exc}") from exc
+    if not isinstance(summary, dict) or summary.get("not_for_d0") is not True:
+        raise CaptureValidationError("repository-surface disposition validation must remain explicitly not_for_d0")
+    return summary
+
+
 def _atomic_write_json(output: Path, artifact: dict[str, Any]) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{output.name}.", suffix=".tmp", dir=output.parent)
@@ -427,10 +510,13 @@ def _atomic_write_json(output: Path, artifact: dict[str, Any]) -> None:
 def capture(
     *,
     source_root: Path,
+    tooling_root: Path,
     inventory_path: Path,
     module_disposition_path: Path,
     test_disposition_path: Path,
     ledger_path: Path,
+    repository_surface_facts_path: Path,
+    repository_surface_disposition_path: Path,
     fixture_dir: Path,
     output_path: Path,
     deny_network: bool,
@@ -439,6 +525,19 @@ def capture(
     if not deny_network:
         raise CaptureValidationError("--deny-network is required for fail-closed capture")
     source_root = source_root.resolve()
+    requested_tooling_root = tooling_root.resolve()
+    try:
+        source_root.relative_to(requested_tooling_root)
+        roots_overlap = True
+    except ValueError:
+        try:
+            requested_tooling_root.relative_to(source_root)
+            roots_overlap = True
+        except ValueError:
+            roots_overlap = False
+    if roots_overlap:
+        raise CaptureValidationError("frozen tooling root must be distinct from the source worktree")
+    tooling_root, checker_payload, tooling_identity = _frozen_tooling_identity(requested_tooling_root)
     output_path = output_path.resolve()
     try:
         output_path.relative_to(source_root)
@@ -446,6 +545,12 @@ def capture(
         pass
     else:
         raise CaptureValidationError("output must be outside the source worktree")
+    try:
+        output_path.relative_to(tooling_root)
+    except ValueError:
+        pass
+    else:
+        raise CaptureValidationError("output must be outside the frozen tooling worktree")
 
     provenance = _source_provenance(source_root)
     initial_commit = provenance["commit"]
@@ -456,31 +561,53 @@ def capture(
         "module_disposition": module_disposition_path,
         "test_disposition": test_disposition_path,
         "ledger": ledger_path,
+        "repository_surface_facts": repository_surface_facts_path,
+        "repository_surface_disposition": repository_surface_disposition_path,
     }
     input_labels = {
         "inventory": "inventory",
         "module_disposition": "module",
         "test_disposition": "test",
         "ledger": "ledger",
+        "repository_surface_facts": "repository-surface facts",
+        "repository_surface_disposition": "repository-surface disposition",
     }
     documents: dict[str, dict[str, Any]] = {}
+    payloads: dict[str, bytes] = {}
     inputs: dict[str, dict[str, str]] = {}
     for key, path in input_paths.items():
         relative = _relative_source_path(source_root, path, key.replace("_", " "))
         payload = _initial_head_blob_bytes(source_root, initial_commit, relative, key.replace("_", " "))
-        documents[key] = _load_json_bytes(payload, key.replace("_", " "))
+        payloads[key] = payload
         inputs[key] = {"path": relative, "sha256": _sha256_bytes(payload)}
+    for key in ("inventory", "module_disposition", "test_disposition", "ledger"):
+        documents[key] = _load_json_bytes(payloads[key], input_labels[key])
 
     _validate_disposition_document(documents["inventory"], input_labels["inventory"])
     _validate_disposition_document(documents["module_disposition"], input_labels["module_disposition"])
     _validate_disposition_document(documents["test_disposition"], input_labels["test_disposition"])
     ledger_entries = validate_ledger(documents["ledger"])
+    repository_surface_summary = _validate_repository_surface_inputs(
+        payloads["repository_surface_facts"],
+        payloads["repository_surface_disposition"],
+        facts_filename=PurePosixPath(inputs["repository_surface_facts"]["path"]).name,
+        checker_payload=checker_payload,
+        checker_filename=str(tooling_root / _REPOSITORY_SURFACE_CHECKER_RELATIVE),
+    )
+    if (
+        repository_surface_summary.get("facts_sha256") != inputs["repository_surface_facts"]["sha256"]
+        or repository_surface_summary.get("disposition_sha256") != inputs["repository_surface_disposition"]["sha256"]
+    ):
+        raise CaptureValidationError("repository-surface disposition checker returned mismatched input digests")
     fixture_dir_relative = _relative_source_path(source_root, fixture_dir, "fixture directory")
     fixture_manifest = _fixture_manifest_from_initial_head(source_root, initial_commit, fixture_dir_relative)
     _validate_ledger_fixture_paths(ledger_entries, fixture_manifest)
     final_provenance = _source_provenance(source_root)
     if final_provenance != provenance:
         raise CaptureValidationError("source Git provenance changed during capture")
+    final_tooling_provenance = _source_provenance(tooling_root)
+    if final_tooling_provenance != tooling_identity["source"]:
+        raise CaptureValidationError("frozen tooling Git provenance changed during capture")
 
     artifact: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -489,7 +616,15 @@ def capture(
         "does_not_assert": ["D0", "D-TECH"],
         "captured_at": datetime.now(UTC).isoformat(),
         "source": provenance,
+        "tooling": tooling_identity,
         "inputs": inputs,
+        "repository_surface": {
+            "scope": "classified_repository_surface_only",
+            "not_for_d0": True,
+            "facts_sha256": inputs["repository_surface_facts"]["sha256"],
+            "disposition_sha256": inputs["repository_surface_disposition"]["sha256"],
+            "validation": repository_surface_summary,
+        },
         "fixtures": fixture_manifest,
         "ledger_summary": {
             "entries": len(ledger_entries),
@@ -506,6 +641,13 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--module-disposition", required=True, help="module disposition JSON")
     parser.add_argument("--test-disposition", required=True, help="test-node disposition JSON")
     parser.add_argument("--ledger", required=True, help="versioned capability ledger JSON")
+    parser.add_argument("--repository-surface-facts", required=True, help="scoped repository-surface facts JSON")
+    parser.add_argument(
+        "--repository-surface-disposition",
+        required=True,
+        help="reviewed scoped repository-surface disposition JSON",
+    )
+    parser.add_argument("--tooling-root", required=True, help="clean worktree containing this frozen capture tooling")
     parser.add_argument("--fixture-dir", required=True, help="directory containing golden fixtures")
     parser.add_argument("--output", required=True, help="repository-external capture artifact path")
     parser.add_argument(
@@ -519,10 +661,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         artifact = capture(
             source_root=Path.cwd(),
+            tooling_root=Path(args.tooling_root),
             inventory_path=Path(args.inventory),
             module_disposition_path=Path(args.module_disposition),
             test_disposition_path=Path(args.test_disposition),
             ledger_path=Path(args.ledger),
+            repository_surface_facts_path=Path(args.repository_surface_facts),
+            repository_surface_disposition_path=Path(args.repository_surface_disposition),
             fixture_dir=Path(args.fixture_dir),
             output_path=Path(args.output),
             deny_network=args.deny_network,
