@@ -1,0 +1,195 @@
+{
+  "artifact_type": "gate_manifest",
+  "decision_status": "scoped",
+  "does_not_assert": [
+    "D-TECH",
+    "D0",
+    "installed_wheel_behavior",
+    "legacy_zero"
+  ],
+  "evidence_child": {
+    "allow_paths": [
+      "docs/quality/0042-r2-acceptance.md",
+      "docs/quality/0042-r2-evidence-digests.json"
+    ],
+    "requires_tested_parent": true,
+    "single_parent_only": true
+  },
+  "final_requires_gates": [
+    "tests",
+    "static",
+    "package",
+    "quality",
+    "parity",
+    "architecture",
+    "performance",
+    "report",
+    "installed",
+    "matrix-aggregate"
+  ],
+  "gates": {
+    "architecture": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "architecture",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "require-loc-reduction",
+        "require-duplicate-reduction",
+        "require-legacy-zero",
+        "require-no-cycles"
+      ]
+    },
+    "evidence-child": {
+      "consumes_d0_bundle": false,
+      "evidence_kind": "evidence_child",
+      "fail_closed": true,
+      "requires_candidate_root": false,
+      "thresholds": [
+        "tested-parent",
+        "evidence-head",
+        "allow-path"
+      ]
+    },
+    "final": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "final",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "evidence-dir"
+      ]
+    },
+    "installed": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "installed",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "profiles",
+        "data-providers",
+        "dependency-lanes"
+      ]
+    },
+    "matrix-aggregate": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "matrix",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "matrix-evidence-dir",
+        "require-os",
+        "require-support-window-from-bundle"
+      ]
+    },
+    "matrix-cell": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "matrix_cell",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "wheel-sha256",
+        "python-full-version",
+        "os",
+        "argv-digest"
+      ]
+    },
+    "package": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "package",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "require-one-sdist",
+        "require-sdist-source-equivalence",
+        "require-legacy-zero"
+      ]
+    },
+    "parity": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "parity",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "families",
+        "require-source-wheel-equal"
+      ]
+    },
+    "performance": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "performance",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "families",
+        "warmups",
+        "repeats"
+      ]
+    },
+    "quality": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "quality",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "require-fresh-coverage",
+        "require-changed-lines",
+        "require-critical-branches"
+      ]
+    },
+    "report": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "report",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "real-browser",
+        "real-html",
+        "real-pdf",
+        "real-xlsx",
+        "interactive-backends"
+      ]
+    },
+    "static": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "static",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": []
+    },
+    "tests": {
+      "consumes_d0_bundle": true,
+      "evidence_kind": "tests",
+      "fail_closed": true,
+      "requires_candidate_root": true,
+      "thresholds": [
+        "include-slow",
+        "include-serial",
+        "include-offline-integration",
+        "benchmarks-covered-by"
+      ]
+    }
+  },
+  "not_for_d0": true,
+  "required_gates": [
+    "tests",
+    "static",
+    "package",
+    "quality",
+    "parity",
+    "architecture",
+    "performance",
+    "report",
+    "installed",
+    "matrix-cell",
+    "matrix-aggregate",
+    "final",
+    "evidence-child"
+  ],
+  "runner_contract": {
+    "candidate_provides_only_actual": true,
+    "expected_values_come_from_tooling_sha": true,
+    "verifies_own_blob_before_execution": true
+  },
+  "schema_version": 1
+}

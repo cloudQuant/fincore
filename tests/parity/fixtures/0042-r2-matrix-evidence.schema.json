@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "hex_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "git_object_id": {
+      "pattern": "^[0-9a-f]{40,64}$",
+      "type": "string"
+    }
+  },
+  "description": "Frozen 0042-R2 matrix-cell evidence contract. Every OS/Python cell must carry one such document; matrix-aggregate only accepts the complete D0-frozen support-window cell set bound to one identical wheel digest.",
+  "properties": {
+    "argv_digest": {
+      "$ref": "#/definitions/hex_sha256",
+      "description": "Digest of the fixed runner argv for this cell."
+    },
+    "candidate_commit": {
+      "$ref": "#/definitions/git_object_id"
+    },
+    "candidate_tree": {
+      "$ref": "#/definitions/git_object_id"
+    },
+    "d0_bundle_digest": {
+      "$ref": "#/definitions/hex_sha256"
+    },
+    "d0_tooling_digest": {
+      "$ref": "#/definitions/hex_sha256"
+    },
+    "dependency_lane": {
+      "enum": [
+        "minimum",
+        "latest",
+        "pinned"
+      ]
+    },
+    "dependency_profile": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "evidence_time": {
+      "description": "ISO-8601 UTC timestamp recorded by the frozen runner; not part of equivalence digests.",
+      "format": "date-time",
+      "type": "string"
+    },
+    "matrix_contract_version": {
+      "const": 1
+    },
+    "os": {
+      "enum": [
+        "linux",
+        "macos",
+        "windows"
+      ]
+    },
+    "output_digest": {
+      "$ref": "#/definitions/hex_sha256",
+      "description": "Digest of the normalized test output evidence for this cell."
+    },
+    "python_full_version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "type": "string"
+    },
+    "runner_image": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "BLOCKED"
+      ]
+    },
+    "wheel_sha256": {
+      "$ref": "#/definitions/hex_sha256",
+      "description": "SHA256 of the single build-authority wheel consumed by this cell. Any cell rebuilding its own wheel is invalid."
+    }
+  },
+  "required": [
+    "matrix_contract_version",
+    "candidate_commit",
+    "candidate_tree",
+    "wheel_sha256",
+    "d0_tooling_digest",
+    "d0_bundle_digest",
+    "os",
+    "runner_image",
+    "python_full_version",
+    "dependency_lane",
+    "dependency_profile",
+    "argv_digest",
+    "output_digest",
+    "evidence_time",
+    "verdict"
+  ],
+  "title": "fincore-0042-r2-matrix-cell-evidence",
+  "type": "object"
+}

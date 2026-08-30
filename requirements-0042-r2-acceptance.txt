@@ -1,0 +1,6 @@
+# Tooling dependencies for the independent 0042-R2 acceptance lane.
+# Frozen by Task 0; the detached D0_TOOLING_SHA installs exactly this set.
+build>=1.2.0
+jsonschema>=4.21.0
+pytest>=8.0.0
+twine>=5.0.0
