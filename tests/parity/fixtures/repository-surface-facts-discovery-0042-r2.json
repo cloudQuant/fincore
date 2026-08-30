@@ -17,14 +17,14 @@
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
-    "script_candidate": 50,
+    "script_candidate": 51,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
   "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Every tracked path beneath scripts/ is included as a script candidate fact, while generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
-  "record_count": 319,
+  "record_count": 320,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -2935,7 +2935,7 @@
       }
     },
     {
-      "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
+      "blob_sha256": "8806e8b1a02b5985b5cc539270862f7b00cf6b29ded23f6ccfcb0a90a4d9e1fd",
       "category_tags": [
         "historical_provenance_candidate"
       ],
@@ -2945,7 +2945,7 @@
           "rule_id": "historical_provenance_path"
         }
       ],
-      "git_blob_id": "1b5c408464c4b454e0d03c7b6c09d47406fc3caa",
+      "git_blob_id": "afe45fca22b2184460e00d1d936e70221a2d982b",
       "git_mode": "100644",
       "kind": "historical_provenance_candidate",
       "path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
@@ -2989,6 +2989,7 @@
           "fincore.v2",
           "scripts/",
           "scripts/capture_capability_baseline.py",
+          "scripts/check_0042_r2_legacy_surface_inventory.py",
           "scripts/check_0042_r2_repository_surface_disposition.py",
           "scripts/check_alphalens_upstream_test_migration.py",
           "scripts/check_architecture_convergence.py",
@@ -3053,6 +3054,7 @@
           "tests/quality/test_0042_r2_profiling_contract.py",
           "tests/quality/test_architecture_convergence.py",
           "tests/quality/test_capture_capability_baseline.py",
+          "tests/quality/test_check_0042_r2_legacy_surface_inventory.py",
           "tests/quality/test_check_feature_parity.py",
           "tests/quality/test_repository_surface_disposition.py",
           "tests/quality/test_run_0042_r2_acceptance.py",
@@ -3078,7 +3080,7 @@
       }
     },
     {
-      "blob_sha256": "5f55b0578fd19d0ae870f3f09be2ce6f5e397ee6980e8f2415875a5c48b037ac",
+      "blob_sha256": "7639147e488a5368d731a528a307360f23109bb607236ee18de3dc043601fa47",
       "category_tags": [
         "historical_provenance_candidate"
       ],
@@ -3088,7 +3090,7 @@
           "rule_id": "historical_provenance_path"
         }
       ],
-      "git_blob_id": "b8e4e95c490d0669779897c8c053dd007c6c573e",
+      "git_blob_id": "710f3e55896b45b717126d86d3b2d940eba07259",
       "git_mode": "100644",
       "kind": "historical_provenance_candidate",
       "path": "docs/quality/0042-r2-development-readiness.md",
@@ -9240,7 +9242,7 @@
       }
     },
     {
-      "blob_sha256": "c2a2befe8d7bcf397bff8545159031114393064a25975923a6860976a520c5bf",
+      "blob_sha256": "60cffc78f472ac1448d7abbcb8bedaf979e35fa2c5dd405861e886f0aecd6cf4",
       "category_tags": [
         "script_candidate"
       ],
@@ -9250,7 +9252,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "10ebbfbe27fde68d17fb13591a3951bdff3bb211",
+      "git_blob_id": "e0fc5233f415e63a71397eb00e6aad76c0ed1610",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/capture_capability_baseline.py",
@@ -9274,14 +9276,18 @@
           "subprocess",
           "sys",
           "tempfile",
+          "types",
           "typing.Any",
           "typing.Sequence"
         ],
-        "reference_tokens": []
+        "reference_tokens": [
+          "scripts/capture_capability_baseline.py",
+          "scripts/check_0042_r2_repository_surface_disposition.py"
+        ]
       }
     },
     {
-      "blob_sha256": "fbcdeaaa81ada640ee2b03bba69cb54ce517a9857cef8efba92d6ad64274fd7c",
+      "blob_sha256": "7479bb93aab4272e26929f541643e5cc55adfa85012e9ac01dc4c5c082564c7b",
       "category_tags": [
         "script_candidate"
       ],
@@ -9291,7 +9297,46 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "8b592ae66db31073cbbc6f735a562b784609a3cb",
+      "git_blob_id": "5852ea01433853a2e03330baa64a904cb63e47e0",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_0042_r2_legacy_surface_inventory.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "collections.Counter",
+          "hashlib",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "stat",
+          "sys",
+          "typing.Any",
+          "typing.Mapping",
+          "typing.Sequence"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "0834fbe6d3b35c8896f9e4c166385d9c85722b9ec323f8d014b04844cdf0a846",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "e7fc19eb011a4378a76f5bf793d70d0d797dc133",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/check_0042_r2_repository_surface_disposition.py",
@@ -10684,7 +10729,7 @@
       }
     },
     {
-      "blob_sha256": "3d13361d955a74a6fdf97097409a8eb550538e1425116ade2811ce7a8f6ef422",
+      "blob_sha256": "1a102c04d3bfd2e5779312001470f9aa581436f915ab2ba417cbd983057ead89",
       "category_tags": [
         "script_candidate"
       ],
@@ -10694,7 +10739,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "7bba60f0c8b0aebd67b2167b93836ab0fe420c57",
+      "git_blob_id": "7fdaaa758c6de1c2a4cbd589165f1e5e8861e77a",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/profile_hotspots.py",
@@ -10707,10 +10752,27 @@
           "__future__.annotations",
           "argparse",
           "cProfile",
+          "collections.abc.Callable",
+          "collections.abc.Mapping",
+          "dataclasses.dataclass",
+          "dataclasses.fields",
+          "dataclasses.is_dataclass",
+          "datetime.date",
+          "datetime.datetime",
           "fincore.factor_analysis.data.prepare_factor_data",
-          "fincore.metrics.ratios.sharpe_ratio",
+          "fincore.metrics.perf_stats.perf_stats",
           "fincore.metrics.risk.annual_volatility",
+          "fincore.metrics.risk.conditional_value_at_risk",
+          "fincore.metrics.risk.downside_risk",
+          "fincore.metrics.risk.tail_ratio",
+          "fincore.metrics.risk.value_at_risk",
+          "fincore.metrics.rolling.rolling_sharpe",
+          "fincore.metrics.rolling.rolling_volatility",
+          "fincore.metrics.round_trips.extract_round_trips",
+          "fincore.report.compute.compute_sections",
+          "hashlib",
           "json",
+          "math",
           "numpy",
           "pandas",
           "pathlib.Path",
@@ -10720,19 +10782,29 @@
           "subprocess",
           "sys",
           "time",
+          "typing.Any",
+          "typing.cast",
+          "workloads.Workload",
           "workloads.describe_workload",
           "workloads.factor_panel_workload",
-          "workloads.single_series_workload"
+          "workloads.report_workload",
+          "workloads.rolling_returns_workload",
+          "workloads.single_series_workload",
+          "workloads.transactions_workload"
         ],
         "reference_tokens": [
           "fincore.factor_analysis.data",
-          "fincore.metrics.ratios",
-          "fincore.metrics.risk"
+          "fincore.metrics.perf_stats",
+          "fincore.metrics.risk",
+          "fincore.metrics.rolling",
+          "fincore.metrics.round_trips",
+          "fincore.report.compute",
+          "scenario, seed"
         ]
       }
     },
     {
-      "blob_sha256": "42d90f3407f3946e4ff9d0ebbc506d89c70fb08bc749510f690bede915a18b12",
+      "blob_sha256": "fba6885b09feeae601cb119c5f205d2a3120e7e3e4b14c42b655db4ed8d8438f",
       "category_tags": [
         "script_candidate"
       ],
@@ -10742,7 +10814,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "f41880af82de8863fb816399f8631912c1824236",
+      "git_blob_id": "09fb05e9f3f34013c366aaa74d4b4e0ad13559d9",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/profile_workloads.py",
@@ -11019,7 +11091,7 @@
       }
     },
     {
-      "blob_sha256": "de1e3e445d7efa8aa2ef2f80781eeb6a3725603a32429927ed6d4d4e8e99f49c",
+      "blob_sha256": "7292af23c1ac2589d57577bc7d1f71f8e9434bb4a9b46928d6197531eff6e5cd",
       "category_tags": [
         "compat_generator_checker",
         "script_candidate"
@@ -11034,7 +11106,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "133a97819288cfc00dc15666280b4961b11de876",
+      "git_blob_id": "7c283c4ff4e1ad4c148123720602bb09f176b076",
       "git_mode": "100644",
       "kind": "compat_generator_checker",
       "path": "scripts/snapshot_public_api.py",
@@ -11047,10 +11119,15 @@
           "__future__.annotations",
           "argparse",
           "ast",
+          "dataclasses.dataclass",
           "importlib",
           "json",
           "pathlib.Path",
-          "sys"
+          "pathlib.PurePosixPath",
+          "stat",
+          "sys",
+          "typing.Iterable",
+          "zipfile"
         ],
         "reference_tokens": [
           "fincore.alphalens",
@@ -11065,9 +11142,7 @@
           "fincore.pyfolio",
           "fincore.report",
           "fincore.risk",
-          "fincore.simulation",
-          "scripts/snapshot_public_api.py",
-          "tests/contracts/test_public_api_behavior_probes.py"
+          "fincore.simulation"
         ]
       }
     },
@@ -11383,7 +11458,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "1b574244bca2fe1ec4e4f4d4343cc40c21766913",
-    "tree": "e318a69f38ae82d9f73dfd2a14805da36a5e5b8c"
+    "commit": "15c9c9c2b757749e04a10d90d94bda9505c1cd07",
+    "tree": "fea6d156601ad06cdb76139e54d9d1baa65ef601"
   }
 }

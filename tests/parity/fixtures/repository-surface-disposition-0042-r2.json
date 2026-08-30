@@ -1817,7 +1817,7 @@
       "rationale": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "rule_id": "historical-provenance",
       "source": {
-        "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
+        "blob_sha256": "8806e8b1a02b5985b5cc539270862f7b00cf6b29ded23f6ccfcb0a90a4d9e1fd",
         "category_tags": [
           "historical_provenance_candidate"
         ],
@@ -1837,7 +1837,7 @@
       "rationale": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "rule_id": "historical-provenance",
       "source": {
-        "blob_sha256": "5f55b0578fd19d0ae870f3f09be2ce6f5e397ee6980e8f2415875a5c48b037ac",
+        "blob_sha256": "7639147e488a5368d731a528a307360f23109bb607236ee18de3dc043601fa47",
         "category_tags": [
           "historical_provenance_candidate"
         ],
@@ -6201,7 +6201,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "c2a2befe8d7bcf397bff8545159031114393064a25975923a6860976a520c5bf",
+        "blob_sha256": "60cffc78f472ac1448d7abbcb8bedaf979e35fa2c5dd405861e886f0aecd6cf4",
         "category_tags": [
           "script_candidate"
         ],
@@ -6223,11 +6223,37 @@
       "legacy_reference_policy": "none",
       "lifecycle": "maintained",
       "owner": "tooling",
+      "path": "scripts/check_0042_r2_legacy_surface_inventory.py",
+      "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
+      "rule_id": "tooling-retarget",
+      "source": {
+        "blob_sha256": "7479bb93aab4272e26929f541643e5cc55adfa85012e9ac01dc4c5c082564c7b",
+        "category_tags": [
+          "script_candidate"
+        ],
+        "content_kind": "text",
+        "git_mode": "100644",
+        "kind": "script_candidate"
+      },
+      "target": {
+        "capability_ids": [],
+        "contract_ids": [
+          "tooling.0_5"
+        ],
+        "path": "scripts/check_0042_r2_legacy_surface_inventory.py"
+      }
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "retarget",
+      "legacy_reference_policy": "none",
+      "lifecycle": "maintained",
+      "owner": "tooling",
       "path": "scripts/check_0042_r2_repository_surface_disposition.py",
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "fbcdeaaa81ada640ee2b03bba69cb54ce517a9857cef8efba92d6ad64274fd7c",
+        "blob_sha256": "0834fbe6d3b35c8896f9e4c166385d9c85722b9ec323f8d014b04844cdf0a846",
         "category_tags": [
           "script_candidate"
         ],
@@ -6962,7 +6988,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "3d13361d955a74a6fdf97097409a8eb550538e1425116ade2811ce7a8f6ef422",
+        "blob_sha256": "1a102c04d3bfd2e5779312001470f9aa581436f915ab2ba417cbd983057ead89",
         "category_tags": [
           "script_candidate"
         ],
@@ -6988,7 +7014,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "42d90f3407f3946e4ff9d0ebbc506d89c70fb08bc749510f690bede915a18b12",
+        "blob_sha256": "fba6885b09feeae601cb119c5f205d2a3120e7e3e4b14c42b655db4ed8d8438f",
         "category_tags": [
           "script_candidate"
         ],
@@ -7187,16 +7213,16 @@
       }
     },
     {
-      "completion_gate": "D-CUTOVER",
-      "disposition": "remove",
+      "completion_gate": "D-RUNTIME",
+      "disposition": "retarget",
       "legacy_reference_policy": "retarget_before_cutover",
-      "lifecycle": "transition",
-      "owner": "quality",
+      "lifecycle": "maintained",
+      "owner": "tooling",
       "path": "scripts/snapshot_public_api.py",
-      "rationale": "Compatibility-only generator/checker has no 0.5 successor and is scheduled for removal at cutover.",
-      "rule_id": "compat-remove",
+      "rationale": "Versioned snapshot tooling retains its strict 0.5 source and wheel contract while the historical v1 projection remains bounded to cutover.",
+      "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "de1e3e445d7efa8aa2ef2f80781eeb6a3725603a32429927ed6d4d4e8e99f49c",
+        "blob_sha256": "7292af23c1ac2589d57577bc7d1f71f8e9434bb4a9b46928d6197531eff6e5cd",
         "category_tags": [
           "compat_generator_checker",
           "script_candidate"
@@ -7205,7 +7231,13 @@
         "git_mode": "100644",
         "kind": "compat_generator_checker"
       },
-      "target": null
+      "target": {
+        "capability_ids": [],
+        "contract_ids": [
+          "tooling.0_5"
+        ],
+        "path": "scripts/snapshot_public_api.py"
+      }
     },
     {
       "completion_gate": "D-CUTOVER",
@@ -7704,13 +7736,13 @@
       "text_only": true
     },
     {
-      "blob_sha256": "b24e15e36bdfd7ff40505e767d827673045d75d4305d2e33d537bd4e26a0bd69",
+      "blob_sha256": "8806e8b1a02b5985b5cc539270862f7b00cf6b29ded23f6ccfcb0a90a4d9e1fd",
       "path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
       "reason": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "text_only": true
     },
     {
-      "blob_sha256": "5f55b0578fd19d0ae870f3f09be2ce6f5e397ee6980e8f2415875a5c48b037ac",
+      "blob_sha256": "7639147e488a5368d731a528a307360f23109bb607236ee18de3dc043601fa47",
       "path": "docs/quality/0042-r2-development-readiness.md",
       "reason": "Historical text provenance remains non-executable and is frozen by its source blob digest.",
       "text_only": true
@@ -8305,12 +8337,12 @@
   },
   "source_facts": {
     "path": "repository-surface-facts-discovery-0042-r2.json",
-    "record_count": 319,
-    "sha256": "74ea252a841479056ed50686c553742b1b335f6ee01a81422ab34e5c0ff27fff",
+    "record_count": 320,
+    "sha256": "fadc3bc1b06f6f6d6aec5b191624349c308b24f57daff5db5c267d1c87df411c",
     "source_provenance": {
       "clean": true,
-      "commit": "1b574244bca2fe1ec4e4f4d4343cc40c21766913",
-      "tree": "e318a69f38ae82d9f73dfd2a14805da36a5e5b8c"
+      "commit": "15c9c9c2b757749e04a10d90d94bda9505c1cd07",
+      "tree": "fea6d156601ad06cdb76139e54d9d1baa65ef601"
     }
   }
 }
