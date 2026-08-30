@@ -15,8 +15,8 @@ decision)`.  It does not mark D0, D-TECH, or release as passed.
 | Recorded pre-document baseline | `2bcb65773f01dd836b5fb4d928741ff1b072179e` |
 | Required preflight identity | caller supplies `FINCORE_R2_ROOT` and a full-SHA `FINCORE_R2_EXPECTED_HEAD`; the actual clean `dev` HEAD must equal that SHA |
 | R2 plan | [`docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md`](../plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md) |
-| R2 plan SHA256 | `65ea04508d354293257dde609e02a9fe01ec6d10b64fa8b7d9d51481a68f4e8d` |
-| R2 plan-containing commit | `58ab613a3d975f47a3797143acc288a64e3adf85` |
+| R2 plan SHA256 | `d4a9fb82a69b90865d3f1e14a6bde77746083c054f7ba8dfeba06eae0d5bcd09` |
+| R2 plan-containing commit | `d941bdc58061a2633d9a8e79d2ce23b454ee3a5e` |
 | Target version | `0.5.0.dev0` |
 | Decision ADR | [`ADR-0042-R2`](../architecture/adr/0042-r2-breaking-unified-core.md) |
 
@@ -61,8 +61,8 @@ FINCORE_R2_PREFLIGHT_RESULT=0
 FINCORE_R2_EXPECTED_BRANCH=dev
 FINCORE_R2_PRE_DOC_BASE=2bcb65773f01dd836b5fb4d928741ff1b072179e
 FINCORE_R2_PLAN=docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md
-FINCORE_R2_PLAN_SHA256=65ea04508d354293257dde609e02a9fe01ec6d10b64fa8b7d9d51481a68f4e8d
-FINCORE_R2_PLAN_COMMIT=58ab613a3d975f47a3797143acc288a64e3adf85
+FINCORE_R2_PLAN_SHA256=d4a9fb82a69b90865d3f1e14a6bde77746083c054f7ba8dfeba06eae0d5bcd09
+FINCORE_R2_PLAN_COMMIT=d941bdc58061a2633d9a8e79d2ce23b454ee3a5e
 
 FINCORE_R2_ROOT_VALID=0
 if test -z "${FINCORE_R2_ROOT:-}"; then
