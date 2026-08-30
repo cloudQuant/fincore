@@ -74,6 +74,7 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                             "scenario_id": "ordinary_returns",
                             "authority": {
                                 "kind": "pinned_upstream_oracle",
+                                "source_project": "empyrical",
                                 "reference": "empyrical.annual_return",
                                 "version": "0.5.5",
                             },
@@ -165,6 +166,27 @@ def test_invalid_ledger_does_not_write_or_overwrite_capture_output(tmp_path: Pat
 
     assert result.returncode != 0
     assert "independent authority" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_rejects_self_referential_pinned_oracle_without_overwriting_output(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    ledger = json.loads(paths["ledger"].read_text(encoding="utf-8"))
+    ledger["entries"][0]["scenarios"][0]["authority"] = {
+        "kind": "pinned_upstream_oracle",
+        "source_project": "empyrical",
+        "reference": "current Fincore output",
+        "version": "0.5.0",
+    }
+    _write_json(paths["ledger"], ledger)
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "self-output" in result.stderr
     assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
 
 

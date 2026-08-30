@@ -72,6 +72,7 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                             "scenario_id": "ordinary_returns",
                             "authority": {
                                 "kind": "pinned_upstream_oracle",
+                                "source_project": "empyrical",
                                 "reference": "empyrical.annual_return",
                                 "version": "0.5.5",
                             },
@@ -178,6 +179,7 @@ def test_valid_minimal_ledger_is_accepted(tmp_path: Path) -> None:
                             "scenario_id": "ordinary_returns",
                             "authority": {
                                 "kind": "pinned_upstream_oracle",
+                                "source_project": "empyrical",
                                 "reference": "empyrical.annual_return",
                             },
                             "golden_path": "annual-return.json",
@@ -186,7 +188,7 @@ def test_valid_minimal_ledger_is_accepted(tmp_path: Path) -> None:
                 )
                 or entry
             ),
-            "traceable version, digest, or provenance",
+            "version or artifact_digest",
         ),
     ],
     ids=[
@@ -214,6 +216,97 @@ def test_ledger_invalid_entries_are_rejected(
         ledger["entries"].append(mutate(entry.copy()))
     else:
         mutate(entry)
+    _write_json(paths["ledger"], ledger)
+    _commit_source(source_root)
+
+    result = _capture(source_root, paths, tmp_path / "capture.json")
+
+    assert result.returncode != 0
+    assert expected_error in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("authority", "expected_error"),
+    [
+        (
+            {
+                "kind": "pinned_upstream_oracle",
+                "reference": "empyrical.annual_return",
+                "version": "0.5.5",
+            },
+            "source_project",
+        ),
+        (
+            {
+                "kind": "pinned_upstream_oracle",
+                "source_project": "Fincore",
+                "reference": "empyrical.annual_return",
+                "version": "0.5.5",
+            },
+            "external project",
+        ),
+        (
+            {
+                "kind": "pinned_upstream_oracle",
+                "source_project": "candidate",
+                "reference": "empyrical.annual_return",
+                "version": "0.5.5",
+            },
+            "external project",
+        ),
+        (
+            {
+                "kind": "pinned_upstream_oracle",
+                "source_project": "CURRENT",
+                "reference": "empyrical.annual_return",
+                "version": "0.5.5",
+            },
+            "external project",
+        ),
+        (
+            {
+                "kind": "pinned_upstream_oracle",
+                "source_project": "empyrical",
+                "reference": "empyrical.annual_return",
+            },
+            "version or artifact_digest",
+        ),
+        (
+            {
+                "kind": "published_standard",
+                "reference": "annualized return definition",
+            },
+            "publication, doi, version, or digest",
+        ),
+        (
+            {
+                "kind": "property_invariant",
+                "reference": "annual returns scale with compounding",
+                "digest": "sha256:fixture",
+            },
+            "invariant_id",
+        ),
+    ],
+    ids=[
+        "missing-project",
+        "fincore-project",
+        "candidate-project",
+        "current-project",
+        "missing-artifact-identity",
+        "paper-metadata",
+        "invariant-id",
+    ],
+)
+def test_required_authorities_require_kind_specific_structured_provenance(
+    tmp_path: Path,
+    authority: dict[str, str],
+    expected_error: str,
+) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    ledger = json.loads(paths["ledger"].read_text(encoding="utf-8"))
+    entry = ledger["entries"][0]
+    assert isinstance(entry, dict)
+    entry["scenarios"][0]["authority"] = authority
     _write_json(paths["ledger"], ledger)
     _commit_source(source_root)
 

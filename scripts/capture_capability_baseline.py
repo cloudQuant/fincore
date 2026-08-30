@@ -14,13 +14,20 @@ non-empty ``target_operation_id``, ``source_nodeids``, ``wheel_nodeids`` and
 an existing fixture-relative ``golden_path`` or an ``oracle_reference``.  A
 ``disposition`` is exactly one of ``required``, ``alias_only`` or
 ``legacy_quirk``.  A ``required`` entry additionally needs an independent
-authority mapping for each scenario: ``authority.kind`` must be one of the
-documented independent authority kinds (``published_standard``,
-``peer_reviewed_paper``, ``independent_reference_implementation``,
-``pinned_upstream_oracle``, ``property_invariant`` or ``upstream_reference``),
-``authority.reference`` must be non-empty, and at least one of ``version``,
-``digest`` or ``provenance`` must provide a traceable identifier.
-Candidate/current Fincore output is never an independent authority.
+authority mapping for each scenario.  Every authority has a non-empty
+``kind`` and ``reference``.  The external implementation kinds
+(``independent_reference_implementation``, ``pinned_upstream_oracle`` and
+``upstream_reference``) additionally require a non-empty external
+``source_project`` plus a ``version`` or ``artifact_digest``.  The normalized
+source project cannot identify Fincore, a candidate or current source.  The
+publication kinds (``published_standard`` and ``peer_reviewed_paper``) require
+one of ``publication``, ``doi``, ``version`` or ``digest``.  The
+``property_invariant`` kind requires ``invariant_id``.  Reference text that
+describes a current/candidate Fincore self-output is rejected as defense in
+depth; it cannot replace the structured provenance fields.
+
+The independent authority schema is fail-closed: fields that are irrelevant to
+a kind do not substitute for that kind's required provenance fields.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
@@ -47,17 +54,17 @@ SCHEMA_VERSION = 1
 _GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40}$")
 _REQUIRED_DISPOSITION = "required"
 _LEDGER_DISPOSITIONS = frozenset({"required", "alias_only", "legacy_quirk"})
-_INDEPENDENT_AUTHORITY_KINDS = frozenset(
-    {
-        "published_standard",
-        "peer_reviewed_paper",
-        "independent_reference_implementation",
-        "pinned_upstream_oracle",
-        "property_invariant",
-        "upstream_reference",
-    }
+_EXTERNAL_IMPLEMENTATION_KINDS = frozenset(
+    {"independent_reference_implementation", "pinned_upstream_oracle", "upstream_reference"}
 )
-_TRACEABILITY_FIELDS = ("version", "digest", "provenance")
+_PUBLICATION_AUTHORITY_KINDS = frozenset({"published_standard", "peer_reviewed_paper"})
+_PROPERTY_INVARIANT_KIND = "property_invariant"
+_INDEPENDENT_AUTHORITY_KINDS = (
+    _EXTERNAL_IMPLEMENTATION_KINDS | _PUBLICATION_AUTHORITY_KINDS | {_PROPERTY_INVARIANT_KIND}
+)
+_EXTERNAL_ARTIFACT_FIELDS = ("version", "artifact_digest")
+_PUBLICATION_TRACEABILITY_FIELDS = ("publication", "doi", "version", "digest")
+_RESERVED_SOURCE_PROJECT_IDENTIFIERS = ("fincore", "candidate", "current")
 
 
 class CaptureValidationError(ValueError):
@@ -127,6 +134,62 @@ def _require_ledger_disposition(entry: dict[str, Any], subject: str) -> str:
     return disposition
 
 
+def _normalize_authority_identifier(value: str) -> str:
+    """Normalize a provenance identifier before checking its reserved source role."""
+    return re.sub(r"[^a-z0-9]+", "", value.casefold())
+
+
+def _reference_describes_fincore_self_output(reference: str) -> bool:
+    normalized = _normalize_authority_identifier(reference)
+    return "fincore" in normalized and ("candidate" in normalized or "current" in normalized)
+
+
+def _require_any_authority_field(
+    authority: dict[str, Any],
+    fields: tuple[str, ...],
+    subject: str,
+    description: str,
+) -> None:
+    if not any(_non_empty_string(authority.get(field)) for field in fields):
+        raise CaptureValidationError(f"{subject} requires {description}")
+
+
+def _validate_required_authority(authority: dict[str, Any], subject: str) -> None:
+    kind = _require_string(authority, "kind", subject)
+    reference = _require_string(authority, "reference", subject)
+    if kind not in _INDEPENDENT_AUTHORITY_KINDS:
+        choices = ", ".join(sorted(_INDEPENDENT_AUTHORITY_KINDS))
+        raise CaptureValidationError(f"{subject} requires an independent authority kind; allowed kinds: {choices}")
+    if _reference_describes_fincore_self_output(reference):
+        raise CaptureValidationError(f"{subject} reference must not describe a Fincore candidate/current self-output")
+    if kind in _EXTERNAL_IMPLEMENTATION_KINDS:
+        source_project = _require_string(authority, "source_project", subject)
+        normalized_project = _normalize_authority_identifier(source_project)
+        if not normalized_project or any(
+            identifier in normalized_project for identifier in _RESERVED_SOURCE_PROJECT_IDENTIFIERS
+        ):
+            raise CaptureValidationError(f"{subject} source_project must identify an external project")
+        _require_any_authority_field(
+            authority,
+            _EXTERNAL_ARTIFACT_FIELDS,
+            subject,
+            "version or artifact_digest",
+        )
+        return
+    if kind in _PUBLICATION_AUTHORITY_KINDS:
+        _require_any_authority_field(
+            authority,
+            _PUBLICATION_TRACEABILITY_FIELDS,
+            subject,
+            "publication, doi, version, or digest",
+        )
+        return
+    if kind == _PROPERTY_INVARIANT_KIND:
+        _require_string(authority, "invariant_id", subject)
+        return
+    raise CaptureValidationError(f"{subject} has no structured provenance policy for authority kind {kind!r}")
+
+
 def _validate_scenario(scenario: dict[str, Any], subject: str, *, required: bool) -> None:
     _require_string(scenario, "scenario_id", subject)
     golden_path = scenario.get("golden_path")
@@ -143,17 +206,7 @@ def _validate_scenario(scenario: dict[str, Any], subject: str, *, required: bool
     authority = scenario.get("authority")
     if not isinstance(authority, dict):
         raise CaptureValidationError(f"{subject} requires an independent authority")
-    kind = authority.get("kind")
-    reference = authority.get("reference")
-    if not _non_empty_string(kind) or not _non_empty_string(reference):
-        raise CaptureValidationError(f"{subject} requires an independent authority")
-    assert isinstance(kind, str)
-    normalized_kind = kind.strip()
-    if normalized_kind not in _INDEPENDENT_AUTHORITY_KINDS:
-        choices = ", ".join(sorted(_INDEPENDENT_AUTHORITY_KINDS))
-        raise CaptureValidationError(f"{subject} requires an independent authority kind; allowed kinds: {choices}")
-    if not any(_non_empty_string(authority.get(field)) for field in _TRACEABILITY_FIELDS):
-        raise CaptureValidationError(f"{subject} requires a traceable version, digest, or provenance")
+    _validate_required_authority(authority, subject)
 
 
 def validate_ledger(ledger: dict[str, Any]) -> list[dict[str, Any]]:
