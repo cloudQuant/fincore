@@ -507,6 +507,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.json`
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.md`
 - Create: `scripts/capture_capability_baseline.py`
+- Create: `scripts/check_0042_r2_repository_surface_disposition.py`
 - Create: `scripts/check_feature_parity.py`
 - Create: `scripts/check_architecture_convergence.py`
 - Create: `scripts/run_0042_r2_acceptance.py`
@@ -533,7 +534,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 1. 先写失败测试，要求 inventory 取所有公开定义、registries、manifests、docs、examples、benchmarks、extras 与 wheel contents 的并集。
 2. 为每个 surface 登记 capability、场景、owner、target operation、source nodeid、wheel nodeid、oracle/golden 和 disposition。
 3. 为每个 `fincore/**/*.py` 登记 keep/move/delete、目标模块、consumer count 和 capability IDs，0 unmapped。
-4. 为 active workflows、packaging/release scripts、maintained docs/templates、examples、type stubs、compat generators/checkers 建立 repository-surface disposition；历史 ADR/acceptance/provenance 单独列 allowlist 并记录原始 digest。
+4. 为 active workflows、packaging/release scripts、maintained docs/templates、examples、type stubs、compat generators/checkers 建立 repository-surface disposition；每项逐路径绑定 raw Git blob、kind/category tags、受控 owner、lifecycle、completion gate、target contract/capability 与 rule ID，不能从 shell token 启发式推断决策。historical/provenance candidate 必须双向映射到单独 allowlist 并记录原始 digest；只允许受限文本后缀的纯文本记录标为 `text_only`，HTML、rendered 或 binary artifact 必须以非文本 provenance 条目保存，不能借 allowlist 作为可执行兼容示例。该 scoped mapping 的成功仍标记 `not_for_d0`，只能在后续与其他完整输入共同封入 D0。
 5. 冻结全部 257 个现有 Catalog binding（Empyrical class 100、Empyrical module 49、metrics 50、flat API 20、context 18、performance 9、Pyfolio module 11），另行盘点 Pyfolio 类的 69 个 methods（其中 67 个 non-private）、Alphalens 61 个 function specs + 7 个 workflows，以及所有未入 Catalog 的增强领域能力；这些是 legacy surfaces，不得直接等同为 257 个独立 capabilities，alias/quirk 必须逐项 disposition。
 6. 每个数值 scenario 登记 expected authority、来源版本/digest、tolerance 和 `preserve/correction_required`；候选或当前输出不能成为唯一 oracle。
 7. 把旧 compatibility tests 中真实 numerical/container/error/plot/report 断言迁成独立 golden 或 invariant；纯签名/MRO/alias 断言仅进入 disposition。
@@ -555,6 +556,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 
 ```bash
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider -p no:rerunfailures tests/parity/test_ledger.py tests/quality/test_capture_capability_baseline.py tests/quality/test_check_feature_parity.py tests/quality/test_architecture_convergence.py tests/quality/test_0042_r2_profiling_contract.py tests/quality/test_run_0042_r2_acceptance.py tests/quality/test_0042_r2_matrix_evidence.py tests/quality/test_repository_surface_disposition.py tests/packaging/test_release_consistency.py tests/benchmarks/test_0042_r2_workloads.py -q --tb=short --maxfail=0
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_0042_r2_repository_surface_disposition.py --facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json
 ```
 
 **再从 clean exact-SHA 采集：**

@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import stat
 import sys
@@ -26,9 +27,14 @@ _OWNER_ID = re.compile(r"^[a-z][a-z0-9_-]*$")
 _ALLOWED_LIFECYCLES = frozenset({"maintained", "transition", "historical_provenance"})
 _ALLOWED_DISPOSITIONS = frozenset({"retain", "retarget", "replace", "remove", "allowlist"})
 _ALLOWED_GATES = frozenset({"D0", "D-RUNTIME", "D-DOMAIN", "D-CUTOVER"})
-_ALLOWED_LEGACY_POLICIES = frozenset({"none", "retarget_before_cutover", "text_only_allowlist"})
+_ALLOWED_LEGACY_POLICIES = frozenset(
+    {"none", "retarget_before_cutover", "text_only_allowlist", "artifact_provenance_allowlist"}
+)
 _REQUIRED_NON_ASSERTIONS = frozenset({"D0", "D-TECH", "installed_wheel_behavior", "legacy_zero"})
 _HISTORICAL_TAG = "historical_provenance_candidate"
+_TEXT_ONLY_HISTORICAL_SUFFIXES = frozenset(
+    {".csv", ".diff", ".json", ".markdown", ".md", ".rst", ".txt", ".yaml", ".yml"}
+)
 
 
 class DispositionValidationError(ValueError):
@@ -41,30 +47,39 @@ def canonical_sha256(value: object) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _read_regular_file(path: Path, label: str) -> bytes:
+    """Read one regular file through one protected descriptor."""
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(path, flags)
+    except OSError as exc:
+        raise DispositionValidationError(f"cannot safely open {label}: {exc}") from exc
+    try:
+        status = os.fstat(descriptor)
+        if not stat.S_ISREG(status.st_mode):
+            raise DispositionValidationError(f"{label} must be a regular file, not a symbolic link: {path}")
+        with os.fdopen(descriptor, "rb") as stream:
+            descriptor = None
+            return stream.read()
+    except OSError as exc:
+        raise DispositionValidationError(f"cannot read {label}: {exc}") from exc
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
 def sha256_file(path: Path) -> str:
-    """Return the SHA256 of a regular JSON input without following a symlink."""
-    try:
-        status = path.stat(follow_symlinks=False)
-    except OSError as exc:
-        raise DispositionValidationError(f"cannot inspect {path}: {exc}") from exc
-    if not stat.S_ISREG(status.st_mode):
-        raise DispositionValidationError(f"input must be a regular file, not a symbolic link: {path}")
-    try:
-        return hashlib.sha256(path.read_bytes()).hexdigest()
-    except OSError as exc:
-        raise DispositionValidationError(f"cannot read {path}: {exc}") from exc
+    """Return the SHA256 of one protected, regular input file."""
+    return hashlib.sha256(_read_regular_file(path, str(path))).hexdigest()
 
 
-def _load_json(path: Path, label: str) -> dict[str, Any]:
+def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
     try:
-        status = path.stat(follow_symlinks=False)
-    except OSError as exc:
-        raise DispositionValidationError(f"cannot inspect {label}: {exc}") from exc
-    if not stat.S_ISREG(status.st_mode):
-        raise DispositionValidationError(f"{label} must be a regular JSON file, not a symbolic link: {path}")
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise DispositionValidationError(f"cannot load {label}: {exc}") from exc
     if not isinstance(value, dict):
         raise DispositionValidationError(f"{label} must be a JSON object")
@@ -82,6 +97,12 @@ def _require_sha256(mapping: Mapping[str, Any], field: str, subject: str) -> str
     value = _require_string(mapping, field, subject)
     if not _SHA256.fullmatch(value):
         raise DispositionValidationError(f"{subject} {field} must be a lowercase SHA256")
+    return value
+
+
+def _require_exact_int(value: object, field: str, subject: str) -> int:
+    if type(value) is not int:
+        raise DispositionValidationError(f"{subject} {field} must be an integer")
     return value
 
 
@@ -124,7 +145,7 @@ def _validate_provenance(value: object, subject: str) -> dict[str, Any]:
 
 
 def _parse_facts(facts: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-    if facts.get("schema_version") != SCHEMA_VERSION:
+    if _require_exact_int(facts.get("schema_version"), "schema_version", "facts") != SCHEMA_VERSION:
         raise DispositionValidationError(f"facts schema_version must be {SCHEMA_VERSION}")
     if facts.get("artifact_type") != "repository_surface_facts_discovery":
         raise DispositionValidationError("facts artifact_type must be repository_surface_facts_discovery")
@@ -136,7 +157,7 @@ def _parse_facts(facts: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], d
     records = facts.get("records")
     if not isinstance(records, list) or not records:
         raise DispositionValidationError("facts records must be a non-empty list")
-    if facts.get("record_count") != len(records):
+    if _require_exact_int(facts.get("record_count"), "record_count", "facts") != len(records):
         raise DispositionValidationError("facts record_count must equal records length")
 
     records_by_path: dict[str, dict[str, Any]] = {}
@@ -150,12 +171,19 @@ def _parse_facts(facts: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], d
         git_mode = _require_string(raw_record, "git_mode", subject)
         if git_mode not in {"100644", "100755"}:
             raise DispositionValidationError(f"{subject} git_mode must name a regular Git blob")
+        token_facts = raw_record.get("token_facts")
+        if not isinstance(token_facts, dict):
+            raise DispositionValidationError(f"{subject} token_facts must be an object")
+        content_kind = _require_string(token_facts, "content_kind", subject)
+        if content_kind not in {"text", "binary"}:
+            raise DispositionValidationError(f"{subject} token_facts content_kind must be text or binary")
         records_by_path[path] = {
             "path": path,
             "git_mode": git_mode,
             "blob_sha256": _require_sha256(raw_record, "blob_sha256", subject),
             "kind": _require_string(raw_record, "kind", subject),
             "category_tags": _require_sorted_strings(raw_record.get("category_tags"), "category_tags", subject),
+            "content_kind": content_kind,
         }
     return records_by_path, provenance
 
@@ -176,16 +204,22 @@ def _validate_source_contract(disposition: Mapping[str, Any], facts: Mapping[str
 
 
 def _validate_source_facts(
-    disposition: Mapping[str, Any], facts_path: Path, facts: Mapping[str, Any], provenance: Mapping[str, Any]
+    disposition: Mapping[str, Any],
+    facts_filename: str,
+    facts_sha256: str,
+    facts: Mapping[str, Any],
+    provenance: Mapping[str, Any],
 ) -> None:
     source_facts = disposition.get("source_facts")
     if not isinstance(source_facts, dict):
         raise DispositionValidationError("disposition source_facts must be an object")
-    if _require_repository_path(source_facts.get("path"), "disposition source_facts") != facts_path.name:
+    if _require_repository_path(source_facts.get("path"), "disposition source_facts") != facts_filename:
         raise DispositionValidationError("disposition source_facts path must name the supplied facts file")
-    if _require_sha256(source_facts, "sha256", "disposition source_facts") != sha256_file(facts_path):
+    if _require_sha256(source_facts, "sha256", "disposition source_facts") != facts_sha256:
         raise DispositionValidationError("disposition source_facts sha256 does not match supplied facts")
-    if source_facts.get("record_count") != facts.get("record_count"):
+    if _require_exact_int(source_facts.get("record_count"), "record_count", "disposition source_facts") != facts.get(
+        "record_count"
+    ):
         raise DispositionValidationError("disposition source_facts record_count does not match facts")
     if _validate_provenance(source_facts.get("source_provenance"), "disposition") != dict(provenance):
         raise DispositionValidationError("disposition source_facts source_provenance does not match facts")
@@ -197,6 +231,12 @@ def _validate_target(value: object, subject: str) -> None:
     _require_repository_path(value.get("path"), subject)
     _require_sorted_strings(value.get("contract_ids"), "target contract_ids", subject, allow_empty=True)
     _require_sorted_strings(value.get("capability_ids"), "target capability_ids", subject, allow_empty=True)
+
+
+def _historical_policy(fact: Mapping[str, Any]) -> tuple[str, bool]:
+    suffix = PurePosixPath(str(fact["path"])).suffix.lower()
+    text_only = fact["content_kind"] == "text" and suffix in _TEXT_ONLY_HISTORICAL_SUFFIXES
+    return ("text_only_allowlist", True) if text_only else ("artifact_provenance_allowlist", False)
 
 
 def _validate_entry(
@@ -219,6 +259,8 @@ def _validate_entry(
         raise DispositionValidationError(f"{subject} source kind does not match source fact")
     if _require_sorted_strings(source.get("category_tags"), "source category_tags", subject) != fact["category_tags"]:
         raise DispositionValidationError(f"{subject} source category_tags do not match source fact category_tags")
+    if _require_string(source, "content_kind", subject) != fact["content_kind"]:
+        raise DispositionValidationError(f"{subject} source content_kind does not match source fact")
     owner = _require_string(entry, "owner", subject)
     if owner not in owners:
         raise DispositionValidationError(f"{subject} owner must appear in disposition owners")
@@ -246,25 +288,28 @@ def _validate_entry(
         )
     target = entry.get("target")
 
+    if _HISTORICAL_TAG in fact["category_tags"] and lifecycle != "historical_provenance":
+        raise DispositionValidationError(f"{subject} historical source requires historical_provenance lifecycle")
     if lifecycle == "historical_provenance":
         if _HISTORICAL_TAG not in fact["category_tags"]:
             raise DispositionValidationError(
                 f"{subject} historical_provenance lifecycle requires a historical source fact"
             )
+        expected_policy, text_only = _historical_policy(fact)
         if (disposition, completion_gate, legacy_reference_policy, target) != (
             "allowlist",
             "D0",
-            "text_only_allowlist",
+            expected_policy,
             None,
         ):
             raise DispositionValidationError(
-                f"{subject} historical_provenance requires allowlist, D0, text_only_allowlist, and null target"
+                f"{subject} historical_provenance requires allowlist, D0, {expected_policy}, and null target"
             )
         return path, {
             "path": path,
             "blob_sha256": fact["blob_sha256"],
             "reason": entry["rationale"],
-            "text_only": True,
+            "text_only": text_only,
         }
     if disposition == "allowlist":
         raise DispositionValidationError(f"{subject} allowlist disposition requires historical_provenance lifecycle")
@@ -296,8 +341,8 @@ def _validate_historical_allowlist(value: object, expected: list[dict[str, Any]]
                 "text_only": record.get("text_only"),
             }
         )
-    if not all(item["text_only"] is True for item in actual):
-        raise DispositionValidationError("historical_provenance_allowlist entries must be text_only")
+    if not all(type(item["text_only"]) is bool for item in actual):
+        raise DispositionValidationError("historical_provenance_allowlist text_only must be boolean")
     if actual != sorted(actual, key=lambda item: item["path"]):
         raise DispositionValidationError("historical_provenance_allowlist must be sorted by path")
     if actual != expected:
@@ -306,11 +351,13 @@ def _validate_historical_allowlist(value: object, expected: list[dict[str, Any]]
 
 def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, Any]:
     """Validate exact one-to-one dispositions and return a non-D0 summary."""
-    facts = _load_json(facts_path, "facts")
-    disposition = _load_json(disposition_path, "disposition")
+    facts_payload = _read_regular_file(facts_path, "facts")
+    disposition_payload = _read_regular_file(disposition_path, "disposition")
+    facts = _load_json_bytes(facts_payload, "facts")
+    disposition = _load_json_bytes(disposition_payload, "disposition")
     records_by_path, provenance = _parse_facts(facts)
 
-    if disposition.get("schema_version") != SCHEMA_VERSION:
+    if _require_exact_int(disposition.get("schema_version"), "schema_version", "disposition") != SCHEMA_VERSION:
         raise DispositionValidationError(f"disposition schema_version must be {SCHEMA_VERSION}")
     if disposition.get("artifact_type") != "repository_surface_disposition":
         raise DispositionValidationError("disposition artifact_type must be repository_surface_disposition")
@@ -325,7 +372,13 @@ def validate_disposition(facts_path: Path, disposition_path: Path) -> dict[str, 
     if not all(_OWNER_ID.fullmatch(owner) for owner in owner_list):
         raise DispositionValidationError("disposition owners must be controlled owner identifiers")
     _validate_source_contract(disposition, facts)
-    _validate_source_facts(disposition, facts_path, facts, provenance)
+    _validate_source_facts(
+        disposition,
+        facts_path.name,
+        hashlib.sha256(facts_payload).hexdigest(),
+        facts,
+        provenance,
+    )
 
     entries = disposition.get("entries")
     if not isinstance(entries, list) or not entries:

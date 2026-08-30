@@ -17,14 +17,14 @@
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
-    "script_candidate": 49,
+    "script_candidate": 50,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
   "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Every tracked path beneath scripts/ is included as a script candidate fact, while generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
-  "record_count": 318,
+  "record_count": 319,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -2935,7 +2935,7 @@
       }
     },
     {
-      "blob_sha256": "65ea04508d354293257dde609e02a9fe01ec6d10b64fa8b7d9d51481a68f4e8d",
+      "blob_sha256": "e1ff841291a3af138358f19ff5e9ab6db5eaae041d5246979b0a54b8563a6dce",
       "category_tags": [
         "historical_provenance_candidate"
       ],
@@ -2945,7 +2945,7 @@
           "rule_id": "historical_provenance_path"
         }
       ],
-      "git_blob_id": "956a26f287f7f2ae4d74f6f5c526b0b97608aa0a",
+      "git_blob_id": "455508c6c59ad7e8ab0a90257ac9b6051041b7b3",
       "git_mode": "100644",
       "kind": "historical_provenance_candidate",
       "path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
@@ -3020,6 +3020,7 @@
           "tests/numerical",
           "tests/packaging/test_release_consistency.py",
           "tests/parity",
+          "tests/parity/fixtures/0042-r2-architecture-threshold-policy.json",
           "tests/parity/fixtures/0042-r2-gate-manifest.json",
           "tests/parity/fixtures/0042-r2-matrix-evidence.schema.json",
           "tests/parity/fixtures/capability-ledger-0042-r2.json",
@@ -9278,6 +9279,43 @@
       }
     },
     {
+      "blob_sha256": "b3f35df2277c11c2bab47356ba12c06a81c1cd0beba3f40f85cde3f9ce080b26",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "b9ce8cc3df75077298fb2d880e0ffc1064261d17",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_0042_r2_repository_surface_disposition.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "hashlib",
+          "json",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "stat",
+          "sys",
+          "typing.Any",
+          "typing.Mapping",
+          "typing.Sequence"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
       "blob_sha256": "e6899c146340dcd54ba838f735ab341344152d87648bdfd62dfa9b85b760a5e9",
       "category_tags": [
         "compat_generator_checker",
@@ -9375,7 +9413,7 @@
       }
     },
     {
-      "blob_sha256": "439b93b4a201244abbd85600034a76d6e9d4d3352a44694788794e5e6e0a5e20",
+      "blob_sha256": "9651356112147518ea67536d374749dc905d6193e7e41c202a4d6125e969b2e3",
       "category_tags": [
         "script_candidate"
       ],
@@ -9385,7 +9423,7 @@
           "rule_id": "tracked_script_path"
         }
       ],
-      "git_blob_id": "54b80381e2a52f6e332990dc76e94f0d7a6fd2bf",
+      "git_blob_id": "13a08a3380e8c3068c83a5b55c459cb2cfbf5ad3",
       "git_mode": "100644",
       "kind": "script_candidate",
       "path": "scripts/check_architecture_convergence.py",
@@ -9416,9 +9454,10 @@
           "pathlib.PurePosixPath",
           "platform",
           "re",
+          "secrets",
+          "stat",
           "subprocess",
           "sys",
-          "tempfile",
           "tokenize",
           "tomllib",
           "typing.Any",
@@ -11341,7 +11380,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "e49617bdd028de80fc4e17d350976bdf03041d86",
-    "tree": "05919cdc08d68cfa0ebb4a7ffb6b3232bc5fe1ea"
+    "commit": "a374fedcba88a2603e9b53292ea27abab8b72940",
+    "tree": "012c2a638c05fdb344f9a1bd8244022355c832da"
   }
 }

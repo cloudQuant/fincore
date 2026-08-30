@@ -56,6 +56,7 @@ def _minimal_facts() -> dict[str, object]:
                 "blob_sha256": "c" * 64,
                 "kind": "historical_provenance_candidate",
                 "category_tags": ["historical_provenance_candidate"],
+                "token_facts": {"content_kind": "text"},
             },
             {
                 "path": "scripts/check_quality.py",
@@ -63,6 +64,7 @@ def _minimal_facts() -> dict[str, object]:
                 "blob_sha256": "d" * 64,
                 "kind": "script_candidate",
                 "category_tags": ["script_candidate"],
+                "token_facts": {"content_kind": "text"},
             },
         ],
     }
@@ -98,6 +100,7 @@ def _minimal_disposition(facts_path: Path) -> dict[str, object]:
                     "blob_sha256": "c" * 64,
                     "kind": "historical_provenance_candidate",
                     "category_tags": ["historical_provenance_candidate"],
+                    "content_kind": "text",
                 },
                 "owner": "architecture",
                 "lifecycle": "historical_provenance",
@@ -115,6 +118,7 @@ def _minimal_disposition(facts_path: Path) -> dict[str, object]:
                     "blob_sha256": "d" * 64,
                     "kind": "script_candidate",
                     "category_tags": ["script_candidate"],
+                    "content_kind": "text",
                 },
                 "owner": "quality",
                 "lifecycle": "maintained",
@@ -156,7 +160,7 @@ def test_committed_disposition_maps_each_frozen_fact_exactly_once() -> None:
 
     result = checker.validate_disposition(FACTS, DISPOSITION)
 
-    assert result["record_count"] == 318
+    assert result["record_count"] == 319
     assert result["unmapped_paths"] == []
     assert result["duplicate_paths"] == []
     assert result["not_for_d0"] is True
@@ -198,6 +202,64 @@ def test_rejects_historical_record_without_immutable_allowlist(tmp_path: Path) -
 
     with pytest.raises(checker.DispositionValidationError, match="historical_provenance"):
         checker.validate_disposition(facts_path, disposition_path)
+
+
+def test_rejects_historical_candidate_reclassified_as_a_transition(tmp_path: Path) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    disposition = json.loads(disposition_path.read_text(encoding="utf-8"))
+    entry = disposition["entries"][0]
+    entry.update(
+        lifecycle="transition",
+        disposition="remove",
+        completion_gate="D-CUTOVER",
+        legacy_reference_policy="retarget_before_cutover",
+        target=None,
+    )
+    disposition["historical_provenance_allowlist"] = []
+    _write_json(disposition_path, disposition)
+
+    with pytest.raises(checker.DispositionValidationError, match="historical source requires historical_provenance"):
+        checker.validate_disposition(facts_path, disposition_path)
+
+
+def test_rejects_binary_historical_artifact_claimed_as_text_only(tmp_path: Path) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    facts = json.loads(facts_path.read_text(encoding="utf-8"))
+    facts["records"][0]["token_facts"]["content_kind"] = "binary"
+    _write_json(facts_path, facts)
+    disposition = json.loads(disposition_path.read_text(encoding="utf-8"))
+    disposition["source_facts"]["sha256"] = checker.sha256_file(facts_path)
+    disposition["entries"][0]["source"]["content_kind"] = "binary"
+    _write_json(disposition_path, disposition)
+
+    with pytest.raises(checker.DispositionValidationError, match="artifact_provenance_allowlist"):
+        checker.validate_disposition(facts_path, disposition_path)
+
+
+def test_binds_facts_parse_and_digest_to_one_protected_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    original_reader = checker._read_regular_file
+    original_facts = facts_path.read_bytes()
+    swapped = False
+
+    def read_then_swap(path: Path, label: str) -> bytes:
+        nonlocal swapped
+        payload = original_reader(path, label)
+        if path == facts_path and not swapped:
+            swapped = True
+            facts_path.write_text('{"unexpected": true}\n', encoding="utf-8")
+        return payload
+
+    monkeypatch.setattr(checker, "_read_regular_file", read_then_swap)
+
+    result = checker.validate_disposition(facts_path, disposition_path)
+
+    assert swapped is True
+    assert result["record_count"] == 2
+    assert original_facts != facts_path.read_bytes()
 
 
 def test_rejects_historical_allowlist_digest_drift(tmp_path: Path) -> None:
