@@ -239,6 +239,48 @@ def test_rejects_python_symlink_in_initial_head_before_overwriting_output(tmp_pa
     assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
 
 
+def test_rejects_module_and_package_name_collision_before_overwriting_output(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    colliding_module = source_root / "fincore" / "metrics.py"
+    colliding_module.write_text('"""Deliberate module/package collision."""\n', encoding="utf-8")
+    subprocess.run(["git", "config", "user.email", "module-facts@example.invalid"], cwd=source_root, check=True)
+    subprocess.run(["git", "config", "user.name", "Module Facts Test"], cwd=source_root, check=True)
+    subprocess.run(["git", "add", "fincore/metrics.py"], cwd=source_root, check=True)
+    subprocess.run(["git", "commit", "--quiet", "-m", "test module collision"], cwd=source_root, check=True)
+    output = tmp_path / "module-facts.json"
+    output.write_text('{"previous": true}\n', encoding="utf-8")
+
+    result = _collect(source_root, output)
+
+    assert result.returncode != 0
+    assert "multiple source paths" in result.stderr.lower()
+    assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
+
+
+def test_rejects_fincore_source_tree_as_output_before_overwriting(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    target = source_root / "fincore" / "metrics" / "basic.py"
+    original = target.read_bytes()
+
+    result = _collect(source_root, Path("fincore/metrics/basic.py"))
+
+    assert result.returncode != 0
+    assert "source tree" in result.stderr.lower()
+    assert target.read_bytes() == original
+
+
+def test_collector_passes_its_focused_mypy_check() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "mypy", str(SCRIPT)],
+        cwd=REPOSITORY_ROOT,
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 @pytest.mark.parametrize("output_argument", [".git", ".git/HEAD"])
 def test_rejects_git_control_directory_as_output_before_overwriting(tmp_path: Path, output_argument: str) -> None:
     source_root = _clone_clean_source(tmp_path)

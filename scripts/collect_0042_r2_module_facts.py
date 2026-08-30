@@ -128,6 +128,12 @@ def _reject_git_control_output(source_root: Path, output: Path) -> None:
             raise DiscoveryError("output must not target the Git control directory")
 
 
+def _reject_source_tree_output(source_root: Path, output: Path) -> None:
+    """Keep generated facts from replacing any Python source input or package file."""
+    if _is_within(output, (source_root / "fincore").resolve()):
+        raise DiscoveryError("output must not target the fincore source tree")
+
+
 def _provenance(source_root: Path) -> dict[str, Any]:
     _require_worktree_root(source_root)
     dirty = _git_text(source_root, "status", "--porcelain=v1", "--untracked-files=all")
@@ -492,8 +498,21 @@ def _parse_module(module: SourceModule, known_modules: set[str]) -> dict[str, An
     }
 
 
+def _module_name_paths(modules: Sequence[Mapping[str, Any]]) -> dict[str, str]:
+    """Index static module names without silently collapsing a package collision."""
+    module_paths: dict[str, str] = {}
+    for module_record in modules:
+        module_name = str(module_record["module_name"])
+        path = str(module_record["path"])
+        prior_path = module_paths.get(module_name)
+        if prior_path is not None and prior_path != path:
+            raise DiscoveryError(f"multiple source paths resolve to module name {module_name!r}")
+        module_paths[module_name] = path
+    return module_paths
+
+
 def _static_consumers(modules: Sequence[Mapping[str, Any]]) -> dict[str, list[str]]:
-    module_paths = {str(module["module_name"]): str(module["path"]) for module in modules}
+    module_paths = _module_name_paths(modules)
     consumers: dict[str, set[str]] = defaultdict(set)
     for module in modules:
         consumer_path = str(module["path"])
@@ -525,20 +544,20 @@ def _collect_artifact(source_root: Path) -> dict[str, Any]:
         source_root, initial["commit"], {module.path for module in blob_modules}
     )
     source_modules: list[SourceModule] = []
-    for module in blob_modules:
-        archive_payload = archive_payloads[module.path]
-        if _sha256_bytes(archive_payload) != module.blob_sha256 or archive_payload != module.payload:
-            raise DiscoveryError(f"initial HEAD archive differs from regular Git blob: {module.path}")
-        source_modules.append(SourceModule(module.path, module.blob_sha256, archive_payload))
+    for source_module in blob_modules:
+        archive_payload = archive_payloads[source_module.path]
+        if _sha256_bytes(archive_payload) != source_module.blob_sha256 or archive_payload != source_module.payload:
+            raise DiscoveryError(f"initial HEAD archive differs from regular Git blob: {source_module.path}")
+        source_modules.append(SourceModule(source_module.path, source_module.blob_sha256, archive_payload))
 
     module_names = {_module_name(module.path)[0] for module in source_modules}
-    modules = [_parse_module(module, module_names) for module in source_modules]
-    modules.sort(key=lambda item: item["path"])
-    consumers = _static_consumers(modules)
-    for module in modules:
-        paths = consumers[str(module["module_name"])]
-        module["static_consumer_paths"] = paths
-        module["static_consumer_count"] = len(paths)
+    module_records = [_parse_module(source_module, module_names) for source_module in source_modules]
+    module_records.sort(key=lambda item: item["path"])
+    consumers = _static_consumers(module_records)
+    for module_record in module_records:
+        paths = consumers[str(module_record["module_name"])]
+        module_record["static_consumer_paths"] = paths
+        module_record["static_consumer_count"] = len(paths)
 
     artifact = {
         "schema_version": SCHEMA_VERSION,
@@ -552,8 +571,8 @@ def _collect_artifact(source_root: Path) -> dict[str, Any]:
         ),
         "source_provenance": initial,
         "source_archive": {"path_prefix": "fincore", "verified_against_regular_blobs": True},
-        "module_count": len(modules),
-        "modules": modules,
+        "module_count": len(module_records),
+        "modules": module_records,
     }
     _verify_provenance(source_root, initial)
     return artifact
@@ -585,6 +604,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         _require_worktree_root(source_root)
         _reject_git_control_output(source_root, output)
+        _reject_source_tree_output(source_root, output)
         artifact = _collect_artifact(source_root)
         _atomic_write(output, artifact)
     except DiscoveryError as exc:
