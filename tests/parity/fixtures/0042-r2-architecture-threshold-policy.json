@@ -1,0 +1,31 @@
+{
+  "artifact_type": "fincore_0042_r2_architecture_threshold_policy",
+  "policy_state": "frozen",
+  "rules": {
+    "max_duplicate_body_occurrences": {
+      "kind": "relative_reduction",
+      "reduction": 0.6
+    },
+    "max_implementation_fingerprint_count": {
+      "kind": "relative_reduction",
+      "reduction": 0.0
+    },
+    "max_internal_cycle_count": {
+      "kind": "absolute_maximum",
+      "maximum": 0
+    },
+    "max_logical_loc": {
+      "kind": "relative_reduction",
+      "reduction": 0.12
+    },
+    "max_optional_import_leakage_count": {
+      "kind": "absolute_maximum",
+      "maximum": 0
+    },
+    "max_physical_loc": {
+      "kind": "relative_reduction",
+      "reduction": 0.12
+    }
+  },
+  "schema_version": 1
+}

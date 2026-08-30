@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Measure and validate a fail-closed 0042-R2 architecture contract.
 
-This tool deliberately performs static source measurement only.  A successful
-``--capture`` produces a deterministic ``measurement_only`` artifact, not a
-D0/D-TECH/Task 8 verdict.  The source must be a clean Git worktree and every
-Python input is read from regular blobs in the initially observed ``HEAD``
-tree.  Capture outputs must be outside that source worktree.
+This tool deliberately performs static source measurement only.  A plain
+``--capture`` produces a deterministic ``measurement_only`` artifact; an
+explicit ``--seal-baseline`` capture produces an architecture-baseline
+component from an immutable threshold policy.  Neither result is a D0,
+D-TECH, Task 8, or release verdict.  The source must be a clean Git worktree
+and every Python input is read from regular blobs in the initially observed
+``HEAD`` tree.  Capture outputs must be outside that source worktree.
 
 The resulting schema records physical and logical LOC, normalized function
 body fingerprints, internal static import edges/cycles, and unguarded imports
@@ -29,9 +31,10 @@ import json
 import os
 import platform
 import re
+import secrets
+import stat
 import subprocess
 import sys
-import tempfile
 import tokenize
 from collections import defaultdict
 from contextlib import suppress
@@ -123,9 +126,18 @@ class ImportOccurrence:
     line: int
     kind: str
     target: str
+    optional_root_hint: str | None
     level: int
     names: tuple[str, ...]
     optional_guarded: bool
+
+
+@dataclass(frozen=True)
+class CaptureOutput:
+    """A capture path bound to the directory descriptor validated for writing."""
+
+    path: Path
+    parent_fd: int
 
 
 def _sha256_bytes(payload: bytes) -> str:
@@ -136,13 +148,27 @@ def _non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
+def _controlled_git_environment() -> dict[str, str]:
+    """Return a Git environment that cannot redirect source provenance."""
+    # A source collector does not need any inherited Git setting.  Stripping
+    # them all rules out alternate object stores, a redirected index/worktree,
+    # replacement-ref bases, and injected config while retaining normal OS
+    # process configuration such as PATH and locale.
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment["GIT_CONFIG_GLOBAL"] = os.devnull
+    environment["GIT_CONFIG_NOSYSTEM"] = "1"
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
 def _git_bytes(source_root: Path, *arguments: str) -> bytes:
     try:
         result = subprocess.run(
-            ["git", *arguments],
+            ["git", "-c", "core.fsmonitor=false", "--no-replace-objects", *arguments],
             cwd=source_root,
             capture_output=True,
             check=False,
+            env=_controlled_git_environment(),
             timeout=30,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -191,7 +217,7 @@ def _source_provenance(source_root: Path) -> tuple[Path, dict[str, Any]]:
     if dirty:
         raise ArchitectureContractError("source Git worktree must be clean before architecture measurement")
     commit = _git_text(source_root, "rev-parse", "HEAD")
-    tree = _git_text(source_root, "rev-parse", "HEAD^{tree}")
+    tree = _git_text(source_root, "rev-parse", f"{commit}^{{tree}}")
     if not _GIT_OBJECT_ID.fullmatch(commit) or not _GIT_OBJECT_ID.fullmatch(tree):
         raise ArchitectureContractError("source Git HEAD and tree must resolve to object identifiers")
     return top_level, {
@@ -417,6 +443,47 @@ def _except_catches_import_error(handler: ast.ExceptHandler) -> bool:
     return False
 
 
+class _HandlerRaiseFinder(ast.NodeVisitor):
+    """Conservatively detect a rethrow path without descending into deferred scopes."""
+
+    def __init__(self) -> None:
+        self.has_raise = False
+
+    def visit_Raise(self, node: ast.Raise) -> None:
+        del node
+        self.has_raise = True
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        del node
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        del node
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        del node
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        # Class decorators, bases, keywords, and top-level body statements
+        # execute immediately.  Only nested methods and lambdas are deferred.
+        # Skipping the whole class would allow a rethrow in an except suite to
+        # incorrectly mark the corresponding try imports as optional.
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        for statement in node.body:
+            self.visit(statement)
+
+
+def _handler_may_reraise(handler: ast.ExceptHandler) -> bool:
+    finder = _HandlerRaiseFinder()
+    for statement in handler.body:
+        finder.visit(statement)
+    return finder.has_raise
+
+
 def _dotted_expression_name(node: ast.expr) -> str | None:
     if isinstance(node, ast.Name):
         return node.id
@@ -426,15 +493,142 @@ def _dotted_expression_name(node: ast.expr) -> str | None:
     return None
 
 
+def _literal_string(node: ast.expr) -> str | None:
+    """Return a literal string expression without evaluating source code."""
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
+
+
+def _literal_call_argument(node: ast.Call, positional_index: int, keyword: str) -> str | None:
+    """Read one literal positional-or-keyword call argument conservatively."""
+    if len(node.args) > positional_index:
+        literal = _literal_string(node.args[positional_index])
+        if literal is not None:
+            return literal
+    for item in node.keywords:
+        if item.arg == keyword:
+            literal = _literal_string(item.value)
+            if literal is not None:
+                return literal
+    return None
+
+
+def _bound_target_names(node: ast.expr) -> set[str]:
+    """Return the names bound by one assignment-like target."""
+    if isinstance(node, ast.Name):
+        return {node.id}
+    if isinstance(node, (ast.List, ast.Tuple)):
+        names: set[str] = set()
+        for element in node.elts:
+            names.update(_bound_target_names(element))
+        return names
+    if isinstance(node, ast.Starred):
+        return _bound_target_names(node.value)
+    return set()
+
+
+class _ScopeBindingFinder(ast.NodeVisitor):
+    """Collect function-local bindings without descending into nested scopes."""
+
+    def __init__(self) -> None:
+        self.names: set[str] = set()
+        self.declared_external_names: set[str] = set()
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, (ast.Del, ast.Store)):
+            self.names.add(node.id)
+
+    def visit_arg(self, node: ast.arg) -> None:
+        self.names.add(node.arg)
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            self.names.add(alias.asname or alias.name.split(".", maxsplit=1)[0])
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        for alias in node.names:
+            if alias.name != "*":
+                self.names.add(alias.asname or alias.name)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self.names.add(node.name)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.names.add(node.name)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self.names.add(node.name)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        del node
+
+    def visit_Global(self, node: ast.Global) -> None:
+        self.declared_external_names.update(node.names)
+
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+        self.declared_external_names.update(node.names)
+
+
+def _function_scope_bound_names(arguments: ast.arguments, body: Iterable[ast.stmt]) -> set[str]:
+    """Find bindings that shadow parent dynamic-import aliases in a function."""
+    finder = _ScopeBindingFinder()
+    finder.visit(arguments)
+    for statement in body:
+        finder.visit(statement)
+    return finder.names - finder.declared_external_names
+
+
 class _ImportCollector(ast.NodeVisitor):
     """Collect imports while preserving whether an ImportError guard encloses them."""
 
     def __init__(self, module: SourceModule) -> None:
         self._module = module
         self._optional_guard_depth = 0
+        # This closed mapping records source-visible ways to invoke literal
+        # dynamic imports.  Ambiguous aliasing errs toward an extra finding,
+        # never a false zero-leakage result.
+        self._dynamic_import_alias_scopes: list[dict[str, str]] = [{}]
         self.occurrences: list[ImportOccurrence] = []
 
-    def _add(self, *, line: int, kind: str, target: str, level: int = 0, names: Iterable[str] = ()) -> None:
+    @property
+    def _dynamic_import_aliases(self) -> dict[str, str]:
+        return self._dynamic_import_alias_scopes[-1]
+
+    def _push_alias_scope(self, shadowed_names: Iterable[str] = ()) -> None:
+        aliases = dict(self._dynamic_import_aliases)
+        for name in shadowed_names:
+            aliases.pop(name, None)
+        self._dynamic_import_alias_scopes.append(aliases)
+
+    def _pop_alias_scope(self) -> None:
+        self._dynamic_import_alias_scopes.pop()
+
+    def _preserve_ambiguous_alias_bindings(self, names: Iterable[str]) -> None:
+        """Keep a possible alias after a non-import rebinding.
+
+        A linear AST walk cannot prove that an assignment in a branch, loop,
+        handler, or conditional definition executes before a later call.  A
+        retained alias can make the static metric conservative, while clearing
+        it could fabricate a false zero-leakage result.  Function-local names
+        are still removed when a new lexical scope is entered above.
+        """
+        del names
+
+    def _register_import_alias(self, name: str, kind: str | None) -> None:
+        if kind is not None:
+            self._dynamic_import_aliases[name] = kind
+        else:
+            self._preserve_ambiguous_alias_bindings((name,))
+
+    def _add(
+        self,
+        *,
+        line: int,
+        kind: str,
+        target: str,
+        optional_root_hint: str | None = None,
+        level: int = 0,
+        names: Iterable[str] = (),
+    ) -> None:
         self.occurrences.append(
             ImportOccurrence(
                 source_module=self._module.module,
@@ -442,6 +636,7 @@ class _ImportCollector(ast.NodeVisitor):
                 line=line,
                 kind=kind,
                 target=target,
+                optional_root_hint=optional_root_hint,
                 level=level,
                 names=tuple(names),
                 optional_guarded=self._optional_guard_depth > 0,
@@ -449,7 +644,13 @@ class _ImportCollector(ast.NodeVisitor):
         )
 
     def visit_Try(self, node: ast.Try) -> None:
-        guarded = any(_except_catches_import_error(handler) for handler in node.handlers)
+        import_error_handlers = [handler for handler in node.handlers if _except_catches_import_error(handler)]
+        # A handler that can rethrow does not make imports in the try suite
+        # reliably optional. Treat conditional/complex rethrow paths as
+        # leakage too: false positives are safer than hiding a hard import.
+        guarded = bool(import_error_handlers) and not any(
+            _handler_may_reraise(handler) for handler in import_error_handlers
+        )
         if not guarded:
             self.generic_visit(node)
             return
@@ -470,6 +671,13 @@ class _ImportCollector(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             self._add(line=node.lineno, kind="import", target=alias.name)
+            bound_name = alias.asname or alias.name.split(".", maxsplit=1)[0]
+            if alias.name == "importlib" or alias.name.startswith("importlib."):
+                self._register_import_alias(bound_name, "importlib_module")
+            elif alias.name == "builtins" or alias.name.startswith("builtins."):
+                self._register_import_alias(bound_name, "builtins_module")
+            else:
+                self._register_import_alias(bound_name, None)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         self._add(
@@ -479,6 +687,16 @@ class _ImportCollector(ast.NodeVisitor):
             level=node.level,
             names=(alias.name for alias in node.names),
         )
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            bound_name = alias.asname or alias.name
+            if node.level == 0 and node.module == "importlib" and alias.name == "import_module":
+                self._register_import_alias(bound_name, "import_module_function")
+            elif node.level == 0 and node.module == "builtins" and alias.name == "__import__":
+                self._register_import_alias(bound_name, "builtin_import_function")
+            else:
+                self._register_import_alias(bound_name, None)
 
     def _visit_deferred_scope(
         self,
@@ -487,6 +705,7 @@ class _ImportCollector(ast.NodeVisitor):
         body: Iterable[ast.stmt] | ast.expr,
         decorators: Iterable[ast.expr] = (),
         returns: ast.expr | None = None,
+        scope_body: Iterable[ast.stmt] = (),
     ) -> None:
         """Visit definition-time expressions under the current import guard.
 
@@ -503,6 +722,7 @@ class _ImportCollector(ast.NodeVisitor):
             self.visit(returns)
         prior_depth = self._optional_guard_depth
         self._optional_guard_depth = 0
+        self._push_alias_scope(_function_scope_bound_names(arguments, scope_body))
         try:
             if isinstance(body, ast.expr):
                 self.visit(body)
@@ -510,6 +730,7 @@ class _ImportCollector(ast.NodeVisitor):
                 for statement in body:
                     self.visit(statement)
         finally:
+            self._pop_alias_scope()
             self._optional_guard_depth = prior_depth
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -518,7 +739,9 @@ class _ImportCollector(ast.NodeVisitor):
             body=node.body,
             decorators=node.decorator_list,
             returns=node.returns,
+            scope_body=node.body,
         )
+        self._preserve_ambiguous_alias_bindings((node.name,))
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_deferred_scope(
@@ -526,17 +749,207 @@ class _ImportCollector(ast.NodeVisitor):
             body=node.body,
             decorators=node.decorator_list,
             returns=node.returns,
+            scope_body=node.body,
         )
+        self._preserve_ambiguous_alias_bindings((node.name,))
 
     def visit_Lambda(self, node: ast.Lambda) -> None:
         self._visit_deferred_scope(arguments=node.args, body=node.body)
 
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        """Visit class-time expressions; nested methods remain deferred."""
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+        self._push_alias_scope()
+        try:
+            for statement in node.body:
+                self.visit(statement)
+        finally:
+            self._pop_alias_scope()
+        self._preserve_ambiguous_alias_bindings((node.name,))
+
+    def _visit_comprehension(
+        self,
+        generators: list[ast.comprehension],
+        values: Iterable[ast.expr],
+        *,
+        deferred: bool,
+    ) -> None:
+        """Visit a comprehension with correct eager/deferred alias and guard scope."""
+        if not generators:  # pragma: no cover - Python AST always has at least one generator.
+            for value in values:
+                self.visit(value)
+            return
+        # The outer iterable runs immediately.  In a generator expression the
+        # remaining iterables, predicates, and element run later, beyond any
+        # enclosing optional-import guard.
+        self.visit(generators[0].iter)
+        shadowed_names: set[str] = set()
+        for generator in generators:
+            shadowed_names.update(_bound_target_names(generator.target))
+        prior_depth = self._optional_guard_depth
+        self._push_alias_scope(shadowed_names)
+        if deferred:
+            self._optional_guard_depth = 0
+        try:
+            for index, generator in enumerate(generators):
+                if index:
+                    self.visit(generator.iter)
+                self.visit(generator.target)
+                for condition in generator.ifs:
+                    self.visit(condition)
+            for value in values:
+                self.visit(value)
+        finally:
+            self._pop_alias_scope()
+            self._optional_guard_depth = prior_depth
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension(node.generators, (node.elt,), deferred=True)
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension(node.generators, (node.elt,), deferred=False)
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension(node.generators, (node.elt,), deferred=False)
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension(node.generators, (node.key, node.value), deferred=False)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        self.visit(node.value)
+        for target in node.targets:
+            self.visit(target)
+            self._bind_assignment_target(target, node.value)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        self.visit(node.annotation)
+        if node.value is not None:
+            self.visit(node.value)
+        self.visit(node.target)
+        self._bind_assignment_target(node.target, node.value)
+
+    def visit_AugAssign(self, node: ast.AugAssign) -> None:
+        self.visit(node.target)
+        self.visit(node.value)
+        self._preserve_ambiguous_alias_bindings(_bound_target_names(node.target))
+
+    def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+        self.visit(node.value)
+        self.visit(node.target)
+        self._bind_assignment_target(node.target, node.value)
+
+    def _visit_for(self, node: ast.For | ast.AsyncFor) -> None:
+        self.visit(node.iter)
+        self.visit(node.target)
+        self._preserve_ambiguous_alias_bindings(_bound_target_names(node.target))
+        for statement in node.body:
+            self.visit(statement)
+        for statement in node.orelse:
+            self.visit(statement)
+
+    def visit_For(self, node: ast.For) -> None:
+        self._visit_for(node)
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
+        self._visit_for(node)
+
+    def _visit_with(self, node: ast.With | ast.AsyncWith) -> None:
+        for item in node.items:
+            self.visit(item.context_expr)
+            if item.optional_vars is not None:
+                self.visit(item.optional_vars)
+                self._preserve_ambiguous_alias_bindings(_bound_target_names(item.optional_vars))
+        for statement in node.body:
+            self.visit(statement)
+
+    def visit_With(self, node: ast.With) -> None:
+        self._visit_with(node)
+
+    def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
+        self._visit_with(node)
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.type is not None:
+            self.visit(node.type)
+        if node.name is not None:
+            self._preserve_ambiguous_alias_bindings((node.name,))
+        for statement in node.body:
+            self.visit(statement)
+
+    def _bind_assignment_target(self, target: ast.expr, value: ast.expr | None) -> None:
+        if (
+            isinstance(target, (ast.List, ast.Tuple))
+            and isinstance(value, (ast.List, ast.Tuple))
+            and len(target.elts) == len(value.elts)
+        ):
+            for child_target, child_value in zip(target.elts, value.elts, strict=True):
+                self._bind_assignment_target(child_target, child_value)
+            return
+        alias_kind = self._import_alias_kind_from_value(value) if value is not None else None
+        for name in _bound_target_names(target):
+            self._register_import_alias(name, alias_kind)
+
+    def _import_alias_kind_from_value(self, node: ast.expr) -> str | None:
+        """Resolve a known import module/callable value for assignment aliases."""
+        if isinstance(node, ast.Name):
+            return self._dynamic_import_aliases.get(node.id)
+        callable_kind = self._dynamic_import_callable_alias_kind(node)
+        if callable_kind is not None:
+            return callable_kind
+        if (
+            isinstance(node, ast.Call)
+            and self._dynamic_import_callable_alias_kind(node.func) == "builtin_import_function"
+        ):
+            import_name = _literal_call_argument(node, 0, "name")
+            if import_name == "importlib":
+                return "importlib_module"
+            if import_name == "builtins":
+                return "builtins_module"
+        return None
+
+    def _dynamic_import_callable_alias_kind(self, node: ast.expr) -> str | None:
+        function_name = _dotted_expression_name(node)
+        if function_name == "importlib.import_module":
+            return "import_module_function"
+        if function_name in {"__import__", "builtins.__import__", "__builtins__.__import__"}:
+            return "builtin_import_function"
+        if isinstance(node, ast.Name):
+            alias_kind = self._dynamic_import_aliases.get(node.id)
+            if alias_kind in {"import_module_function", "builtin_import_function"}:
+                return alias_kind
+        if isinstance(node, ast.Attribute):
+            alias_kind = self._import_alias_kind_from_value(node.value)
+            if node.attr == "import_module" and alias_kind == "importlib_module":
+                return "import_module_function"
+            if node.attr == "__import__" and alias_kind == "builtins_module":
+                return "builtin_import_function"
+        if (
+            isinstance(node, ast.Subscript)
+            and _dotted_expression_name(node.value) == "__builtins__"
+            and _literal_string(node.slice) == "__import__"
+        ):
+            return "builtin_import_function"
+        return None
+
     def visit_Call(self, node: ast.Call) -> None:
-        function_name = _dotted_expression_name(node.func)
-        if function_name in {"__import__", "importlib.import_module"} and node.args:
-            first_argument = node.args[0]
-            if isinstance(first_argument, ast.Constant) and isinstance(first_argument.value, str):
-                self._add(line=node.lineno, kind="dynamic_import", target=first_argument.value)
+        callable_kind = self._dynamic_import_callable_alias_kind(node.func)
+        target = _literal_call_argument(node, 0, "name") if callable_kind is not None else None
+        if target is not None:
+            optional_root_hint = None
+            if callable_kind == "import_module_function" and target.startswith("."):
+                package = _literal_call_argument(node, 1, "package")
+                optional_root_hint = _dependency_root(package) if package is not None else None
+            self._add(
+                line=node.lineno,
+                kind="dynamic_import",
+                target=target,
+                optional_root_hint=optional_root_hint,
+            )
         self.generic_visit(node)
 
 
@@ -548,7 +961,16 @@ def _collect_imports(modules: Iterable[SourceModule]) -> list[ImportOccurrence]:
         occurrences.extend(collector.occurrences)
     return sorted(
         occurrences,
-        key=lambda item: (item.path, item.line, item.kind, item.target, item.level, item.names, item.optional_guarded),
+        key=lambda item: (
+            item.path,
+            item.line,
+            item.kind,
+            item.target,
+            item.optional_root_hint or "",
+            item.level,
+            item.names,
+            item.optional_guarded,
+        ),
     )
 
 
@@ -662,6 +1084,8 @@ def _strongly_connected_components(nodes: Iterable[str], adjacency: Mapping[str,
 
 
 def _import_root(occurrence: ImportOccurrence) -> str | None:
+    if occurrence.optional_root_hint is not None:
+        return occurrence.optional_root_hint
     if occurrence.level:
         return None
     target = occurrence.target.split(".", 1)[0]
@@ -686,6 +1110,7 @@ def _optional_import_facts(
             "optional_root": imported_root,
             "path": occurrence.path,
             "source_module": occurrence.source_module,
+            "target": occurrence.target,
         }
         all_optional.append(fact)
         if not occurrence.optional_guarded:
@@ -994,8 +1419,9 @@ def _read_initial_head_regular_blob(
     if path.is_symlink():
         raise ArchitectureContractError(f"{label} must not be a symbolic link")
     try:
-        relative = path.absolute().relative_to(source_root)
-    except ValueError as exc:
+        resolved_path = path.resolve(strict=True)
+        relative = resolved_path.relative_to(source_root)
+    except (OSError, RuntimeError, ValueError) as exc:
         raise ArchitectureContractError(f"{label} must be inside the clean source worktree") from exc
     relative_path = relative.as_posix()
     _validate_repo_relative_path(relative_path)
@@ -1106,15 +1532,11 @@ def _load_frozen_threshold_policy(
     }
 
 
-def _seal_architecture_baseline(
-    captured: Mapping[str, Any],
+def _derive_candidate_thresholds(
+    summary: Mapping[str, Any],
     threshold_rules: Mapping[str, Mapping[str, Any]],
-    threshold_policy: Mapping[str, str],
-) -> dict[str, Any]:
-    """Turn a clean measurement into a threshold-governed baseline artifact."""
-    sealed = copy.deepcopy(dict(captured))
-    measurements = _require_mapping(sealed.get("measurements"), "captured measurements")
-    summary = _require_mapping(measurements.get("summary"), "captured measurement summary")
+) -> dict[str, int]:
+    """Derive final-candidate limits from a raw D0 summary and frozen policy rules."""
     thresholds: dict[str, int] = {}
     for threshold_name, summary_name in _THRESHOLD_TO_SUMMARY.items():
         value = summary.get(summary_name)
@@ -1128,11 +1550,84 @@ def _seal_architecture_baseline(
             thresholds[threshold_name] = int(
                 (Decimal(value) * (Decimal("1") - reduction)).to_integral_value(rounding=ROUND_FLOOR)
             )
+    return thresholds
+
+
+def _seal_architecture_baseline(
+    captured: Mapping[str, Any],
+    threshold_rules: Mapping[str, Mapping[str, Any]],
+    threshold_policy: Mapping[str, str],
+) -> dict[str, Any]:
+    """Turn a clean measurement into a threshold-governed baseline artifact."""
+    sealed = copy.deepcopy(dict(captured))
+    measurements = _require_mapping(sealed.get("measurements"), "captured measurements")
+    optional_policy = _require_mapping(measurements.get("optional_import_policy"), "captured optional_import_policy")
+    if optional_policy.get("explicit_module_roots") != []:
+        raise ArchitectureContractError(
+            "sealed baselines require no --optional-module roots until an explicit frozen invocation manifest exists"
+        )
+    summary = _require_mapping(measurements.get("summary"), "captured measurement summary")
+    thresholds = _derive_candidate_thresholds(summary, threshold_rules)
     sealed["baseline_state"] = "frozen"
     sealed["threshold_policy"] = dict(threshold_policy)
     sealed["thresholds"] = dict(thresholds)
     sealed["verdict"] = "architecture_baseline"
     return sealed
+
+
+def _verify_frozen_baseline_threshold_policy(
+    baseline: Mapping[str, Any],
+    baseline_source_root: Path,
+) -> None:
+    """Rebuild and bind all sealed baseline facts to its exact clean Git source."""
+    _validate_threshold_policy_provenance(baseline)
+    policy_provenance = _require_mapping(baseline.get("threshold_policy"), "baseline threshold_policy")
+    provenance = _require_mapping(baseline.get("source_provenance"), "baseline source_provenance")
+    commit = provenance.get("commit")
+    if not isinstance(commit, str) or not _GIT_OBJECT_ID.fullmatch(commit):
+        raise ArchitectureContractError("baseline source_provenance commit must be an object identifier")
+    tree = provenance.get("tree")
+    if not isinstance(tree, str) or not _GIT_OBJECT_ID.fullmatch(tree):
+        raise ArchitectureContractError("baseline source_provenance tree must be an object identifier")
+    _, baseline_root_provenance = _source_provenance(baseline_source_root)
+    if baseline_root_provenance != dict(provenance):
+        raise ArchitectureContractError(
+            "baseline-source-root must be clean and checked out at the baseline commit/tree"
+        )
+    policy_path = policy_provenance["path"]
+    assert isinstance(policy_path, str)
+    rules, actual_policy_provenance = _load_frozen_threshold_policy(
+        baseline_source_root,
+        commit,
+        baseline_source_root / policy_path,
+    )
+    if actual_policy_provenance != dict(policy_provenance):
+        raise ArchitectureContractError("baseline threshold_policy does not match its source Git blob")
+    package = baseline.get("package")
+    if not isinstance(package, str):
+        raise ArchitectureContractError("baseline package must be a dotted Python package name")
+    measurements = _require_mapping(baseline.get("measurements"), "baseline measurements")
+    summary = _require_mapping(measurements.get("summary"), "baseline measurement summary")
+    optional_policy = _require_mapping(measurements.get("optional_import_policy"), "baseline optional_import_policy")
+    raw_explicit_roots = optional_policy.get("explicit_module_roots")
+    if not isinstance(raw_explicit_roots, list) or not all(isinstance(root, str) for root in raw_explicit_roots):
+        raise ArchitectureContractError("baseline optional_import_policy explicit_module_roots must be a string list")
+    if raw_explicit_roots:
+        raise ArchitectureContractError(
+            "baseline optional_import_policy explicit_module_roots must be empty without a frozen invocation manifest"
+        )
+    rebuilt, rebuilt_provenance = _build_measurement(baseline_source_root, package, raw_explicit_roots)
+    if rebuilt_provenance != dict(provenance):  # Defensive; _source_provenance already compared above.
+        raise ArchitectureContractError("baseline source provenance changed while rebuilding measurements")
+    if baseline.get("measurement_contract") != rebuilt.get("measurement_contract"):
+        raise ArchitectureContractError("baseline measurement_contract does not match its source Git measurement")
+    if baseline.get("measurements") != rebuilt.get("measurements"):
+        raise ArchitectureContractError("baseline measurements do not match their source Git measurement")
+    if baseline.get("tool_provenance") != rebuilt.get("tool_provenance"):
+        raise ArchitectureContractError("baseline tool_provenance does not match its source Git measurement")
+    expected_thresholds = _derive_candidate_thresholds(summary, rules)
+    if _validate_thresholds(baseline) != expected_thresholds:
+        raise ArchitectureContractError("baseline thresholds are not derived from the frozen threshold policy")
 
 
 def _validate_measurement_shape(document: Mapping[str, Any], label: str) -> dict[str, int]:
@@ -1217,7 +1712,11 @@ def _validate_threshold_policy_provenance(baseline: Mapping[str, Any]) -> None:
         raise ArchitectureContractError("baseline threshold_policy sha256 must be a SHA256 digest")
 
 
-def _validate_baseline_contract(baseline: Mapping[str, Any], actual: Mapping[str, Any]) -> dict[str, int]:
+def _validate_baseline_contract(
+    baseline: Mapping[str, Any],
+    actual: Mapping[str, Any],
+    baseline_source_root: Path,
+) -> dict[str, int]:
     if baseline.get("schema_version") != SCHEMA_VERSION:
         raise ArchitectureContractError(f"baseline schema_version must be {SCHEMA_VERSION}")
     if baseline.get("artifact_type") != ARTIFACT_TYPE:
@@ -1232,7 +1731,7 @@ def _validate_baseline_contract(baseline: Mapping[str, Any], actual: Mapping[str
         raise ArchitectureContractError("baseline package does not match the measured package")
     _validate_measurement_shape(baseline, "baseline")
     _validate_measurement_shape(actual, "actual")
-    _validate_threshold_policy_provenance(baseline)
+    _verify_frozen_baseline_threshold_policy(baseline, baseline_source_root)
     baseline_tool = _require_mapping(baseline.get("tool_provenance"), "baseline tool_provenance")
     actual_tool = _require_mapping(actual.get("tool_provenance"), "actual tool_provenance")
     if baseline_tool["script_sha256"] != actual_tool["script_sha256"]:
@@ -1243,6 +1742,28 @@ def _validate_baseline_contract(baseline: Mapping[str, Any], actual: Mapping[str
     actual_platform = _require_mapping(actual_provenance.get("platform"), "actual platform")
     if baseline_platform != actual_platform:
         raise ArchitectureContractError("baseline platform does not match the current measurement platform")
+    baseline_measurements = _require_mapping(baseline.get("measurements"), "baseline measurements")
+    baseline_optional_policy = _require_mapping(
+        baseline_measurements.get("optional_import_policy"), "baseline optional_import_policy"
+    )
+    actual_measurements = _require_mapping(actual.get("measurements"), "actual measurements")
+    actual_optional_policy = _require_mapping(
+        actual_measurements.get("optional_import_policy"), "actual optional_import_policy"
+    )
+    baseline_effective_roots = baseline_optional_policy.get("effective_module_roots")
+    actual_effective_roots = actual_optional_policy.get("effective_module_roots")
+    if not isinstance(baseline_effective_roots, list) or not all(
+        isinstance(root, str) for root in baseline_effective_roots
+    ):
+        raise ArchitectureContractError("baseline optional_import_policy effective_module_roots must be a string list")
+    if not isinstance(actual_effective_roots, list) or not all(
+        isinstance(root, str) for root in actual_effective_roots
+    ):
+        raise ArchitectureContractError("actual optional_import_policy effective_module_roots must be a string list")
+    if not set(baseline_effective_roots).issubset(actual_effective_roots):
+        raise ArchitectureContractError(
+            "actual optional_import_policy effective_module_roots must cover every frozen baseline optional root"
+        )
     return _validate_thresholds(baseline)
 
 
@@ -1254,9 +1775,14 @@ def _validate_legacy_zero_contract(baseline: Mapping[str, Any]) -> None:
 
 
 def _validate_against_baseline(
-    actual: dict[str, Any], baseline: Mapping[str, Any], *, require_no_cycles: bool, require_legacy_zero: bool
+    actual: dict[str, Any],
+    baseline: Mapping[str, Any],
+    baseline_source_root: Path,
+    *,
+    require_no_cycles: bool,
+    require_legacy_zero: bool,
 ) -> dict[str, Any]:
-    thresholds = _validate_baseline_contract(baseline, actual)
+    thresholds = _validate_baseline_contract(baseline, actual, baseline_source_root)
     if require_legacy_zero:
         _validate_legacy_zero_contract(baseline)
     measurements = _require_mapping(actual.get("measurements"), "actual measurements")
@@ -1274,7 +1800,30 @@ def _validate_against_baseline(
     return {"status": "passed", "thresholds": thresholds}
 
 
-def _validate_capture_path(source_root: Path, path: Path) -> Path:
+def _open_capture_parent(parent: Path) -> int:
+    """Open and identity-check the output parent without following a late symlink."""
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        expected = parent.stat(follow_symlinks=False)
+        if not stat.S_ISDIR(expected.st_mode):
+            raise ArchitectureContractError("capture output parent directory must be a real directory")
+        parent_fd = os.open(parent, flags)
+    except OSError as exc:
+        raise ArchitectureContractError(f"cannot safely open capture output parent: {exc}") from exc
+    try:
+        actual = os.fstat(parent_fd)
+        if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+            raise ArchitectureContractError("capture output parent changed while being opened")
+        return parent_fd
+    except BaseException:
+        with suppress(OSError):
+            os.close(parent_fd)
+        raise
+
+
+def _validate_capture_path(source_root: Path, path: Path) -> CaptureOutput:
     if path.is_symlink():
         raise ArchitectureContractError("capture output must not be a symbolic link")
     resolved = path.resolve(strict=False)
@@ -1286,9 +1835,9 @@ def _validate_capture_path(source_root: Path, path: Path) -> Path:
     parent = resolved.parent
     if not parent.exists() or not parent.is_dir():
         raise ArchitectureContractError("capture output parent directory must already exist")
-    if path.exists() and not path.is_file():
+    if resolved.exists() and not resolved.is_file():
         raise ArchitectureContractError("capture output must be a regular file when it already exists")
-    return resolved
+    return CaptureOutput(path=resolved, parent_fd=_open_capture_parent(parent))
 
 
 def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
@@ -1305,28 +1854,59 @@ def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
     return tuple(paths)
 
 
+def _close_capture_output(output: CaptureOutput) -> None:
+    with suppress(OSError):
+        os.close(output.parent_fd)
+
+
 def _write_capture_atomically(
-    output: Path, serialized: bytes, source_root: Path, provenance: Mapping[str, Any]
+    output: CaptureOutput, serialized: bytes, source_root: Path, provenance: Mapping[str, Any]
 ) -> None:
     temporary_name: str | None = None
+    temporary_fd: int | None = None
     _verify_source_provenance(source_root, provenance)
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="xb", dir=output.parent, prefix=f".{output.name}.", suffix=".tmp", delete=False
-        ) as temporary:
-            temporary_name = temporary.name
+        for _ in range(128):
+            candidate = f".{output.path.name}.{secrets.token_hex(16)}.tmp"
+            try:
+                temporary_fd = os.open(
+                    candidate,
+                    os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_CLOEXEC", 0),
+                    0o600,
+                    dir_fd=output.parent_fd,
+                )
+            except FileExistsError:
+                continue
+            temporary_name = candidate
+            break
+        if (
+            temporary_name is None or temporary_fd is None
+        ):  # pragma: no cover - cryptographic collisions are implausible.
+            raise ArchitectureContractError("cannot reserve a unique capture temporary file")
+        temporary = os.fdopen(temporary_fd, "wb")
+        temporary_fd = None
+        with temporary:
             temporary.write(serialized)
             temporary.flush()
             os.fsync(temporary.fileno())
         _verify_source_provenance(source_root, provenance)
-        Path(temporary_name).replace(output)
+        os.replace(
+            temporary_name,
+            output.path.name,
+            src_dir_fd=output.parent_fd,
+            dst_dir_fd=output.parent_fd,
+        )
+        os.fsync(output.parent_fd)
         temporary_name = None
     except OSError as exc:
         raise ArchitectureContractError(f"cannot atomically write capture output: {exc}") from exc
     finally:
+        if temporary_fd is not None:
+            with suppress(OSError):
+                os.close(temporary_fd)
         if temporary_name is not None:
             with suppress(OSError):
-                Path(temporary_name).unlink(missing_ok=True)
+                os.unlink(temporary_name, dir_fd=output.parent_fd)
 
 
 def _serialize_artifact(artifact: Mapping[str, Any]) -> bytes:
@@ -1341,6 +1921,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--package", required=True, help="dotted package name to measure")
     parser.add_argument("--capture", type=Path, help="write deterministic measurement JSON outside source-root")
     parser.add_argument("--baseline", type=Path, help="frozen architecture baseline JSON to validate")
+    parser.add_argument(
+        "--baseline-source-root",
+        type=Path,
+        help="clean Git root that owns the baseline's recorded policy blob; defaults to --source-root",
+    )
     parser.add_argument(
         "--seal-baseline",
         action="store_true",
@@ -1378,8 +1963,16 @@ def _run(arguments: argparse.Namespace) -> dict[str, Any]:
             raise ArchitectureContractError("--seal-baseline cannot be combined with --baseline")
         if arguments.threshold_policy is None:
             raise ArchitectureContractError("--seal-baseline requires --threshold-policy")
+        if arguments.optional_module:
+            raise ArchitectureContractError(
+                "--seal-baseline does not permit --optional-module without a frozen invocation manifest"
+            )
     elif arguments.threshold_policy is not None:
         raise ArchitectureContractError("--threshold-policy is only valid with --seal-baseline")
+    if arguments.baseline_source_root is not None and arguments.baseline is None:
+        raise ArchitectureContractError("--baseline-source-root is only valid with --baseline")
+    if arguments.require_legacy_zero:
+        _validate_legacy_zero_contract({})
     package = _validate_package_name(arguments.package)
     try:
         source_root = arguments.source_root.resolve(strict=True)
@@ -1387,50 +1980,62 @@ def _run(arguments: argparse.Namespace) -> dict[str, Any]:
         raise ArchitectureContractError("source-root must be an existing directory") from exc
     if not source_root.is_dir():
         raise ArchitectureContractError("source-root must be a directory")
-    capture_path = _validate_capture_path(source_root, arguments.capture) if arguments.capture is not None else None
-    baseline_path = _validate_baseline_path(arguments.baseline) if arguments.baseline is not None else None
-    if capture_path is not None and baseline_path is not None:
-        same_file = capture_path == baseline_path
-        if capture_path.exists():
-            try:
-                same_file = same_file or capture_path.samefile(baseline_path)
-            except OSError as exc:
-                raise ArchitectureContractError(f"cannot compare capture output and baseline: {exc}") from exc
-        if same_file:
-            raise ArchitectureContractError("capture output must not replace the baseline input")
-    artifact, provenance = _build_measurement(source_root, package, arguments.optional_module)
-    if arguments.seal_baseline:
-        assert arguments.threshold_policy is not None
-        threshold_rules, threshold_policy = _load_frozen_threshold_policy(
-            source_root,
-            str(provenance["commit"]),
-            arguments.threshold_policy,
-        )
-        artifact = _seal_architecture_baseline(artifact, threshold_rules, threshold_policy)
-    elif baseline_path is not None:
-        baseline, baseline_sha256 = _load_baseline(baseline_path)
-        artifact["baseline_validation"] = _validate_against_baseline(
-            artifact,
-            baseline,
-            require_no_cycles=arguments.require_no_cycles,
-            require_legacy_zero=arguments.require_legacy_zero,
-        )
-        artifact["baseline_validation"]["baseline_sha256"] = baseline_sha256
-    elif arguments.require_no_cycles:
-        summary = artifact["measurements"]["summary"]
-        if summary["internal_cycle_count"] != 0:
-            raise ArchitectureContractError("architecture cycle requirement failed: internal_cycle_count must be 0")
-    elif arguments.require_legacy_zero:
-        _validate_legacy_zero_contract({})
-    serialized = _serialize_artifact(artifact)
-    if capture_path is not None:
-        _write_capture_atomically(capture_path, serialized, source_root, provenance)
-    return {
-        "capture_sha256": _sha256_bytes(serialized),
-        "package": package,
-        "result": "sealed" if arguments.seal_baseline else "validated" if baseline_path is not None else "captured",
-        "source_commit": provenance["commit"],
-    }
+    baseline_source_root = source_root
+    if arguments.baseline_source_root is not None:
+        try:
+            requested_baseline_root = arguments.baseline_source_root.resolve(strict=True)
+        except (OSError, RuntimeError) as exc:
+            raise ArchitectureContractError("baseline-source-root must be an existing directory") from exc
+        if not requested_baseline_root.is_dir():
+            raise ArchitectureContractError("baseline-source-root must be a directory")
+        baseline_source_root, _ = _source_provenance(requested_baseline_root)
+    capture_output = _validate_capture_path(source_root, arguments.capture) if arguments.capture is not None else None
+    try:
+        baseline_path = _validate_baseline_path(arguments.baseline) if arguments.baseline is not None else None
+        if capture_output is not None and baseline_path is not None:
+            same_file = capture_output.path == baseline_path
+            if capture_output.path.exists():
+                try:
+                    same_file = same_file or capture_output.path.samefile(baseline_path)
+                except OSError as exc:
+                    raise ArchitectureContractError(f"cannot compare capture output and baseline: {exc}") from exc
+            if same_file:
+                raise ArchitectureContractError("capture output must not replace the baseline input")
+        artifact, provenance = _build_measurement(source_root, package, arguments.optional_module)
+        if arguments.seal_baseline:
+            assert arguments.threshold_policy is not None
+            threshold_rules, threshold_policy = _load_frozen_threshold_policy(
+                source_root,
+                str(provenance["commit"]),
+                arguments.threshold_policy,
+            )
+            artifact = _seal_architecture_baseline(artifact, threshold_rules, threshold_policy)
+        elif baseline_path is not None:
+            baseline, baseline_sha256 = _load_baseline(baseline_path)
+            artifact["baseline_validation"] = _validate_against_baseline(
+                artifact,
+                baseline,
+                baseline_source_root,
+                require_no_cycles=arguments.require_no_cycles,
+                require_legacy_zero=arguments.require_legacy_zero,
+            )
+            artifact["baseline_validation"]["baseline_sha256"] = baseline_sha256
+        if arguments.require_no_cycles:
+            summary = artifact["measurements"]["summary"]
+            if summary["internal_cycle_count"] != 0:
+                raise ArchitectureContractError("architecture cycle requirement failed: internal_cycle_count must be 0")
+        serialized = _serialize_artifact(artifact)
+        if capture_output is not None:
+            _write_capture_atomically(capture_output, serialized, source_root, provenance)
+        return {
+            "capture_sha256": _sha256_bytes(serialized),
+            "package": package,
+            "result": "sealed" if arguments.seal_baseline else "validated" if baseline_path is not None else "captured",
+            "source_commit": provenance["commit"],
+        }
+    finally:
+        if capture_output is not None:
+            _close_capture_output(capture_output)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
