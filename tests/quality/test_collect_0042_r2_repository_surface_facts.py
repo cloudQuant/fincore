@@ -172,7 +172,8 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     )
     assert "active_maintained_doc" not in records_by_path["CHANGELOG.md"]["category_tags"]
     assert "active_maintained_doc" not in records_by_path["docs/0039-优化完善项目/任务.md"]["category_tags"]
-    assert "active_maintained_doc" not in records_by_path["docs/MIGRATION.md"]["category_tags"]
+    assert "historical_provenance_candidate" not in records_by_path["docs/MIGRATION.md"]["category_tags"]
+    assert "active_maintained_doc" in records_by_path["docs/MIGRATION.md"]["category_tags"]
     assert (
         "active_maintained_doc"
         not in records_by_path["docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"]["category_tags"]

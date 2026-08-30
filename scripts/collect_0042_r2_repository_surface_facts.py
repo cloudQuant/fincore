@@ -53,6 +53,14 @@ _HISTORICAL_PATH_PREFIXES = (
     "docs/architecture/adr/",
     "docs/迭代计划/",
 )
+_ACTIVE_MAINTAINED_DOCUMENT_PATHS = frozenset(
+    {
+        "README.md",
+        "docs/API_STABILITY.md",
+        "docs/MIGRATION.md",
+        "docs/architecture/public-api-map.md",
+    }
+)
 _CATEGORY_ORDER = (
     "active_workflow",
     "packaging_release_script",
@@ -187,6 +195,8 @@ def _verify_provenance(source_root: Path, initial: Mapping[str, Any]) -> None:
 
 def _is_historical_or_provenance_path(path: str) -> bool:
     name = PurePosixPath(path).name
+    if path in _ACTIVE_MAINTAINED_DOCUMENT_PATHS:
+        return False
     if path == "CHANGELOG.md" or path.startswith(_HISTORICAL_PATH_PREFIXES):
         return True
     if _HISTORICAL_ITERATION_DIRECTORY.match(path):
