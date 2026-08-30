@@ -21,11 +21,13 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 SCHEMA_VERSION = 1
 _GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40,64}$")
@@ -226,9 +228,17 @@ def _classify_path(path: str) -> tuple[tuple[str, ...], tuple[dict[str, str], ..
     if path.startswith(".github/workflows/") and PurePosixPath(path).suffix.lower() in {".yml", ".yaml"}:
         add("active_workflow", "github_workflow_path", "tracked GitHub Actions workflow path")
     if _is_packaging_or_release_path(path):
-        add("packaging_release_script", "packaging_release_path", "tracked packaging or release configuration/script path")
+        add(
+            "packaging_release_script",
+            "packaging_release_path",
+            "tracked packaging or release configuration/script path",
+        )
     if _is_compat_generator_or_checker(path):
-        add("compat_generator_checker", "compat_script_name", "script filename carries compatibility/API contract marker")
+        add(
+            "compat_generator_checker",
+            "compat_script_name",
+            "script filename carries compatibility/API contract marker",
+        )
     if path.endswith(".pyi") or path.endswith("/py.typed"):
         add("type_stub", "type_stub_or_marker_path", "tracked PEP 561 marker or stub path")
     if _is_template_path(path):
@@ -244,7 +254,11 @@ def _classify_path(path: str) -> tuple[tuple[str, ...], tuple[dict[str, str], ..
     if path.startswith("examples/") and not historical:
         add("example", "example_path", "tracked example source, configuration, or input path")
     if _is_document_path(path) and not historical and not _is_template_path(path):
-        add("active_maintained_doc", "maintained_document_path", "tracked documentation/configuration path without historical marker")
+        add(
+            "active_maintained_doc",
+            "maintained_document_path",
+            "tracked documentation/configuration path without historical marker",
+        )
 
     if not tags:
         return None
@@ -501,7 +515,9 @@ def _atomic_write(output: Path, artifact: Mapping[str, Any]) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, required=True, help="external path for deterministic raw repository facts JSON")
+    parser.add_argument(
+        "--output", type=Path, required=True, help="external path for deterministic raw repository facts JSON"
+    )
     arguments = parser.parse_args(argv)
     source_root = Path.cwd().resolve()
     output = arguments.output if arguments.output.is_absolute() else source_root / arguments.output

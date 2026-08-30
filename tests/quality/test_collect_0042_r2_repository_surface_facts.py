@@ -12,11 +12,13 @@ import hashlib
 import json
 import subprocess
 import sys
-from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 SCRIPT = Path(__file__).parents[2] / "scripts" / "collect_0042_r2_repository_surface_facts.py"
 REPOSITORY_ROOT = SCRIPT.parents[1]
@@ -111,7 +113,7 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert artifact["records"] == sorted(artifact["records"], key=lambda item: item["path"])
 
     records_by_path = _records_by_path(artifact)
-    assert EXPECTED_WORKFLOWS <= set(records_by_path)
+    assert set(records_by_path) >= EXPECTED_WORKFLOWS
     assert {"pyproject.toml", "MANIFEST.in", "setup.py"} <= set(records_by_path)
     assert {
         "README.md",
@@ -143,18 +145,23 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert "type_stub" in records_by_path["fincore/py.typed"]["category_tags"]
     assert "compat_generator_checker" in records_by_path["scripts/generate_compat_manifest.py"]["category_tags"]
     assert "historical_provenance_candidate" in records_by_path["CHANGELOG.md"]["category_tags"]
-    assert "historical_provenance_candidate" in records_by_path[
-        "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"
-    ]["category_tags"]
+    assert (
+        "historical_provenance_candidate"
+        in records_by_path["docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"]["category_tags"]
+    )
     assert "historical_provenance_candidate" in records_by_path["docs/upstream-provenance.md"]["category_tags"]
-    assert "historical_provenance_candidate" in records_by_path[
-        "examples/011_abberation/logs/AbberationStrategy_20260207_162014/run_info.json"
-    ]["category_tags"]
+    assert (
+        "historical_provenance_candidate"
+        in records_by_path["examples/011_abberation/logs/AbberationStrategy_20260207_162014/run_info.json"][
+            "category_tags"
+        ]
+    )
     assert "active_maintained_doc" not in records_by_path["CHANGELOG.md"]["category_tags"]
     assert "active_maintained_doc" not in records_by_path["docs/MIGRATION.md"]["category_tags"]
-    assert "active_maintained_doc" not in records_by_path[
-        "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"
-    ]["category_tags"]
+    assert (
+        "active_maintained_doc"
+        not in records_by_path["docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"]["category_tags"]
+    )
 
     source_commit = artifact["source_provenance"]["commit"]
     for path, record in records_by_path.items():
