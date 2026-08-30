@@ -1,7 +1,7 @@
 {
   "artifact_type": "repository_surface_facts_discovery",
   "boundaries": {
-    "excluded": "runtime execution, installed distributions, generic test nodes, source-module dependency analysis, human maintenance/lifecycle decisions, and untracked files",
+    "excluded": "runtime execution, installed distributions, generic runtime module paths, generic test nodes, source-module dependency analysis, human maintenance/lifecycle decisions, and untracked files",
     "included": [
       "tracked active workflow paths",
       "tracked packaging/release scripts and configuration",
@@ -10,19 +10,19 @@
     ]
   },
   "category_counts": {
-    "active_maintained_doc": 135,
+    "active_maintained_doc": 77,
     "active_workflow": 4,
     "compat_generator_checker": 6,
-    "example": 30,
-    "historical_provenance_candidate": 105,
+    "example": 39,
+    "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
-  "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory.",
-  "record_count": 294,
+  "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
+  "record_count": 285,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -291,6 +291,58 @@
       }
     },
     {
+      "blob_sha256": "029e68bf90a7e837b07326c2d8eef138ccb9ab6b71dca3b34b501b05656c8402",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "bfb3abd8c11640b6bc35c782925e443baf2fe326",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": ".superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/progress.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          "docs/compatibility/",
+          "docs/plans/2026-08-12-fincore-empyrical-pyfolio-convergence.md",
+          "examples/data/",
+          "fincore.core",
+          "fincore.empyrical",
+          "fincore.metrics",
+          "fincore.plugin",
+          "scripts/audit_test_markers.py",
+          "scripts/check_coverage_baseline.py",
+          "scripts/compare_benchmarks.py",
+          "tests/compat",
+          "tests/compat/test_manifest_integrity.py",
+          "tests/contracts",
+          "tests/contracts/test_returns_schema.py",
+          "tests/docs",
+          "tests/integration/test_plugin_end_to_end.py",
+          "tests/integration/test_workflows",
+          "tests/integration/test_workflows.py",
+          "tests/test_core",
+          "tests/test_edge_cases",
+          "tests/test_empyrical",
+          "tests/test_empyrical/coverage/test_init_coverage.py",
+          "tests/test_metrics",
+          "tests/test_pyfolio",
+          "tests/test_pyfolio/test_backend_side_effect.py",
+          "tests/test_report",
+          "tests/test_report/test_offline_report.py",
+          "tests/test_tearsheets",
+          "tests/test_utils"
+        ]
+      }
+    },
+    {
       "blob_sha256": "e93c2a07197c69d2da49cb816cd611d27971bf2986576afae4253718e87ea2a7",
       "category_tags": [
         "historical_provenance_candidate"
@@ -513,6 +565,37 @@
         "reference_tokens": [
           "fincore.pyfolio",
           "tests/test_pyfolio"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "260e973f8aac2eef06fa5a708355e7922bedd06c2bc57d2707132a5f417aa4e5",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "6fc27c3725d143aa3f72967329413649be6a501b",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": ".superpowers/sdd/2026-08-12-fincore-empyrical-pyfolio-convergence/task-7-brief.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          "tests/contracts",
+          "tests/contracts/test_portfolio_schema.py",
+          "tests/contracts/test_returns_schema.py",
+          "tests/test_core",
+          "tests/test_core/test_context_cache_contract.py",
+          "tests/test_core/test_context_export_contract.py",
+          "tests/test_core/test_context_plot_contract.py",
+          "tests/test_report"
         ]
       }
     },
@@ -1013,6 +1096,68 @@
       }
     },
     {
+      "blob_sha256": "6d327ffa4f85be2bcdd0d6db35411999ce6eb6714f928153df4e4ab4e56985c3",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "916ef19af65f2536aae4a5da6526f4ee27271330",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "_bmad-output/metrics-coverage-execution-plan.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          "docs/testing-guide.md",
+          "tests/conftest.py",
+          "tests/test_metrics/test_ratios_additional.py"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "213fe802c1913e7ce1890c6d7cc9875bed9eb693bad2e01e461070fd696bcf20",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "57fae42483fcd1379c447ceb49a42df885ae8a9a",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "_bmad-output/metrics-coverage-improvement-plan.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          "fincore.metrics",
+          "fincore.metrics.ratios",
+          "https://docs.pytest.org/",
+          "tests/test_metrics/test_bayesian.py",
+          "tests/test_metrics/test_consecutive.py",
+          "tests/test_metrics/test_perf_attrib.py",
+          "tests/test_metrics/test_perf_stats.py",
+          "tests/test_metrics/test_positions.py",
+          "tests/test_metrics/test_ratios_complete.py",
+          "tests/test_metrics/test_risk_complete.py",
+          "tests/test_metrics/test_round_trips.py",
+          "tests/test_metrics/test_timing.py",
+          "tests/test_metrics/test_transactions.py"
+        ]
+      }
+    },
+    {
       "blob_sha256": "0a65d2d1e008f26015ac19d7ab336cccd32809bbcba1a9e771d0111187bd2881",
       "category_tags": [
         "historical_provenance_candidate"
@@ -1046,6 +1191,36 @@
       }
     },
     {
+      "blob_sha256": "d348c436a710061b139e7d87ca608b2796c76ac33535009eadd3fb8c5eae35f4",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "19b8f0a9921d9b63354eca73ead18e0096ada4f0",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "_bmad-output/project-context.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          "fincore.constants",
+          "fincore.metrics",
+          "fincore.metrics.ratios",
+          "fincore.utils",
+          "fincore.viz",
+          "tests/test_data/",
+          "tests/test_data/returns.csv"
+        ]
+      }
+    },
+    {
       "blob_sha256": "da89b45e81b3e944e16085e6f35691fa576de4cae8d8f5076c1db3a8e4f4e34d",
       "category_tags": [
         "historical_provenance_candidate"
@@ -1075,6 +1250,32 @@
       }
     },
     {
+      "blob_sha256": "3e98a79ab82c35635c9b36de29222a651a05baea1e00feffc3ec29b561ab0f51",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "97bbc261069daec4a22a9d181a2c85e833177b9d",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "_bmad-output/test-artifacts/ci-configuration.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          ".github/workflows/ci-enhanced.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/test-priority.yml"
+        ]
+      }
+    },
+    {
       "blob_sha256": "75402f88100ba338e25e2eab289f0d0e61b7c6b15af10d713b2246750abec8c4",
       "category_tags": [
         "historical_provenance_candidate"
@@ -1100,6 +1301,28 @@
           "tests/conftest.py",
           "tests/integration/"
         ]
+      }
+    },
+    {
+      "blob_sha256": "7c1d60b7efb156a6401652ed3c838f94b822cfb67e75e8574fa4b1a7e0975672",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "14fb662ae5f013bf1f5f248b54f4ba6a3f67b0a3",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "_bmad-output/test-artifacts/nfr-assessment.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
       }
     },
     {
@@ -1157,7 +1380,7 @@
       }
     },
     {
-      "blob_sha256": "ef2e3e142e409a963aef3b61c582b3c1903cb2d79ac9c3b0aaf466c25c2a8c7b",
+      "blob_sha256": "b4935674d96c2a525bcda8274733b008f18c98156138f5c2bde1002a825e27a8",
       "category_tags": [
         "historical_provenance_candidate"
       ],
@@ -1167,54 +1390,38 @@
           "rule_id": "historical_provenance_path"
         }
       ],
-      "git_blob_id": "af85b0e9b4eeb8a4f7dce8358409283e1b840b8e",
+      "git_blob_id": "3e5f4165a33aacaebff17490a888051be8c7c9f5",
       "git_mode": "100644",
       "kind": "historical_provenance_candidate",
-      "path": "benchmarks/bench_factor_analysis.py",
+      "path": "_bmad-output/test-quality-monitoring-system.md",
       "token_facts": {
         "content_kind": "text",
         "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "dataclasses.dataclass",
-          "fincore.factor_analysis.analysis.analyze_factor",
-          "fincore.factor_analysis.data.prepare_factor_data",
-          "fincore.factor_analysis.data.quantize_factor",
-          "fincore.factor_analysis.models.fingerprint_value",
-          "fincore.factor_analysis.performance.average_cumulative_return_by_quantile",
-          "fincore.factor_analysis.performance.common_start_returns",
-          "fincore.factor_analysis.performance.factor_information_coefficient",
-          "fincore.factor_analysis.performance.factor_returns",
-          "fincore.factor_analysis.performance.factor_weights",
-          "numpy",
-          "pandas",
-          "typing.Any",
-          "typing.Callable",
-          "typing.cast"
-        ],
+        "import_tokens": [],
         "reference_tokens": [
-          "fincore.factor_analysis",
-          "fincore.factor_analysis.analysis",
-          "fincore.factor_analysis.data",
-          "fincore.factor_analysis.models",
-          "fincore.factor_analysis.performance"
+          "scripts/generate_quality_report.sh",
+          "scripts/notify_test_failure.py",
+          "tests/benchmarks/",
+          "tests/benchmarks/test_p0_metrics_performance.py",
+          "tests/integration/",
+          "tests/test_edge_cases.py"
         ]
       }
     },
     {
       "blob_sha256": "0e022ecbb97836b4f5f67c21d3eaaca3cdca775fbe2c918275b4db554c1e2edc",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "1297611d08d073f998cca27d0237216a7816f5f1",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/0039-优化完善项目/任务.md",
       "token_facts": {
         "content_kind": "text",
@@ -1493,17 +1700,17 @@
     {
       "blob_sha256": "5ed5bbf0757972e9f98caeed7de4f65b03d8e234ec8f419004fa9d76b6d17c6f",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "d16bd53961942569b6b26469dc0c4008b214e2c8",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "docs/MIGRATION.md",
       "token_facts": {
         "content_kind": "text",
@@ -4440,17 +4647,17 @@
     {
       "blob_sha256": "8c8733fec932ebf099fae2c1ec7520404d08159870c61b1a6337124df4646159",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "70ac4ffe90bd8468e05e478d4b338bdd3211819a",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0001_添加empyrical然后重构/01_需求文档.md",
       "token_facts": {
         "content_kind": "text",
@@ -4462,17 +4669,17 @@
     {
       "blob_sha256": "6555c22b5fddc29dcef5b74b37569afcd44fae325e3dd0942ac6a666370d5733",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "cd6941bd777a85dbb7c698e0d9cd3bf55d60cb73",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0002_把常量从子项目中移动到主项目/01_需求文档.md",
       "token_facts": {
         "content_kind": "text",
@@ -4484,17 +4691,17 @@
     {
       "blob_sha256": "93559aa35065652244acd748cae3bd3cb605594e541be5d80f6b1efb4186822a",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "f50fa6476f714b036fdd8064d780d2c694e367d1",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0003_把empyrical重构成一个类的形式/01_需求文档.md",
       "token_facts": {
         "content_kind": "text",
@@ -4510,17 +4717,17 @@
     {
       "blob_sha256": "9b0b4684ddabe273528ea419578487b0e3fa59630f2f269d6b4d935c7bbe39b9",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "84867612f5e374f62f671ffd7748eee70fa94cd3",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0004_修复重构后的bugs/01_需求.md",
       "token_facts": {
         "content_kind": "text",
@@ -4532,17 +4739,17 @@
     {
       "blob_sha256": "da22f757c68d1f1f6573c1adb5ce90e41a7d3bc8a7a67d7ac6f239151caaeaa4",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "858e4320371b61ba883ffb9b6d9314897fc34cfe",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0005_修复pyfolio重构后的bug/01_修复pyfolio中明显的bugs.md",
       "token_facts": {
         "content_kind": "text",
@@ -4554,17 +4761,17 @@
     {
       "blob_sha256": "b4c049626644e7f205f1da44768247839c5b9e4be5706c0974569d7f183fbf60",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "f943520ae5eb84396c30d8f91fb17deaa6d8f905",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0005_修复pyfolio重构后的bug/02_修复测试用例中的import问题.md",
       "token_facts": {
         "content_kind": "text",
@@ -4580,17 +4787,17 @@
     {
       "blob_sha256": "cffa607e7e603376dade804c85116f3598b950ea6b4d9af089d228e81ba1dd82",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "52788ca664ebcf6b0da6794228793a516f7aca2f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0006_增加注释/01_为函数在增加详细的注释.md",
       "token_facts": {
         "content_kind": "text",
@@ -4602,17 +4809,17 @@
     {
       "blob_sha256": "66a79e51f42763ada2dd3eec7ab8d320536de94efc09feff7a0e241e18d881da",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "1d5212ce40b8e5d1b8b5871363071a1960d5d422",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0007_分析bug和优化点/01_分析当前的bug和可以优化的地方.md",
       "token_facts": {
         "content_kind": "text",
@@ -4628,17 +4835,17 @@
     {
       "blob_sha256": "484405452fc28a3714eff8f4031c18b126154350980a045cfd74c73525d1ad3f",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "7cf66423a96b355643229e611c78b1412436cab6",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0008_继续分析bug和优化/01_分析当前的bug和可以优化的地方.md",
       "token_facts": {
         "content_kind": "text",
@@ -4653,17 +4860,17 @@
     {
       "blob_sha256": "81d145bb603ea2ee6b56f30853e4eacdf18754dbe6f0a15f71cebe0235246f97",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "51cd031b0a82f1f3a606e296760490788b3236a5",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0009-继续分析bug和优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4680,17 +4887,17 @@
     {
       "blob_sha256": "6d73d9d8360b7dd1d5ca03d0d2ed2c9e0ca97cceaebfeadbcc9580e7245fd146",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "a91b90a3f36880ba4c106ca64a32b47dd626cd63",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0010-继续分析bug和优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4702,17 +4909,17 @@
     {
       "blob_sha256": "2c034d0a52a3956c521de28f00a51b9be5edb7613b97227ebcdf81a55219956b",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "cddcd222542b147759997e8041eeb0c3c26c7022",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0011_继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4724,17 +4931,17 @@
     {
       "blob_sha256": "65b178822f10fdeea47d5f28a38bbd717a731788516b40edea4fcf8248a734e2",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "97fe86c7ff2be2d9200a316ab97f72c026129acf",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0012-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4746,17 +4953,17 @@
     {
       "blob_sha256": "e95ef1291d8ce2e43f19d173fe70d65d53c27ef9b7df3ee2684ace7f4bd71254",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "333dc3eaf741b8e88586cccfcdae0d2d2ce26707",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0013-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4770,17 +4977,17 @@
     {
       "blob_sha256": "b39e97b0278848b93a6178f6c5c51b4fe95d5aeb5c24f3afa64cd4b79d4b0cac",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "788515608e6fb3fbf2a5f1ea06f4c6d6b11b4828",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0014-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4792,17 +4999,17 @@
     {
       "blob_sha256": "106cf48e17cd026c03605e29219109cd0207c514d68cb93cff867c629bd9075b",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "5ed87616671a2d78bbf9c613efe48b2c85e4f290",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0015-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4816,17 +5023,17 @@
     {
       "blob_sha256": "8183146aa8516072448239d24e4e03ee4f6dc4517423cd3cd24f17ef4e130021",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "6425e1caa4dc6dfcc5f869fcae40373333a91583",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0016-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4838,17 +5045,17 @@
     {
       "blob_sha256": "9ccacc5abf6c29449b596e494da32856d1101d584025066eb07d6bdfd708b37d",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "14fcf8396cdfaa92f7e7bb33d532120625b2403a",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0017-继续分析bug和改进优化/01-分析bug和优化改进.md",
       "token_facts": {
         "content_kind": "text",
@@ -4860,17 +5067,17 @@
     {
       "blob_sha256": "fd664c56af567ae04e4eb4390ae4c56d6c7c04e89a981a6bbd3c80d68017c027",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "baedc99e895d313e7d3d91dc62e46c6336697e78",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0018-改进优化/改进优化建议.md",
       "token_facts": {
         "content_kind": "text",
@@ -4886,17 +5093,17 @@
     {
       "blob_sha256": "ada7c905d427b77307f9bf93bae3e09830434fee399dc0591e3dc4227a806563",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "2d28924b66dfd54f36bf69f5b0114694e7ca7370",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0018-改进优化/重构建议.md",
       "token_facts": {
         "content_kind": "text",
@@ -4945,17 +5152,17 @@
     {
       "blob_sha256": "3838bbdc370bcad1360c6d720e6a56af54fb150cd78cd0ec6e8ea7d07f83a15d",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "2524e4cd8c3e5d2052bc0ce6401a7059509d8f0f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0019-重构迭代/重构迭代计划.md",
       "token_facts": {
         "content_kind": "text",
@@ -5009,17 +5216,17 @@
     {
       "blob_sha256": "9119b64f2c8e0abe8dc5471babf7cac4c308798617bd42cd98595d4e00b44bae",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "22312bdbfe07b565f343e68f9ff82737a56e7032",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0020-重构优化/重构优化.md",
       "token_facts": {
         "content_kind": "text",
@@ -5041,17 +5248,17 @@
     {
       "blob_sha256": "d4a1000a86bb373a44432b783208f2491c302c9ba4089dd092234058793d5834",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "23d5f2b2c9267697d219adb3015be24d744a2281",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0021-重构优化/重构优化.md",
       "token_facts": {
         "content_kind": "text",
@@ -5065,17 +5272,17 @@
     {
       "blob_sha256": "d982f1c0099d6d69c446ab671d512fc9824188734857ab8cc3c42d1ce6fd6a56",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "917648b169020e43bd5adaa6caee01f33e27d44f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0022-重构优化/图标功能优化.md",
       "token_facts": {
         "content_kind": "text",
@@ -5089,17 +5296,17 @@
     {
       "blob_sha256": "9e56970c7af577c54ebfdbd470ca8f0843017187dcf94c0f7aab8835d8a27f47",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "7584b3ee05550e092d12ff1f88a50d3774717cdd",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0023-准备上线工作/生成fincore包.md",
       "token_facts": {
         "content_kind": "text",
@@ -5114,17 +5321,17 @@
     {
       "blob_sha256": "2bab31d266855116f0ee18f18f279562e43a82c33aeafbeb4b38a5a0d7a8a50b",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "cd0c5ffd044855f3ed869dcc16187ab122916d23",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0024-优化格式/优化格式.md",
       "token_facts": {
         "content_kind": "text",
@@ -5138,17 +5345,17 @@
     {
       "blob_sha256": "6caa8c9edf2860aceffc941b69de88b6915a343269587c7e58acab1e39b97217",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "9abf09ae15f49d5f5c8f403671f46bb8c80bd233",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/分析sortino_ratio.md",
       "token_facts": {
         "content_kind": "text",
@@ -5162,17 +5369,17 @@
     {
       "blob_sha256": "52a4be5bb073ad7203243586cf17287f3a67e6d6702325fe5a685db3a586f333",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "af560ae88f9e2330538172b3279bd17a5393c9c1",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/分析一下risk_free参数.md",
       "token_facts": {
         "content_kind": "text",
@@ -5182,19 +5389,41 @@
       }
     },
     {
-      "blob_sha256": "fb2dfb8e1078277addc3c136260f9c2d8926f808f5020f3e8ee882249acef6a4",
+      "blob_sha256": "b0dec9bf35390a58d196624e9d8a89830c8d1f08b9e92ea2cff0039843a2aff6",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "f9159ef02243420111ba75425700ce223ce7ebe9",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0025-校正指标计算方式/指标算法帮助文档.docx",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "fb2dfb8e1078277addc3c136260f9c2d8926f808f5020f3e8ee882249acef6a4",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "46e9ffba39df70ee79128ae22200ad98f82f2bc2",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/继续计算其他指标.md",
       "token_facts": {
         "content_kind": "text",
@@ -5211,17 +5440,17 @@
     {
       "blob_sha256": "46649b26cb013a41cc2c5ca732baecf770d3f3c5cab3081c6da9a257f06cf227",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "f3784552576b0f59e80501597ac25c7ce81b3f86",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/计算downside_risk等指标.md",
       "token_facts": {
         "content_kind": "text",
@@ -5240,17 +5469,17 @@
     {
       "blob_sha256": "c0bd0308e3180b7655ef4757e354d879e1280c21fc3a605607ab64aa8364767c",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "4587d988c0351468ff0abbf8591bd630f4ff2938",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/计算其他指标.md",
       "token_facts": {
         "content_kind": "text",
@@ -5266,17 +5495,17 @@
     {
       "blob_sha256": "261b03c1a88d9d47112ad8af80455743da9fe7998cc4e9f0ccc7dfe15194e5d3",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "c44eb2a43f622f4a8d1f423e3122675796dca0c7",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0025-校正指标计算方式/需求.md",
       "token_facts": {
         "content_kind": "text",
@@ -5288,19 +5517,261 @@
       }
     },
     {
-      "blob_sha256": "2286f8de06bd21da71ebd1f4062d6d8454aa43993bef4ffbe0ae76f5aec79033",
+      "blob_sha256": "93caba5fa60f8b7eda83b74f4839c7aac23c338d9754394b865f81f6a50ce0c1",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "ff12436c7afc4212e1a0917f5c90027eb94970e3",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/1.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "5243f0cfe53adee646acd54ef26f8e77b72f965436aceb4ed7ea1c4e76494913",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "6a8de6832557eec81336f0423d658de8d185aedf",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/10.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "609e3c860bd0b7c88bf533b962572fa8eda34379fdb286da99cb7e08ea53bedc",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "6f62b00bed821d884410043cf2ba4e2defdd68c2",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/11.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "e3fba0fe61325b221c98a98e715466bc9e5e3215c92d529ce100150730d3072c",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "12e15c53f3331290cfd995fb613218a78b8f248c",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/2.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "6229f5a5593464c23765424dd2c4d6c280a28125f19fc06a7c8a22bbc1e27cf0",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "27d6e9daa2ae42715808b2d329992a34c2abb846",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/3.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "bdf047d2669e29b5d7f9ce5c7a38b5365370cd3d3361fe6df4bb18b225891bd8",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "696dad52807b796edccea3a4ef574a31bb57abf3",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/4.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "80f18ae0bb03226d5d542e4915aabd0147065972f57912d706eb3f75a5b6b34a",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "29401e4ff029bc952ffc87f80c8ee2cb0d630135",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/5.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "f6c1aecef6aa1ebf362f23cbd00b52c53a97d624127c80570199c9d5989ea6cc",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "158594bf84b5c1ed2627ea78cf3a43404deea97e",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/6.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "0c1929488c73f5d26490a713370f9550d9b2c70dbae083d9a8658070ab0eb525",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "9a9a2620bc88dad0ccdbd353e68587be88521da0",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/7.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "8c548dff73e5dd22e9a2327d61e2439dc697c4f5fc58cd881bc24c746a4f14e0",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "1c406ac12fd5882f12531c3021d983e04c74f62e",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/8.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "54be209403cdb504af557c42df029bbe1272ba28b26a6727b268243336167cbe",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
+        }
+      ],
+      "git_blob_id": "4b7971d5c5e8037aecd8e0bbc0ec444cab947c38",
+      "git_mode": "100644",
+      "kind": "historical_provenance_candidate",
+      "path": "docs/迭代计划/0026-优化生成的报告/组合报告/9.png",
+      "token_facts": {
+        "content_kind": "binary",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "2286f8de06bd21da71ebd1f4062d6d8454aa43993bef4ffbe0ae76f5aec79033",
+      "category_tags": [
+        "historical_provenance_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "eddcc89bf047d99c37ce8cb2bdf56c582909f6cc",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0026-优化生成的报告/需求.md",
       "token_facts": {
         "content_kind": "text",
@@ -5315,17 +5786,17 @@
     {
       "blob_sha256": "31970d8b71f50f4e46e762195582b694fc6f2e688b2202d2b03582272f958ea7",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "bdd5d27caacdc4b1afe179e1e26aaa7e0624956f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0027-迈向世界一流绩效分析框架/01_需求文档.md",
       "token_facts": {
         "content_kind": "text",
@@ -5340,17 +5811,17 @@
     {
       "blob_sha256": "5087caea47a18387aaae0e03fcb4ea4bc3b5604c1e442ed23a236e2da5c3233b",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "7800dacdbadcebad0a014dfe2481999d5b53210d",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0027-迈向世界一流绩效分析框架/02_技术方案.md",
       "token_facts": {
         "content_kind": "text",
@@ -5368,17 +5839,17 @@
     {
       "blob_sha256": "71618601bfc42b7b559ebe7cafc203ea7189eabd134c3516368be484253b7539",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "3617f08ff6901a5902d6753c500a039b465a5ba2",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0027-迈向世界一流绩效分析框架/03_迭代进展.md",
       "token_facts": {
         "content_kind": "text",
@@ -5400,17 +5871,17 @@
     {
       "blob_sha256": "31d74c30e421ba69467e74b5a07cc07ab23a46ab8364c73b0c2b59e70fc293bb",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "7c632379565ac5ba8a50661e750f225df08808cf",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0028-代码质量优化迭代/01_任务分解.md",
       "token_facts": {
         "content_kind": "text",
@@ -5424,17 +5895,17 @@
     {
       "blob_sha256": "5c19c2b37fc486a7d75442d52450a51ca7639946401d5abdeb83950a6df54d21",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "01ee6ec3fd50359436de6f4fa91ea84d2f0752b2",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0028-代码质量优化迭代/02_迭代完成报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -5446,17 +5917,17 @@
     {
       "blob_sha256": "bc71f6d9871ea648f6dc39925def4042451d013f8d7c0b6421c8abcf07ee5499",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "f291ed095aacac3d591015f01d58e349a3c04a17",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0028-代码质量优化迭代/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5470,17 +5941,17 @@
     {
       "blob_sha256": "d23f51b22c6334a9c7eae482528c8acbcc99b46fbbcd5f5edb3dbcddc982b22e",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "31bb10bc0405def48077791407ef499425507547",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0029-完善hooks模块/02_迭代完成报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -5496,17 +5967,17 @@
     {
       "blob_sha256": "553b5d9db381318c1bf14049a2608077acea7ade6c8913c05ed2eb3aa3079884",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "84f49da701c626a0daafa15e839b5f66d1deaf69",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0029-完善hooks模块/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5522,17 +5993,17 @@
     {
       "blob_sha256": "d5a7f45aeaa9184e9b1d98d47dbdb362723ea1e84343a5e18e369d3fc221fc94",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "9f9573e512e0b44be0bef715708f1bdf42e32887",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0029-完善hooks模块/问题汇总.md",
       "token_facts": {
         "content_kind": "text",
@@ -5547,17 +6018,17 @@
     {
       "blob_sha256": "0146a1bc5b2d2070fe70e60f7378f117f9bdeb6fb5ac3d0efd4c650138baf414",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "b5f848f628ea5acfc52180c161213d52b24db6f6",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0030-类型系统改进/02_迭代完成报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -5569,17 +6040,17 @@
     {
       "blob_sha256": "643dee9074694745cbd4eae29425581d2e470d94cf56a3f3ae04e11fc7a1e9fe",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "0a85e8545d9e94fbcb094751b1987b41d6bb6cec",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0030-类型系统改进/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5591,17 +6062,17 @@
     {
       "blob_sha256": "76026452f77b73e2af943e5548e8dfbf82932ae846d144933468ae760b618176",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "cbbdbbe24d5a93b6965fa3deeddc93747cc4c98e",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0031-代码优化与清理/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5613,17 +6084,17 @@
     {
       "blob_sha256": "f9451aa6b9225f6815314d060b0ac1d4c3e5bbea72ddaa8ac1bfa689bf242698",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "336695b41bacd9ae3bbc237f8ae06a88408f0146",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0032-迭代完善计划/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5640,17 +6111,17 @@
     {
       "blob_sha256": "eb2e76d69b97ea6c957f2d6e785ca4dade7b421b93c703c81536d20a7e248ca1",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "a29af8ca1a84bacaafa0107048e2d45f251f3d13",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0033-持续优化与产品化/COMPLETED.md",
       "token_facts": {
         "content_kind": "text",
@@ -5668,17 +6139,17 @@
     {
       "blob_sha256": "bf3e8c599435bb2d53be90e3dd8aac5680b0372fcf6a3c6a9114673ed71179b5",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "4cb28c5a3397967015d7ff3a509c95e4a651644f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0033-持续优化与产品化/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5694,17 +6165,17 @@
     {
       "blob_sha256": "2d444092b520c778eb0209de59b0a8e1184b9c38720e45715eb5878d77b45258",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "4feb3ce5237525ed4b5845bd142c0c4227f4276f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0034-公开API稳定性与质量门禁/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5720,17 +6191,17 @@
     {
       "blob_sha256": "82e2915a34e552aa703f2a6c1f94dc57554a879ce6f20067f4c3f9a68585af3f",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "3e4f857d996f7bdb645f6f565dcb7133c18040f2",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0035-语义正确性与测试有效性深化/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5746,17 +6217,17 @@
     {
       "blob_sha256": "57b5a42c26992d282cb5ff1f2c8e499847c99d214492fec7842c3b8ae6ab2ce5",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "0e25da6f189b8b63a581c5723760411607f70e98",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0036-全面质量提升与Bug修复/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5775,17 +6246,17 @@
     {
       "blob_sha256": "bc191222861113f9531d964269a75e7d0315e6fba82fe79fb5cc5a3908d956aa",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "26a1b5d0124040f6078a1fd63eab7d62d24c7d85",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0037-不断修复bug并完善项目/readme.md",
       "token_facts": {
         "content_kind": "text",
@@ -5797,17 +6268,17 @@
     {
       "blob_sha256": "182b5fb4138b57ed81ce79480bd3b58f0a927f78dcf500ff689e70104a7a96e1",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "4f325db46cd038416921f9e2a47b9efa8522ab43",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0038-持续不间断运行/任务.md",
       "token_facts": {
         "content_kind": "text",
@@ -5822,17 +6293,17 @@
     {
       "blob_sha256": "21dbcf52de8904859b8a312e71b31f995c3ff06dca95abfc0b3d81da9a840117",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "3432a46194e03a8d93e09e72c977e3aa3ce404a9",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/00_总结报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -5844,17 +6315,17 @@
     {
       "blob_sha256": "90c7dedc0b88a364ec7359d5bab06f74862e0770dec67e69d080be8188bfb2fa",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "0b9a365a03b179940df6e8e726183717ae83a56c",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/01_测试覆盖率补充.md",
       "token_facts": {
         "content_kind": "text",
@@ -5872,17 +6343,17 @@
     {
       "blob_sha256": "4c163fc3e5847841ce7d08741a42511c608d7f50a6174da88bfe841a3d67d183",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "022622963ded4010c84875c413cad0f2ab6387cb",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/02_代码风格统一.md",
       "token_facts": {
         "content_kind": "text",
@@ -5896,17 +6367,17 @@
     {
       "blob_sha256": "4c67a927f93b4bac9ffacdd28e0b9ed752cd20f73703710e43ce72a685111d00",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "5bd8fc58c01c122e5984f0a9985964a7ebd50809",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/03_文档完善.md",
       "token_facts": {
         "content_kind": "text",
@@ -5922,17 +6393,17 @@
     {
       "blob_sha256": "389ed08afdf83d5dedc4ef7c0a41763f3787bd85b698e1d6e6249d08f810d09d",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "5dee62a3df2161df95d8499df8e3d892239a3f91",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/04_依赖更新.md",
       "token_facts": {
         "content_kind": "text",
@@ -5944,17 +6415,17 @@
     {
       "blob_sha256": "7a73741ea4f5c3502a5e36423150fb797d36d8bab647f9cdd58cff5f12ae2b5c",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "94b966118c0e849787e6f27562059d9eefcb4938",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/05_1.0发布准备.md",
       "token_facts": {
         "content_kind": "text",
@@ -5968,17 +6439,17 @@
     {
       "blob_sha256": "51faac15fccd3948cbb8ceb09b0b1b4503ce20a4e281210c45021812efc44c03",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "c46f596955287a237bcabdc145dbae8ac9648199",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -5990,17 +6461,17 @@
     {
       "blob_sha256": "ee8a30b075952f5f19b5ae4566f392d34e0b44e9f1ef52ac7053c84a9d0506a7",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "1db47e9f83ac8c7c97bf26d45d6a392f95647aa2",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/完成报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -6016,17 +6487,17 @@
     {
       "blob_sha256": "a4b5fbd622b52672c3985141337e6da3c8dbce645c421f2bfc91ee5c88fc683f",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "0a859ea69f08a7eac22266d7de154bf2a8e5700c",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/最终完成报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -6051,17 +6522,17 @@
     {
       "blob_sha256": "d4800d977b9c52694fccdc98e662f3b4618b09799b2316254483da3c1c6a87c2",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "20f9e29029b658c5dd0879d0d54dbb93170b391a",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/0040-渐进式质量提升与产品化/测试覆盖率分析报告.md",
       "token_facts": {
         "content_kind": "text",
@@ -6073,17 +6544,17 @@
     {
       "blob_sha256": "66ce6e67a3d8925f81cfb5acfe6a1711a53a937d5bb16668ccb298bf708e6fb1",
       "category_tags": [
-        "active_maintained_doc"
+        "historical_provenance_candidate"
       ],
       "classification_basis": [
         {
-          "evidence": "tracked documentation/configuration path without historical marker",
-          "rule_id": "maintained_document_path"
+          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
+          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "dc9fd8b8ac6661160ed762e4ac0a738b38774a7f",
       "git_mode": "100644",
-      "kind": "active_maintained_doc",
+      "kind": "historical_provenance_candidate",
       "path": "docs/迭代计划/README.md",
       "token_facts": {
         "content_kind": "text",
@@ -6435,17 +6906,17 @@
     {
       "blob_sha256": "a959084556a716b2b39ec23b47417609b74af2e3485ccc64779ee93a1a5156ff",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "adc77a381bfe0cab229bb506496bb1d94d5d1842",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/01_single_strategy_analysis.py",
       "token_facts": {
         "content_kind": "text",
@@ -6557,17 +7028,17 @@
     {
       "blob_sha256": "463bc87504009b73ef5f885f4dbfc50b4f4017e1b17ff9decb824e535ddf6f26",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "431ac465a68fc79388b885c197e92187f9258b11",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/04_risk_management_report.py",
       "token_facts": {
         "content_kind": "text",
@@ -6685,17 +7156,17 @@
     {
       "blob_sha256": "6b5377260eec2b6609fd0869add1bea293084e3143fd755189f97db3e63b676c",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "c15e1101a12979894055d40418713fc7a971638c",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/07_market_timing_analysis.py",
       "token_facts": {
         "content_kind": "text",
@@ -6788,17 +7259,17 @@
     {
       "blob_sha256": "f82b7353c875d3b0b2078b2afff79a58854dbad82a70c940e1601f39799f6c2a",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "29f4fbb2866a67a3c544496bf187118bd6039aea",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/10_market_timing_analysis.py",
       "token_facts": {
         "content_kind": "text",
@@ -6886,17 +7357,17 @@
     {
       "blob_sha256": "cdbabc4054ec1799f1a13fd42a7dd5e312a82392c7e71d4b80097f3a8601d469",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "b07adcffcfa48d76a199cea3928088b464f96982",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/13_bootstrap_analysis.py",
       "token_facts": {
         "content_kind": "text",
@@ -6951,17 +7422,17 @@
     {
       "blob_sha256": "464a8a048a899bc5bea9d6e76e5b1f6022c8c68402e8f5828c22964f6f91cb66",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "85a53296f2e30fffc71495de5e85e920b5b703c5",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/15_report_generation.py",
       "token_facts": {
         "content_kind": "text",
@@ -7049,17 +7520,17 @@
     {
       "blob_sha256": "baa1222aefab82114e0470c8207a0f85b0b146715c673067a2de58789ff0a620",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "33efe679992f7db17154c86d60ef012c3dcd653d",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/18_positions_analysis.py",
       "token_facts": {
         "content_kind": "text",
@@ -7332,17 +7803,17 @@
     {
       "blob_sha256": "1bd6fd538e3ee0000fa8bee75ef007d12112d6ca6e17e108ec2caef529fe2768",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "6ed6827e7d481925af68e6b6a1eb27aa5e2d6dd2",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/factor_analysis_quickstart.py",
       "token_facts": {
         "content_kind": "text",
@@ -7376,17 +7847,17 @@
     {
       "blob_sha256": "c8c79aa96c480e402a6ae8b7343e5a126a84f7a8055dd86f497f95ebd4f64106",
       "category_tags": [
-        "historical_provenance_candidate"
+        "example"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked example source, configuration, or input path",
+          "rule_id": "example_path"
         }
       ],
       "git_blob_id": "961afa2787033faf78952c096061f5590a8fa711",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "example",
       "path": "examples/generate_report.py",
       "token_facts": {
         "content_kind": "text",
@@ -7589,114 +8060,6 @@
       }
     },
     {
-      "blob_sha256": "a2379a06920254c0bc715e863d1100cecf2927df3deae344a4ba75734e41eaf9",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "15b934650ba1e6f3e6c945fb3727f6957980216c",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "fincore/contracts/analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "dataclasses.dataclass",
-          "dataclasses.field",
-          "fincore.contracts.profiles.ENHANCED_V1",
-          "hashlib",
-          "pandas",
-          "typing.Any"
-        ],
-        "reference_tokens": [
-          "fincore.contracts.profiles"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "d7555307daebfce469ff5949fc0094d720f2dcf07d1aa4e6929601d7cf524a79",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "5fc3a68e2d83f5872250335e5ff5b140490e44e4",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "fincore/contracts/factor_analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "dataclasses.dataclass",
-          "inspect",
-          "types.MappingProxyType",
-          "typing.Any",
-          "typing.Literal",
-          "typing.Mapping"
-        ],
-        "reference_tokens": []
-      }
-    },
-    {
-      "blob_sha256": "8702be4d8ae80d71f00df87dd271af7abdd9e33a421cced330db97e8ec6b77e9",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "32a8484b5147e78588dab5d479c2d893a7111f39",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "fincore/factor_analysis/analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "collections.abc.Hashable",
-          "collections.abc.Sequence",
-          "fincore.factor_analysis.calendar.get_forward_returns_columns",
-          "fincore.factor_analysis.models.EventAnalysisModel",
-          "fincore.factor_analysis.models.FactorAnalysisConfig",
-          "fincore.factor_analysis.models.FactorAnalysisModel",
-          "fincore.factor_analysis.models.FactorGroupAnalysis",
-          "fincore.factor_analysis.models.fingerprint_value",
-          "fincore.factor_analysis.models.frozen_mapping",
-          "fincore.factor_analysis.models.snapshot_pandas",
-          "fincore.factor_analysis.performance",
-          "fincore.factor_analysis.portfolio",
-          "numpy",
-          "operator",
-          "pandas",
-          "typing.Any",
-          "typing.cast"
-        ],
-        "reference_tokens": [
-          "fincore.factor_analysis.calendar",
-          "fincore.factor_analysis.models",
-          "fincore.factor_analysis.performance",
-          "fincore.factor_analysis.portfolio"
-        ]
-      }
-    },
-    {
       "blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "category_tags": [
         "type_stub"
@@ -7716,97 +8079,6 @@
         "executable_tokens": [],
         "import_tokens": [],
         "reference_tokens": []
-      }
-    },
-    {
-      "blob_sha256": "b241d79de995528a3ac5069ef05ba7188d24bebbe2c349e2df96e4944ae8b113",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "08793561910de32c218cda96d584442aee538ebb",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "fincore/report/provenance.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "dataclasses.dataclass",
-          "dataclasses.field",
-          "hashlib",
-          "json",
-          "numpy",
-          "pandas",
-          "pathlib.Path",
-          "pathlib.PurePath",
-          "pathlib.PureWindowsPath",
-          "platform",
-          "scipy",
-          "subprocess",
-          "typing.Any",
-          "typing.Mapping",
-          "urllib.parse.urlsplit"
-        ],
-        "reference_tokens": []
-      }
-    },
-    {
-      "blob_sha256": "7e0c5c27ffc8eaf572d96513ebc360f60d22fa08babddc05bf25c5a0fd8570b6",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "352c603facac499be8942d9186366c6bfdbf56f1",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "fincore/risk/report.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "collections.abc.Mapping",
-          "collections.abc.Sequence",
-          "copy",
-          "dataclasses.asdict",
-          "dataclasses.dataclass",
-          "datetime.timezone",
-          "fincore.risk.backtesting.RiskBacktestResult",
-          "fincore.risk.calibration.basel_traffic_light",
-          "fincore.risk.diagnostics.WalkForwardVaRResult",
-          "json",
-          "math",
-          "numbers.Integral",
-          "numbers.Real",
-          "numpy",
-          "pandas",
-          "pathlib.Path",
-          "types.MappingProxyType",
-          "typing.Any",
-          "typing.Final",
-          "typing.TYPE_CHECKING",
-          "typing.cast"
-        ],
-        "reference_tokens": [
-          "fincore.risk.backtesting",
-          "fincore.risk.calibration",
-          "fincore.risk.diagnostics",
-          "fincore.risk.diagnostics.WalkForwardVaRResult",
-          "fincore.risk.diagnostics.walk_forward_var",
-          "fincore.risk.walk_forward_var"
-        ]
       }
     },
     {
@@ -7899,17 +8171,17 @@
     {
       "blob_sha256": "1c0a52f94778048a2af18431b875670cfc6549ebafc851a0bdd9a7a52b4f4ac9",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "a004ee9afae3513c60fcb4d74ebe41ac3a79eafe",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/api/factor-analysis.md",
       "token_facts": {
         "content_kind": "text",
@@ -8089,17 +8361,17 @@
     {
       "blob_sha256": "d1401cd8ede64244f77203c35f4a620e241a11075ade5c0fdc2bb267ce389f09",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "ee8abdf772932f4f37f32e63a399d1ba1a46ce47",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/api/report.md",
       "token_facts": {
         "content_kind": "text",
@@ -8260,17 +8532,17 @@
     {
       "blob_sha256": "e73ec224e999df9bbe348bc5644c62e11df9d070b59be93e0eec4e9c96901536",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "c4ec1259e50ed9b3bc4a15464b35e9ed2842e19c",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/development/changelog.md",
       "token_facts": {
         "content_kind": "text",
@@ -8440,17 +8712,17 @@
     {
       "blob_sha256": "2d8e90cc7504b2b4ed3c62866442ac0264cc2c3925ae1d8799943ec99df27468",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "d052115435672b1f255101ea16a0369c5b50a9e0",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/getting-started/migration.md",
       "token_facts": {
         "content_kind": "text",
@@ -8500,17 +8772,17 @@
     {
       "blob_sha256": "9f630ffdc78989c814266d8bab01d183e0208260b74fd41e5c3d0f880dddd189",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "39e29e90ac4f8de1003d1bac86241e8de165706a",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/guide/analysis-context.md",
       "token_facts": {
         "content_kind": "text",
@@ -8557,17 +8829,17 @@
     {
       "blob_sha256": "b4b7cbc257a8dd86012748fab38db6adeabc26be0970b6b2f120ed47760139ef",
       "category_tags": [
-        "historical_provenance_candidate"
+        "active_maintained_doc"
       ],
       "classification_basis": [
         {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
+          "evidence": "tracked documentation/configuration path without historical marker",
+          "rule_id": "maintained_document_path"
         }
       ],
       "git_blob_id": "34ba7a1b2187e91967cfb2a13bc2184002b597f7",
       "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
+      "kind": "active_maintained_doc",
       "path": "mkdocs_docs/guide/factor-analysis.md",
       "token_facts": {
         "content_kind": "text",
@@ -8838,60 +9110,14 @@
       }
     },
     {
-      "blob_sha256": "c2a2befe8d7bcf397bff8545159031114393064a25975923a6860976a520c5bf",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "10ebbfbe27fde68d17fb13591a3951bdff3bb211",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "scripts/capture_capability_baseline.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [
-          "python:__main__"
-        ],
-        "import_tokens": [
-          "__future__.annotations",
-          "argparse",
-          "datetime.UTC",
-          "datetime.datetime",
-          "hashlib",
-          "json",
-          "os",
-          "pathlib.Path",
-          "pathlib.PurePosixPath",
-          "pathlib.PureWindowsPath",
-          "re",
-          "subprocess",
-          "sys",
-          "tempfile",
-          "typing.Any",
-          "typing.Sequence"
-        ],
-        "reference_tokens": []
-      }
-    },
-    {
       "blob_sha256": "e6899c146340dcd54ba838f735ab341344152d87648bdfd62dfa9b85b760a5e9",
       "category_tags": [
-        "compat_generator_checker",
-        "historical_provenance_candidate"
+        "compat_generator_checker"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
-        },
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
         }
       ],
       "git_blob_id": "64b2b474062cae41d6da79dc2ef25b6716e64e62",
@@ -8967,42 +9193,6 @@
         ],
         "reference_tokens": [
           "scripts/snapshot_public_api.py"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "21691249221354bd71d21721fcebf248c272e2920413f34d7ccf759b9c2bad53",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "9cce2c4903c000736b5919eed9a9217d4dc26638",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "scripts/check_coverage_baseline.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [
-          "python:__main__"
-        ],
-        "import_tokens": [
-          "__future__.annotations",
-          "argparse",
-          "collections.defaultdict",
-          "json",
-          "pathlib.Path",
-          "re",
-          "subprocess",
-          "sys",
-          "typing.Any"
-        ],
-        "reference_tokens": [
-          "scripts/collect_quality_baseline.py"
         ]
       }
     },
@@ -9156,56 +9346,6 @@
         "reference_tokens": [
           "fincore.__file__",
           "fincore.__version__"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "d1cd9c73a670031b521fb468c89a9a5bf037d0f74c810965ab7a216ad6a7e90f",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "5526e7ef5ce4df23c35852963492721df4d800c9",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "scripts/collect_quality_baseline.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [
-          "python:__main__"
-        ],
-        "import_tokens": [
-          "__future__.annotations",
-          "argparse",
-          "collections.abc.Iterable",
-          "datetime.UTC",
-          "datetime.datetime",
-          "hashlib",
-          "json",
-          "matplotlib",
-          "numpy",
-          "os",
-          "pandas",
-          "pathlib.Path",
-          "re",
-          "scipy",
-          "shutil",
-          "subprocess",
-          "sys",
-          "tempfile",
-          "time",
-          "typing.Any",
-          "typing.TYPE_CHECKING"
-        ],
-        "reference_tokens": [
-          "fincore.egg",
-          "scripts/check_quality_snapshot.py",
-          "tests/benchmarks"
         ]
       }
     },
@@ -9634,719 +9774,6 @@
         ],
         "reference_tokens": []
       }
-    },
-    {
-      "blob_sha256": "0cd325d29813880e3759a0c294028046e78e20d59bd51cdf93193d2cc77a5389",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "bae276233480cffdde34d2c053ddc0486d2af090",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/benchmarks/test_factor_analysis_performance.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "bench_factor_analysis.SCENARIOS",
-          "bench_factor_analysis.SEED",
-          "copy.deepcopy",
-          "hashlib",
-          "json",
-          "os",
-          "pathlib.Path",
-          "platform",
-          "pytest",
-          "scripts.compare_benchmarks.list_candidate_baselines",
-          "scripts.compare_benchmarks.select_baseline",
-          "subprocess",
-          "sys",
-          "typing.Any"
-        ],
-        "reference_tokens": [
-          "tests/benchmarks/test_factor_analysis_performance.py"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "f2f0ced6daf7cf43db08bda5388490b1ed419d7dae0d888febe5e4d549fc5b00",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "14271dec1e64f8669bcf18f01b9d038652f772d0",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-upstream-test-migration.json",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [],
-        "reference_tokens": [
-          "tests/compat/alphalens/test_factor_cleaning.py",
-          "tests/compat/alphalens/test_forward_returns.py",
-          "tests/compat/alphalens/test_performance.py",
-          "tests/compat/alphalens/test_tearsheets_e2e.py",
-          "tests/test_factor_analysis/test_events.py",
-          "tests/test_factor_analysis/test_information.py",
-          "tests/test_factor_analysis/test_tears.py",
-          "tests/test_factor_analysis/test_turnover.py",
-          "tests/test_factor_analysis/test_weights_returns.py",
-          "tests/test_performance.py",
-          "tests/test_tears.py",
-          "tests/test_utils.py"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "1d54a1f1c1f325136c09f291c986dcf9778beb685f4ab511cef70c0a50ee4e7e",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "5f09dacd2ad1dc65261cacfe1c52d74ae576ba8c",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/compat/pyfolio/test_review_fixes.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "decimal.Decimal",
-          "fincore.constants.CAP_BUCKETS",
-          "fincore.constants.SECTORS",
-          "fincore.contracts.portfolio.ExposureBundle",
-          "fincore.empyrical.Empyrical",
-          "fincore.exceptions.DataAlignmentError",
-          "fincore.exceptions.ValidationError",
-          "fincore.metrics.positions.compute_cap_exposures",
-          "fincore.metrics.positions.compute_sector_exposures",
-          "fincore.metrics.positions.compute_style_factor_exposures",
-          "fincore.metrics.positions.compute_volume_exposures",
-          "fincore.metrics.positions.get_long_short_notional",
-          "fincore.metrics.transactions.make_transaction_frame",
-          "fincore.pyfolio.Pyfolio",
-          "importlib",
-          "matplotlib",
-          "matplotlib.figure.Figure",
-          "matplotlib.pyplot",
-          "numpy",
-          "pandas",
-          "pandas.testing.assert_series_equal",
-          "pytest",
-          "typing.Any"
-        ],
-        "reference_tokens": [
-          "fincore.constants",
-          "fincore.contracts.portfolio",
-          "fincore.empyrical",
-          "fincore.exceptions",
-          "fincore.metrics.positions",
-          "fincore.metrics.transactions",
-          "fincore.pyfolio"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "49ea061ccc450c78e1fbb643dab8e59729cccd469de150cd9cddbcf97ced4f5e",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "55074a52fd90eeb1b5d8b314fcd714e31a5ef51c",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/compat/test_alphalens_upstream_test_migration.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "ast",
-          "json",
-          "pathlib.Path",
-          "pytest",
-          "runpy",
-          "subprocess",
-          "sys",
-          "textwrap"
-        ],
-        "reference_tokens": [
-          "'alphalens'",
-          "[\n                \"--inventory\",\n                str(INVENTORY_PATH",
-          "[\n            \"--inventory\",\n            str(INVENTORY_PATH",
-          "fincore.alphalens",
-          "proof,\n            {\"rerun-case\": \"tests/compat/alphalens/test_target.py::test_target[rerun-case]\"},",
-          "proof,\n            {\"revision-case\": \"tests/compat/alphalens/test_target.py::test_target[revision-case]\"},",
-          "proof,\n            {\"revision-case\": \"tests/compat/alphalens/test_target.py::test_target[revision-case]\"},\n            \"0\" * 40,",
-          "proof_path",
-          "proof_path, \"utils\"",
-          "selected_inventory, selected_map",
-          "tests/compat/alphalens/test_forward_returns.py",
-          "tests/compat/alphalens/test_target.py",
-          "tests/compat/alphalens/test_tearsheets_e2e.py",
-          "tests/not-pinned.py",
-          "tests/test_performance.py",
-          "tests/test_tears.py",
-          "tests/test_utils.py",
-          "tree"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "09a8de67cd5aa4be3b464ab1378892a9e410299196ee471b91a5bb0371c548fa",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "1334e2acdf72181b5e3904739d30212b770f1406",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/contracts/test_enhanced_analysis_contract.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.contracts.analysis.AnalysisInput",
-          "fincore.contracts.analysis.PortfolioSemantics",
-          "fincore.contracts.analysis.SeriesSemantics",
-          "fincore.exceptions.AlignmentError",
-          "fincore.exceptions.FincoreError",
-          "fincore.exceptions.InputContractError",
-          "fincore.exceptions.NumericalConvergenceError",
-          "fincore.exceptions.ResourceLifecycleError",
-          "fincore.exceptions.ResultContractError",
-          "fincore.factor_analysis.fama_macbeth",
-          "inspect",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.contracts.analysis",
-          "fincore.exceptions",
-          "fincore.factor_analysis",
-          "fincore.metrics.ratios.sharpe_ratio"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "1ffb89838e19e0b48aae558382fce30524f4ac13d7eece868780d77ab02e5783",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "381f6b7e55e2936870e6ec5141ae5d181c070bef",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/numerical/test_risk_validation_report.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "dataclasses.replace",
-          "dateutil.tz",
-          "fincore.risk.BASEL_REFERENCE_DISCLOSURE",
-          "fincore.risk.RiskModelSpec",
-          "fincore.risk.backtesting.backtest_var",
-          "fincore.risk.build_risk_validation_report",
-          "fincore.risk.calibration.basel_traffic_light",
-          "fincore.risk.walk_forward_var",
-          "json",
-          "numpy",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.risk",
-          "fincore.risk.backtesting",
-          "fincore.risk.calibration"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "61cb93139e08f5ea09ac8246a7002193dd7f967c937c7d7a315747c3be17599d",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "45d73960c54e2d8f6b14dded6e11c21e2e33f5c1",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/quality/test_capture_capability_baseline.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "hashlib",
-          "importlib.util",
-          "json",
-          "pathlib.Path",
-          "pytest",
-          "subprocess",
-          "sys"
-        ],
-        "reference_tokens": [
-          "fincore.metrics",
-          "tests/legacy/test_metrics.py",
-          "tests/parity/test_metrics.py"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "7896c80b81aa8699570d1dd4bc5f08d8f57c8ecd522648048659f4c7f0b42692",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "1681af198441bd7a92c465435e016b15d525c61c",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/quality/test_collect_quality_baseline.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "importlib.util",
-          "pathlib.Path",
-          "pytest",
-          "subprocess"
-        ],
-        "reference_tokens": [
-          "docs/quality/baseline.json",
-          "fincore.egg",
-          "fincore.py"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "b9e39542fd0157f30b9ed6664018bfe514af3a3d59eff7d67464ce8b2ea209b5",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "38b7385710108640483fe03a1a877c3b483e7aeb",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_attribution/coverage/test_style_analysis_coverage.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.attribution.style.style_analysis",
-          "numpy",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.attribution.style"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "2a0ba3a59fbaff122966471853f6034d7ea62190a62ca96637d95addd3fb8e1d",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "9704c79329368c5e513c08af2a444568f3924943",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_attribution/coverage/test_style_result_summary.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.attribution.style.StyleResult",
-          "fincore.attribution.style.analyze_performance_by_style",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.attribution.style"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "8aa7c520568f7893b9253b17d0d1860eade23539d736260cca1fc96a849d3743",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "e215416e7b56bdc68ad5127365d04656875628c4",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_attribution/coverage/test_style_result_summary_advanced.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.attribution.style.StyleResult",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.attribution.style"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "8550c834869e7f25e91294381a672d747ad938363be23073ee3447b7d092063e",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "b38ba5461da3cf4cca857307a60ae8d065ff9a62",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_attribution/test_style_analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.attribution.style.StyleResult",
-          "fincore.attribution.style.style_analysis",
-          "numpy",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.attribution.style"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "ba8cf5f9d8c5d9314a5a688baea3c549dde8fa61f70416e7733de9a076ab6eef",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "511744987c5f9d82909f038c095b82e688ef5e68",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_empyrical/stats/REFACTORING_SUMMARY.md",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [],
-        "reference_tokens": [
-          "tests/test_empyrical/stats/",
-          "tests/test_empyrical/test_stats.py",
-          "tests/test_empyrical/test_stats.py.bak"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "8600cd0383b5f85bd60c4c96b0caf69912c2a123688b400179a3426be1582269",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "2fb79df60e43e9773d6616c0c6e4c815c864a693",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_empyrical/test_correlation_analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "fincore.empyrical.Empyrical",
-          "numpy",
-          "numpy.testing.assert_almost_equal",
-          "pandas",
-          "unittest.TestCase",
-          "warnings"
-        ],
-        "reference_tokens": [
-          "fincore.empyrical"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "e25820b708d44d8c0d11f0d64edf6445d9a0a94e97b3129dc82fcaf0ef9f262a",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "b9b6377a5a543595edf747f6aa8b5006559568cb",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_empyrical/test_indicator_analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "fincore.empyrical.Empyrical",
-          "fincore.metrics.ratios.information_ratio",
-          "numpy",
-          "numpy.testing.assert_almost_equal",
-          "pandas",
-          "unittest.TestCase"
-        ],
-        "reference_tokens": [
-          "docs/0025-",
-          "fincore.empyrical",
-          "fincore.metrics.ratios"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "5d02db718c8cdb726c5a561914a26072967afd703ad376b69a7150c30e753901",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "f0f5f2c16947def0d0773b8370878e083b3cb5f2",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_factor_analysis/test_analysis.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.factor_analysis.FactorAnalysisModel",
-          "fincore.factor_analysis.analysis.analyze_factor",
-          "fincore.factor_analysis.analyze_factor",
-          "fincore.factor_analysis.data",
-          "pandas",
-          "pytest",
-          "typing.TYPE_CHECKING"
-        ],
-        "reference_tokens": [
-          "fincore.factor_analysis",
-          "fincore.factor_analysis.analysis"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "07720d9a0fb9bc0362f5ac84cafe63caf00a164e6e556e1f4505c077e518ce04",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "b61224b49153e3db2a61b6a730106df1c1cd2f8d",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_factor_analysis/test_analysis_branches.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.factor_analysis.analysis._analyze_factor",
-          "fincore.factor_analysis.analysis._copy_clean_factor_data",
-          "fincore.factor_analysis.analysis._legacy_quantile_cumulative_returns",
-          "fincore.factor_analysis.analysis._normalize_periods",
-          "fincore.factor_analysis.analysis._normalize_positive_lags",
-          "fincore.factor_analysis.analysis._normalize_time_aggregation",
-          "numpy",
-          "pandas",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.factor_analysis.analysis"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "a21bef44d420ad1a468cd5d959d4b2052c7bdda67969ac7c28b7872b11801ec6",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "35e0f0c82fff458f5c796dd125e8f95709cdac0c",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_report/test_offline_report.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.report",
-          "fincore.report.render_html.generate_html",
-          "pandas",
-          "pathlib.Path",
-          "socket"
-        ],
-        "reference_tokens": [
-          "fincore.report",
-          "fincore.report.__file__",
-          "fincore.report.render_html",
-          "http://cdn.\"",
-          "https://cdn.\""
-        ]
-      }
-    },
-    {
-      "blob_sha256": "fcedb096b0684f474225c571f38edebf98a5d0261d003e8244ec5156657b4569",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "82b300a457b65ac39896bd90c3294bf8893a3d3f",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_report/test_pdf_cleanup.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "PyPDF2.PdfWriter",
-          "__future__.annotations",
-          "fincore.exceptions.ValidationError",
-          "fincore.report.render_pdf.generate_pdf",
-          "pandas",
-          "pathlib.Path",
-          "playwright.sync_api",
-          "pytest"
-        ],
-        "reference_tokens": [
-          "fincore.exceptions",
-          "fincore.report.render_pdf"
-        ]
-      }
-    },
-    {
-      "blob_sha256": "c951d9c56b9c5ce95992329f72f9b52bf3b2f81d756d96ecc8a0f56e8f4c141b",
-      "category_tags": [
-        "historical_provenance_candidate"
-      ],
-      "classification_basis": [
-        {
-          "evidence": "path/name is a historical, generated-artifact, plan, quality, ADR, or provenance candidate",
-          "rule_id": "historical_provenance_path"
-        }
-      ],
-      "git_blob_id": "9d771dccaa2becf21fa450a3b8f94e8d6418334d",
-      "git_mode": "100644",
-      "kind": "historical_provenance_candidate",
-      "path": "tests/test_report/test_provenance.py",
-      "token_facts": {
-        "content_kind": "text",
-        "executable_tokens": [],
-        "import_tokens": [
-          "__future__.annotations",
-          "fincore.report.create_strategy_report",
-          "fincore.report.provenance.ReportProvenance",
-          "fincore.report.provenance.SCHEMA_VERSION",
-          "json",
-          "pandas",
-          "pathlib.Path",
-          "subprocess",
-          "typing.TYPE_CHECKING"
-        ],
-        "reference_tokens": [
-          "fincore.report",
-          "fincore.report.provenance"
-        ]
-      }
     }
   ],
   "schema_version": 1,
@@ -10356,7 +9783,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "ac282861440d998571d3bde5d271ee33abab2722",
-    "tree": "a9ab0e68ff7ba368a97175d4a5a8f1613833bd9d"
+    "commit": "e64ccef65860406a9943442a02aa55785a8bb1fa",
+    "tree": "d54ad4bb73578bec4ffe0a03de39de19a5dd2b24"
   }
 }
