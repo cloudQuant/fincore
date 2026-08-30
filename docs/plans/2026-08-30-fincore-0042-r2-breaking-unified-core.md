@@ -499,6 +499,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create: `tests/parity/fixtures/planned-api-0.5.0.json`
 - Create: `tests/parity/fixtures/0042-r2-gate-manifest.json`
 - Create: `tests/parity/fixtures/0042-r2-matrix-evidence.schema.json`
+- Create: `tests/parity/fixtures/0042-r2-architecture-threshold-policy.json`
 - Create: `tests/parity/goldens/0042-r2/`
 - Create after clean capture: `docs/quality/0042-r2-capability-baseline.json`
 - Create after clean capture: `docs/quality/0042-r2-architecture-baseline.json`
@@ -536,7 +537,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 5. 冻结全部 257 个现有 Catalog binding（Empyrical class 100、Empyrical module 49、metrics 50、flat API 20、context 18、performance 9、Pyfolio module 11），另行盘点 Pyfolio 类的 69 个 methods（其中 67 个 non-private）、Alphalens 61 个 function specs + 7 个 workflows，以及所有未入 Catalog 的增强领域能力；这些是 legacy surfaces，不得直接等同为 257 个独立 capabilities，alias/quirk 必须逐项 disposition。
 6. 每个数值 scenario 登记 expected authority、来源版本/digest、tolerance 和 `preserve/correction_required`；候选或当前输出不能成为唯一 oracle。
 7. 把旧 compatibility tests 中真实 numerical/container/error/plot/report 断言迁成独立 golden 或 invariant；纯签名/MRO/alias 断言仅进入 disposition。
-8. 实现可复现 physical/logical LOC、normalized AST duplication、import graph、cycle、optional-import leakage 和 implementation fingerprint 测量。
+8. 实现可复现 physical/logical LOC、normalized AST duplication、import graph、cycle、optional-import leakage 和 implementation fingerprint 测量；该通用 architecture checker 只提供可度量架构事实，不能替代第 12 项 Catalog/DAG/snapshot budget，也不能自行宣称 legacy-zero。
 9. 修复 public snapshot：识别 callable kind、signature/default/kw-only，禁止静默跳过空 surface，并支持 source/wheel 比较。
 10. 将 release consistency 改为版本化 contract：D0 可验证当前包，0.5 candidate contract 明确不要求 Alphalens/Pyfolio/Empyrical 文件；contract expected 来自冻结 bundle，不由 candidate 版本字符串选择。
 11. 扩展 profiler 到 metrics、rolling、transactions、factor、risk、report；每个 workload 校验输出 schema/digest。
@@ -545,9 +546,10 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 14. 实现独立 acceptance runner：只接受 candidate root、唯一 wheel、gate 和仓库外 D0 bundle；expected、schema、tolerance、tool argv 均来自 runner 所在的冻结 tooling SHA，candidate 只能提供 actual。
 15. 冻结 required gate manifest：`tests`（全部非在线 functional，含 slow/serial/offline integration）、`static`、`package`、`quality`、`parity`、`architecture`、`performance`、`report`、`installed`、`matrix-cell`、`matrix-aggregate`、`final`、`evidence-child`；`final` 缺任一技术 gate evidence 都 fail closed，`evidence-child` 单独验证 verdict 文档的 parent/allowlist。
 16. 冻结 matrix cell schema，并在 D0 bundle 中记录精确、有序的 `python_support_window`（目标为 3.11–3.14，实际集合以 D0 依赖矩阵为准）：candidate commit/tree、同一 wheel SHA256、D0 tooling/bundle digest、OS/runner image、Python full version、dependency lane/profile、固定 argv digest、test/output digest、时间和 verdict。`matrix-aggregate` 只接受 Linux/macOS/Windows × 该 D0-frozen Python 支持窗口的全部 cell；bundle 缺少该字段、字段为空或 cell 不完整均 fail closed。
-17. 先提交并冻结 `D0_TOOLING_SHA`；从该 SHA 的 detached worktree 执行工具测试，之后不允许 Tasks 1–9 修改 runner、checker、profiler、measurement schema 或 threshold。
+17. 先提交并冻结 `D0_TOOLING_SHA` 与 source-tracked architecture threshold policy；policy 只定义由 D0 原始测量派生的 candidate threshold rules，不能把 D0 自身当成已达到 final reduction 的候选。随后从该 SHA 的 detached worktree 执行工具测试，之后不允许 Tasks 1–9 修改 runner、checker、profiler、measurement schema、policy schema 或 threshold。
 18. 若 fresh coverage 仍低于 60%，启动独立 Task 0B coverage-gap sub-tranche：Quality owner 分配 domain test owners，只新增真实 branch/error/boundary 测试，不改生产语义、不使用无断言执行；发现 defect 时先交回独立 `fix:` tranche，修复和测试都落到 clean named commit 后再重测。
-19. Task 0B 达到 overall branch `>=60%`、critical modules `>=90%` 后，再从 clean exact-SHA worktree 执行 Task 0C D0 capture；证据先写到仓库外目录，再作为单独、可审查的 baseline commit materialize 到上述 `docs/quality/0042-r2-*` 文件。记录 `D0_TOOLING_SHA`、baseline source SHA、acceptance lock digest 和外部 bundle digest。
+19. Task 0B 达到 overall branch `>=60%`、critical modules `>=90%` 后，再从 clean exact-SHA worktree 执行 Task 0C D0 capture；证据先写到仓库外目录，再作为单独、可审查的 baseline commit materialize 到上述 `docs/quality/0042-r2-*` 文件。记录 `D0_TOOLING_SHA`、baseline source SHA/tree、acceptance lock digest 和外部 bundle digest。
+20. D0 bundle 必须包含 architecture baseline source provisioning manifest：baseline source commit/tree、architecture threshold policy 的 path/Git blob/SHA256，以及可验证地 materialize 为 clean detached checkout 的 source archive/object provenance。后续 architecture 比较必须将该 checkout 作为 `--baseline-source-root`；不得以 candidate checkout、`D0_TOOLING_ROOT` 或空临时目录替代。
 
 **先验证工具测试：**
 
@@ -562,7 +564,7 @@ set -euo pipefail
 FINCORE_0042R2_D0_DIR=$(mktemp -d /tmp/fincore-0042-r2-d0.XXXXXX)
 FINCORE_0042R2_MPL_DIR=$(mktemp -d /tmp/fincore-0042-r2-mpl.XXXXXX)
 PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/capture_capability_baseline.py --inventory tests/parity/fixtures/legacy-surface-inventory-0042-r2.json --module-disposition tests/parity/fixtures/module-disposition-0042-r2.json --test-disposition tests/parity/fixtures/test-node-disposition-0042-r2.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --fixture-dir tests/parity/goldens/0042-r2 --output "$FINCORE_0042R2_D0_DIR/capability-baseline.json" --deny-network
-/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --capture "$FINCORE_0042R2_D0_DIR/architecture-baseline.json"
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --capture "$FINCORE_0042R2_D0_DIR/architecture-baseline.json" --seal-baseline --threshold-policy tests/parity/fixtures/0042-r2-architecture-threshold-policy.json
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/profile_workloads.py --sizes small medium large --kinds metrics rolling transactions factor risk report --warmups 2 --repeats 5 --require-output-digest --output "$FINCORE_0042R2_D0_DIR/performance-baseline.json"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/collect_quality_baseline.py --json "$FINCORE_0042R2_D0_DIR/current-baseline.json" --markdown "$FINCORE_0042R2_D0_DIR/current-baseline.md"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_quality_snapshot.py --snapshot "$FINCORE_0042R2_D0_DIR/current-baseline.json"
@@ -588,7 +590,7 @@ runner 必须先验证自己的 blob/commit、acceptance lock 和 D0 bundle dige
 - active workflow/script/maintained-doc/template disposition 为 100%；historical/provenance allowlist 的原始 digest 已冻结。
 - required capability 的适用 happy/boundary/error/optional/provider/documented scenario 覆盖率为 100%。
 - 孤儿能力 0、未裁决差异 0、无 owner 项 0；所有 `correction_required` 均有独立 oracle 和具名修复 owner。
-- D0 记录 commit、tree、clean 状态、Python/依赖/平台、脚本 SHA、include/exclude manifest 和证据 digest。
+- D0 记录 commit、tree、clean 状态、Python/依赖/平台、脚本 SHA、architecture threshold policy blob/digest、include/exclude manifest 和证据 digest；architecture baseline source provisioning manifest 能重建一个 clean exact baseline-source checkout。
 - `D0_TOOLING_SHA` 与 baseline source SHA 分离记录；tooling SHA 是后续正式 gate 的唯一 checker/profiler/runner 权威。
 - branch coverage 至少 60%；若 clean base 尚未达到，不得用旧 snapshot 代替，先补测试再冻结 D0。
 - 性能 baseline 非 pending，所有 workload 输出 digest 有效。
@@ -982,15 +984,19 @@ test -n "$FINCORE_0042R2_D0_BUNDLE"
 ```bash
 PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider tests/contracts/test_removed_legacy_surfaces.py tests/parity tests/numerical tests/property -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/snapshot_public_api.py --check tests/contracts/fixtures/public-api-0.5.0.json
-/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --baseline docs/quality/0042-r2-architecture-baseline.json --require-legacy-zero --require-no-cycles
+test -n "$FINCORE_0042R2_D0_TOOLING_ROOT"
+test -n "$FINCORE_0042R2_D0_BASELINE_SOURCE_ROOT"
+test -n "$FINCORE_0042R2_D0_BUNDLE"
+test -z "$(git -C "$FINCORE_0042R2_D0_BASELINE_SOURCE_ROOT" status --porcelain=v1 --untracked-files=all)"
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -I "$FINCORE_0042R2_D0_TOOLING_ROOT/scripts/check_architecture_convergence.py" --source-root "$PWD" --package fincore --baseline "$FINCORE_0042R2_D0_BUNDLE/architecture-baseline.json" --baseline-source-root "$FINCORE_0042R2_D0_BASELINE_SOURCE_ROOT" --require-no-cycles
 FINCORE_0042R2_CUTOVER_DIST=$(mktemp -d /tmp/fincore-0042-r2-cutover.XXXXXX)
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m build --outdir "$FINCORE_0042R2_CUTOVER_DIST"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m twine check "$FINCORE_0042R2_CUTOVER_DIST"/*
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/test_installed_wheel.py --dist "$FINCORE_0042R2_CUTOVER_DIST" --profiles core factor-analysis visualization report-pdf report-xlsx bayesian all --data-providers all
-test -n "$FINCORE_0042R2_D0_TOOLING_ROOT"
-test -n "$FINCORE_0042R2_D0_BUNDLE"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -I "$FINCORE_0042R2_D0_TOOLING_ROOT/scripts/run_0042_r2_acceptance.py" --candidate-root "$PWD" --candidate-dist "$FINCORE_0042R2_CUTOVER_DIST" --expected-bundle "$FINCORE_0042R2_D0_BUNDLE" --gate cutover --require-source-wheel-equal --require-legacy-zero --data-providers all
 ```
+
+通用 architecture checker 不接收 `--require-legacy-zero`：该 flag 只由冻结 acceptance runner 的专用 legacy-removal contract 解释。runner 还必须先按 D0 bundle 的 provisioning manifest materialize 并验证 `FINCORE_0042R2_D0_BASELINE_SOURCE_ROOT` 的 commit/tree/policy blob；shell 的 clean 检查不是该 provenance 验证的替代。
 
 **Acceptance:** 旧 source 文件、wheel 文件、imports、root aliases、profiles、extras、bindings、active workflow/script 和 maintained docs executable refs 均为 0；historical/provenance allowlist digest 不变；planned/actual API 一致；同一 wheel 的全部能力 profile 与 data-provider offline profile 通过。
 
@@ -1016,16 +1022,17 @@ test -n "$FINCORE_0042R2_D0_BUNDLE"
 **Steps:**
 
 1. 先冻结互斥 `BUILD_AUTHORITY=ci|self_hosted`。CI 模式由 Task 8 workflow 的唯一 build job 从 clean exact-SHA 构建；self-hosted 模式由预登记 acceptance builder 构建。两种模式都只构建一次 sdist/wheel，并记录 commit、tree、clean 状态、build frontend/version、constraints digest 和 artifact SHA256。
-2. 所有 Python/OS/minimum/latest/profile 和最终 acceptance 都下载/接收 build authority 产生的同一个 wheel 字节，不在任何 consumer job 内重建。
-3. 对 source 与 wheel 执行完整 capability ledger；normalized output/golden 完全一致。`package` gate 还必须只读解包唯一 sdist，验证内容、metadata、maintained docs、license/provenance 和 legacy-zero 与 tested source contract 等价；不得从 sdist 重建第二个候选 wheel。
-4. 执行 full non-online、numerical/property、coverage、Ruff、format、mypy、MkDocs、dependency matrix、architecture、LOC、duplicate、performance。
-5. 执行真实 HTML/PDF/XLSX、Chromium、Plotly/Bokeh 和 artifact lifecycle。
-6. 执行 core、factor-analysis、visualization、report-pdf、report-xlsx、bayesian、每个 data provider offline profile 与 all。
-7. 扫描最终 wheel 的 LICENSE/NOTICE/provenance；删除旧代码不等于自动解除归属义务。
-8. acceptance 文档明确区分 D-TECH 与 D-RELEASE；本地全绿不自动授权 merge/tag/publish。
-9. matrix evidence 可来自现有 CI artifact 或预登记 self-hosted runners，但两者都必须执行冻结 `matrix-cell` contract；aggregate 只接受完整 3 OS × D0-frozen `python_support_window` cell 集和同一 wheel digest，不依赖 Ruleset/required-check 配置。
-10. 在运行任何 gate 前冻结 `TECHNICAL_CANDIDATE_SHA`；所有 evidence 和构件绑定该 parent，不允许 acceptance 过程中修改 candidate tree。
-11. final PASS 后才创建 evidence-only child commit，allowlist 仅为 `docs/quality/0042-r2-acceptance.md` 与外部证据 digest 索引。该 commit 必须记录 `tested_parent_sha=TECHNICAL_CANDIDATE_SHA`；D-TECH verdict 和 wheel 仍属于 tested parent，evidence child 不得被描述为重新测试过的 candidate，也不得重建 wheel。
+2. runner 从 D0 bundle 的 provisioning manifest materialize clean detached baseline-source checkout，验证 baseline commit/tree、architecture threshold policy Git blob/SHA256 和重建 measurement；该 checkout 仅通过 `--baseline-source-root` 提供给 D0-tooling architecture checker，绝不由 candidate 或 tooling checkout 代替。
+3. 所有 Python/OS/minimum/latest/profile 和最终 acceptance 都下载/接收 build authority 产生的同一个 wheel 字节，不在任何 consumer job 内重建。
+4. 对 source 与 wheel 执行完整 capability ledger；normalized output/golden 完全一致。`package` gate 还必须只读解包唯一 sdist，验证内容、metadata、maintained docs、license/provenance 和 legacy-zero 与 tested source contract 等价；不得从 sdist 重建第二个候选 wheel。
+5. 执行 full non-online、numerical/property、coverage、Ruff、format、mypy、MkDocs、dependency matrix、architecture、LOC、duplicate、performance。
+6. 执行真实 HTML/PDF/XLSX、Chromium、Plotly/Bokeh 和 artifact lifecycle。
+7. 执行 core、factor-analysis、visualization、report-pdf、report-xlsx、bayesian、每个 data provider offline profile 与 all。
+8. 扫描最终 wheel 的 LICENSE/NOTICE/provenance；删除旧代码不等于自动解除归属义务。
+9. acceptance 文档明确区分 D-TECH 与 D-RELEASE；本地全绿不自动授权 merge/tag/publish。
+10. matrix evidence 可来自现有 CI artifact 或预登记 self-hosted runners，但两者都必须执行冻结 `matrix-cell` contract；aggregate 只接受完整 3 OS × D0-frozen `python_support_window` cell 集和同一 wheel digest，不依赖 Ruleset/required-check 配置。
+11. 在运行任何 gate 前冻结 `TECHNICAL_CANDIDATE_SHA`；所有 evidence 和构件绑定该 parent，不允许 acceptance 过程中修改 candidate tree。
+12. final PASS 后才创建 evidence-only child commit，allowlist 仅为 `docs/quality/0042-r2-acceptance.md` 与外部证据 digest 索引。该 commit 必须记录 `tested_parent_sha=TECHNICAL_CANDIDATE_SHA`；D-TECH verdict 和 wheel 仍属于 tested parent，evidence child 不得被描述为重新测试过的 candidate，也不得重建 wheel。
 
 **核心命令：**
 
