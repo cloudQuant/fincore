@@ -6201,7 +6201,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "60cffc78f472ac1448d7abbcb8bedaf979e35fa2c5dd405861e886f0aecd6cf4",
+        "blob_sha256": "5fca40328c3d651feae8f3608a761267a7f5dcc20b36d68d218811bc7034a9ce",
         "category_tags": [
           "script_candidate"
         ],
