@@ -119,6 +119,38 @@ def _require_worktree_root(source_root: Path) -> Path:
     return top_level
 
 
+def _is_within(path: Path, root: Path) -> bool:
+    """Return whether a resolved path is a root or descendant of ``root``."""
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
+    """Resolve every Git administration root that must never be an output target."""
+    raw_paths = (
+        source_root / ".git",
+        Path(_git_text(source_root, "rev-parse", "--git-dir")),
+        Path(_git_text(source_root, "rev-parse", "--git-common-dir")),
+    )
+    resolved_paths: list[Path] = []
+    for raw_path in raw_paths:
+        candidate = raw_path if raw_path.is_absolute() else source_root / raw_path
+        resolved = candidate.resolve()
+        if resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+    return tuple(resolved_paths)
+
+
+def _reject_git_control_output(source_root: Path, output: Path) -> None:
+    """Fail before writing anywhere in the worktree's Git administration data."""
+    for control_path in _git_control_paths(source_root):
+        if _is_within(output, control_path):
+            raise DiscoveryError("output must not target the Git control directory")
+
+
 def _provenance(source_root: Path) -> dict[str, Any]:
     _require_worktree_root(source_root)
     dirty = _git_text(source_root, "status", "--porcelain=v1", "--untracked-files=all")
@@ -721,12 +753,13 @@ def _snapshot_imports(snapshot: Path) -> Iterator[None]:
     }
     for name in saved_modules:
         del sys.modules[name]
+    original_sys_path = list(sys.path)
     sys.path.insert(0, str(snapshot))
     importlib.invalidate_caches()
     try:
         yield
     finally:
-        sys.path.remove(str(snapshot))
+        sys.path[:] = original_sys_path
         for name in tuple(sys.modules):
             if name == "fincore" or name.startswith("fincore."):
                 del sys.modules[name]
@@ -972,6 +1005,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         _require_worktree_root(source_root)
+        _reject_git_control_output(source_root, output)
         source_artifact_paths = {(source_root / spec.path).resolve() for spec in _SOURCE_SPECS}
         if output in source_artifact_paths:
             raise DiscoveryError("output must not overwrite a required source artifact")

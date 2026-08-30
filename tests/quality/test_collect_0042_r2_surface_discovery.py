@@ -17,8 +17,11 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 SCRIPT = Path(__file__).parents[2] / "scripts" / "collect_0042_r2_surface_discovery.py"
 REPOSITORY_ROOT = SCRIPT.parents[1]
+FIXTURE = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "legacy-surface-discovery-0042-r2.json"
 
 REQUIRED_SOURCE_KINDS = frozenset(
     {
@@ -67,10 +70,10 @@ EXPECTED_SOURCE_COUNTS = {
 }
 
 
-def _clone_clean_source(tmp_path: Path) -> Path:
-    """Create an independent clean checkout at this task's current Git HEAD."""
+def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
+    """Create an independent clean checkout at one locally reachable revision."""
     expected_head = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+        ["git", "rev-parse", revision],
         cwd=REPOSITORY_ROOT,
         capture_output=True,
         check=True,
@@ -214,6 +217,25 @@ def test_artifact_hashes_are_initial_head_blob_hashes_and_raw_entries_have_no_de
     assert "timestamp" not in serialized
 
 
+def test_committed_fixture_is_byte_identical_to_its_recorded_clean_source(tmp_path: Path) -> None:
+    """The frozen raw fixture must remain reproducible from its own source commit."""
+    expected_bytes = FIXTURE.read_bytes()
+    fixture = json.loads(expected_bytes)
+    assert fixture["artifact_type"] == "legacy_surface_discovery"
+    assert fixture["discovery_status"] == "partial"
+    assert fixture["not_for_d0"] is True
+    recorded_commit = fixture["source"]["commit"]
+    assert isinstance(recorded_commit, str) and recorded_commit
+
+    source_root = _clone_clean_source(tmp_path, recorded_commit)
+    output = tmp_path / "regenerated.json"
+
+    result = _collect(source_root, output)
+
+    assert result.returncode == 0, result.stderr
+    assert output.read_bytes() == expected_bytes
+
+
 def test_rejects_dirty_source_before_overwriting_output(tmp_path: Path) -> None:
     source_root = _clone_clean_source(tmp_path)
     (source_root / "raw-discovery-dirty-marker.txt").write_text("dirty\n", encoding="utf-8")
@@ -225,3 +247,17 @@ def test_rejects_dirty_source_before_overwriting_output(tmp_path: Path) -> None:
     assert result.returncode != 0
     assert "clean" in result.stderr.lower()
     assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
+
+
+@pytest.mark.parametrize("output_argument", [".git", ".git/HEAD"])
+def test_rejects_git_control_directory_as_output_before_overwriting(tmp_path: Path, output_argument: str) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    git_path = source_root / output_argument
+    original = git_path.read_bytes() if git_path.is_file() else None
+
+    result = _collect(source_root, Path(output_argument))
+
+    assert result.returncode != 0
+    assert "git control" in result.stderr.lower()
+    if original is not None:
+        assert git_path.read_bytes() == original
