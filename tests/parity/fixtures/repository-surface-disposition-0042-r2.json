@@ -6453,7 +6453,7 @@
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
       "source": {
-        "blob_sha256": "1d4166773dae68c695c2122deb39f374598fbb75f42668e4e67cd4f251c405df",
+        "blob_sha256": "03f85d9d1b64d75f43ed559146da7008c761d999a71f2f25a1c5c63a542c4788",
         "category_tags": [
           "script_candidate"
         ],
@@ -8390,11 +8390,11 @@
   "source_facts": {
     "path": "repository-surface-facts-discovery-0042-r2.json",
     "record_count": 322,
-    "sha256": "eedb16285d2dca4e8b16968c727b74d7f35bbf5e9a7107c0ef1cc087e6992420",
+    "sha256": "be9dee3504e580a92b7b193684c94e7eadde3c39bf82ee95633c7d61c0e5d58e",
     "source_provenance": {
       "clean": true,
-      "commit": "8d370af02218d9f35b91b552ad4aa64d5176d862",
-      "tree": "06e4e7862b54048b3678c0c4bfb0ce56f739ff6f"
+      "commit": "b9fc112336d5467e74077fd0f3a330a8c628564a",
+      "tree": "39ed5adff57377d7fe4156a40477aeafc2dc774e"
     }
   }
 }

@@ -39988,11 +39988,11 @@
   "source_facts": {
     "node_count": 5601,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "683441f9cec6d796cad817ec1fa25319847550e945f475784e41f360f8e54189",
+    "sha256": "3b6213e8ac964b335f5701187229e9d9296626d096dfd6bc16a653d61a3d7041",
     "source_provenance": {
       "clean": true,
-      "commit": "8d370af02218d9f35b91b552ad4aa64d5176d862",
-      "tree": "06e4e7862b54048b3678c0c4bfb0ce56f739ff6f"
+      "commit": "b9fc112336d5467e74077fd0f3a330a8c628564a",
+      "tree": "39ed5adff57377d7fe4156a40477aeafc2dc774e"
     }
   }
 }
