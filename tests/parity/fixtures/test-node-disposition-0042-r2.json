@@ -15861,6 +15861,55 @@
     },
     {
       "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_every_gate_is_fail_closed_and_declares_its_evidence_kind",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_every_gate_is_fail_closed_and_declares_its_evidence_kind"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_evidence_child_policy_freezes_the_two_document_allowlist",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_evidence_child_policy_freezes_the_two_document_allowlist"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_final_gate_requires_every_technical_gate",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_final_gate_requires_every_technical_gate"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_gate_manifest_freezes_the_required_gate_set",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_gate_manifest_freezes_the_required_gate_set"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_digest_patterns_are_strict",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_digest_patterns_are_strict"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_freezes_the_cell_contract",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_freezes_the_cell_contract"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_runner_contract_forbids_candidate_supplied_expected_values",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_0042_r2_matrix_evidence.py::test_runner_contract_forbids_candidate_supplied_expected_values"
+    },
+    {
+      "disposition": "retain",
       "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
@@ -17174,6 +17223,69 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_repository_surface_disposition.py::test_rejects_source_fact_digest_or_category_drift"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_bundle_gating_blocked_until_the_d0_bundle_is_frozen",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_bundle_gating_blocked_until_the_d0_bundle_is_frozen"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_a_wrong_or_missing_parent",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_a_wrong_or_missing_parent"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_merge_commits_with_two_parents",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_merge_commits_with_two_parents"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_paths_outside_the_allowlist",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_paths_outside_the_allowlist"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_passes_for_an_allowlisted_single_parent_child",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_passes_for_an_allowlisted_single_parent_child"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_is_bound_to_the_runner_blob",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_is_bound_to_the_runner_blob"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_expected_bundle_inside_the_candidate_tree_is_rejected",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_expected_bundle_inside_the_candidate_tree_is_rejected"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_missing_expected_bundle_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_missing_expected_bundle_is_a_usage_error"
+    },
+    {
+      "disposition": "retain",
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_unknown_gate_is_a_usage_error",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "rule_id": "canonical-retention",
+      "target": "tests/quality/test_run_0042_r2_acceptance.py::test_unknown_gate_is_a_usage_error"
     },
     {
       "disposition": "retain",
@@ -39720,13 +39832,13 @@
   "schema_version": 1,
   "scope": "non_online_functional_collection_only",
   "source_facts": {
-    "node_count": 5563,
+    "node_count": 5579,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "93ad937dc477b1a875043bcd339c047472bc9b67bcb080c3bdb62a1f3383b2d7",
+    "sha256": "cd7598f64d97bed7ccd8f2a1c59dca61b7d80551aba248602ca21fabfc77a307",
     "source_provenance": {
       "clean": true,
-      "commit": "395b583be28aade6b79465e819c894e95aa0962a",
-      "tree": "09d4f16bb4e9da16e993353787d182bb86dc0340"
+      "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
+      "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
     }
   }
 }

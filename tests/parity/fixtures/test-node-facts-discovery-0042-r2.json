@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 210,
+        "count": 226,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3069,
+        "count": 3085,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2713,
+        "count": 2729,
         "group": "<unmarked>"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5563,
+  "node_count": 5579,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -21022,6 +21022,62 @@
       "directory_group": "tests/quality",
       "legacy_family": "other",
       "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_every_gate_is_fail_closed_and_declares_its_evidence_kind",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_evidence_child_policy_freezes_the_two_document_allowlist",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_final_gate_requires_every_technical_gate",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_gate_manifest_freezes_the_required_gate_set",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_digest_patterns_are_strict",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_matrix_schema_freezes_the_cell_contract",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_matrix_evidence.py::test_runner_contract_forbids_candidate_supplied_expected_values",
+      "test_blob_sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b",
+      "test_path": "tests/quality/test_0042_r2_matrix_evidence.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
       "nodeid": "tests/quality/test_0042_r2_module_disposition.py::test_disposition_document_header_is_scoped_and_fail_closed",
       "test_blob_sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7",
       "test_path": "tests/quality/test_0042_r2_module_disposition.py"
@@ -22547,6 +22603,78 @@
       "nodeid": "tests/quality/test_repository_surface_disposition.py::test_rejects_source_fact_digest_or_category_drift",
       "test_blob_sha256": "187859c929415e54e95cbda7c4604622225058dd24bb18401636cc10c9b82421",
       "test_path": "tests/quality/test_repository_surface_disposition.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_bundle_gating_blocked_until_the_d0_bundle_is_frozen",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_a_wrong_or_missing_parent",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_merge_commits_with_two_parents",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_blocks_paths_outside_the_allowlist",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_child_passes_for_an_allowlisted_single_parent_child",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_evidence_is_bound_to_the_runner_blob",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_expected_bundle_inside_the_candidate_tree_is_rejected",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_missing_expected_bundle_is_a_usage_error",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_run_0042_r2_acceptance.py::test_unknown_gate_is_a_usage_error",
+      "test_blob_sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb",
+      "test_path": "tests/quality/test_run_0042_r2_acceptance.py"
     },
     {
       "directory_group": "tests/quality",
@@ -51293,16 +51421,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1085,
+    "regular_blob_count": 1091,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "395b583be28aade6b79465e819c894e95aa0962a",
-    "tree": "09d4f16bb4e9da16e993353787d182bb86dc0340"
+    "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
+    "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
   },
-  "source_test_blob_count": 475,
+  "source_test_blob_count": 477,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -51845,6 +51973,11 @@
       "sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798"
     },
     {
+      "git_object_id": "7baf2dfc9819f4fe8c02766267dbb62363db2d91",
+      "path": "tests/quality/test_0042_r2_matrix_evidence.py",
+      "sha256": "b7388a841bb84653a987f82331b3c52fb8e68f3b6e591f50b8c1c346d406068b"
+    },
+    {
       "git_object_id": "09bf570fad0527d6663fea2ee11416f569acbdff",
       "path": "tests/quality/test_0042_r2_module_disposition.py",
       "sha256": "6779ad00bba8a6b1d817ba86f8cf8383451d480fcd8fbb0d6239cd40225dfec7"
@@ -51928,6 +52061,11 @@
       "git_object_id": "0410a6040096964f76d7d2af7eb71fc0bedc066f",
       "path": "tests/quality/test_repository_surface_disposition.py",
       "sha256": "187859c929415e54e95cbda7c4604622225058dd24bb18401636cc10c9b82421"
+    },
+    {
+      "git_object_id": "9af9593366fada7ce745d105f883f31dd5467f20",
+      "path": "tests/quality/test_run_0042_r2_acceptance.py",
+      "sha256": "657b2609e8c8836e4d8f8397d0ebbd998c38a1324dafcd81da88b336ea9f4fcb"
     },
     {
       "git_object_id": "5f4e2d157ae0df4badab4e1410f28f13eaa7ec17",

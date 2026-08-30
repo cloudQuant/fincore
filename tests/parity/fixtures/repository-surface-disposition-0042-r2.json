@@ -7088,6 +7088,32 @@
       "legacy_reference_policy": "none",
       "lifecycle": "maintained",
       "owner": "tooling",
+      "path": "scripts/run_0042_r2_acceptance.py",
+      "rationale": "Tracked acceptance tooling remains maintained and must follow the canonical runtime/tooling contract.",
+      "rule_id": "tooling-retarget",
+      "source": {
+        "blob_sha256": "fdae0128de9102ca5d22e70f23108fd424fe8615c79f80f96d7c6c2f25fd5a04",
+        "category_tags": [
+          "script_candidate"
+        ],
+        "content_kind": "text",
+        "git_mode": "100644",
+        "kind": "script_candidate"
+      },
+      "target": {
+        "capability_ids": [],
+        "contract_ids": [
+          "tooling.0_5"
+        ],
+        "path": "scripts/run_0042_r2_acceptance.py"
+      }
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "retarget",
+      "legacy_reference_policy": "none",
+      "lifecycle": "maintained",
+      "owner": "tooling",
       "path": "scripts/run_factor_benchmarks.py",
       "rationale": "Tracked tooling remains maintained and must follow the canonical runtime/tooling contract.",
       "rule_id": "tooling-retarget",
@@ -8337,12 +8363,12 @@
   },
   "source_facts": {
     "path": "repository-surface-facts-discovery-0042-r2.json",
-    "record_count": 320,
-    "sha256": "869a38bfdd3d21c750119d5458fac4616ec74a3b03396dc8cf91306407b8658c",
+    "record_count": 321,
+    "sha256": "a80130d092b3f82fd4262af13c998cec3a10ea75739fbfcb3f46654b5d63cf85",
     "source_provenance": {
       "clean": true,
-      "commit": "395b583be28aade6b79465e819c894e95aa0962a",
-      "tree": "09d4f16bb4e9da16e993353787d182bb86dc0340"
+      "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
+      "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
     }
   }
 }

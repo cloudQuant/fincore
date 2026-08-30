@@ -17,14 +17,14 @@
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
-    "script_candidate": 51,
+    "script_candidate": 52,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
   "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Every tracked path beneath scripts/ is included as a script candidate fact, while generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
-  "record_count": 320,
+  "record_count": 321,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -10897,6 +10897,40 @@
       }
     },
     {
+      "blob_sha256": "fdae0128de9102ca5d22e70f23108fd424fe8615c79f80f96d7c6c2f25fd5a04",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "8dd5e6107729c4f2f535d8f84bdf1d806ec1d09b",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/run_0042_r2_acceptance.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "datetime.UTC",
+          "datetime.datetime",
+          "hashlib",
+          "json",
+          "pathlib.Path",
+          "subprocess",
+          "sys"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
       "blob_sha256": "8477690c75328d6aab9a69bc373783ae92fc106a7fb6740c3fe37bd3504b01b9",
       "category_tags": [
         "script_candidate"
@@ -11458,7 +11492,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "395b583be28aade6b79465e819c894e95aa0962a",
-    "tree": "09d4f16bb4e9da16e993353787d182bb86dc0340"
+    "commit": "fb73d15b2e33e8a00e4502626db690b61c64a1cf",
+    "tree": "f55a1a035481a698e767d3835bd6b769ccb233aa"
   }
 }
