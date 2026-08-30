@@ -31,9 +31,15 @@ a kind do not substitute for that kind's required provenance fields.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
-All inputs and all files below ``--fixture-dir`` must be tracked by the clean
-source tree.  ``--output`` must be outside that source tree, and is atomically
-replaced only after every validation succeeds.
+All input and fixture bytes are read from immutable blobs in the initially
+recorded clean ``HEAD`` tree, never from the mutable working tree.  Each
+``golden_path`` is a portable fixture-relative POSIX path: it cannot be
+absolute, contain ``.``, ``..`` or empty segments, or contain a backslash.  The
+selected input and fixture entries must be regular Git blobs; symbolic links are
+rejected rather than being followed through the mutable worktree.  The
+initial and final Git provenance must match before ``--output`` is atomically
+replaced.  This binds every recorded SHA256 to the original commit/tree even if
+the worktree is changed and restored while capture is running.
 """
 
 from __future__ import annotations
@@ -47,11 +53,11 @@ import subprocess
 import sys
 import tempfile
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Sequence
 
 SCHEMA_VERSION = 1
-_GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40}$")
+_GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40,64}$")
 _REQUIRED_DISPOSITION = "required"
 _LEDGER_DISPOSITIONS = frozenset({"required", "alias_only", "legacy_quirk"})
 _EXTERNAL_IMPLEMENTATION_KINDS = frozenset(
@@ -75,19 +81,15 @@ def _non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
 
 
-def _load_json(path: Path, label: str) -> dict[str, Any]:
+def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise CaptureValidationError(f"cannot read {label} JSON at {path}: {exc}") from exc
+        value = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise CaptureValidationError(f"cannot read {label} JSON from initial HEAD blob: {exc}") from exc
     if not isinstance(value, dict):
         raise CaptureValidationError(f"{label} must be a JSON object")
     return value
@@ -259,6 +261,25 @@ def _git_output(source_root: Path, *arguments: str) -> str:
     return result.stdout.strip()
 
 
+def _git_bytes(source_root: Path, *arguments: str) -> bytes:
+    """Run a Git object query without ever reading source worktree bytes."""
+    try:
+        result = subprocess.run(
+            ["git", *arguments],
+            cwd=source_root,
+            capture_output=True,
+            text=False,
+            check=False,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise CaptureValidationError(f"cannot read initial HEAD Git objects: {exc}") from exc
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).decode("utf-8", errors="replace").strip()
+        raise CaptureValidationError(f"cannot read initial HEAD Git objects: {detail or 'git command failed'}")
+    return result.stdout
+
+
 def _source_provenance(source_root: Path) -> dict[str, str | bool]:
     reported_root = Path(_git_output(source_root, "rev-parse", "--show-toplevel")).resolve()
     if reported_root != source_root:
@@ -273,65 +294,117 @@ def _source_provenance(source_root: Path) -> dict[str, str | bool]:
     return {"commit": commit, "tree": tree, "clean": True}
 
 
-def _relative_tracked_path(source_root: Path, path: Path, label: str) -> str:
+def _relative_source_path(source_root: Path, path: Path, label: str) -> str:
+    """Derive a source path lexically, without following mutable worktree links."""
+    lexical_path = path.absolute()
+    if ".." in lexical_path.parts:
+        raise CaptureValidationError(f"{label} must not contain lexical parent-directory traversal")
     try:
-        relative = path.resolve().relative_to(source_root)
+        relative = lexical_path.relative_to(source_root)
     except ValueError as exc:
         raise CaptureValidationError(f"{label} must be inside the source worktree") from exc
-    if not path.is_file():
-        raise CaptureValidationError(f"{label} must be an existing regular file")
-    try:
-        result = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", "--", relative.as_posix()],
-            cwd=source_root,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=30,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        raise CaptureValidationError(f"cannot verify that {label} is tracked: {exc}") from exc
-    if result.returncode != 0:
-        raise CaptureValidationError(f"{label} must be tracked by the source worktree")
     return relative.as_posix()
 
 
-def _fixture_manifest(source_root: Path, fixture_dir: Path) -> dict[str, dict[str, str]]:
-    try:
-        fixture_dir.resolve().relative_to(source_root)
-    except ValueError as exc:
-        raise CaptureValidationError("fixture directory must be inside the source worktree") from exc
-    if not fixture_dir.is_dir():
-        raise CaptureValidationError("fixture directory must exist")
-    files = [path for path in sorted(fixture_dir.rglob("*")) if path.is_file()]
-    if not files:
-        raise CaptureValidationError("fixture directory must contain at least one file")
+def _git_tree_blobs(source_root: Path, commit: str, relative_path: str) -> dict[str, str]:
+    """Return immutable blob IDs under one literal path in ``commit``'s tree."""
+    output = _git_bytes(
+        source_root,
+        "ls-tree",
+        "-r",
+        "-z",
+        "--full-tree",
+        commit,
+        "--",
+        f":(literal){relative_path}",
+    )
+    blobs: dict[str, str] = {}
+    for record in output.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_path = record.split(b"\t", maxsplit=1)
+            mode, object_type, raw_object_id = metadata.split(b" ", maxsplit=2)
+            object_id = raw_object_id.decode("ascii")
+            path = os.fsdecode(raw_path)
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise CaptureValidationError("initial HEAD tree contains an invalid Git entry") from exc
+        if mode not in {b"100644", b"100755"} or object_type != b"blob":
+            raise CaptureValidationError(f"initial HEAD path {path!r} must contain regular-file blobs only")
+        if _GIT_OBJECT_ID.fullmatch(object_id) is None:
+            raise CaptureValidationError(f"initial HEAD path {path!r} has an invalid blob object ID")
+        if path in blobs:
+            raise CaptureValidationError(f"initial HEAD tree repeats path {path!r}")
+        blobs[path] = object_id
+    return blobs
+
+
+def _git_blob_bytes(source_root: Path, object_id: str) -> bytes:
+    return _git_bytes(source_root, "cat-file", "blob", object_id)
+
+
+def _initial_head_blob_bytes(source_root: Path, commit: str, relative_path: str, label: str) -> bytes:
+    blobs = _git_tree_blobs(source_root, commit, relative_path)
+    if set(blobs) != {relative_path}:
+        raise CaptureValidationError(f"{label} must be a regular file in the initial HEAD tree")
+    return _git_blob_bytes(source_root, blobs[relative_path])
+
+
+def _portable_fixture_relative_path(value: str, subject: str) -> str:
+    """Return one canonical, non-escaping POSIX fixture-manifest key."""
+    parts = value.split("/")
+    posix_path = PurePosixPath(value)
+    windows_path = PureWindowsPath(value)
+    if (
+        not value
+        or "\\" in value
+        or "\x00" in value
+        or posix_path.is_absolute()
+        or windows_path.is_absolute()
+        or windows_path.drive
+        or windows_path.root
+        or any(part in {"", ".", ".."} for part in parts)
+    ):
+        raise CaptureValidationError(f"{subject} golden_path must be a portable fixture-relative POSIX path")
+    normalized = "/".join(parts)
+    if PurePosixPath(normalized).as_posix() != normalized:
+        raise CaptureValidationError(f"{subject} golden_path must be a portable fixture-relative POSIX path")
+    return normalized
+
+
+def _fixture_manifest_from_initial_head(
+    source_root: Path, commit: str, fixture_dir_relative: str
+) -> dict[str, dict[str, str]]:
+    blobs = _git_tree_blobs(source_root, commit, fixture_dir_relative)
+    prefix = "" if fixture_dir_relative == "." else f"{fixture_dir_relative.rstrip('/')}/"
     manifest: dict[str, dict[str, str]] = {}
-    for path in files:
-        relative = path.relative_to(fixture_dir).as_posix()
-        _relative_tracked_path(source_root, path, f"fixture {relative}")
-        manifest[relative] = {"sha256": _sha256(path)}
+    for source_relative, object_id in blobs.items():
+        if prefix and not source_relative.startswith(prefix):
+            raise CaptureValidationError("initial HEAD fixture manifest escapes the requested fixture directory")
+        fixture_relative = source_relative[len(prefix) :] if prefix else source_relative
+        fixture_key = _portable_fixture_relative_path(fixture_relative, f"fixture {fixture_relative!r}")
+        if fixture_key in manifest:
+            raise CaptureValidationError(f"initial HEAD fixture manifest repeats path {fixture_key!r}")
+        manifest[fixture_key] = {"sha256": _sha256_bytes(_git_blob_bytes(source_root, object_id))}
+    if not manifest:
+        raise CaptureValidationError("fixture directory must contain at least one file in the initial HEAD tree")
     return manifest
 
 
-def _validate_ledger_fixture_paths(ledger_entries: list[dict[str, Any]], fixture_dir: Path) -> None:
-    resolved_fixture_dir = fixture_dir.resolve()
+def _validate_ledger_fixture_paths(
+    ledger_entries: list[dict[str, Any]], fixture_manifest: dict[str, dict[str, str]]
+) -> None:
     for entry_index, entry in enumerate(ledger_entries):
         for scenario_index, scenario in enumerate(entry["scenarios"]):
             golden_path = scenario.get("golden_path")
             if not _non_empty_string(golden_path):
                 continue
             assert isinstance(golden_path, str)
-            candidate = (resolved_fixture_dir / golden_path).resolve()
-            try:
-                candidate.relative_to(resolved_fixture_dir)
-            except ValueError as exc:
+            subject = f"ledger entry {entry_index} scenario {scenario_index}"
+            fixture_key = _portable_fixture_relative_path(golden_path, subject)
+            if fixture_key not in fixture_manifest:
                 raise CaptureValidationError(
-                    f"ledger entry {entry_index} scenario {scenario_index} golden_path escapes fixture directory"
-                ) from exc
-            if not candidate.is_file():
-                raise CaptureValidationError(
-                    f"ledger entry {entry_index} scenario {scenario_index} golden_path does not exist: {golden_path}"
+                    f"{subject} golden_path does not exist in the initial HEAD fixture manifest: {fixture_key}"
                 )
 
 
@@ -375,11 +448,14 @@ def capture(
         raise CaptureValidationError("output must be outside the source worktree")
 
     provenance = _source_provenance(source_root)
+    initial_commit = provenance["commit"]
+    if not isinstance(initial_commit, str):
+        raise CaptureValidationError("capture requires a string initial source commit")
     input_paths = {
-        "inventory": inventory_path.resolve(),
-        "module_disposition": module_disposition_path.resolve(),
-        "test_disposition": test_disposition_path.resolve(),
-        "ledger": ledger_path.resolve(),
+        "inventory": inventory_path,
+        "module_disposition": module_disposition_path,
+        "test_disposition": test_disposition_path,
+        "ledger": ledger_path,
     }
     input_labels = {
         "inventory": "inventory",
@@ -390,16 +466,18 @@ def capture(
     documents: dict[str, dict[str, Any]] = {}
     inputs: dict[str, dict[str, str]] = {}
     for key, path in input_paths.items():
-        relative = _relative_tracked_path(source_root, path, key.replace("_", " "))
-        documents[key] = _load_json(path, key.replace("_", " "))
-        inputs[key] = {"path": relative, "sha256": _sha256(path)}
+        relative = _relative_source_path(source_root, path, key.replace("_", " "))
+        payload = _initial_head_blob_bytes(source_root, initial_commit, relative, key.replace("_", " "))
+        documents[key] = _load_json_bytes(payload, key.replace("_", " "))
+        inputs[key] = {"path": relative, "sha256": _sha256_bytes(payload)}
 
     _validate_disposition_document(documents["inventory"], input_labels["inventory"])
     _validate_disposition_document(documents["module_disposition"], input_labels["module_disposition"])
     _validate_disposition_document(documents["test_disposition"], input_labels["test_disposition"])
     ledger_entries = validate_ledger(documents["ledger"])
-    fixture_manifest = _fixture_manifest(source_root, fixture_dir.resolve())
-    _validate_ledger_fixture_paths(ledger_entries, fixture_dir)
+    fixture_dir_relative = _relative_source_path(source_root, fixture_dir, "fixture directory")
+    fixture_manifest = _fixture_manifest_from_initial_head(source_root, initial_commit, fixture_dir_relative)
+    _validate_ledger_fixture_paths(ledger_entries, fixture_manifest)
     final_provenance = _source_provenance(source_root)
     if final_provenance != provenance:
         raise CaptureValidationError("source Git provenance changed during capture")

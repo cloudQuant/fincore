@@ -190,6 +190,39 @@ def test_capture_rejects_self_referential_pinned_oracle_without_overwriting_outp
     assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
 
 
+def test_capture_rejects_absolute_golden_path_without_overwriting_output(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    ledger = json.loads(paths["ledger"].read_text(encoding="utf-8"))
+    ledger["entries"][0]["scenarios"][0]["golden_path"] = str(paths["fixture_dir"] / "annual-return.json")
+    _write_json(paths["ledger"], ledger)
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "portable fixture-relative" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_rejects_initial_head_symlink_fixture_without_writing_output(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    fixture = paths["fixture_dir"] / "annual-return.json"
+    outside_fixture = tmp_path / "outside-fixture.json"
+    outside_fixture.write_text('{"value": 999.0}\n', encoding="utf-8")
+    fixture.unlink()
+    fixture.symlink_to(outside_fixture)
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "regular-file blobs only" in result.stderr
+    assert not output.exists()
+
+
 def test_capture_rejects_missing_deny_network_flag(tmp_path: Path) -> None:
     source_root, paths = _minimal_inputs(tmp_path)
 
@@ -260,6 +293,107 @@ def test_capture_rejects_git_state_changed_during_input_hashing(
 
     assert provenance_calls == 2
     assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_uses_initial_head_blobs_when_worktree_bytes_change_then_recover(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _capture_module()
+    source_root, paths = _minimal_inputs(tmp_path)
+    output = tmp_path / "capture.json"
+    fixture = paths["fixture_dir"] / "annual-return.json"
+    initial_ledger = paths["ledger"].read_bytes()
+    initial_fixture = fixture.read_bytes()
+    malicious_ledger = b"\n" + initial_ledger + b"\n"
+    malicious_fixture = b'{"value": 999.0}\n'
+    original_provenance = module._source_provenance
+    provenance_calls = 0
+
+    def mutate_then_recover_before_final_provenance(root: Path):
+        nonlocal provenance_calls
+        provenance_calls += 1
+        if provenance_calls == 1:
+            provenance = original_provenance(root)
+            paths["ledger"].write_bytes(malicious_ledger)
+            fixture.write_bytes(malicious_fixture)
+            assert paths["ledger"].read_bytes() == malicious_ledger
+            assert fixture.read_bytes() == malicious_fixture
+            return provenance
+        if provenance_calls == 2:
+            paths["ledger"].write_bytes(initial_ledger)
+            fixture.write_bytes(initial_fixture)
+        return original_provenance(root)
+
+    monkeypatch.setattr(module, "_source_provenance", mutate_then_recover_before_final_provenance)
+
+    artifact = module.capture(
+        source_root=source_root,
+        inventory_path=paths["inventory"],
+        module_disposition_path=paths["module_disposition"],
+        test_disposition_path=paths["test_disposition"],
+        ledger_path=paths["ledger"],
+        fixture_dir=paths["fixture_dir"],
+        output_path=output,
+        deny_network=True,
+    )
+
+    assert provenance_calls == 2
+    assert artifact["inputs"]["ledger"]["sha256"] == hashlib.sha256(initial_ledger).hexdigest()
+    assert artifact["inputs"]["ledger"]["sha256"] != hashlib.sha256(malicious_ledger).hexdigest()
+    assert artifact["fixtures"]["annual-return.json"]["sha256"] == hashlib.sha256(initial_fixture).hexdigest()
+    assert artifact["fixtures"]["annual-return.json"]["sha256"] != hashlib.sha256(malicious_fixture).hexdigest()
+
+
+def test_capture_uses_initial_lexical_fixture_path_when_symlink_is_repointed_then_restored(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _capture_module()
+    source_root, paths = _minimal_inputs(tmp_path)
+    fixture_dir = paths["fixture_dir"]
+    initial_fixture = fixture_dir / "annual-return.json"
+    initial_fixture_bytes = initial_fixture.read_bytes()
+    alternate_dir = source_root / "other-goldens"
+    alternate_dir.mkdir()
+    alternate_fixture = alternate_dir / "annual-return.json"
+    alternate_fixture.write_text('{"value": 999.0}\n', encoding="utf-8")
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    backup_dir = source_root / "goldens-backup"
+    original_provenance = module._source_provenance
+    provenance_calls = 0
+
+    def repoint_then_restore_fixture_directory(root: Path):
+        nonlocal provenance_calls
+        provenance_calls += 1
+        if provenance_calls == 1:
+            provenance = original_provenance(root)
+            fixture_dir.rename(backup_dir)
+            fixture_dir.symlink_to(alternate_dir, target_is_directory=True)
+            return provenance
+        if provenance_calls == 2:
+            fixture_dir.unlink()
+            backup_dir.rename(fixture_dir)
+        return original_provenance(root)
+
+    monkeypatch.setattr(module, "_source_provenance", repoint_then_restore_fixture_directory)
+
+    artifact = module.capture(
+        source_root=source_root,
+        inventory_path=paths["inventory"],
+        module_disposition_path=paths["module_disposition"],
+        test_disposition_path=paths["test_disposition"],
+        ledger_path=paths["ledger"],
+        fixture_dir=fixture_dir,
+        output_path=output,
+        deny_network=True,
+    )
+
+    assert provenance_calls == 2
+    assert artifact["fixtures"]["annual-return.json"]["sha256"] == hashlib.sha256(initial_fixture_bytes).hexdigest()
+    assert (
+        artifact["fixtures"]["annual-return.json"]["sha256"]
+        != hashlib.sha256(alternate_fixture.read_bytes()).hexdigest()
+    )
 
 
 def test_capture_module_documents_the_fail_closed_schema() -> None:
