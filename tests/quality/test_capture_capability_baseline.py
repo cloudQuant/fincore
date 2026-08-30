@@ -216,6 +216,87 @@ def test_invalid_repository_surface_disposition_does_not_overwrite_capture_outpu
     assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
 
 
+def test_capture_rejects_a_scoped_raw_only_legacy_inventory(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    _write_json(
+        paths["inventory"],
+        {
+            "schema_version": 1,
+            "artifact_type": "legacy_surface_inventory",
+            "scope": "raw_legacy_surface_only",
+            "decision_status": "scoped",
+            "not_for_d0": True,
+            "entries": [{"legacy_entry_id": "metric_registry:annual_return", "disposition": "required"}],
+        },
+    )
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "raw_legacy_surface_only" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_rejects_a_relabelled_legacy_surface_inventory(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    _write_json(
+        paths["inventory"],
+        {
+            "schema_version": 1,
+            "artifact_type": "legacy_surface_inventory",
+            "scope": "complete_legacy_surface",
+            "decision_status": "complete",
+            "not_for_d0": False,
+            "entries": [{"legacy_entry_id": "metric_registry:annual_return", "disposition": "required"}],
+        },
+    )
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "legacy_surface_inventory" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_rejects_any_inventory_explicitly_marked_not_for_d0(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    inventory = json.loads(paths["inventory"].read_text(encoding="utf-8"))
+    inventory["not_for_d0"] = True
+    _write_json(paths["inventory"], inventory)
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "not_for_d0" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
+def test_capture_rejects_duplicate_json_policy_keys(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    paths["inventory"].write_bytes(
+        b'{"entries": [{"item_id": "metrics.annual_return", "disposition": "required"}], '
+        b'"scope": "candidate", "scope": "candidate"}\n'
+    )
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "duplicate JSON key" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
+
+
 def test_capture_uses_static_repository_surface_checker_under_isolated_mode(tmp_path: Path) -> None:
     source_root, paths = _minimal_inputs(tmp_path, include_candidate_checker_spoof=True)
     output = tmp_path / "capture.json"

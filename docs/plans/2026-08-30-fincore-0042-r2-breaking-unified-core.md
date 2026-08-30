@@ -509,6 +509,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.md`
 - Create: `scripts/capture_capability_baseline.py`
 - Create: `scripts/check_0042_r2_repository_surface_disposition.py`
+- Create: `scripts/check_0042_r2_legacy_surface_inventory.py`
 - Create: `scripts/check_feature_parity.py`
 - Create: `scripts/check_architecture_convergence.py`
 - Create: `scripts/run_0042_r2_acceptance.py`
@@ -529,10 +530,12 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Modify before tooling freeze: `scripts/check_release_consistency.py`
 - Modify: `tests/packaging/test_release_consistency.py`
 - Create: `tests/quality/test_repository_surface_disposition.py`
+- Create: `tests/quality/test_check_0042_r2_legacy_surface_inventory.py`
 
 **Steps:**
 
 1. 先写失败测试，要求 inventory 取所有公开定义、registries、manifests、docs、examples、benchmarks、extras 与 wheel contents 的并集。
+   - 在完整并集采集完成前，可先建立只读 `legacy_surface_discovery` 的字节级 checker：它只能证明当前 partial raw rows 与 scoped inventory decisions 一一对应，必须保留 `not_for_d0`，并拒绝将其接入 baseline capture、伪造最终 fixture 或宣称 legacy-zero。每项 decision 必须回填 raw entry ID、source ID/kind、artifact digest、locator 与 canonical raw-entry digest；重叠 public path 仍作为不同 raw entry 分别决策，禁止去重。这个 preparatory checker 暂时只接受 `required`，防止同一份未完成 JSON 自证 alias/quirk 或审批；`alias_only` 与 `legacy_quirk` 只能在完整并集、冻结的 oracle/golden/nodeid 证据和可验证的独立审批记录齐备后进入后续 checker。无论何时，都不授权保留旧入口、旧导入路径、wrapper 或 shim。
 2. 为每个 surface 登记 capability、场景、owner、target operation、source nodeid、wheel nodeid、oracle/golden 和 disposition。
 3. 为每个 `fincore/**/*.py` 登记 keep/move/delete、目标模块、consumer count 和 capability IDs，0 unmapped。
 4. 为 active workflows、packaging/release scripts、maintained docs/templates、examples、type stubs、compat generators/checkers 建立 repository-surface disposition；每项逐路径绑定 raw Git blob、kind/category tags、受控 owner、lifecycle、completion gate、target contract/capability 与 rule ID，不能从 shell token 启发式推断决策。historical/provenance candidate 必须双向映射到单独 allowlist 并记录原始 digest；只允许受限文本后缀的纯文本记录标为 `text_only`，HTML、rendered 或 binary artifact 必须以非文本 provenance 条目保存，不能借 allowlist 作为可执行兼容示例。capability baseline capture 必须从初始 clean `HEAD` 的同一组 Git blobs 读取 facts/disposition，并调用冻结 tooling 的字节级校验器；不得重新读取 mutable worktree。该 scoped mapping 的成功仍标记 `not_for_d0`，只能在后续与其他完整输入共同封入 D0。
@@ -556,7 +559,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 **先验证工具测试：**
 
 ```bash
-/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider -p no:rerunfailures tests/parity/test_ledger.py tests/quality/test_capture_capability_baseline.py tests/quality/test_check_feature_parity.py tests/quality/test_architecture_convergence.py tests/quality/test_0042_r2_profiling_contract.py tests/quality/test_run_0042_r2_acceptance.py tests/quality/test_0042_r2_matrix_evidence.py tests/quality/test_repository_surface_disposition.py tests/packaging/test_release_consistency.py tests/benchmarks/test_0042_r2_workloads.py -q --tb=short --maxfail=0
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider -p no:rerunfailures tests/parity/test_ledger.py tests/quality/test_capture_capability_baseline.py tests/quality/test_check_feature_parity.py tests/quality/test_architecture_convergence.py tests/quality/test_0042_r2_profiling_contract.py tests/quality/test_run_0042_r2_acceptance.py tests/quality/test_0042_r2_matrix_evidence.py tests/quality/test_repository_surface_disposition.py tests/quality/test_check_0042_r2_legacy_surface_inventory.py tests/packaging/test_release_consistency.py tests/benchmarks/test_0042_r2_workloads.py -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_0042_r2_repository_surface_disposition.py --facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json
 ```
 

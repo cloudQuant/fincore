@@ -35,10 +35,44 @@ _HISTORICAL_TAG = "historical_provenance_candidate"
 _TEXT_ONLY_HISTORICAL_SUFFIXES = frozenset(
     {".csv", ".diff", ".json", ".markdown", ".md", ".rst", ".txt", ".yaml", ".yml"}
 )
+_FORBIDDEN_ASSERTION_FIELDS = frozenset(
+    {
+        "assertions",
+        "does_assert",
+        "d0",
+        "d0_status",
+        "d_tech",
+        "d_tech_status",
+        "final",
+        "final_status",
+        "final_verdict",
+        "legacy_zero",
+        "passed",
+        "release_status",
+        "verdict",
+        "verdicts",
+    }
+)
+_NORMALIZED_FORBIDDEN_ASSERTION_FIELDS = frozenset(
+    re.sub(r"[^a-z0-9]+", "", field.casefold()) for field in _FORBIDDEN_ASSERTION_FIELDS
+)
 
 
 class DispositionValidationError(ValueError):
     """Raised when repository facts cannot support a complete disposition."""
+
+
+class _DuplicateJsonKeyError(ValueError):
+    """Raised when a JSON object repeats a policy-relevant key."""
+
+
+def _json_object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise _DuplicateJsonKeyError(f"duplicate JSON key {key!r}")
+        value[key] = item
+    return value
 
 
 def canonical_sha256(value: object) -> str:
@@ -49,9 +83,12 @@ def canonical_sha256(value: object) -> str:
 
 def _read_regular_file(path: Path, label: str) -> bytes:
     """Read one regular file through one protected descriptor."""
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise DispositionValidationError(
+            "protected regular-file reads require os.O_NOFOLLOW and fail closed when it is unavailable"
+        )
     flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
-    if hasattr(os, "O_NOFOLLOW"):
-        flags |= os.O_NOFOLLOW
+    flags |= os.O_NOFOLLOW
     descriptor: int | None = None
     try:
         descriptor = os.open(path, flags)
@@ -78,8 +115,8 @@ def sha256_file(path: Path) -> str:
 
 def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
     try:
-        value = json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(payload.decode("utf-8"), object_pairs_hook=_json_object_without_duplicate_keys)
+    except (UnicodeDecodeError, json.JSONDecodeError, _DuplicateJsonKeyError) as exc:
         raise DispositionValidationError(f"cannot load {label}: {exc}") from exc
     if not isinstance(value, dict):
         raise DispositionValidationError(f"{label} must be a JSON object")
@@ -132,6 +169,20 @@ def _require_sorted_strings(value: object, field: str, subject: str, *, allow_em
     return value
 
 
+def _normalized_field_key(value: object) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.casefold()) if isinstance(value, str) else ""
+
+
+def _contains_assertion_field(value: object) -> bool:
+    if isinstance(value, Mapping):
+        return any(_normalized_field_key(key) in _NORMALIZED_FORBIDDEN_ASSERTION_FIELDS for key in value) or any(
+            _contains_assertion_field(item) for item in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_assertion_field(item) for item in value)
+    return False
+
+
 def _validate_provenance(value: object, subject: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise DispositionValidationError(f"{subject} source_provenance must be an object")
@@ -145,6 +196,8 @@ def _validate_provenance(value: object, subject: str) -> dict[str, Any]:
 
 
 def _parse_facts(facts: Mapping[str, Any]) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    if _contains_assertion_field(facts):
+        raise DispositionValidationError("facts must not contain D0, legacy-zero, or final-verdict assertion fields")
     if _require_exact_int(facts.get("schema_version"), "schema_version", "facts") != SCHEMA_VERSION:
         raise DispositionValidationError(f"facts schema_version must be {SCHEMA_VERSION}")
     if facts.get("artifact_type") != "repository_surface_facts_discovery":
@@ -366,6 +419,10 @@ def validate_disposition_payloads(
     facts_sha256 = hashlib.sha256(facts_payload).hexdigest()
     disposition_sha256 = hashlib.sha256(disposition_payload).hexdigest()
 
+    if _contains_assertion_field(disposition):
+        raise DispositionValidationError(
+            "disposition must not contain D0, legacy-zero, or final-verdict assertion fields"
+        )
     if _require_exact_int(disposition.get("schema_version"), "schema_version", "disposition") != SCHEMA_VERSION:
         raise DispositionValidationError(f"disposition schema_version must be {SCHEMA_VERSION}")
     if disposition.get("artifact_type") != "repository_surface_disposition":

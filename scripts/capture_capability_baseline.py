@@ -31,6 +31,11 @@ a kind do not substitute for that kind's required provenance fields.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
+Any ``legacy_surface_inventory`` is rejected here until a complete frozen
+checker is integrated.  In particular, the interim ``raw_legacy_surface_only``
+inventory cannot enter a capability-baseline capture before documents,
+examples, benchmarks, distribution artifacts, and test nodes join the same
+clean-source inventory.
 Repository-surface facts and their reviewed disposition are separately
 validated as scoped, explicitly non-D0 inputs.  All input and fixture bytes
 are read from immutable blobs in the initially
@@ -87,6 +92,19 @@ class CaptureValidationError(ValueError):
     """Raised when a capture input cannot serve as exact-SHA provenance."""
 
 
+class _DuplicateJsonKeyError(ValueError):
+    """Raised when a JSON object repeats a policy-relevant key."""
+
+
+def _json_object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise _DuplicateJsonKeyError(f"duplicate JSON key {key!r}")
+        value[key] = item
+    return value
+
+
 def _non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -97,8 +115,8 @@ def _sha256_bytes(payload: bytes) -> str:
 
 def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
     try:
-        value = json.loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(payload.decode("utf-8"), object_pairs_hook=_json_object_without_duplicate_keys)
+    except (UnicodeDecodeError, json.JSONDecodeError, _DuplicateJsonKeyError) as exc:
         raise CaptureValidationError(f"cannot read {label} JSON from initial HEAD blob: {exc}") from exc
     if not isinstance(value, dict):
         raise CaptureValidationError(f"{label} must be a JSON object")
@@ -121,6 +139,21 @@ def _validate_disposition_document(document: dict[str, Any], label: str) -> None
     for index, entry in enumerate(_require_entries(document, label)):
         if not _non_empty_string(entry.get("disposition")):
             raise CaptureValidationError(f"{label} disposition entry {index} must be non-empty")
+
+
+def _validate_inventory_document(document: dict[str, Any]) -> None:
+    """Reject legacy inventory artifacts until their complete checker is frozen."""
+    _validate_disposition_document(document, "inventory")
+    if document.get("scope") == "raw_legacy_surface_only":
+        raise CaptureValidationError(
+            "inventory scope raw_legacy_surface_only is a preparatory non-D0 artifact and cannot enter baseline capture"
+        )
+    if document.get("artifact_type") == "legacy_surface_inventory":
+        raise CaptureValidationError(
+            "legacy_surface_inventory cannot enter baseline capture until a complete frozen checker is integrated"
+        )
+    if document.get("not_for_d0") is True:
+        raise CaptureValidationError("inventory explicitly marked not_for_d0 cannot enter baseline capture")
 
 
 def _require_string(entry: dict[str, Any], key: str, subject: str) -> str:
@@ -583,7 +616,7 @@ def capture(
     for key in ("inventory", "module_disposition", "test_disposition", "ledger"):
         documents[key] = _load_json_bytes(payloads[key], input_labels[key])
 
-    _validate_disposition_document(documents["inventory"], input_labels["inventory"])
+    _validate_inventory_document(documents["inventory"])
     _validate_disposition_document(documents["module_disposition"], input_labels["module_disposition"])
     _validate_disposition_document(documents["test_disposition"], input_labels["test_disposition"])
     ledger_entries = validate_ledger(documents["ledger"])

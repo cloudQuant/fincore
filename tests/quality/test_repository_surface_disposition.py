@@ -181,6 +181,37 @@ def test_byte_contract_matches_the_protected_path_wrapper() -> None:
     assert from_payloads["disposition_sha256"] == checker.sha256_file(DISPOSITION)
 
 
+def test_rejects_duplicate_json_policy_keys(tmp_path: Path) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    duplicate_key_payload = facts_path.read_bytes().replace(
+        b'"not_for_d0": true,',
+        b'"not_for_d0": true, "not_for_d0": true,',
+        1,
+    )
+
+    with pytest.raises(checker.DispositionValidationError, match="duplicate JSON key"):
+        checker.validate_disposition_payloads(
+            duplicate_key_payload,
+            disposition_path.read_bytes(),
+            facts_filename=facts_path.name,
+        )
+
+
+def test_rejects_normalized_d0_assertion_claims(tmp_path: Path) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    facts = json.loads(facts_path.read_text(encoding="utf-8"))
+    facts["D0"] = {"status": "passed"}
+    _write_json(facts_path, facts)
+    disposition = json.loads(disposition_path.read_text(encoding="utf-8"))
+    disposition["source_facts"]["sha256"] = checker.sha256_file(facts_path)
+    _write_json(disposition_path, disposition)
+
+    with pytest.raises(checker.DispositionValidationError, match="assertion"):
+        checker.validate_disposition(facts_path, disposition_path)
+
+
 def test_rejects_missing_record_mapping_before_claiming_success(tmp_path: Path) -> None:
     checker = _load_checker()
     facts_path, disposition_path = _write_minimal_pair(tmp_path)
@@ -275,6 +306,17 @@ def test_binds_facts_parse_and_digest_to_one_protected_read(tmp_path: Path, monk
     assert swapped is True
     assert result["record_count"] == 2
     assert original_facts != facts_path.read_bytes()
+
+
+def test_protected_reader_fails_closed_when_the_platform_lacks_no_follow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checker = _load_checker()
+    facts_path, disposition_path = _write_minimal_pair(tmp_path)
+    monkeypatch.delattr(checker.os, "O_NOFOLLOW", raising=False)
+
+    with pytest.raises(checker.DispositionValidationError, match="O_NOFOLLOW"):
+        checker.validate_disposition(facts_path, disposition_path)
 
 
 def test_rejects_historical_allowlist_digest_drift(tmp_path: Path) -> None:
