@@ -12,9 +12,15 @@ non-empty ``entries`` list.  Every entry needs a unique non-empty
 non-empty ``target_operation_id``, ``source_nodeids``, ``wheel_nodeids`` and
 ``scenarios`` list.  Each scenario needs a non-empty ``scenario_id`` and either
 an existing fixture-relative ``golden_path`` or an ``oracle_reference``.  A
-``required`` entry additionally needs an independent authority mapping for each
-scenario: ``authority.kind`` and ``authority.reference`` must be non-empty, and
-candidate/current Fincore output kinds are rejected as non-independent.
+``disposition`` is exactly one of ``required``, ``alias_only`` or
+``legacy_quirk``.  A ``required`` entry additionally needs an independent
+authority mapping for each scenario: ``authority.kind`` must be one of the
+documented independent authority kinds (``published_standard``,
+``peer_reviewed_paper``, ``independent_reference_implementation``,
+``pinned_upstream_oracle``, ``property_invariant`` or ``upstream_reference``),
+``authority.reference`` must be non-empty, and at least one of ``version``,
+``digest`` or ``provenance`` must provide a traceable identifier.
+Candidate/current Fincore output is never an independent authority.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
@@ -39,16 +45,19 @@ from typing import Any, Sequence
 
 SCHEMA_VERSION = 1
 _GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40}$")
-_NON_INDEPENDENT_AUTHORITY_KINDS = frozenset(
+_REQUIRED_DISPOSITION = "required"
+_LEDGER_DISPOSITIONS = frozenset({"required", "alias_only", "legacy_quirk"})
+_INDEPENDENT_AUTHORITY_KINDS = frozenset(
     {
-        "candidate",
-        "candidate_fincore_output",
-        "candidate_output",
-        "current",
-        "current_fincore_output",
-        "current_output",
+        "published_standard",
+        "peer_reviewed_paper",
+        "independent_reference_implementation",
+        "pinned_upstream_oracle",
+        "property_invariant",
+        "upstream_reference",
     }
 )
+_TRACEABILITY_FIELDS = ("version", "digest", "provenance")
 
 
 class CaptureValidationError(ValueError):
@@ -79,8 +88,8 @@ def _load_json(path: Path, label: str) -> dict[str, Any]:
 
 def _require_entries(document: dict[str, Any], label: str) -> list[dict[str, Any]]:
     entries = document.get("entries")
-    if not isinstance(entries, list):
-        raise CaptureValidationError(f"{label} must contain an entries list")
+    if not isinstance(entries, list) or not entries:
+        raise CaptureValidationError(f"{label} entries must be non-empty")
     normalized: list[dict[str, Any]] = []
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict):
@@ -110,6 +119,14 @@ def _require_string_list(entry: dict[str, Any], key: str, subject: str) -> list[
     return [str(item).strip() for item in value]
 
 
+def _require_ledger_disposition(entry: dict[str, Any], subject: str) -> str:
+    disposition = entry.get("disposition")
+    if not isinstance(disposition, str) or disposition not in _LEDGER_DISPOSITIONS:
+        choices = ", ".join(sorted(_LEDGER_DISPOSITIONS))
+        raise CaptureValidationError(f"{subject} ledger disposition must be one of: {choices}")
+    return disposition
+
+
 def _validate_scenario(scenario: dict[str, Any], subject: str, *, required: bool) -> None:
     _require_string(scenario, "scenario_id", subject)
     golden_path = scenario.get("golden_path")
@@ -131,8 +148,12 @@ def _validate_scenario(scenario: dict[str, Any], subject: str, *, required: bool
     if not _non_empty_string(kind) or not _non_empty_string(reference):
         raise CaptureValidationError(f"{subject} requires an independent authority")
     assert isinstance(kind, str)
-    if kind.strip().lower() in _NON_INDEPENDENT_AUTHORITY_KINDS:
-        raise CaptureValidationError(f"{subject} requires an independent authority, not candidate/current Fincore output")
+    normalized_kind = kind.strip()
+    if normalized_kind not in _INDEPENDENT_AUTHORITY_KINDS:
+        choices = ", ".join(sorted(_INDEPENDENT_AUTHORITY_KINDS))
+        raise CaptureValidationError(f"{subject} requires an independent authority kind; allowed kinds: {choices}")
+    if not any(_non_empty_string(authority.get(field)) for field in _TRACEABILITY_FIELDS):
+        raise CaptureValidationError(f"{subject} requires a traceable version, digest, or provenance")
 
 
 def validate_ledger(ledger: dict[str, Any]) -> list[dict[str, Any]]:
@@ -140,8 +161,6 @@ def validate_ledger(ledger: dict[str, Any]) -> list[dict[str, Any]]:
     if ledger.get("schema_version") != SCHEMA_VERSION:
         raise CaptureValidationError(f"ledger schema_version must be {SCHEMA_VERSION}")
     entries = _require_entries(ledger, "ledger")
-    if not entries:
-        raise CaptureValidationError("ledger entries must be non-empty")
 
     capability_ids: set[str] = set()
     for index, entry in enumerate(entries):
@@ -151,7 +170,7 @@ def validate_ledger(ledger: dict[str, Any]) -> list[dict[str, Any]]:
             raise CaptureValidationError(f"duplicate capability_id {capability_id!r}")
         capability_ids.add(capability_id)
         _require_string(entry, "owner", subject)
-        disposition = _require_string(entry, "disposition", subject)
+        disposition = _require_ledger_disposition(entry, subject)
         _require_string(entry, "target_operation_id", subject)
         _require_string_list(entry, "source_nodeids", subject)
         _require_string_list(entry, "wheel_nodeids", subject)
@@ -161,7 +180,11 @@ def validate_ledger(ledger: dict[str, Any]) -> list[dict[str, Any]]:
         for scenario_index, scenario in enumerate(scenarios):
             if not isinstance(scenario, dict):
                 raise CaptureValidationError(f"{subject} scenario {scenario_index} must be a JSON object")
-            _validate_scenario(scenario, f"{subject} scenario {scenario_index}", required=disposition == "required")
+            _validate_scenario(
+                scenario,
+                f"{subject} scenario {scenario_index}",
+                required=disposition == _REQUIRED_DISPOSITION,
+            )
     return entries
 
 
@@ -324,6 +347,9 @@ def capture(
     ledger_entries = validate_ledger(documents["ledger"])
     fixture_manifest = _fixture_manifest(source_root, fixture_dir.resolve())
     _validate_ledger_fixture_paths(ledger_entries, fixture_dir)
+    final_provenance = _source_provenance(source_root)
+    if final_provenance != provenance:
+        raise CaptureValidationError("source Git provenance changed during capture")
 
     artifact: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -336,7 +362,7 @@ def capture(
         "fixtures": fixture_manifest,
         "ledger_summary": {
             "entries": len(ledger_entries),
-            "required_entries": sum(entry["disposition"] == "required" for entry in ledger_entries),
+            "required_entries": sum(entry["disposition"] == _REQUIRED_DISPOSITION for entry in ledger_entries),
         },
     }
     _atomic_write_json(output_path, artifact)
@@ -351,7 +377,9 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--ledger", required=True, help="versioned capability ledger JSON")
     parser.add_argument("--fixture-dir", required=True, help="directory containing golden fixtures")
     parser.add_argument("--output", required=True, help="repository-external capture artifact path")
-    parser.add_argument("--deny-network", action="store_true", help="acknowledge that capture must make no network calls")
+    parser.add_argument(
+        "--deny-network", action="store_true", help="acknowledge that capture must make no network calls"
+    )
     return parser.parse_args(argv)
 
 

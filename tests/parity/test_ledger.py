@@ -71,8 +71,9 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
                         {
                             "scenario_id": "ordinary_returns",
                             "authority": {
-                                "kind": "upstream_reference",
-                                "reference": "empyrical annual_return 0.5.5",
+                                "kind": "pinned_upstream_oracle",
+                                "reference": "empyrical.annual_return",
+                                "version": "0.5.5",
                             },
                             "golden_path": "annual-return.json",
                         }
@@ -128,21 +129,77 @@ def test_valid_minimal_ledger_is_accepted(tmp_path: Path) -> None:
         ),
         (lambda entry: entry.pop("owner") or entry, "owner"),
         (lambda entry: entry.pop("disposition") or entry, "disposition"),
+        (lambda entry: entry.update(disposition="REQUIRED") or entry, "ledger disposition"),
+        (lambda entry: entry.update(disposition=" required ") or entry, "ledger disposition"),
+        (lambda entry: entry.update(disposition="unknown") or entry, "ledger disposition"),
         (
-            lambda entry: entry.update(
-                scenarios=[
-                    {
-                        "scenario_id": "ordinary_returns",
-                        "authority": {"kind": "candidate_fincore_output", "reference": "candidate value"},
-                        "golden_path": "annual-return.json",
-                    }
-                ]
-            )
-            or entry,
-            "independent authority",
+            lambda entry: (
+                entry.update(
+                    scenarios=[
+                        {
+                            "scenario_id": "ordinary_returns",
+                            "authority": {
+                                "kind": "candidate_fincore_result",
+                                "reference": "candidate value",
+                                "version": "0.5.0",
+                            },
+                            "golden_path": "annual-return.json",
+                        }
+                    ]
+                )
+                or entry
+            ),
+            "independent authority kind",
+        ),
+        (
+            lambda entry: (
+                entry.update(
+                    scenarios=[
+                        {
+                            "scenario_id": "ordinary_returns",
+                            "authority": {
+                                "kind": "unrecognized_oracle",
+                                "reference": "unknown implementation",
+                                "version": "1.0",
+                            },
+                            "golden_path": "annual-return.json",
+                        }
+                    ]
+                )
+                or entry
+            ),
+            "independent authority kind",
+        ),
+        (
+            lambda entry: (
+                entry.update(
+                    scenarios=[
+                        {
+                            "scenario_id": "ordinary_returns",
+                            "authority": {
+                                "kind": "pinned_upstream_oracle",
+                                "reference": "empyrical.annual_return",
+                            },
+                            "golden_path": "annual-return.json",
+                        }
+                    ]
+                )
+                or entry
+            ),
+            "traceable version, digest, or provenance",
         ),
     ],
-    ids=["duplicate", "missing-owner", "missing-disposition", "candidate-oracle"],
+    ids=[
+        "duplicate",
+        "missing-owner",
+        "missing-disposition",
+        "uppercase-disposition",
+        "whitespace-disposition",
+        "unknown-disposition",
+        "candidate-oracle",
+        "unknown-oracle",
+        "untraceable-oracle",
+    ],
 )
 def test_ledger_invalid_entries_are_rejected(
     tmp_path: Path,
@@ -177,3 +234,46 @@ def test_executable_disposition_records_must_not_be_blank(tmp_path: Path, docume
     assert result.returncode != 0
     assert document_name.replace("_", " ") in result.stderr
     assert "disposition" in result.stderr
+
+
+@pytest.mark.parametrize("document_name", ["inventory", "module_disposition", "test_disposition"])
+def test_disposition_documents_must_not_be_empty(tmp_path: Path, document_name: str) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    _write_json(paths[document_name], {"entries": []})
+    _commit_source(source_root)
+
+    result = _capture(source_root, paths, tmp_path / "capture.json")
+
+    assert result.returncode != 0
+    assert "entries must be non-empty" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("target_operation_id", None),
+        ("source_nodeids", []),
+        ("wheel_nodeids", []),
+        ("scenarios", []),
+    ],
+)
+def test_required_ledger_entry_requires_target_nodes_and_scenarios(
+    tmp_path: Path,
+    field: str,
+    value: object,
+) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    ledger = json.loads(paths["ledger"].read_text(encoding="utf-8"))
+    entry = ledger["entries"][0]
+    assert isinstance(entry, dict)
+    if value is None:
+        entry.pop(field)
+    else:
+        entry[field] = value
+    _write_json(paths["ledger"], ledger)
+    _commit_source(source_root)
+
+    result = _capture(source_root, paths, tmp_path / "capture.json")
+
+    assert result.returncode != 0
+    assert field in result.stderr
