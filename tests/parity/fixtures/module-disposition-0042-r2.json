@@ -1,0 +1,1402 @@
+{
+  "artifact_type": "module_disposition",
+  "decision_status": "scoped",
+  "does_not_assert": [
+    "D-TECH",
+    "D0",
+    "installed_wheel_behavior",
+    "legacy_zero"
+  ],
+  "entries": [
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "keep",
+      "owner": "packaging",
+      "path": "fincore/__init__.py",
+      "rationale": "Root package is rewritten at cutover to expose only version, error model, and domain namespaces.",
+      "rule_id": "root-rewrite",
+      "target_path": "fincore/__init__.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/_compat/__init__.py",
+      "rationale": "The compatibility shell package is removed; no shim or alias surface survives the cutover.",
+      "rule_id": "compat-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/_dispatch.py",
+      "rationale": "The legacy dynamic dispatch layer is removed with the unified runtime invocation path.",
+      "rule_id": "catalog-authority",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "metrics",
+      "path": "fincore/_empyrical_legacy.py",
+      "rationale": "The Empyrical legacy implementation is deleted after parity proves kernel equivalence.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "portfolio",
+      "path": "fincore/_pyfolio_impl.py",
+      "rationale": "The Pyfolio implementation module is deleted after portfolio workflows replace it.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/_registry.py",
+      "rationale": "The legacy metric registry is removed once domain operations() feed the builtin catalog.",
+      "rule_id": "catalog-authority",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/_types.py",
+      "rationale": "Common type and schema definitions move into the canonical runtime.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/types.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "factor",
+      "path": "fincore/alphalens/__init__.py",
+      "rationale": "Alphalens capabilities merge into factor_analysis and report/factor; the package is deleted.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "factor",
+      "path": "fincore/alphalens/performance.py",
+      "rationale": "Alphalens capabilities merge into factor_analysis and report/factor; the package is deleted.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "factor",
+      "path": "fincore/alphalens/plotting.py",
+      "rationale": "Alphalens capabilities merge into factor_analysis and report/factor; the package is deleted.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "factor",
+      "path": "fincore/alphalens/tears.py",
+      "rationale": "Alphalens capabilities merge into factor_analysis and report/factor; the package is deleted.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "factor",
+      "path": "fincore/alphalens/utils.py",
+      "rationale": "Alphalens capabilities merge into factor_analysis and report/factor; the package is deleted.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/api/__init__.py",
+      "rationale": "The API facade package is absorbed by the runtime package surface.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/__init__.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/api/adapters.py",
+      "rationale": "Operation adapters are removed; OperationSpec carries no adapter or projection surface.",
+      "rule_id": "adapter-removal",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/api/builtins.py",
+      "rationale": "The composition root becomes runtime.builtins with a fixed domain operations() manifest.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/builtins.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/api/catalog.py",
+      "rationale": "Catalog indexing becomes the runtime catalog built from domain operations().",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/catalog.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/api/invoke.py",
+      "rationale": "Invocation orchestration becomes the runtime plan/run/batch engine.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/engine.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/api/specs.py",
+      "rationale": "Operation specs become the immutable runtime OperationSpec.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/specs.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "attribution",
+      "path": "fincore/attribution/__init__.py",
+      "rationale": "Attribution domain module retained as the single attribution implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/attribution/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "attribution",
+      "path": "fincore/attribution/brinson.py",
+      "rationale": "Attribution domain module retained as the single attribution implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/attribution/brinson.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "attribution",
+      "path": "fincore/attribution/fama_french.py",
+      "rationale": "Attribution domain module retained as the single attribution implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/attribution/fama_french.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "attribution",
+      "path": "fincore/attribution/fama_french_patch.py",
+      "rationale": "The Fama-French patch merges into the single fama_french implementation.",
+      "rule_id": "kernel-consolidation",
+      "target_path": "fincore/attribution/fama_french.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "attribution",
+      "path": "fincore/attribution/style.py",
+      "rationale": "Attribution domain module retained as the single attribution implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/attribution/style.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/backends/__init__.py",
+      "rationale": "The backends package disappears after the NumPy backend moves to runtime.",
+      "rule_id": "runtime-absorption",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/backends/numpy_backend.py",
+      "rationale": "The NumPy backend becomes the runtime backend contract implementation.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/backends.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/capabilities.py",
+      "rationale": "The third capability list is removed once the domain operation catalog is authoritative.",
+      "rule_id": "catalog-authority",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "metrics",
+      "path": "fincore/constants/__init__.py",
+      "rationale": "The constants package disappears after frequency/style semantics move to consumers.",
+      "rule_id": "support-consolidation",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "viz",
+      "path": "fincore/constants/color.py",
+      "rationale": "Color constants move into viz style primitives.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/viz/styles.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/constants/interesting_periods.py",
+      "rationale": "Interesting-period timing semantics move to the consuming metrics timing module.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/metrics/timing.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/constants/periods.py",
+      "rationale": "Period constants become metrics frequency primitives.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/metrics/frequencies.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "viz",
+      "path": "fincore/constants/style.py",
+      "rationale": "Style constants move into viz style primitives.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/viz/styles.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/contracts/__init__.py",
+      "rationale": "The contracts package disappears after schemas move to runtime and domains.",
+      "rule_id": "runtime-absorption",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/contracts/analysis.py",
+      "rationale": "Generic analysis schemas move into runtime data contracts.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/data.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "factor",
+      "path": "fincore/contracts/factor_analysis.py",
+      "rationale": "Factor analysis contracts colocate with the factor domain models.",
+      "rule_id": "domain-colocation",
+      "target_path": "fincore/factor_analysis/models.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "factor",
+      "path": "fincore/contracts/factor_workflows.py",
+      "rationale": "Factor workflow specs become explicit factor workflows colocated with the domain.",
+      "rule_id": "domain-colocation",
+      "target_path": "fincore/factor_analysis/workflows.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "portfolio",
+      "path": "fincore/contracts/portfolio.py",
+      "rationale": "Portfolio contracts colocate with the portfolio domain models.",
+      "rule_id": "domain-colocation",
+      "target_path": "fincore/portfolio/models.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/contracts/profiles.py",
+      "rationale": "Strict/enhanced profiles are removed with the breaking cutover.",
+      "rule_id": "profile-removal",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/contracts/time_series.py",
+      "rationale": "Generic time-series schemas move into runtime data contracts.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/data.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/contracts/validation.py",
+      "rationale": "Generic validation rules move to the runtime; financial rules move to their domains.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/validation.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "report",
+      "path": "fincore/contracts/workflows.py",
+      "rationale": "The workflow registry second source of truth is removed; workflows become explicit builders.",
+      "rule_id": "workflow-registry-removal",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/core/__init__.py",
+      "rationale": "The core package disappears after its content moves to runtime and metrics.",
+      "rule_id": "runtime-absorption",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/core/context.py",
+      "rationale": "AnalysisContext state/cache becomes the runtime AnalysisSession without facade method surfaces.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/session.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/core/engine.py",
+      "rationale": "The rolling engine becomes the metrics rolling kernel primitive.",
+      "rule_id": "kernel-consolidation",
+      "target_path": "fincore/metrics/_rolling.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/core/execution.py",
+      "rationale": "Execution orchestration merges into the runtime engine.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/engine.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/core/planner.py",
+      "rationale": "DAG planning merges into the runtime engine.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/engine.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/core/rolling_moments.py",
+      "rationale": "Rolling moment primitives merge into the metrics rolling kernel.",
+      "rule_id": "kernel-consolidation",
+      "target_path": "fincore/metrics/_rolling.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/core/snapshot.py",
+      "rationale": "AnalysisSnapshot becomes the immutable runtime input with copy-on-ingest and digest isolation.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/data.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "data",
+      "path": "fincore/data/__init__.py",
+      "rationale": "The data domain keeps its provider surface with the offline fake-client contract.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/data/__init__.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/data/contracts.py",
+      "rationale": "Generic snapshot contracts move to runtime; provider schemas stay in data.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/data.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "data",
+      "path": "fincore/data/providers.py",
+      "rationale": "Provider implementations stay in the data domain with lazy optional imports.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/data/providers.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/data/snapshots.py",
+      "rationale": "Generic snapshot machinery moves into runtime data inputs.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/data.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "metrics",
+      "path": "fincore/empyrical.py",
+      "rationale": "The Empyrical facade is deleted after its algorithms migrate to metrics/performance kernels.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "keep",
+      "owner": "runtime",
+      "path": "fincore/exceptions.py",
+      "rationale": "Error categories and structured diagnostics are unified in the runtime error model.",
+      "rule_id": "unified-error-model",
+      "target_path": "fincore/exceptions.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/__init__.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/analysis.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/analysis.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/calendar.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/calendar.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/costs.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/costs.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/data.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/data.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/exceptions.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/exceptions.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/inference.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/inference.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/models.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/models.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/performance.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/performance.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/pit.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/pit.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "factor",
+      "path": "fincore/factor_analysis/portfolio.py",
+      "rationale": "Canonical factor analysis module retained; alphalens capabilities merge here.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/factor_analysis/portfolio.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/factor_analysis/render_matplotlib.py",
+      "rationale": "Factor rendering leaves the domain layer and becomes a report/factor renderer.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/factor/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/factor_analysis/tears.py",
+      "rationale": "Factor tear composition becomes an explicit report/factor workflow.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/factor/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/hooks/__init__.py",
+      "rationale": "Hook registration is rebuilt through the extension snapshot with narrow interfaces.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/hooks/events.py",
+      "rationale": "Hook events are registered in the immutable extension snapshot instead of a mutable singleton.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/snapshot.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/__init__.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/alpha_beta.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/alpha_beta.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/basic.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/basic.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/bayesian.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/bayesian.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/consecutive.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/consecutive.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/drawdown.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/drawdown.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "attribution",
+      "path": "fincore/metrics/perf_attrib.py",
+      "rationale": "Perf-attribution metrics stay frozen through Task 2 and merge into attribution in Task 5B.",
+      "rule_id": "handoff-frozen",
+      "target_path": "fincore/metrics/perf_attrib.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/perf_stats.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/perf_stats.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/positions.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/positions.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/ratios.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/ratios.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/returns.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/returns.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/risk.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/risk.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/rolling.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/rolling.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/round_trips.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/round_trips.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/stats.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/stats.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/timing.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/timing.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/transactions.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/transactions.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "metrics",
+      "path": "fincore/metrics/yearly.py",
+      "rationale": "Canonical metrics kernel module retained and hardened as the single metric implementation path.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/metrics/yearly.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "optimization",
+      "path": "fincore/optimization/__init__.py",
+      "rationale": "Optimization domain module retained with constraint and feasibility contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/optimization/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "optimization",
+      "path": "fincore/optimization/_utils.py",
+      "rationale": "Optimization domain module retained with constraint and feasibility contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/optimization/_utils.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "optimization",
+      "path": "fincore/optimization/frontier.py",
+      "rationale": "Optimization domain module retained with constraint and feasibility contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/optimization/frontier.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "optimization",
+      "path": "fincore/optimization/objectives.py",
+      "rationale": "Optimization domain module retained with constraint and feasibility contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/optimization/objectives.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "optimization",
+      "path": "fincore/optimization/risk_parity.py",
+      "rationale": "Optimization domain module retained with constraint and feasibility contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/optimization/risk_parity.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "performance",
+      "path": "fincore/performance/__init__.py",
+      "rationale": "Canonical performance kernel module retained with TWR/MWR/XIRR and disclosure semantics.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/performance/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "performance",
+      "path": "fincore/performance/cashflows.py",
+      "rationale": "Canonical performance kernel module retained with TWR/MWR/XIRR and disclosure semantics.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/performance/cashflows.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "performance",
+      "path": "fincore/performance/disclosures.py",
+      "rationale": "Canonical performance kernel module retained with TWR/MWR/XIRR and disclosure semantics.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/performance/disclosures.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "performance",
+      "path": "fincore/performance/inference.py",
+      "rationale": "Canonical performance kernel module retained with TWR/MWR/XIRR and disclosure semantics.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/performance/inference.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "performance",
+      "path": "fincore/performance/returns.py",
+      "rationale": "Canonical performance kernel module retained with TWR/MWR/XIRR and disclosure semantics.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/performance/returns.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/plugin/__init__.py",
+      "rationale": "Plugin registration is rebuilt as the immutable extension snapshot surface.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/plugin/discovery.py",
+      "rationale": "Extension discovery moves into the extension snapshot contract.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/snapshot.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/plugin/registry.py",
+      "rationale": "The mutable process registry becomes the immutable ExtensionSnapshot.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/snapshot.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "extensions",
+      "path": "fincore/plugin/specs.py",
+      "rationale": "Extension specs move into the extension snapshot contract.",
+      "rule_id": "extensions-rebuild",
+      "target_path": "fincore/extensions/snapshot.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "portfolio",
+      "path": "fincore/pyfolio.py",
+      "rationale": "The Pyfolio facade is deleted after its workflows become portfolio/report builders.",
+      "rule_id": "facade-deletion",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/__init__.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/__init__.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/report/artifacts.py",
+      "rationale": "Report artifacts merge into the single runtime ArtifactBundle.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/artifacts.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/compute.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/compute.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/format.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/format.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/model.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/model.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/provenance.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/provenance.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/render_html.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/render_html.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "report",
+      "path": "fincore/report/render_pdf.py",
+      "rationale": "Report module retained and reorganized into portfolio/factor/renderers in Task 6.",
+      "rule_id": "report-reorganization",
+      "target_path": "fincore/report/render_pdf.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "runtime",
+      "path": "fincore/results/__init__.py",
+      "rationale": "The results package disappears after the unified Result model moves to runtime.",
+      "rule_id": "runtime-absorption",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/results/artifacts.py",
+      "rationale": "Artifact ownership and lifecycle become the runtime ArtifactBundle.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/artifacts.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/results/base.py",
+      "rationale": "The Result protocol becomes the unified runtime Result model.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/results.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/results/serialization.py",
+      "rationale": "The versioned serializer merges into runtime results with a stable schema only.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/results.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/__init__.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/backtesting.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/backtesting.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/calibration.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/calibration.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/diagnostics.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/diagnostics.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/evt.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/evt.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/garch.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/garch.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/models.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/models.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/report.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/report.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "risk",
+      "path": "fincore/risk/specs.py",
+      "rationale": "Risk domain module retained; typed results stay domain-side and rendering moves to report in Task 6.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/risk/specs.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/__init__.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/base.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/base.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/bootstrap.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/bootstrap.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/monte_carlo.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/monte_carlo.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/paths.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/paths.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "simulation",
+      "path": "fincore/simulation/scenarios.py",
+      "rationale": "Simulation domain module retained with unified rng and optional-import contracts.",
+      "rule_id": "kernel-retention",
+      "target_path": "fincore/simulation/scenarios.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/__init__.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/bayesian.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/capacity.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/perf_attrib.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/positions.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/returns.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/risk.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/round_trips.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/sheets.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/transactions.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "report",
+      "path": "fincore/tearsheets/utils.py",
+      "rationale": "Tearsheet compute/render becomes report/portfolio builders and renderers consuming canonical results.",
+      "rule_id": "renderer-separation",
+      "target_path": "fincore/report/portfolio/"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "metrics",
+      "path": "fincore/utils/__init__.py",
+      "rationale": "The catch-all utils package disappears after helpers move to single owners.",
+      "rule_id": "support-consolidation",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "portfolio",
+      "path": "fincore/utils/common_utils.py",
+      "rationale": "Portfolio helpers move to portfolio in Task 3; the table/export/asset/legend remainder hands off to report in Task 6.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/portfolio/positions.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/utils/data_utils.py",
+      "rationale": "Data primitives become private metrics numeric helpers.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/metrics/_numeric.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/utils/date_utils.py",
+      "rationale": "Financial date/frequency primitives move to metrics; generic timezone normalization uses the runtime contract.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/metrics/frequencies.py"
+    },
+    {
+      "completion_gate": "D-CUTOVER",
+      "disposition": "delete",
+      "owner": "packaging",
+      "path": "fincore/utils/deprecate.py",
+      "rationale": "Deprecation helpers have no independent observable and are removed at cutover.",
+      "rule_id": "support-consolidation",
+      "target_path": null
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "move",
+      "owner": "metrics",
+      "path": "fincore/utils/math_utils.py",
+      "rationale": "Numeric primitives become private metrics numeric helpers.",
+      "rule_id": "support-consolidation",
+      "target_path": "fincore/metrics/_numeric.py"
+    },
+    {
+      "completion_gate": "D-RUNTIME",
+      "disposition": "move",
+      "owner": "runtime",
+      "path": "fincore/validation.py",
+      "rationale": "Generic boundary validation moves into the runtime; financial rules move to their domains.",
+      "rule_id": "runtime-absorption",
+      "target_path": "fincore/runtime/validation.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/__init__.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/base.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/base.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/html_backend.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/html_backend.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/interactive/__init__.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/interactive/__init__.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/interactive/bokeh_backend.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/interactive/bokeh_backend.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/interactive/plotly_backend.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/interactive/plotly_backend.py"
+    },
+    {
+      "completion_gate": "D-DOMAIN",
+      "disposition": "keep",
+      "owner": "viz",
+      "path": "fincore/viz/matplotlib_backend.py",
+      "rationale": "Viz backend module retained with lazy optional imports and explicit resource ownership.",
+      "rule_id": "domain-retention",
+      "target_path": "fincore/viz/matplotlib_backend.py"
+    }
+  ],
+  "not_for_d0": true,
+  "schema_version": 1,
+  "scope": "fincore_source_tree_only",
+  "source_facts": {
+    "module_count": 153,
+    "path": "module-facts-discovery-0042-r2.json",
+    "sha256": "ea95c933707d6d60d5ee093e1e0124c04009b4cac3b6922b25cd5faafab3f4f0",
+    "source_provenance": {
+      "clean": true,
+      "commit": "739081686808445065d681cc7c5e9a8032f261a8",
+      "tree": "6c9b19cfc0ac03bf9cd19fec5b4990a91fefa3c4"
+    }
+  }
+}
