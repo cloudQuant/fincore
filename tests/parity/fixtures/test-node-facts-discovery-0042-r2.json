@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 203,
+        "count": 210,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3062,
+        "count": 3069,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2706,
+        "count": 2713,
         "group": "<unmarked>"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5556,
+  "node_count": 5563,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20961,6 +20961,62 @@
       "nodeid": "tests/property/test_time_series_contracts.py::test_sharpe_ratio_is_scale_invariant",
       "test_blob_sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc",
       "test_path": "tests/property/test_time_series_contracts.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_passes_the_frozen_capture_schema",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_contract_binds_the_committed_input_bytes",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_upstream_capabilities_use_the_pinned_empyrical_oracle",
+      "test_blob_sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
       "directory_group": "tests/quality",
@@ -51237,16 +51293,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1083,
+    "regular_blob_count": 1085,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "a00d3931029e4862f8b2145e1a1204909d0e10c0",
-    "tree": "2c0573a2ff2dbf09f6e374fa2a72df84dbfe57a7"
+    "commit": "395b583be28aade6b79465e819c894e95aa0962a",
+    "tree": "09d4f16bb4e9da16e993353787d182bb86dc0340"
   },
-  "source_test_blob_count": 474,
+  "source_test_blob_count": 475,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -51782,6 +51838,11 @@
       "git_object_id": "353eca70cba8644ac5c00d83f9367d1da822521b",
       "path": "tests/property/test_time_series_contracts.py",
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
+    },
+    {
+      "git_object_id": "a49320b550d26d2cebd6ece8f12228ee5b3acbef",
+      "path": "tests/quality/test_0042_r2_capability_ledger.py",
+      "sha256": "497d3ac5e40acb74997bfae3e43591284e699ec618cebd67c42d8a5265793798"
     },
     {
       "git_object_id": "09bf570fad0527d6663fea2ee11416f569acbdff",

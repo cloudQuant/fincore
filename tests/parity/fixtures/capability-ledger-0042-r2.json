@@ -3408,9 +3408,9 @@
   "scope": "metrics_and_performance_families_only",
   "source_contract": {
     "inventory_artifact_type": "legacy_surface_inventory",
-    "inventory_sha256": "34bc05411d127e12e74b241ce38aa76a19ca8271675a758a4ec59efa964b2d0b",
+    "inventory_sha256": "0ddbe523cc55ccf0417d7de89efe3263ae4610949ef83eae98a3daf7097bb1fd",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "ff26d3c0da8e9497b9ac0aecca8967134ac43c2247d5be617e91642c0f8ff1c8",
+    "node_facts_sha256": "93ad937dc477b1a875043bcd339c047472bc9b67bcb080c3bdb62a1f3383b2d7",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }
