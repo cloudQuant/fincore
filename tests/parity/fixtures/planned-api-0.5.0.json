@@ -1,0 +1,129 @@
+{
+  "artifact_type": "planned_public_api",
+  "decision_status": "scoped",
+  "does_not_assert": [
+    "D-TECH",
+    "D0",
+    "installed_wheel_behavior",
+    "legacy_zero"
+  ],
+  "entry_models": [
+    {
+      "model_id": "domain_function",
+      "rule": "the public path is the implementation path; direct calls return natural values and share one domain validation implementation with runtime.run"
+    },
+    {
+      "model_id": "runtime_execution",
+      "rule": "fincore.runtime.run and batch resolve one operation_id to exactly one canonical callable and wrap it in one Result model"
+    },
+    {
+      "model_id": "domain_workflow",
+      "rule": "portfolio, factor, risk, and report workflows are explicit builder/analyze/render functions consuming canonical domain results"
+    }
+  ],
+  "not_for_d0": true,
+  "removed_root_shapes": [
+    "flat metric functions at the root package",
+    "dynamic __getattr__ flat API with lazy aliases",
+    "Empyrical and Pyfolio facade classes with class-method bindings",
+    "strict and enhanced profile bindings",
+    "METRIC_REGISTRY and workflow registry projections",
+    "compatibility shells, deprecation wrappers, and fincore.v2 aliases"
+  ],
+  "removed_surfaces": [
+    "fincore.empyrical",
+    "fincore.pyfolio",
+    "fincore.alphalens",
+    "fincore._registry",
+    "fincore._dispatch",
+    "fincore._compat",
+    "fincore.capabilities",
+    "fincore.api",
+    "fincore.core",
+    "fincore.contracts",
+    "fincore.results",
+    "fincore.tearsheets",
+    "fincore.backends",
+    "fincore.constants",
+    "fincore.utils",
+    "fincore.plugin",
+    "fincore.hooks"
+  ],
+  "root_shape": {
+    "allowed_symbols": [
+      "__version__",
+      "errors"
+    ],
+    "namespace_only": true,
+    "rule": "the root package exposes version, the error model, and domain namespaces only; no flat callables and no facade classes"
+  },
+  "schema_version": 1,
+  "source_contract": {
+    "module_disposition_path": "module-disposition-0042-r2.json",
+    "plan_path": "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
+    "plan_sections": [
+      "2.1",
+      "2.2",
+      "0.2"
+    ]
+  },
+  "target_namespaces": {
+    "fincore.attribution": {
+      "owner": "attribution",
+      "role": "domain_kernel_and_workflows"
+    },
+    "fincore.data": {
+      "owner": "data",
+      "role": "provider_contracts_with_lazy_optional_imports"
+    },
+    "fincore.exceptions": {
+      "owner": "runtime",
+      "role": "unified_error_categories"
+    },
+    "fincore.extensions": {
+      "owner": "extensions",
+      "role": "immutable_extension_snapshot"
+    },
+    "fincore.factor_analysis": {
+      "owner": "factor",
+      "role": "single_factor_prepare_model_analyze_implementation"
+    },
+    "fincore.metrics": {
+      "owner": "metrics",
+      "role": "canonical_metric_kernels"
+    },
+    "fincore.optimization": {
+      "owner": "optimization",
+      "role": "domain_kernel_and_workflows"
+    },
+    "fincore.performance": {
+      "owner": "performance",
+      "role": "twr_mwr_xirr_cashflow_inference_disclosure"
+    },
+    "fincore.portfolio": {
+      "owner": "portfolio",
+      "role": "positions_transactions_round_trips_capacity_workflows"
+    },
+    "fincore.report": {
+      "owner": "report",
+      "role": "compute_once_render_many_portfolio_and_factor_reports"
+    },
+    "fincore.risk": {
+      "owner": "risk",
+      "role": "fitted_risk_models_forecasts_and_validation"
+    },
+    "fincore.runtime": {
+      "owner": "runtime",
+      "role": "catalog_engine_session_result_artifact"
+    },
+    "fincore.simulation": {
+      "owner": "simulation",
+      "role": "domain_kernel_and_workflows"
+    },
+    "fincore.viz": {
+      "owner": "viz",
+      "role": "pluggable_backends_with_resource_ownership"
+    }
+  },
+  "target_version": "0.5.0"
+}
