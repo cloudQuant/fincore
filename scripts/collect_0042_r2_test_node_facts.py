@@ -166,8 +166,37 @@ def _require_external_output(source_root: Path, output: Path) -> None:
     try:
         output.relative_to(source_root)
     except ValueError:
-        return
-    raise DiscoveryError("output path must be outside the source Git worktree")
+        pass
+    else:
+        raise DiscoveryError("output path must be outside the source Git worktree")
+    for control_path in _git_control_paths(source_root):
+        if _is_within(output, control_path):
+            raise DiscoveryError("output must not target the Git control directory")
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    """Return whether a resolved path is a root or descendant of ``root``."""
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
+    """Resolve every worktree Git administration root that must never be output."""
+    raw_paths = (
+        source_root / ".git",
+        Path(_git_text(source_root, "rev-parse", "--git-dir")),
+        Path(_git_text(source_root, "rev-parse", "--git-common-dir")),
+    )
+    resolved_paths: list[Path] = []
+    for raw_path in raw_paths:
+        candidate = raw_path if raw_path.is_absolute() else source_root / raw_path
+        resolved = candidate.resolve()
+        if resolved not in resolved_paths:
+            resolved_paths.append(resolved)
+    return tuple(resolved_paths)
 
 
 def _git_object_format(source_root: Path) -> str:
@@ -300,6 +329,7 @@ def _collection_environment(plugin_directory: Path, snapshot_root: Path, report_
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
     environment.pop("PYTEST_ADDOPTS", None)
+    environment.pop("PYTEST_PLUGINS", None)
     environment.update(
         {
             "FINCORE_0042_R2_NODE_REPORT": str(report_path),

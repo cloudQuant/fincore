@@ -274,6 +274,51 @@ def test_rejects_output_inside_source_worktree_before_collection(tmp_path: Path)
     ).stdout
 
 
+def test_rejects_linked_worktree_git_control_output_before_collection(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    linked_root = tmp_path / "linked-worktree"
+    subprocess.run(
+        ["git", "worktree", "add", "--detach", str(linked_root), "HEAD"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    git_dir = Path(
+        subprocess.run(
+            ["git", "rev-parse", "--absolute-git-dir"],
+            cwd=linked_root,
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.strip()
+    )
+    target = git_dir / "HEAD"
+    original = target.read_bytes()
+
+    result = _collect(linked_root, target)
+
+    assert result.returncode != 0
+    assert "git control" in result.stderr.lower()
+    assert target.read_bytes() == original
+
+
+def test_collection_environment_excludes_ambient_pytest_plugins(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    collector = _load_collector_module()
+    monkeypatch.setenv("PYTEST_PLUGINS", "untrusted_plugin")
+
+    environment = collector._collection_environment(
+        tmp_path / "plugin",
+        tmp_path / "snapshot",
+        tmp_path / "report.json",
+    )
+
+    assert environment["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] == "1"
+    assert "PYTEST_PLUGINS" not in environment
+
+
 def test_rejects_non_regular_test_blob_before_overwriting_output(tmp_path: Path) -> None:
     source_root = _clone_clean_source(tmp_path)
     (source_root / "tests" / "linked_0042_r2_test.py").symlink_to("compat/empyrical/test_public_api.py")
