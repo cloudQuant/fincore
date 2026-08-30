@@ -498,7 +498,8 @@ def _collect_artifact(source_root: Path) -> dict[str, Any]:
         "partial_reason": (
             "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. "
             "It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, "
-            "or a complete repository inventory."
+            "or a complete repository inventory. Generic runtime module paths and test nodes are deliberately "
+            "excluded because the module-facts and test-node-facts artifacts own those source-level inventories."
         ),
         "boundaries": {
             "included": [
@@ -507,8 +508,8 @@ def _collect_artifact(source_root: Path) -> dict[str, Any]:
                 "tracked maintained-document/template path candidates",
                 "tracked examples, type stubs, compatibility generators/checkers, and historical/provenance candidates",
             ],
-            "excluded": "runtime execution, installed distributions, generic test nodes, source-module dependency analysis, "
-            "human maintenance/lifecycle decisions, and untracked files",
+            "excluded": "runtime execution, installed distributions, generic runtime module paths, generic test nodes, "
+            "source-module dependency analysis, human maintenance/lifecycle decisions, and untracked files",
         },
         "source_provenance": initial,
         "source_archive": {"path_scope": "classified repository paths", "verified_against_regular_blobs": True},

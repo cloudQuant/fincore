@@ -30,6 +30,19 @@ EXPECTED_WORKFLOWS = {
     ".github/workflows/publish.yml",
     ".github/workflows/test-priority.yml",
 }
+EXPECTED_FROZEN_CATEGORY_COUNTS = {
+    "active_maintained_doc": 77,
+    "active_workflow": 4,
+    "compat_generator_checker": 6,
+    "example": 39,
+    "historical_provenance_candidate": 144,
+    "packaging_release_script": 14,
+    "template": 1,
+    "type_stub": 1,
+}
+# This is the corrected scoped baseline: the prior 294-record artifact admitted
+# runtime/test paths via a filename heuristic.  Those paths belong to the
+# dedicated module- and test-node discovery artifacts, not this repository surface.
 
 
 def _clone_clean_source(tmp_path: Path, revision: str = "HEAD") -> Path:
@@ -110,6 +123,8 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert len(artifact["source_provenance"]["tree"]) == 40
     assert artifact["source_archive"]["verified_against_regular_blobs"] is True
     assert artifact["record_count"] == len(artifact["records"])
+    assert artifact["record_count"] == 285
+    assert artifact["category_counts"] == EXPECTED_FROZEN_CATEGORY_COUNTS
     assert artifact["records"] == sorted(artifact["records"], key=lambda item: item["path"])
 
     records_by_path = _records_by_path(artifact)
@@ -244,6 +259,8 @@ def test_committed_fixture_is_byte_identical_to_its_recorded_clean_source(tmp_pa
     assert fixture["artifact_type"] == "repository_surface_facts_discovery"
     assert fixture["discovery_status"] == "partial"
     assert fixture["not_for_d0"] is True
+    assert fixture["record_count"] == 285
+    assert fixture["category_counts"] == EXPECTED_FROZEN_CATEGORY_COUNTS
     recorded_commit = fixture["source_provenance"]["commit"]
     assert isinstance(recorded_commit, str) and recorded_commit
 
