@@ -44,6 +44,15 @@ _HISTORICAL_FILENAME = re.compile(
     r"migration|provenance|report|review|summary)(?:[_-]|\.|$)",
     re.IGNORECASE,
 )
+_HISTORICAL_ITERATION_DIRECTORY = re.compile(r"^docs/\d{4}[-_]")
+_HISTORICAL_PATH_PREFIXES = (
+    ".superpowers/sdd/",
+    "_bmad-output/",
+    "docs/plans/",
+    "docs/quality/",
+    "docs/architecture/adr/",
+    "docs/迭代计划/",
+)
 _CATEGORY_ORDER = (
     "active_workflow",
     "packaging_release_script",
@@ -178,11 +187,15 @@ def _verify_provenance(source_root: Path, initial: Mapping[str, Any]) -> None:
 
 def _is_historical_or_provenance_path(path: str) -> bool:
     name = PurePosixPath(path).name
-    if path == "CHANGELOG.md" or path.startswith(("docs/plans/", "docs/quality/", "docs/architecture/adr/")):
+    if path == "CHANGELOG.md" or path.startswith(_HISTORICAL_PATH_PREFIXES):
+        return True
+    if _HISTORICAL_ITERATION_DIRECTORY.match(path):
         return True
     if path.startswith("examples/") and ("/logs/" in path or "/output/" in path):
         return True
-    return path == "docs/upstream-provenance.md" or bool(_HISTORICAL_FILENAME.search(name))
+    return path == "docs/upstream-provenance.md" or (
+        path.startswith("docs/") and bool(_HISTORICAL_FILENAME.search(name))
+    )
 
 
 def _is_document_path(path: str) -> bool:

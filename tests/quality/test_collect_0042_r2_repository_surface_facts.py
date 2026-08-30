@@ -130,8 +130,10 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     } <= set(records_by_path)
     assert {
         "CHANGELOG.md",
+        "docs/0039-优化完善项目/任务.md",
         "docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md",
         "docs/upstream-provenance.md",
+        "docs/迭代计划/0001_添加empyrical然后重构/01_需求文档.md",
         "examples/011_abberation/logs/AbberationStrategy_20260207_162014/run_info.json",
     } <= set(records_by_path)
 
@@ -142,9 +144,17 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert "active_maintained_doc" in records_by_path["README.md"]["category_tags"]
     assert "template" in records_by_path[".github/pull_request_template.md"]["category_tags"]
     assert "example" in records_by_path["examples/quick_start.py"]["category_tags"]
+    assert (
+        "historical_provenance_candidate"
+        not in records_by_path["examples/factor_analysis_quickstart.py"]["category_tags"]
+    )
+    assert "example" in records_by_path["examples/factor_analysis_quickstart.py"]["category_tags"]
+    assert "historical_provenance_candidate" not in records_by_path["mkdocs_docs/api/report.md"]["category_tags"]
+    assert "active_maintained_doc" in records_by_path["mkdocs_docs/api/report.md"]["category_tags"]
     assert "type_stub" in records_by_path["fincore/py.typed"]["category_tags"]
     assert "compat_generator_checker" in records_by_path["scripts/generate_compat_manifest.py"]["category_tags"]
     assert "historical_provenance_candidate" in records_by_path["CHANGELOG.md"]["category_tags"]
+    assert "historical_provenance_candidate" in records_by_path["docs/0039-优化完善项目/任务.md"]["category_tags"]
     assert (
         "historical_provenance_candidate"
         in records_by_path["docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"]["category_tags"]
@@ -152,16 +162,27 @@ def test_collects_deterministic_raw_repository_surface_facts_from_clean_head(tmp
     assert "historical_provenance_candidate" in records_by_path["docs/upstream-provenance.md"]["category_tags"]
     assert (
         "historical_provenance_candidate"
+        in records_by_path["docs/迭代计划/0001_添加empyrical然后重构/01_需求文档.md"]["category_tags"]
+    )
+    assert (
+        "historical_provenance_candidate"
         in records_by_path["examples/011_abberation/logs/AbberationStrategy_20260207_162014/run_info.json"][
             "category_tags"
         ]
     )
     assert "active_maintained_doc" not in records_by_path["CHANGELOG.md"]["category_tags"]
+    assert "active_maintained_doc" not in records_by_path["docs/0039-优化完善项目/任务.md"]["category_tags"]
     assert "active_maintained_doc" not in records_by_path["docs/MIGRATION.md"]["category_tags"]
     assert (
         "active_maintained_doc"
         not in records_by_path["docs/plans/2026-08-30-fincore-0042-r2-breaking-unified-core.md"]["category_tags"]
     )
+    assert (
+        "active_maintained_doc"
+        not in records_by_path["docs/迭代计划/0001_添加empyrical然后重构/01_需求文档.md"]["category_tags"]
+    )
+    assert "fincore/contracts/analysis.py" not in records_by_path
+    assert "tests/test_report/test_offline_report.py" not in records_by_path
 
     source_commit = artifact["source_provenance"]["commit"]
     for path, record in records_by_path.items():
