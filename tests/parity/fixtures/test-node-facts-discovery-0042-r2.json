@@ -71,7 +71,7 @@
         "group": "tests/packaging"
       },
       {
-        "count": 27,
+        "count": 29,
         "group": "tests/parity"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3060,
+        "count": 3062,
         "group": "other"
       },
       {
@@ -299,7 +299,7 @@
         "group": "p3"
       },
       {
-        "count": 1710,
+        "count": 1712,
         "group": "parametrize"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5554,
+  "node_count": 5556,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20429,7 +20429,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_disposition_documents_must_not_be_empty[inventory]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20439,7 +20439,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_disposition_documents_must_not_be_empty[module_disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20449,7 +20449,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_disposition_documents_must_not_be_empty[test_disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20459,7 +20459,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_executable_disposition_records_must_not_be_blank[inventory]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20469,7 +20469,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_executable_disposition_records_must_not_be_blank[module_disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20479,7 +20479,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_executable_disposition_records_must_not_be_blank[test_disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20489,7 +20489,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[candidate-oracle]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20499,7 +20499,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[duplicate]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20509,7 +20509,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[missing-disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20519,7 +20519,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[missing-owner]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20529,7 +20529,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[unknown-disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20539,7 +20539,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[unknown-oracle]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20549,7 +20549,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[untraceable-oracle]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20559,7 +20559,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[uppercase-disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20569,7 +20569,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_ledger_invalid_entries_are_rejected[whitespace-disposition]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20579,7 +20579,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[candidate-project]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20589,7 +20589,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[current-project]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20599,7 +20599,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[fincore-project]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20609,7 +20609,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[invariant-id]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20619,7 +20619,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[missing-artifact-identity]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20629,7 +20629,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[missing-project]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20639,7 +20639,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_authorities_require_kind_specific_structured_provenance[paper-metadata]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20649,7 +20649,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_ledger_entry_requires_target_nodes_and_scenarios[scenarios-value3]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20659,7 +20659,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_ledger_entry_requires_target_nodes_and_scenarios[source_nodeids-value1]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20669,7 +20669,7 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_ledger_entry_requires_target_nodes_and_scenarios[target_operation_id-None]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20679,7 +20679,27 @@
         "parametrize"
       ],
       "nodeid": "tests/parity/test_ledger.py::test_required_ledger_entry_requires_target_nodes_and_scenarios[wheel_nodeids-value2]",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
+      "test_path": "tests/parity/test_ledger.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [
+        "parametrize"
+      ],
+      "nodeid": "tests/parity/test_ledger.py::test_scoped_ledger_cannot_enter_baseline_capture[explicit-not-for-d0]",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
+      "test_path": "tests/parity/test_ledger.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [
+        "parametrize"
+      ],
+      "nodeid": "tests/parity/test_ledger.py::test_scoped_ledger_cannot_enter_baseline_capture[scoped-decision-status]",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -20687,7 +20707,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/parity/test_ledger.py::test_valid_minimal_ledger_is_accepted",
-      "test_blob_sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa",
+      "test_blob_sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8",
       "test_path": "tests/parity/test_ledger.py"
     },
     {
@@ -51223,8 +51243,8 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "eef1be234edd058281d4be58dee9282b2a8c5949",
-    "tree": "0fddbac2d78a563e6c69d39ff80fd7a65dd54c47"
+    "commit": "a00d3931029e4862f8b2145e1a1204909d0e10c0",
+    "tree": "2c0573a2ff2dbf09f6e374fa2a72df84dbfe57a7"
   },
   "source_test_blob_count": 474,
   "source_test_blobs": [
@@ -51729,9 +51749,9 @@
       "sha256": "ef0fcd1c508a4886e459c4aedc9d52bdd96ac92b2090a934a19449c394dd0432"
     },
     {
-      "git_object_id": "a74cd1b1dadc34acfb8fc5d03220a1c6a966f5e4",
+      "git_object_id": "a0b16a0ac37e27e0777d531e3a6c4419037a50bc",
       "path": "tests/parity/test_ledger.py",
-      "sha256": "ddbc7c68240fd4b69aa0f81c40aa41e269fd7fc51fae65cfd500e4381fe3a2fa"
+      "sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8"
     },
     {
       "git_object_id": "308e74ee56d3ace78f8855c146f7dc7dc9ee588a",
