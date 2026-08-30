@@ -20,6 +20,8 @@ import pytest
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 SCRIPT = REPOSITORY_ROOT / "scripts" / "check_0042_r2_legacy_surface_inventory.py"
+COMMITTED_RAW_DISCOVERY = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "legacy-surface-discovery-0042-r2.json"
+COMMITTED_INVENTORY = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "legacy-surface-inventory-0042-r2.json"
 
 
 def _load_checker() -> Any:
@@ -412,3 +414,22 @@ def test_cli_is_fail_closed_for_an_invalid_inventory(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "sha256" in result.stderr
+
+
+def test_committed_inventory_maps_each_discovered_raw_row_exactly_once() -> None:
+    assert COMMITTED_RAW_DISCOVERY.is_file(), "committed raw legacy-surface discovery fixture is missing"
+    assert COMMITTED_INVENTORY.is_file(), "committed legacy-surface inventory fixture is missing"
+    checker = _load_checker()
+
+    result = checker.validate_legacy_surface_inventory(COMMITTED_RAW_DISCOVERY, COMMITTED_INVENTORY)
+
+    raw = json.loads(COMMITTED_RAW_DISCOVERY.read_text(encoding="utf-8"))
+    expected_count = len(raw["entries"])
+    assert result["record_count"] == expected_count
+    assert result["unmapped_entry_ids"] == []
+    assert result["duplicate_entry_ids"] == []
+    assert result["not_for_d0"] is True
+    assert result["scope"] == "raw_legacy_surface_only"
+    assert result["disposition_counts"] == {"required": expected_count}
+    assert result["raw_discovery_sha256"] == checker.sha256_file(COMMITTED_RAW_DISCOVERY)
+    assert result["inventory_sha256"] == checker.sha256_file(COMMITTED_INVENTORY)
