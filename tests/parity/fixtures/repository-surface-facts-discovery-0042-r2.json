@@ -1,9 +1,10 @@
 {
   "artifact_type": "repository_surface_facts_discovery",
   "boundaries": {
-    "excluded": "runtime execution, installed distributions, generic runtime module paths, generic test nodes, source-module dependency analysis, human maintenance/lifecycle decisions, and untracked files",
+    "excluded": "runtime execution, installed distributions, generic runtime module paths, generic test nodes, source-module dependency analysis, human maintenance/lifecycle decisions, and untracked files; the script inventory is complete only for tracked scripts/ paths, not for every executable-like file",
     "included": [
       "tracked active workflow paths",
+      "every tracked path beneath scripts/ as script-candidate facts for later disposition",
       "tracked packaging/release scripts and configuration",
       "tracked maintained-document/template path candidates",
       "tracked examples, type stubs, compatibility generators/checkers, and historical/provenance candidates"
@@ -16,13 +17,14 @@
     "example": 39,
     "historical_provenance_candidate": 144,
     "packaging_release_script": 14,
+    "script_candidate": 49,
     "template": 1,
     "type_stub": 1
   },
   "discovery_status": "partial",
   "not_for_d0": true,
-  "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
-  "record_count": 285,
+  "partial_reason": "This raw path-facts artifact records no maintenance or lifecycle decision and cannot be D0 evidence. It does not prove complete compatibility removal, runtime execution, installed-wheel behavior, or a complete repository inventory. Every tracked path beneath scripts/ is included as a script candidate fact, while generic runtime module paths and test nodes are deliberately excluded because the module-facts and test-node-facts artifacts own those source-level inventories.",
+  "record_count": 318,
   "records": [
     {
       "blob_sha256": "6de153556154fbe6b2237ad68da2548d13f7d5fa020055231f09f68cb709c2e1",
@@ -95,7 +97,20 @@
       "token_facts": {
         "content_kind": "text",
         "executable_tokens": [
+          "workflow:run:)",
+          "workflow:run:EOF",
+          "workflow:run:artifacts",
+          "workflow:run:artifacts[p.name]",
           "workflow:run:bandit",
+          "workflow:run:cp",
+          "workflow:run:else",
+          "workflow:run:fi",
+          "workflow:run:for",
+          "workflow:run:if",
+          "workflow:run:import",
+          "workflow:run:json.dumps({\"artifacts\":",
+          "workflow:run:mkdir",
+          "workflow:run:pathlib.Path(\"dist/release-manifest.json\").write_text(",
           "workflow:run:pip",
           "workflow:run:pytest",
           "workflow:run:python",
@@ -163,6 +178,7 @@
         "content_kind": "text",
         "executable_tokens": [
           "workflow:run:mkdocs",
+          "workflow:run:pip",
           "workflow:uses:actions/checkout@v4",
           "workflow:uses:actions/configure-pages@v6",
           "workflow:uses:actions/deploy-pages@v5",
@@ -203,8 +219,17 @@
         "content_kind": "text",
         "executable_tokens": [
           "workflow:run:bandit",
+          "workflow:run:ci_run_id=\"$(gh",
+          "workflow:run:echo",
+          "workflow:run:exit",
+          "workflow:run:fi",
+          "workflow:run:gh",
+          "workflow:run:if",
+          "workflow:run:pip",
           "workflow:run:pytest",
           "workflow:run:python",
+          "workflow:run:release_sha=\"$(git",
+          "workflow:run:ruff",
           "workflow:run:twine",
           "workflow:uses:actions/checkout@v4",
           "workflow:uses:actions/setup-python@v6",
@@ -249,6 +274,10 @@
       "token_facts": {
         "content_kind": "text",
         "executable_tokens": [
+          "workflow:run:echo",
+          "workflow:run:pip",
+          "workflow:run:pytest",
+          "workflow:run:python",
           "workflow:uses:actions/checkout@v4",
           "workflow:uses:actions/setup-python@v6",
           "workflow:uses:actions/upload-artifact@v4",
@@ -9110,14 +9139,158 @@
       }
     },
     {
+      "blob_sha256": "f8daed22c7d014988add49460e388e946a4191b36f83c766301cb5a4103d0689",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "6cae7349c4c07e34c9657b211e8fad3b336d2649",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/README_update_script.md",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [],
+        "reference_tokens": [
+          ".github/workflows/update-test-data.yml",
+          "scripts/update_global_index_data.py",
+          "tests/test_data"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "357f900ca777622d8e30b51c0bf6be909cb32ccb9ca571bf9d7ca116b99504b8",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "17fa67f497d1dc0e4f62a5e6e3d655882f83d8f4",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/analyze_nav_excel_to_html.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "fincore.report.create_strategy_report",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "re"
+        ],
+        "reference_tokens": [
+          "fincore.report"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "8b4da090c895ff41ce0f03eec1a00ba962c6a7c4cbf4469b0313280a97748899",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "dd69bff783f48b83ceddc5b0edbda81eb04e3676",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/audit_test_markers.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "pathlib.Path",
+          "pytest",
+          "re",
+          "subprocess",
+          "sys",
+          "xml.etree.ElementTree"
+        ],
+        "reference_tokens": [
+          ".github/workflows/ci.yml",
+          "tests/benchmarks",
+          "tests/compat",
+          "tests/errors/failures/skipped"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "c2a2befe8d7bcf397bff8545159031114393064a25975923a6860976a520c5bf",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "10ebbfbe27fde68d17fb13591a3951bdff3bb211",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/capture_capability_baseline.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "datetime.UTC",
+          "datetime.datetime",
+          "hashlib",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "pathlib.PureWindowsPath",
+          "re",
+          "subprocess",
+          "sys",
+          "tempfile",
+          "typing.Any",
+          "typing.Sequence"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
       "blob_sha256": "e6899c146340dcd54ba838f735ab341344152d87648bdfd62dfa9b85b760a5e9",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "64b2b474062cae41d6da79dc2ef25b6716e64e62",
@@ -9167,12 +9340,17 @@
     {
       "blob_sha256": "9d1806814d336348586b4cb4158aec985df201861fa875a9b6f523b27776fdf2",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "fb0cbe62b36eccce16a21c5f044f8e35c6cae09c",
@@ -9197,14 +9375,108 @@
       }
     },
     {
+      "blob_sha256": "439b93b4a201244abbd85600034a76d6e9d4d3352a44694788794e5e6e0a5e20",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "54b80381e2a52f6e332990dc76e94f0d7a6fd2bf",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_architecture_convergence.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "ast",
+          "collections.abc.Iterable",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "contextlib.suppress",
+          "copy",
+          "dataclasses.dataclass",
+          "decimal.Decimal",
+          "decimal.InvalidOperation",
+          "decimal.ROUND_FLOOR",
+          "hashlib",
+          "io.StringIO",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "platform",
+          "re",
+          "subprocess",
+          "sys",
+          "tempfile",
+          "tokenize",
+          "tomllib",
+          "typing.Any",
+          "typing.TYPE_CHECKING"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "21691249221354bd71d21721fcebf248c272e2920413f34d7ccf759b9c2bad53",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "9cce2c4903c000736b5919eed9a9217d4dc26638",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_coverage_baseline.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "collections.defaultdict",
+          "json",
+          "pathlib.Path",
+          "re",
+          "subprocess",
+          "sys",
+          "typing.Any"
+        ],
+        "reference_tokens": [
+          "scripts/collect_quality_baseline.py"
+        ]
+      }
+    },
+    {
       "blob_sha256": "0d4055245da7bd71961c45a87ed6805d244b304fc78386da939f666428950f55",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "0390321dc67328b509926f5a7621dd0586125f4b",
@@ -9236,12 +9508,17 @@
     {
       "blob_sha256": "8b19eb99381ef281f481c4c5894d93206b36e493e0372058ee735248b5a31313",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "e8a9d73061213177a610edb885a429a8559f4028",
@@ -9269,14 +9546,95 @@
       }
     },
     {
+      "blob_sha256": "1d4166773dae68c695c2122deb39f374598fbb75f42668e4e67cd4f251c405df",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "a2ed8372110b8c4276af1b709e702a00cda08547",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_performance.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "fincore.api.build_builtin_catalog",
+          "fincore.api.invoke.invoke",
+          "fincore.core.execution.DAGExecutor",
+          "fincore.core.planner.DAGNode",
+          "fincore.core.planner.ExecutionPlan",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "sys",
+          "time"
+        ],
+        "reference_tokens": [
+          "docs/quality/performance-budget.md",
+          "fincore.api",
+          "fincore.api.invoke",
+          "fincore.core.execution",
+          "fincore.core.planner"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "0465261e32c2a3911b451a434c4d4311a94350cd6e88e1bd761d4e3a647ca308",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "a64ae3ef21d4c2b30404fc3a121fd9e3787ffe8e",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_quality_snapshot.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "json",
+          "pathlib.Path",
+          "subprocess",
+          "typing.Any",
+          "typing.Sequence"
+        ],
+        "reference_tokens": [
+          "docs/quality/current-baseline.json"
+        ]
+      }
+    },
+    {
       "blob_sha256": "ff8820e10c2212af00deae3a441eab96ca22fe05d2708710180241c8f885f11c",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "6f869d28b7ad6f2a0f7ba567013410717118fd91",
@@ -9304,12 +9662,17 @@
     {
       "blob_sha256": "f35e9aa5f53fdeb1c1d8ba32185c796a8f66b69c33cf59cd65861672b21ba301",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "89cb78eb5b5bcb6bb40c140cc0abdaa2899ecf74",
@@ -9350,14 +9713,607 @@
       }
     },
     {
+      "blob_sha256": "40e03b50aed89c976cc4e1601ce5ce9594be929f43c944dfbd8d352b5e72ac19",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "8c113a97a0e0f65311d0a32fc23cc783fc121833",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/check_workflow_integrity.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "pathlib.Path",
+          "re",
+          "sys",
+          "yaml",
+          "yaml.nodes.MappingNode",
+          "yaml.nodes.SequenceNode"
+        ],
+        "reference_tokens": [
+          ".github/workflows/"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "9f73ffe5f866d3dd5b2159c04e47a7142450fb6d8a5a4b4e8862e369bdf6ed13",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "3eeed198099096165f890397f83579ba06c11140",
+      "git_mode": "100755",
+      "kind": "script_candidate",
+      "path": "scripts/claude_night_runner.sh",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "shell:'",
+          "shell:(",
+          "shell:)",
+          "shell:*)",
+          "shell:--compact-interval)",
+          "shell:--extra-args)",
+          "shell:--log-dir)",
+          "shell:--max-runs)",
+          "shell:--max-turns)",
+          "shell:--model)",
+          "shell:--restart-delay)",
+          "shell:--skip-format)",
+          "shell:--skip-health)",
+          "shell:--task-file)",
+          "shell:--workdir)",
+          "shell:-h|--help)",
+          "shell:2>&1",
+          "shell:CLAUDE_ARGS+=(--continue)",
+          "shell:CLAUDE_ARGS=(\"${CLAUDE_BASE_ARGS[@]}\")",
+          "shell:CLAUDE_BASE_ARGS=(-p",
+          "shell:COMPACT_INTERVAL=5",
+          "shell:CONTINUE_PROMPT=\"$TASK_FILE\"",
+          "shell:CURRENT_PROMPT=\"$CONTINUE_PROMPT\"",
+          "shell:CURRENT_PROMPT=\"$PROMPT\"",
+          "shell:DEFAULT_WORKDIR=\"$(cd",
+          "shell:EXTRA_ARGS=\"\"",
+          "shell:HEALTH_CSV=\"$LOG_DIR/health_history.csv\"",
+          "shell:LOG_DIR=\"\"",
+          "shell:LOG_DIR=\"$WORKDIR/logs/claude\"",
+          "shell:MAX_RUNS=0",
+          "shell:MAX_TURNS=200",
+          "shell:MODEL=\"\"",
+          "shell:PROMPT=\"$TASK_FILE\"",
+          "shell:RESTART_DELAY=10",
+          "shell:RUN_COUNT=$((RUN_COUNT",
+          "shell:RUN_COUNT=0",
+          "shell:SCRIPT_DIR=\"$(cd",
+          "shell:SKIP_FORMAT=false",
+          "shell:SKIP_HEALTH=false",
+          "shell:TASK_FILE=\"docs/0037-不断修复bug并完善项目/readme.md\"",
+          "shell:TASK_FULL_PATH=\"$WORKDIR/$TASK_FILE\"",
+          "shell:USE_CONTINUE=false",
+          "shell:USE_CONTINUE=true",
+          "shell:WORKDIR=\"$DEFAULT_WORKDIR\"",
+          "shell:[[",
+          "shell:break",
+          "shell:case",
+          "shell:cd",
+          "shell:claude",
+          "shell:collect_health",
+          "shell:collect_health()",
+          "shell:content",
+          "shell:continue",
+          "shell:cov_line=$(echo",
+          "shell:cov_output=$(cd",
+          "shell:cov_pct=$(echo",
+          "shell:d",
+          "shell:done",
+          "shell:echo",
+          "shell:elif",
+          "shell:else",
+          "shell:esac",
+          "shell:except",
+          "shell:exit",
+          "shell:exit_code=${PIPESTATUS[0]}",
+          "shell:failed=$(echo",
+          "shell:fi",
+          "shell:git",
+          "shell:if",
+          "shell:import",
+          "shell:line",
+          "shell:local",
+          "shell:log.flush()",
+          "shell:log.write(line)",
+          "shell:log_file=\"$LOG_DIR/claude_run${RUN_COUNT}_${ts}.log\"",
+          "shell:log_path",
+          "shell:mkdir",
+          "shell:msg_type",
+          "shell:passed=$(echo",
+          "shell:print(content,",
+          "shell:print(s,",
+          "shell:print_help()",
+          "shell:printf",
+          "shell:pytest_output=$(cd",
+          "shell:ruff",
+          "shell:ruff_count=$(echo",
+          "shell:ruff_count=0",
+          "shell:ruff_output=$(cd",
+          "shell:s",
+          "shell:sed",
+          "shell:set",
+          "shell:skipped=$(echo",
+          "shell:sleep",
+          "shell:tool",
+          "shell:ts=\"$(date",
+          "shell:while",
+          "shell:with",
+          "shell:{",
+          "shell:}"
+        ],
+        "import_tokens": [],
+        "reference_tokens": [
+          "docs/0037-",
+          "scripts/claude_night_runner.sh"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "2ea0abe44dc98605f088360d8ad37b9922531e7eb8dfc79bfed7f0eae053226c",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "6be9bc043af1d04d0b4812c5ac6d0564a6e0d9ce",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/collect_0042_r2_module_facts.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "ast",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "collections.defaultdict",
+          "contextlib.suppress",
+          "dataclasses.dataclass",
+          "hashlib",
+          "io",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "subprocess",
+          "sys",
+          "tarfile",
+          "tempfile",
+          "typing.Any"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "7a2689b639627aa627abfdb2c246eb6767651dc5aece6f9480ae27b2d622f1c7",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "e13089a44c5e5b4f1cb72fbbd017cfb2c83e0485",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/collect_0042_r2_repository_surface_facts.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "ast",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "contextlib.suppress",
+          "dataclasses.dataclass",
+          "hashlib",
+          "io",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "secrets",
+          "stat",
+          "subprocess",
+          "sys",
+          "tarfile",
+          "typing.Any",
+          "typing.TYPE_CHECKING"
+        ],
+        "reference_tokens": [
+          ".github/PAGES_SETUP.md",
+          ".github/workflows/",
+          ".github/workflows/publish.yml",
+          "?:(?:[+-]?[1-9][0-9]*",
+          "docs/API_STABILITY.md",
+          "docs/MIGRATION.md",
+          "docs/architecture/adr/",
+          "docs/architecture/public-api-map.md",
+          "docs/plans/",
+          "docs/quality/",
+          "docs/upstream-provenance.md"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "d0506e7d9eb560dff70a60b500ca0d3c2a1cabda4cf396bca1e95b44eaf34163",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "0a0799bded8d203e47ec8c007e16c13739046a25",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/collect_0042_r2_surface_discovery.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "ast",
+          "collections.abc.Iterator",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "contextlib.contextmanager",
+          "contextlib.suppress",
+          "dataclasses.dataclass",
+          "hashlib",
+          "importlib",
+          "importlib.util",
+          "io",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "subprocess",
+          "sys",
+          "tarfile",
+          "tempfile",
+          "tomllib",
+          "typing.Any"
+        ],
+        "reference_tokens": [
+          "fincore._registry",
+          "fincore.alphalens",
+          "fincore.alphalens.tears",
+          "fincore.api.builtins",
+          "fincore.capabilities",
+          "fincore.contracts.factor_analysis",
+          "fincore.contracts.factor_workflows",
+          "fincore.contracts.workflows",
+          "fincore.pyfolio.Pyfolio",
+          "scripts/test_installed_wheel.py",
+          "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
+          "tests/compat/fixtures/empyrical-0.6.0-api.json",
+          "tests/compat/fixtures/pyfolio-0.9.6-api.json",
+          "tests/contracts/fixtures/public-api-0.4.0.dev0.json"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "e7cb80e6a749af3233e7e2607c18b6895d9f71e62d05dc869c113c3608e8b050",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "8a1d00d39629b4974e216cfe6aaf04bf7d0347dc",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/collect_0042_r2_test_node_facts.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "collections.Counter",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "contextlib.suppress",
+          "dataclasses.dataclass",
+          "hashlib",
+          "io",
+          "json",
+          "os",
+          "pathlib.Path",
+          "pathlib.PurePosixPath",
+          "re",
+          "subprocess",
+          "sys",
+          "tarfile",
+          "tempfile",
+          "typing.Any"
+        ],
+        "reference_tokens": [
+          "tests/benchmarks",
+          "tests/benchmarks/",
+          "tests/compat/alphalens/",
+          "tests/compat/empyrical/",
+          "tests/compat/pyfolio/",
+          "tests/test_empyrical/",
+          "tests/test_factor_analysis/",
+          "tests/test_pyfolio/"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "d1cd9c73a670031b521fb468c89a9a5bf037d0f74c810965ab7a216ad6a7e90f",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "5526e7ef5ce4df23c35852963492721df4d800c9",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/collect_quality_baseline.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "collections.abc.Iterable",
+          "datetime.UTC",
+          "datetime.datetime",
+          "hashlib",
+          "json",
+          "matplotlib",
+          "numpy",
+          "os",
+          "pandas",
+          "pathlib.Path",
+          "re",
+          "scipy",
+          "shutil",
+          "subprocess",
+          "sys",
+          "tempfile",
+          "time",
+          "typing.Any",
+          "typing.TYPE_CHECKING"
+        ],
+        "reference_tokens": [
+          "fincore.egg",
+          "scripts/check_quality_snapshot.py",
+          "tests/benchmarks"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "2d56252d3576699a700dfd5c9189a2f3b3efa45364ea1c7bda7279dbe9789f7d",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "b44afc217eed37478d6a98113b906c781c9b3d0f",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/compare_benchmarks.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "datetime.datetime",
+          "itertools.pairwise",
+          "json",
+          "math",
+          "pathlib.Path",
+          "re",
+          "statistics",
+          "sys"
+        ],
+        "reference_tokens": [
+          "scripts/compare_benchmarks.py"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "1c02b32a8d86a4f505828a57e4166b5b4ca0b9e009bcff6f71d2ab873d15cb11",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "35bfdaed8585dbc7a70e3a0d4331df3c7afea4fa",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/extract_nav_to_excel.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [
+          "pandas",
+          "pathlib.Path"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "09ab8bab28105723e34481c60c78716dc00859b4620d09e21272b9e44239ae20",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "a6655c55051db22fa0707eb5eed754e9be7c1b11",
+      "git_mode": "100755",
+      "kind": "script_candidate",
+      "path": "scripts/fincore_night_runner.sh",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "shell:(",
+          "shell:)",
+          "shell:*)",
+          "shell:--extra-args)",
+          "shell:--log-dir)",
+          "shell:--max-runs)",
+          "shell:--model)",
+          "shell:--restart-delay)",
+          "shell:--skip-health)",
+          "shell:--task-file)",
+          "shell:--workdir)",
+          "shell:-h|--help)",
+          "shell:2>&1",
+          "shell:CODEX_ARGS+=(-)",
+          "shell:CODEX_ARGS=(exec",
+          "shell:DEFAULT_WORKDIR=\"$(cd",
+          "shell:EXTRA_ARGS=\"\"",
+          "shell:HEALTH_CSV=\"$LOG_DIR/health_history.csv\"",
+          "shell:LOG_DIR=\"\"",
+          "shell:LOG_DIR=\"$WORKDIR/logs/codex\"",
+          "shell:MAX_RUNS=0",
+          "shell:MODEL=\"\"",
+          "shell:RESTART_DELAY=15",
+          "shell:RUN_COUNT=$((RUN_COUNT",
+          "shell:RUN_COUNT=0",
+          "shell:SCRIPT_DIR=\"$(cd",
+          "shell:SKIP_HEALTH=false",
+          "shell:TASK_FILE=\"docs/0037-不断修复bug并完善项目/readme.md\"",
+          "shell:TASK_FULL_PATH=\"$WORKDIR/$TASK_FILE\"",
+          "shell:WORKDIR=\"$DEFAULT_WORKDIR\"",
+          "shell:[[",
+          "shell:break",
+          "shell:case",
+          "shell:cat",
+          "shell:cd",
+          "shell:collect_health",
+          "shell:collect_health()",
+          "shell:cov_line=$(echo",
+          "shell:cov_output=$(cd",
+          "shell:cov_pct=$(echo",
+          "shell:done",
+          "shell:echo",
+          "shell:elif",
+          "shell:else",
+          "shell:esac",
+          "shell:exit",
+          "shell:exit_code=${PIPESTATUS[1]}",
+          "shell:failed=$(echo",
+          "shell:fi",
+          "shell:git",
+          "shell:if",
+          "shell:local",
+          "shell:log_file=\"$LOG_DIR/fincore_run${RUN_COUNT}_${ts}.log\"",
+          "shell:mkdir",
+          "shell:passed=$(echo",
+          "shell:print_help()",
+          "shell:printf",
+          "shell:pytest_output=$(cd",
+          "shell:ruff",
+          "shell:ruff_count=$(echo",
+          "shell:ruff_count=0",
+          "shell:ruff_output=$(cd",
+          "shell:sed",
+          "shell:set",
+          "shell:skipped=$(echo",
+          "shell:sleep",
+          "shell:ts=\"$(date",
+          "shell:while",
+          "shell:{",
+          "shell:}"
+        ],
+        "import_tokens": [],
+        "reference_tokens": [
+          "docs/0037-",
+          "scripts/fincore_night_runner.sh"
+        ]
+      }
+    },
+    {
       "blob_sha256": "e8ed036d3033ace1e9562d50d39df85f52e1ff0b2d19ae1195fa8309339dafa6",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "789d44ddb4ea4e67f39a9e744ce252d84140fac5",
@@ -9396,12 +10352,17 @@
     {
       "blob_sha256": "3a0328cb8ccf132a7b44ad70cc37f0b55a717f8223adb5f508a86eef05fbe24d",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "7862352d2aefee1d8f863f6c91e97a200133c79f",
@@ -9435,12 +10396,17 @@
     {
       "blob_sha256": "5512a5384f21697756ce0257d5fec91e1fbbfde9fcd1f74d8dc6bd7b229227c7",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "92c5dccc768420d5e551acc5288c70a35d0631f3",
@@ -9482,14 +10448,48 @@
       }
     },
     {
+      "blob_sha256": "fbd1f0d6ce55a57d597c6167a39dfbf1a570e251a3cf3e8df08590aebaf3262c",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "1df4054aea4fba589c9010ae1f12c162014b88b3",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/git_dual_push_setup.sh",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "shell:echo",
+          "shell:git"
+        ],
+        "import_tokens": [],
+        "reference_tokens": [
+          "https://gitee.com/yunjinqi/empyrical.git",
+          "https://gitee.com/yunjinqi/fincore.git",
+          "https://github.com/cloudQuant/fincore.git"
+        ]
+      }
+    },
+    {
       "blob_sha256": "23e2e0858749207196101905bda2de0c09640f207bb5ee5d0745d7d18cf04013",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "f0a443ba3f7e0a5f2b0b3f2ac7076983c58ee94f",
@@ -9518,12 +10518,17 @@
     {
       "blob_sha256": "f1394ac64652d528cdb35832412bdff38994c74bec07b063b096c756098d27fc",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "202f7cd92f4292fa40565c6d7dd47f43dcb30ff1",
@@ -9549,14 +10554,442 @@
       }
     },
     {
+      "blob_sha256": "852c899aeb1445ef47aed8f1be0f197455e7863b59b3162547c499c917488971",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "d35c16c1efeec342325d0a0405a6571408f201f8",
+      "git_mode": "100755",
+      "kind": "script_candidate",
+      "path": "scripts/kill_claude_runner.sh",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "shell:--dry)",
+          "shell:-f|--force)",
+          "shell:-h|--help)",
+          "shell:;;",
+          "shell:DRY_RUN=false",
+          "shell:FORCE=false",
+          "shell:PIDS+=(\"$pid\")",
+          "shell:PIDS=()",
+          "shell:PROC_INFO+=\"$line\"$'\\n'",
+          "shell:PROC_INFO=\"\"",
+          "shell:UNIQUE_PIDS=($(printf",
+          "shell:case",
+          "shell:done",
+          "shell:echo",
+          "shell:esac",
+          "shell:exit",
+          "shell:fi",
+          "shell:if",
+          "shell:kill",
+          "shell:pid=$(echo",
+          "shell:printf",
+          "shell:read",
+          "shell:set",
+          "shell:while"
+        ],
+        "import_tokens": [],
+        "reference_tokens": [
+          "scripts/kill_claude_runner.sh"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "8945064278648d69b9f3ed49c58bed843138ad9096bcbe85ef7b7eb3e6c3b98c",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "a6daaa2180b845522c26810944d00dced6eae789",
+      "git_mode": "100755",
+      "kind": "script_candidate",
+      "path": "scripts/optimize_code.sh",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "shell:PROJECT_DIR=\"$(dirname",
+          "shell:SCRIPT_DIR=\"$(cd",
+          "shell:cd",
+          "shell:check_tool",
+          "shell:check_tool()",
+          "shell:echo",
+          "shell:else",
+          "shell:exit",
+          "shell:fi",
+          "shell:find",
+          "shell:if",
+          "shell:pip",
+          "shell:python",
+          "shell:ruff",
+          "shell:set",
+          "shell:}"
+        ],
+        "import_tokens": [],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "3d13361d955a74a6fdf97097409a8eb550538e1425116ade2811ce7a8f6ef422",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "7bba60f0c8b0aebd67b2167b93836ab0fe420c57",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/profile_hotspots.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "cProfile",
+          "fincore.factor_analysis.data.prepare_factor_data",
+          "fincore.metrics.ratios.sharpe_ratio",
+          "fincore.metrics.risk.annual_volatility",
+          "json",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "platform",
+          "pstats",
+          "resource",
+          "subprocess",
+          "sys",
+          "time",
+          "workloads.describe_workload",
+          "workloads.factor_panel_workload",
+          "workloads.single_series_workload"
+        ],
+        "reference_tokens": [
+          "fincore.factor_analysis.data",
+          "fincore.metrics.ratios",
+          "fincore.metrics.risk"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "42d90f3407f3946e4ff9d0ebbc506d89c70fb08bc749510f690bede915a18b12",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "f41880af82de8863fb816399f8631912c1824236",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/profile_workloads.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "json",
+          "pathlib.Path",
+          "subprocess",
+          "sys",
+          "tempfile",
+          "typing.Any",
+          "typing.cast"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "b99858c9c382701e95b677cb03557c918324764e57aa7536ac3c7347e7588565",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "ea39138e14d4da41ff09f37708022ea87fadfc99",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/remove_null_bytes_empyrical.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "pathlib.Path"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "ae3f5ec277be72647a652aa1b45e3cbda97566b03bceb71c3763eedc9869cdba",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "513d8f29a1f93020e50d0bbba9101fc666979353",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/render_capability_inventory.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "fincore.capabilities.list_capabilities",
+          "pathlib.Path",
+          "sys"
+        ],
+        "reference_tokens": [
+          "fincore.capabilities",
+          "scripts/"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "8477690c75328d6aab9a69bc373783ae92fc106a7fb6740c3fe37bd3504b01b9",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "df0f31e4db9a817306075eb282ef008378747426",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/run_factor_benchmarks.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "bench_factor_analysis.SCENARIOS",
+          "bench_factor_analysis.SEED",
+          "bench_factor_analysis.build_workload",
+          "bench_factor_analysis.output_metadata",
+          "json",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "platform",
+          "resource",
+          "scipy",
+          "statsmodels",
+          "subprocess",
+          "sys",
+          "time",
+          "tracemalloc"
+        ],
+        "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "31e6bafc136aa478ac84acc2baa4f499fda18a0f5270158ae1a5c93d6ddb0359",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "eae01e36a65ad8a1d705525640e4a9a199339909",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/run_rolling_benchmarks.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "fincore.core.engine.RollingEngine",
+          "fincore.metrics.rolling",
+          "json",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "platform",
+          "resource",
+          "subprocess",
+          "sys",
+          "time",
+          "tracemalloc"
+        ],
+        "reference_tokens": [
+          "fincore.core.engine",
+          "fincore.metrics",
+          "scripts/compare_benchmarks.py",
+          "scripts/run_rolling_benchmarks.py",
+          "tests/benchmarks/test_rolling_regression.py"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "cace201a3a3d9d0f07c8072d104c54f44f172b8d11ecba8bbe67e66a07999b33",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "d439e89f4681b5a100ea0f77d8385d87d09750aa",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/run_round_trip_benchmarks.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "argparse",
+          "fincore.metrics.round_trips.extract_round_trips",
+          "json",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "platform",
+          "resource",
+          "subprocess",
+          "sys",
+          "time",
+          "tracemalloc"
+        ],
+        "reference_tokens": [
+          "fincore.metrics.round_trips",
+          "scripts/run_round_trip_benchmarks.py"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "1ea674dce8ce839faf8751cd70ad9ce9a496a82f14dbaa187a5bffb476d92222",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "3706d65c078c7e7f9b24c5985d0a3782cf4ea4ce",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/simple_import_test.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [
+          "fincore.metrics.ratios.sharpe_ratio",
+          "pathlib.Path",
+          "subprocess",
+          "sys"
+        ],
+        "reference_tokens": [
+          "fincore.metrics.ratios"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "3fe765fe1789455854293e9b5c724edf1b4e9d0e57dc78068ebf239e23c76823",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "20254875337014b565b09abb8d50ceeb753ddb2e",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/simple_test.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [
+          "fincore",
+          "fincore.metrics.ratios.excess_sharpe",
+          "fincore.metrics.ratios.sharpe_ratio",
+          "fincore.metrics.ratios.sortino_ratio",
+          "fincore.metrics.risk.annual_volatility",
+          "fincore.metrics.risk.downside_risk",
+          "fincore.metrics.risk.tail_ratio",
+          "fincore.metrics.risk.tracking_error",
+          "pathlib.Path",
+          "sys"
+        ],
+        "reference_tokens": [
+          "fincore.metrics.ratios",
+          "fincore.metrics.risk"
+        ]
+      }
+    },
+    {
       "blob_sha256": "de1e3e445d7efa8aa2ef2f80781eeb6a3725603a32429927ed6d4d4e8e99f49c",
       "category_tags": [
-        "compat_generator_checker"
+        "compat_generator_checker",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "script filename carries compatibility/API contract marker",
           "rule_id": "compat_script_name"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "133a97819288cfc00dc15666280b4961b11de876",
@@ -9599,12 +11032,17 @@
     {
       "blob_sha256": "633e743ec3206f29ba60094ecf500a9718c01ba73e6da40307bf8c79769b8f91",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "8c8316530a4c9088b7e350d68390a046ddf679df",
@@ -9646,12 +11084,17 @@
     {
       "blob_sha256": "efdc43ca139067b65e3a9cfd834b137a175027392fef59dd5dd8ece9269fd0db",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "50ed756b0079e5b90e79ea5482d2532f1f38a77e",
@@ -9683,12 +11126,17 @@
     {
       "blob_sha256": "5da6f4d9cfdda166d8a7027f6574bc0e012a7514cdc2e9966bf5abe938fa1959",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "79c3809cf36a8ac680e84e32518da9972ca2fc38",
@@ -9721,14 +11169,85 @@
       }
     },
     {
+      "blob_sha256": "eb8f219ec52796a012e3607fe6ad918250e8aa6b6fb216a4da361f19ced84bfd",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "f4a0ca0fae57ad4673074df80bf55c2716779d47",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/test_runner.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [],
+        "import_tokens": [
+          "fincore",
+          "fincore.metrics.ratios",
+          "importlib",
+          "pathlib.Path",
+          "subprocess",
+          "sys"
+        ],
+        "reference_tokens": [
+          "fincore.metrics.ratios",
+          "tests/test_metrics/test_ratios_complete.py"
+        ]
+      }
+    },
+    {
+      "blob_sha256": "158ea652c13292a4960fe34205ea7df356ba83f0077fd3d010b95b3e1000dc8d",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "f53fd8e9569b57e0bb30cc945ed399a265ba76d4",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/update_global_index_data.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "akshare",
+          "pandas",
+          "pathlib.Path",
+          "sys",
+          "time"
+        ],
+        "reference_tokens": [
+          "scripts/update_global_index_data.py",
+          "tests/test_data",
+          "tests/test_data/index_data"
+        ]
+      }
+    },
+    {
       "blob_sha256": "1c48b3c8a5b373072bbe2eed3bf7aab6a8e5046e001ef8ff43992b9825635e9c",
       "category_tags": [
-        "packaging_release_script"
+        "packaging_release_script",
+        "script_candidate"
       ],
       "classification_basis": [
         {
           "evidence": "tracked packaging or release configuration/script path",
           "rule_id": "packaging_release_path"
+        },
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
         }
       ],
       "git_blob_id": "d11df8eb469eac3f2037e305d13e782971acabe3",
@@ -9747,6 +11266,45 @@
           "sys"
         ],
         "reference_tokens": []
+      }
+    },
+    {
+      "blob_sha256": "418c0af98b00f1e6e1a6f6b7a9a987fbe09bb23efbc30086c34c7b2036b36614",
+      "category_tags": [
+        "script_candidate"
+      ],
+      "classification_basis": [
+        {
+          "evidence": "tracked scripts subtree candidate path",
+          "rule_id": "tracked_script_path"
+        }
+      ],
+      "git_blob_id": "81972c8e913255b6c26e2539b6d2783372dc286a",
+      "git_mode": "100644",
+      "kind": "script_candidate",
+      "path": "scripts/verify_quality_fixes.py",
+      "token_facts": {
+        "content_kind": "text",
+        "executable_tokens": [
+          "python:__main__"
+        ],
+        "import_tokens": [
+          "__future__.annotations",
+          "fincore.metrics.ratios.conditional_sharpe_ratio",
+          "fincore.metrics.ratios.excess_sharpe",
+          "fincore.metrics.ratios.information_ratio",
+          "fincore.metrics.risk.annual_volatility",
+          "fincore.metrics.risk.value_at_risk",
+          "numpy",
+          "pandas",
+          "pathlib.Path",
+          "sys"
+        ],
+        "reference_tokens": [
+          "fincore.metrics.ratios",
+          "fincore.metrics.risk",
+          "scripts/verify_quality_fixes.py"
+        ]
       }
     },
     {
@@ -9783,7 +11341,7 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "e64ccef65860406a9943442a02aa55785a8bb1fa",
-    "tree": "d54ad4bb73578bec4ffe0a03de39de19a5dd2b24"
+    "commit": "e49617bdd028de80fc4e17d350976bdf03041d86",
+    "tree": "05919cdc08d68cfa0ebb4a7ffb6b3232bc5fe1ea"
   }
 }
