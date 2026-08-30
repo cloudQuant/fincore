@@ -1,0 +1,227 @@
+"""Contracts for the 0042-R2 raw legacy-surface discovery artifact.
+
+The fixture this command produces is deliberately *not* the reconciled
+inventory consumed by the capability-baseline capture command.  These tests
+exercise it from a separate clean clone so its source provenance is real while
+the checkout used to run pytest remains free to contain the test and script
+under development.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import subprocess
+import sys
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+SCRIPT = Path(__file__).parents[2] / "scripts" / "collect_0042_r2_surface_discovery.py"
+REPOSITORY_ROOT = SCRIPT.parents[1]
+
+REQUIRED_SOURCE_KINDS = frozenset(
+    {
+        "metric_registry",
+        "workflow_registry",
+        "performance_operation_specs",
+        "alphalens_function_specs",
+        "alphalens_workflow_specs",
+        "public_api_snapshot",
+        "empyrical_compat_manifest",
+        "pyfolio_compat_manifest",
+        "alphalens_compat_manifest",
+        "capability_registry",
+        "distribution_extras",
+        "installed_consumer_profiles",
+        "pyfolio_class_methods",
+    }
+)
+
+EXPECTED_ARTIFACT_PATHS = {
+    "metric_registry": "fincore/_registry.py",
+    "workflow_registry": "fincore/contracts/workflows.py",
+    "performance_operation_specs": "fincore/api/builtins.py",
+    "alphalens_function_specs": "fincore/contracts/factor_analysis.py",
+    "alphalens_workflow_specs": "fincore/contracts/factor_workflows.py",
+    "public_api_snapshot": "tests/contracts/fixtures/public-api-0.4.0.dev0.json",
+    "empyrical_compat_manifest": "tests/compat/fixtures/empyrical-0.6.0-api.json",
+    "pyfolio_compat_manifest": "tests/compat/fixtures/pyfolio-0.9.6-api.json",
+    "alphalens_compat_manifest": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
+    "capability_registry": "fincore/capabilities.py",
+    "distribution_extras": "pyproject.toml",
+    "installed_consumer_profiles": "scripts/test_installed_wheel.py",
+    "pyfolio_class_methods": "fincore/_pyfolio_impl.py",
+}
+
+EXPECTED_SOURCE_COUNTS = {
+    "metric_registry": 237,
+    "workflow_registry": 11,
+    "performance_operation_specs": 9,
+    "alphalens_function_specs": 61,
+    "alphalens_workflow_specs": 7,
+    "capability_registry": 25,
+    "distribution_extras": 15,
+    "installed_consumer_profiles": 9,
+    "pyfolio_class_methods": 67,
+}
+
+
+def _clone_clean_source(tmp_path: Path) -> Path:
+    """Create an independent clean checkout at this task's current Git HEAD."""
+    expected_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPOSITORY_ROOT,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    source_root = tmp_path / "source"
+    subprocess.run(
+        ["git", "clone", "--quiet", "--no-local", str(REPOSITORY_ROOT), str(source_root)],
+        check=True,
+        text=True,
+    )
+    subprocess.run(["git", "checkout", "--quiet", expected_head], cwd=source_root, check=True, text=True)
+    assert not subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=source_root,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout
+    return source_root
+
+
+def _collect(source_root: Path, output: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--output", str(output)],
+        cwd=source_root,
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+
+def _load_artifact(source_root: Path, output: Path) -> dict[str, Any]:
+    result = _collect(source_root, output)
+    assert result.returncode == 0, result.stderr
+    return json.loads(output.read_text(encoding="utf-8"))
+
+
+def _entry_counts(artifact: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = defaultdict(int)
+    for entry in artifact["entries"]:
+        counts[entry["source_kind"]] += 1
+    return dict(counts)
+
+
+def _walk_mapping_keys(value: object) -> set[str]:
+    if isinstance(value, dict):
+        return set(value) | set().union(*(_walk_mapping_keys(item) for item in value.values()))
+    if isinstance(value, list):
+        return set().union(*(_walk_mapping_keys(item) for item in value)) if value else set()
+    return set()
+
+
+def test_collects_deterministic_multisource_raw_facts_from_clean_head(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    first_output = tmp_path / "first.json"
+    second_output = tmp_path / "second.json"
+
+    artifact = _load_artifact(source_root, first_output)
+    second = _load_artifact(source_root, second_output)
+
+    assert first_output.read_bytes() == second_output.read_bytes()
+    assert artifact == second
+    assert artifact["schema_version"] == 1
+    assert artifact["artifact_type"] == "legacy_surface_discovery"
+    assert artifact["discovery_status"] == "partial"
+    assert artifact["not_for_d0"] is True
+    assert "maintained docs" in artifact["partial_reason"]
+    assert "examples" in artifact["partial_reason"]
+    assert "benchmarks" in artifact["partial_reason"]
+    assert "wheel" in artifact["partial_reason"]
+    assert "test-node" in artifact["partial_reason"]
+    assert set(artifact["required_source_kinds"]) == REQUIRED_SOURCE_KINDS
+    assert artifact["source"]["clean"] is True
+    assert len(artifact["source"]["commit"]) == 40
+    assert len(artifact["source"]["tree"]) == 40
+    assert artifact["entries"]
+    assert artifact["source_artifacts"]
+    assert artifact["discrepancies"]
+
+    artifact_by_kind = {item["source_kind"]: item for item in artifact["source_artifacts"]}
+    assert set(artifact_by_kind) == REQUIRED_SOURCE_KINDS
+    assert {kind: item["path"] for kind, item in artifact_by_kind.items()} == EXPECTED_ARTIFACT_PATHS
+    assert all(not Path(item["path"]).is_absolute() for item in artifact["source_artifacts"])
+    assert all("\\" not in item["path"] for item in artifact["source_artifacts"])
+    counts = _entry_counts(artifact)
+    assert set(EXPECTED_SOURCE_COUNTS) <= set(counts)
+    assert all(counts[kind] == count for kind, count in EXPECTED_SOURCE_COUNTS.items())
+    assert counts["empyrical_compat_manifest"] > 0
+    assert counts["pyfolio_compat_manifest"] > 0
+    assert counts["alphalens_compat_manifest"] > 0
+
+    entries_by_path: dict[str, set[str]] = defaultdict(set)
+    for entry in artifact["entries"]:
+        assert entry["entry_id"]
+        assert entry["source_id"] == entry["source_kind"]
+        assert entry["origin"]
+        assert entry["surface"]
+        assert entry["concept"]
+        assert entry["source_locator"]
+        locator = entry["source_locator"]
+        source_artifact = artifact_by_kind[entry["source_kind"]]
+        assert locator["artifact_path"] == source_artifact["path"]
+        assert locator["artifact_sha256"] == source_artifact["sha256"]
+        public_path = entry["surface"].get("public_path")
+        if public_path:
+            entries_by_path[public_path].add(entry["source_kind"])
+
+    assert any(len(kinds) > 1 for kinds in entries_by_path.values()), "cross-source facts must not be deduplicated"
+    assert any(entry["source_kind"] == "alphalens_function_specs" for entry in artifact["entries"])
+    assert any(entry["source_kind"] == "pyfolio_class_methods" for entry in artifact["entries"])
+    assert {
+        "catalog_projection_not_complete_source",
+        "snapshot_paths_not_equivalent_to_catalog_bindings",
+        "pyfolio_class_methods_not_workflows",
+        "factor_contract_manifest_not_one_to_one",
+        "distribution_extras_not_installed_profiles",
+    } <= {item["discrepancy_id"] for item in artifact["discrepancies"]}
+
+
+def test_artifact_hashes_are_initial_head_blob_hashes_and_raw_entries_have_no_decisions(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    output = tmp_path / "surface.json"
+    artifact = _load_artifact(source_root, output)
+    commit = artifact["source"]["commit"]
+
+    for source_artifact in artifact["source_artifacts"]:
+        payload = subprocess.run(
+            ["git", "show", f"{commit}:{source_artifact['path']}"],
+            cwd=source_root,
+            capture_output=True,
+            check=True,
+        ).stdout
+        assert source_artifact["sha256"] == hashlib.sha256(payload).hexdigest()
+
+    forbidden_decision_fields = {"owner", "disposition", "target_operation_id", "oracle"}
+    assert not (_walk_mapping_keys(artifact["entries"]) & forbidden_decision_fields)
+    serialized = output.read_text(encoding="utf-8")
+    assert str(source_root) not in serialized
+    assert "generated_at" not in serialized
+    assert "timestamp" not in serialized
+
+
+def test_rejects_dirty_source_before_overwriting_output(tmp_path: Path) -> None:
+    source_root = _clone_clean_source(tmp_path)
+    (source_root / "raw-discovery-dirty-marker.txt").write_text("dirty\n", encoding="utf-8")
+    output = tmp_path / "surface.json"
+    output.write_text('{"previous": true}\n', encoding="utf-8")
+
+    result = _collect(source_root, output)
+
+    assert result.returncode != 0
+    assert "clean" in result.stderr.lower()
+    assert output.read_text(encoding="utf-8") == '{"previous": true}\n'
