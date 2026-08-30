@@ -124,7 +124,7 @@
 - 旧 Empyrical/Pyfolio/Alphalens 聚焦语义测试实跑为 `1184 passed`；`tests/compat` 当前可收集约 1,386 个测试。它们是迁移语料，不是最终旧 API 保留门。
 - 当前质量 snapshot 绑定旧 commit，branch coverage 45%，低于 60% 门，不能作为 R2 D0。
 - 当前 root worktree 含用户已有的治理、CI 和文档改动；它们保持用户所有权并与 clean R2 worktree 隔离，不能封印为正式 baseline。
-- `scripts/check_architecture_convergence.py` 与 `scripts/check_feature_parity.py` 当前不存在；Task 0 先以测试驱动新增，后续任务才能引用。
+- `scripts/check_architecture_convergence.py` 已提供可测量的 architecture facts，但尚未构成 D0 或 legacy-zero 结论；`scripts/check_feature_parity.py` 当前不存在，Task 0 必须先以测试驱动新增并与完整 ledger/baseline 绑定，后续任务才能引用 parity 结论。
 - `scripts/profile_workloads.py` 当前只覆盖 metrics/factor；Task 0 先扩展 rolling/transactions/risk/report 并冻结输出 digest。
 - `check_performance.py` 当前 fixed budget 覆盖 dispatch 与 DAG，但缺 snapshot 门；R2 必须补齐。
 - 历史 0042 审计已记录 risk、simulation、attribution 等领域的金融正确性疑点；R2 不得把这些当前输出当成自动可信的 parity expected。
@@ -579,7 +579,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" 
 
 上述 committed fixture/golden 输入必须在 clean exact-SHA 内存在，并将每个输入及其 include/exclude manifest 的 digest 写入 D0 bundle；`FINCORE_0042R2_D0_DIR` 只承载本次 clean capture 的输出，不得把空临时目录当作账本、disposition 或 golden 的来源。`FINCORE_0042R2_D0_TOOLING_ROOT` 必须是与 candidate source root 分离的 clean detached tooling worktree；capture 会记录其 commit/tree 以及 capture/checker Git-blob SHA256，并拒绝 candidate 作为 tooling root。tooling SHA、baseline source SHA、clean status、平台和依赖 provenance 仍须按本任务的 D0 要求一并冻结。
 
-上述 `check_feature_parity.py`、`check_architecture_convergence.py` 和扩展后的 profiler CLI 只有在本任务实现并通过测试后才可执行；它们不是当前仓库已存在的能力。
+上述 `check_feature_parity.py` 和扩展后的 profiler CLI 只有在本任务实现并通过测试后才可执行；现有 `check_architecture_convergence.py` 只能采集/比较受冻结 policy 约束的架构事实，不能单独签署 D0 或 legacy-zero。
 
 正式 tranche/final gate 不从 candidate checkout 执行这些脚本，而使用 detached `D0_TOOLING_SHA`：
 
