@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import stat
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -319,6 +320,8 @@ class _WheelReader:
         for candidate in candidates:
             if candidate not in self._members:
                 continue
+            if not _is_regular_wheel_source_member(self._members[candidate]):
+                raise SnapshotContractError(f"wheel source member is not a regular file: {candidate}")
             try:
                 payload = self.archive.read(candidate)
                 return _ModuleText(
@@ -357,6 +360,23 @@ def _validate_wheel_member_name(name: str) -> None:
         raise SnapshotContractError(f"unsafe wheel member: {name!r}")
     if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
         raise SnapshotContractError(f"unsafe wheel member: {name!r}")
+
+
+def _is_regular_wheel_source_member(member: zipfile.ZipInfo) -> bool:
+    """Return whether one selected Python source member is a regular file.
+
+    Wheel archives may also contain normal directory and metadata entries.  We
+    validate only a member selected as Python source, while honoring Unix mode
+    bits when the creator supplied them.  A zero file-type is permitted for
+    cross-platform archives that omit POSIX type bits.
+    """
+
+    if member.is_dir():
+        return False
+    if member.create_system != 3:
+        return True
+    file_type = stat.S_IFMT(member.external_attr >> 16)
+    return file_type in {0, stat.S_IFREG}
 
 
 def _unparse(node: ast.AST | None) -> str | None:

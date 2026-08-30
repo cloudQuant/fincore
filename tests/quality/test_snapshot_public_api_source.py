@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import zipfile
@@ -209,6 +210,22 @@ def test_snapshot_rejects_wheel_members_that_escape_the_archive_root(tmp_path: P
 
     assert result.returncode != 0
     assert "unsafe wheel member" in result.stderr.lower()
+
+
+def test_snapshot_rejects_wheel_source_member_marked_as_unix_symlink(tmp_path: Path) -> None:
+    """A wheel source module must be a regular file even when it is never extracted."""
+
+    wheel = tmp_path / "fincore-0.0.0-py3-none-any.whl"
+    source_member = zipfile.ZipInfo("fincore/__init__.py")
+    source_member.create_system = 3
+    source_member.external_attr = (stat.S_IFLNK | 0o777) << 16
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr(source_member, "__all__ = ['safe']\ndef safe(): pass\n")
+
+    result = _run_snapshot("--wheel", str(wheel), "--surface", "fincore", cwd=tmp_path)
+
+    assert result.returncode != 0
+    assert "not a regular file" in result.stderr.lower()
 
 
 def test_snapshot_rejects_multiple_or_damaged_wheels(tmp_path: Path) -> None:
