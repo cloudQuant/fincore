@@ -8,13 +8,14 @@ what is retained, rewritten, or removed.
 from __future__ import annotations
 
 import json
+import os
 import stat
 import subprocess
 import sys
 import zipfile
 from pathlib import Path
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "collect_0042_r2_surface_union.py"
 
 

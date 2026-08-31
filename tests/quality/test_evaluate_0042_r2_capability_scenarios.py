@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 from tests.support.frozen_capture_tooling import create_frozen_capture_tooling_root
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "evaluate_0042_r2_capability_scenarios.py"
 
 

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 
 def test_builtin_catalog_registers_report_compute_without_loading_optional_renderers() -> None:
-    root = Path(__file__).parents[2]
+    root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
     probe = """
 import json
 import sys

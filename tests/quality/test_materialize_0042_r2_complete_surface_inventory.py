@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 FIXTURES = REPOSITORY_ROOT / "tests" / "parity" / "fixtures"
 SCRIPT = REPOSITORY_ROOT / "scripts" / "materialize_0042_r2_complete_surface_inventory.py"
 CHECKER = REPOSITORY_ROOT / "scripts" / "check_0042_r2_complete_surface_inventory.py"

@@ -9,13 +9,14 @@ validation, and per-case fail-closed validation without re-running workloads.
 from __future__ import annotations
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "profile_workloads.py"
 HOTSPOT_SCRIPT = REPOSITORY_ROOT / "scripts" / "profile_hotspots.py"
 

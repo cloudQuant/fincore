@@ -5,12 +5,13 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, cast
 
-SCRIPT = Path(__file__).parents[2] / "scripts" / "check_architecture_convergence.py"
+SCRIPT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "scripts" / "check_architecture_convergence.py"
 
 
 def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:

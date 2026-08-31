@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -17,7 +18,7 @@ from typing import Any
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "check_0042_r2_repository_surface_disposition.py"
 FACTS = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "repository-surface-facts-discovery-0042-r2.json"
 DISPOSITION = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "repository-surface-disposition-0042-r2.json"

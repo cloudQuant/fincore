@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 from pathlib import Path
 
 from fincore.runtime import OperationCatalog
@@ -31,7 +32,7 @@ def test_attribution_operations_resolve_to_direct_domain_kernels() -> None:
 
 
 def test_attribution_domain_does_not_depend_on_legacy_dispatch_or_metric_aliases() -> None:
-    package_root = Path(__file__).parents[2] / "fincore" / "attribution"
+    package_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "attribution"
     forbidden = (
         "fincore._dispatch",
         "fincore._registry",
@@ -53,7 +54,7 @@ def test_attribution_domain_does_not_depend_on_legacy_dispatch_or_metric_aliases
 
 
 def test_attribution_provider_boundaries_have_no_process_global_registration_api() -> None:
-    package_root = Path(__file__).parents[2] / "fincore" / "attribution"
+    package_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "attribution"
     forbidden = ("set_ff_provider", "clear_ff_factor_cache", "set_style_provider", "clear_style_factor_cache")
 
     violations = {

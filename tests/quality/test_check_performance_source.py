@@ -19,7 +19,7 @@ def test_direct_performance_gate_prefers_its_checkout_source(tmp_path: Path) -> 
     runtime_dir.mkdir(parents=True)
     shadow_runtime_dir = tmp_path / "shadow" / "fincore" / "runtime"
     shadow_runtime_dir.mkdir(parents=True)
-    root = Path(__file__).resolve().parents[2]
+    root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
     shutil.copy2(root / "scripts" / "check_performance.py", script_dir / "check_performance.py")
     shutil.copy2(root / "scripts" / "_0042_r2_tooling.py", script_dir / "_0042_r2_tooling.py")
     (repository / "fincore" / "__init__.py").write_text("", encoding="utf-8")

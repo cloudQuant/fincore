@@ -11,10 +11,11 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 FIXTURES = REPOSITORY_ROOT / "tests" / "parity" / "fixtures"
 LEDGER = FIXTURES / "capability-ledger-0042-r2.json"
 INVENTORY = FIXTURES / "complete-surface-inventory-0042-r2.json"

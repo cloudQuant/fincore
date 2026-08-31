@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 WORKFLOWS = (
     ROOT / ".github" / "workflows" / "ci.yml",
     ROOT / ".github" / "workflows" / "publish.yml",

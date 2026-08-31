@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
 
 CANONICAL_DOMAINS = (
@@ -39,7 +40,7 @@ def _absolute_imports(path: Path) -> set[str]:
 
 
 def test_canonical_domains_do_not_depend_on_pre_cutover_support_packages() -> None:
-    package_root = Path(__file__).parents[2] / "fincore"
+    package_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore"
     violations: list[str] = []
 
     for domain in CANONICAL_DOMAINS:

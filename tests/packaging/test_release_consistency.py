@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import io
+import os
 import shutil
 import subprocess
 import sys
@@ -15,7 +16,7 @@ import pytest
 
 from scripts.check_release_candidate import _pyproject_version
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 RELEASE_CHECK = REPO_ROOT / "scripts" / "check_release_consistency.py"
 _BUILD_SOURCE_IGNORES = (
     ".git",

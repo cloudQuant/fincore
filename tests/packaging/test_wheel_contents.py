@@ -12,6 +12,7 @@ Builds the wheel from the checkout and asserts the artifact layout:
 from __future__ import annotations
 
 import email
+import os
 import shutil
 import subprocess
 import sys
@@ -24,7 +25,7 @@ import pytest
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 FUNCTIONAL_EXTRAS = {

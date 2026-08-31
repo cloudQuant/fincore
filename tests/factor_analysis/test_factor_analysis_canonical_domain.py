@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 from pathlib import Path
 
 from fincore.runtime import OperationCatalog
@@ -56,7 +57,7 @@ def test_factor_root_is_namespace_only_without_reexported_leaf_callables() -> No
 
 
 def test_factor_domain_does_not_import_legacy_facades_or_dispatch() -> None:
-    package_root = Path(__file__).parents[2] / "fincore" / "factor_analysis"
+    package_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "factor_analysis"
     forbidden = (
         "fincore._dispatch",
         "fincore._registry",

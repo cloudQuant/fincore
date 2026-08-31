@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 MODULE_FACTS = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "module-facts-discovery-0042-r2.json"
 DISPOSITION = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "module-disposition-0042-r2.json"
 

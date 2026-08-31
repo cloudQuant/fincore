@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ from scripts.check_quality_snapshot import (
     load_snapshot,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 
 
 def test_rejects_dirty_or_wrong_commit_snapshot(tmp_path: Path) -> None:

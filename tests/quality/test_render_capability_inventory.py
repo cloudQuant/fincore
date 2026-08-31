@@ -19,7 +19,7 @@ def test_direct_inventory_script_prefers_its_checkout_source(tmp_path: Path) -> 
     package_dir.mkdir()
     shadow_package_dir = tmp_path / "shadow" / "fincore"
     shadow_package_dir.mkdir(parents=True)
-    root = Path(__file__).resolve().parents[2]
+    root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
     shutil.copy2(root / "scripts" / "render_capability_inventory.py", script_dir / "render_capability_inventory.py")
     (package_dir / "__init__.py").write_text("", encoding="utf-8")
     (package_dir / "capabilities.py").write_text(

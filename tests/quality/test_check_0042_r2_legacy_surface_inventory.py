@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -18,7 +19,7 @@ from typing import Any
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "check_0042_r2_legacy_surface_inventory.py"
 COMMITTED_RAW_DISCOVERY = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "legacy-surface-discovery-0042-r2.json"
 COMMITTED_INVENTORY = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "legacy-surface-inventory-0042-r2.json"

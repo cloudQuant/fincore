@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 BENCHMARKS = ROOT / "benchmarks"
 if str(BENCHMARKS) not in sys.path:
     sys.path.insert(0, str(BENCHMARKS))

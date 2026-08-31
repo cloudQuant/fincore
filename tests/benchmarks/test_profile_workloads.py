@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 
 
 def _run_profile_workloads(output: Path, *arguments: str) -> subprocess.CompletedProcess[str]:

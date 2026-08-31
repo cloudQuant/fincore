@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "check_0042_r2_complete_surface_inventory.py"
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import runpy
 from pathlib import Path
@@ -16,7 +17,7 @@ import fincore
 
 matplotlib.use("Agg", force=True)
 
-_ROOT = Path(__file__).resolve().parents[2]
+_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 _FACTOR_ANALYSIS_QUICKSTART = _ROOT / "examples" / "factor_analysis_quickstart.py"
 _METRICS_REPORT = _ROOT / "examples" / "metrics_report.py"
 _PORTFOLIO_OPTIMIZATION = _ROOT / "examples" / "portfolio_optimization.py"

@@ -12,6 +12,7 @@ D0_TOOLING_SHA acceptance runner.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -19,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "profile_workloads.py"
 R2_KINDS = ("metrics", "rolling", "transactions", "factor", "risk", "report")
 GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40}$")

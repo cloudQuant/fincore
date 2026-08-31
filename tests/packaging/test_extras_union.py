@@ -7,6 +7,7 @@ The breaking release deliberately has no compatibility-profile extras.
 
 from __future__ import annotations
 
+import os
 import tomllib
 from pathlib import Path
 
@@ -14,7 +15,7 @@ import pytest
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 CONTRIBUTOR_REQUIREMENT_FILES = (REPO_ROOT / "requirements.txt", REPO_ROOT / "requirements-test.txt")
 PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}

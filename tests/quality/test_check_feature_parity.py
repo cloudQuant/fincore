@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-REPOSITORY_ROOT = Path(__file__).parents[2]
+REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 SCRIPT = REPOSITORY_ROOT / "scripts" / "check_feature_parity.py"
 COMMITTED_LEDGER = REPOSITORY_ROOT / "tests" / "parity" / "fixtures" / "capability-ledger-0042-r2.json"
 

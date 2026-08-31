@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
 
 _FORBIDDEN_PREFIXES = (
@@ -32,7 +33,7 @@ def _imports(path: Path) -> set[str]:
 
 
 def test_runtime_modules_do_not_depend_on_legacy_facades_domains_or_renderers() -> None:
-    runtime_root = Path(__file__).parents[2] / "fincore" / "runtime"
+    runtime_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "runtime"
     violations: dict[str, list[str]] = {}
     for path in sorted(runtime_root.glob("*.py")):
         imports = _imports(path)
@@ -49,6 +50,6 @@ def test_runtime_modules_do_not_depend_on_legacy_facades_domains_or_renderers() 
 
 
 def test_builtin_composition_source_never_scans_loaded_modules() -> None:
-    builtins_source = (Path(__file__).parents[2] / "fincore" / "runtime" / "builtins.py").read_text(encoding="utf-8")
+    builtins_source = (Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "runtime" / "builtins.py").read_text(encoding="utf-8")
 
     assert "sys.modules" not in builtins_source

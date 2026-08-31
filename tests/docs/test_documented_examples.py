@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -9,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-_ROOT = Path(__file__).resolve().parents[2]
+_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
 DOCS = _ROOT / "mkdocs_docs"
 
 _CODE_BLOCK_RE = re.compile(r"```python\n(.*?)```", re.DOTALL)

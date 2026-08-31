@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import sysconfig
@@ -92,7 +93,7 @@ print(json.dumps({
 
 
 def test_source_tree_has_no_legacy_modules_or_root_aliases() -> None:
-    source_root = Path(__file__).parents[2]
+    source_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
     payload = _probe_source_tree(source_root)
 
     assert Path(str(payload["module_file"])).is_relative_to(source_root)
