@@ -8,13 +8,24 @@ gate must BLOCK, and identity errors must be usage failures.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPOSITORY_ROOT = Path(__file__).parents[2]
 SCRIPT = REPOSITORY_ROOT / "scripts" / "run_0042_r2_acceptance.py"
+
+
+def _load_runner_module():
+    specification = importlib.util.spec_from_file_location("fincore_0042_r2_runner_test", SCRIPT)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
 
 
 def _run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -67,7 +78,7 @@ def test_unknown_gate_is_a_usage_error(tmp_path: Path) -> None:
     assert evidence["verdict"] == "BLOCKED"
 
 
-def test_bundle_gating_blocked_until_the_d0_bundle_is_frozen(tmp_path: Path) -> None:
+def test_malformed_d0_bundle_is_a_usage_error(tmp_path: Path) -> None:
     repo = _git_repo(tmp_path)
     bundle = tmp_path / "d0-bundle.json"
     bundle.write_text("{}\n", encoding="utf-8")
@@ -85,8 +96,8 @@ def test_bundle_gating_blocked_until_the_d0_bundle_is_frozen(tmp_path: Path) -> 
         ]
     )
 
-    assert result.returncode == 3
-    assert "blocked" in result.stderr
+    assert result.returncode == 2
+    assert "expected-bundle must be a directory" in result.stderr
     evidence = json.loads((tmp_path / "out" / "evidence.json").read_text(encoding="utf-8"))
     assert evidence["verdict"] == "BLOCKED"
     assert evidence["gate"] == "tests"
@@ -274,3 +285,68 @@ def test_evidence_child_blocks_merge_commits_with_two_parents(tmp_path: Path) ->
 
     assert result.returncode == 3
     assert "exactly one parent" in result.stderr
+
+
+def test_d0_bundle_loader_binds_every_artifact_and_the_tooling_identity(tmp_path: Path) -> None:
+    """Expected facts come from the external D0 bundle, never the candidate."""
+
+    runner = _load_runner_module()
+    bundle = tmp_path / "d0"
+    bundle.mkdir()
+    artifacts = {
+        "capability_baseline": "capability-baseline.json",
+        "architecture_baseline": "architecture-baseline.json",
+        "performance_baseline": "performance-baseline.json",
+        "quality_baseline": "quality-baseline.json",
+    }
+    for name, relative in artifacts.items():
+        (bundle / relative).write_text(json.dumps({"name": name}), encoding="utf-8")
+    source_bundle = bundle / "baseline-source.bundle"
+    source_bundle.write_bytes(b"baseline source bundle")
+    tooling_identity = {
+        "commit": "a" * 40,
+        "tree": "b" * 40,
+        "runner_blob_sha256": "c" * 64,
+    }
+    manifest = {
+        "artifact_type": "fincore_0042_r2_d0_bundle",
+        "schema_version": 1,
+        "tooling": {
+            "commit": tooling_identity["commit"],
+            "tree": tooling_identity["tree"],
+            "files": {"scripts/run_0042_r2_acceptance.py": tooling_identity["runner_blob_sha256"]},
+        },
+        "baseline_source": {
+            "commit": "d" * 40,
+            "tree": "e" * 40,
+            "provisioning": {
+                "git_bundle": {
+                    "path": source_bundle.name,
+                    "sha256": hashlib.sha256(source_bundle.read_bytes()).hexdigest(),
+                }
+            },
+        },
+        "artifacts": {
+            name: {"path": relative, "sha256": hashlib.sha256((bundle / relative).read_bytes()).hexdigest()}
+            for name, relative in artifacts.items()
+        },
+        "python_support_window": ["3.11.8"],
+    }
+    (bundle / "d0-bundle-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    loaded = runner._load_d0_bundle(bundle, tooling_identity)
+
+    assert loaded["manifest_sha256"] == hashlib.sha256((bundle / "d0-bundle-manifest.json").read_bytes()).hexdigest()
+    assert loaded["baseline_source_bundle"] == source_bundle
+    assert loaded["artifacts"]["architecture_baseline"] == bundle / "architecture-baseline.json"
+
+
+def test_materialized_baseline_cleanup_rejects_an_untrusted_path(tmp_path: Path) -> None:
+    """The runner may only remove the scratch directory it created itself."""
+
+    runner = _load_runner_module()
+    source_root = tmp_path / "untrusted" / "source"
+    source_root.mkdir(parents=True)
+
+    with pytest.raises(runner.RunnerBlockedError, match="runner-owned"):
+        runner._cleanup_materialized_source(source_root)
