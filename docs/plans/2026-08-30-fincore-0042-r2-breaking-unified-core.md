@@ -493,6 +493,8 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 
 - Create: `tests/parity/fixtures/capability-ledger-0042-r2.json`
 - Create: `tests/parity/fixtures/legacy-surface-inventory-0042-r2.json`
+- Create: `tests/parity/fixtures/surface-union-facts-discovery-0042-r2.json`
+- Create: `tests/parity/fixtures/complete-surface-inventory-0042-r2.json`
 - Create: `tests/parity/fixtures/module-disposition-0042-r2.json`
 - Create: `tests/parity/fixtures/test-node-disposition-0042-r2.json`
 - Create: `tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json`
@@ -508,6 +510,8 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.json`
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.md`
 - Create: `scripts/capture_capability_baseline.py`
+- Create: `scripts/materialize_0042_r2_complete_surface_inventory.py`
+- Create: `scripts/check_0042_r2_complete_surface_inventory.py`
 - Create: `scripts/check_0042_r2_repository_surface_disposition.py`
 - Create: `scripts/check_0042_r2_legacy_surface_inventory.py`
 - Create: `scripts/check_feature_parity.py`
@@ -516,6 +520,8 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create: `requirements-0042-r2-acceptance.txt`
 - Create: `tests/parity/test_ledger.py`
 - Create: `tests/quality/test_capture_capability_baseline.py`
+- Create: `tests/quality/test_materialize_0042_r2_complete_surface_inventory.py`
+- Create: `tests/quality/test_check_0042_r2_complete_surface_inventory.py`
 - Create: `tests/quality/test_check_feature_parity.py`
 - Create: `tests/quality/test_architecture_convergence.py`
 - Create: `tests/quality/test_0042_r2_profiling_contract.py`
@@ -559,7 +565,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 **先验证工具测试：**
 
 ```bash
-/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider -p no:rerunfailures tests/parity/test_ledger.py tests/quality/test_capture_capability_baseline.py tests/quality/test_check_feature_parity.py tests/quality/test_architecture_convergence.py tests/quality/test_0042_r2_profiling_contract.py tests/quality/test_run_0042_r2_acceptance.py tests/quality/test_0042_r2_matrix_evidence.py tests/quality/test_repository_surface_disposition.py tests/quality/test_check_0042_r2_legacy_surface_inventory.py tests/packaging/test_release_consistency.py tests/benchmarks/test_0042_r2_workloads.py -q --tb=short --maxfail=0
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -m pytest -o addopts='' -p no:cacheprovider -p no:rerunfailures tests/parity/test_ledger.py tests/quality/test_capture_capability_baseline.py tests/quality/test_check_feature_parity.py tests/quality/test_architecture_convergence.py tests/quality/test_0042_r2_profiling_contract.py tests/quality/test_run_0042_r2_acceptance.py tests/quality/test_0042_r2_matrix_evidence.py tests/quality/test_repository_surface_disposition.py tests/quality/test_check_0042_r2_legacy_surface_inventory.py tests/quality/test_collect_0042_r2_surface_union.py tests/quality/test_check_0042_r2_complete_surface_inventory.py tests/quality/test_materialize_0042_r2_complete_surface_inventory.py tests/packaging/test_release_consistency.py tests/benchmarks/test_0042_r2_workloads.py -q --tb=short --maxfail=0
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_0042_r2_repository_surface_disposition.py --facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json
 ```
 
@@ -570,7 +576,7 @@ set -euo pipefail
 FINCORE_0042R2_D0_DIR=$(mktemp -d /tmp/fincore-0042-r2-d0.XXXXXX)
 FINCORE_0042R2_MPL_DIR=$(mktemp -d /tmp/fincore-0042-r2-mpl.XXXXXX)
 test -n "$FINCORE_0042R2_D0_TOOLING_ROOT"
-PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -I "$FINCORE_0042R2_D0_TOOLING_ROOT/scripts/capture_capability_baseline.py" --inventory tests/parity/fixtures/legacy-surface-inventory-0042-r2.json --module-disposition tests/parity/fixtures/module-disposition-0042-r2.json --test-disposition tests/parity/fixtures/test-node-disposition-0042-r2.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --repository-surface-facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --repository-surface-disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json --tooling-root "$FINCORE_0042R2_D0_TOOLING_ROOT" --fixture-dir tests/parity/goldens/0042-r2 --output "$FINCORE_0042R2_D0_DIR/capability-baseline.json" --deny-network
+PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python -I "$FINCORE_0042R2_D0_TOOLING_ROOT/scripts/capture_capability_baseline.py" --legacy-discovery tests/parity/fixtures/legacy-surface-discovery-0042-r2.json --surface-union tests/parity/fixtures/surface-union-facts-discovery-0042-r2.json --inventory tests/parity/fixtures/complete-surface-inventory-0042-r2.json --module-disposition tests/parity/fixtures/module-disposition-0042-r2.json --test-disposition tests/parity/fixtures/test-node-disposition-0042-r2.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --repository-surface-facts tests/parity/fixtures/repository-surface-facts-discovery-0042-r2.json --repository-surface-disposition tests/parity/fixtures/repository-surface-disposition-0042-r2.json --tooling-root "$FINCORE_0042R2_D0_TOOLING_ROOT" --fixture-dir tests/parity/goldens/0042-r2 --output "$FINCORE_0042R2_D0_DIR/capability-baseline.json" --deny-network
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --capture "$FINCORE_0042R2_D0_DIR/architecture-baseline.json" --seal-baseline --threshold-policy tests/parity/fixtures/0042-r2-architecture-threshold-policy.json
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/profile_workloads.py --sizes small medium large --kinds metrics rolling transactions factor risk report --warmups 2 --repeats 5 --require-output-digest --output "$FINCORE_0042R2_D0_DIR/performance-baseline.json"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/collect_quality_baseline.py --json "$FINCORE_0042R2_D0_DIR/current-baseline.json" --markdown "$FINCORE_0042R2_D0_DIR/current-baseline.md"

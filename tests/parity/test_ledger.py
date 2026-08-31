@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.support.complete_surface_inputs import write_minimal_complete_surface_inputs
 from tests.support.frozen_capture_tooling import create_frozen_capture_tooling_root
 from tests.support.repository_surface_inputs import write_minimal_repository_surface_inputs
 
@@ -46,6 +47,8 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
     (fixture_dir / "annual-return.json").write_text('{"value": 0.1}\n', encoding="utf-8")
 
     paths = {
+        "legacy_discovery": source_root / "legacy-discovery.json",
+        "surface_union": source_root / "surface-union.json",
         "inventory": source_root / "inventory.json",
         "module_disposition": source_root / "module-disposition.json",
         "test_disposition": source_root / "test-disposition.json",
@@ -54,7 +57,7 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         "tooling_root": create_frozen_capture_tooling_root(tmp_path / "frozen-tooling", SCRIPT.parent),
     }
     paths.update(write_minimal_repository_surface_inputs(source_root))
-    _write_json(paths["inventory"], {"entries": [{"item_id": "metrics.annual_return", "disposition": "required"}]})
+    write_minimal_complete_surface_inputs(paths)
     _write_json(paths["module_disposition"], {"entries": [{"module": "fincore.metrics", "disposition": "keep"}]})
     _write_json(
         paths["test_disposition"],
@@ -64,6 +67,7 @@ def _minimal_inputs(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         paths["ledger"],
         {
             "schema_version": 1,
+            "decision_status": "complete",
             "entries": [
                 {
                     "capability_id": "metrics.annual_return",
@@ -98,6 +102,10 @@ def _capture(source_root: Path, paths: dict[str, Path], output: Path) -> subproc
             sys.executable,
             "-I",
             str(paths["tooling_root"] / "scripts" / "capture_capability_baseline.py"),
+            "--legacy-discovery",
+            str(paths["legacy_discovery"]),
+            "--surface-union",
+            str(paths["surface_union"]),
             "--inventory",
             str(paths["inventory"]),
             "--module-disposition",

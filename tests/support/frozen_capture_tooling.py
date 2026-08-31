@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 _TOOLING_FILES = (
     "capture_capability_baseline.py",
+    "check_0042_r2_complete_surface_inventory.py",
     "check_0042_r2_repository_surface_disposition.py",
 )
 

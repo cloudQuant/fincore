@@ -41,6 +41,135 @@ def _commit_source(source_root: Path) -> None:
     )
 
 
+def _canonical_sha256(value: object) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _source_provenance() -> dict[str, object]:
+    return {"commit": "a" * 40, "tree": "b" * 40, "clean": True}
+
+
+def _write_minimal_complete_surface_inputs(paths: dict[str, Path]) -> None:
+    provenance = _source_provenance()
+    legacy_entry = {
+        "entry_id": "legacy:metrics.annual_return",
+        "source_id": "legacy_manifest",
+        "source_kind": "compat_manifest",
+        "source_locator": {"artifact_path": "fixtures/legacy.json", "locator": "entries[0]"},
+    }
+    legacy = {
+        "schema_version": 1,
+        "artifact_type": "legacy_surface_discovery",
+        "discovery_status": "partial",
+        "not_for_d0": True,
+        "source": provenance,
+        "entries": [legacy_entry],
+    }
+    _write_json(paths["legacy_discovery"], legacy)
+    kinds = (
+        "public_definition",
+        "registry",
+        "manifest",
+        "documentation",
+        "example",
+        "benchmark",
+        "extra",
+        "wheel_content",
+    )
+    union_entries = [
+        {
+            "entry_id": f"{kind}:fixtures/{kind}.json",
+            "source_kind": kind,
+            "source": {
+                "artifact_path": f"fixtures/{kind}.json",
+                "artifact_sha256": "d" * 64,
+                "locator": f"{kind}:{index}",
+            },
+        }
+        for index, kind in enumerate(kinds)
+    ]
+    union = {
+        "schema_version": 1,
+        "artifact_type": "surface_union_facts_discovery",
+        "discovery_status": "complete",
+        "not_for_d0": True,
+        "does_not_assert": ["D-TECH", "D0", "installed_wheel_behavior", "legacy_zero"],
+        "source_provenance": provenance,
+        "wheel": {"filename": "fincore.whl", "sha256": "c" * 64, "member_count": 1},
+        "entry_count": len(union_entries),
+        "kind_counts": dict.fromkeys(kinds, 1),
+        "entries": union_entries,
+        "canonical_entries_sha256": _canonical_sha256(union_entries),
+    }
+    _write_json(paths["surface_union"], union)
+    supporting_entries = [
+        {
+            "inventory_entry_id": f"surface_union:{raw_entry['entry_id']}",
+            "source_id": "surface_union",
+            "raw_entry_id": raw_entry["entry_id"],
+            "raw_entry_sha256": _canonical_sha256(raw_entry),
+            "owner": "platform",
+            "disposition": "supporting",
+            "capability_ids": ["platform.surface"],
+            "target_operation_id": "platform.surface",
+            "scenario_ids": ["platform.surface"],
+            "source_nodeids": [],
+            "wheel_nodeids": [],
+            "evidence": {"oracle_reference": "reviewed supporting surface record"},
+            "completion_gate": "D0",
+            "rationale": "The raw union record is supporting evidence for the complete surface decision.",
+            "rule_id": "supporting-surface",
+        }
+        for raw_entry in union_entries
+    ]
+    inventory = {
+        "schema_version": 1,
+        "artifact_type": "complete_surface_inventory",
+        "scope": "complete_legacy_surface_union",
+        "decision_status": "complete",
+        "does_not_assert": ["D-TECH", "D0", "installed_wheel_behavior", "legacy_zero"],
+        "owners": ["metrics", "platform"],
+        "source_artifacts": [
+            {
+                "source_id": "legacy_surface_discovery",
+                "path": paths["legacy_discovery"].name,
+                "sha256": _sha256(paths["legacy_discovery"]),
+                "entry_count": 1,
+                "source_provenance": provenance,
+            },
+            {
+                "source_id": "surface_union",
+                "path": paths["surface_union"].name,
+                "sha256": _sha256(paths["surface_union"]),
+                "entry_count": len(union_entries),
+                "source_provenance": provenance,
+            },
+        ],
+        "entries": [
+            {
+                "inventory_entry_id": "legacy_surface_discovery:legacy:metrics.annual_return",
+                "source_id": "legacy_surface_discovery",
+                "raw_entry_id": legacy_entry["entry_id"],
+                "raw_entry_sha256": _canonical_sha256(legacy_entry),
+                "owner": "metrics",
+                "disposition": "required",
+                "capability_ids": ["metrics.annual_return"],
+                "target_operation_id": "metrics.annual_return",
+                "scenario_ids": ["ordinary_returns"],
+                "source_nodeids": ["tests/legacy/test_metrics.py::test_annual_return"],
+                "wheel_nodeids": ["tests/parity/test_metrics.py::test_annual_return"],
+                "evidence": {"golden_path": "annual-return.json"},
+                "completion_gate": "D-DOMAIN",
+                "rationale": "The canonical metrics operation remains a required analytical capability.",
+                "rule_id": "unified-operation",
+            },
+            *supporting_entries,
+        ],
+    }
+    _write_json(paths["inventory"], inventory)
+
+
 def _minimal_inputs(tmp_path: Path, *, include_candidate_checker_spoof: bool = False) -> tuple[Path, dict[str, Path]]:
     source_root = tmp_path / "source"
     source_root.mkdir()
@@ -49,6 +178,8 @@ def _minimal_inputs(tmp_path: Path, *, include_candidate_checker_spoof: bool = F
     (fixture_dir / "annual-return.json").write_text('{"value": 0.1}\n', encoding="utf-8")
 
     paths = {
+        "legacy_discovery": source_root / "legacy-discovery.json",
+        "surface_union": source_root / "surface-union.json",
         "inventory": source_root / "inventory.json",
         "module_disposition": source_root / "module-disposition.json",
         "test_disposition": source_root / "test-disposition.json",
@@ -57,7 +188,7 @@ def _minimal_inputs(tmp_path: Path, *, include_candidate_checker_spoof: bool = F
         "tooling_root": create_frozen_capture_tooling_root(tmp_path / "frozen-tooling", SCRIPT.parent),
     }
     paths.update(write_minimal_repository_surface_inputs(source_root))
-    _write_json(paths["inventory"], {"entries": [{"item_id": "metrics.annual_return", "disposition": "required"}]})
+    _write_minimal_complete_surface_inputs(paths)
     _write_json(paths["module_disposition"], {"entries": [{"module": "fincore.metrics", "disposition": "keep"}]})
     _write_json(
         paths["test_disposition"],
@@ -67,6 +198,7 @@ def _minimal_inputs(tmp_path: Path, *, include_candidate_checker_spoof: bool = F
         paths["ledger"],
         {
             "schema_version": 1,
+            "decision_status": "complete",
             "entries": [
                 {
                     "capability_id": "metrics.annual_return",
@@ -92,6 +224,10 @@ def _minimal_inputs(tmp_path: Path, *, include_candidate_checker_spoof: bool = F
         },
     )
     if include_candidate_checker_spoof:
+        (source_root / "scripts" / "check_0042_r2_complete_surface_inventory.py").write_text(
+            "raise RuntimeError('candidate checker must not be imported')\n",
+            encoding="utf-8",
+        )
         (source_root / "scripts" / "check_0042_r2_repository_surface_disposition.py").write_text(
             "raise RuntimeError('candidate checker must not be imported')\n",
             encoding="utf-8",
@@ -116,6 +252,10 @@ def _capture(
     command.extend(
         [
             str(runner_script or paths["tooling_root"] / "scripts" / "capture_capability_baseline.py"),
+            "--legacy-discovery",
+            str(paths["legacy_discovery"]),
+            "--surface-union",
+            str(paths["surface_union"]),
             "--inventory",
             str(paths["inventory"]),
             "--module-disposition",
@@ -182,13 +322,21 @@ def test_capture_records_clean_git_provenance_and_input_hashes(tmp_path: Path) -
     assert artifact["tooling"]["repository_surface_disposition_checker"]["path"] == (
         "scripts/check_0042_r2_repository_surface_disposition.py"
     )
+    assert artifact["tooling"]["complete_surface_inventory_checker"]["path"] == (
+        "scripts/check_0042_r2_complete_surface_inventory.py"
+    )
     assert artifact["tooling"]["capture"]["sha256"] == _sha256(
         paths["tooling_root"] / "scripts" / "capture_capability_baseline.py"
     )
     assert artifact["tooling"]["repository_surface_disposition_checker"]["sha256"] == _sha256(
         paths["tooling_root"] / "scripts" / "check_0042_r2_repository_surface_disposition.py"
     )
+    assert artifact["tooling"]["complete_surface_inventory_checker"]["sha256"] == _sha256(
+        paths["tooling_root"] / "scripts" / "check_0042_r2_complete_surface_inventory.py"
+    )
     for key in (
+        "legacy_discovery",
+        "surface_union",
         "inventory",
         "module_disposition",
         "test_disposition",
@@ -197,6 +345,10 @@ def test_capture_records_clean_git_provenance_and_input_hashes(tmp_path: Path) -
         "repository_surface_disposition",
     ):
         assert artifact["inputs"][key]["sha256"] == _sha256(paths[key])
+    assert artifact["complete_surface_inventory"]["scope"] == "complete_legacy_surface_union"
+    assert artifact["complete_surface_inventory"]["validation"]["artifact_type"] == (
+        "complete_surface_inventory_validation"
+    )
     assert artifact["repository_surface"]["scope"] == "classified_repository_surface_only"
     assert artifact["repository_surface"]["not_for_d0"] is True
     assert artifact["repository_surface"]["facts_sha256"] == _sha256(paths["repository_surface_facts"])
@@ -311,6 +463,26 @@ def test_capture_uses_static_repository_surface_checker_under_isolated_mode(tmp_
     assert result.returncode == 0, result.stderr
     artifact = json.loads(output.read_text(encoding="utf-8"))
     assert artifact["repository_surface"]["validation"]["artifact_type"] == "repository_surface_disposition_validation"
+    assert (
+        artifact["complete_surface_inventory"]["validation"]["artifact_type"] == "complete_surface_inventory_validation"
+    )
+
+
+def test_capture_rejects_a_complete_inventory_that_no_longer_binds_its_raw_union(tmp_path: Path) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    union = json.loads(paths["surface_union"].read_text(encoding="utf-8"))
+    union["entries"][0]["source"]["artifact_sha256"] = "e" * 64
+    union["canonical_entries_sha256"] = _canonical_sha256(union["entries"])
+    _write_json(paths["surface_union"], union)
+    _commit_source(source_root)
+    output = tmp_path / "capture.json"
+    output.write_text('{"previous": "success"}\n', encoding="utf-8")
+
+    result = _capture(source_root, paths, output)
+
+    assert result.returncode != 0
+    assert "complete-surface inventory validation failed" in result.stderr
+    assert output.read_text(encoding="utf-8") == '{"previous": "success"}\n'
 
 
 def test_capture_rejects_a_tooling_root_that_does_not_own_the_running_script(tmp_path: Path) -> None:
@@ -329,6 +501,10 @@ def test_capture_rejects_candidate_tooling_even_when_its_script_matches(tmp_path
     candidate_scripts = source_root / "scripts"
     candidate_capture = candidate_scripts / "capture_capability_baseline.py"
     shutil.copy2(paths["tooling_root"] / "scripts" / candidate_capture.name, candidate_capture)
+    shutil.copy2(
+        paths["tooling_root"] / "scripts" / "check_0042_r2_complete_surface_inventory.py",
+        candidate_scripts / "check_0042_r2_complete_surface_inventory.py",
+    )
     shutil.copy2(
         paths["tooling_root"] / "scripts" / "check_0042_r2_repository_surface_disposition.py",
         candidate_scripts / "check_0042_r2_repository_surface_disposition.py",
@@ -482,6 +658,8 @@ def test_capture_rejects_git_state_changed_during_input_hashing(
     with pytest.raises(module.CaptureValidationError, match="source Git provenance changed during capture"):
         module.capture(
             source_root=source_root,
+            legacy_discovery_path=paths["legacy_discovery"],
+            surface_union_path=paths["surface_union"],
             inventory_path=paths["inventory"],
             module_disposition_path=paths["module_disposition"],
             test_disposition_path=paths["test_disposition"],
@@ -542,6 +720,8 @@ def test_capture_uses_initial_head_blobs_when_worktree_bytes_change_then_recover
 
     artifact = module.capture(
         source_root=source_root,
+        legacy_discovery_path=paths["legacy_discovery"],
+        surface_union_path=paths["surface_union"],
         inventory_path=paths["inventory"],
         module_disposition_path=paths["module_disposition"],
         test_disposition_path=paths["test_disposition"],
@@ -598,6 +778,8 @@ def test_capture_executes_the_frozen_checker_blob_when_its_worktree_file_changes
     artifact = module.capture(
         source_root=source_root,
         tooling_root=paths["tooling_root"],
+        legacy_discovery_path=paths["legacy_discovery"],
+        surface_union_path=paths["surface_union"],
         inventory_path=paths["inventory"],
         module_disposition_path=paths["module_disposition"],
         test_disposition_path=paths["test_disposition"],
@@ -611,6 +793,44 @@ def test_capture_executes_the_frozen_checker_blob_when_its_worktree_file_changes
 
     assert checker_path.read_bytes() == initial_checker
     assert artifact["repository_surface"]["validation"]["not_for_d0"] is True
+
+
+def test_capture_executes_the_frozen_complete_inventory_checker_blob_when_mutated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_root, paths = _minimal_inputs(tmp_path)
+    module = _capture_module(paths["tooling_root"])
+    checker_path = paths["tooling_root"] / "scripts" / "check_0042_r2_complete_surface_inventory.py"
+    initial_checker = checker_path.read_bytes()
+    original_validate = module._validate_complete_inventory_inputs
+
+    def mutate_then_validate(*args: object, **kwargs: object):
+        checker_path.write_text("raise RuntimeError('mutable checker executed')\n", encoding="utf-8")
+        try:
+            return original_validate(*args, **kwargs)
+        finally:
+            checker_path.write_bytes(initial_checker)
+
+    monkeypatch.setattr(module, "_validate_complete_inventory_inputs", mutate_then_validate)
+
+    artifact = module.capture(
+        source_root=source_root,
+        tooling_root=paths["tooling_root"],
+        legacy_discovery_path=paths["legacy_discovery"],
+        surface_union_path=paths["surface_union"],
+        inventory_path=paths["inventory"],
+        module_disposition_path=paths["module_disposition"],
+        test_disposition_path=paths["test_disposition"],
+        ledger_path=paths["ledger"],
+        repository_surface_facts_path=paths["repository_surface_facts"],
+        repository_surface_disposition_path=paths["repository_surface_disposition"],
+        fixture_dir=paths["fixture_dir"],
+        output_path=tmp_path / "capture.json",
+        deny_network=True,
+    )
+
+    assert checker_path.read_bytes() == initial_checker
+    assert artifact["complete_surface_inventory"]["validation"]["not_a_d0_verdict"] is True
 
 
 def test_capture_uses_initial_lexical_fixture_path_when_symlink_is_repointed_then_restored(
@@ -649,6 +869,8 @@ def test_capture_uses_initial_lexical_fixture_path_when_symlink_is_repointed_the
 
     artifact = module.capture(
         source_root=source_root,
+        legacy_discovery_path=paths["legacy_discovery"],
+        surface_union_path=paths["surface_union"],
         inventory_path=paths["inventory"],
         module_disposition_path=paths["module_disposition"],
         test_disposition_path=paths["test_disposition"],

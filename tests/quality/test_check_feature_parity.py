@@ -133,7 +133,7 @@ def test_unknown_family_is_a_usage_error(tmp_path: Path) -> None:
     assert "unknown families" in result.stderr
 
 
-def test_committed_scoped_ledger_is_blocked_for_families_with_gaps(tmp_path: Path) -> None:
+def test_committed_complete_ledger_requires_actual_capture_evidence(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
     _write_json(baseline, _captured_baseline({}))
 
@@ -141,8 +141,7 @@ def test_committed_scoped_ledger_is_blocked_for_families_with_gaps(tmp_path: Pat
         ["--baseline", str(baseline), "--ledger", str(COMMITTED_LEDGER), "--families", "metrics", "performance"]
     )
 
-    assert result.returncode == 3
-    assert "coverage gaps" in result.stderr
+    assert result.returncode == 1
 
 
 def test_scoped_ledger_without_gaps_still_cannot_sign_parity(tmp_path: Path) -> None:
@@ -260,9 +259,7 @@ def test_dist_directory_without_a_wheel_is_blocked(tmp_path: Path) -> None:
     _write_json(ledger, _complete_ledger())
     _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
 
-    result = _run(
-        ["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics", "--dist", str(dist)]
-    )
+    result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics", "--dist", str(dist)])
 
     assert result.returncode == 3
     assert "no wheel" in result.stderr

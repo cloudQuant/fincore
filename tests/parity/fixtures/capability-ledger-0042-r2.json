@@ -1,11 +1,6 @@
 {
   "artifact_type": "capability_ledger",
-  "coverage_gaps": [
-    {
-      "capability_id": "viz.resource.show_owned_figures",
-      "reason": "no_source_nodeid"
-    }
-  ],
+  "coverage_gaps": [],
   "covered_families": [
     "attribution",
     "data",
@@ -21,7 +16,7 @@
     "simulation",
     "viz"
   ],
-  "decision_status": "scoped",
+  "decision_status": "complete",
   "does_not_assert": [
     "D-TECH",
     "D0",
@@ -10468,16 +10463,39 @@
       "wheel_nodeids": [
         "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures"
       ]
+    },
+    {
+      "capability_id": "viz.resource.show_owned_figures",
+      "disposition": "required",
+      "owner": "viz",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "viz.resource.show_owned_figures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for viz.resource.show_owned_figures"
+          },
+          "oracle_reference": "invariant contract viz.resource.show_owned_figures.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures"
+      ],
+      "target_operation_id": "viz.resource.show_owned_figures",
+      "wheel_nodeids": [
+        "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures"
+      ]
     }
   ],
-  "not_for_d0": true,
   "schema_version": 1,
   "scope": "all_capability_families_except_packaging",
   "source_contract": {
     "alphalens_manifest_path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
     "alphalens_manifest_sha256": "715ad55ae9483210938dfc6ffe1efb36690b7739a6b584383a9403d70b4f2125",
-    "inventory_artifact_type": "legacy_surface_inventory",
-    "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
+    "inventory_artifact_type": "complete_surface_inventory",
+    "inventory_path": "tests/parity/fixtures/complete-surface-inventory-0042-r2.json",
+    "inventory_sha256": "5637e29b72cf0955aa4f43f57eafc64dc824647af8a0cf16ef2e071eaa895c97",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
     "node_facts_sha256": "78b097d9a88cccb13522660548803d9a7b29f3e590aa32696bf13e3783a99977",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",

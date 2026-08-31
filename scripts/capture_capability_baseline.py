@@ -31,11 +31,12 @@ a kind do not substitute for that kind's required provenance fields.
 
 The inventory, module-disposition and test-disposition inputs are JSON objects
 with an ``entries`` list; every record must have a non-empty ``disposition``.
-Any ``legacy_surface_inventory`` is rejected here until a complete frozen
-checker is integrated.  In particular, the interim ``raw_legacy_surface_only``
-inventory cannot enter a capability-baseline capture before documents,
-examples, benchmarks, distribution artifacts, and test nodes join the same
-clean-source inventory.
+The inventory must be a reviewed ``complete_surface_inventory``. Its supplied
+raw legacy-discovery and surface-union inputs are validated with the exact
+complete-inventory checker blob from the separate frozen tooling worktree. The
+interim ``raw_legacy_surface_only`` inventory remains rejected: it cannot enter
+a capability-baseline capture before documents, examples, benchmarks,
+distribution artifacts, and wheel contents join the same clean-source union.
 Repository-surface facts and their reviewed disposition are separately
 validated as scoped, explicitly non-D0 inputs.  All input and fixture bytes
 are read from immutable blobs in the initially
@@ -86,6 +87,7 @@ _PUBLICATION_TRACEABILITY_FIELDS = ("publication", "doi", "version", "digest")
 _RESERVED_SOURCE_PROJECT_IDENTIFIERS = ("fincore", "candidate", "current")
 _CAPTURE_TOOL_RELATIVE = "scripts/capture_capability_baseline.py"
 _REPOSITORY_SURFACE_CHECKER_RELATIVE = "scripts/check_0042_r2_repository_surface_disposition.py"
+_COMPLETE_SURFACE_INVENTORY_CHECKER_RELATIVE = "scripts/check_0042_r2_complete_surface_inventory.py"
 
 
 class CaptureValidationError(ValueError):
@@ -142,7 +144,7 @@ def _validate_disposition_document(document: dict[str, Any], label: str) -> None
 
 
 def _validate_inventory_document(document: dict[str, Any]) -> None:
-    """Reject legacy inventory artifacts until their complete checker is frozen."""
+    """Require a reviewed full-union inventory before capability capture."""
     _validate_disposition_document(document, "inventory")
     if document.get("scope") == "raw_legacy_surface_only":
         raise CaptureValidationError(
@@ -152,6 +154,10 @@ def _validate_inventory_document(document: dict[str, Any]) -> None:
         raise CaptureValidationError(
             "legacy_surface_inventory cannot enter baseline capture until a complete frozen checker is integrated"
         )
+    if document.get("artifact_type") != "complete_surface_inventory":
+        raise CaptureValidationError("inventory must be a complete_surface_inventory validated by frozen tooling")
+    if document.get("scope") != "complete_legacy_surface_union" or document.get("decision_status") != "complete":
+        raise CaptureValidationError("inventory must declare a complete_legacy_surface_union decision")
     if document.get("not_for_d0") is True:
         raise CaptureValidationError("inventory explicitly marked not_for_d0 cannot enter baseline capture")
 
@@ -403,8 +409,8 @@ def _initial_head_blob_bytes(source_root: Path, commit: str, relative_path: str,
     return _git_blob_bytes(source_root, blobs[relative_path])
 
 
-def _frozen_tooling_identity(tooling_root: Path) -> tuple[Path, bytes, dict[str, Any]]:
-    """Return the clean static tooling root, checker bytes, and immutable identity."""
+def _frozen_tooling_identity(tooling_root: Path) -> tuple[Path, dict[str, bytes], dict[str, Any]]:
+    """Return clean static tooling and every checker blob needed for capture."""
     resolved_root = tooling_root.resolve()
     expected_capture_path = resolved_root / _CAPTURE_TOOL_RELATIVE
     actual_capture_path = Path(__file__).resolve()
@@ -420,15 +426,24 @@ def _frozen_tooling_identity(tooling_root: Path) -> tuple[Path, bytes, dict[str,
         _CAPTURE_TOOL_RELATIVE,
         "frozen capture tooling",
     )
-    checker_payload = _initial_head_blob_bytes(
+    repository_checker_payload = _initial_head_blob_bytes(
         resolved_root,
         tooling_commit,
         _REPOSITORY_SURFACE_CHECKER_RELATIVE,
         "frozen repository-surface disposition checker",
     )
+    complete_inventory_checker_payload = _initial_head_blob_bytes(
+        resolved_root,
+        tooling_commit,
+        _COMPLETE_SURFACE_INVENTORY_CHECKER_RELATIVE,
+        "frozen complete-surface inventory checker",
+    )
     return (
         resolved_root,
-        checker_payload,
+        {
+            "repository_surface": repository_checker_payload,
+            "complete_inventory": complete_inventory_checker_payload,
+        },
         {
             "root": str(resolved_root),
             "source": tooling_provenance,
@@ -438,7 +453,11 @@ def _frozen_tooling_identity(tooling_root: Path) -> tuple[Path, bytes, dict[str,
             },
             "repository_surface_disposition_checker": {
                 "path": _REPOSITORY_SURFACE_CHECKER_RELATIVE,
-                "sha256": _sha256_bytes(checker_payload),
+                "sha256": _sha256_bytes(repository_checker_payload),
+            },
+            "complete_surface_inventory_checker": {
+                "path": _COMPLETE_SURFACE_INVENTORY_CHECKER_RELATIVE,
+                "sha256": _sha256_bytes(complete_inventory_checker_payload),
             },
         },
     )
@@ -534,6 +553,78 @@ def _validate_repository_surface_inputs(
     return summary
 
 
+def _write_checker_input(directory: Path, filename: str, payload: bytes, label: str) -> Path:
+    """Write one immutable payload into a fresh private checker directory."""
+    if filename != PurePosixPath(filename).name or not filename:
+        raise CaptureValidationError(f"{label} filename must be one safe file name")
+    path = directory / filename
+    descriptor: int | None = None
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            descriptor = None
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except OSError as exc:
+        raise CaptureValidationError(f"cannot materialize frozen {label} checker input: {exc}") from exc
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    return path
+
+
+def _validate_complete_inventory_inputs(
+    legacy_discovery_payload: bytes,
+    surface_union_payload: bytes,
+    inventory_payload: bytes,
+    *,
+    legacy_discovery_filename: str,
+    surface_union_filename: str,
+    inventory_filename: str,
+    checker_payload: bytes,
+    checker_filename: str,
+) -> dict[str, Any]:
+    """Validate exact candidate blobs with the frozen complete-inventory checker."""
+    filenames = (legacy_discovery_filename, surface_union_filename, inventory_filename)
+    if len(set(filenames)) != len(filenames):
+        raise CaptureValidationError("complete-inventory checker input filenames must be distinct")
+    checker = types.ModuleType("fincore_0042_r2_complete_inventory_checker")
+    checker.__file__ = checker_filename
+    try:
+        checker_code = compile(checker_payload, checker_filename, "exec")
+        exec(checker_code, checker.__dict__)
+    except (ImportError, SyntaxError, TypeError, ValueError) as exc:
+        raise CaptureValidationError(f"cannot load static complete-surface inventory checker: {exc}") from exc
+    validator = getattr(checker, "validate_complete_inventory", None)
+    if not callable(validator):
+        raise CaptureValidationError("static complete-surface inventory checker lacks validation")
+    try:
+        with tempfile.TemporaryDirectory(prefix="fincore-0042-r2-complete-inventory-inputs-") as temporary_directory:
+            directory = Path(temporary_directory)
+            legacy_discovery_path = _write_checker_input(
+                directory, legacy_discovery_filename, legacy_discovery_payload, "legacy discovery"
+            )
+            surface_union_path = _write_checker_input(directory, surface_union_filename, surface_union_payload, "surface union")
+            inventory_path = _write_checker_input(directory, inventory_filename, inventory_payload, "complete inventory")
+            summary = validator(legacy_discovery_path, surface_union_path, inventory_path)
+    except (OSError, TypeError, ValueError) as exc:
+        raise CaptureValidationError(f"complete-surface inventory validation failed: {exc}") from exc
+    expected_digests = {
+        "legacy_discovery_sha256": _sha256_bytes(legacy_discovery_payload),
+        "surface_union_sha256": _sha256_bytes(surface_union_payload),
+        "inventory_sha256": _sha256_bytes(inventory_payload),
+    }
+    if (
+        not isinstance(summary, dict)
+        or summary.get("artifact_type") != "complete_surface_inventory_validation"
+        or summary.get("not_a_d0_verdict") is not True
+        or any(summary.get(key) != digest for key, digest in expected_digests.items())
+    ):
+        raise CaptureValidationError("complete-surface inventory checker returned an invalid summary")
+    return summary
+
+
 def _atomic_write_json(output: Path, artifact: dict[str, Any]) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{output.name}.", suffix=".tmp", dir=output.parent)
@@ -554,6 +645,8 @@ def capture(
     *,
     source_root: Path,
     tooling_root: Path,
+    legacy_discovery_path: Path,
+    surface_union_path: Path,
     inventory_path: Path,
     module_disposition_path: Path,
     test_disposition_path: Path,
@@ -580,7 +673,7 @@ def capture(
             roots_overlap = False
     if roots_overlap:
         raise CaptureValidationError("frozen tooling root must be distinct from the source worktree")
-    tooling_root, checker_payload, tooling_identity = _frozen_tooling_identity(requested_tooling_root)
+    tooling_root, checker_payloads, tooling_identity = _frozen_tooling_identity(requested_tooling_root)
     output_path = output_path.resolve()
     try:
         output_path.relative_to(source_root)
@@ -600,6 +693,8 @@ def capture(
     if not isinstance(initial_commit, str):
         raise CaptureValidationError("capture requires a string initial source commit")
     input_paths = {
+        "legacy_discovery": legacy_discovery_path,
+        "surface_union": surface_union_path,
         "inventory": inventory_path,
         "module_disposition": module_disposition_path,
         "test_disposition": test_disposition_path,
@@ -608,6 +703,8 @@ def capture(
         "repository_surface_disposition": repository_surface_disposition_path,
     }
     input_labels = {
+        "legacy_discovery": "legacy discovery",
+        "surface_union": "surface union",
         "inventory": "inventory",
         "module_disposition": "module",
         "test_disposition": "test",
@@ -631,11 +728,21 @@ def capture(
     _validate_disposition_document(documents["test_disposition"], input_labels["test_disposition"])
     _validate_ledger_document(documents["ledger"])
     ledger_entries = validate_ledger(documents["ledger"])
+    complete_inventory_summary = _validate_complete_inventory_inputs(
+        payloads["legacy_discovery"],
+        payloads["surface_union"],
+        payloads["inventory"],
+        legacy_discovery_filename=PurePosixPath(inputs["legacy_discovery"]["path"]).name,
+        surface_union_filename=PurePosixPath(inputs["surface_union"]["path"]).name,
+        inventory_filename=PurePosixPath(inputs["inventory"]["path"]).name,
+        checker_payload=checker_payloads["complete_inventory"],
+        checker_filename=str(tooling_root / _COMPLETE_SURFACE_INVENTORY_CHECKER_RELATIVE),
+    )
     repository_surface_summary = _validate_repository_surface_inputs(
         payloads["repository_surface_facts"],
         payloads["repository_surface_disposition"],
         facts_filename=PurePosixPath(inputs["repository_surface_facts"]["path"]).name,
-        checker_payload=checker_payload,
+        checker_payload=checker_payloads["repository_surface"],
         checker_filename=str(tooling_root / _REPOSITORY_SURFACE_CHECKER_RELATIVE),
     )
     if (
@@ -662,6 +769,13 @@ def capture(
         "source": provenance,
         "tooling": tooling_identity,
         "inputs": inputs,
+        "complete_surface_inventory": {
+            "scope": "complete_legacy_surface_union",
+            "legacy_discovery_sha256": inputs["legacy_discovery"]["sha256"],
+            "surface_union_sha256": inputs["surface_union"]["sha256"],
+            "inventory_sha256": inputs["inventory"]["sha256"],
+            "validation": complete_inventory_summary,
+        },
         "repository_surface": {
             "scope": "classified_repository_surface_only",
             "not_for_d0": True,
@@ -681,7 +795,9 @@ def capture(
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--inventory", required=True, help="versioned legacy-surface inventory JSON")
+    parser.add_argument("--legacy-discovery", required=True, help="raw legacy-surface discovery JSON")
+    parser.add_argument("--surface-union", required=True, help="raw complete-input surface-union discovery JSON")
+    parser.add_argument("--inventory", required=True, help="reviewed complete-surface inventory JSON")
     parser.add_argument("--module-disposition", required=True, help="module disposition JSON")
     parser.add_argument("--test-disposition", required=True, help="test-node disposition JSON")
     parser.add_argument("--ledger", required=True, help="versioned capability ledger JSON")
@@ -706,6 +822,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         artifact = capture(
             source_root=Path.cwd(),
             tooling_root=Path(args.tooling_root),
+            legacy_discovery_path=Path(args.legacy_discovery),
+            surface_union_path=Path(args.surface_union),
             inventory_path=Path(args.inventory),
             module_disposition_path=Path(args.module_disposition),
             test_disposition_path=Path(args.test_disposition),

@@ -1,9 +1,9 @@
-"""Fail-closed contracts for the scoped 0042-R2 capability ledger.
+"""Fail-closed contracts for the complete analytical 0042-R2 capability ledger.
 
-The scoped ledger covers the metrics and performance families only.  It binds
-each capability to real collected source nodeids, planned wheel nodeids, and
-one independent-authority scenario.  It is explicitly not D0 evidence: the
-capture tool rejects it while it remains scoped.
+The ledger binds every analytical capability to real collected source nodeids,
+planned wheel nodeids, and an independent-authority scenario.  Distribution
+configuration stays in the complete surface inventory and package gates rather
+than being relabelled as a financial capability.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).parents[2]
 FIXTURES = REPOSITORY_ROOT / "tests" / "parity" / "fixtures"
 LEDGER = FIXTURES / "capability-ledger-0042-r2.json"
-INVENTORY = FIXTURES / "legacy-surface-inventory-0042-r2.json"
+INVENTORY = FIXTURES / "complete-surface-inventory-0042-r2.json"
 NODE_FACTS = FIXTURES / "test-node-facts-discovery-0042-r2.json"
 UPSTREAM_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "empyrical-0.6.0-api.json"
 ALPHALENS_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "alphalens-0.4.0-cloudquant-api.json"
@@ -67,20 +67,24 @@ def _inventory_targets() -> dict[str, str]:
     targets: dict[str, str] = {}
     for entry in inventory["entries"]:
         target = entry["target_operation_id"]
-        if entry["owner"] in _COVERED_OWNERS and ".surface." not in target:
+        if (
+            entry["source_id"] == "legacy_surface_discovery"
+            and entry["disposition"] == "required"
+            and entry["owner"] in _COVERED_OWNERS
+        ):
             targets[target] = entry["owner"]
     return targets
 
 
-def test_ledger_header_is_scoped_and_fail_closed() -> None:
+def test_ledger_header_is_complete_and_non_verdict() -> None:
     ledger = _load()
 
     assert ledger["schema_version"] == 1
     assert ledger["artifact_type"] == "capability_ledger"
     assert ledger["scope"] == "all_capability_families_except_packaging"
     assert ledger["covered_families"] == sorted(_COVERED_OWNERS)
-    assert ledger["decision_status"] == "scoped"
-    assert ledger["not_for_d0"] is True
+    assert ledger["decision_status"] == "complete"
+    assert ledger.get("not_for_d0") is not True
     assert set(ledger["does_not_assert"]) >= _REQUIRED_NON_ASSERTIONS
 
 
@@ -121,6 +125,8 @@ def test_ledger_source_contract_binds_the_committed_input_bytes() -> None:
     ledger = _load()
     contract = ledger["source_contract"]
 
+    assert contract["inventory_artifact_type"] == "complete_surface_inventory"
+    assert contract["inventory_path"] == "tests/parity/fixtures/complete-surface-inventory-0042-r2.json"
     assert contract["inventory_sha256"] == hashlib.sha256(INVENTORY.read_bytes()).hexdigest()
     assert contract["node_facts_sha256"] == hashlib.sha256(NODE_FACTS.read_bytes()).hexdigest()
     assert contract["upstream_manifest_sha256"] == hashlib.sha256(UPSTREAM_MANIFEST.read_bytes()).hexdigest()
@@ -165,13 +171,10 @@ def test_factor_capabilities_use_the_pinned_alphalens_oracle() -> None:
     assert alphalens_references > 0, "factor tranche must bind alphalens-derived capabilities to the pinned oracle"
 
 
-def test_coverage_gaps_declare_only_missing_source_evidence() -> None:
+def test_coverage_gaps_are_closed_before_the_ledger_enters_baseline_capture() -> None:
     ledger = _load()
 
-    assert ledger["coverage_gaps"], "a scoped ledger must declare its remaining coverage gaps"
-    for gap in ledger["coverage_gaps"]:
-        assert set(gap) == {"capability_id", "reason"}
-        assert gap["reason"] == "no_source_nodeid"
+    assert ledger["coverage_gaps"] == []
 
 
 def test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios() -> None:
@@ -580,13 +583,12 @@ def test_reporting_portfolio_and_attribution_migration_scenarios_are_bound() -> 
             "report.portfolio.plot_sector_allocations",
             "report.portfolio.strategy_report",
         },
-        "viz": {"viz.resource.close_owned_figures"},
+        "viz": {"viz.resource.close_owned_figures", "viz.resource.show_owned_figures"},
     }
 
     gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
     entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
 
-    assert "viz.resource.show_owned_figures" in gap_ids
     for owner, capability_ids in expected.items():
         assert not capability_ids & gap_ids
         for capability_id in capability_ids:
