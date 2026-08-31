@@ -72,69 +72,52 @@ class TestProviderImportErrors:
     """Tests for ImportError handling in providers (lines 226-227, 387-388, 530-531)."""
 
     def test_yahoo_finance_import_error(self, monkeypatch):
-        """Test YahooFinanceProvider handles import error gracefully (lines 226-227)."""
-        import sys
+        """Test YahooFinanceProvider handles its canonical loader failure gracefully."""
+        from fincore.data.providers import YahooFinanceProvider
+        from fincore.runtime import validation
 
-        # Temporarily remove yfinance from sys.modules if it exists
-        yf_backup = sys.modules.pop("yfinance", None)
-        yf_base_backup = sys.modules.pop("yfinance", None)
+        real_import_module = validation.importlib.import_module
 
-        try:
-            # Mock the import to fail
-            import builtins
+        def missing_yfinance(name: str):
+            if name == "yfinance":
+                raise ModuleNotFoundError("No module named 'yfinance'")
+            return real_import_module(name)
 
-            real_import = builtins.__import__
+        monkeypatch.setattr(validation.importlib, "import_module", missing_yfinance)
 
-            def mock_import(name, *args, **kwargs):
-                if name == "yfinance":
-                    raise ImportError("No module named 'yfinance'")
-                return real_import(name, *args, **kwargs)
-
-            monkeypatch.setattr(builtins, "__import__", mock_import)
-
-            with pytest.raises(ImportError, match="yfinance"):
-                from fincore.data.providers import YahooFinanceProvider
-
-                YahooFinanceProvider()
-        finally:
-            # Restore yfinance if it was there
-            if yf_backup is not None:
-                sys.modules["yfinance"] = yf_backup
-            if yf_base_backup is not None:
-                sys.modules["yfinance"] = yf_base_backup
+        with pytest.raises(ImportError, match="yfinance"):
+            YahooFinanceProvider()
 
     def test_alpha_vantage_import_error(self, monkeypatch):
-        """Test AlphaVantageProvider handles requests import error (lines 387-388)."""
-        import builtins
+        """Test AlphaVantageProvider handles its canonical loader failure gracefully."""
+        from fincore.data.providers import AlphaVantageProvider
+        from fincore.runtime import validation
 
-        real_import = builtins.__import__
+        real_import_module = validation.importlib.import_module
 
-        def mock_import(name, *args, **kwargs):
+        def missing_requests(name: str):
             if name == "requests":
-                raise ImportError("No module named 'requests'")
-            return real_import(name, *args, **kwargs)
+                raise ModuleNotFoundError("No module named 'requests'")
+            return real_import_module(name)
 
-        monkeypatch.setattr(builtins, "__import__", mock_import)
+        monkeypatch.setattr(validation.importlib, "import_module", missing_requests)
 
         with pytest.raises(ImportError, match="requests is required"):
-            from fincore.data.providers import AlphaVantageProvider
-
             AlphaVantageProvider(api_key="test_key")
 
     def test_tushare_import_error(self, monkeypatch):
-        """Test TushareProvider handles tushare import error (lines 530-531)."""
-        import builtins
+        """Test TushareProvider handles its canonical loader failure gracefully."""
+        from fincore.data.providers import TushareProvider
+        from fincore.runtime import validation
 
-        real_import = builtins.__import__
+        real_import_module = validation.importlib.import_module
 
-        def mock_import(name, *args, **kwargs):
+        def missing_tushare(name: str):
             if name == "tushare":
-                raise ImportError("No module named 'tushare'")
-            return real_import(name, *args, **kwargs)
+                raise ModuleNotFoundError("No module named 'tushare'")
+            return real_import_module(name)
 
-        monkeypatch.setattr(builtins, "__import__", mock_import)
+        monkeypatch.setattr(validation.importlib, "import_module", missing_tushare)
 
         with pytest.raises(ImportError, match="tushare is required"):
-            from fincore.data.providers import TushareProvider
-
             TushareProvider(token="test_token")
