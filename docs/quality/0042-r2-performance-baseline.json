@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "cold_import_seconds": 0.022863125,
+      "cold_import_seconds": 0.025376916,
       "execution_input_digest": "184c482b15fadb628f6a13f104b05d8cd8be2c8b27b11c29f5ce5c284d95c74d",
       "hotspots": [
         {
@@ -31,8 +31,13 @@
         },
         {
           "calls": "3",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "axis_nan_policy_wrapper (_axis_nan_policy.py:426)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "skewness (stats.py:78)"
         },
         {
           "calls": "9",
@@ -41,13 +46,8 @@
         },
         {
           "calls": "9",
-          "cumtime_seconds": 0.0,
+          "cumtime_seconds": 0.001,
           "function": "validate_metric_arguments (validation.py:388)"
-        },
-        {
-          "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "skewness (stats.py:78)"
         },
         {
           "calls": "1",
@@ -96,9 +96,9 @@
         "warmups": 2
       },
       "output_digest": "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
-      "peak_rss_bytes": 164741120,
+      "peak_rss_bytes": 165658624,
       "profiled_output_digest": "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
-      "profiled_wall_seconds": 0.003717541,
+      "profiled_wall_seconds": 0.0041965,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -109,17 +109,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.001504083,
-        "median_seconds": 0.00141225,
-        "minimum_seconds": 0.001399584,
-        "p95_seconds": 0.001501216
+        "maximum_seconds": 0.001770042,
+        "median_seconds": 0.001736458,
+        "minimum_seconds": 0.001485042,
+        "p95_seconds": 0.001763434
       },
       "timing_samples_seconds": [
-        0.001504083,
-        0.00148975,
-        0.00141225,
-        0.001401708,
-        0.001399584
+        0.001770042,
+        0.001737,
+        0.001540583,
+        0.001485042,
+        0.001736458
       ],
       "warmup_output_digests": [
         "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
@@ -134,7 +134,7 @@
       }
     },
     {
-      "cold_import_seconds": 0.022823,
+      "cold_import_seconds": 0.025861042,
       "execution_input_digest": "13d2ccdaff999d8d03479a00b7d54dbafb6cc42dc9cb147b1f937fceb5370edf",
       "hotspots": [
         {
@@ -173,34 +173,34 @@
           "function": "_validated_arguments (_dispatch.py:126)"
         },
         {
-          "calls": "9",
-          "cumtime_seconds": 0.0,
-          "function": "validate_metric_arguments (validation.py:388)"
-        },
-        {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "omega_ratio (ratios.py:481)"
-        },
-        {
-          "calls": "1",
-          "cumtime_seconds": 0.0,
+          "cumtime_seconds": 0.001,
           "function": "stability_of_timeseries (ratios.py:1198)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "skewness (stats.py:78)"
+          "cumtime_seconds": 0.001,
+          "function": "omega_ratio (ratios.py:481)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.001,
+          "function": "validate_metric_arguments (validation.py:388)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "kurtosis (_stats_py.py:1356)"
+          "cumtime_seconds": 0.001,
+          "function": "skewness (stats.py:78)"
         },
         {
           "calls": "6",
           "cumtime_seconds": 0.0,
           "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "kurtosis (_stats_py.py:1356)"
         },
         {
           "calls": "9",
@@ -210,7 +210,7 @@
         {
           "calls": "1",
           "cumtime_seconds": 0.0,
-          "function": "__init__ (_stats_py.py:10819)"
+          "function": "__init__ (base.py:460)"
         }
       ],
       "kind": "metrics",
@@ -229,9 +229,9 @@
         "warmups": 2
       },
       "output_digest": "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
-      "peak_rss_bytes": 163905536,
+      "peak_rss_bytes": 165199872,
       "profiled_output_digest": "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
-      "profiled_wall_seconds": 0.003847458,
+      "profiled_wall_seconds": 0.004205,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -242,17 +242,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.001648,
-        "median_seconds": 0.001556791,
-        "minimum_seconds": 0.001539834,
-        "p95_seconds": 0.001642175
+        "maximum_seconds": 0.001957666,
+        "median_seconds": 0.0017505,
+        "minimum_seconds": 0.001653583,
+        "p95_seconds": 0.001929941
       },
       "timing_samples_seconds": [
-        0.001648,
-        0.001618875,
-        0.001556791,
-        0.001550083,
-        0.001539834
+        0.0017505,
+        0.001957666,
+        0.001653583,
+        0.001691666,
+        0.001819042
       ],
       "warmup_output_digests": [
         "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
@@ -267,22 +267,22 @@
       }
     },
     {
-      "cold_import_seconds": 0.022817916,
+      "cold_import_seconds": 0.026176167,
       "execution_input_digest": "fa674a019624f282496302fb0df877389881f02a255f1d1404574f6a2759fb0d",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.004,
+          "cumtime_seconds": 0.005,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.004,
+          "cumtime_seconds": 0.005,
           "function": "run_metrics (profile_hotspots.py:392)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.004,
+          "cumtime_seconds": 0.005,
           "function": "perf_stats (perf_stats.py:45)"
         },
         {
@@ -297,7 +297,7 @@
         },
         {
           "calls": "3",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "axis_nan_policy_wrapper (_axis_nan_policy.py:426)"
         },
         {
@@ -308,7 +308,12 @@
         {
           "calls": "1",
           "cumtime_seconds": 0.001,
-          "function": "omega_ratio (ratios.py:481)"
+          "function": "stability_of_timeseries (ratios.py:1198)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "skewness (stats.py:78)"
         },
         {
           "calls": "9",
@@ -317,23 +322,18 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "stability_of_timeseries (ratios.py:1198)"
-        },
-        {
-          "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "skewness (stats.py:78)"
-        },
-        {
-          "calls": "6",
-          "cumtime_seconds": 0.0,
-          "function": "new_method (common.py:67)"
+          "cumtime_seconds": 0.001,
+          "function": "omega_ratio (ratios.py:481)"
         },
         {
           "calls": "1",
           "cumtime_seconds": 0.0,
           "function": "kurtosis (_stats_py.py:1356)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
         },
         {
           "calls": "9",
@@ -343,7 +343,7 @@
         {
           "calls": "1",
           "cumtime_seconds": 0.0,
-          "function": "__init__ (_stats_py.py:10819)"
+          "function": "__init__ (base.py:460)"
         }
       ],
       "kind": "metrics",
@@ -362,9 +362,9 @@
         "warmups": 2
       },
       "output_digest": "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
-      "peak_rss_bytes": 165625856,
+      "peak_rss_bytes": 166051840,
       "profiled_output_digest": "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
-      "profiled_wall_seconds": 0.003978209,
+      "profiled_wall_seconds": 0.004646667,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -375,17 +375,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.0017735,
-        "median_seconds": 0.001693917,
-        "minimum_seconds": 0.001668667,
-        "p95_seconds": 0.00177
+        "maximum_seconds": 0.002286292,
+        "median_seconds": 0.002193583,
+        "minimum_seconds": 0.002097292,
+        "p95_seconds": 0.002273467
       },
       "timing_samples_seconds": [
-        0.0017735,
-        0.001756,
-        0.001693917,
-        0.00168025,
-        0.001668667
+        0.002286292,
+        0.002097292,
+        0.00211825,
+        0.002193583,
+        0.002222167
       ],
       "warmup_output_digests": [
         "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
@@ -400,7 +400,7 @@
       }
     },
     {
-      "cold_import_seconds": 0.023166542,
+      "cold_import_seconds": 0.029368666,
       "execution_input_digest": "f9032569c1303d8d63999f7c95e14f2033e5e97bee6edc977746dde8c31aa13d",
       "hotspots": [
         {
@@ -456,12 +456,12 @@
         {
           "calls": "1",
           "cumtime_seconds": 0.0,
-          "function": "rolling_volatility (rolling.py:527)"
+          "function": "mean (rolling.py:1686)"
         },
         {
           "calls": "1",
           "cumtime_seconds": 0.0,
-          "function": "mean (rolling.py:1686)"
+          "function": "rolling_volatility (rolling.py:527)"
         },
         {
           "calls": "3",
@@ -469,14 +469,14 @@
           "function": "_construct_result (series.py:6813)"
         },
         {
-          "calls": "2",
-          "cumtime_seconds": 0.0,
-          "function": "__mul__ (arraylike.py:204)"
-        },
-        {
           "calls": "3",
           "cumtime_seconds": 0.0,
           "function": "homogeneous_func (rolling.py:571)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__mul__ (arraylike.py:204)"
         }
       ],
       "kind": "rolling",
@@ -495,9 +495,9 @@
         "warmups": 2
       },
       "output_digest": "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
-      "peak_rss_bytes": 108363776,
+      "peak_rss_bytes": 108986368,
       "profiled_output_digest": "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
-      "profiled_wall_seconds": 0.000548125,
+      "profiled_wall_seconds": 0.000621041,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -508,17 +508,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.000208542,
-        "median_seconds": 0.000165542,
-        "minimum_seconds": 0.000162333,
-        "p95_seconds": 0.000201292
+        "maximum_seconds": 0.004792,
+        "median_seconds": 0.000221542,
+        "minimum_seconds": 0.0001865,
+        "p95_seconds": 0.003887467
       },
       "timing_samples_seconds": [
-        0.000208542,
-        0.000172291,
-        0.000165542,
-        0.000162875,
-        0.000162333
+        0.000221542,
+        0.0001865,
+        0.004792,
+        0.000269333,
+        0.000192417
       ],
       "warmup_output_digests": [
         "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
@@ -533,7 +533,7 @@
       }
     },
     {
-      "cold_import_seconds": 0.022975417,
+      "cold_import_seconds": 0.026955542,
       "execution_input_digest": "7eec3d9b9ef37cc3a31fe48bb8d8609d7bce92abdec7c0bd86bfd7d7b4f28e31",
       "hotspots": [
         {
@@ -592,14 +592,14 @@
           "function": "rolling_volatility (rolling.py:527)"
         },
         {
-          "calls": "3",
-          "cumtime_seconds": 0.0,
-          "function": "homogeneous_func (rolling.py:571)"
-        },
-        {
           "calls": "1",
           "cumtime_seconds": 0.0,
           "function": "mean (rolling.py:1686)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "homogeneous_func (rolling.py:571)"
         },
         {
           "calls": "3",
@@ -628,9 +628,9 @@
         "warmups": 2
       },
       "output_digest": "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
-      "peak_rss_bytes": 108380160,
+      "peak_rss_bytes": 109461504,
       "profiled_output_digest": "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
-      "profiled_wall_seconds": 0.000588208,
+      "profiled_wall_seconds": 0.000636167,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -641,17 +641,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.000247625,
-        "median_seconds": 0.000204125,
-        "minimum_seconds": 0.0002005,
-        "p95_seconds": 0.000240633
+        "maximum_seconds": 0.000273958,
+        "median_seconds": 0.000235,
+        "minimum_seconds": 0.000224917,
+        "p95_seconds": 0.000272866
       },
       "timing_samples_seconds": [
-        0.000247625,
-        0.000212667,
-        0.000204125,
-        0.0002005,
-        0.000202
+        0.0002685,
+        0.000273958,
+        0.000229459,
+        0.000224917,
+        0.000235
       ],
       "warmup_output_digests": [
         "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
@@ -666,7 +666,7 @@
       }
     },
     {
-      "cold_import_seconds": 0.022883958,
+      "cold_import_seconds": 0.026629083,
       "execution_input_digest": "fc8813472e0dafca62ad30d61065617606ae6a46064166fc6593ed91956914dd",
       "hotspots": [
         {
@@ -681,7 +681,7 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
+          "cumtime_seconds": 0.001,
           "function": "rolling_sharpe (rolling.py:556)"
         },
         {
@@ -700,14 +700,14 @@
           "function": "_apply_series (rolling.py:424)"
         },
         {
-          "calls": "3",
-          "cumtime_seconds": 0.0,
-          "function": "new_method (common.py:67)"
-        },
-        {
           "calls": "2",
           "cumtime_seconds": 0.0,
           "function": "std (rolling.py:1729)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
         },
         {
           "calls": "3",
@@ -761,9 +761,9 @@
         "warmups": 2
       },
       "output_digest": "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
-      "peak_rss_bytes": 108380160,
+      "peak_rss_bytes": 109051904,
       "profiled_output_digest": "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
-      "profiled_wall_seconds": 0.00063275,
+      "profiled_wall_seconds": 0.000706083,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -774,17 +774,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.000290125,
-        "median_seconds": 0.000257708,
-        "minimum_seconds": 0.00024625,
-        "p95_seconds": 0.000285983
+        "maximum_seconds": 0.0003415,
+        "median_seconds": 0.000294833,
+        "minimum_seconds": 0.000279333,
+        "p95_seconds": 0.000335908
       },
       "timing_samples_seconds": [
-        0.000290125,
-        0.000257708,
-        0.000247208,
-        0.00024625,
-        0.000269417
+        0.0003415,
+        0.000313541,
+        0.000294833,
+        0.000279333,
+        0.000293625
       ],
       "warmup_output_digests": [
         "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
@@ -799,27 +799,27 @@
       }
     },
     {
-      "cold_import_seconds": 0.022922084,
+      "cold_import_seconds": 0.036910375,
       "execution_input_digest": "ec534cc4c5bc17b02a8e9ac476710d64b1234ab889d8d74e465f92e71cd2b18b",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.158,
+          "cumtime_seconds": 0.181,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.158,
+          "cumtime_seconds": 0.181,
           "function": "run_transactions (profile_hotspots.py:423)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.158,
+          "cumtime_seconds": 0.181,
           "function": "extract_round_trips (round_trips.py:199)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.151,
+          "cumtime_seconds": 0.173,
           "function": "groupby_consecutive (round_trips.py:140)"
         },
         {
@@ -829,17 +829,17 @@
         },
         {
           "calls": "4",
-          "cumtime_seconds": 0.128,
+          "cumtime_seconds": 0.143,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "4",
-          "cumtime_seconds": 0.128,
+          "cumtime_seconds": 0.143,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
           "calls": "500",
-          "cumtime_seconds": 0.12,
+          "cumtime_seconds": 0.133,
           "function": "vwap (round_trips.py:159)"
         },
         {
@@ -854,27 +854,27 @@
         },
         {
           "calls": "2053",
-          "cumtime_seconds": 0.038,
+          "cumtime_seconds": 0.041,
           "function": "_get_item (frame.py:4966)"
         },
         {
           "calls": "2065",
-          "cumtime_seconds": 0.036,
+          "cumtime_seconds": 0.039,
           "function": "_ixs (frame.py:4292)"
         },
         {
           "calls": "525/517",
-          "cumtime_seconds": 0.034,
+          "cumtime_seconds": 0.038,
           "function": "new_method (common.py:67)"
         },
         {
           "calls": "504",
-          "cumtime_seconds": 0.031,
+          "cumtime_seconds": 0.034,
           "function": "_arith_method (base.py:1633)"
         },
         {
           "calls": "500",
-          "cumtime_seconds": 0.031,
+          "cumtime_seconds": 0.035,
           "function": "__mul__ (arraylike.py:204)"
         }
       ],
@@ -894,9 +894,9 @@
         "warmups": 2
       },
       "output_digest": "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
-      "peak_rss_bytes": 113688576,
+      "peak_rss_bytes": 114491392,
       "profiled_output_digest": "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
-      "profiled_wall_seconds": 0.1583055,
+      "profiled_wall_seconds": 0.181053292,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -907,17 +907,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.058130541,
-        "median_seconds": 0.05809575,
-        "minimum_seconds": 0.058034541,
-        "p95_seconds": 0.058123749
+        "maximum_seconds": 0.116137334,
+        "median_seconds": 0.061831875,
+        "minimum_seconds": 0.060795666,
+        "p95_seconds": 0.105846734
       },
       "timing_samples_seconds": [
-        0.058096583,
-        0.058084,
-        0.05809575,
-        0.058034541,
-        0.058130541
+        0.061831875,
+        0.060795666,
+        0.061226625,
+        0.064684334,
+        0.116137334
       ],
       "warmup_output_digests": [
         "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
@@ -932,27 +932,27 @@
       }
     },
     {
-      "cold_import_seconds": 0.022862541,
+      "cold_import_seconds": 0.025773917,
       "execution_input_digest": "f0beec2d4b4d43c8047d25646ad729348586916af4967d55f77cfebff4fa5c9f",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 1.328,
+          "cumtime_seconds": 1.399,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.328,
+          "cumtime_seconds": 1.399,
           "function": "run_transactions (profile_hotspots.py:423)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.328,
+          "cumtime_seconds": 1.399,
           "function": "extract_round_trips (round_trips.py:199)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.283,
+          "cumtime_seconds": 1.354,
           "function": "groupby_consecutive (round_trips.py:140)"
         },
         {
@@ -962,17 +962,17 @@
         },
         {
           "calls": "4",
-          "cumtime_seconds": 1.257,
+          "cumtime_seconds": 1.323,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "4",
-          "cumtime_seconds": 1.256,
+          "cumtime_seconds": 1.322,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
           "calls": "5000",
-          "cumtime_seconds": 1.187,
+          "cumtime_seconds": 1.249,
           "function": "vwap (round_trips.py:159)"
         },
         {
@@ -987,27 +987,27 @@
         },
         {
           "calls": "20047",
-          "cumtime_seconds": 0.359,
+          "cumtime_seconds": 0.379,
           "function": "_get_item (frame.py:4966)"
         },
         {
           "calls": "20059",
-          "cumtime_seconds": 0.337,
+          "cumtime_seconds": 0.356,
           "function": "_ixs (frame.py:4292)"
         },
         {
           "calls": "5023/5015",
-          "cumtime_seconds": 0.321,
+          "cumtime_seconds": 0.338,
           "function": "new_method (common.py:67)"
         },
         {
           "calls": "4998",
-          "cumtime_seconds": 0.312,
+          "cumtime_seconds": 0.327,
           "function": "__mul__ (arraylike.py:204)"
         },
         {
           "calls": "5002",
-          "cumtime_seconds": 0.301,
+          "cumtime_seconds": 0.316,
           "function": "_arith_method (base.py:1633)"
         }
       ],
@@ -1027,9 +1027,9 @@
         "warmups": 2
       },
       "output_digest": "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
-      "peak_rss_bytes": 114835456,
+      "peak_rss_bytes": 117014528,
       "profiled_output_digest": "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
-      "profiled_wall_seconds": 1.327633917,
+      "profiled_wall_seconds": 1.398925125,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1040,17 +1040,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.485581416,
-        "median_seconds": 0.4797925,
-        "minimum_seconds": 0.477478708,
-        "p95_seconds": 0.485374133
+        "maximum_seconds": 0.749654417,
+        "median_seconds": 0.527122333,
+        "minimum_seconds": 0.52139725,
+        "p95_seconds": 0.726239134
       },
       "timing_samples_seconds": [
-        0.478058917,
-        0.484545,
-        0.4797925,
-        0.477478708,
-        0.485581416
+        0.749654417,
+        0.632578,
+        0.52139725,
+        0.524967791,
+        0.527122333
       ],
       "warmup_output_digests": [
         "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
@@ -1065,27 +1065,27 @@
       }
     },
     {
-      "cold_import_seconds": 0.022944375,
+      "cold_import_seconds": 0.0257845,
       "execution_input_digest": "6e676a23739a44a0a6db11f9233c0a8723ffe13163bfb15ee8f78d8353555806",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 13.01,
+          "cumtime_seconds": 16.093,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 13.01,
+          "cumtime_seconds": 16.093,
           "function": "run_transactions (profile_hotspots.py:423)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 13.01,
+          "cumtime_seconds": 16.093,
           "function": "extract_round_trips (round_trips.py:199)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 12.582,
+          "cumtime_seconds": 15.413,
           "function": "groupby_consecutive (round_trips.py:140)"
         },
         {
@@ -1095,17 +1095,17 @@
         },
         {
           "calls": "4",
-          "cumtime_seconds": 12.524,
+          "cumtime_seconds": 15.345,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "4",
-          "cumtime_seconds": 12.521,
+          "cumtime_seconds": 15.342,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
           "calls": "50000",
-          "cumtime_seconds": 11.823,
+          "cumtime_seconds": 14.498,
           "function": "vwap (round_trips.py:159)"
         },
         {
@@ -1120,27 +1120,27 @@
         },
         {
           "calls": "199984",
-          "cumtime_seconds": 3.549,
+          "cumtime_seconds": 4.402,
           "function": "_get_item (frame.py:4966)"
         },
         {
           "calls": "199996",
-          "cumtime_seconds": 3.333,
+          "cumtime_seconds": 4.132,
           "function": "_ixs (frame.py:4292)"
         },
         {
           "calls": "50002/49994",
-          "cumtime_seconds": 3.211,
+          "cumtime_seconds": 3.9,
           "function": "new_method (common.py:67)"
         },
         {
           "calls": "49977",
-          "cumtime_seconds": 3.126,
+          "cumtime_seconds": 3.805,
           "function": "__mul__ (arraylike.py:204)"
         },
         {
           "calls": "49981",
-          "cumtime_seconds": 3.022,
+          "cumtime_seconds": 3.677,
           "function": "_arith_method (base.py:1633)"
         }
       ],
@@ -1160,9 +1160,9 @@
         "warmups": 2
       },
       "output_digest": "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
-      "peak_rss_bytes": 156549120,
+      "peak_rss_bytes": 157925376,
       "profiled_output_digest": "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
-      "profiled_wall_seconds": 13.010024584,
+      "profiled_wall_seconds": 16.093349125,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1173,17 +1173,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 4.71317125,
-        "median_seconds": 4.677778791,
-        "minimum_seconds": 4.671926916,
-        "p95_seconds": 4.706171717
+        "maximum_seconds": 6.814080125,
+        "median_seconds": 6.092748583,
+        "minimum_seconds": 5.779964583,
+        "p95_seconds": 6.736944717
       },
       "timing_samples_seconds": [
-        4.671926916,
-        4.677778791,
-        4.71317125,
-        4.678173583,
-        4.677574166
+        5.779964583,
+        6.814080125,
+        6.428403083,
+        5.968981958,
+        6.092748583
       ],
       "warmup_output_digests": [
         "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
@@ -1198,32 +1198,32 @@
       }
     },
     {
-      "cold_import_seconds": 0.022874,
+      "cold_import_seconds": 0.026072125,
       "execution_input_digest": "8edd8a60f9a36215b6c9b9a811bab4b3d4d4e8ec9cd2da3662ba4c94c45fae33",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.31,
+          "cumtime_seconds": 0.479,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.31,
+          "cumtime_seconds": 0.479,
           "function": "run_factor (profile_hotspots.py:449)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.31,
+          "cumtime_seconds": 0.479,
           "function": "prepare_factor_data (data.py:400)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.258,
+          "cumtime_seconds": 0.424,
           "function": "_prepare_from_forward_returns (data.py:339)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.248,
+          "cumtime_seconds": 0.412,
           "function": "quantize_factor (data.py:238)"
         },
         {
@@ -1233,12 +1233,12 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.246,
+          "cumtime_seconds": 0.41,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.201,
+          "cumtime_seconds": 0.334,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
@@ -1248,17 +1248,17 @@
         },
         {
           "calls": "247",
-          "cumtime_seconds": 0.19,
+          "cumtime_seconds": 0.319,
           "function": "_quantile_calculation (data.py:210)"
         },
         {
           "calls": "247",
-          "cumtime_seconds": 0.172,
+          "cumtime_seconds": 0.294,
           "function": "qcut (tile.py:295)"
         },
         {
           "calls": "247",
-          "cumtime_seconds": 0.016,
+          "cumtime_seconds": 0.028,
           "function": "quantile (function_base.py:4292)"
         },
         {
@@ -1268,12 +1268,12 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.045,
+          "cumtime_seconds": 0.076,
           "function": "_wrap_applied_output (generic.py:538)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.045,
+          "cumtime_seconds": 0.076,
           "function": "_concat_objects (groupby.py:1153)"
         }
       ],
@@ -1293,9 +1293,9 @@
         "warmups": 2
       },
       "output_digest": "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
-      "peak_rss_bytes": 182239232,
+      "peak_rss_bytes": 191823872,
       "profiled_output_digest": "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
-      "profiled_wall_seconds": 0.309562,
+      "profiled_wall_seconds": 0.478692125,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1306,17 +1306,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.140877375,
-        "median_seconds": 0.1272845,
-        "minimum_seconds": 0.126965,
-        "p95_seconds": 0.138192192
+        "maximum_seconds": 0.234338625,
+        "median_seconds": 0.179801833,
+        "minimum_seconds": 0.139249875,
+        "p95_seconds": 0.230562542
       },
       "timing_samples_seconds": [
-        0.1272845,
-        0.126965,
-        0.140877375,
-        0.127451458,
-        0.126969708
+        0.179801833,
+        0.234338625,
+        0.215458208,
+        0.139962125,
+        0.139249875
       ],
       "warmup_output_digests": [
         "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
@@ -1331,47 +1331,47 @@
       }
     },
     {
-      "cold_import_seconds": 0.023040167,
+      "cold_import_seconds": 0.026393625,
       "execution_input_digest": "14389313cc9c7c9d75714e227d436a9e44f79a191e5586ac5bdb6d8e0401e07c",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 1.874,
+          "cumtime_seconds": 2.021,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.874,
+          "cumtime_seconds": 2.021,
           "function": "run_factor (profile_hotspots.py:449)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.873,
+          "cumtime_seconds": 2.02,
           "function": "prepare_factor_data (data.py:400)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.492,
+          "cumtime_seconds": 1.595,
           "function": "_prepare_from_forward_returns (data.py:339)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.318,
+          "cumtime_seconds": 1.392,
           "function": "quantize_factor (data.py:238)"
         },
         {
           "calls": "16",
-          "cumtime_seconds": 0.002,
+          "cumtime_seconds": 0.003,
           "function": "apply (blocks.py:341)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.309,
+          "cumtime_seconds": 1.38,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 1.076,
+          "cumtime_seconds": 1.134,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
@@ -1381,17 +1381,17 @@
         },
         {
           "calls": "1255",
-          "cumtime_seconds": 1.013,
+          "cumtime_seconds": 1.066,
           "function": "_quantile_calculation (data.py:210)"
         },
         {
           "calls": "1255",
-          "cumtime_seconds": 0.921,
+          "cumtime_seconds": 0.97,
           "function": "qcut (tile.py:295)"
         },
         {
           "calls": "1255",
-          "cumtime_seconds": 0.108,
+          "cumtime_seconds": 0.12,
           "function": "quantile (function_base.py:4292)"
         },
         {
@@ -1401,12 +1401,12 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "__init__ (ops.py:590)"
+          "cumtime_seconds": 0.251,
+          "function": "compute_forward_returns (data.py:155)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.233,
+          "cumtime_seconds": 0.245,
           "function": "_wrap_applied_output (generic.py:538)"
         }
       ],
@@ -1426,9 +1426,9 @@
         "warmups": 2
       },
       "output_digest": "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
-      "peak_rss_bytes": 651968512,
+      "peak_rss_bytes": 664846336,
       "profiled_output_digest": "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
-      "profiled_wall_seconds": 1.873563583,
+      "profiled_wall_seconds": 2.020949875,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1439,17 +1439,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.999580084,
-        "median_seconds": 0.99348,
-        "minimum_seconds": 0.981749166,
-        "p95_seconds": 0.998601726
+        "maximum_seconds": 1.328940458,
+        "median_seconds": 1.260524291,
+        "minimum_seconds": 1.075170709,
+        "p95_seconds": 1.323644666
       },
       "timing_samples_seconds": [
-        0.994688292,
-        0.990289792,
-        0.999580084,
-        0.981749166,
-        0.99348
+        1.260524291,
+        1.3024615,
+        1.328940458,
+        1.08958325,
+        1.075170709
       ],
       "warmup_output_digests": [
         "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
@@ -1464,47 +1464,47 @@
       }
     },
     {
-      "cold_import_seconds": 0.030835583,
+      "cold_import_seconds": 0.028639584,
       "execution_input_digest": "2bf0a5d52660c5957356f4a8bc6cb54c12d4de2cdc6709632ce0cf2aecd44178",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 4.653,
+          "cumtime_seconds": 5.03,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 4.653,
+          "cumtime_seconds": 5.03,
           "function": "run_factor (profile_hotspots.py:449)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 4.651,
+          "cumtime_seconds": 5.029,
           "function": "prepare_factor_data (data.py:400)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 3.462,
+          "cumtime_seconds": 3.762,
           "function": "_prepare_from_forward_returns (data.py:339)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 2.739,
+          "cumtime_seconds": 2.965,
           "function": "quantize_factor (data.py:238)"
         },
         {
           "calls": "16",
-          "cumtime_seconds": 0.008,
+          "cumtime_seconds": 0.011,
           "function": "apply (blocks.py:341)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 2.702,
+          "cumtime_seconds": 2.922,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 2.221,
+          "cumtime_seconds": 2.4,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
@@ -1514,17 +1514,17 @@
         },
         {
           "calls": "2515",
-          "cumtime_seconds": 2.076,
+          "cumtime_seconds": 2.242,
           "function": "_quantile_calculation (data.py:210)"
         },
         {
           "calls": "2515",
-          "cumtime_seconds": 1.891,
+          "cumtime_seconds": 2.043,
           "function": "qcut (tile.py:295)"
         },
         {
           "calls": "2515",
-          "cumtime_seconds": 0.232,
+          "cumtime_seconds": 0.26,
           "function": "quantile (function_base.py:4292)"
         },
         {
@@ -1534,12 +1534,12 @@
         },
         {
           "calls": "2",
-          "cumtime_seconds": 0.012,
+          "cumtime_seconds": 0.014,
           "function": "unique (_mixins.py:231)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.715,
+          "cumtime_seconds": 0.762,
           "function": "compute_forward_returns (data.py:155)"
         }
       ],
@@ -1559,9 +1559,9 @@
         "warmups": 2
       },
       "output_digest": "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
-      "peak_rss_bytes": 1347649536,
+      "peak_rss_bytes": 1312800768,
       "profiled_output_digest": "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
-      "profiled_wall_seconds": 4.652605875,
+      "profiled_wall_seconds": 5.030148792,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1572,17 +1572,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 2.898820042,
-        "median_seconds": 2.879939,
-        "minimum_seconds": 2.866578708,
-        "p95_seconds": 2.896273825
+        "maximum_seconds": 3.928466875,
+        "median_seconds": 3.811610375,
+        "minimum_seconds": 3.344725708,
+        "p95_seconds": 3.91368685
       },
       "timing_samples_seconds": [
-        2.866578708,
-        2.875738542,
-        2.886088958,
-        2.879939,
-        2.898820042
+        3.811610375,
+        3.85456675,
+        3.776563333,
+        3.928466875,
+        3.344725708
       ],
       "warmup_output_digests": [
         "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
@@ -1597,17 +1597,17 @@
       }
     },
     {
-      "cold_import_seconds": 0.022855666,
+      "cold_import_seconds": 0.025685208,
       "execution_input_digest": "1a40469186066101a01d4d7246b0597cdcbbea1b43b964c53ee20144f4006a8d",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "run_risk (profile_hotspots.py:474)"
         },
         {
@@ -1656,14 +1656,14 @@
           "function": "_ureduce (function_base.py:3763)"
         },
         {
-          "calls": "2",
-          "cumtime_seconds": 0.0,
-          "function": "value_at_risk (risk.py:203)"
-        },
-        {
           "calls": "4",
           "cumtime_seconds": 0.0,
           "function": "_quantile_ureduce_func (function_base.py:4697)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "value_at_risk (risk.py:203)"
         },
         {
           "calls": "4",
@@ -1692,9 +1692,9 @@
         "warmups": 2
       },
       "output_digest": "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
-      "peak_rss_bytes": 108085248,
+      "peak_rss_bytes": 108494848,
       "profiled_output_digest": "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
-      "profiled_wall_seconds": 0.001330833,
+      "profiled_wall_seconds": 0.001513459,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1705,17 +1705,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.000486667,
-        "median_seconds": 0.000460459,
-        "minimum_seconds": 0.000447542,
-        "p95_seconds": 0.0004836
+        "maximum_seconds": 0.000523917,
+        "median_seconds": 0.000488791,
+        "minimum_seconds": 0.000469625,
+        "p95_seconds": 0.000521759
       },
       "timing_samples_seconds": [
-        0.000486667,
-        0.000471333,
-        0.000460459,
-        0.000452291,
-        0.000447542
+        0.000523917,
+        0.000513125,
+        0.00048275,
+        0.000488791,
+        0.000469625
       ],
       "warmup_output_digests": [
         "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
@@ -1730,17 +1730,17 @@
       }
     },
     {
-      "cold_import_seconds": 0.023423375,
+      "cold_import_seconds": 0.02694,
       "execution_input_digest": "eaaa247aba8d8c326616de72cd90aa32372d26007b0fd260c354e35d98dd6365",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.001,
+          "cumtime_seconds": 0.002,
           "function": "run_risk (profile_hotspots.py:474)"
         },
         {
@@ -1825,9 +1825,9 @@
         "warmups": 2
       },
       "output_digest": "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
-      "peak_rss_bytes": 108232704,
+      "peak_rss_bytes": 109133824,
       "profiled_output_digest": "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
-      "profiled_wall_seconds": 0.001413292,
+      "profiled_wall_seconds": 0.001574833,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1838,17 +1838,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.000540292,
-        "median_seconds": 0.000508459,
-        "minimum_seconds": 0.000493875,
-        "p95_seconds": 0.000535834
+        "maximum_seconds": 0.000809667,
+        "median_seconds": 0.00064225,
+        "minimum_seconds": 0.000557,
+        "p95_seconds": 0.000777609
       },
       "timing_samples_seconds": [
-        0.000540292,
-        0.000518,
-        0.000508459,
-        0.000493875,
-        0.000494167
+        0.000809667,
+        0.00064225,
+        0.000592541,
+        0.000649375,
+        0.000557
       ],
       "warmup_output_digests": [
         "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
@@ -1863,7 +1863,7 @@
       }
     },
     {
-      "cold_import_seconds": 0.022892584,
+      "cold_import_seconds": 0.025396167,
       "execution_input_digest": "62648e4e8ce018779dba5e3ba23fc3f943881fecaa5636eaf69436ffe55d4ceb",
       "hotspots": [
         {
@@ -1912,14 +1912,14 @@
           "function": "_ureduce (function_base.py:3763)"
         },
         {
-          "calls": "5",
-          "cumtime_seconds": 0.0,
-          "function": "validate_metric_arguments (validation.py:388)"
-        },
-        {
           "calls": "4",
           "cumtime_seconds": 0.0,
           "function": "_quantile_ureduce_func (function_base.py:4697)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
         },
         {
           "calls": "4",
@@ -1958,9 +1958,9 @@
         "warmups": 2
       },
       "output_digest": "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
-      "peak_rss_bytes": 109019136,
+      "peak_rss_bytes": 109625344,
       "profiled_output_digest": "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
-      "profiled_wall_seconds": 0.001513125,
+      "profiled_wall_seconds": 0.001594625,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -1971,17 +1971,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.0008075,
-        "median_seconds": 0.00061225,
-        "minimum_seconds": 0.000577292,
-        "p95_seconds": 0.000769067
+        "maximum_seconds": 0.00070725,
+        "median_seconds": 0.000699917,
+        "minimum_seconds": 0.000654208,
+        "p95_seconds": 0.000707158
       },
       "timing_samples_seconds": [
-        0.00061225,
-        0.000615333,
-        0.0008075,
-        0.000598167,
-        0.000577292
+        0.000655042,
+        0.000706791,
+        0.000699917,
+        0.000654208,
+        0.00070725
       ],
       "warmup_output_digests": [
         "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
@@ -1996,32 +1996,32 @@
       }
     },
     {
-      "cold_import_seconds": 0.022770792,
+      "cold_import_seconds": 0.024537834,
       "execution_input_digest": "d6abcadba55a016ae19e9aa5e8e1c47623b7e71406221fae5dec4c42a9b07db0",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.028,
+          "cumtime_seconds": 0.031,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.028,
+          "cumtime_seconds": 0.031,
           "function": "run_report (profile_hotspots.py:506)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.028,
+          "cumtime_seconds": 0.031,
           "function": "compute_sections (compute.py:550)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.014,
+          "cumtime_seconds": 0.015,
           "function": "_compute_time_series (compute.py:278)"
         },
         {
           "calls": "36",
-          "cumtime_seconds": 0.013,
+          "cumtime_seconds": 0.014,
           "function": "enhanced_identity_adapter (_dispatch.py:42)"
         },
         {
@@ -2031,7 +2031,7 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.008,
+          "cumtime_seconds": 0.009,
           "function": "_compute_extended_stats (compute.py:242)"
         },
         {
@@ -2046,17 +2046,17 @@
         },
         {
           "calls": "5",
-          "cumtime_seconds": 0.005,
+          "cumtime_seconds": 0.006,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "2",
-          "cumtime_seconds": 0.005,
+          "cumtime_seconds": 0.006,
           "function": "aggregate_returns (returns.py:214)"
         },
         {
           "calls": "5",
-          "cumtime_seconds": 0.005,
+          "cumtime_seconds": 0.006,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
@@ -2066,13 +2066,13 @@
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.004,
-          "function": "gen_drawdown_table (drawdown.py:350)"
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (_stats_py.py:10819)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.0,
-          "function": "__init__ (_stats_py.py:10819)"
+          "cumtime_seconds": 0.005,
+          "function": "gen_drawdown_table (drawdown.py:350)"
         }
       ],
       "kind": "report",
@@ -2091,9 +2091,9 @@
         "warmups": 2
       },
       "output_digest": "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
-      "peak_rss_bytes": 169082880,
+      "peak_rss_bytes": 168230912,
       "profiled_output_digest": "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
-      "profiled_wall_seconds": 0.028484958,
+      "profiled_wall_seconds": 0.030656959,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -2104,17 +2104,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.011605334,
-        "median_seconds": 0.011523292,
-        "minimum_seconds": 0.011349042,
-        "p95_seconds": 0.011599992
+        "maximum_seconds": 0.013406,
+        "median_seconds": 0.012626375,
+        "minimum_seconds": 0.012551792,
+        "p95_seconds": 0.013399542
       },
       "timing_samples_seconds": [
-        0.011605334,
-        0.011523292,
-        0.011349042,
-        0.011578625,
-        0.011374291
+        0.013406,
+        0.013373708,
+        0.012626375,
+        0.0126095,
+        0.012551792
       ],
       "warmup_output_digests": [
         "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
@@ -2129,32 +2129,32 @@
       }
     },
     {
-      "cold_import_seconds": 0.022819875,
+      "cold_import_seconds": 0.024546333,
       "execution_input_digest": "88f5d8e81a9265655c94c12c71ff36fee3278354af5895b6b47550459be223fc",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.052,
+          "cumtime_seconds": 0.055,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.052,
+          "cumtime_seconds": 0.055,
           "function": "run_report (profile_hotspots.py:506)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.052,
+          "cumtime_seconds": 0.055,
           "function": "compute_sections (compute.py:550)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.036,
+          "cumtime_seconds": 0.037,
           "function": "_compute_time_series (compute.py:278)"
         },
         {
           "calls": "38",
-          "cumtime_seconds": 0.029,
+          "cumtime_seconds": 0.03,
           "function": "enhanced_identity_adapter (_dispatch.py:42)"
         },
         {
@@ -2174,7 +2174,7 @@
         },
         {
           "calls": "5",
-          "cumtime_seconds": 0.02,
+          "cumtime_seconds": 0.021,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
@@ -2224,9 +2224,9 @@
         "warmups": 2
       },
       "output_digest": "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
-      "peak_rss_bytes": 168476672,
+      "peak_rss_bytes": 169623552,
       "profiled_output_digest": "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
-      "profiled_wall_seconds": 0.052090916,
+      "profiled_wall_seconds": 0.054784458,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -2237,17 +2237,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.02414325,
-        "median_seconds": 0.023858916,
-        "minimum_seconds": 0.023724541,
-        "p95_seconds": 0.024112434
+        "maximum_seconds": 0.026197875,
+        "median_seconds": 0.025333334,
+        "minimum_seconds": 0.0246845,
+        "p95_seconds": 0.026042717
       },
       "timing_samples_seconds": [
-        0.023989167,
-        0.02414325,
-        0.023744,
-        0.023858916,
-        0.023724541
+        0.025272333,
+        0.025333334,
+        0.0246845,
+        0.025422083,
+        0.026197875
       ],
       "warmup_output_digests": [
         "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
@@ -2262,32 +2262,32 @@
       }
     },
     {
-      "cold_import_seconds": 0.022896541,
+      "cold_import_seconds": 0.02444175,
       "execution_input_digest": "faf2469c2c59d25811650e185cdb86b2cdbd2f78f5bd47807756f7d5d22d2d04",
       "hotspots": [
         {
           "calls": "1",
-          "cumtime_seconds": 0.078,
+          "cumtime_seconds": 0.081,
           "function": "run (profile_hotspots.py:555)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.078,
+          "cumtime_seconds": 0.081,
           "function": "run_report (profile_hotspots.py:506)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.078,
+          "cumtime_seconds": 0.081,
           "function": "compute_sections (compute.py:550)"
         },
         {
           "calls": "1",
-          "cumtime_seconds": 0.061,
+          "cumtime_seconds": 0.063,
           "function": "_compute_time_series (compute.py:278)"
         },
         {
           "calls": "38",
-          "cumtime_seconds": 0.049,
+          "cumtime_seconds": 0.051,
           "function": "enhanced_identity_adapter (_dispatch.py:42)"
         },
         {
@@ -2297,7 +2297,7 @@
         },
         {
           "calls": "2",
-          "cumtime_seconds": 0.04,
+          "cumtime_seconds": 0.042,
           "function": "aggregate_returns (returns.py:214)"
         },
         {
@@ -2307,32 +2307,32 @@
         },
         {
           "calls": "5",
-          "cumtime_seconds": 0.038,
+          "cumtime_seconds": 0.04,
           "function": "_python_apply_general (groupby.py:1652)"
         },
         {
           "calls": "5",
-          "cumtime_seconds": 0.038,
+          "cumtime_seconds": 0.04,
           "function": "apply_groupwise (ops.py:1013)"
         },
         {
           "calls": "148",
-          "cumtime_seconds": 0.031,
+          "cumtime_seconds": 0.032,
           "function": "cum_returns (returns.py:113)"
         },
         {
           "calls": "126",
-          "cumtime_seconds": 0.03,
+          "cumtime_seconds": 0.031,
           "function": "cumulate_returns (returns.py:242)"
         },
         {
           "calls": "409/273",
-          "cumtime_seconds": 0.022,
+          "cumtime_seconds": 0.023,
           "function": "__array_ufunc__ (generic.py:2056)"
         },
         {
           "calls": "409/273",
-          "cumtime_seconds": 0.022,
+          "cumtime_seconds": 0.023,
           "function": "array_ufunc (arraylike.py:257)"
         },
         {
@@ -2357,9 +2357,9 @@
         "warmups": 2
       },
       "output_digest": "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
-      "peak_rss_bytes": 170016768,
+      "peak_rss_bytes": 169656320,
       "profiled_output_digest": "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
-      "profiled_wall_seconds": 0.078480334,
+      "profiled_wall_seconds": 0.081350833,
       "provenance": {
         "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
         "dirty": false,
@@ -2370,17 +2370,17 @@
       },
       "schema": "fincore-hotspot-profile-v2",
       "timing": {
-        "maximum_seconds": 0.038124708,
-        "median_seconds": 0.037923959,
-        "minimum_seconds": 0.037766666,
-        "p95_seconds": 0.038106683
+        "maximum_seconds": 0.040320542,
+        "median_seconds": 0.039192291,
+        "minimum_seconds": 0.038447375,
+        "p95_seconds": 0.040259975
       },
       "timing_samples_seconds": [
-        0.038124708,
-        0.038034583,
-        0.037923959,
-        0.037897417,
-        0.037766666
+        0.040320542,
+        0.040017708,
+        0.039192291,
+        0.038513833,
+        0.038447375
       ],
       "warmup_output_digests": [
         "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
