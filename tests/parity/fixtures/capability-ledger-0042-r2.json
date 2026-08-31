@@ -22,6 +22,94 @@
       "reason": "no_source_nodeid"
     },
     {
+      "capability_id": "data.provider.ak_share_provider",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "data.provider.alpha_vantage_provider",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "data.provider.alphavantage",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "data.provider.data_provider",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.clear_registry",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.default_metric_family",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.duplicate_policy",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.duplicate_registration_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.extension_kind",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.extension_registry",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.get_metric",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.get_registry",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.get_viz_backend",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.isolated_registry",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.list_hooks",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.list_metrics",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.list_viz_backends",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.register_hook",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.register_metric",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.register_viz_backend",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.registration",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "extensions.snapshot.rolling_family",
+      "reason": "no_source_nodeid"
+    },
+    {
       "capability_id": "factor.analysis.apply_factor_costs",
       "reason": "no_source_nodeid"
     },
@@ -214,6 +302,86 @@
       "reason": "no_source_nodeid"
     },
     {
+      "capability_id": "report.portfolio.plot_alpha_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_annual_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_drawdown_periods",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_drawdown_underwater",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_exposures",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_gross_leverage",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_holdings",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_long_short_holdings",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_max_median_position_concentration",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_dist",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_heatmap",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_timeseries",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_perf_attrib_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_return_quantiles",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_risk_exposures",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_beta",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_returns",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_volatility",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.plot_sector_allocations",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "report.portfolio.strategy_report",
+      "reason": "no_source_nodeid"
+    },
+    {
       "capability_id": "risk.basel_reference_disclosure",
       "reason": "no_source_nodeid"
     },
@@ -256,17 +424,30 @@
     {
       "capability_id": "simulation.monte_carlo",
       "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "viz.resource.close_owned_figures",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "viz.resource.show_owned_figures",
+      "reason": "no_source_nodeid"
     }
   ],
   "covered_families": [
     "attribution",
+    "data",
+    "extensions",
     "factor",
     "metrics",
     "optimization",
     "performance",
     "portfolio",
+    "report",
     "risk",
-    "simulation"
+    "runtime",
+    "simulation",
+    "viz"
   ],
   "decision_status": "scoped",
   "does_not_assert": [
@@ -709,6 +890,258 @@
       "target_operation_id": "attribution.style_result",
       "wheel_nodeids": [
         "tests/parity/test_attribution.py::test_style_result"
+      ]
+    },
+    {
+      "capability_id": "data.provider.akshare",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.akshare.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.akshare"
+          },
+          "oracle_reference": "invariant contract data.provider.akshare.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_optional_dependency_health.py::test_akshare_broken_sdk_raises_controlled_dependency_error",
+        "tests/test_data/test_providers_more_coverage.py::test_akshare_fetch_multiple_and_get_info_exception",
+        "tests/test_data/test_providers_more_coverage.py::test_akshare_provider_empty_data_raises",
+        "tests/test_data/test_providers_more_coverage.py::test_akshare_provider_import_error",
+        "tests/test_data/test_providers_offline_fetch.py::test_akshare_provider_offline_fetch_and_info_via_stub_module"
+      ],
+      "target_operation_id": "data.provider.akshare",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_akshare"
+      ]
+    },
+    {
+      "capability_id": "data.provider.fetch_multiple_prices",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.fetch_multiple_prices.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.fetch_multiple_prices"
+          },
+          "oracle_reference": "invariant contract data.provider.fetch_multiple_prices.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_fetch_multiple_prices_strict_passes_through",
+        "tests/test_data/test_providers_integration.py::TestYahooFinanceProviderIntegration::test_fetch_multiple_prices"
+      ],
+      "target_operation_id": "data.provider.fetch_multiple_prices",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_fetch_multiple_prices"
+      ]
+    },
+    {
+      "capability_id": "data.provider.fetch_price_data",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.fetch_price_data.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.fetch_price_data"
+          },
+          "oracle_reference": "invariant contract data.provider.fetch_price_data.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_integration.py::TestYahooFinanceProviderIntegration::test_fetch_price_data_default_years",
+        "tests/test_data/test_providers_integration.py::TestYahooFinanceProviderIntegration::test_fetch_price_data_with_dates",
+        "tests/test_data/test_providers_more_coverage.py::test_fetch_price_data_and_multiple_prices_provider_as_string_and_date_strings",
+        "tests/test_data/test_providers_offline_fetch.py::test_fetch_price_data_and_multiple_prices_default_date_logic"
+      ],
+      "target_operation_id": "data.provider.fetch_price_data",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_fetch_price_data"
+      ]
+    },
+    {
+      "capability_id": "data.provider.get_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.get_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.get_provider"
+          },
+          "oracle_reference": "invariant contract data.provider.get_provider.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_av",
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_invalid",
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_tushare",
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_yahoo",
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_yfinance_alias",
+        "tests/test_data/test_providers.py::TestConvenienceFunctions::test_get_provider_invalid",
+        "tests/test_data/test_providers.py::TestConvenienceFunctions::test_get_provider_yahoo",
+        "tests/test_data/test_providers.py::TestConvenienceFunctions::test_get_provider_yfinance_alias"
+      ],
+      "target_operation_id": "data.provider.get_provider",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_get_provider"
+      ]
+    },
+    {
+      "capability_id": "data.provider.tushare",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.tushare.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.tushare"
+          },
+          "oracle_reference": "invariant contract data.provider.tushare.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestProviderImportErrors::test_tushare_import_error",
+        "tests/test_data/test_providers_more_coverage.py::test_tushare_fetch_multiple_and_get_info_empty"
+      ],
+      "target_operation_id": "data.provider.tushare",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_tushare"
+      ]
+    },
+    {
+      "capability_id": "data.provider.tushare_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.tushare_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.tushare_provider"
+          },
+          "oracle_reference": "invariant contract data.provider.tushare_provider.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_more_coverage.py::test_tushare_provider_empty_data_raises",
+        "tests/test_data/test_providers_offline_fetch.py::test_tushare_provider_offline_fetch_and_info_via_stub_module"
+      ],
+      "target_operation_id": "data.provider.tushare_provider",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_tushare_provider"
+      ]
+    },
+    {
+      "capability_id": "data.provider.yahoo",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.yahoo.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.yahoo"
+          },
+          "oracle_reference": "invariant contract data.provider.yahoo.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestProviderImportErrors::test_yahoo_finance_import_error",
+        "tests/test_data/test_optional_dependency_health.py::test_yahoo_provider_survives_broken_sdk_when_client_injected",
+        "tests/test_data/test_providers_offline_fetch.py::test_yahoo_finance_fetch_and_get_info_are_offline",
+        "tests/test_data/test_providers_offline_fetch.py::test_yahoo_finance_fetch_raises_when_empty"
+      ],
+      "target_operation_id": "data.provider.yahoo",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_yahoo"
+      ]
+    },
+    {
+      "capability_id": "data.provider.yahoo_finance_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.yahoo_finance_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for data.provider.yahoo_finance_provider"
+          },
+          "oracle_reference": "invariant contract data.provider.yahoo_finance_provider.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_more_coverage.py::test_yahoo_finance_provider_with_session"
+      ],
+      "target_operation_id": "data.provider.yahoo_finance_provider",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_yahoo_finance_provider"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.execute_hooks",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.execute_hooks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for extensions.snapshot.execute_hooks"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.execute_hooks.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_hooks/test_events.py::test_execute_hooks_returns_transformed_first_arg",
+        "tests/test_hooks/test_events.py::test_execute_hooks_with_no_args_returns_none",
+        "tests/test_plugin/test_plugin_registry.py::TestRegisterHook::test_execute_hooks_unknown_event_does_nothing"
+      ],
+      "target_operation_id": "extensions.snapshot.execute_hooks",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_execute_hooks"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.scope",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.scope.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for extensions.snapshot.scope"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.scope.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/test_alphalens_upstream_test_migration.py::test_collection_proof_requires_the_complete_controlled_envelope[scope-performance-scope mismatch]"
+      ],
+      "target_operation_id": "extensions.snapshot.scope",
+      "wheel_nodeids": [
+        "tests/parity/test_data_extensions.py::test_scope"
       ]
     },
     {
@@ -2015,6 +2448,10 @@
         "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[alpha]",
         "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[alpha]",
         "tests/test_core/test_context_cache_contract.py::test_alpha_and_beta_share_one_cached_alpha_beta_calculation",
+        "tests/test_data/providers_unit/test_convenience.py::TestProviderImportErrors::test_alpha_vantage_import_error",
+        "tests/test_data/test_providers_more_coverage.py::test_alpha_vantage_fetch_multiple_strict_and_nonstrict",
+        "tests/test_data/test_providers_offline_fetch.py::test_alpha_vantage_fetch_success_and_error_are_offline",
+        "tests/test_data/test_providers_offline_fetch.py::test_alpha_vantage_get_info_offline",
         "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_alpha_empty",
         "tests/test_edge_cases.py::TestAlphaBetaEdgeCases::test_alpha_mismatched_length",
         "tests/test_empyrical/stats/test_alpha_beta_basic.py::TestAlphaBetaBasic::test_alpha_0",
@@ -3112,7 +3549,8 @@
         "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[monthly-0.07681145747868608]",
         "tests/test_empyrical/test_continued_indicators.py::TestVarExcessReturn::test_monthly_annualization",
         "tests/test_factor_analysis/test_matplotlib_renderer.py::test_monthly_heatmap_keeps_source_year_rows_and_month_columns",
-        "tests/test_factor_analysis/test_pandas3_regressions.py::test_monthly_alias_is_normalized_without_warning"
+        "tests/test_factor_analysis/test_pandas3_regressions.py::test_monthly_alias_is_normalized_without_warning",
+        "tests/test_viz/test_plotly_coverage.py::TestPlotlyBackendAdditionalCoverage::test_monthly_heatmap_with_dataframe_input"
       ],
       "target_operation_id": "metrics.frequency.monthly",
       "wheel_nodeids": [
@@ -4992,7 +5430,6 @@
         }
       ],
       "source_nodeids": [
-        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[turnover-create_turnover_tear_sheet-{'turnover_periods': ['1D', '5D']}-1]",
         "tests/test_factor_analysis/test_tears_branches.py::test_turnover_tear_sheet",
         "tests/test_factor_analysis/test_turnover.py::test_turnover_empty_and_tie_boundary_contract"
       ],
@@ -5342,6 +5779,1887 @@
       "target_operation_id": "portfolio.perf_stats.show_perf_stats",
       "wheel_nodeids": [
         "tests/parity/test_portfolio.py::test_show_perf_stats"
+      ]
+    },
+    {
+      "capability_id": "report.factor.axes_style",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.axes_style.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.axes_style"
+          },
+          "oracle_reference": "invariant contract report.factor.axes_style.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:axes_style]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:axes_style:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:axes_style]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:axes_style]",
+        "tests/test_tearsheets/test_utils.py::test_axes_style_returns_style"
+      ],
+      "target_operation_id": "report.factor.axes_style",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_axes_style"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_event_returns_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_event_returns_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_event_returns_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_event_returns_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_event_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_returns_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_returns_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_returns_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_event_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_event_returns_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_event_returns_tear_sheet-kwargs5-True]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_event_workflows_show_and_close_their_own_figures[create_event_returns_tear_sheet-kwargs0-2]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_event_returns_tear_sheet-True-True-kwargs5-2-required_tables5]"
+      ],
+      "target_operation_id": "report.factor.create_event_returns_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_event_returns_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_event_study_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_event_study_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_event_study_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_event_study_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_event_study_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_study_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_study_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_event_study_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_event_study_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_event_study_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_event_study_tear_sheet-kwargs6-True]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_event_workflows_show_and_close_their_own_figures[create_event_study_tear_sheet-kwargs1-3]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_event_study_tear_sheet-True-False-kwargs6-3-required_tables6]"
+      ],
+      "target_operation_id": "report.factor.create_event_study_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_event_study_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_full_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_full_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_full_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_full_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_full_tear_sheet-kwargs4-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_composite_workflows_show_only_the_current_source_section[create_full_tear_sheet-kwargs1-4]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[full-create_full_tear_sheet-{'long_short': False, 'group_neutral': False, 'by_group': True}-4]",
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_full_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_full_tear_sheet]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_full_tear_sheet-False-True-kwargs4-4-required_tables4]",
+        "tests/test_factor_analysis/test_tears.py::test_strict_return_workflows_preserve_unused_categorical_group_error[create_full_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_2",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_3",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_4",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_5",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_6",
+        "tests/test_tearsheets/delegation/test_full_simple.py::test_create_full_tear_sheet_delegates_through_optional_sections"
+      ],
+      "target_operation_id": "report.factor.create_full_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_full_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_information_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_information_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_information_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_information_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_information_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_information_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_information_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_information_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_information_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_information_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_information_tear_sheet-kwargs2-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[information-create_information_tear_sheet-{'group_neutral': False, 'by_group': True}-1]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_information_tear_sheet-False-True-kwargs2-1-required_tables2]"
+      ],
+      "target_operation_id": "report.factor.create_information_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_information_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_returns_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_returns_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_returns_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_returns_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_returns_tear_sheet-kwargs1-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_composite_workflows_show_only_the_current_source_section[create_returns_tear_sheet-kwargs0-2]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[returns-create_returns_tear_sheet-{'long_short': False, 'group_neutral': False, 'by_group': True}-2]",
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_returns_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_returns_tear_sheet]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_returns_tear_sheet-False-True-kwargs1-2-required_tables1]",
+        "tests/test_factor_analysis/test_tears.py::test_strict_return_workflows_preserve_unused_categorical_group_error[create_returns_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_2",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_3",
+        "tests/test_tearsheets/delegation/test_returns.py::test_create_returns_tear_sheet_bootstrap_requires_benchmark",
+        "tests/test_tearsheets/delegation/test_returns.py::test_create_returns_tear_sheet_smoke_with_benchmark_live_and_bootstrap"
+      ],
+      "target_operation_id": "report.factor.create_returns_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_returns_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_summary_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_summary_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_summary_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_summary_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_summary_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_summary_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_summary_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_summary_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_summary_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_summary_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_summary_tear_sheet-kwargs0-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[summary-create_summary_tear_sheet-{'long_short': False, 'group_neutral': False}-1]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_summary_tear_sheet-False-False-kwargs0-1-required_tables0]"
+      ],
+      "target_operation_id": "report.factor.create_summary_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_summary_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.create_turnover_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.create_turnover_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.create_turnover_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.factor.create_turnover_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_turnover_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_turnover_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_turnover_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_turnover_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_turnover_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_turnover_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_turnover_tear_sheet-kwargs3-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[turnover-create_turnover_tear_sheet-{'turnover_periods': ['1D', '5D']}-1]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_turnover_tear_sheet-False-False-kwargs3-1-required_tables3]"
+      ],
+      "target_operation_id": "report.factor.create_turnover_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_turnover_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.factor.customize",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.customize.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.customize"
+          },
+          "oracle_reference": "invariant contract report.factor.customize.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:customize]",
+        "tests/compat/alphalens/test_signatures.py::test_customize_hidden_context_precedes_source_binding",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:customize:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:customize]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:customize]",
+        "tests/test_utils/test_common_decorators.py::test_customize_decorator_fallback_when_no_plotting_helpers_present",
+        "tests/test_utils/test_common_decorators.py::test_customize_decorator_set_context_false_calls_function_directly",
+        "tests/test_utils/test_common_decorators.py::test_customize_decorator_uses_plotting_context_and_axes_style"
+      ],
+      "target_operation_id": "report.factor.customize",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_customize"
+      ]
+    },
+    {
+      "capability_id": "report.factor.grid_figure",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.grid_figure.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.grid_figure"
+          },
+          "oracle_reference": "invariant contract report.factor.grid_figure.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_grid_figure_and_legacy_exceptions_resolve",
+        "tests/test_factor_analysis/test_tears.py::test_grid_figure_owns_one_lazy_matplotlib_grid_and_closes_only_itself",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_close_is_idempotent",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_closed_raises_on_create_new_figure",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[-1]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[0]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[False]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[-1]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[0]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[True]"
+      ],
+      "target_operation_id": "report.factor.grid_figure",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_grid_figure"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_cumulative_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_cumulative_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_cumulative_returns"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_cumulative_returns.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_cumulative_returns:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_cumulative_returns]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_cumulative_returns]"
+      ],
+      "target_operation_id": "report.factor.plot_cumulative_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cumulative_returns"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_cumulative_returns_by_quantile",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_cumulative_returns_by_quantile.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_cumulative_returns_by_quantile"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_cumulative_returns_by_quantile.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_cumulative_returns_by_quantile-arguments4]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_cumulative_returns_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_cumulative_returns_by_quantile:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_cumulative_returns_by_quantile]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_cumulative_returns_by_quantile]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_cumulative_returns_by_quantile_requires_quantile_index"
+      ],
+      "target_operation_id": "report.factor.plot_cumulative_returns_by_quantile",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cumulative_returns_by_quantile"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_events_distribution",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_events_distribution.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_events_distribution"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_events_distribution.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_events_distribution]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_events_distribution:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_events_distribution]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_events_distribution]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_events_distribution_rejects_bad_num_bars",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_events_distribution_requires_date_level",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_events_distribution_single_date"
+      ],
+      "target_operation_id": "report.factor.plot_events_distribution",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_events_distribution"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_factor_rank_auto_correlation",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_factor_rank_auto_correlation.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_factor_rank_auto_correlation"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_factor_rank_auto_correlation.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_factor_rank_auto_correlation]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_factor_rank_auto_correlation:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_factor_rank_auto_correlation]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_factor_rank_auto_correlation]"
+      ],
+      "target_operation_id": "report.factor.plot_factor_rank_auto_correlation",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_factor_rank_auto_correlation"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_ic_by_group",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_ic_by_group.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_ic_by_group"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_ic_by_group.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_ic_by_group-arguments2]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_ic_by_group]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_ic_by_group:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_ic_by_group]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_ic_by_group]"
+      ],
+      "target_operation_id": "report.factor.plot_ic_by_group",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_ic_by_group"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_ic_hist",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_ic_hist.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_ic_hist"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_ic_hist.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_ic_hist]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_ic_hist:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_ic_hist]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_ic_hist]"
+      ],
+      "target_operation_id": "report.factor.plot_ic_hist",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_ic_hist"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_ic_qq",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_ic_qq.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_ic_qq"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_ic_qq.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_ic_qq]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_ic_qq:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_ic_qq]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_ic_qq]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_ic_qq_missing_scipy",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_ic_qq_with_explicit_distribution"
+      ],
+      "target_operation_id": "report.factor.plot_ic_qq",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_ic_qq"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_ic_ts",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_ic_ts.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_ic_ts"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_ic_ts.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_ic_ts]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_ic_ts:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_ic_ts]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_ic_ts]"
+      ],
+      "target_operation_id": "report.factor.plot_ic_ts",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_ic_ts"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_information_table",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_information_table.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_information_table"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_information_table.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_information_table]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_information_table:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_information_table]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_information_table]"
+      ],
+      "target_operation_id": "report.factor.plot_information_table",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_information_table"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_mean_quantile_returns_spread_time_series",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_mean_quantile_returns_spread_time_series.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_mean_quantile_returns_spread_time_series"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_mean_quantile_returns_spread_time_series.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_mean_quantile_returns_spread_time_series]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_mean_quantile_returns_spread_time_series:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_mean_quantile_returns_spread_time_series]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_mean_quantile_returns_spread_time_series]"
+      ],
+      "target_operation_id": "report.factor.plot_mean_quantile_returns_spread_time_series",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_mean_quantile_returns_spread_time_series"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_monthly_ic_heatmap",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_monthly_ic_heatmap.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_monthly_ic_heatmap"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_monthly_ic_heatmap.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_monthly_ic_heatmap-arguments3]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_monthly_ic_heatmap]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_monthly_ic_heatmap:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_monthly_ic_heatmap]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_monthly_ic_heatmap]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_monthly_ic_heatmap_rejects_non_datetime_index"
+      ],
+      "target_operation_id": "report.factor.plot_monthly_ic_heatmap",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_monthly_ic_heatmap"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_quantile_average_cumulative_return",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_quantile_average_cumulative_return.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_quantile_average_cumulative_return"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_quantile_average_cumulative_return.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_quantile_average_cumulative_return-arguments5]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_quantile_average_cumulative_return]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_quantile_average_cumulative_return:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_quantile_average_cumulative_return]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_quantile_average_cumulative_return]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_quantile_average_cumulative_return_requires_quantile_index"
+      ],
+      "target_operation_id": "report.factor.plot_quantile_average_cumulative_return",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_quantile_average_cumulative_return"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_quantile_returns_bar",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_quantile_returns_bar.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_quantile_returns_bar"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_quantile_returns_bar.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_quantile_returns_bar-arguments0]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_quantile_returns_bar]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_quantile_returns_bar:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_quantile_returns_bar]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_quantile_returns_bar]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_quantile_returns_bar_by_group_requires_group"
+      ],
+      "target_operation_id": "report.factor.plot_quantile_returns_bar",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_quantile_returns_bar"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_quantile_returns_violin",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_quantile_returns_violin.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_quantile_returns_violin"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_quantile_returns_violin.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_plotting.py::test_empty_strict_charts_still_require_the_alphalens_extra[plot_quantile_returns_violin-arguments1]",
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_quantile_returns_violin]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_quantile_returns_violin:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_quantile_returns_violin]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_quantile_returns_violin]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_quantile_returns_violin_requires_quantile_index"
+      ],
+      "target_operation_id": "report.factor.plot_quantile_returns_violin",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_quantile_returns_violin"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_quantile_statistics_table",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_quantile_statistics_table.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_quantile_statistics_table"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_quantile_statistics_table.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_quantile_statistics_table]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_quantile_statistics_table:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_quantile_statistics_table]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_quantile_statistics_table]"
+      ],
+      "target_operation_id": "report.factor.plot_quantile_statistics_table",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_quantile_statistics_table"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_returns_table",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_returns_table.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_returns_table"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_returns_table.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_returns_table]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_returns_table:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_returns_table]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_returns_table]"
+      ],
+      "target_operation_id": "report.factor.plot_returns_table",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_returns_table"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_top_bottom_quantile_turnover",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_top_bottom_quantile_turnover.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_top_bottom_quantile_turnover"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_top_bottom_quantile_turnover.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_top_bottom_quantile_turnover]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_top_bottom_quantile_turnover:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_top_bottom_quantile_turnover]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_top_bottom_quantile_turnover]",
+        "tests/test_factor_analysis/test_render_matplotlib_branches.py::test_plot_top_bottom_quantile_turnover_rejects_empty"
+      ],
+      "target_operation_id": "report.factor.plot_top_bottom_quantile_turnover",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_top_bottom_quantile_turnover"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plot_turnover_table",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plot_turnover_table.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plot_turnover_table"
+          },
+          "oracle_reference": "invariant contract report.factor.plot_turnover_table.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plot_turnover_table]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plot_turnover_table:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plot_turnover_table]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plot_turnover_table]"
+      ],
+      "target_operation_id": "report.factor.plot_turnover_table",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_turnover_table"
+      ]
+    },
+    {
+      "capability_id": "report.factor.plotting_context",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.plotting_context.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.plotting_context"
+          },
+          "oracle_reference": "invariant contract report.factor.plotting_context.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plotting_context]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plotting_context:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plotting_context]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plotting_context]",
+        "tests/test_tearsheets/test_utils.py::test_plotting_context_returns_context"
+      ],
+      "target_operation_id": "report.factor.plotting_context",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plotting_context"
+      ]
+    },
+    {
+      "capability_id": "report.factor.print_table",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.print_table.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.print_table"
+          },
+          "oracle_reference": "invariant contract report.factor.print_table.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[utils:print_table]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[utils:print_table:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[utils:print_table]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[utils:print_table]",
+        "tests/compat/alphalens/test_strict_utils_helpers.py::test_print_table_uses_lazy_ipython_display_and_restores_format",
+        "tests/compat/alphalens/test_utils_legacy_branches.py::test_print_table_requires_ipython",
+        "tests/test_utils/test_display_utils.py::TestPrintTable::test_print_table_injects_header_rows_and_calls_display",
+        "tests/test_utils/test_display_utils.py::TestPrintTable::test_print_table_run_flask_app_does_not_implicitly_export",
+        "tests/test_utils/test_display_utils.py::TestPrintTable::test_print_table_with_series_input"
+      ],
+      "target_operation_id": "report.factor.print_table",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_print_table"
+      ]
+    },
+    {
+      "capability_id": "report.factor.render",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.factor.render.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.factor.render"
+          },
+          "oracle_reference": "invariant contract report.factor.render.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_report/test_pdf_cleanup.py::test_render_failure_leaves_no_temp_files"
+      ],
+      "target_operation_id": "report.factor.render",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_render"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_bayesian_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_bayesian_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_bayesian_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_bayesian_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_bayesian_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_bayesian_tear_sheet]",
+        "tests/test_tearsheets/delegation/test_bayesian.py::test_create_bayesian_tear_sheet_requires_live_start_date",
+        "tests/test_tearsheets/sheets_coverage/test_bayesian.py::test_create_bayesian_tear_sheet_happy_path_with_benchmark_and_stoch_vol",
+        "tests/test_tearsheets/sheets_coverage/test_bayesian.py::test_create_bayesian_tear_sheet_requires_live_start_date"
+      ],
+      "target_operation_id": "report.portfolio.create_bayesian_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_bayesian_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_capacity_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_capacity_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_capacity_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_capacity_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_capacity_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_capacity_tear_sheet]",
+        "tests/test_tearsheets/delegation/test_capacity.py::test_create_capacity_tear_sheet_runs_with_stubbed_pyfolio"
+      ],
+      "target_operation_id": "report.portfolio.create_capacity_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_capacity_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_full_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_full_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_full_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_full_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_full_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_full_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_full_tear_sheet-kwargs4-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_composite_workflows_show_only_the_current_source_section[create_full_tear_sheet-kwargs1-4]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[full-create_full_tear_sheet-{'long_short': False, 'group_neutral': False, 'by_group': True}-4]",
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_full_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_full_tear_sheet]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_full_tear_sheet-False-True-kwargs4-4-required_tables4]",
+        "tests/test_factor_analysis/test_tears.py::test_strict_return_workflows_preserve_unused_categorical_group_error[create_full_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_2",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_3",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_4",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_5",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_full_tear_sheet_breakdown_6",
+        "tests/test_tearsheets/delegation/test_full_simple.py::test_create_full_tear_sheet_delegates_through_optional_sections"
+      ],
+      "target_operation_id": "report.portfolio.create_full_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_full_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_interesting_times_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_interesting_times_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_interesting_times_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_interesting_times_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_interesting_times_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_interesting_times_tear_sheet]",
+        "tests/test_final_coverage_edges.py::TestTearsheetsSheetsEdgeCases::test_create_interesting_times_tear_sheet_run_flask",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_interesting_times_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_interesting_times_tear_sheet_breakdown_1",
+        "tests/test_tearsheets/delegation/test_interesting_times.py::test_create_interesting_times_tear_sheet_warns_and_returns_when_no_overlap",
+        "tests/test_tearsheets/sheets_coverage/test_interesting_times.py::test_create_interesting_times_tear_sheet_happy_path_with_benchmark"
+      ],
+      "target_operation_id": "report.portfolio.create_interesting_times_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_interesting_times_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_perf_attrib_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_perf_attrib_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_perf_attrib_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_perf_attrib_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_perf_attrib_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_perf_attrib_tear_sheet]",
+        "tests/test_tearsheets/sheets_coverage/test_perf_attrib.py::test_create_perf_attrib_tear_sheet_with_and_without_partitions"
+      ],
+      "target_operation_id": "report.portfolio.create_perf_attrib_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_perf_attrib_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_position_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_position_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_position_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_position_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_position_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_position_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_position_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_position_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_position_tear_sheet_breakdown_2",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_position_tear_sheet_breakdown_3",
+        "tests/test_tearsheets/delegation/test_positions.py::test_create_position_tear_sheet_smoke_with_sector_mappings_and_hide_positions"
+      ],
+      "target_operation_id": "report.portfolio.create_position_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_position_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_returns_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_returns_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_returns_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_returns_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:customize-set-context-false]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:customize-set-context-true]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[tears:create_returns_tear_sheet:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[tears:create_returns_tear_sheet]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel[create_returns_tear_sheet-kwargs1-False]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_composite_workflows_show_only_the_current_source_section[create_returns_tear_sheet-kwargs0-2]",
+        "tests/compat/alphalens/test_tearsheets_e2e.py::test_strict_factor_workflows_show_and_close_their_own_figures[returns-create_returns_tear_sheet-{'long_short': False, 'group_neutral': False, 'by_group': True}-2]",
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_returns_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_returns_tear_sheet]",
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_workflow_matrix_exposes_expected_sections_without_showing[create_returns_tear_sheet-False-True-kwargs1-2-required_tables1]",
+        "tests/test_factor_analysis/test_tears.py::test_strict_return_workflows_preserve_unused_categorical_group_error[create_returns_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_2",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_returns_tear_sheet_breakdown_3",
+        "tests/test_tearsheets/delegation/test_returns.py::test_create_returns_tear_sheet_bootstrap_requires_benchmark",
+        "tests/test_tearsheets/delegation/test_returns.py::test_create_returns_tear_sheet_smoke_with_benchmark_live_and_bootstrap"
+      ],
+      "target_operation_id": "report.portfolio.create_returns_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_returns_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_risk_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_risk_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_risk_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_risk_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_risk_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_risk_tear_sheet]",
+        "tests/test_final_coverage_edges.py::TestTearsheetsSheetsEdgeCases::test_create_risk_tear_sheet_with_shares_held",
+        "tests/test_tearsheets/sheets_coverage/test_risk.py::test_create_risk_tear_sheet_handles_optional_panels"
+      ],
+      "target_operation_id": "report.portfolio.create_risk_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_risk_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_round_trip_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_round_trip_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_round_trip_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_round_trip_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_round_trip_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_round_trip_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_round_trip_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_round_trip_tear_sheet_breakdown_1",
+        "tests/test_tearsheets/delegation/test_round_trips.py::test_create_round_trip_tear_sheet_smoke_with_sector_mappings",
+        "tests/test_tearsheets/delegation/test_round_trips.py::test_create_round_trip_tear_sheet_warns_and_returns_when_too_few_trades"
+      ],
+      "target_operation_id": "report.portfolio.create_round_trip_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_round_trip_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_simple_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_simple_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_simple_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_simple_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_simple_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_simple_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_simple_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_simple_tear_sheet_breakdown_1",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_simple_tear_sheet_breakdown_2",
+        "tests/test_tearsheets/delegation/test_full_simple.py::test_create_simple_tear_sheet_runs_without_real_pyfolio"
+      ],
+      "target_operation_id": "report.portfolio.create_simple_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_simple_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_strategy_report",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_strategy_report.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_strategy_report"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_strategy_report.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_report/test_model.py::test_create_strategy_report_default_returns_path_only",
+        "tests/test_report/test_model.py::test_create_strategy_report_return_result_bundles_artifacts"
+      ],
+      "target_operation_id": "report.portfolio.create_strategy_report",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_strategy_report"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.create_txn_tear_sheet",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.create_txn_tear_sheet.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.create_txn_tear_sheet"
+          },
+          "oracle_reference": "invariant contract report.portfolio.create_txn_tear_sheet.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/pyfolio/test_public_api.py::test_full_pyfolio_profile_has_frozen_path_and_signature[create_txn_tear_sheet]",
+        "tests/compat/pyfolio/test_public_api.py::test_strict_workflow_call_binding_delegates_all_bound_arguments[create_txn_tear_sheet]",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_txn_tear_sheet_breakdown_0",
+        "tests/test_pyfolio/test_tears.py::PositionsTestCase::test_create_txn_tear_sheet_breakdown_1",
+        "tests/test_tearsheets/delegation/test_transactions.py::test_create_txn_tear_sheet_smoke_warns_on_turnover_hist_failure"
+      ],
+      "target_operation_id": "report.portfolio.create_txn_tear_sheet",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_create_txn_tear_sheet"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_bayes_cone",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_bayes_cone.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_bayes_cone"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_bayes_cone.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBayesCone::test_plot_bayes_cone_creates_ax_when_none",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_bayes_cone_returns_scalar_score_and_draws_plot",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_bayes_cone_without_plot_train_len"
+      ],
+      "target_operation_id": "report.portfolio.plot_bayes_cone",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_bayes_cone"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_best",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_best.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_best"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_best.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_creates_axes_when_none",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_creates_derived_difference_column",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_raises_error_on_insufficient_axes",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_raises_error_when_no_trace_or_data",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_raises_error_when_only_test_data",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotBestErrors::test_plot_best_raises_error_when_only_train_data",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_best_accepts_dataframe_trace_and_derives_missing_columns",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_best_creates_trace_from_data_line_49",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_best_with_all_columns_present_and_no_burn",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_best_with_dict_trace_line_57",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_best_without_burn_uses_full_trace"
+      ],
+      "target_operation_id": "report.portfolio.plot_best",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_best"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_cap_exposures_gross",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_cap_exposures_gross.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_cap_exposures_gross"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_cap_exposures_gross.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_cap_volume_exposures.py::TestCapExposurePlots::test_plot_cap_exposures_gross_with_ax_none"
+      ],
+      "target_operation_id": "report.portfolio.plot_cap_exposures_gross",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cap_exposures_gross"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_cap_exposures_longshort",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_cap_exposures_longshort.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_cap_exposures_longshort"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_cap_exposures_longshort.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_cap_volume_exposures.py::TestCapExposurePlots::test_plot_cap_exposures_longshort_with_ax_none"
+      ],
+      "target_operation_id": "report.portfolio.plot_cap_exposures_longshort",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cap_exposures_longshort"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_cap_exposures_net",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_cap_exposures_net.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_cap_exposures_net"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_cap_exposures_net.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_cap_volume_exposures.py::TestCapExposurePlots::test_plot_cap_exposures_net_with_ax_none"
+      ],
+      "target_operation_id": "report.portfolio.plot_cap_exposures_net",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cap_exposures_net"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_capacity_sweep",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_capacity_sweep.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_capacity_sweep"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_capacity_sweep.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_capacity.py::test_plot_capacity_sweep_breaks_on_negative_sharpe_line_63",
+        "tests/test_tearsheets/test_capacity.py::test_plot_capacity_sweep_runs_and_returns_axes"
+      ],
+      "target_operation_id": "report.portfolio.plot_capacity_sweep",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_capacity_sweep"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_cones",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_cones.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_cones"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_cones.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_capacity.py::test_plot_cones_breaks_when_no_crossing_line_143",
+        "tests/test_tearsheets/test_capacity.py::test_plot_cones_runs_and_returns_axes_when_ax_provided",
+        "tests/test_tearsheets/test_capacity.py::test_plot_cones_runs_and_returns_figure_when_no_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_cones",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_cones"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_daily_turnover_hist",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_daily_turnover_hist.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_daily_turnover_hist"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_daily_turnover_hist.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotDailyTurnoverHist::test_plot_daily_turnover_hist_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotDailyTurnoverHist::test_plot_daily_turnover_hist_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_volume.py::TestPlotDailyTurnoverHist::test_plot_daily_turnover_hist_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_volume.py::TestPlotDailyTurnoverHist::test_plot_daily_turnover_hist_with_custom_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_daily_turnover_hist",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_daily_turnover_hist"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_daily_volume",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_daily_volume.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_daily_volume"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_daily_volume.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotDailyVolume::test_plot_daily_volume_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotDailyVolume::test_plot_daily_volume_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_volume.py::TestPlotDailyVolume::test_plot_daily_volume_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_volume.py::TestPlotDailyVolume::test_plot_daily_volume_with_custom_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_daily_volume",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_daily_volume"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_prob_profit_trade",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_prob_profit_trade.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_prob_profit_trade"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_prob_profit_trade.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_round_trips_tearsheet.py::test_plot_prob_profit_trade_with_custom_ax",
+        "tests/test_tearsheets/test_round_trips_tearsheet.py::test_plot_prob_profit_trade_with_default_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_prob_profit_trade",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_prob_profit_trade"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_returns"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_returns.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context_plot_contract.py::test_plot_returns_artifacts_not_backend",
+        "tests/test_core/test_viz.py::TestMatplotlibBackend::test_plot_returns",
+        "tests/test_viz/test_bokeh_coverage.py::TestBokehBackendAdditionalCoverage::test_plot_returns_with_benchmark",
+        "tests/test_viz/test_interactive/test_interactive.py::TestBokehBackend::test_plot_returns",
+        "tests/test_viz/test_interactive/test_interactive.py::TestPlotlyBackend::test_plot_returns",
+        "tests/test_viz/test_interactive/test_interactive.py::TestPlotlyBackend::test_plot_returns_with_benchmark"
+      ],
+      "target_operation_id": "report.portfolio.plot_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_returns"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_sharpe",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_rolling_sharpe.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_rolling_sharpe"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_rolling_sharpe.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_viz.py::TestMatplotlibBackend::test_plot_rolling_sharpe",
+        "tests/test_viz/test_bokeh_coverage.py::TestBokehBackendAdditionalCoverage::test_plot_rolling_sharpe_no_span_fallback_to_hspan",
+        "tests/test_viz/test_bokeh_coverage.py::TestBokehBackendAdditionalCoverage::test_plot_rolling_sharpe_with_benchmark",
+        "tests/test_viz/test_interactive/test_interactive.py::TestBokehBackend::test_plot_rolling_sharpe",
+        "tests/test_viz/test_interactive/test_interactive.py::TestPlotlyBackend::test_plot_rolling_sharpe",
+        "tests/test_viz/test_interactive/test_interactive.py::TestPlotlyBackend::test_plot_rolling_sharpe_with_benchmark"
+      ],
+      "target_operation_id": "report.portfolio.plot_rolling_sharpe",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_rolling_sharpe"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_round_trip_lifetimes",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_round_trip_lifetimes.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_round_trip_lifetimes"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_round_trip_lifetimes.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_round_trips_tearsheet.py::test_plot_round_trip_lifetimes_with_custom_ax",
+        "tests/test_tearsheets/test_round_trips_tearsheet.py::test_plot_round_trip_lifetimes_with_default_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_round_trip_lifetimes",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_round_trip_lifetimes"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_sector_exposures_gross",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_sector_exposures_gross.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_sector_exposures_gross"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_sector_exposures_gross.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_gross_with_ax_none",
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_gross_with_custom_sector_dict"
+      ],
+      "target_operation_id": "report.portfolio.plot_sector_exposures_gross",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_sector_exposures_gross"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_sector_exposures_longshort",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_sector_exposures_longshort.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_sector_exposures_longshort"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_sector_exposures_longshort.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_longshort_with_ax_none",
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_longshort_with_custom_sector_dict"
+      ],
+      "target_operation_id": "report.portfolio.plot_sector_exposures_longshort",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_sector_exposures_longshort"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_sector_exposures_net",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_sector_exposures_net.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_sector_exposures_net"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_sector_exposures_net.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_net_with_ax_none",
+        "tests/test_tearsheets/risk_plots/test_sector_exposures.py::TestSectorExposurePlots::test_plot_sector_exposures_net_with_custom_sector_dict"
+      ],
+      "target_operation_id": "report.portfolio.plot_sector_exposures_net",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_sector_exposures_net"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_slippage_sensitivity",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_slippage_sensitivity.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_slippage_sensitivity"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_slippage_sensitivity.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotSlippageSensitivity::test_plot_slippage_sensitivity_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotSlippageSensitivity::test_plot_slippage_sensitivity_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_slippage.py::TestPlotSlippageSensitivity::test_plot_slippage_sensitivity_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_slippage.py::TestPlotSlippageSensitivity::test_plot_slippage_sensitivity_with_custom_ax"
+      ],
+      "target_operation_id": "report.portfolio.plot_slippage_sensitivity",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_slippage_sensitivity"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_slippage_sweep",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_slippage_sweep.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_slippage_sweep"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_slippage_sweep.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_custom_ax",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_custom_params",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_slippage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_slippage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_slippage.py::TestPlotSlippageSweep::test_plot_slippage_sweep_with_custom_params"
+      ],
+      "target_operation_id": "report.portfolio.plot_slippage_sweep",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_slippage_sweep"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_stoch_vol",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_stoch_vol.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_stoch_vol"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_stoch_vol.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::TestPlotStochVolErrors::test_plot_stoch_vol_creates_ax_when_none",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_stoch_vol_accepts_stub_trace",
+        "tests/test_tearsheets/test_bayesian_tearsheet.py::test_plot_stoch_vol_creates_trace_from_data_line_153"
+      ],
+      "target_operation_id": "report.portfolio.plot_stoch_vol",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_stoch_vol"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_style_factor_exposures",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_style_factor_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_style_factor_exposures"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_style_factor_exposures.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_style_factor.py::TestStyleFactorPlots::test_plot_style_factor_exposures_with_ax_none",
+        "tests/test_tearsheets/risk_plots/test_style_factor.py::TestStyleFactorPlots::test_plot_style_factor_exposures_with_factor_name",
+        "tests/test_tearsheets/risk_plots/test_style_factor.py::TestStyleFactorPlots::test_plot_style_factor_exposures_with_series_no_name"
+      ],
+      "target_operation_id": "report.portfolio.plot_style_factor_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_style_factor_exposures"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_turnover",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_turnover.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_turnover"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_turnover.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTurnover::test_plot_turnover_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTurnover::test_plot_turnover_with_custom_ax",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTurnover::test_plot_turnover_with_custom_legend_loc",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_turnover.py::TestPlotTurnover::test_plot_turnover_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_turnover.py::TestPlotTurnover::test_plot_turnover_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_turnover.py::TestPlotTurnover::test_plot_turnover_with_custom_legend_loc"
+      ],
+      "target_operation_id": "report.portfolio.plot_turnover",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_turnover"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_txn_time_hist",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_txn_time_hist.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_txn_time_hist"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_txn_time_hist.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_ax_none",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_ax",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_bin_minutes",
+        "tests/test_tearsheets/test_transactions_plotting_full_coverage.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_tz",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_ax_none",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_ax",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_bin_minutes",
+        "tests/test_tearsheets/tx_plotting_split/test_plot_time_hist.py::TestPlotTxnTimeHist::test_plot_txn_time_hist_with_custom_tz"
+      ],
+      "target_operation_id": "report.portfolio.plot_txn_time_hist",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_txn_time_hist"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_volume_exposures_gross",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_volume_exposures_gross.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_volume_exposures_gross"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_volume_exposures_gross.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_cap_volume_exposures.py::TestVolumeExposurePlots::test_plot_volume_exposures_gross_with_ax_none"
+      ],
+      "target_operation_id": "report.portfolio.plot_volume_exposures_gross",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_volume_exposures_gross"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_volume_exposures_longshort",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_volume_exposures_longshort.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_volume_exposures_longshort"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_volume_exposures_longshort.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/risk_plots/test_cap_volume_exposures.py::TestVolumeExposurePlots::test_plot_volume_exposures_longshort_with_ax_none"
+      ],
+      "target_operation_id": "report.portfolio.plot_volume_exposures_longshort",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_plot_volume_exposures_longshort"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.report_artifacts",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.report_artifacts.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.report_artifacts"
+          },
+          "oracle_reference": "invariant contract report.portfolio.report_artifacts.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context_plot_contract.py::test_report_artifacts_close_closes_matplotlib_figures"
+      ],
+      "target_operation_id": "report.portfolio.report_artifacts",
+      "wheel_nodeids": [
+        "tests/parity/test_report_models.py::test_report_artifacts"
       ]
     },
     {
@@ -5945,6 +8263,35 @@
       ]
     },
     {
+      "capability_id": "runtime.session.analyze",
+      "disposition": "required",
+      "owner": "runtime",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "runtime.session.analyze.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for runtime.session.analyze"
+          },
+          "oracle_reference": "invariant contract runtime.session.analyze.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context.py::TestAnalyzeConvenience::test_analyze_returns_context",
+        "tests/test_core/test_context.py::TestAnalyzeConvenience::test_analyze_with_factor_returns",
+        "tests/test_utils/test_common_data.py::test_analyze_dataframe_differences_prints_for_identical_and_different",
+        "tests/test_utils/test_common_data.py::test_analyze_dataframe_differences_prints_index_columns_dtype_and_metadata_differences",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_different_freq",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_prints_for_identical_and_different",
+        "tests/test_utils/test_common_data.py::test_analyze_series_differences_prints_index_dtype_and_metadata_differences"
+      ],
+      "target_operation_id": "runtime.session.analyze",
+      "wheel_nodeids": [
+        "tests/runtime/test_session.py::test_analyze"
+      ]
+    },
+    {
       "capability_id": "simulation.bootstrap",
       "disposition": "required",
       "owner": "simulation",
@@ -5999,11 +8346,97 @@
       "wheel_nodeids": [
         "tests/parity/test_simulation.py::test_bootstrap_ci"
       ]
+    },
+    {
+      "capability_id": "viz.resource.grid_figure",
+      "disposition": "required",
+      "owner": "viz",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "viz.resource.grid_figure.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for viz.resource.grid_figure"
+          },
+          "oracle_reference": "invariant contract viz.resource.grid_figure.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_grid_figure_and_legacy_exceptions_resolve",
+        "tests/test_factor_analysis/test_tears.py::test_grid_figure_owns_one_lazy_matplotlib_grid_and_closes_only_itself",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_close_is_idempotent",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_closed_raises_on_create_new_figure",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[-1]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[0]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_cols[False]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[-1]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[0]",
+        "tests/test_factor_analysis/test_tears_branches.py::test_grid_figure_rejects_invalid_rows[True]"
+      ],
+      "target_operation_id": "viz.resource.grid_figure",
+      "wheel_nodeids": [
+        "tests/parity/test_report_renderers.py::test_grid_figure"
+      ]
+    },
+    {
+      "capability_id": "viz.style.axes_style",
+      "disposition": "required",
+      "owner": "viz",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "viz.style.axes_style.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for viz.style.axes_style"
+          },
+          "oracle_reference": "invariant contract viz.style.axes_style.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:axes_style]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:axes_style:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:axes_style]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:axes_style]",
+        "tests/test_tearsheets/test_utils.py::test_axes_style_returns_style"
+      ],
+      "target_operation_id": "viz.style.axes_style",
+      "wheel_nodeids": [
+        "tests/parity/test_report_renderers.py::test_axes_style"
+      ]
+    },
+    {
+      "capability_id": "viz.style.plotting_context",
+      "disposition": "required",
+      "owner": "viz",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "viz.style.plotting_context.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for viz.style.plotting_context"
+          },
+          "oracle_reference": "invariant contract viz.style.plotting_context.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_frozen_definition_resolves[plotting:plotting_context]",
+        "tests/compat/alphalens/test_signatures.py::test_decorator_call_grammar_matches_manifest[plotting:plotting_context:source-visible]",
+        "tests/compat/alphalens/test_signatures.py::test_signature_matches_manifest[plotting:plotting_context]",
+        "tests/compat/alphalens/test_signatures.py::test_source_signature_rejects_unexpected_keyword[plotting:plotting_context]",
+        "tests/test_tearsheets/test_utils.py::test_plotting_context_returns_context"
+      ],
+      "target_operation_id": "viz.style.plotting_context",
+      "wheel_nodeids": [
+        "tests/parity/test_report_renderers.py::test_plotting_context"
+      ]
     }
   ],
   "not_for_d0": true,
   "schema_version": 1,
-  "scope": "analytical_families_only",
+  "scope": "all_capability_families_except_packaging",
   "source_contract": {
     "alphalens_manifest_path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
     "alphalens_manifest_sha256": "715ad55ae9483210938dfc6ffe1efb36690b7739a6b584383a9403d70b4f2125",

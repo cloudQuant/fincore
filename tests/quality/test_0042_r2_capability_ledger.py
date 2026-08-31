@@ -23,6 +23,9 @@ UPSTREAM_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "empyric
 ALPHALENS_MANIFEST = REPOSITORY_ROOT / "tests" / "compat" / "fixtures" / "alphalens-0.4.0-cloudquant-api.json"
 CAPTURE_SCRIPT = REPOSITORY_ROOT / "scripts" / "capture_capability_baseline.py"
 
+# Packaging inventory rows are distribution configuration, not analytical
+# capabilities; they remain outside the ledger by design and are gated by the
+# package/installed lanes instead.
 _COVERED_OWNERS = (
     "metrics",
     "performance",
@@ -32,6 +35,11 @@ _COVERED_OWNERS = (
     "simulation",
     "optimization",
     "portfolio",
+    "report",
+    "viz",
+    "data",
+    "extensions",
+    "runtime",
 )
 _REQUIRED_NON_ASSERTIONS = frozenset({"D0", "D-TECH", "installed_wheel_behavior", "legacy_zero"})
 
@@ -69,7 +77,7 @@ def test_ledger_header_is_scoped_and_fail_closed() -> None:
 
     assert ledger["schema_version"] == 1
     assert ledger["artifact_type"] == "capability_ledger"
-    assert ledger["scope"] == "analytical_families_only"
+    assert ledger["scope"] == "all_capability_families_except_packaging"
     assert ledger["covered_families"] == sorted(_COVERED_OWNERS)
     assert ledger["decision_status"] == "scoped"
     assert ledger["not_for_d0"] is True
