@@ -10497,7 +10497,7 @@
     "inventory_path": "tests/parity/fixtures/complete-surface-inventory-0042-r2.json",
     "inventory_sha256": "5637e29b72cf0955aa4f43f57eafc64dc824647af8a0cf16ef2e071eaa895c97",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "78b097d9a88cccb13522660548803d9a7b29f3e590aa32696bf13e3783a99977",
+    "node_facts_sha256": "59008b7e2a53bf5d9f853385ad097b1fbc6b10652126f5d91041f7da68e7f6cf",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }

@@ -12,12 +12,12 @@
   "scope": "non_online_functional_collection_only",
   "source_facts": {
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "78b097d9a88cccb13522660548803d9a7b29f3e590aa32696bf13e3783a99977",
-    "node_count": 5646,
+    "sha256": "59008b7e2a53bf5d9f853385ad097b1fbc6b10652126f5d91041f7da68e7f6cf",
+    "node_count": 5650,
     "source_provenance": {
       "clean": true,
-      "commit": "ed4b9f024ea0d6f16944c353fd5c34686a63c780",
-      "tree": "edd1629c3d346349027c698f66f2d23f172f3158"
+      "commit": "c0f5d42d326d0c2d7c07728384d50cb71a11f2b1",
+      "tree": "e8f1cca2f74e6619685a8560fe4117aa34170a04"
     }
   },
   "entries": [
@@ -15964,11 +15964,11 @@
       "target": "tests/property/test_time_series_contracts.py::test_sharpe_ratio_is_scale_invariant"
     },
     {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_are_closed_before_the_ledger_enters_baseline_capture",
       "disposition": "retain",
-      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
-      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_are_closed_before_the_ledger_enters_baseline_capture",
       "rule_id": "canonical-retention",
-      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence"
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_data_provider_contracts_have_offline_executable_scenarios",
@@ -16006,11 +16006,11 @@
       "target": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once"
     },
     {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_complete_and_non_verdict",
       "disposition": "retain",
-      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
-      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_complete_and_non_verdict",
       "rule_id": "canonical-retention",
-      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed"
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",
@@ -16391,6 +16391,13 @@
       "target": "tests/quality/test_capture_capability_baseline.py::test_capture_executes_the_frozen_checker_blob_when_its_worktree_file_changes_then_recovers"
     },
     {
+      "nodeid": "tests/quality/test_capture_capability_baseline.py::test_capture_executes_the_frozen_complete_inventory_checker_blob_when_mutated",
+      "disposition": "retain",
+      "target": "tests/quality/test_capture_capability_baseline.py::test_capture_executes_the_frozen_complete_inventory_checker_blob_when_mutated",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/quality/test_capture_capability_baseline.py::test_capture_module_documents_the_fail_closed_schema",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -16403,6 +16410,13 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_capture_capability_baseline.py::test_capture_records_clean_git_provenance_and_input_hashes"
+    },
+    {
+      "nodeid": "tests/quality/test_capture_capability_baseline.py::test_capture_rejects_a_complete_inventory_that_no_longer_binds_its_raw_union",
+      "disposition": "retain",
+      "target": "tests/quality/test_capture_capability_baseline.py::test_capture_rejects_a_complete_inventory_that_no_longer_binds_its_raw_union",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",
@@ -16720,11 +16734,11 @@
       "target": "tests/quality/test_check_feature_parity.py::test_capability_absent_from_baseline_fails_as_missing"
     },
     {
+      "nodeid": "tests/quality/test_check_feature_parity.py::test_committed_complete_ledger_requires_actual_capture_evidence",
       "disposition": "retain",
-      "nodeid": "tests/quality/test_check_feature_parity.py::test_committed_scoped_ledger_is_blocked_for_families_with_gaps",
-      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
+      "target": "tests/quality/test_check_feature_parity.py::test_committed_complete_ledger_requires_actual_capture_evidence",
       "rule_id": "canonical-retention",
-      "target": "tests/quality/test_check_feature_parity.py::test_committed_scoped_ledger_is_blocked_for_families_with_gaps"
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",
@@ -17334,6 +17348,20 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_dependency_matrix.py::test_yfinance_import_probe_succeeds_with_minimum_constraints"
+    },
+    {
+      "nodeid": "tests/quality/test_materialize_0042_r2_complete_surface_inventory.py::test_materializer_rejects_an_unreviewed_legacy_target",
+      "disposition": "retain",
+      "target": "tests/quality/test_materialize_0042_r2_complete_surface_inventory.py::test_materializer_rejects_an_unreviewed_legacy_target",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_materialize_0042_r2_complete_surface_inventory.py::test_materializer_reproduces_the_committed_reviewed_inventory",
+      "disposition": "retain",
+      "target": "tests/quality/test_materialize_0042_r2_complete_surface_inventory.py::test_materializer_reproduces_the_committed_reviewed_inventory",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",
