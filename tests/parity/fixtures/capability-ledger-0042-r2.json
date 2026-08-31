@@ -2,126 +2,6 @@
   "artifact_type": "capability_ledger",
   "coverage_gaps": [
     {
-      "capability_id": "attribution.brinson",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "attribution.ff_factor_provider",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "attribution.performance.plot_factor_contribution_to_perf",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "attribution.performance.show_profit_attribution",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "attribution.style_factor_provider",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "portfolio.perf_stats.plot_perf_stats",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "portfolio.perf_stats.show_worst_drawdown_periods",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "portfolio.positions.show_and_plot_top_positions",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "portfolio.round_trips.print_round_trip_stats",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_alpha_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_annual_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_drawdown_periods",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_drawdown_underwater",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_exposures",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_gross_leverage",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_holdings",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_long_short_holdings",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_max_median_position_concentration",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_monthly_returns_dist",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_monthly_returns_heatmap",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_monthly_returns_timeseries",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_perf_attrib_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_return_quantiles",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_risk_exposures",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_rolling_beta",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_rolling_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_rolling_volatility",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.plot_sector_allocations",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "report.portfolio.strategy_report",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "viz.resource.close_owned_figures",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "viz.resource.show_owned_figures",
       "reason": "no_source_nodeid"
     }
@@ -9898,6 +9778,696 @@
       "wheel_nodeids": [
         "tests/parity/test_report_renderers.py::test_plotting_context"
       ]
+    },
+    {
+      "capability_id": "attribution.brinson",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Brinson, G. P., Hood, L. R., & Beebower, G. L. (1986). Determinants of portfolio performance. Financial Analysts Journal.",
+            "reference": "Brinson-Hood-Beebower attribution decomposition"
+          },
+          "oracle_reference": "Brinson-Hood-Beebower attribution decomposition",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_bhb_identity_holds"
+      ],
+      "target_operation_id": "attribution.brinson",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_brinson"
+      ]
+    },
+    {
+      "capability_id": "attribution.ff_factor_provider",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.ff_factor_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.ff_factor_provider"
+          },
+          "oracle_reference": "invariant contract attribution.ff_factor_provider.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_fama_french_provider.py::test_fetch_ff_factors_caches_module_provider_and_returns_copies"
+      ],
+      "target_operation_id": "attribution.ff_factor_provider",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_factor_providers"
+      ]
+    },
+    {
+      "capability_id": "attribution.performance.plot_factor_contribution_to_perf",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.performance.plot_factor_contribution_to_perf.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.performance.plot_factor_contribution_to_perf"
+          },
+          "oracle_reference": "invariant contract attribution.performance.plot_factor_contribution_to_perf.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_perf_attrib_plot_helpers_smoke"
+      ],
+      "target_operation_id": "attribution.performance.plot_factor_contribution_to_perf",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_performance_attribution_charts"
+      ]
+    },
+    {
+      "capability_id": "attribution.performance.show_profit_attribution",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.performance.show_profit_attribution.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.performance.show_profit_attribution"
+          },
+          "oracle_reference": "invariant contract attribution.performance.show_profit_attribution.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts"
+      ],
+      "target_operation_id": "attribution.performance.show_profit_attribution",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_profit_attribution"
+      ]
+    },
+    {
+      "capability_id": "attribution.style_factor_provider",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.style_factor_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.style_factor_provider"
+          },
+          "oracle_reference": "invariant contract attribution.style_factor_provider.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_attribution.py::TestFetchPlaceholders::test_fetch_style_factors_raises"
+      ],
+      "target_operation_id": "attribution.style_factor_provider",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_factor_providers"
+      ]
+    },
+    {
+      "capability_id": "portfolio.perf_stats.plot_perf_stats",
+      "disposition": "required",
+      "owner": "portfolio",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "portfolio.perf_stats.plot_perf_stats.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for portfolio.perf_stats.plot_perf_stats"
+          },
+          "oracle_reference": "invariant contract portfolio.perf_stats.plot_perf_stats.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "portfolio.perf_stats.plot_perf_stats",
+      "wheel_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_perf_stats_plot"
+      ]
+    },
+    {
+      "capability_id": "portfolio.perf_stats.show_worst_drawdown_periods",
+      "disposition": "required",
+      "owner": "portfolio",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "portfolio.perf_stats.show_worst_drawdown_periods.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for portfolio.perf_stats.show_worst_drawdown_periods"
+          },
+          "oracle_reference": "invariant contract portfolio.perf_stats.show_worst_drawdown_periods.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts"
+      ],
+      "target_operation_id": "portfolio.perf_stats.show_worst_drawdown_periods",
+      "wheel_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts"
+      ]
+    },
+    {
+      "capability_id": "portfolio.positions.show_and_plot_top_positions",
+      "disposition": "required",
+      "owner": "portfolio",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "portfolio.positions.show_and_plot_top_positions.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for portfolio.positions.show_and_plot_top_positions"
+          },
+          "oracle_reference": "invariant contract portfolio.positions.show_and_plot_top_positions.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "portfolio.positions.show_and_plot_top_positions",
+      "wheel_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_positions_charts"
+      ]
+    },
+    {
+      "capability_id": "portfolio.round_trips.print_round_trip_stats",
+      "disposition": "required",
+      "owner": "portfolio",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "portfolio.round_trips.print_round_trip_stats.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for portfolio.round_trips.print_round_trip_stats"
+          },
+          "oracle_reference": "invariant contract portfolio.round_trips.print_round_trip_stats.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts"
+      ],
+      "target_operation_id": "portfolio.round_trips.print_round_trip_stats",
+      "wheel_nodeids": [
+        "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_alpha_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_alpha_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_alpha_returns"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_alpha_returns.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_perf_attrib_plot_helpers_smoke"
+      ],
+      "target_operation_id": "report.portfolio.plot_alpha_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_attribution_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_annual_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_annual_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_annual_returns"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_annual_returns.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_annual_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_drawdown_periods",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_drawdown_periods.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_drawdown_periods"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_drawdown_periods.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_drawdown_periods",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_drawdown_underwater",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_drawdown_underwater.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_drawdown_underwater"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_drawdown_underwater.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_drawdown_underwater",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_exposures",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_exposures"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_exposures.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_gross_leverage",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_gross_leverage.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_gross_leverage"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_gross_leverage.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_gross_leverage",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_holdings",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_holdings.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_holdings"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_holdings.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_holdings",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_long_short_holdings",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_long_short_holdings.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_long_short_holdings"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_long_short_holdings.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_long_short_holdings",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_max_median_position_concentration",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_max_median_position_concentration.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_max_median_position_concentration"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_max_median_position_concentration.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_max_median_position_concentration",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_dist",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_monthly_returns_dist.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_monthly_returns_dist"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_monthly_returns_dist.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_monthly_returns_dist",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_heatmap",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_monthly_returns_heatmap.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_monthly_returns_heatmap"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_monthly_returns_heatmap.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_monthly_returns_heatmap",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_monthly_returns_timeseries",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_monthly_returns_timeseries.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_monthly_returns_timeseries"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_monthly_returns_timeseries.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_monthly_returns_timeseries",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_perf_attrib_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_perf_attrib_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_perf_attrib_returns"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_perf_attrib_returns.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_perf_attrib_plot_helpers_smoke"
+      ],
+      "target_operation_id": "report.portfolio.plot_perf_attrib_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_attribution_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_return_quantiles",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_return_quantiles.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_return_quantiles"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_return_quantiles.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_return_quantiles",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_risk_exposures",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_risk_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_risk_exposures"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_risk_exposures.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_perf_attrib_plot_helpers_smoke"
+      ],
+      "target_operation_id": "report.portfolio.plot_risk_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_attribution_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_beta",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_rolling_beta.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_rolling_beta"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_rolling_beta.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_rolling_beta",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_returns",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_rolling_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_rolling_returns"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_rolling_returns.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_rolling_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_rolling_volatility",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_rolling_volatility.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_rolling_volatility"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_rolling_volatility.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_returns_plots_cover_ax_none_and_live_start_date_str"
+      ],
+      "target_operation_id": "report.portfolio.plot_rolling_volatility",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_return_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.plot_sector_allocations",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.plot_sector_allocations.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.plot_sector_allocations"
+          },
+          "oracle_reference": "invariant contract report.portfolio.plot_sector_allocations.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_positions_tearsheet_more_coverage.py::test_positions_plots_cover_ax_none_branches"
+      ],
+      "target_operation_id": "report.portfolio.plot_sector_allocations",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_position_charts"
+      ]
+    },
+    {
+      "capability_id": "report.portfolio.strategy_report",
+      "disposition": "required",
+      "owner": "report",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "report.portfolio.strategy_report.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for report.portfolio.strategy_report"
+          },
+          "oracle_reference": "invariant contract report.portfolio.strategy_report.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_report/test_model.py::test_create_strategy_report_return_result_bundles_artifacts"
+      ],
+      "target_operation_id": "report.portfolio.strategy_report",
+      "wheel_nodeids": [
+        "tests/parity/test_report.py::test_strategy_report"
+      ]
+    },
+    {
+      "capability_id": "viz.resource.close_owned_figures",
+      "disposition": "required",
+      "owner": "viz",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "viz.resource.close_owned_figures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for viz.resource.close_owned_figures"
+          },
+          "oracle_reference": "invariant contract viz.resource.close_owned_figures.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures"
+      ],
+      "target_operation_id": "viz.resource.close_owned_figures",
+      "wheel_nodeids": [
+        "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures"
+      ]
     }
   ],
   "not_for_d0": true,
@@ -9909,7 +10479,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "501c7d2713d27d2de0f68f5bf4cc78fafa54bd5392b65ce4aad289f96d733f4a",
+    "node_facts_sha256": "03cf340b345b77876a915fe55929d4cf5e65dbf58a94b8b2ec7d220ea9979aa9",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }

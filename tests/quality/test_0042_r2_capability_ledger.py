@@ -539,3 +539,59 @@ def test_factor_models_costs_pit_and_inference_have_canonical_scenarios() -> Non
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_reporting_portfolio_and_attribution_migration_scenarios_are_bound() -> None:
+    """Display behaviors retain real source scenarios while APIs are redesigned."""
+    ledger = _load()
+    expected = {
+        "attribution": {
+            "attribution.brinson",
+            "attribution.ff_factor_provider",
+            "attribution.performance.plot_factor_contribution_to_perf",
+            "attribution.performance.show_profit_attribution",
+            "attribution.style_factor_provider",
+        },
+        "portfolio": {
+            "portfolio.perf_stats.plot_perf_stats",
+            "portfolio.perf_stats.show_worst_drawdown_periods",
+            "portfolio.positions.show_and_plot_top_positions",
+            "portfolio.round_trips.print_round_trip_stats",
+        },
+        "report": {
+            "report.portfolio.plot_alpha_returns",
+            "report.portfolio.plot_annual_returns",
+            "report.portfolio.plot_drawdown_periods",
+            "report.portfolio.plot_drawdown_underwater",
+            "report.portfolio.plot_exposures",
+            "report.portfolio.plot_gross_leverage",
+            "report.portfolio.plot_holdings",
+            "report.portfolio.plot_long_short_holdings",
+            "report.portfolio.plot_max_median_position_concentration",
+            "report.portfolio.plot_monthly_returns_dist",
+            "report.portfolio.plot_monthly_returns_heatmap",
+            "report.portfolio.plot_monthly_returns_timeseries",
+            "report.portfolio.plot_perf_attrib_returns",
+            "report.portfolio.plot_return_quantiles",
+            "report.portfolio.plot_risk_exposures",
+            "report.portfolio.plot_rolling_beta",
+            "report.portfolio.plot_rolling_returns",
+            "report.portfolio.plot_rolling_volatility",
+            "report.portfolio.plot_sector_allocations",
+            "report.portfolio.strategy_report",
+        },
+        "viz": {"viz.resource.close_owned_figures"},
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert "viz.resource.show_owned_figures" in gap_ids
+    for owner, capability_ids in expected.items():
+        assert not capability_ids & gap_ids
+        for capability_id in capability_ids:
+            entry = entries[capability_id]
+            assert entry["owner"] == owner
+            assert entry["disposition"] == "required"
+            assert entry["source_nodeids"]
+            assert entry["wheel_nodeids"]
