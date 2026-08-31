@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import importlib
 from collections.abc import Callable, Mapping, Sequence
-from functools import wraps
+from functools import partial, wraps
 from numbers import Integral
 from typing import Any, Literal, cast
 
@@ -42,15 +42,13 @@ def _plot_dependencies() -> tuple[Any, Any, Any, Any]:
     return pyplot, cm, ticker, seaborn
 
 
-def _require_statsmodels() -> Any:
-    """Resolve the Q-Q plotting implementation without an eager import."""
-
-    return load_optional_module(
-        "statsmodels.api",
-        dependency="statsmodels",
-        extra="visualization",
-        message="plot_ic_qq requires the optional 'visualization' extra. Install it with:\n    pip install fincore[visualization]",
-    )
+_require_statsmodels = partial(
+    load_optional_module,
+    "statsmodels.api",
+    dependency="statsmodels",
+    extra="visualization",
+    message="plot_ic_qq requires the optional 'visualization' extra. Install it with:\n    pip install fincore[visualization]",
+)
 
 
 def _as_frame(value: pd.DataFrame | pd.Series, name: str) -> pd.DataFrame:

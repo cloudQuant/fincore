@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
@@ -16,13 +17,13 @@ if TYPE_CHECKING:
 __all__ = ["render_matplotlib"]
 
 
-def _matplotlib():
-    return load_optional_module(
-        "matplotlib.pyplot",
-        dependency="matplotlib",
-        extra="visualization",
-        message="optional_dependency_missing: matplotlib is required for static report rendering",
-    )
+_matplotlib = partial(
+    load_optional_module,
+    "matplotlib.pyplot",
+    dependency="matplotlib",
+    extra="visualization",
+    message="optional_dependency_missing: matplotlib is required for static report rendering",
+)
 
 
 def render_matplotlib(document: ReportDocument, *, axes: Mapping[str, Any] | None = None) -> ArtifactBundle:

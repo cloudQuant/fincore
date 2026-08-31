@@ -6,6 +6,7 @@ and export capabilities using Plotly.
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, cast
 
 import numpy as np
@@ -15,6 +16,14 @@ from fincore.runtime.validation import load_optional_module
 from fincore.viz.contracts import VizBackend
 
 __all__ = ["PlotlyBackend"]
+
+_load_plotly = partial(
+    load_optional_module,
+    "plotly.graph_objects",
+    dependency="plotly",
+    extra="visualization",
+    message="Plotly is required for PlotlyBackend. Install with: pip install plotly",
+)
 
 
 class PlotlyBackend(VizBackend):
@@ -124,19 +133,9 @@ class PlotlyBackend(VizBackend):
             return self.template
         return self.default_template
 
-    def _plotly_module(self) -> Any:
-        """Resolve Plotly only at the visualization execution boundary."""
-
-        return load_optional_module(
-            "plotly.graph_objects",
-            dependency="plotly",
-            extra="visualization",
-            message="Plotly is required for PlotlyBackend. Install with: pip install plotly",
-        )
-
     def _create_figure(self) -> Any:
         """Create a new figure with configured template."""
-        go = self._plotly_module()
+        go = _load_plotly()
         try:
             fig = go.Figure(
                 layout=dict(

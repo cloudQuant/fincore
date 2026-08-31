@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
@@ -41,10 +42,7 @@ __all__ = [
 ]
 
 
-def _pymc() -> Any:
-    """Resolve the Bayesian backend at the explicit model-execution boundary."""
-
-    return load_optional_module("pymc", dependency="pymc", extra="bayesian")
+_pymc = partial(load_optional_module, "pymc", dependency="pymc", extra="bayesian")
 
 
 def model_returns_t_alpha_beta(
