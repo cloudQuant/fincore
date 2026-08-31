@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.factor_analysis import analyze_factor, prepare_factor_data, prepare_factor_data_by_horizon
+from fincore.factor_analysis.analysis import analyze_factor
+from fincore.factor_analysis.data import prepare_factor_data, prepare_factor_data_by_horizon
 from fincore.factor_analysis.exceptions import FactorLossExceededError
 
 
@@ -46,7 +47,7 @@ def test_prepares_each_horizon_without_discarding_short_horizon_rows() -> None:
     assert (long_report.input_count, long_report.forward_returns_count, long_report.binning_count) == (12, 8, 8)
     assert long_report.forward_returns_loss == pytest.approx(1.0 / 3.0)
 
-    model = analyze_factor(result.by_horizon["1D"].data, periods=("1D",), include_pyfolio=False)
+    model = analyze_factor(result.by_horizon["1D"].data, periods=("1D",), include_portfolio_inputs=False)
     assert model.forward_periods == ("1D",)
 
     legacy_shape = prepare_factor_data(factor, prices, periods=(1, 3), quantiles=2, max_loss=1.0)

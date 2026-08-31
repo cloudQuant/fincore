@@ -16,6 +16,7 @@ _BUILTIN_PROVIDER_PATHS: tuple[str, ...] = (
     "fincore.metrics.operations:operations",
     "fincore.performance.operations:operations",
     "fincore.portfolio.operations:operations",
+    "fincore.factor_analysis.operations:operations",
 )
 
 

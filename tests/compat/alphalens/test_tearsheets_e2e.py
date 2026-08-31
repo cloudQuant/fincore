@@ -54,7 +54,7 @@ def _workflow_model(*, by_group: bool) -> object:
         periods=("1D",),
         turnover_periods=(1,),
         by_group=by_group,
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
 
 
@@ -151,7 +151,7 @@ def _source_model(
         group_neutral=group_neutral,
         by_group=by_group,
         turnover_periods=lags,
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
 
 
@@ -850,12 +850,12 @@ def test_enhanced_analysis_keeps_turnover_lag_validation_private(clean_factor_da
     from fincore.factor_analysis.analysis import analyze_factor
 
     with pytest.raises(ValueError, match="positive integers"):
-        analyze_factor(clean_factor_data, turnover_periods=(0,), include_pyfolio=False)
+        analyze_factor(clean_factor_data, turnover_periods=(0,), include_portfolio_inputs=False)
     with pytest.raises(TypeError, match="unexpected keyword argument"):
         analyze_factor(
             clean_factor_data,
             turnover_periods=(1,),
-            include_pyfolio=False,
+            include_portfolio_inputs=False,
             _allow_legacy_zero_turnover=True,  # type: ignore[call-arg]
         )
 
@@ -987,7 +987,7 @@ def test_each_strict_workflow_assembles_once_and_never_reenters_a_kernel(
     )
     for kernel_name in performance_names:
         monkeypatch.setattr(performance, kernel_name, guard(kernel_name, getattr(performance, kernel_name)))
-    for kernel_name in ("factor_cumulative_returns", "factor_positions", "create_pyfolio_input"):
+    for kernel_name in ("factor_cumulative_returns", "factor_positions", "build_factor_portfolio_inputs"):
         monkeypatch.setattr(portfolio, kernel_name, guard(kernel_name, getattr(portfolio, kernel_name)))
 
     pyplot = _pyplot()
@@ -1065,7 +1065,7 @@ def test_strict_returns_tables_and_spread_error_use_source_period_conversion(
     from fincore.factor_analysis.analysis import analyze_factor
     from fincore.factor_analysis.render_matplotlib import build_returns_table
 
-    model = analyze_factor(clean_factor_data, long_short=False, include_pyfolio=False)
+    model = analyze_factor(clean_factor_data, long_short=False, include_portfolio_inputs=False)
     mean, _ = performance.mean_return_by_quantile(clean_factor_data, demeaned=False)
     mean_by_date, std_by_date = performance.mean_return_by_quantile(clean_factor_data, by_date=True, demeaned=False)
     base = mean.columns[0]

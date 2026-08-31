@@ -7,7 +7,7 @@ import pandas as pd
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from fincore.factor_analysis import quantize_factor
+from fincore.factor_analysis.data import quantize_factor
 
 
 def _factor_frame(values: list[float], n_dates: int = 4) -> pd.DataFrame:

@@ -546,11 +546,11 @@ def test_renderer_consumes_a_compute_once_model_without_reentering_kernels(
 ) -> None:
     """Renderer functions only construct artists from a finished model snapshot."""
 
-    from fincore.factor_analysis import performance
+    import fincore.factor_analysis.performance as performance
     from fincore.factor_analysis.analysis import analyze_factor
 
     renderer = importlib.import_module("fincore.factor_analysis.render_matplotlib")
-    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
 
     def kernel_reentry(*args: object, **kwargs: object) -> None:
         raise AssertionError("a renderer must not re-enter factor-analysis kernels")

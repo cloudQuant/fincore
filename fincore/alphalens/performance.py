@@ -759,7 +759,7 @@ def create_pyfolio_input(
     )
     level_names = _strict_factor_data_level_names(factor_data)
     _strict_reject_duplicate_return_period(factor_data, benchmark_period)
-    output = _portfolio.create_pyfolio_input(
+    output = _portfolio.build_factor_portfolio_inputs(
         factor_data,
         period,
         capital=capital,
@@ -780,7 +780,7 @@ def create_pyfolio_input(
         strict_positions = strict_positions.copy(deep=True)
         strict_positions.loc[~strict_positions.index.isin(output.returns.index), :] = np.nan
     if level_names is None:
-        return returns, _strict_position_frame(strict_positions), output.benchmark_rets
+        return returns, _strict_position_frame(strict_positions), output.benchmark_returns
     return (
         returns,
         _strict_position_frame(
@@ -789,7 +789,7 @@ def create_pyfolio_input(
             columns_name=level_names[1],
             preserve_names=True,
         ),
-        output.benchmark_rets,
+        output.benchmark_returns,
     )
 
 

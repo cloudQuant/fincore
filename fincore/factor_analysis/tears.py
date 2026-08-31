@@ -472,7 +472,7 @@ def create_returns_tear_sheet(
                 grid.next_row(),
             )
             charts._legacy_plot_cumulative_returns_by_quantile_values(
-                model.legacy_quantile_cumulative_returns[period],
+                model.quantile_cumulative_returns[period],
                 period,
                 grid.next_row(),
             )

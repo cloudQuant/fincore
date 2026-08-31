@@ -123,8 +123,8 @@ def _as_spread_frame(value: pd.Series | pd.DataFrame, name: str) -> pd.DataFrame
     return value.to_frame(name) if isinstance(value, pd.Series) else value.copy(deep=True)
 
 
-def _legacy_quantile_cumulative_returns(mean_by_date: pd.DataFrame) -> dict[str, pd.DataFrame]:
-    """Precompute strict plot curves so the renderer never re-enters a kernel."""
+def _quantile_cumulative_returns(mean_by_date: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    """Precompute quantile growth curves so renderers never re-enter a kernel."""
 
     if not len(mean_by_date.columns):
         return {}
@@ -392,9 +392,9 @@ def _analyze_factor(
     periods: Sequence[str] | None = None,
     turnover_periods: Sequence[int] = (1,),
     time_aggregation: Sequence[str] = ("M",),
-    include_pyfolio: bool = True,
-    pyfolio_capital: int | float | None = None,
-    pyfolio_benchmark_period: str = "1D",
+    include_portfolio_inputs: bool = True,
+    portfolio_capital: int | float | None = None,
+    portfolio_benchmark_period: str = "1D",
     event_returns: pd.DataFrame | None = None,
     event_before: int | None = None,
     event_after: int | None = None,
@@ -414,10 +414,10 @@ def _analyze_factor(
     selected_periods = _normalize_periods(available_periods, periods)
     lags = _normalize_positive_lags(turnover_periods, allow_legacy_zero=allow_legacy_zero_turnover)
     aggregations = _normalize_time_aggregation(time_aggregation)
-    if not isinstance(pyfolio_benchmark_period, str):
-        raise TypeError("pyfolio_benchmark_period must be a string")
-    if pyfolio_capital is not None and not isinstance(pyfolio_capital, (int, float)):
-        raise TypeError("pyfolio_capital must be a number or None")
+    if not isinstance(portfolio_benchmark_period, str):
+        raise TypeError("portfolio_benchmark_period must be a string")
+    if portfolio_capital is not None and not isinstance(portfolio_capital, (int, float)):
+        raise TypeError("portfolio_capital must be a number or None")
 
     normalized_event_before = event_before
     normalized_event_after = event_after
@@ -449,9 +449,9 @@ def _analyze_factor(
         event_after=config_event_after,
         turnover_periods=lags,
         time_aggregation=aggregations,
-        include_pyfolio=include_pyfolio,
-        pyfolio_capital=pyfolio_capital,
-        pyfolio_benchmark_period=pyfolio_benchmark_period,
+        include_portfolio_inputs=include_portfolio_inputs,
+        portfolio_capital=portfolio_capital,
+        portfolio_benchmark_period=portfolio_benchmark_period,
     )
     analysis_data = _with_selected_periods(snapshot, selected_periods)
     has_group = "group" in analysis_data.columns
@@ -604,7 +604,7 @@ def _analyze_factor(
         )
         for period in selected_periods
     }
-    legacy_quantile_cumulative = _legacy_quantile_cumulative_returns(aggregate_mean_by_date)
+    quantile_cumulative = _quantile_cumulative_returns(aggregate_mean_by_date)
     positions = {
         period: portfolio.factor_positions(
             analysis_data,
@@ -615,17 +615,17 @@ def _analyze_factor(
         )
         for period in selected_periods
     }
-    pyfolio_inputs = (
-        portfolio.create_pyfolio_input(
+    portfolio_inputs = (
+        portfolio.build_factor_portfolio_inputs(
             analysis_data,
             selected_periods[0],
-            capital=config.pyfolio_capital,
+            capital=config.portfolio_capital,
             long_short=long_short,
             group_neutral=group_neutral,
             equal_weight=equal_weight,
-            benchmark_period=config.pyfolio_benchmark_period,
+            benchmark_period=config.portfolio_benchmark_period,
         )
-        if include_pyfolio
+        if include_portfolio_inputs
         else None
     )
 
@@ -659,7 +659,7 @@ def _analyze_factor(
         "factor_weights": weights.to_frame("factor"),
         "factor_returns": factor_returns,
         "factor_cumulative_returns": cumulative,
-        "legacy_quantile_cumulative_returns": legacy_quantile_cumulative,
+        "quantile_cumulative_returns": quantile_cumulative,
         "factor_positions": positions,
         "alpha_beta": alpha_beta,
         "mean_returns_by_quantile": mean_returns,
@@ -684,7 +684,7 @@ def _analyze_factor(
         "grouped_results": grouped,
         "time_aggregated_results": time_aggregated,
         "aggregate_time_aggregated_results": aggregate_time_aggregated,
-        "pyfolio_inputs": pyfolio_inputs,
+        "portfolio_inputs": portfolio_inputs,
         "event_returns": event_model,
     }
 
@@ -696,7 +696,7 @@ def _analyze_factor(
         factor_weights=weights.to_frame("factor"),
         factor_returns=factor_returns,
         factor_cumulative_returns=frozen_mapping(cumulative),
-        legacy_quantile_cumulative_returns=frozen_mapping(legacy_quantile_cumulative),
+        quantile_cumulative_returns=frozen_mapping(quantile_cumulative),
         factor_positions=frozen_mapping(positions),
         alpha_beta=alpha_beta,
         mean_returns_by_quantile=mean_returns,
@@ -721,7 +721,7 @@ def _analyze_factor(
         grouped_results=frozen_mapping(grouped),
         time_aggregated_results=frozen_mapping(time_aggregated),
         aggregate_time_aggregated_results=frozen_mapping(aggregate_time_aggregated),
-        pyfolio_inputs=pyfolio_inputs,
+        portfolio_inputs=portfolio_inputs,
         event_input_snapshot=event_input_snapshot,
         event_returns=event_model,
         result_fingerprint=fingerprint_value(result_payload),
@@ -738,9 +738,9 @@ def analyze_factor(
     periods: Sequence[str] | None = None,
     turnover_periods: Sequence[int] = (1,),
     time_aggregation: Sequence[str] = ("M",),
-    include_pyfolio: bool = True,
-    pyfolio_capital: int | float | None = None,
-    pyfolio_benchmark_period: str = "1D",
+    include_portfolio_inputs: bool = True,
+    portfolio_capital: int | float | None = None,
+    portfolio_benchmark_period: str = "1D",
     event_returns: pd.DataFrame | None = None,
     event_before: int | None = None,
     event_after: int | None = None,
@@ -761,9 +761,9 @@ def analyze_factor(
         periods=periods,
         turnover_periods=turnover_periods,
         time_aggregation=time_aggregation,
-        include_pyfolio=include_pyfolio,
-        pyfolio_capital=pyfolio_capital,
-        pyfolio_benchmark_period=pyfolio_benchmark_period,
+        include_portfolio_inputs=include_portfolio_inputs,
+        portfolio_capital=portfolio_capital,
+        portfolio_benchmark_period=portfolio_benchmark_period,
         event_returns=event_returns,
         event_before=event_before,
         event_after=event_after,

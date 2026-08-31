@@ -10,8 +10,8 @@ import pytest
 from pandas.tseries.offsets import BDay, CustomBusinessDay
 
 from fincore.factor_analysis.portfolio import (
-    PyfolioFactorInputs,
-    create_pyfolio_input,
+    FactorPortfolioInputs,
+    build_factor_portfolio_inputs,
     factor_cumulative_returns,
     factor_positions,
     positions,
@@ -111,11 +111,11 @@ def test_factor_portfolios_cover_filters_weighting_and_calendar_without_input_mu
     pd.testing.assert_frame_equal(source, original)
 
 
-def test_enhanced_pyfolio_input_is_frozen_and_preserves_daily_alignment_timezone_and_cash() -> None:
+def test_factor_portfolio_inputs_are_frozen_and_preserve_daily_alignment_timezone_and_cash() -> None:
     source = _factor_data(timezone="UTC", intraday=True)
     original = source.copy(deep=True)
 
-    output = create_pyfolio_input(
+    output = build_factor_portfolio_inputs(
         source,
         "1D",
         capital=1_000_000,
@@ -124,24 +124,22 @@ def test_enhanced_pyfolio_input_is_frozen_and_preserves_daily_alignment_timezone
         benchmark_period="5D",
     )
 
-    assert isinstance(output, PyfolioFactorInputs)
+    assert isinstance(output, FactorPortfolioInputs)
     assert output.returns.index.tz is not None
     assert output.positions.index.tz is not None
     assert output.returns.index.isin(output.positions.index).all()
     assert output.positions.columns[-1] == "cash"
-    assert output.benchmark_rets is not None
-    assert output.benchmark_rets.name == "benchmark"
+    assert output.benchmark_returns is not None
+    assert output.benchmark_returns.name == "benchmark"
     assert output.positions.abs().sum(axis=1).max() > 1.0
     assert output.positions.drop(columns="cash").abs().sum(axis=1).iloc[0] == pytest.approx(1_000_000 * 1.035)
-    legacy = output.as_legacy_tuple()
-    assert legacy == (output.returns, output.positions, output.benchmark_rets)
     with pytest.raises(FrozenInstanceError):
         output.returns = pd.Series(dtype=float)  # type: ignore[misc]
     pd.testing.assert_frame_equal(source, original)
 
 
-def test_enhanced_pyfolio_input_uses_none_for_a_missing_benchmark_period_and_keeps_gross_net_cash() -> None:
-    output = create_pyfolio_input(
+def test_factor_portfolio_inputs_use_none_for_a_missing_benchmark_period_and_keep_gross_net_cash() -> None:
+    output = build_factor_portfolio_inputs(
         _factor_data(),
         "1D",
         capital=None,
@@ -151,18 +149,18 @@ def test_enhanced_pyfolio_input_uses_none_for_a_missing_benchmark_period_and_kee
         benchmark_period="10D",
     )
 
-    assert output.benchmark_rets is None
+    assert output.benchmark_returns is None
     gross = output.positions.drop(columns="cash").abs().sum(axis=1)
     net = output.positions.drop(columns="cash").sum(axis=1)
     pd.testing.assert_series_equal(output.positions["cash"], 1.0 - net, check_names=False)
     np.testing.assert_allclose(gross[gross > 0].to_numpy(), np.ones((gross > 0).sum()))
 
 
-def test_enhanced_pyfolio_capital_positions_fill_the_full_five_day_holding_horizon() -> None:
+def test_factor_portfolio_capital_positions_fill_the_full_five_day_holding_horizon() -> None:
     """Capital scaling must not turn active post-return-horizon rows into NaN."""
 
     source = _factor_data()
-    output = create_pyfolio_input(
+    output = build_factor_portfolio_inputs(
         source,
         "5D",
         capital=100_000,

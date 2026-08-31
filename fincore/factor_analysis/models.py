@@ -24,7 +24,7 @@ import pandas as pd
 from pandas.tseries.frequencies import to_offset
 from pandas.tseries.offsets import BDay, CustomBusinessDay
 
-from fincore.factor_analysis.portfolio import PyfolioFactorInputs
+from fincore.factor_analysis.portfolio import FactorPortfolioInputs
 
 _MappingKey = TypeVar("_MappingKey", bound=Hashable)
 _MappingValue = TypeVar("_MappingValue")
@@ -1359,13 +1359,13 @@ def _snapshot_value(value: object) -> object:
         return {_snapshot_value(item) for item in value}
     if isinstance(value, frozenset):
         return frozenset(_snapshot_value(item) for item in value)
-    if isinstance(value, PyfolioFactorInputs):
-        return PyfolioFactorInputs(
+    if isinstance(value, FactorPortfolioInputs):
+        return FactorPortfolioInputs(
             returns=cast("pd.Series", snapshot_pandas(value.returns)),
             positions=cast("pd.DataFrame", snapshot_pandas(value.positions)),
-            benchmark_rets=None
-            if value.benchmark_rets is None
-            else cast("pd.Series", snapshot_pandas(value.benchmark_rets)),
+            benchmark_returns=None
+            if value.benchmark_returns is None
+            else cast("pd.Series", snapshot_pandas(value.benchmark_returns)),
         )
     if isinstance(value, FactorGroupAnalysis):
         return FactorGroupAnalysis(
@@ -1471,9 +1471,9 @@ class FactorAnalysisConfig:
     event_after: int | None = None
     turnover_periods: tuple[int, ...] = (1,)
     time_aggregation: tuple[str, ...] = ("M",)
-    include_pyfolio: bool = True
-    pyfolio_capital: int | float | None = None
-    pyfolio_benchmark_period: str = "1D"
+    include_portfolio_inputs: bool = True
+    portfolio_capital: int | float | None = None
+    portfolio_benchmark_period: str = "1D"
     fingerprint: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -1482,7 +1482,7 @@ class FactorAnalysisConfig:
         periods = _typed_sequence(self.periods, "periods")
         turnover_periods = _typed_sequence(self.turnover_periods, "turnover_periods")
         time_aggregation = _typed_sequence(self.time_aggregation, "time_aggregation")
-        for name in ("long_short", "group_neutral", "equal_weight", "by_group", "include_pyfolio"):
+        for name in ("long_short", "group_neutral", "equal_weight", "by_group", "include_portfolio_inputs"):
             if not isinstance(getattr(self, name), bool):
                 raise TypeError(f"{name} must be a bool")
         if any(not isinstance(period, str) for period in periods):
@@ -1496,19 +1496,19 @@ class FactorAnalysisConfig:
                 raise TypeError(f"{name} must be an int or None")
             if value is not None and value < 0:
                 raise ValueError(f"{name} must be a non-negative integer")
-        if not isinstance(self.pyfolio_benchmark_period, str):
-            raise TypeError("pyfolio_benchmark_period must be a string")
-        capital = self.pyfolio_capital
+        if not isinstance(self.portfolio_benchmark_period, str):
+            raise TypeError("portfolio_benchmark_period must be a string")
+        capital = self.portfolio_capital
         if capital is not None:
             if not isinstance(capital, (int, float)) or isinstance(capital, bool):
-                raise TypeError("pyfolio_capital must be an int, float, or None")
+                raise TypeError("portfolio_capital must be an int, float, or None")
             if isinstance(capital, int):
                 try:
                     exactly_representable = int(float(capital)) == capital
                 except OverflowError:
                     exactly_representable = False
                 if not exactly_representable:
-                    raise ValueError("pyfolio_capital integer must be representable exactly by float arithmetic")
+                    raise ValueError("portfolio_capital integer must be representable exactly by float arithmetic")
 
         object.__setattr__(self, "periods", periods)
         object.__setattr__(self, "turnover_periods", turnover_periods)
@@ -1524,9 +1524,9 @@ class FactorAnalysisConfig:
             "event_after": self.event_after,
             "turnover_periods": turnover_periods,
             "time_aggregation": time_aggregation,
-            "include_pyfolio": self.include_pyfolio,
-            "pyfolio_capital": self.pyfolio_capital,
-            "pyfolio_benchmark_period": self.pyfolio_benchmark_period,
+            "include_portfolio_inputs": self.include_portfolio_inputs,
+            "portfolio_capital": self.portfolio_capital,
+            "portfolio_benchmark_period": self.portfolio_benchmark_period,
         }
         object.__setattr__(self, "fingerprint", fingerprint_value(payload))
 
@@ -1618,7 +1618,7 @@ class FactorAnalysisModel:
     factor_weights: pd.DataFrame
     factor_returns: pd.DataFrame
     factor_cumulative_returns: Mapping[str, pd.Series]
-    legacy_quantile_cumulative_returns: Mapping[str, pd.DataFrame]
+    quantile_cumulative_returns: Mapping[str, pd.DataFrame]
     factor_positions: Mapping[str, pd.DataFrame]
     alpha_beta: pd.DataFrame
     mean_returns_by_quantile: pd.DataFrame
@@ -1643,7 +1643,7 @@ class FactorAnalysisModel:
     grouped_results: Mapping[Hashable, FactorGroupAnalysis]
     time_aggregated_results: Mapping[str, pd.Series | pd.DataFrame]
     aggregate_time_aggregated_results: Mapping[str, pd.Series | pd.DataFrame]
-    pyfolio_inputs: PyfolioFactorInputs | None
+    portfolio_inputs: FactorPortfolioInputs | None
     event_input_snapshot: pd.DataFrame | None
     event_returns: EventAnalysisModel | None = None
     result_fingerprint: str = ""
@@ -1655,7 +1655,7 @@ class FactorAnalysisModel:
             "factor_weights",
             "factor_returns",
             "factor_cumulative_returns",
-            "legacy_quantile_cumulative_returns",
+            "quantile_cumulative_returns",
             "factor_positions",
             "alpha_beta",
             "mean_returns_by_quantile",
@@ -1680,7 +1680,7 @@ class FactorAnalysisModel:
             "grouped_results",
             "time_aggregated_results",
             "aggregate_time_aggregated_results",
-            "pyfolio_inputs",
+            "portfolio_inputs",
             "event_input_snapshot",
             "event_returns",
         }

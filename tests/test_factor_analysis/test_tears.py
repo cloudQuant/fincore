@@ -40,7 +40,7 @@ def _workflow_model(*, event: bool, by_group: bool) -> object:
         periods=("1D",),
         turnover_periods=(1,),
         by_group=by_group,
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
         event_returns=event_returns,
         event_before=1 if event else None,
         event_after=2 if event else None,
@@ -216,7 +216,7 @@ def _source_event_model(
             group_neutral=group_neutral,
             by_group=by_group,
             turnover_periods=periods,
-            include_pyfolio=False,
+            include_portfolio_inputs=False,
             event_returns=price_frame,
             event_before=before,
             event_after=after,
@@ -388,7 +388,7 @@ def test_enhanced_summary_tear_sheet_consumes_one_model_and_leaves_figures_to_th
     from fincore.factor_analysis.analysis import analyze_factor
     from fincore.factor_analysis.tears import FactorTearSheetArtifacts, create_summary_tear_sheet
 
-    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     pyplot = _pyplot()
     shown: list[object] = []
     monkeypatch.setattr(pyplot, "show", lambda *args, **kwargs: shown.append((args, kwargs)))
@@ -416,7 +416,7 @@ def test_all_enhanced_tear_workflows_read_the_model_without_reentering_kernels(
 ) -> None:
     """The renderer boundary consumes snapshots; it never recomputes analytical fields."""
 
-    from fincore.factor_analysis import performance
+    import fincore.factor_analysis.performance as performance
     from fincore.factor_analysis.tears import (
         close_owned_figures,
         create_event_returns_tear_sheet,

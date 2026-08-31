@@ -41,7 +41,7 @@ pip install fincore[alphalens]
 | Clean factor and forward returns | `fincore.alphalens.utils.get_clean_factor_and_forward_returns` | `prepare_factor_data` |
 | Information coefficient | `fincore.alphalens.performance.factor_information_coefficient` | `factor_information_coefficient` |
 | Full tear sheet | `fincore.alphalens.tears.create_full_tear_sheet` | `analyze_factor`, then `create_full_tear_sheet(model)` |
-| Pyfolio handoff | legacy tuple + `fincore.pyfolio` | typed `PyfolioFactorInputs` |
+| Pyfolio handoff | legacy tuple + `fincore.pyfolio` | typed `FactorPortfolioInputs` |
 
 For enhanced code, retain the `PreparedFactorData.loss_report`, pass its
 `data` to `analyze_factor`, then explicitly manage `FactorTearSheetArtifacts`.
@@ -90,7 +90,7 @@ leaking a stale value forward.
 ```python
 import pandas as pd
 
-from fincore.factor_analysis import materialize_pit_factor
+from fincore.factor_analysis.pit import materialize_pit_factor
 
 observations = pd.DataFrame(
     {

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.factor_analysis import render_matplotlib as rm
+import fincore.factor_analysis.render_matplotlib as rm
 
 
 def _quantile_frame() -> pd.DataFrame:

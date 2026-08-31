@@ -44,7 +44,7 @@ values, time-order violations, and timezone mismatches rather than guessing.
 ## Prepare data without full-sample filtering
 
 ```python
-from fincore.factor_analysis import prepare_pit_factor_data
+from fincore.factor_analysis.data import prepare_pit_factor_data
 
 prepared = prepare_pit_factor_data(
     observations,
@@ -96,7 +96,7 @@ an execution, liquidity, FX, or borrow policy for the caller.
 ```python
 import pandas as pd
 
-from fincore.factor_analysis import FactorCostModel, apply_factor_costs
+from fincore.factor_analysis.costs import FactorCostModel, apply_factor_costs
 
 dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
 weights = pd.Series(
@@ -172,9 +172,10 @@ After enhanced analysis, run the explicit post-analysis step rather than
 reading a raw IC average as a discovery claim:
 
 ```python
-from fincore.factor_analysis import analyze_factor, factor_model_inference
+from fincore.factor_analysis.analysis import analyze_factor
+from fincore.factor_analysis.inference import factor_model_inference
 
-model = analyze_factor(prepared.data, periods=("1D", "5D"), include_pyfolio=False)
+model = analyze_factor(prepared.data, periods=("1D", "5D"), include_portfolio_inputs=False)
 inference = factor_model_inference(model, alpha=0.05)
 audit_table = inference.hypotheses
 ```
@@ -207,7 +208,7 @@ For a serially dependent sequence of fitted cross-sections, opt in explicitly
 to Bartlett Newey-West covariance and retain the returned metadata:
 
 ```python
-from fincore.factor_analysis import fama_macbeth
+from fincore.factor_analysis.inference import fama_macbeth
 
 result = fama_macbeth(
     returns,

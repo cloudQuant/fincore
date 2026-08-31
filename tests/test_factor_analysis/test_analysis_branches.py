@@ -9,10 +9,10 @@ import pytest
 from fincore.factor_analysis.analysis import (
     _analyze_factor,
     _copy_clean_factor_data,
-    _legacy_quantile_cumulative_returns,
     _normalize_periods,
     _normalize_positive_lags,
     _normalize_time_aggregation,
+    _quantile_cumulative_returns,
 )
 
 
@@ -140,13 +140,13 @@ def test_normalize_time_aggregation_rejects_duplicates() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _legacy_quantile_cumulative_returns
+# _quantile_cumulative_returns
 # ---------------------------------------------------------------------------
 
 
 def test_legacy_quantile_cumulative_returns_empty() -> None:
     empty = pd.DataFrame()
-    assert _legacy_quantile_cumulative_returns(empty) == {}
+    assert _quantile_cumulative_returns(empty) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -155,13 +155,13 @@ def test_legacy_quantile_cumulative_returns_empty() -> None:
 
 
 def test_analyze_factor_rejects_non_string_benchmark_period() -> None:
-    with pytest.raises(TypeError, match="pyfolio_benchmark_period"):
-        _analyze_factor(_clean(), pyfolio_benchmark_period=1)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="portfolio_benchmark_period"):
+        _analyze_factor(_clean(), portfolio_benchmark_period=1)  # type: ignore[arg-type]
 
 
 def test_analyze_factor_rejects_non_numeric_capital() -> None:
-    with pytest.raises(TypeError, match="pyfolio_capital"):
-        _analyze_factor(_clean(), pyfolio_capital="lots")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="portfolio_capital"):
+        _analyze_factor(_clean(), portfolio_capital="lots")  # type: ignore[arg-type]
 
 
 def test_analyze_factor_legacy_event_windows_type_error() -> None:

@@ -11,7 +11,7 @@ import pytest
 from pandas.tseries.offsets import BDay
 
 from fincore.alphalens import performance as strict_performance
-from fincore.factor_analysis.portfolio import create_pyfolio_input as enhanced_create_pyfolio_input
+from fincore.factor_analysis.portfolio import build_factor_portfolio_inputs
 from fincore.factor_analysis.portfolio import factor_cumulative_returns as enhanced_factor_cumulative_returns
 from fincore.factor_analysis.portfolio import factor_positions as enhanced_factor_positions
 from fincore.factor_analysis.portfolio import positions as enhanced_positions
@@ -127,7 +127,7 @@ def test_strict_factor_position_and_pyfolio_position_frames_project_object_dtype
     strict_factor_positions = strict_performance.factor_positions(source, "5D", equal_weight=True)
     pd.testing.assert_frame_equal(strict_factor_positions, expected_factor_positions)
 
-    enhanced_pyfolio = enhanced_create_pyfolio_input(
+    enhanced_portfolio = build_factor_portfolio_inputs(
         source,
         "1D",
         capital=100_000,
@@ -135,9 +135,9 @@ def test_strict_factor_position_and_pyfolio_position_frames_project_object_dtype
         equal_weight=True,
         benchmark_period="missing",
     )
-    expected_pyfolio = enhanced_pyfolio.positions.copy(deep=True)
-    expected_pyfolio.loc[~expected_pyfolio.index.isin(enhanced_pyfolio.returns.index), :] = np.nan
-    expected_pyfolio = expected_pyfolio.astype(object)
+    expected_portfolio = enhanced_portfolio.positions.copy(deep=True)
+    expected_portfolio.loc[~expected_portfolio.index.isin(enhanced_portfolio.returns.index), :] = np.nan
+    expected_portfolio = expected_portfolio.astype(object)
     _, strict_pyfolio_positions, _ = strict_performance.create_pyfolio_input(
         source,
         "1D",
@@ -146,7 +146,7 @@ def test_strict_factor_position_and_pyfolio_position_frames_project_object_dtype
         equal_weight=True,
         benchmark_period="missing",
     )
-    pd.testing.assert_frame_equal(strict_pyfolio_positions, expected_pyfolio)
+    pd.testing.assert_frame_equal(strict_pyfolio_positions, expected_portfolio)
 
 
 def test_strict_pyfolio_capital_projection_retains_pinned_trailing_nan_rows() -> None:
@@ -197,7 +197,7 @@ def test_strict_group_neutral_missing_group_preserves_source_key_error(function_
     enhanced = {
         "factor_cumulative_returns": enhanced_factor_cumulative_returns,
         "factor_positions": enhanced_factor_positions,
-        "create_pyfolio_input": enhanced_create_pyfolio_input,
+        "create_pyfolio_input": build_factor_portfolio_inputs,
     }[function_name]
     strict = getattr(strict_performance, function_name)
 
@@ -262,7 +262,7 @@ def test_strict_duplicate_benchmark_period_projects_key_error_after_main_period_
     source.insert(3, "5D", source["5D"].to_numpy(), allow_duplicates=True)
 
     with pytest.raises(ValueError, match="exactly one"):
-        enhanced_create_pyfolio_input(source, "1D", benchmark_period="5D")
+        build_factor_portfolio_inputs(source, "1D", benchmark_period="5D")
     with pytest.raises(KeyError, match=re.escape("'5D'")):
         strict_performance.create_pyfolio_input(source, "1D", benchmark_period="5D")
     with pytest.raises(ValueError, match=re.escape("Period 'missing' not found")):

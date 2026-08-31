@@ -8,12 +8,9 @@ import pytest
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
-from fincore.factor_analysis import (
-    analyze_factor,
-    factor_model_inference,
-    prepare_factor_data_from_forward_returns,
-)
-from fincore.factor_analysis.inference import information_coefficient_inference
+from fincore.factor_analysis.analysis import analyze_factor
+from fincore.factor_analysis.data import prepare_factor_data_from_forward_returns
+from fincore.factor_analysis.inference import factor_model_inference, information_coefficient_inference
 
 
 def _information_coefficients() -> pd.DataFrame:
@@ -87,7 +84,7 @@ def _prepared_factor_data() -> pd.DataFrame:
 
 
 def test_factor_model_inference_consumes_the_aggregate_enhanced_ic_snapshot() -> None:
-    model = analyze_factor(_prepared_factor_data(), periods=("1D", "5D"), include_pyfolio=False)
+    model = analyze_factor(_prepared_factor_data(), periods=("1D", "5D"), include_portfolio_inputs=False)
 
     from_model = factor_model_inference(model)
     direct = information_coefficient_inference(model.aggregate_information_coefficient)

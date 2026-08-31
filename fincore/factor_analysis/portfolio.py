@@ -1,10 +1,4 @@
-"""Portfolio construction and Pyfolio bridge for the factor-analysis kernel.
-
-The functions in this module are the enhanced, standalone implementation.
-They deliberately do not inspect the compatibility fixture or carry a legacy
-profile switch; the strict Alphalens facade projects its source-visible details
-at its own boundary.
-"""
+"""Portfolio construction for the canonical factor-analysis kernel."""
 
 from __future__ import annotations
 
@@ -15,22 +9,17 @@ from typing import Any, Sequence, cast
 import pandas as pd
 from pandas.tseries.offsets import BDay
 
-from fincore.factor_analysis import performance as _performance
+import fincore.factor_analysis.performance as _performance
 from fincore.factor_analysis.calendar import add_custom_calendar_timedelta, get_forward_returns_columns
 
 
 @dataclass(frozen=True)
-class PyfolioFactorInputs:
-    """Typed, enhanced representation of the three inputs expected by Pyfolio."""
+class FactorPortfolioInputs:
+    """Typed daily return, position, and benchmark inputs for factor workflows."""
 
     returns: pd.Series
     positions: pd.DataFrame
-    benchmark_rets: pd.Series | None
-
-    def as_legacy_tuple(self) -> tuple[pd.Series, pd.DataFrame, pd.Series | None]:
-        """Return the immutable container's legacy Alphalens tuple projection."""
-
-        return self.returns, self.positions, self.benchmark_rets
+    benchmark_returns: pd.Series | None
 
 
 def _require_weight_series(weights: pd.Series) -> pd.Series:
@@ -200,14 +189,14 @@ def factor_positions(
 
 
 def _daily_cumulative_returns(cumulative: pd.Series) -> tuple[pd.Series, pd.Series]:
-    """Resample a cumulative curve and derive Pyfolio-compatible daily returns."""
+    """Resample a cumulative curve and derive daily factor-portfolio returns."""
 
     daily_cumulative = cumulative.resample("1D").last().ffill()
     daily_returns = daily_cumulative.pct_change(fill_method=None).fillna(0.0)
     return daily_cumulative, daily_returns
 
 
-def create_pyfolio_input(
+def build_factor_portfolio_inputs(
     factor_data: pd.DataFrame,
     period: object,
     capital: float | None = None,
@@ -217,13 +206,8 @@ def create_pyfolio_input(
     quantiles: Sequence[int] | None = None,
     groups: Sequence[str] | None = None,
     benchmark_period: object = "1D",
-) -> PyfolioFactorInputs:
-    """Build typed daily returns, positions, and optional benchmark for Pyfolio.
-
-    The enhanced builder is independent of external Pyfolio.  It merely emits
-    data in the workflow's canonical shape; rendering stays in
-    :mod:`fincore.pyfolio` and remains lazily optional.
-    """
+) -> FactorPortfolioInputs:
+    """Build typed daily returns, positions, and an optional benchmark series."""
 
     cumulative = factor_cumulative_returns(
         factor_data,
@@ -258,7 +242,7 @@ def create_pyfolio_input(
         daily_positions = daily_positions.mul(capital_curve * capital, axis=0)
 
     forward_columns = get_forward_returns_columns(factor_data.columns)
-    benchmark_rets: pd.Series | None = None
+    benchmark_returns: pd.Series | None = None
     if benchmark_period in forward_columns:
         benchmark_data = _performance._copy_factor_data(factor_data)
         benchmark_data["factor"] = benchmark_data["factor"].abs()
@@ -269,19 +253,19 @@ def create_pyfolio_input(
             group_neutral=False,
             equal_weight=True,
         )
-        _, benchmark_rets = _daily_cumulative_returns(benchmark_cumulative)
-        benchmark_rets.name = "benchmark"
+        _, benchmark_returns = _daily_cumulative_returns(benchmark_cumulative)
+        benchmark_returns.name = "benchmark"
 
-    return PyfolioFactorInputs(
+    return FactorPortfolioInputs(
         returns=returns.copy(deep=True),
         positions=daily_positions.copy(deep=True),
-        benchmark_rets=None if benchmark_rets is None else benchmark_rets.copy(deep=True),
+        benchmark_returns=None if benchmark_returns is None else benchmark_returns.copy(deep=True),
     )
 
 
 __all__ = [
-    "PyfolioFactorInputs",
-    "create_pyfolio_input",
+    "FactorPortfolioInputs",
+    "build_factor_portfolio_inputs",
     "factor_cumulative_returns",
     "factor_positions",
     "positions",

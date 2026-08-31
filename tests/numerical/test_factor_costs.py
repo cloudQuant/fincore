@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.factor_analysis import FactorCostModel, apply_factor_costs, estimate_factor_capacity
+from fincore.factor_analysis.costs import FactorCostModel, apply_factor_costs, estimate_factor_capacity
 from tests.oracles.factor.costs_oracle import factor_cost_ledger_reference
 
 

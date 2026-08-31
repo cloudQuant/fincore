@@ -19,7 +19,8 @@ import pandas as pd
 import pytest
 from pandas.tseries.offsets import BDay, CustomBusinessDay
 
-from fincore.factor_analysis import performance, portfolio
+import fincore.factor_analysis.performance as performance
+import fincore.factor_analysis.portfolio as portfolio
 from fincore.factor_analysis.calendar import get_forward_returns_columns
 
 
@@ -162,7 +163,7 @@ def test_factor_analysis_model_declares_every_renderer_required_field() -> None:
         "rank_autocorrelation",
         "grouped_results",
         "time_aggregated_results",
-        "pyfolio_inputs",
+        "portfolio_inputs",
         "event_returns",
         "result_fingerprint",
     } <= names
@@ -184,7 +185,7 @@ def test_public_model_and_entrypoint_annotations_resolve_at_runtime() -> None:
     from fincore.factor_analysis.models import FactorAnalysisModel
 
     assert "periods" in get_type_hints(analyze_factor)
-    assert "pyfolio_inputs" in get_type_hints(FactorAnalysisModel)
+    assert "portfolio_inputs" in get_type_hints(FactorAnalysisModel)
 
 
 def test_analyze_factor_computes_ic_once_and_owns_input_snapshot(
@@ -207,7 +208,7 @@ def test_analyze_factor_computes_ic_once_and_owns_input_snapshot(
         clean_factor_data,
         periods=("1D", "5D"),
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
     # Pandas 3 rejects NaN assignment into the integer quantile column; a
     # factor-only mutation still proves the model owns its input snapshot.
@@ -231,7 +232,7 @@ def test_model_fields_match_the_existing_enhanced_kernel_outputs(clean_factor_da
     from fincore.factor_analysis.analysis import analyze_factor
 
     source = _only_periods(clean_factor_data, ("1D", "5D"))
-    model = analyze_factor(source, periods=("1D", "5D"), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D", "5D"), turnover_periods=(1,), include_portfolio_inputs=False)
 
     expected_weights = performance.factor_weights(source).to_frame("factor")
     expected_returns = performance.factor_returns(source)
@@ -265,7 +266,7 @@ def test_model_fields_match_the_existing_enhanced_kernel_outputs(clean_factor_da
     pd.testing.assert_frame_equal(model.quantile_statistics, expected_statistics)
     assert tuple(model.quantile_turnover) == (1,)
     assert list(model.rank_autocorrelation.columns) == [1]
-    assert model.pyfolio_inputs is None
+    assert model.portfolio_inputs is None
 
 
 def test_config_and_result_fingerprints_cover_options_and_input(
@@ -287,17 +288,19 @@ def test_config_and_result_fingerprints_cover_options_and_input(
         FactorAnalysisConfig(periods=("1D", "5D"), event_before=1, event_after=2),
         FactorAnalysisConfig(periods=("1D", "5D"), turnover_periods=(2,)),
         FactorAnalysisConfig(periods=("1D", "5D"), time_aggregation=("W",)),
-        FactorAnalysisConfig(periods=("1D", "5D"), include_pyfolio=False),
-        FactorAnalysisConfig(periods=("1D", "5D"), pyfolio_capital=100_000.0),
-        FactorAnalysisConfig(periods=("1D", "5D"), pyfolio_benchmark_period="5D"),
+        FactorAnalysisConfig(periods=("1D", "5D"), include_portfolio_inputs=False),
+        FactorAnalysisConfig(periods=("1D", "5D"), portfolio_capital=100_000.0),
+        FactorAnalysisConfig(periods=("1D", "5D"), portfolio_benchmark_period="5D"),
     )
     assert len({base.fingerprint, *(item.fingerprint for item in variants)}) == len(variants) + 1
 
-    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
-    equivalent = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
+    equivalent = analyze_factor(
+        clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False
+    )
     changed_input = clean_factor_data.copy(deep=True)
     changed_input.iloc[0, changed_input.columns.get_loc("factor")] += 0.25
-    changed = analyze_factor(changed_input, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    changed = analyze_factor(changed_input, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
 
     assert (
         model.config.fingerprint != changed.config.fingerprint or model.result_fingerprint != changed.result_fingerprint
@@ -312,7 +315,7 @@ def test_config_and_result_fingerprints_cover_options_and_input(
         next_representable,
         periods=("1D",),
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
 
     assert model.result_fingerprint != next_model.result_fingerprint
@@ -324,7 +327,7 @@ def test_config_and_result_fingerprints_cover_options_and_input(
         clean_factor_data,
         periods=("1D",),
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
         event_returns=event_input,
     )
     changed_event_input = event_input.copy(deep=True)
@@ -333,7 +336,7 @@ def test_config_and_result_fingerprints_cover_options_and_input(
         clean_factor_data,
         periods=("1D",),
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
         event_returns=changed_event_input,
     )
     assert incomplete_event.result_fingerprint != changed_incomplete_event.result_fingerprint
@@ -440,7 +443,7 @@ def test_fingerprint_supports_standard_extension_dtype_metadata(clean_factor_dat
 
     observed = clean_factor_data.copy(deep=True)
     observed["observed_at"] = pd.date_range("2024-01-01", periods=len(observed), tz="America/New_York")
-    model = analyze_factor(observed, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(observed, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     extension_frame = pd.DataFrame(
         {
             "period": pd.Series(pd.period_range("2024-01", periods=2, freq="M")),
@@ -520,7 +523,7 @@ def test_model_handoff_retains_numpy_dtype_attrs(clean_factor_data: pd.DataFrame
         [(("title_a", "a"), "i4"), ("b", "f8")], align=True, metadata={"unit": "USD"}
     )
     source.attrs["subarray_dtype"] = np.dtype((np.dtype("i4"), (2,)), metadata={"unit": "USD"})
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     restored = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
 
     assert isinstance(restored, Mapping)
@@ -537,7 +540,7 @@ def test_model_handoff_retains_numpy_dtype_attrs(clean_factor_data: pd.DataFrame
     assert (
         model.result_fingerprint
         != analyze_factor(
-            clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False
+            clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False
         ).result_fingerprint
     )
 
@@ -563,7 +566,7 @@ def test_model_fingerprint_and_json_handoff_support_stdlib_asset_labels(
         names=clean_factor_data.index.names,
     )
 
-    model = analyze_factor(relabelled, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(relabelled, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     restored = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
     scalar_labels = pd.Index(
         [
@@ -855,7 +858,7 @@ def test_model_handoff_supports_hashable_unordered_object_cells(clean_factor_dat
     metadata = frozenset({"a", "b"})
     source = clean_factor_data.copy(deep=True)
     source["metadata"] = [metadata] * len(source)
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
     restored_mapping = deserialize_serializable_value(
         json.loads(json.dumps(serializable_value({metadata: {"values": metadata}}), allow_nan=False))
@@ -883,7 +886,7 @@ def test_model_handoff_supports_accepted_binary_numeric_and_arrow_object_values(
     source["metadata_bytes"] = [b"asset-bytes"] * len(source)
     source["metadata_complex"] = [complex(1.5, -2.25)] * len(source)
     source["metadata_decimal"] = [Decimal("1.2300")] * len(source)
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
     arrow_frame = pd.DataFrame(
         {
@@ -935,7 +938,7 @@ def test_json_handoff_retains_numpy_scalars_and_nested_object_arrays(
     )
     source = clean_factor_data.copy(deep=True)
     source["metadata_scalar"] = pd.Series([np.float32(1.25)] * len(source), index=source.index, dtype=object)
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     restored_model = deserialize_serializable_value(json.loads(json.dumps(model.to_serializable(), allow_nan=False)))
 
     assert isinstance(restored_scalars, Mapping)
@@ -975,7 +978,7 @@ def test_config_owns_sequence_options_and_rejects_lossy_integer_capital() -> Non
         periods=periods,  # type: ignore[arg-type]
         turnover_periods=turnover_periods,  # type: ignore[arg-type]
         time_aggregation=aggregations,  # type: ignore[arg-type]
-        pyfolio_capital=2**53,
+        portfolio_capital=2**53,
     )
     fingerprint = config.fingerprint
     periods.append("5D")
@@ -985,12 +988,12 @@ def test_config_owns_sequence_options_and_rejects_lossy_integer_capital() -> Non
     assert config.periods == ("1D",)
     assert config.turnover_periods == (1,)
     assert config.time_aggregation == ("M",)
-    assert config.pyfolio_capital == 2**53
+    assert config.portfolio_capital == 2**53
     assert config.fingerprint == fingerprint
 
     with pytest.raises(ValueError, match="exactly"):
-        FactorAnalysisConfig(pyfolio_capital=2**53 + 1)
-    assert FactorAnalysisConfig(pyfolio_capital=2**54).pyfolio_capital == 2**54
+        FactorAnalysisConfig(portfolio_capital=2**53 + 1)
+    assert FactorAnalysisConfig(portfolio_capital=2**54).portfolio_capital == 2**54
 
 
 def test_config_rejects_nondeterministic_sequences_and_invalid_typed_options(
@@ -1019,13 +1022,13 @@ def test_config_rejects_nondeterministic_sequences_and_invalid_typed_options(
         FactorAnalysisConfig(event_before=-1)
 
     with pytest.raises(TypeError, match="periods"):
-        analyze_factor(clean_factor_data, periods="1D", include_pyfolio=False)  # type: ignore[arg-type]
+        analyze_factor(clean_factor_data, periods="1D", include_portfolio_inputs=False)  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="event_before"):
         analyze_factor(
             clean_factor_data,
             event_before="bad",  # type: ignore[arg-type]
             event_after=None,
-            include_pyfolio=False,
+            include_portfolio_inputs=False,
         )
 
 
@@ -1084,7 +1087,7 @@ def test_model_exposes_defensive_snapshots_for_all_renderer_data(
         periods=("1D",),
         turnover_periods=(1,),
         by_group=True,
-        include_pyfolio=True,
+        include_portfolio_inputs=True,
         event_returns=_event_returns(prices),
         event_before=1,
         event_after=2,
@@ -1096,8 +1099,8 @@ def test_model_exposes_defensive_snapshots_for_all_renderer_data(
     group_snapshot = model.grouped_results[group_key].factor_returns.copy(deep=True)
     assert model.event_returns is not None
     event_snapshot = model.event_returns.event_windows.copy(deep=True)
-    assert model.pyfolio_inputs is not None
-    positions_snapshot = model.pyfolio_inputs.positions.copy(deep=True)
+    assert model.portfolio_inputs is not None
+    positions_snapshot = model.portfolio_inputs.positions.copy(deep=True)
 
     changed_factor_data = model.factor_data
     changed_factor_data.iloc[0, changed_factor_data.columns.get_loc("factor")] = 999.0
@@ -1108,8 +1111,8 @@ def test_model_exposes_defensive_snapshots_for_all_renderer_data(
     assert model.event_returns is not None
     changed_event = model.event_returns.event_windows
     changed_event.iloc[0, 0] = 999.0
-    assert model.pyfolio_inputs is not None
-    changed_positions = model.pyfolio_inputs.positions
+    assert model.portfolio_inputs is not None
+    changed_positions = model.portfolio_inputs.positions
     changed_positions.iloc[0, 0] = 999.0
 
     pd.testing.assert_frame_equal(model.factor_data, factor_snapshot)
@@ -1117,8 +1120,8 @@ def test_model_exposes_defensive_snapshots_for_all_renderer_data(
     pd.testing.assert_frame_equal(model.grouped_results[group_key].factor_returns, group_snapshot)
     assert model.event_returns is not None
     pd.testing.assert_frame_equal(model.event_returns.event_windows, event_snapshot)
-    assert model.pyfolio_inputs is not None
-    pd.testing.assert_frame_equal(model.pyfolio_inputs.positions, positions_snapshot)
+    assert model.portfolio_inputs is not None
+    pd.testing.assert_frame_equal(model.portfolio_inputs.positions, positions_snapshot)
     assert model.result_fingerprint == fingerprint
     with pytest.raises(TypeError):
         model.factor_positions["new"] = pd.DataFrame()  # type: ignore[index]
@@ -1134,7 +1137,7 @@ def test_model_owns_mutable_object_cells_before_computation(clean_factor_data: p
     mutable_group = _MutableGroupLabel(["initial"])
     source = clean_factor_data.astype({"group": object})
     source.iloc[0, source.columns.get_loc("group")] = mutable_group
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
     fingerprint = model.result_fingerprint
 
     mutable_group.labels.append("caller-mutation")
@@ -1154,7 +1157,9 @@ def test_grouped_model_exposes_copied_mapping_keys(clean_factor_data: pd.DataFra
     second_group = _MutableGroupLabel(["two"])
     source = clean_factor_data.astype({"group": object})
     source.loc[:, "group"] = [first_group if row % 2 else second_group for row in range(len(source))]
-    model = analyze_factor(source, periods=("1D",), turnover_periods=(1,), by_group=True, include_pyfolio=False)
+    model = analyze_factor(
+        source, periods=("1D",), turnover_periods=(1,), by_group=True, include_portfolio_inputs=False
+    )
     fingerprint = model.result_fingerprint
 
     exposed_key = next(key for key in model.grouped_results if isinstance(key, _MutableGroupLabel))
@@ -1243,7 +1248,7 @@ def test_group_and_event_sections_are_optional_typed_models(
         periods=("1D",),
         by_group=True,
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
     assert no_group.grouped_results == {}
     assert no_group.event_returns is None
@@ -1253,7 +1258,7 @@ def test_group_and_event_sections_are_optional_typed_models(
         periods=("1D",),
         by_group=True,
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
     )
     assert set(grouped.grouped_results) == set(clean_factor_data["group"].unique())
     assert all(isinstance(item, FactorGroupAnalysis) for item in grouped.grouped_results.values())
@@ -1262,7 +1267,7 @@ def test_group_and_event_sections_are_optional_typed_models(
         clean_factor_data,
         periods=("1D",),
         turnover_periods=(1,),
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
         event_returns=_event_returns(prices),
         event_before=1,
         event_after=2,
@@ -1279,7 +1284,7 @@ def test_model_is_frozen_json_serializable_and_contains_no_render_objects(clean_
 
     from fincore.factor_analysis.analysis import analyze_factor
 
-    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_pyfolio=False)
+    model = analyze_factor(clean_factor_data, periods=("1D",), turnover_periods=(1,), include_portfolio_inputs=False)
 
     with pytest.raises(FrozenInstanceError):
         model.config = model.config  # type: ignore[misc]
@@ -1292,22 +1297,24 @@ def test_model_is_frozen_json_serializable_and_contains_no_render_objects(clean_
     )
 
 
-def test_pyfolio_bridge_is_optional_typed_data_not_a_renderer(clean_factor_data: pd.DataFrame) -> None:
-    """The model may include the Task 5 bridge without importing external Pyfolio."""
+def test_portfolio_inputs_are_optional_typed_data_not_a_renderer(clean_factor_data: pd.DataFrame) -> None:
+    """The model may include portfolio inputs without importing a renderer."""
 
     from fincore.factor_analysis.analysis import analyze_factor
-    from fincore.factor_analysis.portfolio import PyfolioFactorInputs
+    from fincore.factor_analysis.portfolio import FactorPortfolioInputs
 
     model = analyze_factor(
         clean_factor_data,
         periods=("1D",),
         turnover_periods=(1,),
-        include_pyfolio=True,
-        pyfolio_capital=100_000.0,
-        pyfolio_benchmark_period="5D",
+        include_portfolio_inputs=True,
+        portfolio_capital=100_000.0,
+        portfolio_benchmark_period="5D",
     )
 
-    assert isinstance(model.pyfolio_inputs, PyfolioFactorInputs)
-    _assert_serializable_data_only(model.pyfolio_inputs)
-    bridge_payload = json.loads(json.dumps(model.to_serializable(), sort_keys=True, allow_nan=False))["pyfolio_inputs"]
-    assert set(bridge_payload) == {"benchmark_rets", "positions", "returns"}
+    assert isinstance(model.portfolio_inputs, FactorPortfolioInputs)
+    _assert_serializable_data_only(model.portfolio_inputs)
+    bridge_payload = json.loads(json.dumps(model.to_serializable(), sort_keys=True, allow_nan=False))[
+        "portfolio_inputs"
+    ]
+    assert set(bridge_payload) == {"benchmark_returns", "positions", "returns"}

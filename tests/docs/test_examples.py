@@ -403,14 +403,14 @@ def test_stability_documented_flat_api_names() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_factor_analysis_quickstart_runs_strict_facade() -> None:
+def test_factor_analysis_quickstart_builds_offline_canonical_inputs() -> None:
     example = _load_factor_analysis_quickstart()
 
-    clean = example["strict_quickstart"]()
+    factor, prices = example["synthetic_factor_inputs"]()
 
-    assert isinstance(clean, pd.DataFrame)
-    assert {"factor", "factor_quantile", "1D"}.issubset(clean.columns)
-    assert clean.index.names == ["date", "asset"]
+    assert isinstance(factor, pd.Series)
+    assert isinstance(prices, pd.DataFrame)
+    assert factor.index.names == ["date", "asset"]
 
 
 def test_factor_analysis_quickstart_prepares_and_analyzes_enhanced_model() -> None:
@@ -423,10 +423,10 @@ def test_factor_analysis_quickstart_prepares_and_analyzes_enhanced_model() -> No
     assert not model.information_coefficient.empty
 
 
-def test_factor_analysis_quickstart_builds_pyfolio_bridge_inputs() -> None:
+def test_factor_analysis_quickstart_builds_portfolio_inputs() -> None:
     example = _load_factor_analysis_quickstart()
 
-    inputs = example["pyfolio_bridge"]()
+    inputs = example["factor_portfolio_inputs"]()
 
     assert inputs.returns.index.isin(inputs.positions.index).all()
     assert "cash" in inputs.positions.columns
@@ -444,8 +444,8 @@ def test_factor_analysis_quickstart_renders_and_closes_headless_summary() -> Non
 
 def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch: pytest.MonkeyPatch) -> None:
     example = _load_factor_analysis_quickstart()
+    import fincore.factor_analysis.render_matplotlib as render_matplotlib
     from fincore.exceptions import DependencyError
-    from fincore.factor_analysis import render_matplotlib
 
     real_import = render_matplotlib.importlib.import_module
 
@@ -462,7 +462,7 @@ def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch:
 
 def test_factor_cost_and_capacity_ledger_example() -> None:
     # mkdocs_docs/concepts/factor-research-protocol.md cost/capacity block.
-    from fincore.factor_analysis import FactorCostModel, apply_factor_costs
+    from fincore.factor_analysis.costs import FactorCostModel, apply_factor_costs
 
     dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
     weights = pd.Series(
@@ -495,7 +495,7 @@ def test_factor_cost_and_capacity_ledger_example() -> None:
 
 def test_fama_macbeth_newey_west_example() -> None:
     # mkdocs_docs/concepts/factor-research-protocol.md Newey-West block.
-    from fincore.factor_analysis import fama_macbeth
+    from fincore.factor_analysis.inference import fama_macbeth
 
     dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
     assets = ["a", "b", "c"]

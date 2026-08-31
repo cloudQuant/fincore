@@ -84,7 +84,7 @@ def test_portfolio_semantics_defaults() -> None:
 
 
 def test_fama_macbeth_preserves_the_iid_default_and_exposes_newey_west_keywords() -> None:
-    from fincore.factor_analysis import fama_macbeth
+    from fincore.factor_analysis.inference import fama_macbeth
 
     parameters = inspect.signature(fama_macbeth).parameters
 

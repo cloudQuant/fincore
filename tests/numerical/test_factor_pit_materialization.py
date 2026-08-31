@@ -6,10 +6,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.factor_analysis import PITPoint as public_pit_point
-from fincore.factor_analysis import materialize_pit_factor as public_materialize_pit_factor
-from fincore.factor_analysis import prepare_pit_factor_data as public_prepare_pit_factor_data
-from fincore.factor_analysis import validate_pit_alignment as public_validate_pit_alignment
 from fincore.factor_analysis.data import prepare_pit_factor_data
 from fincore.factor_analysis.pit import PITPoint, materialize_pit_factor, validate_pit_alignment
 
@@ -28,11 +24,11 @@ def _observations() -> pd.DataFrame:
 
 
 class TestPITFactorMaterialization:
-    def test_exposes_the_causal_path_on_the_enhanced_factor_surface(self) -> None:
-        assert public_pit_point is PITPoint
-        assert public_materialize_pit_factor is materialize_pit_factor
-        assert public_prepare_pit_factor_data is prepare_pit_factor_data
-        assert public_validate_pit_alignment is validate_pit_alignment
+    def test_exposes_the_causal_path_from_its_owning_modules(self) -> None:
+        assert PITPoint.__module__ == "fincore.factor_analysis.pit"
+        assert materialize_pit_factor.__module__ == "fincore.factor_analysis.pit"
+        assert prepare_pit_factor_data.__module__ == "fincore.factor_analysis.data"
+        assert validate_pit_alignment.__module__ == "fincore.factor_analysis.pit"
 
     def test_pit_point_enforces_the_event_time_contract(self) -> None:
         as_of = pd.Timestamp("2024-01-01", tz="UTC")

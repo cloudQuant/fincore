@@ -31,7 +31,7 @@ def test_stack_missing_value_policy_is_explicit_in_event_model() -> None:
     returns.iloc[0, 0] = np.nan
     model = analyze_factor(
         data,
-        include_pyfolio=False,
+        include_portfolio_inputs=False,
         event_returns=returns,
         event_before=0,
         event_after=1,
@@ -118,6 +118,6 @@ def test_enhanced_kernel_warning_budget_is_zero_future_warnings() -> None:
         warnings.simplefilter("always")
         factor_information_coefficient(data)
         factor_weights(data)
-        analyze_factor(data, include_pyfolio=False)
+        analyze_factor(data, include_portfolio_inputs=False)
 
     assert not [item for item in caught if issubclass(item.category, FutureWarning)]

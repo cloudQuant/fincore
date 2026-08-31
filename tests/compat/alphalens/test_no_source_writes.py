@@ -73,7 +73,7 @@ sys.addaudithook(_audit)
 
 import pandas as pd
 
-from fincore.factor_analysis import analyze_factor
+from fincore.factor_analysis.analysis import analyze_factor
 from fincore.factor_analysis.tears import (
     close_owned_figures,
     create_event_returns_tear_sheet,
@@ -118,7 +118,7 @@ model = analyze_factor(
     periods=("1D",),
     turnover_periods=(1,),
     by_group=True,
-    include_pyfolio=False,
+    include_portfolio_inputs=False,
     event_returns=event_returns,
     event_before=1,
     event_after=2,
