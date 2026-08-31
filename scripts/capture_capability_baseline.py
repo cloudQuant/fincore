@@ -605,8 +605,12 @@ def _validate_complete_inventory_inputs(
             legacy_discovery_path = _write_checker_input(
                 directory, legacy_discovery_filename, legacy_discovery_payload, "legacy discovery"
             )
-            surface_union_path = _write_checker_input(directory, surface_union_filename, surface_union_payload, "surface union")
-            inventory_path = _write_checker_input(directory, inventory_filename, inventory_payload, "complete inventory")
+            surface_union_path = _write_checker_input(
+                directory, surface_union_filename, surface_union_payload, "surface union"
+            )
+            inventory_path = _write_checker_input(
+                directory, inventory_filename, inventory_payload, "complete inventory"
+            )
             summary = validator(legacy_discovery_path, surface_union_path, inventory_path)
     except (OSError, TypeError, ValueError) as exc:
         raise CaptureValidationError(f"complete-surface inventory validation failed: {exc}") from exc
@@ -783,6 +787,7 @@ def capture(
             "disposition_sha256": inputs["repository_surface_disposition"]["sha256"],
             "validation": repository_surface_summary,
         },
+        "fixture_root": fixture_dir_relative,
         "fixtures": fixture_manifest,
         "ledger_summary": {
             "entries": len(ledger_entries),

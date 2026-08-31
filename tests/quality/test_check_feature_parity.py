@@ -7,6 +7,7 @@ for the detached D0_TOOLING_SHA acceptance runner.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -63,12 +64,50 @@ def _complete_ledger(family: str = "metrics") -> dict:
     }
 
 
-def _captured_baseline(capabilities: dict) -> dict:
+def _captured_baseline(capabilities: dict, *, ledger_path: Path | None = None) -> dict:
+    source = {"commit": "a" * 40, "tree": "b" * 40, "clean": True}
+    ledger_sha256 = hashlib.sha256(ledger_path.read_bytes()).hexdigest() if ledger_path else "c" * 64
+    normalized_capabilities = {}
+    for capability_id, record in capabilities.items():
+        if record.get("status") != "ok":
+            normalized_capabilities[capability_id] = record
+            continue
+        normalized_capabilities[capability_id] = {
+            **record,
+            "input_capture_sha256": "d" * 64,
+            "ledger_sha256": ledger_sha256,
+            "source_identity": source,
+            "wheel_nodeids": ["tests/parity/test_demo.py::test_demo"],
+            "scenarios": [
+                {
+                    "scenario_id": "ordinary_inputs",
+                    "status": "ok",
+                    "authority_sha256": "e" * 64,
+                    "oracle_sha256": "f" * 64,
+                    "output_sha256": "0" * 64,
+                    "execution_ids": ["source-0001"],
+                }
+            ],
+        }
     return {
         "artifact_type": "capability_baseline_capture",
         "capture_status": "captured",
-        "source": {"commit": "a" * 40, "tree": "b" * 40, "clean": True},
-        "capabilities": capabilities,
+        "source": source,
+        "evaluation_status": "evaluated_source",
+        "evaluation": {
+            "artifact_type": "capability_scenario_evaluation",
+            "input_capture_sha256": "d" * 64,
+            "ledger": {"sha256": ledger_sha256},
+            "mode": "baseline_source",
+        },
+        "executions": {
+            "source-0001": {
+                "argv": ["python", "-m", "pytest", "tests/parity/test_demo.py::test_demo"],
+                "exit_code": 0,
+                "output_sha256": "0" * 64,
+            }
+        },
+        "capabilities": normalized_capabilities,
     }
 
 
@@ -98,7 +137,7 @@ def test_baseline_without_capability_section_is_blocked(tmp_path: Path) -> None:
     ledger = tmp_path / "ledger.json"
     baseline = tmp_path / "baseline.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({}))
+    _write_json(baseline, _captured_baseline({}, ledger_path=ledger))
     payload = json.loads(baseline.read_text(encoding="utf-8"))
     payload.pop("capabilities")
     _write_json(baseline, payload)
@@ -125,7 +164,7 @@ def test_unknown_family_is_a_usage_error(tmp_path: Path) -> None:
     ledger = tmp_path / "ledger.json"
     baseline = tmp_path / "baseline.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({}))
+    _write_json(baseline, _captured_baseline({}, ledger_path=ledger))
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "not_a_family"])
 
@@ -135,13 +174,13 @@ def test_unknown_family_is_a_usage_error(tmp_path: Path) -> None:
 
 def test_committed_complete_ledger_requires_actual_capture_evidence(tmp_path: Path) -> None:
     baseline = tmp_path / "baseline.json"
-    _write_json(baseline, _captured_baseline({}))
+    _write_json(baseline, _captured_baseline({}, ledger_path=COMMITTED_LEDGER))
 
     result = _run(
         ["--baseline", str(baseline), "--ledger", str(COMMITTED_LEDGER), "--families", "metrics", "performance"]
     )
 
-    assert result.returncode == 1
+    assert result.returncode == 3
 
 
 def test_scoped_ledger_without_gaps_still_cannot_sign_parity(tmp_path: Path) -> None:
@@ -152,7 +191,7 @@ def test_scoped_ledger_without_gaps_still_cannot_sign_parity(tmp_path: Path) -> 
     scoped["not_for_d0"] = True
     scoped["scope"] = "metrics_family_only"
     _write_json(ledger, scoped)
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger))
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics"])
 
@@ -166,7 +205,7 @@ def test_family_outside_ledger_scope_is_blocked(tmp_path: Path) -> None:
     scoped = _complete_ledger("metrics")
     scoped["scope"] = "metrics_family_only"
     _write_json(ledger, scoped)
-    _write_json(baseline, _captured_baseline({}))
+    _write_json(baseline, _captured_baseline({}, ledger_path=ledger))
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "factor"])
 
@@ -179,7 +218,7 @@ def test_complete_ledger_with_ok_baseline_passes_and_writes_evidence(tmp_path: P
     baseline = tmp_path / "baseline.json"
     output = tmp_path / "evidence.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger))
 
     result = _run(
         [
@@ -207,7 +246,7 @@ def test_divergent_capability_fails_with_unresolved_difference(tmp_path: Path) -
     baseline = tmp_path / "baseline.json"
     output = tmp_path / "evidence.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "divergent"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "divergent"}}, ledger_path=ledger))
 
     result = _run(
         [
@@ -228,22 +267,35 @@ def test_divergent_capability_fails_with_unresolved_difference(tmp_path: Path) -
     assert evidence["results"][0]["unresolved_differences"] == ["metrics.demo_capability"]
 
 
-def test_capability_absent_from_baseline_fails_as_missing(tmp_path: Path) -> None:
+def test_unbound_ok_capability_is_blocked_not_counted_as_verified(tmp_path: Path) -> None:
     ledger = tmp_path / "ledger.json"
     baseline = tmp_path / "baseline.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({}))
+    payload = _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger)
+    payload["capabilities"]["metrics.demo_capability"]["scenarios"][0].pop("output_sha256")
+    _write_json(baseline, payload)
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics"])
 
-    assert result.returncode == 1
+    assert result.returncode == 3
+
+
+def test_capability_absent_from_baseline_blocks_as_missing_evidence(tmp_path: Path) -> None:
+    ledger = tmp_path / "ledger.json"
+    baseline = tmp_path / "baseline.json"
+    _write_json(ledger, _complete_ledger())
+    _write_json(baseline, _captured_baseline({}, ledger_path=ledger))
+
+    result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics"])
+
+    assert result.returncode == 3
 
 
 def test_family_without_ledger_capabilities_is_blocked(tmp_path: Path) -> None:
     ledger = tmp_path / "ledger.json"
     baseline = tmp_path / "baseline.json"
     _write_json(ledger, _complete_ledger("metrics"))
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger))
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics", "factor"])
 
@@ -257,7 +309,7 @@ def test_dist_directory_without_a_wheel_is_blocked(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
     dist.mkdir()
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger))
 
     result = _run(["--baseline", str(baseline), "--ledger", str(ledger), "--families", "metrics", "--dist", str(dist)])
 
@@ -269,7 +321,7 @@ def test_missing_dist_directory_is_a_usage_error(tmp_path: Path) -> None:
     ledger = tmp_path / "ledger.json"
     baseline = tmp_path / "baseline.json"
     _write_json(ledger, _complete_ledger())
-    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}))
+    _write_json(baseline, _captured_baseline({"metrics.demo_capability": {"status": "ok"}}, ledger_path=ledger))
 
     result = _run(
         [

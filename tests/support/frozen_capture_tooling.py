@@ -13,6 +13,7 @@ _TOOLING_FILES = (
     "capture_capability_baseline.py",
     "check_0042_r2_complete_surface_inventory.py",
     "check_0042_r2_repository_surface_disposition.py",
+    "evaluate_0042_r2_capability_scenarios.py",
 )
 
 

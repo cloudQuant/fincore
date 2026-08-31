@@ -46,6 +46,7 @@ _KNOWN_FAMILIES = frozenset(
     }
 )
 _OK_CAPABILITY_STATUSES = frozenset({"ok"})
+_PENDING_CAPABILITY_STATUSES = frozenset({"pending"})
 
 
 class ParityUsageError(ValueError):
@@ -79,11 +80,13 @@ def _require_existing_path(value: str | None, label: str) -> Path:
     return path
 
 
-def _validate_baseline(baseline: dict, baseline_path: Path) -> None:
+def _is_sha256(value: object) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(character in "0123456789abcdef" for character in value)
+
+
+def _validate_baseline(baseline: dict, baseline_path: Path, ledger_sha256: str) -> None:
     if baseline.get("artifact_type") != "capability_baseline_capture":
-        raise ParityUsageError(
-            f"baseline must be a capability_baseline_capture artifact: {baseline_path}"
-        )
+        raise ParityUsageError(f"baseline must be a capability_baseline_capture artifact: {baseline_path}")
     status = baseline.get("capture_status")
     if status == "pending":
         raise ParityBlockedError(f"baseline capture is pending: {baseline_path}")
@@ -92,6 +95,24 @@ def _validate_baseline(baseline: dict, baseline_path: Path) -> None:
     capabilities = baseline.get("capabilities")
     if not isinstance(capabilities, dict):
         raise ParityBlockedError("baseline does not carry a capability parity section")
+    if baseline.get("evaluation_status") != "evaluated_source":
+        raise ParityBlockedError("baseline capability section was not produced by the frozen source scenario evaluator")
+    evaluation = baseline.get("evaluation")
+    if not isinstance(evaluation, dict) or evaluation.get("artifact_type") != "capability_scenario_evaluation":
+        raise ParityBlockedError("baseline lacks capability-scenario evaluation identity")
+    if evaluation.get("mode") != "baseline_source":
+        raise ParityBlockedError("baseline capability evaluation is not a frozen source evaluation")
+    if not _is_sha256(evaluation.get("input_capture_sha256")):
+        raise ParityBlockedError("baseline evaluation lacks an input-capture SHA256")
+    ledger = evaluation.get("ledger")
+    if not isinstance(ledger, dict) or ledger.get("sha256") != ledger_sha256:
+        raise ParityBlockedError("baseline evaluation ledger SHA256 does not match the supplied ledger")
+    source = baseline.get("source")
+    if not isinstance(source, dict) or not all(source.get(key) for key in ("commit", "tree")):
+        raise ParityBlockedError("baseline lacks captured source identity")
+    executions = baseline.get("executions")
+    if not isinstance(executions, dict) or not executions:
+        raise ParityBlockedError("baseline evaluation lacks source execution evidence")
 
 
 def _ledger_family_scope(ledger: dict) -> frozenset[str]:
@@ -105,16 +126,18 @@ def _ledger_family_scope(ledger: dict) -> frozenset[str]:
 
 
 def _select_ledger_capabilities(ledger: dict, families: frozenset[str]) -> list[dict]:
-    return [entry for entry in ledger.get("entries", []) if entry.get("owner") in families]
+    return [
+        entry
+        for entry in ledger.get("entries", [])
+        if entry.get("owner") in families and entry.get("disposition") == "required"
+    ]
 
 
 def _check_ledger_completeness(ledger: dict, families: frozenset[str], families_arg: list[str]) -> None:
     scope = _ledger_family_scope(ledger)
     missing_scope = sorted(families - scope)
     if missing_scope:
-        raise ParityBlockedError(
-            f"ledger scope does not cover requested families: {', '.join(missing_scope)}"
-        )
+        raise ParityBlockedError(f"ledger scope does not cover requested families: {', '.join(missing_scope)}")
     if ledger.get("decision_status") == "scoped" or ledger.get("not_for_d0") is True:
         gap_families = set()
         for gap in ledger.get("coverage_gaps", []):
@@ -128,16 +151,51 @@ def _check_ledger_completeness(ledger: dict, families: frozenset[str], families_
                 f"{', '.join(sorted(gap_families))} (requested: {', '.join(families_arg)})"
             )
         if ledger.get("decision_status") == "scoped":
-            raise ParityBlockedError(
-                "ledger decision_status scoped cannot sign parity until it is complete"
-            )
+            raise ParityBlockedError("ledger decision_status scoped cannot sign parity until it is complete")
 
 
-def _evaluate_family(
-    family: str, entries: list[dict], capabilities: dict
-) -> dict:
+def _valid_ok_record(record: dict, baseline: dict) -> bool:
+    evaluation = baseline["evaluation"]
+    if record.get("input_capture_sha256") != evaluation.get("input_capture_sha256"):
+        return False
+    ledger = evaluation.get("ledger")
+    if not isinstance(ledger, dict) or record.get("ledger_sha256") != ledger.get("sha256"):
+        return False
+    if record.get("source_identity") != baseline.get("source"):
+        return False
+    if not isinstance(record.get("wheel_nodeids"), list) or not record["wheel_nodeids"]:
+        return False
+    scenarios = record.get("scenarios")
+    executions = baseline.get("executions")
+    if not isinstance(scenarios, list) or not scenarios or not isinstance(executions, dict):
+        return False
+    for scenario in scenarios:
+        if not isinstance(scenario, dict) or scenario.get("status") != "ok":
+            return False
+        if not _is_sha256(scenario.get("authority_sha256")) or not _is_sha256(scenario.get("output_sha256")):
+            return False
+        if not (_is_sha256(scenario.get("golden_sha256")) or _is_sha256(scenario.get("oracle_sha256"))):
+            return False
+        execution_ids = scenario.get("execution_ids")
+        if not isinstance(execution_ids, list) or not execution_ids:
+            return False
+        for execution_id in execution_ids:
+            execution = executions.get(execution_id)
+            if not isinstance(execution, dict) or execution.get("exit_code") != 0:
+                return False
+            if not isinstance(execution.get("argv"), list) or not execution["argv"]:
+                return False
+            if not _is_sha256(execution.get("output_sha256")):
+                return False
+    return True
+
+
+def _evaluate_family(family: str, entries: list[dict], baseline: dict) -> dict:
+    capabilities = baseline["capabilities"]
     missing: list[str] = []
     divergent: list[str] = []
+    pending: list[str] = []
+    untrusted: list[str] = []
     verified: list[str] = []
     for entry in entries:
         capability_id = entry["capability_id"]
@@ -147,19 +205,24 @@ def _evaluate_family(
             continue
         status = record.get("status")
         if status in _OK_CAPABILITY_STATUSES:
-            verified.append(capability_id)
+            if _valid_ok_record(record, baseline):
+                verified.append(capability_id)
+            else:
+                untrusted.append(capability_id)
+        elif status in _PENDING_CAPABILITY_STATUSES:
+            pending.append(capability_id)
         else:
             divergent.append(capability_id)
-    verdict = "PASS"
-    if missing or divergent:
-        verdict = "FAIL"
+    verdict = "BLOCKED" if missing or pending or untrusted else "FAIL" if divergent else "PASS"
     return {
         "family": family,
         "verdict": verdict,
         "required_capabilities": len(entries),
         "verified_capabilities": len(verified),
         "missing_capabilities": sorted(missing),
+        "pending_capabilities": sorted(pending),
         "unresolved_differences": sorted(divergent),
+        "untrusted_capabilities": sorted(untrusted),
     }
 
 
@@ -199,21 +262,25 @@ def main(argv: list[str] | None = None) -> int:
             wheels = sorted(dist_path.glob("*.whl"))
             if not wheels:
                 raise ParityBlockedError(f"--dist contains no wheel artifact: {dist_path}")
-        baseline = _load_json(baseline_path, "baseline")
-        _validate_baseline(baseline, baseline_path)
         ledger = _load_json(ledger_path, "ledger")
         if ledger.get("artifact_type") != "capability_ledger":
             raise ParityUsageError(f"ledger must be a capability_ledger artifact: {ledger_path}")
         _check_ledger_completeness(ledger, families, sorted(families))
+        baseline = _load_json(baseline_path, "baseline")
+        _validate_baseline(baseline, baseline_path, _sha256_file(ledger_path))
 
-        capabilities = baseline["capabilities"]
         for family in sorted(families):
             entries = _select_ledger_capabilities(ledger, frozenset({family}))
             if not entries:
                 raise ParityBlockedError(f"ledger declares no capabilities for family {family!r}")
-            family_results.append(_evaluate_family(family, entries, capabilities))
+            family_results.append(_evaluate_family(family, entries, baseline))
 
-        verdict = "PASS" if all(result["verdict"] == "PASS" for result in family_results) else "FAIL"
+        if any(result["verdict"] == "BLOCKED" for result in family_results):
+            verdict = "BLOCKED"
+        elif any(result["verdict"] == "FAIL" for result in family_results):
+            verdict = "FAIL"
+        else:
+            verdict = "PASS"
     except ParityUsageError as exc:
         exit_override = EXIT_USAGE
         reasons.append(f"usage: {exc}")

@@ -354,6 +354,7 @@ def test_capture_records_clean_git_provenance_and_input_hashes(tmp_path: Path) -
     assert artifact["repository_surface"]["facts_sha256"] == _sha256(paths["repository_surface_facts"])
     assert artifact["repository_surface"]["disposition_sha256"] == _sha256(paths["repository_surface_disposition"])
     assert artifact["repository_surface"]["validation"]["not_for_d0"] is True
+    assert artifact["fixture_root"] == "goldens"
     assert artifact["fixtures"]["annual-return.json"]["sha256"] == _sha256(paths["fixture_dir"] / "annual-return.json")
 
 
