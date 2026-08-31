@@ -38,7 +38,13 @@ from packaging.version import InvalidVersion, Version
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
+
+REPO_ROOT = resolve_source_root(SCRIPT_ROOT.parent)
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 

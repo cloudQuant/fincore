@@ -21,6 +21,7 @@ def test_direct_performance_gate_prefers_its_checkout_source(tmp_path: Path) -> 
     shadow_runtime_dir.mkdir(parents=True)
     root = Path(__file__).resolve().parents[2]
     shutil.copy2(root / "scripts" / "check_performance.py", script_dir / "check_performance.py")
+    shutil.copy2(root / "scripts" / "_0042_r2_tooling.py", script_dir / "_0042_r2_tooling.py")
     (repository / "fincore" / "__init__.py").write_text("", encoding="utf-8")
     (runtime_dir / "__init__.py").write_text(
         "from .builtins import builtin_catalog\n",

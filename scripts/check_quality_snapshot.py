@@ -13,12 +13,20 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Sequence
+
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
 
 SCHEMA_VERSION = 1
 MIN_BRANCH_COVERAGE = 60.0
 BRANCH_COVERAGE_LABEL = "branch-coverage"
+SOURCE_ROOT = resolve_source_root(SCRIPT_ROOT.parent)
 
 
 def load_snapshot(path: str | Path) -> dict[str, Any]:
@@ -73,7 +81,7 @@ def check_snapshot(
     """
     snapshot = load_snapshot(path)
     if expected_commit is None:
-        expected_commit = _head_commit(Path(__file__).resolve().parents[1])
+        expected_commit = _head_commit(SOURCE_ROOT)
     violations: list[str] = []
     if snapshot.get("schema_version") != SCHEMA_VERSION:
         violations.append(f"schema_version must be {SCHEMA_VERSION}")

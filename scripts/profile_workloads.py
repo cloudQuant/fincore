@@ -18,8 +18,15 @@ import tempfile
 from pathlib import Path
 from typing import Any, cast
 
-ROOT = Path(__file__).resolve().parent.parent
-HOTSPOT_PROFILER = ROOT / "scripts" / "profile_hotspots.py"
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
+
+TOOLING_ROOT = SCRIPT_ROOT.parent
+ROOT = resolve_source_root(TOOLING_ROOT)
+HOTSPOT_PROFILER = TOOLING_ROOT / "scripts" / "profile_hotspots.py"
 WORKLOAD_KINDS = ("metrics", "rolling", "transactions", "factor", "risk", "report")
 WORKLOAD_PROFILE_SCHEMA = "fincore-workload-profiles-v2"
 HOTSPOT_PROFILE_SCHEMA = "fincore-hotspot-profile-v2"

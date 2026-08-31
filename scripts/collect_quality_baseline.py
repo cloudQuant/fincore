@@ -20,6 +20,14 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
+
+SOURCE_ROOT = resolve_source_root(SCRIPT_ROOT.parent)
+
 
 # The checker (scripts/check_quality_snapshot.py) reads this exact version and
 # rejects any snapshot produced by a different collector.  Bump it whenever the
@@ -531,7 +539,7 @@ def main() -> int:
         "--markdown", type=Path, required=True, help="Markdown output path, relative to the source root"
     )
     args = parser.parse_args()
-    source_root = Path(__file__).resolve().parents[1]
+    source_root = SOURCE_ROOT
     json_path = args.json if args.json.is_absolute() else source_root / args.json
     markdown_path = args.markdown if args.markdown.is_absolute() else source_root / args.markdown
     output_paths = {

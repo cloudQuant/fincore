@@ -31,7 +31,14 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
+
+TOOLING_ROOT = SCRIPT_ROOT.parent
+ROOT = resolve_source_root(TOOLING_ROOT)
 BENCHMARKS = ROOT / "benchmarks"
 for path in (str(ROOT), str(BENCHMARKS)):
     if path not in sys.path:

@@ -17,7 +17,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _0042_r2_tooling import resolve_source_root
+
+ROOT = resolve_source_root(SCRIPT_ROOT.parent)
 
 
 # A direct script invocation otherwise resolves ``fincore`` from an editable,
