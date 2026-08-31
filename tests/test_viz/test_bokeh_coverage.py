@@ -103,7 +103,7 @@ class TestBokehBackendAdditionalCoverage:
 
         assert fig is not None
 
-    def test_plot_rolling_sharpe_no_span_fallback_to_hspan(self):
+    def test_plot_rolling_sharpe_no_span_fallback_to_hspan(self, monkeypatch):
         """Test plot_rolling_sharpe when Span is not available (covers lines 342-344)."""
         from bokeh.models import Span
 
@@ -115,29 +115,13 @@ class TestBokehBackendAdditionalCoverage:
 
         backend = BokehBackend()
 
-        # Patch importlib to simulate missing Span but present HSpan
-        original_import_module = BokehBackend.plot_rolling_sharpe.__globals__.get("importlib")
+        import bokeh.models as models
 
-        # Create a mock module with Span=None
-        mock_models = MagicMock()
-        mock_models.Span = None
+        monkeypatch.setattr(models, "Span", None)
+        monkeypatch.setattr(models, "HSpan", Span, raising=False)
 
-        # Use the real Span for HSpan since they're typically in the same module
-        mock_models.HSpan = Span
-
-        with patch("fincore.viz.interactive.bokeh_backend.importlib") as mock_importlib:
-            mock_importlib.import_module.return_value = mock_models
-
-            # Call the actual method from the module level
-            import fincore.viz.interactive.bokeh_backend as be_module
-
-            be_module.importlib = mock_importlib
-
-            fig = backend.plot_rolling_sharpe(sharpe)
-            assert fig is not None
-
-            # Restore
-            be_module.importlib = original_import_module or __import__("importlib")
+        fig = backend.plot_rolling_sharpe(sharpe)
+        assert fig is not None
 
     def test_plot_monthly_heatmap_with_dataframe(self):
         """Test plot_monthly_heatmap with DataFrame input (covers line 394)."""

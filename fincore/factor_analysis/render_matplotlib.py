@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.exceptions import DependencyError
+from fincore.runtime.validation import load_optional_module
 
 DECIMAL_TO_BPS = 10_000.0
 _DEFAULT_THEORETICAL_DIST = object()
@@ -26,30 +27,30 @@ _DEFAULT_THEORETICAL_DIST = object()
 def _plot_dependencies() -> tuple[Any, Any, Any, Any]:
     """Load the visualization stack only for an explicit renderer call."""
 
-    try:
-        pyplot = importlib.import_module("matplotlib.pyplot")
-        cm = importlib.import_module("matplotlib.cm")
-        ticker = importlib.import_module("matplotlib.ticker")
-        seaborn = importlib.import_module("seaborn")
-    except ModuleNotFoundError as error:
-        raise DependencyError(
-            "Factor-analysis plotting requires the optional 'visualization' extra. "
-            "Install it with:\n    pip install fincore[visualization]",
-            dependency="matplotlib/seaborn",
-        ) from error
+    message = (
+        "Factor-analysis plotting requires the optional 'visualization' extra. "
+        "Install it with:\n    pip install fincore[visualization]"
+    )
+    pyplot = load_optional_module(
+        "matplotlib.pyplot", dependency="matplotlib/seaborn", extra="visualization", message=message
+    )
+    cm = load_optional_module("matplotlib.cm", dependency="matplotlib/seaborn", extra="visualization", message=message)
+    ticker = load_optional_module(
+        "matplotlib.ticker", dependency="matplotlib/seaborn", extra="visualization", message=message
+    )
+    seaborn = load_optional_module("seaborn", dependency="matplotlib/seaborn", extra="visualization", message=message)
     return pyplot, cm, ticker, seaborn
 
 
 def _require_statsmodels() -> Any:
     """Resolve the Q-Q plotting implementation without an eager import."""
 
-    try:
-        return importlib.import_module("statsmodels.api")
-    except ModuleNotFoundError as error:
-        raise DependencyError(
-            "plot_ic_qq requires the optional 'visualization' extra. Install it with:\n    pip install fincore[visualization]",
-            dependency="statsmodels",
-        ) from error
+    return load_optional_module(
+        "statsmodels.api",
+        dependency="statsmodels",
+        extra="visualization",
+        message="plot_ic_qq requires the optional 'visualization' extra. Install it with:\n    pip install fincore[visualization]",
+    )
 
 
 def _as_frame(value: pd.DataFrame | pd.Series, name: str) -> pd.DataFrame:

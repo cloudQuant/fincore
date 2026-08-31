@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from fincore.exceptions import DependencyError
 from fincore.report.models import ReportDocument
 from fincore.runtime import ArtifactBundle
+from fincore.runtime.validation import load_optional_module
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -17,15 +17,12 @@ __all__ = ["render_matplotlib"]
 
 
 def _matplotlib():
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError as error:
-        raise DependencyError(
-            "optional_dependency_missing: matplotlib is required for static report rendering",
-            dependency="matplotlib",
-            extra="visualization",
-        ) from error
-    return plt
+    return load_optional_module(
+        "matplotlib.pyplot",
+        dependency="matplotlib",
+        extra="visualization",
+        message="optional_dependency_missing: matplotlib is required for static report rendering",
+    )
 
 
 def render_matplotlib(document: ReportDocument, *, axes: Mapping[str, Any] | None = None) -> ArtifactBundle:

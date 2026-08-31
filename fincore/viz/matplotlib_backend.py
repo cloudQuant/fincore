@@ -11,6 +11,8 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
+from fincore.runtime.validation import load_optional_module
+
 __all__ = ["MatplotlibBackend"]
 
 
@@ -22,9 +24,7 @@ class MatplotlibBackend:
     """
 
     def _import_plt(self):
-        import matplotlib.pyplot as plt
-
-        return plt
+        return load_optional_module("matplotlib.pyplot", dependency="matplotlib", extra="visualization")
 
     def plot_returns(
         self,
@@ -109,7 +109,7 @@ class MatplotlibBackend:
         plt = self._import_plt()
         if ax is None:
             _, ax = plt.subplots(figsize=(10, 5))
-        import matplotlib.colors as mcolors
+        mcolors = load_optional_module("matplotlib.colors", dependency="matplotlib", extra="visualization")
 
         monthly_returns: pd.DataFrame
         if isinstance(returns, pd.Series):

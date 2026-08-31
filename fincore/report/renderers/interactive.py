@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fincore.exceptions import DependencyError
 from fincore.runtime import ArtifactBundle
+from fincore.runtime.validation import load_optional_module
 
 if TYPE_CHECKING:
     from fincore.report.models import ReportDocument
@@ -16,14 +16,12 @@ __all__ = ["render_bokeh", "render_plotly"]
 def render_plotly(document: ReportDocument) -> ArtifactBundle:
     """Create one Plotly figure from already computed report series."""
 
-    try:
-        import plotly.graph_objects as graph_objects
-    except ImportError as error:
-        raise DependencyError(
-            "optional_dependency_missing: plotly is required for interactive report rendering",
-            dependency="plotly",
-            extra="visualization",
-        ) from error
+    graph_objects = load_optional_module(
+        "plotly.graph_objects",
+        dependency="plotly",
+        extra="visualization",
+        message="optional_dependency_missing: plotly is required for interactive report rendering",
+    )
     figure = graph_objects.Figure()
     for section in document.sections:
         for name, values in section.series.items():
@@ -42,14 +40,12 @@ def render_plotly(document: ReportDocument) -> ArtifactBundle:
 def render_bokeh(document: ReportDocument) -> ArtifactBundle:
     """Create one Bokeh figure from already computed report series."""
 
-    try:
-        from bokeh.plotting import figure
-    except ImportError as error:
-        raise DependencyError(
-            "optional_dependency_missing: bokeh is required for interactive report rendering",
-            dependency="bokeh",
-            extra="visualization",
-        ) from error
+    figure = load_optional_module(
+        "bokeh.plotting",
+        dependency="bokeh",
+        extra="visualization",
+        message="optional_dependency_missing: bokeh is required for interactive report rendering",
+    ).figure
     chart = figure(title=document.title, x_axis_type="datetime")
     for section in document.sections:
         for name, values in section.series.items():

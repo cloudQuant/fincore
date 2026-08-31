@@ -5,12 +5,12 @@ Provides server-compatible interactive visualizations using Bokeh.
 
 from __future__ import annotations
 
-import importlib
 from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 
+from fincore.runtime.validation import load_optional_module
 from fincore.viz.contracts import VizBackend
 
 __all__ = ["BokehBackend", "PrintfTickFormatter"]
@@ -91,12 +91,19 @@ class BokehBackend(VizBackend):
             self.grid_color = "#E0E0E0"
             self.text_color = "#424242"
 
+    def _bokeh_module(self, module_name: str) -> Any:
+        """Resolve one Bokeh module only at the rendering boundary."""
+
+        return load_optional_module(
+            module_name,
+            dependency="bokeh",
+            extra="visualization",
+            message="Bokeh is required for BokehBackend. Install with: pip install bokeh",
+        )
+
     def _create_figure(self, **kwargs) -> Any:
         """Create a new Bokeh figure."""
-        try:
-            from bokeh.plotting import figure
-        except ImportError as e:
-            raise ImportError("Bokeh is required for BokehBackend. Install with: pip install bokeh") from e
+        figure = self._bokeh_module("bokeh.plotting").figure
 
         fig = figure(
             height=self.height,
@@ -138,7 +145,9 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import ColumnDataSource, HoverTool
+        models = self._bokeh_module("bokeh.models")
+        ColumnDataSource = models.ColumnDataSource
+        HoverTool = models.HoverTool
 
         p = self._create_figure(
             x_axis_type="datetime",
@@ -219,7 +228,9 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import ColumnDataSource, HoverTool
+        models = self._bokeh_module("bokeh.models")
+        ColumnDataSource = models.ColumnDataSource
+        HoverTool = models.HoverTool
 
         p = self._create_figure(
             x_axis_type="datetime",
@@ -291,7 +302,9 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import ColumnDataSource, HoverTool
+        models = self._bokeh_module("bokeh.models")
+        ColumnDataSource = models.ColumnDataSource
+        HoverTool = models.HoverTool
 
         p = self._create_figure(
             x_axis_type="datetime",
@@ -335,7 +348,7 @@ class BokehBackend(VizBackend):
             )
 
         # Add zero line (Span may be absent in some bokeh stubs/versions).
-        models = importlib.import_module("bokeh.models")
+        models = self._bokeh_module("bokeh.models")
         Span = getattr(models, "Span", None)
         if Span is not None:
             zero_line = Span(location=0, dimension="width", line_color=self.grid_color, line_alpha=0.5)
@@ -378,8 +391,13 @@ class BokehBackend(VizBackend):
         LayoutDOM
             Bokeh figure object.
         """
-        from bokeh.models import BasicTicker, ColumnDataSource, FactorRange, HoverTool, LinearColorMapper
-        from bokeh.plotting import figure
+        models = self._bokeh_module("bokeh.models")
+        BasicTicker = models.BasicTicker
+        ColumnDataSource = models.ColumnDataSource
+        FactorRange = models.FactorRange
+        HoverTool = models.HoverTool
+        LinearColorMapper = models.LinearColorMapper
+        figure = self._bokeh_module("bokeh.plotting").figure
 
         pivot: pd.DataFrame
         if isinstance(returns, pd.Series):
@@ -469,7 +487,7 @@ class BokehBackend(VizBackend):
         )
         p.add_tools(hover)
 
-        models = importlib.import_module("bokeh.models")
+        models = self._bokeh_module("bokeh.models")
         ColorBar = getattr(models, "ColorBar", None)
         if ColorBar is not None:
             color_bar = ColorBar(
@@ -486,9 +504,7 @@ class BokehBackend(VizBackend):
 
     def show(self, fig: Any) -> None:
         """Display the figure in a browser or notebook."""
-        from bokeh.io import show as bokeh_show
-
-        bokeh_show(fig)
+        self._bokeh_module("bokeh.io").show(fig)
 
     def save_html(self, fig: Any, filename: str) -> None:
         """Save the figure as HTML.
@@ -500,9 +516,7 @@ class BokehBackend(VizBackend):
         filename : str
             Output HTML filename.
         """
-        from bokeh.io import save as bokeh_save
-
-        bokeh_save(fig, filename)
+        self._bokeh_module("bokeh.io").save(fig, filename)
 
 
 class PrintfTickFormatter:

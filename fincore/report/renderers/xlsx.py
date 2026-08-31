@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from fincore.exceptions import DependencyError
 from fincore.runtime import ArtifactBundle
+from fincore.runtime.validation import load_optional_module
 
 if TYPE_CHECKING:
     from fincore.report.models import ReportDocument
@@ -19,14 +19,12 @@ __all__ = ["write_xlsx"]
 def write_xlsx(document: ReportDocument, target: str | Path) -> ArtifactBundle:
     """Write precomputed metrics/tables/series to an XLSX workbook."""
 
-    try:
-        import openpyxl
-    except ImportError as error:
-        raise DependencyError(
-            "optional_dependency_missing: openpyxl is required for XLSX report rendering",
-            dependency="openpyxl",
-            extra="report-xlsx",
-        ) from error
+    load_optional_module(
+        "openpyxl",
+        dependency="openpyxl",
+        extra="report-xlsx",
+        message="optional_dependency_missing: openpyxl is required for XLSX report rendering",
+    )
     output = Path(target)
     output.parent.mkdir(parents=True, exist_ok=True)
     with pd.ExcelWriter(output, engine="openpyxl") as writer:

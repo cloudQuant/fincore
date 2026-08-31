@@ -11,20 +11,18 @@ from __future__ import annotations
 import importlib
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import Any, Mapping, cast
 
 import pandas as pd
 
 # These public annotations are deliberately runtime-resolvable for renderer
 # consumers that call ``typing.get_type_hints``.
 from fincore.factor_analysis.models import EventAnalysisModel, FactorAnalysisModel  # noqa: TC001
+from fincore.runtime.validation import load_optional_module
 
-if TYPE_CHECKING:
-    from matplotlib.figure import Figure
-else:
-    # Keep ``typing.get_type_hints`` usable without importing the optional
-    # Matplotlib package at factor-analysis import time.
-    Figure = Any
+# Keep ``typing.get_type_hints`` usable without importing the optional
+# Matplotlib package at factor-analysis import time.
+Figure = Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,8 +51,8 @@ class GridFigure:
             raise ValueError("rows must be a positive integer")
         if isinstance(cols, bool) or not isinstance(cols, int) or cols < 1:
             raise ValueError("cols must be a positive integer")
-        pyplot = importlib.import_module("matplotlib.pyplot")
-        gridspec = importlib.import_module("matplotlib.gridspec")
+        pyplot = load_optional_module("matplotlib.pyplot", dependency="matplotlib", extra="visualization")
+        gridspec = load_optional_module("matplotlib.gridspec", dependency="matplotlib", extra="visualization")
         self.rows = rows
         self.cols = cols
         self.fig = pyplot.figure(figsize=(14, rows * 7))
@@ -98,7 +96,7 @@ class GridFigure:
 
         if self.fig is None:
             return
-        pyplot = importlib.import_module("matplotlib.pyplot")
+        pyplot = load_optional_module("matplotlib.pyplot", dependency="matplotlib", extra="visualization")
         pyplot.close(self.fig)
         self.fig = None
         self.gs = None
@@ -113,7 +111,7 @@ def _renderer() -> Any:
 def _show_figures(figures: tuple[Figure, ...]) -> None:
     """Show each owned legacy figure once, matching source workflow sections."""
 
-    pyplot = importlib.import_module("matplotlib.pyplot")
+    pyplot = load_optional_module("matplotlib.pyplot", dependency="matplotlib", extra="visualization")
     for _ in figures:
         pyplot.show()
 
@@ -121,7 +119,7 @@ def _show_figures(figures: tuple[Figure, ...]) -> None:
 def close_owned_figures(artifacts: FactorTearSheetArtifacts) -> None:
     """Close exactly the figures returned by an enhanced workflow."""
 
-    pyplot = importlib.import_module("matplotlib.pyplot")
+    pyplot = load_optional_module("matplotlib.pyplot", dependency="matplotlib", extra="visualization")
     for figure in artifacts.figures:
         pyplot.close(figure)
 

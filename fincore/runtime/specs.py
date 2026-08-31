@@ -25,8 +25,8 @@ def _required_identifier(value: str, field_name: str) -> str:
 
 
 def make_operations_provider(
-    declarations: tuple["OperationSpec", ...],
-) -> Callable[[], tuple["OperationSpec", ...]]:
+    declarations: tuple[OperationSpec, ...],
+) -> Callable[[], tuple[OperationSpec, ...]]:
     """Expose immutable domain declarations without copying a domain wrapper."""
 
     if not isinstance(declarations, tuple):

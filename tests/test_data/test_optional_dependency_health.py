@@ -38,15 +38,14 @@ def test_yahoo_provider_survives_broken_sdk_when_client_injected(monkeypatch) ->
 
 
 def test_akshare_broken_sdk_raises_controlled_dependency_error(monkeypatch) -> None:
-    real_import = builtins.__import__
+    from fincore.runtime import validation
 
-    def broken_import(name, *args, **kwargs):
+    def broken_import(name: str):
         if name == "akshare":
             raise AttributeError("module 'lib' has no attribute 'GEN_EMAIL'")
-        return real_import(name, *args, **kwargs)
+        raise AssertionError(f"unexpected optional module request: {name}")
 
-    monkeypatch.setattr(builtins, "__import__", broken_import)
-    monkeypatch.delitem(sys.modules, "akshare", raising=False)
+    monkeypatch.setattr(validation.importlib, "import_module", broken_import)
 
     with pytest.raises(DependencyError, match="data-cn"):
         AkShareProvider()

@@ -6,9 +6,9 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fincore.exceptions import DependencyError
 from fincore.report.renderers.html import render_html
 from fincore.runtime import ArtifactBundle
+from fincore.runtime.validation import load_optional_module
 
 if TYPE_CHECKING:
     from fincore.report.models import ReportDocument
@@ -19,14 +19,12 @@ __all__ = ["write_pdf"]
 def write_pdf(document: ReportDocument, target: str | Path) -> ArtifactBundle:
     """Render a document with Chromium; Playwright is imported only on invocation."""
 
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError as error:
-        raise DependencyError(
-            "optional_dependency_missing: Playwright/Chromium is required for PDF report rendering",
-            dependency="playwright",
-            extra="report-pdf",
-        ) from error
+    sync_playwright = load_optional_module(
+        "playwright.sync_api",
+        dependency="playwright",
+        extra="report-pdf",
+        message="optional_dependency_missing: Playwright/Chromium is required for PDF report rendering",
+    ).sync_playwright
     output = Path(target)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="fincore-report-") as temporary_directory:

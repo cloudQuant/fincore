@@ -6,14 +6,12 @@ and export capabilities using Plotly.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
 
-if TYPE_CHECKING:
-    import plotly.graph_objects as go
-
+from fincore.runtime.validation import load_optional_module
 from fincore.viz.contracts import VizBackend
 
 __all__ = ["PlotlyBackend"]
@@ -88,7 +86,7 @@ class PlotlyBackend(VizBackend):
         self.width = width
         self.template = template
         self.show_legend = show_legend
-        self._fig: go.Figure | None = None
+        self._fig: Any | None = None
 
         # Set up theme-specific colors
         self._setup_theme()
@@ -126,24 +124,33 @@ class PlotlyBackend(VizBackend):
             return self.template
         return self.default_template
 
-    def _create_figure(self) -> go.Figure:
-        """Create a new figure with configured template."""
-        try:
-            import plotly.graph_objects as go
-        except ImportError as e:
-            raise ImportError("Plotly is required for PlotlyBackend. Install with: pip install plotly") from e
+    def _plotly_module(self) -> Any:
+        """Resolve Plotly only at the visualization execution boundary."""
 
-        fig = go.Figure(
-            layout=dict(
-                template=self._get_template(),
-                height=self.height,
-                width=self.width,
-                showlegend=self.show_legend,
-                font=dict(color=self.colors["text"]),
-                plot_bgcolor=self.colors["background"],
-                paper_bgcolor=self.colors["background"],
-            )
+        return load_optional_module(
+            "plotly.graph_objects",
+            dependency="plotly",
+            extra="visualization",
+            message="Plotly is required for PlotlyBackend. Install with: pip install plotly",
         )
+
+    def _create_figure(self) -> Any:
+        """Create a new figure with configured template."""
+        go = self._plotly_module()
+        try:
+            fig = go.Figure(
+                layout=dict(
+                    template=self._get_template(),
+                    height=self.height,
+                    width=self.width,
+                    showlegend=self.show_legend,
+                    font=dict(color=self.colors["text"]),
+                    plot_bgcolor=self.colors["background"],
+                    paper_bgcolor=self.colors["background"],
+                )
+            )
+        except ImportError as error:
+            raise ImportError("Plotly is required for PlotlyBackend. Install with: pip install plotly") from error
 
         # Update grid colors
         fig.update_xaxes(gridcolor=self.colors["grid"], zerolinecolor=self.colors["grid"])
@@ -156,7 +163,7 @@ class PlotlyBackend(VizBackend):
         cum_returns: pd.Series,
         benchmark: pd.Series | None = None,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot cumulative returns with optional benchmark.
 
         Parameters
@@ -217,7 +224,7 @@ class PlotlyBackend(VizBackend):
         self,
         drawdown: pd.Series,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot underwater drawdown chart.
 
         Parameters
@@ -262,7 +269,7 @@ class PlotlyBackend(VizBackend):
         benchmark_sharpe: pd.Series | None = None,
         window: int = 252,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot rolling Sharpe ratio.
 
         Parameters
@@ -323,7 +330,7 @@ class PlotlyBackend(VizBackend):
         self,
         returns: pd.Series | pd.DataFrame,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot monthly returns heatmap.
 
         Parameters
@@ -400,7 +407,7 @@ class PlotlyBackend(VizBackend):
         returns: pd.DataFrame,
         n_points: int = 50,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot efficient frontier with random portfolios.
 
         Parameters
@@ -487,7 +494,7 @@ class PlotlyBackend(VizBackend):
         self,
         returns: pd.DataFrame,
         **kwargs,
-    ) -> go.Figure:
+    ) -> Any:
         """Plot correlation matrix heatmap.
 
         Parameters

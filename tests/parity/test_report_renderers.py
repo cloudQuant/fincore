@@ -74,19 +74,18 @@ def test_interactive_renderers_project_precomputed_series() -> None:
 
 
 def test_optional_renderer_imports_fail_only_when_the_renderer_is_invoked(monkeypatch, tmp_path) -> None:
-    import builtins
-
     from fincore.exceptions import DependencyError
     from fincore.report.renderers.pdf import write_pdf
+    from fincore.runtime import validation
 
-    original_import = builtins.__import__
+    original_import = validation.importlib.import_module
 
-    def missing_playwright(name, globals=None, locals=None, fromlist=(), level=0):
+    def missing_playwright(name: str):
         if name.startswith("playwright"):
             raise ImportError("playwright unavailable")
-        return original_import(name, globals, locals, fromlist, level)
+        return original_import(name)
 
-    monkeypatch.setattr(builtins, "__import__", missing_playwright)
+    monkeypatch.setattr(validation.importlib, "import_module", missing_playwright)
 
     try:
         write_pdf(_document(), tmp_path / "report.pdf")

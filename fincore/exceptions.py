@@ -10,8 +10,6 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import numpy as np
 
-from fincore.metrics.frequencies import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
-
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
@@ -129,7 +127,7 @@ class InsufficientDataError(FincoreError):
 class InvalidPeriodError(FincoreError):
     """Raised when an invalid period is specified."""
 
-    VALID_PERIODS: ClassVar[list[str]] = [DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY]
+    VALID_PERIODS: ClassVar[list[str]] = ["daily", "weekly", "monthly", "quarterly", "yearly"]
 
     def __init__(self, period: str):
         self.period = period

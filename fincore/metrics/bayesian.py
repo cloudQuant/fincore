@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from fincore.metrics.returns import cum_returns
+from fincore.runtime.validation import load_optional_module
 
 __all__ = [
     "compute_bayes_cone",
@@ -38,6 +39,12 @@ __all__ = [
     "simulate_paths",
     "summarize_paths",
 ]
+
+
+def _pymc() -> Any:
+    """Resolve the Bayesian backend at the explicit model-execution boundary."""
+
+    return load_optional_module("pymc", dependency="pymc", extra="bayesian")
 
 
 def model_returns_t_alpha_beta(
@@ -66,7 +73,7 @@ def model_returns_t_alpha_beta(
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
-    import pymc as pm
+    pm = _pymc()
 
     if len(data) != len(bmark):
         data, bmark = data.align(bmark, join="inner")
@@ -113,7 +120,7 @@ def model_returns_normal(
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
-    import pymc as pm
+    pm = _pymc()
 
     data_array = np.asarray(data)
 
@@ -151,7 +158,7 @@ def model_returns_t(
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
-    import pymc as pm
+    pm = _pymc()
 
     data_array = np.asarray(data)
 
@@ -196,7 +203,7 @@ def model_best(
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
-    import pymc as pm
+    pm = _pymc()
 
     y = pd.DataFrame({"y1": y1, "y2": y2})
     y = y.dropna()
@@ -253,7 +260,7 @@ def model_stoch_vol(
     trace : pymc3.sampling.BaseTrace
         A trace object that contains samples for each parameter.
     """
-    import pymc as pm
+    pm = _pymc()
 
     data_array = np.asarray(data)
 

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
-from fincore.exceptions import DependencyError
+from fincore.runtime.validation import load_optional_module
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -259,19 +259,13 @@ class YahooFinanceProvider(DataProvider):
             self._session = session
             return
         self._client = None
-        try:
-            import yfinance as yf
-
-            self._yf = yf
-            self._session = session
-        except Exception as e:
-            # A broken optional SDK (not just a missing one) must surface as a
-            # controlled DependencyError, never a raw third-party error.
-            raise DependencyError(
-                "yfinance is required for YahooFinanceProvider. Install with: pip install 'fincore[data-yahoo]'",
-                dependency="yfinance",
-                extra="data-yahoo",
-            ) from e
+        self._yf = load_optional_module(
+            "yfinance",
+            dependency="yfinance",
+            extra="data-yahoo",
+            message="yfinance is required for YahooFinanceProvider. Install with: pip install 'fincore[data-yahoo]'",
+        )
+        self._session = session
 
     def fetch(
         self,
@@ -381,16 +375,12 @@ class AlphaVantageProvider(DataProvider):
     BASE_URL = "https://www.alphavantage.co/query"
 
     def __init__(self, api_key: str, outputsize: str = "full"):
-        try:
-            import requests
-
-            self._requests = requests
-        except Exception as e:
-            raise DependencyError(
-                "requests is required for AlphaVantageProvider. Install with: pip install 'fincore[data-alphavantage]'",
-                dependency="requests",
-                extra="data-alphavantage",
-            ) from e
+        self._requests = load_optional_module(
+            "requests",
+            dependency="requests",
+            extra="data-alphavantage",
+            message="requests is required for AlphaVantageProvider. Install with: pip install 'fincore[data-alphavantage]'",
+        )
 
         self.api_key = api_key
         self.outputsize = outputsize
@@ -496,18 +486,14 @@ class TushareProvider(DataProvider):
     """
 
     def __init__(self, token: str):
-        try:
-            import tushare as ts
-
-            self._ts = ts
-            self._token = token
-            self._pro = None
-        except Exception as e:
-            raise DependencyError(
-                "tushare is required for TushareProvider. Install with: pip install 'fincore[data-cn]'",
-                dependency="tushare",
-                extra="data-cn",
-            ) from e
+        self._ts = load_optional_module(
+            "tushare",
+            dependency="tushare",
+            extra="data-cn",
+            message="tushare is required for TushareProvider. Install with: pip install 'fincore[data-cn]'",
+        )
+        self._token = token
+        self._pro = None
 
     def _get_pro(self):
         """Lazy initialization of Pro API."""
@@ -631,16 +617,12 @@ class AkShareProvider(DataProvider):
     batch_adjust_default = "qfq"
 
     def __init__(self):
-        try:
-            import akshare as ak
-
-            self._ak = ak
-        except Exception as e:
-            raise DependencyError(
-                "akshare is required for AkShareProvider. Install with: pip install 'fincore[data-cn]'",
-                dependency="akshare",
-                extra="data-cn",
-            ) from e
+        self._ak = load_optional_module(
+            "akshare",
+            dependency="akshare",
+            extra="data-cn",
+            message="akshare is required for AkShareProvider. Install with: pip install 'fincore[data-cn]'",
+        )
 
     def fetch(  # type: ignore[override]
         self,

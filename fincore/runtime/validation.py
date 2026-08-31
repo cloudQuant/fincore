@@ -2,10 +2,35 @@
 
 from __future__ import annotations
 
+import importlib
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+from fincore.exceptions import DependencyError
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+
+def load_optional_module(
+    module_name: str,
+    *,
+    dependency: str,
+    extra: str | None = None,
+    message: str | None = None,
+) -> ModuleType:
+    """Import one optional module only at its explicit capability boundary."""
+
+    try:
+        return importlib.import_module(module_name)
+    except Exception as error:
+        raise DependencyError(
+            message or f"optional_dependency_missing: {dependency} is required",
+            dependency=dependency,
+            extra=extra,
+        ) from error
 
 
 def validate_mapping(value: Mapping[str, Any], *, name: str) -> dict[str, Any]:
