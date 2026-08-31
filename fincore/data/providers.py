@@ -69,6 +69,8 @@ class DataProvider(ABC):
     >>> returns = data['Adj Close'].pct_change().dropna()
     """
 
+    batch_adjust_default: bool | str = True
+
     @abstractmethod
     def fetch(
         self,
@@ -102,14 +104,13 @@ class DataProvider(ABC):
         """
         ...
 
-    @abstractmethod
     def fetch_multiple(
         self,
         symbols: list[str],
         start: str | datetime,
         end: str | datetime,
         interval: str = "1d",
-        adjust: bool = True,
+        adjust: bool | str | None = None,
         strict: bool = False,
     ) -> dict[str, pd.DataFrame]:
         """Fetch historical data for multiple symbols.
@@ -135,7 +136,29 @@ class DataProvider(ABC):
         dict
             Dictionary mapping symbols to their DataFrames.
         """
-        ...
+        if adjust is None:
+            adjust = self.batch_adjust_default
+        provider = type(self).__name__.removesuffix("Provider")
+        results: dict[str, pd.DataFrame] = {}
+        errors: dict[str, Exception] = {}
+        for symbol in symbols:
+            try:
+                results[symbol] = self.fetch(symbol, start, end, interval, adjust)  # type: ignore[arg-type]
+            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as error:
+                logger.warning(
+                    "Failed to fetch %s from %s: %s",
+                    symbol,
+                    provider,
+                    error,
+                    extra={"provider": provider, "symbol": symbol},
+                )
+                if strict:
+                    errors[symbol] = error
+                else:
+                    results[symbol] = pd.DataFrame()
+        if strict and errors:
+            raise BatchFetchError(provider, errors=errors, partial_results=results)
+        return results
 
     @abstractmethod
     def get_info(self, symbol: str) -> dict:
@@ -307,58 +330,6 @@ class YahooFinanceProvider(DataProvider):
 
         return data
 
-    def fetch_multiple(
-        self,
-        symbols: list[str],
-        start: str | datetime,
-        end: str | datetime,
-        interval: str = "1d",
-        adjust: bool = True,
-        strict: bool = False,
-    ) -> dict[str, pd.DataFrame]:
-        """Fetch data for multiple symbols.
-
-        Parameters
-        ----------
-        symbols : list of str
-            Ticker symbols.
-        start : str or datetime
-            Start date.
-        end : str or datetime
-            End date.
-        interval : str, default '1d'
-            Data frequency.
-        adjust : bool, default True
-            Whether to use adjusted prices.
-        strict : bool, default False
-            If True, raise :class:`BatchFetchError` when any symbol fails.
-            If False, failed symbols are returned as empty DataFrames.
-
-        Returns
-        -------
-        dict
-            Dictionary mapping symbols to DataFrames.
-        """
-        results = {}
-        errors: dict[str, Exception] = {}
-        for symbol in symbols:
-            try:
-                results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
-                logger.warning(
-                    "Failed to fetch %s from Yahoo Finance: %s",
-                    symbol,
-                    e,
-                    extra={"provider": "YahooFinance", "symbol": symbol},
-                )
-                if strict:
-                    errors[symbol] = e
-                else:
-                    results[symbol] = pd.DataFrame()
-        if strict and errors:
-            raise BatchFetchError("YahooFinance", errors=errors, partial_results=results)
-        return results
-
     def get_info(self, symbol: str) -> dict:
         """Get information about a symbol.
 
@@ -483,36 +454,6 @@ class AlphaVantageProvider(DataProvider):
             df["Adj Close"] = df["close"]
 
         return df
-
-    def fetch_multiple(
-        self,
-        symbols: list[str],
-        start: str | datetime,
-        end: str | datetime,
-        interval: str = "1d",
-        adjust: bool = True,
-        strict: bool = False,
-    ) -> dict[str, pd.DataFrame]:
-        """Fetch data for multiple symbols."""
-        results = {}
-        errors: dict[str, Exception] = {}
-        for symbol in symbols:
-            try:
-                results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
-                logger.warning(
-                    "Failed to fetch %s from Alpha Vantage: %s",
-                    symbol,
-                    e,
-                    extra={"provider": "AlphaVantage", "symbol": symbol},
-                )
-                if strict:
-                    errors[symbol] = e
-                else:
-                    results[symbol] = pd.DataFrame()
-        if strict and errors:
-            raise BatchFetchError("AlphaVantage", errors=errors, partial_results=results)
-        return results
 
     def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""
@@ -650,36 +591,6 @@ class TushareProvider(DataProvider):
 
         return data[["Open", "High", "Low", "Close", "Adj Close", "Volume"]]
 
-    def fetch_multiple(
-        self,
-        symbols: list[str],
-        start: str | datetime,
-        end: str | datetime,
-        interval: str = "1d",
-        adjust: bool = True,
-        strict: bool = False,
-    ) -> dict[str, pd.DataFrame]:
-        """Fetch data for multiple symbols."""
-        results = {}
-        errors: dict[str, Exception] = {}
-        for symbol in symbols:
-            try:
-                results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
-                logger.warning(
-                    "Failed to fetch %s from Tushare: %s",
-                    symbol,
-                    e,
-                    extra={"provider": "Tushare", "symbol": symbol},
-                )
-                if strict:
-                    errors[symbol] = e
-                else:
-                    results[symbol] = pd.DataFrame()
-        if strict and errors:
-            raise BatchFetchError("Tushare", errors=errors, partial_results=results)
-        return results
-
     def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""
         pro = self._get_pro()
@@ -716,6 +627,8 @@ class AkShareProvider(DataProvider):
     >>> provider = AkShareProvider()
     >>> data = provider.fetch("000001", start="2020-01-01", end="2020-12-31")
     """
+
+    batch_adjust_default = "qfq"
 
     def __init__(self):
         try:
@@ -801,36 +714,6 @@ class AkShareProvider(DataProvider):
         data["Adj Close"] = data["Close"]
 
         return data[["Open", "High", "Low", "Close", "Adj Close", "Volume"]]
-
-    def fetch_multiple(  # type: ignore[override]
-        self,
-        symbols: list[str],
-        start: str | datetime,
-        end: str | datetime,
-        interval: str = "1d",
-        adjust: str = "qfq",
-        strict: bool = False,
-    ) -> dict[str, pd.DataFrame]:
-        """Fetch data for multiple symbols."""
-        results = {}
-        errors: dict[str, Exception] = {}
-        for symbol in symbols:
-            try:
-                results[symbol] = self.fetch(symbol, start, end, interval, adjust)
-            except (ConnectionError, TimeoutError, ValueError, KeyError, OSError, RuntimeError) as e:
-                logger.warning(
-                    "Failed to fetch %s from AkShare: %s",
-                    symbol,
-                    e,
-                    extra={"provider": "AkShare", "symbol": symbol},
-                )
-                if strict:
-                    errors[symbol] = e
-                else:
-                    results[symbol] = pd.DataFrame()
-        if strict and errors:
-            raise BatchFetchError("AkShare", errors=errors, partial_results=results)
-        return results
 
     def get_info(self, symbol: str) -> dict:
         """Get information about a symbol."""

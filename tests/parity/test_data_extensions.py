@@ -164,6 +164,31 @@ def test_fetch_multiple_prices() -> None:
     assert all(not frame.empty for frame in frames.values())
 
 
+def test_data_providers_inherit_one_batch_fetch_contract() -> None:
+    from fincore.data.providers import BatchFetchError, DataProvider
+
+    class InMemoryProvider(DataProvider):
+        def fetch(self, symbol, start, end, interval="1d", adjust=True):
+            del start, end, interval, adjust
+            if symbol == "BAD":
+                raise ValueError("fixture failure")
+            return _price_frame()
+
+        def get_info(self, symbol: str) -> dict:
+            return {"symbol": symbol}
+
+    provider = InMemoryProvider()
+
+    non_strict = provider.fetch_multiple(["OK", "BAD"], "2024-01-01", "2024-02-01")
+
+    assert not non_strict["OK"].empty
+    assert non_strict["BAD"].empty
+    with pytest.raises(BatchFetchError) as error:
+        provider.fetch_multiple(["OK", "BAD"], "2024-01-01", "2024-02-01", strict=True)
+    assert error.value.provider == "InMemory"
+    assert set(error.value.partial_results) == {"OK"}
+
+
 def test_execute_hooks() -> None:
     from fincore.extensions.snapshot import ExtensionHook, ExtensionSnapshot
 
