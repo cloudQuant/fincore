@@ -41,6 +41,7 @@ def test_direct_performance_gate_prefers_its_checkout_source(tmp_path: Path) -> 
         encoding="utf-8",
     )
     environment = dict(os.environ)
+    environment.pop("FINCORE_0042R2_SOURCE_ROOT", None)
     environment["PYTHONPATH"] = os.pathsep.join((str(tmp_path / "shadow"), str(repository)))
 
     completed = subprocess.run(
