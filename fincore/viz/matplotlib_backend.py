@@ -139,7 +139,10 @@ class MatplotlibBackend:
 
         # TwoSlopeNorm requires vmin < vcenter < vmax; fall back to a linear
         # normalization when the data does not cross zero.
-        norm: mcolors.Normalize | mcolors.TwoSlopeNorm
+        # ``load_optional_module`` intentionally returns a dynamic module at
+        # this boundary, so the concrete Matplotlib norm type is not available
+        # to static analysis without importing an optional dependency eagerly.
+        norm: Any
         if vmin < 0 < vmax:
             norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
         else:

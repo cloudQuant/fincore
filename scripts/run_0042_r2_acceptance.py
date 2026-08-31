@@ -265,9 +265,7 @@ def _load_d0_bundle(bundle: Path, tooling_identity: dict[str, str]) -> dict:
 
     manifest_artifacts = _require_mapping(manifest.get("artifacts"), "D0 bundle artifacts")
     if set(manifest_artifacts) != _REQUIRED_D0_ARTIFACTS:
-        raise RunnerUsageError(
-            "D0 bundle artifacts must contain exactly " + ", ".join(sorted(_REQUIRED_D0_ARTIFACTS))
-        )
+        raise RunnerUsageError("D0 bundle artifacts must contain exactly " + ", ".join(sorted(_REQUIRED_D0_ARTIFACTS)))
     artifacts: dict[str, Path] = {}
     for name in sorted(_REQUIRED_D0_ARTIFACTS):
         specification = _require_mapping(manifest_artifacts[name], f"D0 bundle artifact {name}")
@@ -282,10 +280,14 @@ def _load_d0_bundle(bundle: Path, tooling_identity: dict[str, str]) -> dict:
     if (
         not isinstance(python_support_window, list)
         or not python_support_window
-        or not all(isinstance(version, str) and _PYTHON_FULL_VERSION.fullmatch(version) for version in python_support_window)
+        or not all(
+            isinstance(version, str) and _PYTHON_FULL_VERSION.fullmatch(version) for version in python_support_window
+        )
         or python_support_window != sorted(set(python_support_window))
     ):
-        raise RunnerUsageError("D0 bundle python_support_window must be a non-empty sorted list of full Python versions")
+        raise RunnerUsageError(
+            "D0 bundle python_support_window must be a non-empty sorted list of full Python versions"
+        )
 
     return {
         "artifacts": artifacts,
@@ -558,11 +560,7 @@ def _run_package_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pa
         "command": record,
         "sdist_sha256": _sha256_file(sdist),
         "sdist_source_violations": sdist_violations,
-        "verdict": (
-            "PASS"
-            if record["exit_code"] == 0 and not legacy_violations and not sdist_violations
-            else "FAIL"
-        ),
+        "verdict": ("PASS" if record["exit_code"] == 0 and not legacy_violations and not sdist_violations else "FAIL"),
         "wheel_legacy_violations": legacy_violations,
         "wheel_sha256": _sha256_file(wheel),
     }
@@ -825,7 +823,10 @@ def _run_performance_gate(args: argparse.Namespace, bundle: dict, candidate_root
         if candidate_rss <= baseline_rss * 0.70:
             rss_improvements.append(label)
         provenance = _require_mapping(candidate_case.get("provenance"), f"candidate {label} provenance")
-        if provenance.get("commit") != _git(candidate_root, "rev-parse", "HEAD") or provenance.get("dirty") is not False:
+        if (
+            provenance.get("commit") != _git(candidate_root, "rev-parse", "HEAD")
+            or provenance.get("dirty") is not False
+        ):
             differences.append(f"{label} profile provenance is not the clean candidate")
         baseline_provenance = _require_mapping(baseline_case.get("provenance"), f"D0 {label} provenance")
         differences.extend(
@@ -911,7 +912,9 @@ def _run_installed_gate(args: argparse.Namespace, bundle: dict, candidate_root: 
         "consumer": consumer_record,
         "dependency_lanes": dict(zip(("minimum", "latest"), lanes, strict=True)),
         "wheel_sha256": _sha256_file(wheel),
-        "verdict": "PASS" if consumer_record["exit_code"] == 0 and all(lane["exit_code"] == 0 for lane in lanes) else "FAIL",
+        "verdict": "PASS"
+        if consumer_record["exit_code"] == 0 and all(lane["exit_code"] == 0 for lane in lanes)
+        else "FAIL",
     }
 
 
@@ -947,7 +950,10 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
     _require_requested_flag(args.require_source_wheel_equal, "require-source-wheel-equal", "parity")
     wheel, _, _ = _require_candidate_distribution(args, candidate_root)
     baseline = _artifact_json(bundle, "capability_baseline")
-    if baseline.get("artifact_type") != "capability_baseline_capture" or baseline.get("evaluation_status") != "evaluated_source":
+    if (
+        baseline.get("artifact_type") != "capability_baseline_capture"
+        or baseline.get("evaluation_status") != "evaluated_source"
+    ):
         raise RunnerBlockedError("D0 capability baseline is not an evaluated source artifact")
     evaluation = _require_mapping(baseline.get("evaluation"), "D0 capability evaluation")
     ledger_info = _require_mapping(evaluation.get("ledger"), "D0 capability evaluation ledger")
@@ -1195,14 +1201,22 @@ def _run_matrix_cell_gate(
         "output_digest": _canonical_sha256({"install": install, "tests": test_record}),
         "python_full_version": full_python,
         "runner_image": runner_image,
-        "verdict": "PASS" if install["exit_code"] == 0 and test_record is not None and test_record["exit_code"] == 0 else "FAIL",
+        "verdict": "PASS"
+        if install["exit_code"] == 0 and test_record is not None and test_record["exit_code"] == 0
+        else "FAIL",
         "wheel_sha256": _sha256_file(wheel),
     }
     cell_path = output_dir / "matrix-cell.json"
     if cell_path.exists():
         raise RunnerUsageError(f"matrix cell output already exists: {cell_path}")
     cell_path.write_text(json.dumps(cell, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return {"cell": cell, "cell_path": str(cell_path), "install": install, "tests": test_record, "verdict": cell["verdict"]}
+    return {
+        "cell": cell,
+        "cell_path": str(cell_path),
+        "install": install,
+        "tests": test_record,
+        "verdict": cell["verdict"],
+    }
 
 
 def _candidate_environment(candidate_root: Path) -> dict[str, str]:
@@ -1269,7 +1283,9 @@ def _materialize_baseline_source(bundle: dict) -> Path:
         )
         if checked_out.returncode != 0:
             detail = (checked_out.stderr or checked_out.stdout).strip()
-            raise RunnerBlockedError(f"cannot check out the D0 baseline source commit: {detail or 'git checkout failed'}")
+            raise RunnerBlockedError(
+                f"cannot check out the D0 baseline source commit: {detail or 'git checkout failed'}"
+            )
         if _git(checkout, "rev-parse", "HEAD^{tree}") != baseline["tree"]:
             raise RunnerBlockedError("materialized D0 baseline source tree does not match the bundle manifest")
         if _git(checkout, "status", "--porcelain=v1", "--untracked-files=all"):
@@ -1323,7 +1339,9 @@ def _legacy_source_probe(candidate_root: Path) -> dict:
         timeout=120,
     )
     if completed.returncode != 0:
-        raise RunnerBlockedError(f"legacy source probe could not run: {completed.stderr.strip() or completed.stdout.strip()}")
+        raise RunnerBlockedError(
+            f"legacy source probe could not run: {completed.stderr.strip() or completed.stdout.strip()}"
+        )
     try:
         result = json.loads(completed.stdout)
     except json.JSONDecodeError as exc:
@@ -1407,7 +1425,9 @@ def _run_architecture_gate(
     if record["exit_code"] != 0:
         return {"command": record, "verdict": "FAIL"}
     candidate_artifact = _read_json(capture, "candidate architecture capture")
-    validation = _require_mapping(candidate_artifact.get("baseline_validation"), "candidate architecture baseline_validation")
+    validation = _require_mapping(
+        candidate_artifact.get("baseline_validation"), "candidate architecture baseline_validation"
+    )
     if not _architecture_validation_passed(validation):
         return {"command": record, "validation": validation, "verdict": "FAIL"}
     legacy = _legacy_source_probe(candidate_root)
@@ -1501,7 +1521,9 @@ def _run_matrix_aggregate_gate(
         if key in cells:
             raise RunnerBlockedError(f"matrix evidence contains duplicate cell {key[0]}/{key[1]}")
         cells[key] = path
-    expected = {(operating_system, version) for operating_system in requested_os for version in bundle["python_support_window"]}
+    expected = {
+        (operating_system, version) for operating_system in requested_os for version in bundle["python_support_window"]
+    }
     missing = sorted(expected - set(cells))
     unexpected = sorted(set(cells) - expected)
     if missing or unexpected:
@@ -1512,7 +1534,9 @@ def _run_matrix_aggregate_gate(
             fragments.append("unexpected " + ", ".join(f"{os_name}/{version}" for os_name, version in unexpected))
         raise RunnerBlockedError("matrix evidence is incomplete: " + "; ".join(fragments))
     return {
-        "cells": {f"{operating_system}/{version}": str(path) for (operating_system, version), path in sorted(cells.items())},
+        "cells": {
+            f"{operating_system}/{version}": str(path) for (operating_system, version), path in sorted(cells.items())
+        },
         "expected_cells": sorted(f"{operating_system}/{version}" for operating_system, version in expected),
         "wheel_sha256": wheel_sha256,
         "verdict": "PASS",
