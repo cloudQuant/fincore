@@ -7,9 +7,15 @@ from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
 
-def _frozen_mapping(value: Mapping[str, Any]) -> Mapping[str, Any]:
-    """Copy one metadata mapping before exposing it from an immutable spec."""
-    return MappingProxyType(dict(value))
+def _freeze_metadata(value: Any) -> Any:
+    """Recursively detach schema/provenance metadata from its declaration caller."""
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze_metadata(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_metadata(item) for item in value)
+    if isinstance(value, set):
+        return frozenset(_freeze_metadata(item) for item in value)
+    return value
 
 
 def _required_identifier(value: str, field_name: str) -> str:
@@ -36,6 +42,8 @@ class OperationSpec:
     optional_extra: str | None = None
     deterministic: bool = True
     rng_policy: str = "none"
+    semantic_mode: str | None = None
+    mode_approval: str | None = None
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -45,8 +53,14 @@ class OperationSpec:
             raise TypeError("callable must be callable")
         if self.optional_extra is not None:
             _required_identifier(self.optional_extra, "optional_extra")
-        object.__setattr__(self, "input_schema", _frozen_mapping(self.input_schema))
-        object.__setattr__(self, "provenance", _frozen_mapping(self.provenance))
+        if (self.semantic_mode is None) != (self.mode_approval is None):
+            raise ValueError("semantic_mode and mode_approval must be provided together")
+        if self.semantic_mode is not None:
+            _required_identifier(self.semantic_mode, "semantic_mode")
+            _required_identifier(self.mode_approval, "mode_approval")
+        object.__setattr__(self, "input_schema", _freeze_metadata(self.input_schema))
+        object.__setattr__(self, "output_schema", _freeze_metadata(self.output_schema))
+        object.__setattr__(self, "provenance", _freeze_metadata(self.provenance))
 
     @property
     def implementation_fingerprint(self) -> str:

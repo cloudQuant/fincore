@@ -74,7 +74,7 @@ class AnalysisSession:
             with self._lock:
                 cached = self._cache.get(cache_key)
             if cached is not None:
-                return cached.with_metadata(cache="hit")
+                return cached.copy_for_consumer(cache="hit")
 
         result = _run_snapshot(
             spec,
@@ -85,12 +85,16 @@ class AnalysisSession:
             config_digest=config_digest,
         )
         if spec.deterministic:
+            try:
+                cache_value = result.copy_for_consumer()
+            except Exception:  # noqa: BLE001 - third-party domain values define their own copy protocol.
+                return result.with_metadata(cache="disabled")
             with self._lock:
                 if self._closed:
                     raise RuntimeError("analysis session is closed")
-                existing = self._cache.setdefault(cache_key, result)
-            if existing is not result:
-                return existing.with_metadata(cache="hit")
+                existing = self._cache.setdefault(cache_key, cache_value)
+            if existing is not cache_value:
+                return existing.copy_for_consumer(cache="hit")
         return result
 
     def close(self) -> None:

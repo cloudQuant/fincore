@@ -69,3 +69,32 @@ def test_sessions_are_isolated_and_closed_sessions_cannot_run_operations() -> No
     assert first.closed is True
     with pytest.raises(RuntimeError, match="closed"):
         first.run("metrics.counted", {"value": 1})
+
+
+def test_session_cache_does_not_expose_a_mutable_cached_domain_value() -> None:
+    from fincore.runtime import AnalysisSession, OperationCatalog, OperationSpec
+
+    calls: list[int] = []
+
+    def table(*, value: int) -> list[int]:
+        calls.append(value)
+        return [value]
+
+    catalog = OperationCatalog(
+        (
+            OperationSpec(
+                operation_id="metrics.table",
+                capability_id="metrics.table",
+                domain="metrics",
+                callable=table,
+            ),
+        )
+    )
+    session = AnalysisSession(catalog)
+
+    first = session.run("metrics.table", {"value": 1})
+    first.value.append(99)
+    second = session.run("metrics.table", {"value": 1})
+
+    assert calls == [1]
+    assert second.value == [1]

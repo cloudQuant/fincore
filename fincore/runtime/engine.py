@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from time import perf_counter_ns
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from .data import AnalysisSnapshot
@@ -19,6 +21,82 @@ def _mapping(value: Mapping[str, Any], label: str) -> dict[str, Any]:
     if any(not isinstance(key, str) for key in value):
         raise TypeError(f"{label} keys must be strings")
     return dict(value)
+
+
+@dataclass(frozen=True, slots=True, init=False)
+class OperationRequest:
+    """One isolated operation request that can safely enter a batch plan."""
+
+    operation_id: str
+    snapshot: AnalysisSnapshot
+    _config_snapshot: AnalysisSnapshot = field(repr=False)
+
+    def __init__(
+        self,
+        operation_id: str,
+        inputs: Mapping[str, Any],
+        config: Mapping[str, Any] | None = None,
+    ) -> None:
+        if not isinstance(operation_id, str) or not operation_id.strip():
+            raise ValueError("operation_id must be a non-empty string")
+        input_snapshot = AnalysisSnapshot.from_inputs(_mapping(inputs, "inputs"))
+        config_snapshot = AnalysisSnapshot.from_inputs(
+            {"config": _mapping(config, "config") if config is not None else {}}
+        )
+        object.__setattr__(self, "operation_id", operation_id)
+        object.__setattr__(self, "snapshot", input_snapshot)
+        object.__setattr__(self, "_config_snapshot", config_snapshot)
+
+    @property
+    def config(self) -> Mapping[str, Any]:
+        """Return an independent copy of the request's isolated config."""
+        config = self._config_snapshot.materialize()["config"]
+        if not isinstance(config, Mapping):  # pragma: no cover - established by __init__.
+            raise TypeError("operation request config must be a mapping")
+        return config
+
+    @property
+    def config_digest(self) -> str:
+        """Return the deterministic digest of the isolated configuration."""
+        return self._config_snapshot.digest
+
+
+@dataclass(frozen=True, slots=True)
+class ExecutionPlan:
+    """A catalog-bound, ordered batch of already-isolated requests."""
+
+    catalog_digest: str
+    requests: tuple[OperationRequest, ...]
+
+
+def plan(requests: Iterable[OperationRequest], *, catalog: OperationCatalog) -> ExecutionPlan:
+    """Validate requests against one immutable catalog snapshot without running them."""
+    planned_requests = tuple(requests)
+    for request in planned_requests:
+        if not isinstance(request, OperationRequest):
+            raise TypeError("requests must contain OperationRequest instances")
+        catalog.resolve(request.operation_id)
+    return ExecutionPlan(catalog_digest=catalog.digest, requests=planned_requests)
+
+
+def batch(
+    requests: Iterable[OperationRequest] | ExecutionPlan,
+    *,
+    catalog: OperationCatalog,
+) -> tuple[Result, ...]:
+    """Execute an ordered batch against the exact catalog it was planned for."""
+    execution_plan = requests if isinstance(requests, ExecutionPlan) else plan(requests, catalog=catalog)
+    if execution_plan.catalog_digest != catalog.digest:
+        raise ValueError("execution plan was created for another catalog snapshot")
+    return tuple(
+        run(
+            request.operation_id,
+            request.snapshot.materialize(),
+            request.config,
+            catalog=catalog,
+        )
+        for request in execution_plan.requests
+    )
 
 
 def run(

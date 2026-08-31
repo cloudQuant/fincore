@@ -35,9 +35,18 @@ class OperationCatalog:
                     f"{previous.implementation_fingerprint} and {spec.implementation_fingerprint}"
                 )
             if previous is not None:
-                raise ValueError(f"duplicate leaf capability_id: {spec.capability_id}")
+                if previous.semantic_mode is None or spec.semantic_mode is None:
+                    raise ValueError(
+                        "multiple operation IDs for one leaf capability require distinct approved semantic modes: "
+                        f"{spec.capability_id}"
+                    )
+                if previous.semantic_mode == spec.semantic_mode:
+                    raise ValueError(
+                        "multiple operation IDs for one leaf capability cannot reuse a semantic mode: "
+                        f"{spec.capability_id}.{spec.semantic_mode}"
+                    )
             by_operation_id[spec.operation_id] = spec
-            by_capability_id[spec.capability_id] = spec
+            by_capability_id.setdefault(spec.capability_id, spec)
         object.__setattr__(self, "operations", ordered_operations)
         object.__setattr__(self, "_by_operation_id", MappingProxyType(dict(by_operation_id)))
 
@@ -58,6 +67,8 @@ class OperationCatalog:
                 "optional_extra": spec.optional_extra,
                 "deterministic": spec.deterministic,
                 "rng_policy": spec.rng_policy,
+                "semantic_mode": spec.semantic_mode,
+                "mode_approval": spec.mode_approval,
             }
             for spec in self.operations
         ]
