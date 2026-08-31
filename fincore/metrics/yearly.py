@@ -23,11 +23,11 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.metrics.basic import annualization_factor, ensure_datetime_index_series
+from fincore.metrics._annual import annual_return
+from fincore.metrics.basic import ensure_datetime_index_series
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import sharpe_ratio
-from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
 from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
 
@@ -41,54 +41,6 @@ __all__ = [
     "max_drawdown_by_year",
     "sharpe_ratio_by_year",
 ]
-
-
-def annual_return(
-    returns: pd.Series | pd.DataFrame | np.ndarray,
-    period: str = DAILY,
-    annualization: float | None = None,
-) -> float | np.ndarray | pd.Series:
-    """Determine the mean annual growth rate of returns (CAGR).
-
-    This is effectively the compound annual growth rate assuming
-    reinvestment of returns.
-
-    Parameters
-    ----------
-    returns : array-like or pd.Series or pd.DataFrame
-        Non-cumulative simple returns.
-    period : str, optional
-        Frequency of the input data (for example ``DAILY``). Used to
-        infer the annualization factor when ``annualization`` is ``None``.
-    annualization : float, optional
-        Custom annualization factor. If provided, this value is used
-        directly instead of inferring it from ``period``.
-
-    Returns
-    -------
-    float or np.ndarray or pd.Series
-        Annualized return. For 1D input a scalar is returned; for 2D input
-        one value is returned per column.
-    """
-    if len(returns) < 1:
-        return np.nan
-
-    ann_factor = annualization_factor(period, annualization)
-    num_years = len(returns) / ann_factor
-    ending_value = cum_returns_final(returns, starting_value=1)
-    if isinstance(ending_value, (pd.Series, np.ndarray)):
-        result = np.asarray(ending_value, dtype=float).copy()
-        mask = result <= 0
-        result[mask] = -1.0
-        result[~mask] = result[~mask] ** (1 / num_years) - 1
-        if isinstance(ending_value, pd.Series):
-            return pd.Series(result, index=ending_value.index)
-        return result
-    if ending_value <= 0:
-        return -1.0
-    # cast() is a runtime no-op; it only pins the static type because
-    # mypy types ``float ** float`` as Any.
-    return cast("float", ending_value ** (1 / num_years)) - 1
 
 
 def annual_return_by_year(

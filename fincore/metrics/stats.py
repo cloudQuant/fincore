@@ -754,21 +754,17 @@ def tracking_difference(
 def common_sense_ratio(returns: pd.Series | np.ndarray) -> float:
     """Calculate the common sense ratio.
 
-    Delegates to :func:`fincore.metrics.ratios.common_sense_ratio`.
-
-    Parameters
-    ----------
-    returns : array-like or pd.Series
-        Non-cumulative strategy returns.
-
-    Returns
-    -------
-    float
-        Common sense ratio, or ``NaN`` if there is insufficient data.
+    Combines tail ratio with win rate to describe the risk-reward profile.
     """
-    from fincore.metrics.ratios import common_sense_ratio as _csr
+    from fincore.metrics.risk import tail_ratio
 
-    return _csr(returns)
+    if len(returns) < 2:
+        return np.nan
+    tail = tail_ratio(returns)
+    wins = win_rate(returns)
+    if np.isnan(tail) or np.isnan(wins) or wins == 0:
+        return np.nan
+    return tail * wins / (1 - wins) if wins != 1 else np.inf
 
 
 def var_cov_var_normal(p: float, c: float, mu: float = 0, sigma: float = 1) -> float:

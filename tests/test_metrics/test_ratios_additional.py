@@ -34,11 +34,10 @@ def test_adjusted_sharpe_ratio_nan_and_skew_kurt_fallbacks() -> None:
 
 def test_calmar_ratio_returns_nan_when_temp_infinite(monkeypatch) -> None:
     import fincore.metrics.drawdown as dd_mod
-    import fincore.metrics.yearly as yearly_mod
 
     min_pos = float(np.nextafter(0.0, 1.0))
     monkeypatch.setattr(dd_mod, "max_drawdown", lambda *_args, **_kwargs: -min_pos)
-    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 1.0)
+    monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: 1.0)
 
     r = np.array([0.01, -0.01, 0.02, -0.02])
     assert np.isnan(ratios_mod.calmar_ratio(r))
@@ -72,14 +71,13 @@ def test_omega_ratio_annualization_one_and_required_return_invalid() -> None:
 
 def test_cal_treynor_ratio_dataframe_beta_mask_and_series_output(monkeypatch) -> None:
     import fincore.metrics.alpha_beta as ab_mod
-    import fincore.metrics.yearly as yearly_mod
 
     idx = pd.date_range("2024-01-01", periods=5, freq="B", tz="UTC")
     returns = pd.DataFrame({"A": [0.01, 0.0, 0.01, 0.0, 0.01], "B": [0.02, 0.0, 0.0, 0.0, 0.0]}, index=idx)
     factor = returns * 0.5
 
     monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: pd.Series({"A": 0.0, "B": 2.0}))
-    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: pd.Series({"A": 0.1, "B": 0.2}))
+    monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: pd.Series({"A": 0.1, "B": 0.2}))
 
     out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
     assert isinstance(out, pd.Series)
@@ -90,7 +88,6 @@ def test_cal_treynor_ratio_dataframe_beta_mask_and_series_output(monkeypatch) ->
 def test_cal_treynor_ratio_2d_array_beta_else_branch(monkeypatch) -> None:
     """Test cal_treynor_ratio when b is array but ann_excess_return is not Series/DataFrame (line 603)."""
     import fincore.metrics.alpha_beta as ab_mod
-    import fincore.metrics.yearly as yearly_mod
 
     returns = np.array([[0.01, 0.02], [0.0, 0.01], [0.01, 0.0], [0.0, 0.01], [0.01, 0.0]])
     factor = np.array([0.005, 0.0, 0.005, 0.0, 0.005])
@@ -98,7 +95,7 @@ def test_cal_treynor_ratio_2d_array_beta_else_branch(monkeypatch) -> None:
     # Mock beta_aligned to return an array
     monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: np.array([1.5, 2.0]))
     # Mock annual_return to return scalar (not Series/DataFrame)
-    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+    monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
 
     out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
     # Should return an array
@@ -109,7 +106,6 @@ def test_cal_treynor_ratio_2d_array_beta_else_branch(monkeypatch) -> None:
 def test_cal_treynor_ratio_1d_scalar_beta_else_branch(monkeypatch) -> None:
     """Test cal_treynor_ratio when b is scalar in else branch (lines 606-607)."""
     import fincore.metrics.alpha_beta as ab_mod
-    import fincore.metrics.yearly as yearly_mod
 
     returns = np.array([0.01, 0.0, 0.01, 0.0, 0.01])
     factor = np.array([0.005, 0.0, 0.005, 0.0, 0.005])
@@ -117,7 +113,7 @@ def test_cal_treynor_ratio_1d_scalar_beta_else_branch(monkeypatch) -> None:
     # Mock beta_aligned to return a positive scalar (not Series/ndarray)
     # This is unusual but the code handles it
     monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: 1.5)
-    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+    monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
 
     out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
     # Should return a scalar
@@ -177,9 +173,7 @@ def test_common_sense_ratio_and_stability_and_capture_edge_cases(monkeypatch) ->
 
     assert np.isnan(ratios_mod._capture_aligned([], [], period="daily"))
 
-    import fincore.metrics.yearly as yearly_mod
-
-    monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.0)
+    monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: 0.0)
     assert np.isnan(ratios_mod._capture_aligned([0.01, 0.02], [0.01, 0.02], period="daily"))
 
 
@@ -195,7 +189,6 @@ def test_up_down_capture_returns_nan_when_down_cap_zero(monkeypatch) -> None:
 def test_cal_treynor_ratio_scalar_beta_2d_returns() -> None:
     """Test cal_treynor_ratio when returns is 2D but beta is scalar (lines 606-607)."""
     import fincore.metrics.alpha_beta as ab_mod
-    import fincore.metrics.yearly as yearly_mod
 
     # 2D returns (multi-column)
     returns = np.array([[0.01, 0.02], [0.0, 0.01], [0.01, 0.0], [0.0, 0.01], [0.01, 0.0]])
@@ -205,7 +198,7 @@ def test_cal_treynor_ratio_scalar_beta_2d_returns() -> None:
     monkeypatch = pytest.MonkeyPatch()
     try:
         monkeypatch.setattr(ab_mod, "beta_aligned", lambda *_args, **_kwargs: 1.5)
-        monkeypatch.setattr(yearly_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
+        monkeypatch.setattr(ratios_mod, "annual_return", lambda *_args, **_kwargs: 0.1)
 
         out = ratios_mod.cal_treynor_ratio(returns, factor, risk_free=0.0, period="daily", annualization=252)
         # Should return an array with both elements set

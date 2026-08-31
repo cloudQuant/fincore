@@ -462,7 +462,7 @@ def var_excess_return(
     if len(returns) < 2:
         return np.nan
 
-    from fincore.metrics.yearly import annual_return
+    from fincore.metrics._annual import annual_return
 
     ann_ret = annual_return(returns, period=period, annualization=annualization)
     var_value = value_at_risk(returns, cutoff=cutoff)

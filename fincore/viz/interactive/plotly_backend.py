@@ -14,7 +14,7 @@ import pandas as pd
 if TYPE_CHECKING:
     import plotly.graph_objects as go
 
-from fincore.viz.base import VizBackend
+from fincore.viz.contracts import VizBackend
 
 __all__ = ["PlotlyBackend"]
 

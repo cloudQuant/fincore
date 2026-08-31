@@ -11,7 +11,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from fincore.viz.base import VizBackend
+from fincore.viz.contracts import VizBackend
 
 __all__ = ["BokehBackend", "PrintfTickFormatter"]
 

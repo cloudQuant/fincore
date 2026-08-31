@@ -28,9 +28,11 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
+from fincore.metrics._annual import annual_return
 from fincore.metrics._numeric import nanmean, nanstd
 from fincore.metrics.basic import adjust_returns, annualization_factor
 from fincore.metrics.frequencies import APPROX_BDAYS_PER_YEAR, DAILY
+from fincore.metrics.stats import common_sense_ratio, kurtosis, skewness
 from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 __all__ = [
@@ -281,8 +283,6 @@ def adjusted_sharpe_ratio(
         Adjusted Sharpe ratio that accounts for non-normality. Returns
         ``NaN`` when there is insufficient data.
     """
-    from fincore.metrics.stats import kurtosis, skewness
-
     if len(returns) < 4:
         return np.nan
 
@@ -398,7 +398,6 @@ def calmar_ratio(
         drawdown is non-negative or infinite.
     """
     from fincore.metrics.drawdown import max_drawdown
-    from fincore.metrics.yearly import annual_return
 
     max_dd = max_drawdown(returns=returns)
 
@@ -665,9 +664,7 @@ def cal_treynor_ratio(
             return float(out.item())
         return out
 
-    from fincore.metrics.yearly import annual_return as _annual_return
-
-    ann_return = _annual_return(returns, period=period, annualization=annualization)
+    ann_return = annual_return(returns, period=period, annualization=annualization)
     ann_excess_return = ann_return - risk_free
 
     b = beta_aligned(
@@ -802,9 +799,7 @@ def m_squared(
     if len(returns_aligned) < 2:
         return np.nan
 
-    from fincore.metrics.yearly import annual_return as _annual_return
-
-    ann_return = _annual_return(returns_aligned, period=period, annualization=annualization)
+    ann_return = annual_return(returns_aligned, period=period, annualization=annualization)
 
     ann_vol = annual_volatility(returns_aligned, period=period, annualization=annualization)
     ann_factor_vol = annual_volatility(factor_aligned, period=period, annualization=annualization)
@@ -826,8 +821,6 @@ def _compute_annualized_return(
 
     Shared helper used by sterling_ratio, burke_ratio, kappa_three_ratio, etc.
     """
-    from fincore.metrics.yearly import annual_return
-
     return annual_return(returns, period=period, annualization=annualization)
 
 
@@ -1163,38 +1156,6 @@ def _sample_excess_kurtosis(x):
     return kurt - correction
 
 
-def common_sense_ratio(returns: pd.Series | np.ndarray) -> float:
-    """Calculate the common sense ratio.
-
-    The common sense ratio combines the tail ratio with the win rate to
-    provide a measure of the risk-reward profile of a strategy.
-
-    Parameters
-    ----------
-    returns : array-like or pd.Series
-        Non-cumulative strategy returns.
-
-    Returns
-    -------
-    float
-        Common sense ratio. Returns ``NaN`` if there are insufficient
-        observations or if win rate is zero.
-    """
-    from fincore.metrics.risk import tail_ratio as _tail_ratio
-    from fincore.metrics.stats import win_rate
-
-    if len(returns) < 2:
-        return np.nan
-
-    tr = _tail_ratio(returns)
-    wr = win_rate(returns)
-
-    if np.isnan(tr) or np.isnan(wr) or wr == 0:
-        return np.nan
-
-    return tr * wr / (1 - wr) if wr != 1 else np.inf
-
-
 def stability_of_timeseries(returns: pd.Series | np.ndarray) -> float:
     """Determine the R-squared of a linear fit to cumulative log returns.
 
@@ -1236,8 +1197,6 @@ def _capture_aligned(
     period: str = DAILY,
 ) -> float:
     """Compute capture ratio on pre-aligned data (no alignment step)."""
-    from fincore.metrics.yearly import annual_return
-
     if len(returns) < 1:
         return np.nan
 
@@ -1474,8 +1433,6 @@ def up_capture_return(
         Annualized strategy return during up-market periods, or ``NaN``
         if there are no positive benchmark periods.
     """
-    from fincore.metrics.yearly import annual_return
-
     aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
@@ -1525,8 +1482,6 @@ def down_capture_return(
         Annualized strategy return during down-market periods, or ``NaN``
         if there are no negative benchmark periods.
     """
-    from fincore.metrics.yearly import annual_return
-
     aligned_returns, aligned_factor = align_binary_metric_inputs(
         returns, factor_returns, alignment=alignment, normalize_tz=normalize_tz
     )
