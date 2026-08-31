@@ -133,3 +133,20 @@ def test_catalog_allows_shared_leaf_implementation_only_for_distinct_approved_se
                 ),
             )
         )
+
+
+def test_operations_provider_returns_the_declared_immutable_tuple_without_a_domain_wrapper() -> None:
+    from fincore.runtime.specs import OperationSpec, make_operations_provider
+
+    declared = (
+        OperationSpec(
+            operation_id="metrics.sum",
+            capability_id="metrics.sum",
+            domain="metrics",
+            callable=_sum_values,
+        ),
+    )
+
+    provider = make_operations_provider(declared)
+
+    assert provider() is declared

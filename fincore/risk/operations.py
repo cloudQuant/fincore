@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .backtesting import backtest_es, backtest_var, christoffersen_lr, kupiec_lr
 from .calibration import basel_traffic_light, es_calibration_score, expected_exception_count
@@ -54,7 +54,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable metadata for direct risk operations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

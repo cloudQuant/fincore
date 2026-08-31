@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .providers import fetch_multiple_prices, fetch_price_data, get_provider
 from .snapshots import DataSnapshot
@@ -33,7 +33,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable metadata for direct data operations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

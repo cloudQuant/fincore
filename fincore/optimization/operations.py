@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .frontier import efficient_frontier
 from .objectives import optimize
@@ -33,7 +33,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable metadata for direct optimization operations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

@@ -24,6 +24,20 @@ def _required_identifier(value: str, field_name: str) -> str:
     return value
 
 
+def make_operations_provider(
+    declarations: tuple["OperationSpec", ...],
+) -> Callable[[], tuple["OperationSpec", ...]]:
+    """Expose immutable domain declarations without copying a domain wrapper."""
+
+    if not isinstance(declarations, tuple):
+        raise TypeError("operation declarations must be an immutable tuple")
+
+    def provider() -> tuple[OperationSpec, ...]:
+        return declarations
+
+    return provider
+
+
 @dataclass(frozen=True, slots=True)
 class OperationSpec:
     """One domain-owned operation and its direct canonical implementation.

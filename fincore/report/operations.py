@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .factor.compute import build_factor_report
 from .portfolio.compute import build_portfolio_report
@@ -32,7 +32,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable direct-call report operation declarations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

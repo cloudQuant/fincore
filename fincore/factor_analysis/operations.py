@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .analysis import analyze_factor
 from .calendar import (
@@ -112,7 +112,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable direct-call metadata for factor-analysis capabilities."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

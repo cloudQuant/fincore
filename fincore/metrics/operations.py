@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -303,6 +303,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return the immutable direct-call operation catalog contribution for metrics."""
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

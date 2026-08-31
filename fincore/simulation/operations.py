@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .base import annualize, compute_statistics, estimate_parameters, validate_returns
 from .bootstrap import bootstrap, bootstrap_ci, bootstrap_summary
@@ -49,7 +49,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable metadata for direct simulation operations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

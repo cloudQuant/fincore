@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
 from .disclosures import render_disclosure
@@ -39,6 +39,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable direct-call operation metadata for performance analytics."""
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)

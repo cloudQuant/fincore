@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fincore.runtime import OperationSpec
+from fincore.runtime.specs import OperationSpec, make_operations_provider
 
 from .brinson import brinson_attribution, brinson_cumulative, brinson_results
 from .fama_french import calculate_idiosyncratic_risk, fetch_ff_factors
@@ -62,7 +62,4 @@ _OPERATIONS = tuple(
 )
 
 
-def operations() -> tuple[OperationSpec, ...]:
-    """Return immutable metadata for direct attribution operations."""
-
-    return _OPERATIONS
+operations = make_operations_provider(_OPERATIONS)
