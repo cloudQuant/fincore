@@ -71,7 +71,7 @@
         "group": "tests/packaging"
       },
       {
-        "count": 29,
+        "count": 32,
         "group": "tests/parity"
       },
       {
@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 255,
+        "count": 265,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3114,
+        "count": 3127,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2757,
+        "count": 2768,
         "group": "<unmarked>"
       },
       {
@@ -283,7 +283,7 @@
         "group": "integration_offline"
       },
       {
-        "count": 669,
+        "count": 671,
         "group": "p0"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5608,
+  "node_count": 5621,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20711,6 +20711,34 @@
       "test_path": "tests/parity/test_ledger.py"
     },
     {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_metrics.py::test_gross_leverage",
+      "test_blob_sha256": "54d279326eb5bc2a918bb05905dcc8c6a9afe5bd1a8db719c8e05140ac7ce9a4",
+      "test_path": "tests/parity/test_metrics.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [
+        "p0"
+      ],
+      "nodeid": "tests/parity/test_metrics.py::test_second_max_drawdown",
+      "test_blob_sha256": "54d279326eb5bc2a918bb05905dcc8c6a9afe5bd1a8db719c8e05140ac7ce9a4",
+      "test_path": "tests/parity/test_metrics.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [
+        "p0"
+      ],
+      "nodeid": "tests/parity/test_metrics.py::test_third_max_drawdown",
+      "test_blob_sha256": "54d279326eb5bc2a918bb05905dcc8c6a9afe5bd1a8db719c8e05140ac7ce9a4",
+      "test_path": "tests/parity/test_metrics.py"
+    },
+    {
       "directory_group": "tests/performance",
       "legacy_family": "other",
       "markers": [
@@ -21574,6 +21602,54 @@
       "directory_group": "tests/quality",
       "legacy_family": "other",
       "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_complete_inventory_binds_every_source_fact_exactly_once",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_duplicate_policy_keys",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_inventory_which_omits_one_union_fact",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_raw_provenance_drift_between_discovery_inputs",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_required_entry_without_real_source_and_wheel_nodeids",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_scoped_or_not_for_d0_inventory_header",
+      "test_blob_sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5",
+      "test_path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
       "nodeid": "tests/quality/test_check_0042_r2_legacy_surface_inventory.py::test_accepts_dot_separated_capability_ids_from_the_existing_registry",
       "test_blob_sha256": "1b62d68d4ab6caa67a10a3775d7c4a494776b803e2f42ffeb4642efaf6a84002",
       "test_path": "tests/quality/test_check_0042_r2_legacy_surface_inventory.py"
@@ -22147,6 +22223,38 @@
       "nodeid": "tests/quality/test_collect_0042_r2_surface_discovery.py::test_rejects_git_control_directory_as_output_before_overwriting[.git]",
       "test_blob_sha256": "1e16da5c135e4c80153e9ae9ce3ff0382b58047950047fc542fba136d5868cbb",
       "test_path": "tests/quality/test_collect_0042_r2_surface_discovery.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_collects_all_required_raw_surface_kinds_deterministically",
+      "test_blob_sha256": "d5c912d28950224302fd718405467c1e71c8da68c3334b3e3c34d34b7ffe312f",
+      "test_path": "tests/quality/test_collect_0042_r2_surface_union.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_dirty_source_without_replacing_previous_output",
+      "test_blob_sha256": "d5c912d28950224302fd718405467c1e71c8da68c3334b3e3c34d34b7ffe312f",
+      "test_path": "tests/quality/test_collect_0042_r2_surface_union.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_member_path_traversal",
+      "test_blob_sha256": "d5c912d28950224302fd718405467c1e71c8da68c3334b3e3c34d34b7ffe312f",
+      "test_path": "tests/quality/test_collect_0042_r2_surface_union.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_symbolic_link_member",
+      "test_blob_sha256": "d5c912d28950224302fd718405467c1e71c8da68c3334b3e3c34d34b7ffe312f",
+      "test_path": "tests/quality/test_collect_0042_r2_surface_union.py"
     },
     {
       "directory_group": "tests/quality",
@@ -51655,16 +51763,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1097,
+    "regular_blob_count": 1102,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "c6e2005b5bc7fb52fa8834976b55501dddc0748e",
-    "tree": "5d89c47f6983586daf31dc3aa688265242e6f768"
+    "commit": "6de193c3a3c3bcbcbb38c5063fc93edbdba73b9a",
+    "tree": "c74c5598451cab50912bd1e981cbb6baa59b3767"
   },
-  "source_test_blob_count": 480,
+  "source_test_blob_count": 483,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -52172,6 +52280,11 @@
       "sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8"
     },
     {
+      "git_object_id": "ecdd4c9a1e2ecdd722ab778b4c77b81ec7e43d46",
+      "path": "tests/parity/test_metrics.py",
+      "sha256": "54d279326eb5bc2a918bb05905dcc8c6a9afe5bd1a8db719c8e05140ac7ce9a4"
+    },
+    {
       "git_object_id": "308e74ee56d3ace78f8855c146f7dc7dc9ee588a",
       "path": "tests/performance/test_hotspot_regressions.py",
       "sha256": "142adfaca9ea7620b598fea724e8461f667535d279ecff530a1c47af1e995c0d"
@@ -52242,6 +52355,11 @@
       "sha256": "02fe6231cf5b0ff2727c9fa97f25e55b0d01c20820b7aed3f836c46d67f28e91"
     },
     {
+      "git_object_id": "e4245d8907823ae0823452169246449391a54072",
+      "path": "tests/quality/test_check_0042_r2_complete_surface_inventory.py",
+      "sha256": "ca6f1f5e69e5ce81c6b81d6a4333d632efda5f32a51ba94825fdeeca7d8098e5"
+    },
+    {
       "git_object_id": "c0e482d72ee9c8f997f64d99e2d5438bbb1d0660",
       "path": "tests/quality/test_check_0042_r2_legacy_surface_inventory.py",
       "sha256": "1b62d68d4ab6caa67a10a3775d7c4a494776b803e2f42ffeb4642efaf6a84002"
@@ -52275,6 +52393,11 @@
       "git_object_id": "8d45145393dcac3f15f1f6fe8cbaeeff6b255778",
       "path": "tests/quality/test_collect_0042_r2_surface_discovery.py",
       "sha256": "1e16da5c135e4c80153e9ae9ce3ff0382b58047950047fc542fba136d5868cbb"
+    },
+    {
+      "git_object_id": "b675ecb3026b2f9d024dc22f8eb75fc0680882d4",
+      "path": "tests/quality/test_collect_0042_r2_surface_union.py",
+      "sha256": "d5c912d28950224302fd718405467c1e71c8da68c3334b3e3c34d34b7ffe312f"
     },
     {
       "git_object_id": "8061a6c75b7330a035d346e83dbc2d5e8cc642fc",

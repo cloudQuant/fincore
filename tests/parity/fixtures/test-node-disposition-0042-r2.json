@@ -7,6 +7,19 @@
     "installed_wheel_behavior",
     "legacy_zero"
   ],
+  "not_for_d0": true,
+  "schema_version": 1,
+  "scope": "non_online_functional_collection_only",
+  "source_facts": {
+    "path": "test-node-facts-discovery-0042-r2.json",
+    "sha256": "d86bf46ea49003e5b2dfd1522fad2a97d888dede00f8fab0aee875d7a376553a",
+    "node_count": 5621,
+    "source_provenance": {
+      "clean": true,
+      "commit": "6de193c3a3c3bcbcbb38c5063fc93edbdba73b9a",
+      "tree": "c74c5598451cab50912bd1e981cbb6baa59b3767"
+    }
+  },
   "entries": [
     {
       "disposition": "migrate",
@@ -15608,6 +15621,27 @@
       "target": "tests/parity/test_ledger.py::test_valid_minimal_ledger_is_accepted"
     },
     {
+      "nodeid": "tests/parity/test_metrics.py::test_gross_leverage",
+      "disposition": "retain",
+      "target": "tests/parity/test_metrics.py::test_gross_leverage",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_metrics.py::test_second_max_drawdown",
+      "disposition": "retain",
+      "target": "tests/parity/test_metrics.py::test_second_max_drawdown",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_metrics.py::test_third_max_drawdown",
+      "disposition": "retain",
+      "target": "tests/parity/test_metrics.py::test_third_max_drawdown",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/performance/test_hotspot_regressions.py::test_datetime_index_add_matches_legacy_semantics[delta0]",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -16336,6 +16370,48 @@
       "target": "tests/quality/test_capture_capability_baseline.py::test_invalid_repository_surface_disposition_does_not_overwrite_capture_output"
     },
     {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_complete_inventory_binds_every_source_fact_exactly_once",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_complete_inventory_binds_every_source_fact_exactly_once",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_duplicate_policy_keys",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_duplicate_policy_keys",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_inventory_which_omits_one_union_fact",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_inventory_which_omits_one_union_fact",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_raw_provenance_drift_between_discovery_inputs",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_raw_provenance_drift_between_discovery_inputs",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_required_entry_without_real_source_and_wheel_nodeids",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_required_entry_without_real_source_and_wheel_nodeids",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_scoped_or_not_for_d0_inventory_header",
+      "disposition": "retain",
+      "target": "tests/quality/test_check_0042_r2_complete_surface_inventory.py::test_rejects_scoped_or_not_for_d0_inventory_header",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/quality/test_check_0042_r2_legacy_surface_inventory.py::test_accepts_dot_separated_capability_ids_from_the_existing_registry",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -16824,6 +16900,34 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_collect_0042_r2_surface_discovery.py::test_rejects_git_control_directory_as_output_before_overwriting[.git]"
+    },
+    {
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_collects_all_required_raw_surface_kinds_deterministically",
+      "disposition": "retain",
+      "target": "tests/quality/test_collect_0042_r2_surface_union.py::test_collects_all_required_raw_surface_kinds_deterministically",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_dirty_source_without_replacing_previous_output",
+      "disposition": "retain",
+      "target": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_dirty_source_without_replacing_previous_output",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_member_path_traversal",
+      "disposition": "retain",
+      "target": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_member_path_traversal",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_symbolic_link_member",
+      "disposition": "retain",
+      "target": "tests/quality/test_collect_0042_r2_surface_union.py::test_rejects_wheel_symbolic_link_member",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",
@@ -40030,18 +40134,5 @@
       "rule_id": "canonical-retention",
       "target": "tests/test_viz/test_plotly_coverage.py::TestPlotlyBackendCoverage::test_show_raises_value_error_when_no_figure"
     }
-  ],
-  "not_for_d0": true,
-  "schema_version": 1,
-  "scope": "non_online_functional_collection_only",
-  "source_facts": {
-    "node_count": 5608,
-    "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "963360197b3fa6a0146d90005073d38f07964b20d9fa69492c8a56f42e2622dd",
-    "source_provenance": {
-      "clean": true,
-      "commit": "c6e2005b5bc7fb52fa8834976b55501dddc0748e",
-      "tree": "5d89c47f6983586daf31dc3aa688265242e6f768"
-    }
-  }
+  ]
 }

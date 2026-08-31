@@ -226,18 +226,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "metrics.gross_leverage",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "metrics.second_max_drawdown",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "metrics.third_max_drawdown",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "optimization.optimization_error",
       "reason": "no_source_nodeid"
     },
@@ -3680,6 +3668,29 @@
       ]
     },
     {
+      "capability_id": "metrics.gross_leverage",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.gross_leverage.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "absolute non-cash exposure divided by net liquidation, with zero net liquidation represented as NaN"
+          },
+          "oracle_reference": "invariant contract metrics.gross_leverage.invariant.v1",
+          "scenario_id": "absolute_notional_and_zero_net_liquidation"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_metrics.py::test_gross_leverage"
+      ],
+      "target_operation_id": "metrics.gross_leverage",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_gross_leverage"
+      ]
+    },
+    {
       "capability_id": "metrics.get_max_drawdown_period",
       "disposition": "required",
       "owner": "metrics",
@@ -4945,6 +4956,29 @@
       ]
     },
     {
+      "capability_id": "metrics.second_max_drawdown",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.second_max_drawdown.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the second-most-negative value among distinct drawdown episodes, or NaN when fewer than two episodes exist"
+          },
+          "oracle_reference": "invariant contract metrics.second_max_drawdown.invariant.v1",
+          "scenario_id": "ordered_distinct_drawdown_episodes"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_metrics.py::test_second_max_drawdown"
+      ],
+      "target_operation_id": "metrics.second_max_drawdown",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_second_max_drawdown"
+      ]
+    },
+    {
       "capability_id": "metrics.second_max_drawdown_days",
       "disposition": "required",
       "owner": "metrics",
@@ -5287,6 +5321,29 @@
       "target_operation_id": "metrics.tail_ratio",
       "wheel_nodeids": [
         "tests/parity/test_metrics.py::test_tail_ratio"
+      ]
+    },
+    {
+      "capability_id": "metrics.third_max_drawdown",
+      "disposition": "required",
+      "owner": "metrics",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "metrics.third_max_drawdown.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the third-most-negative value among distinct drawdown episodes, or NaN when fewer than three episodes exist"
+          },
+          "oracle_reference": "invariant contract metrics.third_max_drawdown.invariant.v1",
+          "scenario_id": "ordered_distinct_drawdown_episodes"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_metrics.py::test_third_max_drawdown"
+      ],
+      "target_operation_id": "metrics.third_max_drawdown",
+      "wheel_nodeids": [
+        "tests/parity/test_metrics.py::test_third_max_drawdown"
       ]
     },
     {
@@ -8443,7 +8500,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "963360197b3fa6a0146d90005073d38f07964b20d9fa69492c8a56f42e2622dd",
+    "node_facts_sha256": "d86bf46ea49003e5b2dfd1522fad2a97d888dede00f8fab0aee875d7a376553a",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }

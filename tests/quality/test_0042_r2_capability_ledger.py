@@ -172,3 +172,36 @@ def test_coverage_gaps_declare_only_missing_source_evidence() -> None:
     for gap in ledger["coverage_gaps"]:
         assert set(gap) == {"capability_id", "reason"}
         assert gap["reason"] == "no_source_nodeid"
+
+
+def test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios() -> None:
+    """Prevent these implemented metrics from regressing to unsupported gaps.
+
+    The three functions have stable, domain-native oracle cases.  They must
+    therefore be represented by executable source and installed-wheel
+    scenarios instead of indefinitely remaining in the generic coverage-gap
+    queue.
+    """
+    ledger = _load()
+    expected = {
+        "metrics.gross_leverage": {
+            "tests/parity/test_metrics.py::test_gross_leverage",
+        },
+        "metrics.second_max_drawdown": {
+            "tests/parity/test_metrics.py::test_second_max_drawdown",
+        },
+        "metrics.third_max_drawdown": {
+            "tests/parity/test_metrics.py::test_third_max_drawdown",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "metrics"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids
