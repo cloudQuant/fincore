@@ -226,18 +226,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "optimization.optimization_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "optimization.optimize",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "optimization.risk_parity",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "performance.cashflow.cashflow_adjusted_returns",
       "reason": "no_source_nodeid"
     },
@@ -407,10 +395,6 @@
     },
     {
       "capability_id": "risk.walk_forward_var",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "simulation.monte_carlo",
       "reason": "no_source_nodeid"
     },
     {
@@ -5722,6 +5706,75 @@
       ]
     },
     {
+      "capability_id": "optimization.optimization_error",
+      "disposition": "required",
+      "owner": "optimization",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "optimization.optimization_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "optimization failures retain their message, solver status, and solver diagnostic"
+          },
+          "oracle_reference": "invariant contract optimization.optimization_error.invariant.v1",
+          "scenario_id": "structured_solver_diagnostic"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_optimization/test_utils_full_coverage.py::TestValidateResult::test_failed_result_contains_status_and_message"
+      ],
+      "target_operation_id": "optimization.optimization_error",
+      "wheel_nodeids": [
+        "tests/parity/test_optimization.py::test_optimization_error"
+      ]
+    },
+    {
+      "capability_id": "optimization.optimize",
+      "disposition": "required",
+      "owner": "optimization",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "optimization.optimize.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a no-short constrained allocation sums to one, respects bounds, and reports finite portfolio metrics"
+          },
+          "oracle_reference": "invariant contract optimization.optimize.invariant.v1",
+          "scenario_id": "bounded_max_sharpe_allocation"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_optimization/test_optimize.py::TestOptimize::test_max_sharpe"
+      ],
+      "target_operation_id": "optimization.optimize",
+      "wheel_nodeids": [
+        "tests/parity/test_optimization.py::test_optimize"
+      ]
+    },
+    {
+      "capability_id": "optimization.risk_parity",
+      "disposition": "required",
+      "owner": "optimization",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "optimization.risk_parity.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "equal-budget risk parity returns positive normalized weights with approximately equal risk-contribution shares"
+          },
+          "oracle_reference": "invariant contract optimization.risk_parity.invariant.v1",
+          "scenario_id": "equal_risk_contribution"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_optimization/test_risk_parity.py::TestRiskParity::test_equal_risk_contribution"
+      ],
+      "target_operation_id": "optimization.risk_parity",
+      "wheel_nodeids": [
+        "tests/parity/test_optimization.py::test_risk_parity"
+      ]
+    },
+    {
       "capability_id": "performance.cashflow.mwr",
       "disposition": "required",
       "owner": "performance",
@@ -8402,6 +8455,29 @@
       "target_operation_id": "simulation.bootstrap_ci",
       "wheel_nodeids": [
         "tests/parity/test_simulation.py::test_bootstrap_ci"
+      ]
+    },
+    {
+      "capability_id": "simulation.monte_carlo",
+      "disposition": "required",
+      "owner": "simulation",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "simulation.monte_carlo.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a fixed seed produces finite Monte Carlo paths with the requested path and horizon dimensions"
+          },
+          "oracle_reference": "invariant contract simulation.monte_carlo.invariant.v1",
+          "scenario_id": "seeded_path_generation"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_simulation/test_monte_carlo.py::TestMonteCarlo::test_simulate_reproducible"
+      ],
+      "target_operation_id": "simulation.monte_carlo",
+      "wheel_nodeids": [
+        "tests/parity/test_simulation.py::test_monte_carlo"
       ]
     },
     {

@@ -205,3 +205,32 @@ def test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios() ->
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios() -> None:
+    """Keep direct domain behaviors out of the generic coverage-gap queue."""
+    ledger = _load()
+    expected = {
+        "optimization.optimization_error": {
+            "tests/parity/test_optimization.py::test_optimization_error",
+        },
+        "optimization.optimize": {
+            "tests/parity/test_optimization.py::test_optimize",
+        },
+        "optimization.risk_parity": {
+            "tests/parity/test_optimization.py::test_risk_parity",
+        },
+        "simulation.monte_carlo": {
+            "tests/parity/test_simulation.py::test_monte_carlo",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids
