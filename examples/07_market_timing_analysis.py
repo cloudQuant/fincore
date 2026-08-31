@@ -120,7 +120,7 @@ print("4. GARCH 波动率模型")
 print("-" * 70)
 
 try:
-    from fincore.risk import garch
+    import fincore.risk.garch as garch
 
     # 拟合 GARCH(1,1) 模型
     garch_result = garch.fit_garch(returns, p=1, q=1)

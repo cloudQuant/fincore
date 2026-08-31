@@ -7,9 +7,8 @@ import pandas as pd
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from fincore.risk import forecast_es, forecast_var
 from fincore.risk.backtesting import kupiec_lr
-from fincore.risk.models import SIGN_LOSSES_NEGATIVE
+from fincore.risk.models import SIGN_LOSSES_NEGATIVE, forecast_es, forecast_var
 
 
 @given(

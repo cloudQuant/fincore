@@ -155,7 +155,9 @@ def test_performance_transaction_ledger_example() -> None:
 
 def test_risk_validation_report_example(tmp_path: Path) -> None:
     # mkdocs_docs/guide/risk-validation.md "Auditable walk-forward VaR" block.
-    from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+    from fincore.risk.diagnostics import walk_forward_var
+    from fincore.risk.report import build_risk_validation_report
+    from fincore.risk.specs import RiskModelSpec
 
     returns = pd.Series(
         np.linspace(-0.02, 0.02, 60),

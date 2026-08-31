@@ -10,14 +10,11 @@ import pandas as pd
 import pytest
 from dateutil import tz
 
-from fincore.risk import (
-    BASEL_REFERENCE_DISCLOSURE,
-    RiskModelSpec,
-    build_risk_validation_report,
-    walk_forward_var,
-)
 from fincore.risk.backtesting import backtest_var
 from fincore.risk.calibration import basel_traffic_light
+from fincore.risk.diagnostics import walk_forward_var
+from fincore.risk.report import BASEL_REFERENCE_DISCLOSURE, build_risk_validation_report
+from fincore.risk.specs import RiskModelSpec
 
 
 def _validated_result():

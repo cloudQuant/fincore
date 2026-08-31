@@ -9,10 +9,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.risk import RiskModelSpec as PublicRiskModelSpec
-from fincore.risk import walk_forward_var
 from fincore.risk.backtesting import backtest_var
 from fincore.risk.calibration import basel_traffic_light, es_calibration_score, expected_exception_count
+from fincore.risk.diagnostics import walk_forward_var
 from fincore.risk.specs import RiskModelSpec
 
 
@@ -34,7 +33,6 @@ class TestRiskModelSpec:
         assert spec.confidence_level == 0.99
         assert spec.horizon == 1
         assert spec.sign_convention == "losses_negative"
-        assert PublicRiskModelSpec is RiskModelSpec
 
     def test_rejects_invalid_confidence(self) -> None:
         with pytest.raises(ValueError, match="confidence_level"):

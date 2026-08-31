@@ -36,7 +36,7 @@ print()
 # =========================================================================
 # 2. Extreme Value Theory (EVT)
 # =========================================================================
-from fincore.risk import evt_cvar, evt_var, extreme_risk, gpd_fit, hill_estimator
+from fincore.risk.evt import evt_cvar, evt_var, extreme_risk, gpd_fit, hill_estimator
 
 print("=" * 60)
 print("Extreme Value Theory (EVT)")
@@ -69,7 +69,7 @@ print(f"\nExtreme risk report keys: {list(report.keys())}")
 # =========================================================================
 # 3. GARCH Models
 # =========================================================================
-from fincore.risk import EGARCH, GARCH, GJRGARCH, conditional_var, forecast_volatility
+from fincore.risk.garch import EGARCH, GARCH, GJRGARCH, conditional_var, forecast_volatility
 
 print("\n" + "=" * 60)
 print("GARCH Models")

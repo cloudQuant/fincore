@@ -14,7 +14,7 @@ inconclusive.
 import numpy as np
 import pandas as pd
 
-from fincore.risk import forecast_es, forecast_var
+from fincore.risk.models import forecast_es, forecast_var
 
 rng = np.random.default_rng(7)
 returns = pd.Series(rng.normal(0.0, 0.02, 500))
@@ -64,7 +64,7 @@ VaR. These legacy estimators are still not out-of-sample validated models.
 
 ```python
 # -- minimal-backtest
-from fincore.risk import backtest_var
+from fincore.risk.backtesting import backtest_var
 
 forecast = pd.Series([-0.02, -0.02, -0.02], index=pd.date_range("2024-01-01", periods=3, tz="UTC"))
 realized = pd.Series([-0.01, -0.03, -0.02], index=forecast.index)
@@ -105,7 +105,9 @@ scalars so the backtest digest can be replayed exactly.
 import numpy as np
 import pandas as pd
 
-from fincore.risk import RiskModelSpec, build_risk_validation_report, walk_forward_var
+from fincore.risk.diagnostics import walk_forward_var
+from fincore.risk.report import build_risk_validation_report
+from fincore.risk.specs import RiskModelSpec
 
 returns = pd.Series(
     np.linspace(-0.02, 0.02, 60),
@@ -131,7 +133,7 @@ the exception tail versus the forecast ES) and reports status `experimental`;
 it is not a compliance statement.
 
 ```python
-from fincore.risk import backtest_es
+from fincore.risk.backtesting import backtest_es
 
 result = backtest_es(forecast, realized, confidence_level=0.975)
 print(result.status)   # "experimental"
