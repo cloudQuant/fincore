@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
+from fincore.performance.cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
 from tests.oracles.performance.cashflow_oracle import cashflow_adjusted_period_return
 
 

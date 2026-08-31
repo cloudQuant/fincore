@@ -5,7 +5,7 @@ from __future__ import annotations
 import inspect
 from dataclasses import fields
 
-from fincore.performance import DisclosureContext, render_disclosure
+from fincore.performance.disclosures import DisclosureContext, render_disclosure
 
 
 def test_disclosure_context_fields_and_constructor_order_are_versioned() -> None:

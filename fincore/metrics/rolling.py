@@ -23,10 +23,10 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 from fincore.core.rolling_moments import roll_alpha_beta_vectorized, roll_max_drawdown_chunked
 from fincore.metrics.basic import annualization_factor
+from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import down_capture, sortino_ratio, up_capture
 from fincore.metrics.risk import annual_volatility
 
@@ -672,9 +672,3 @@ def rolling_regression(
 
     result = pd.DataFrame({"alpha": rolling_alpha_vals, "beta": rolling_beta_vals})
     return result.dropna()
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

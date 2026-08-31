@@ -75,7 +75,7 @@ def _disclosure_text(value, default):
 def _merge_disclosure_context(default, disclosure_context):
     """Merge non-empty caller declarations into a provenance-backed default."""
 
-    from fincore.performance import DisclosureContext
+    from fincore.performance.disclosures import DisclosureContext
 
     if disclosure_context is None:
         return default
@@ -110,7 +110,7 @@ def _resolved_performance_disclosure(returns, benchmark_rets, period, disclosure
     derived from the validated report input.
     """
 
-    from fincore.performance import DisclosureContext
+    from fincore.performance.disclosures import DisclosureContext
 
     sample_period = (
         f"{returns.index[0].strftime('%Y-%m-%d')} to {returns.index[-1].strftime('%Y-%m-%d')} "
@@ -142,7 +142,7 @@ def _legacy_performance_disclosure(model, disclosure_context):
     such and a caller may add explicit declarations through ``DisclosureContext``.
     """
 
-    from fincore.performance import DisclosureContext
+    from fincore.performance.disclosures import DisclosureContext
 
     raw_period = model.get("period")
     period = raw_period if isinstance(raw_period, str) and raw_period.strip() else "unknown"

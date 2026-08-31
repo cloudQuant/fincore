@@ -25,10 +25,10 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics._numeric import nanmean, nanstd
 from fincore.metrics.basic import adjust_returns, annualization_factor
-from fincore.utils import nanmean, nanstd
+from fincore.metrics.frequencies import DAILY
 
 logger = logging.getLogger(__name__)
 
@@ -789,9 +789,3 @@ def beta_fragility_heuristic_aligned(
         Beta fragility heuristic, or ``NaN`` if there is insufficient data.
     """
     return _beta_fragility_heuristic_aligned(returns, factor_returns)
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

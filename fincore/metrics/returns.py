@@ -26,12 +26,12 @@ This module provides core functions for return analytics, including:
 from __future__ import annotations
 
 import math
-from typing import Callable, cast
+from typing import cast
 
 import numpy as np
 import pandas as pd
 
-from fincore.constants import MONTHLY, QUARTERLY, WEEKLY, YEARLY
+from fincore.metrics.frequencies import MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 __all__ = [
     "aggregate_returns",
@@ -40,44 +40,6 @@ __all__ = [
     "normalize",
     "simple_returns",
 ]
-
-
-def _get_annual_return() -> Callable[..., float | np.ndarray | pd.Series]:
-    """Lazily import ``annual_return`` to avoid circular dependencies.
-
-    Returns
-    -------
-    function
-        The ``annual_return`` function.
-    """
-    from fincore.metrics.yearly import annual_return
-
-    return annual_return
-
-
-# Re-export annual_return for backwards compatibility
-def annual_return(*args: object, **kwargs: object) -> float | np.ndarray | pd.Series:
-    """Backwards-compatible wrapper for computing annual return (CAGR).
-
-    The implementation lives in :func:`fincore.metrics.yearly.annual_return`.
-
-    Parameters
-    ----------
-    *args : tuple
-        Positional arguments forwarded to ``yearly.annual_return``.
-    **kwargs : dict
-        Keyword arguments forwarded to ``yearly.annual_return``.
-
-    Returns
-    -------
-    float
-        Annual return.
-
-    See Also
-    --------
-    fincore.metrics.yearly.annual_return : Implementation.
-    """
-    return _get_annual_return()(*args, **kwargs)
 
 
 def simple_returns(
@@ -325,9 +287,3 @@ def normalize(
         )
         return returns * np.nan
     return starting_value * (returns / first_value)
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

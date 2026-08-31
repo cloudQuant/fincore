@@ -23,10 +23,10 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 from fincore.metrics.basic import annualization_factor, ensure_datetime_index_series
 from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import sharpe_ratio
 from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
@@ -405,9 +405,3 @@ def information_ratio_by_year(
     if return_as_array:
         return np.asarray(information_ratios)
     return information_ratios
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

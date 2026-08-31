@@ -24,10 +24,10 @@ from typing import TYPE_CHECKING, Callable, cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics._numeric import nanmean
 from fincore.metrics.basic import adjust_returns, annualization_factor
-from fincore.utils import nanmean
+from fincore.metrics.frequencies import DAILY
 
 if TYPE_CHECKING:
     from fincore._types import ReturnOrDataFrame
@@ -859,9 +859,3 @@ def alpha_percentile_rank(
     percentile = rank / len(all_alphas)
 
     return float(percentile)
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from PyPDF2 import PdfReader, PdfWriter
 
-from fincore.performance import DisclosureContext
+from fincore.performance.disclosures import DisclosureContext
 from fincore.report.render_pdf import generate_pdf
 
 

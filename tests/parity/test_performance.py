@@ -7,17 +7,9 @@ from typing import get_args
 import numpy as np
 import pandas as pd
 
-from fincore.performance import (
-    CashflowTiming,
-    DisclosureContext,
-    FeeTreatment,
-    cashflow_adjusted_returns,
-    cashflow_adjusted_twr,
-    render_disclosure,
-    sharpe_confidence_interval,
-    sharpe_standard_error,
-    standard_error_of_mean,
-)
+from fincore.performance.cashflows import CashflowTiming, FeeTreatment, cashflow_adjusted_returns, cashflow_adjusted_twr
+from fincore.performance.disclosures import DisclosureContext, render_disclosure
+from fincore.performance.inference import sharpe_confidence_interval, sharpe_standard_error, standard_error_of_mean
 
 
 def _valuation_index(periods: int) -> pd.DatetimeIndex:
@@ -115,3 +107,27 @@ def test_sharpe_inference() -> None:
     assert lower < upper
     assert np.isclose((lower + upper) / 2.0, expected_sharpe)
     assert np.isclose(upper - lower, 2.0 * 1.96 * sharpe_standard_error_value)
+
+
+def test_performance_operation_manifest_exposes_direct_domain_callables() -> None:
+    from fincore.performance.operations import operations
+    from fincore.runtime import OperationCatalog
+
+    catalog = OperationCatalog(operations())
+
+    assert {
+        "performance.cashflows.cashflow_adjusted_returns",
+        "performance.cashflows.cashflow_adjusted_twr",
+        "performance.returns.mwr",
+        "performance.returns.twr",
+        "performance.returns.xirr",
+        "performance.inference.sharpe_confidence_interval",
+    }.issubset(catalog.operation_ids)
+    assert catalog.resolve("performance.returns.twr").callable.__module__ == "fincore.performance.returns"
+
+
+def test_performance_namespace_does_not_reexport_leaf_functions_or_models() -> None:
+    import fincore.performance as performance
+
+    assert not hasattr(performance, "cashflow_adjusted_returns")
+    assert not hasattr(performance, "DisclosureContext")

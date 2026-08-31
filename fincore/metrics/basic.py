@@ -18,13 +18,12 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import cast
 
 import numpy as np
 import pandas as pd
 
-from fincore.constants import ANNUALIZATION_FACTORS, DAILY, PERIOD_TO_FREQ
+from fincore.metrics.frequencies import DAILY, annualization_factor, pandas_frequency
 
 __all__ = [
     "adjust_returns",
@@ -71,7 +70,10 @@ def ensure_datetime_index_series(
     if values.size == 0:
         return pd.Series(values)
 
-    freq = PERIOD_TO_FREQ.get(period, "D")
+    try:
+        freq = pandas_frequency(period)
+    except ValueError:
+        freq = "D"
     index = pd.date_range("1970-01-01", periods=values.size, freq=freq)
     return pd.Series(values, index=index)
 
@@ -121,46 +123,6 @@ def adjust_returns(
     if isinstance(adjustment_factor, (float, int)) and adjustment_factor == 0:
         return returns
     return returns - adjustment_factor
-
-
-@lru_cache(maxsize=32)
-def annualization_factor(period: str, annualization: float | None = None) -> float:
-    """Return the annualization factor for a given period.
-
-    If a custom ``annualization`` value is provided, it is returned
-    directly. Otherwise, the factor is looked up from a predefined
-    mapping based on ``period``.
-
-    Parameters
-    ----------
-    period : str
-        Frequency of the data (for example ``DAILY``, ``WEEKLY``,
-        ``MONTHLY``, ``YEARLY``).
-    annualization : float or None
-        Custom annualization factor. If provided (not ``None``), this
-        value is returned directly.
-
-    Returns
-    -------
-    float
-        Annualization factor corresponding to ``period`` or the custom
-        value if provided.
-
-    Raises
-    ------
-    ValueError
-        If ``period`` is not recognized and ``annualization`` is ``None``.
-    """
-    if annualization is None:
-        try:
-            factor = float(ANNUALIZATION_FACTORS[period])
-        except KeyError as e:
-            raise ValueError(
-                "Period cannot be '{}'. Can be '{}'.".format(period, "', '".join(ANNUALIZATION_FACTORS.keys()))
-            ) from e
-    else:
-        factor = float(annualization)
-    return factor
 
 
 def to_pandas(ob: np.ndarray | pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:

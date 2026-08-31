@@ -8,7 +8,7 @@ from pathlib import PurePosixPath, PureWindowsPath
 import numpy as np
 import pandas as pd
 
-from fincore.performance import DisclosureContext
+from fincore.performance.disclosures import DisclosureContext
 from fincore.report import create_strategy_report
 from fincore.report.compute import compute_sections
 from fincore.report.provenance import ReportProvenance

@@ -40,3 +40,25 @@ def test_third_max_drawdown() -> None:
     returns = pd.Series([0.0, -0.20, 0.25, -0.10, 0.12, -0.05, 0.06])
 
     np.testing.assert_allclose(drawdown.third_max_drawdown(returns), -0.05, rtol=0.0, atol=1e-12)
+
+
+def test_metrics_operation_manifest_exposes_direct_kernel_paths_without_legacy_aliases() -> None:
+    from fincore.metrics.operations import operations
+    from fincore.runtime import OperationCatalog
+
+    catalog = OperationCatalog(operations())
+
+    assert {
+        "metrics.returns.simple_returns",
+        "metrics.returns.cum_returns",
+        "metrics.drawdown.max_drawdown",
+        "metrics.ratios.sharpe_ratio",
+        "metrics.risk.annual_volatility",
+        "metrics.alpha_beta.alpha_beta",
+        "metrics.rolling.roll_sharpe_ratio",
+        "metrics.stats.skewness",
+        "metrics.yearly.annual_return",
+    }.issubset(catalog.operation_ids)
+    assert "metrics.cagr" not in catalog.operation_ids
+    assert "metrics.cumulative_returns" not in catalog.operation_ids
+    assert catalog.resolve("metrics.ratios.sharpe_ratio").callable.__module__ == "fincore.metrics.ratios"

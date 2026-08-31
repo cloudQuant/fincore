@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.performance import mwr, sharpe_standard_error, twr, xirr
+from fincore.performance.inference import sharpe_standard_error
+from fincore.performance.returns import mwr, twr, xirr
 
 
 def _npv(cashflows: np.ndarray, times: np.ndarray, rate: float) -> float:

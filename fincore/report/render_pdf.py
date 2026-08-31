@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from fincore.performance import DisclosureContext
+    from fincore.performance.disclosures import DisclosureContext
     from fincore.report.model import ReportModel
 
 __all__ = ["generate_pdf"]

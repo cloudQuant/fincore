@@ -45,7 +45,7 @@ from fincore.report.artifacts import ReportArtifacts
 if TYPE_CHECKING:
     import pandas as pd
 
-    from fincore.performance import DisclosureContext
+    from fincore.performance.disclosures import DisclosureContext
     from fincore.report.model import ReportModel
 
 

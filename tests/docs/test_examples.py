@@ -118,7 +118,7 @@ def test_quickstart_flat_api_example() -> None:
 
 def test_performance_cashflow_semantics_example() -> None:
     # mkdocs_docs/guide/performance-semantics.md "Cashflow-adjusted" block.
-    from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
+    from fincore.performance.cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
 
     dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
     valuations = pd.Series([100.0, 110.0, 121.0], index=dates)
@@ -133,7 +133,7 @@ def test_performance_cashflow_semantics_example() -> None:
 
 def test_performance_transaction_ledger_example() -> None:
     # mkdocs_docs/guide/performance-semantics.md transaction ledger block.
-    from fincore.performance import cashflow_adjusted_twr
+    from fincore.performance.cashflows import cashflow_adjusted_twr
 
     dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
     ledger = pd.DataFrame(

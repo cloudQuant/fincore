@@ -23,11 +23,8 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore._dispatch import resolve_raw_metric as _resolve_raw_metric
-from fincore.utils import nanmin
-
-_cum_returns = _resolve_raw_metric("fincore.metrics.returns:cum_returns")
-del _resolve_raw_metric
+from fincore.metrics._numeric import nanmin
+from fincore.metrics.returns import cum_returns as _cum_returns
 
 __all__ = [
     "gen_drawdown_table",
@@ -751,9 +748,3 @@ def third_max_drawdown_recovery_days(returns: pd.Series | np.ndarray) -> int | f
     sorted_drawdowns = sorted(drawdown_periods, key=lambda x: x["value"])
     recovery_duration = sorted_drawdowns[2]["recovery_duration"]
     return recovery_duration if recovery_duration is not None else np.nan
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

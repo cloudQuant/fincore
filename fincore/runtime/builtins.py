@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
     from .specs import OperationSpec
 
-_BUILTIN_PROVIDER_PATHS: tuple[str, ...] = ()
+_BUILTIN_PROVIDER_PATHS: tuple[str, ...] = (
+    "fincore.metrics.operations:operations",
+    "fincore.performance.operations:operations",
+)
 
 
 def compose_catalog(providers: Iterable[Callable[[], Iterable[OperationSpec]]]) -> OperationCatalog:

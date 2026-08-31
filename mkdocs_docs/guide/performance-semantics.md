@@ -1,7 +1,6 @@
 # Performance return semantics
 
-`fincore.performance` is the enhanced performance layer. It does not change
-the frozen Empyrical or Pyfolio compatibility surfaces. Its APIs make the
+`fincore.performance` is the canonical performance domain. Its APIs make the
 return convention, cashflow timing, fee treatment, and currency conversion
 explicit so a report never silently selects a financial interpretation.
 
@@ -17,7 +16,7 @@ an unvalued intra-period flow has no defensible timing.
 ```python
 import pandas as pd
 
-from fincore.performance import cashflow_adjusted_returns, cashflow_adjusted_twr
+from fincore.performance.cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
 
 dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
 valuations = pd.Series([100.0, 110.0, 121.0], index=dates)
@@ -94,7 +93,7 @@ paths rather than copying sensitive free-form text verbatim.
 ```python
 import pandas as pd
 
-from fincore.performance import DisclosureContext
+from fincore.performance.disclosures import DisclosureContext
 from fincore.report import create_strategy_report
 
 returns = pd.Series(

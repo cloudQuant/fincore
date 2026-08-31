@@ -24,15 +24,15 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 
-from fincore.constants import DAILY
+from fincore.metrics._numeric import nanmean, nanstd
 from fincore.metrics.basic import annualization_factor
 from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import calmar_ratio, omega_ratio, sharpe_ratio, sortino_ratio, stability_of_timeseries
 from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility, tail_ratio, value_at_risk
 from fincore.metrics.stats import kurtosis, skewness
 from fincore.metrics.yearly import annual_return
-from fincore.utils import nanmean, nanstd
 
 __all__ = [
     "calc_bootstrap",

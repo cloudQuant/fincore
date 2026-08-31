@@ -26,8 +26,8 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-from fincore.constants import DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics.frequencies import DAILY
 
 __all__ = [
     "bond_market_correlation",

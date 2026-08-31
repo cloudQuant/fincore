@@ -28,10 +28,10 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import APPROX_BDAYS_PER_YEAR, DAILY
 from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.metrics._numeric import nanmean, nanstd
 from fincore.metrics.basic import adjust_returns, annualization_factor
-from fincore.utils import nanmean, nanstd
+from fincore.metrics.frequencies import APPROX_BDAYS_PER_YEAR, DAILY
 
 __all__ = [
     "adjusted_sharpe_ratio",
@@ -1543,9 +1543,3 @@ def down_capture_return(
         return np.nan
 
     return annual_return(down_returns, period=period, annualization=annualization)  # type: ignore[return-value]
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface
