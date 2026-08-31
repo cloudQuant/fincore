@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 
 def test_monte_carlo() -> None:

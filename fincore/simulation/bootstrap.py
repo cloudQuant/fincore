@@ -49,7 +49,7 @@ def bootstrap(
     Examples
     --------
     >>> import numpy as np
-    >>> from fincore.simulation import bootstrap
+    >>> from fincore.simulation.bootstrap import bootstrap
     >>> returns = np.random.normal(0.001, 0.02, 252)
     >>> boot_mean = bootstrap(returns, n_samples=10000, statistic="mean")
     >>> np.percentile(boot_mean, [2.5, 97.5])  # 95% CI
@@ -112,7 +112,7 @@ def bootstrap_ci(
 
     Examples
     --------
-    >>> from fincore.simulation import bootstrap_ci
+    >>> from fincore.simulation.bootstrap import bootstrap_ci
     >>> import numpy as np
     >>> returns = np.random.normal(0.001, 0.02, 252)
     >>> ci = bootstrap_ci(returns, alpha=0.05)

@@ -54,7 +54,7 @@ print()
 # =========================================================================
 # 2. Efficient Frontier
 # =========================================================================
-from fincore.optimization import efficient_frontier
+from fincore.optimization.frontier import efficient_frontier
 
 print("=" * 60)
 print("Efficient Frontier")
@@ -70,7 +70,7 @@ for i, (_, row) in enumerate(ef.head().iterrows()):
 # =========================================================================
 # 3. Risk Parity
 # =========================================================================
-from fincore.optimization import risk_parity
+from fincore.optimization.risk_parity import risk_parity
 
 print("\n" + "=" * 60)
 print("Risk Parity Portfolio")
@@ -94,7 +94,7 @@ for asset, rc in zip(asset_names, risk_contrib, strict=True):
 # =========================================================================
 # 4. Constrained Optimization
 # =========================================================================
-from fincore.optimization import optimize
+from fincore.optimization.objectives import optimize
 
 print("\n" + "=" * 60)
 print("Constrained Optimization")

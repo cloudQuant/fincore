@@ -417,7 +417,7 @@ class PlotlyBackend(VizBackend):
         go.Figure
             Interactive Plotly figure.
         """
-        from fincore.optimization import efficient_frontier
+        from fincore.optimization.frontier import efficient_frontier
 
         frontier = efficient_frontier(returns, n_points=n_points)
 

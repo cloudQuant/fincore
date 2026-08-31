@@ -6,8 +6,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.optimization import efficient_frontier
-from fincore.optimization._utils import OptimizationError, check_feasibility, make_positive_semidefinite
+from fincore.optimization._utils import check_feasibility, make_positive_semidefinite
+from fincore.optimization.exceptions import OptimizationError
+from fincore.optimization.frontier import efficient_frontier
 
 
 def test_check_feasibility_accepts_psd() -> None:

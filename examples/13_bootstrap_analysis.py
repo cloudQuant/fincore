@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from fincore import max_drawdown, sharpe_ratio
-from fincore.simulation import bootstrap
+from fincore.simulation.bootstrap import bootstrap
 
 print("=" * 70)
 print("自助法统计分析示例")

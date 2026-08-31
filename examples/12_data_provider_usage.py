@@ -29,7 +29,7 @@ print("1. Yahoo Finance 数据")
 print("=" * 70)
 
 try:
-    from fincore.data import YahooFinanceProvider
+    from fincore.data.providers import YahooFinanceProvider
 
     # 创建数据提供者
     yahoo = YahooFinanceProvider()
@@ -78,7 +78,7 @@ try:
     # 注意: 需要设置 API key
     import os
 
-    from fincore.data import AlphaVantageProvider
+    from fincore.data.providers import AlphaVantageProvider
 
     api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
@@ -117,7 +117,7 @@ try:
     token = os.environ.get("TUSHARE_TOKEN")
 
     if token:
-        from fincore.data import TushareProvider
+        from fincore.data.providers import TushareProvider
 
         ts_provider = TushareProvider(token=token)
 
@@ -145,7 +145,7 @@ print("4. AkShare 数据 (中国市场)")
 print("=" * 70)
 
 try:
-    from fincore.data import AkShareProvider
+    from fincore.data.providers import AkShareProvider
 
     akshare = AkShareProvider()
 
@@ -210,7 +210,7 @@ print("""
 如果需要使用自定义数据源，可以继承 DataProvider 基类:
 
 ```python
-from fincore.data import DataProvider
+from fincore.data.providers import DataProvider
 
 class MyDataProvider(DataProvider):
     def get_prices(self, symbols, start=None, end=None):

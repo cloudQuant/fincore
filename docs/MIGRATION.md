@@ -192,7 +192,7 @@ Provider integrations are optional and may require extra packages, credentials,
 network access, or provider-specific configuration:
 
 ```python
-from fincore.data import YahooFinanceProvider
+from fincore.data.providers import YahooFinanceProvider
 
 provider = YahooFinanceProvider()
 prices = provider.fetch("AAPL", start="2024-01-01", end="2024-02-01")
@@ -206,7 +206,9 @@ raise an actionable import error when its optional SDK is absent.
 ```python
 import pandas as pd
 
-from fincore.optimization import efficient_frontier, optimize, risk_parity
+from fincore.optimization.frontier import efficient_frontier
+from fincore.optimization.objectives import optimize
+from fincore.optimization.risk_parity import risk_parity
 
 asset_returns = pd.DataFrame(
     {

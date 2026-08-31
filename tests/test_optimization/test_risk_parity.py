@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.optimization import risk_parity
+from fincore.optimization.risk_parity import risk_parity
 
 
 @pytest.fixture

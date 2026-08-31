@@ -21,7 +21,8 @@ import numpy as np
 import pandas as pd
 
 from fincore import annual_volatility, sharpe_ratio
-from fincore.optimization import OptimizationError, optimize
+from fincore.optimization.exceptions import OptimizationError
+from fincore.optimization.objectives import optimize
 
 print("=" * 70)
 print("自定义组合优化示例")

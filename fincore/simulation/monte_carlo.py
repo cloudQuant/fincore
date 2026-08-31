@@ -78,7 +78,7 @@ class MonteCarlo:
         Examples
         --------
         >>> import numpy as np
-        >>> from fincore.simulation import MonteCarlo
+        >>> from fincore.simulation.monte_carlo import MonteCarlo
         >>> returns = np.random.normal(0.001, 0.02, 252)
         >>> mc = MonteCarlo(returns)
         >>> result = mc.simulate(n_paths=10000, horizon=252)

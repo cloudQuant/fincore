@@ -21,7 +21,7 @@ import pandas as pd
 
 from fincore import Empyrical
 from fincore.constants.interesting_periods import PERIODS
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 print("=" * 70)
 print("压力测试与极端情景分析示例")

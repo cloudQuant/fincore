@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fincore.optimization import OptimizationError, optimize, risk_parity
+from fincore.optimization.exceptions import OptimizationError
+from fincore.optimization.objectives import optimize
+from fincore.optimization.risk_parity import risk_parity
 
 
 def _returns() -> pd.DataFrame:

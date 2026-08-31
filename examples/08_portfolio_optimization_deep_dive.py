@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 
 from fincore import annual_volatility, max_drawdown, sharpe_ratio
-from fincore.optimization import efficient_frontier, risk_parity
+from fincore.optimization.frontier import efficient_frontier
+from fincore.optimization.risk_parity import risk_parity
 
 print("=" * 70)
 print("组合优化深度示例")

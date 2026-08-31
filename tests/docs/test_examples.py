@@ -340,7 +340,9 @@ def test_pyfolio_functional_facade_main_chain() -> None:
 
 def test_portfolio_optimization_examples() -> None:
     # README block, executed as written (variable names and arguments match).
-    from fincore.optimization import efficient_frontier, optimize, risk_parity
+    from fincore.optimization.frontier import efficient_frontier
+    from fincore.optimization.objectives import optimize
+    from fincore.optimization.risk_parity import risk_parity
 
     returns_df = pd.DataFrame(
         {

@@ -36,7 +36,7 @@ print()
 # =========================================================================
 # 2. Monte Carlo Path Simulation
 # =========================================================================
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 print("=" * 60)
 print("Monte Carlo Path Simulation")
@@ -66,7 +66,7 @@ print(f"  CVaR(95%): {sim_cvar:.4f}")
 # =========================================================================
 # 3. Bootstrap Confidence Intervals
 # =========================================================================
-from fincore.simulation import bootstrap, bootstrap_ci
+from fincore.simulation.bootstrap import bootstrap, bootstrap_ci
 
 print("\n" + "=" * 60)
 print("Bootstrap Statistical Inference")

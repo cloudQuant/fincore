@@ -136,7 +136,7 @@ def test_perf_attrib_benchmark(benchmark):
 @pytest.mark.benchmark(group="optimization")
 def test_efficient_frontier_benchmark(benchmark):
     """Benchmark efficient frontier calculation (target: <500ms)."""
-    from fincore.optimization import efficient_frontier
+    from fincore.optimization.frontier import efficient_frontier
 
     # Create sample data with correct shape
     np.random.seed(42)

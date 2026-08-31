@@ -54,7 +54,7 @@ class TestMonteCarloParameterRespect:
     """MonteCarlo.simulate must honor drift/volatility parameters."""
 
     def test_drift_and_volatility_change_output(self) -> None:
-        from fincore.simulation import MonteCarlo
+        from fincore.simulation.monte_carlo import MonteCarlo
 
         rng = np.random.default_rng(42)
         returns = pd.Series(rng.normal(0.0, 0.02, 1000))
@@ -66,7 +66,7 @@ class TestMonteCarloParameterRespect:
         assert np.mean(up.paths[:, -1]) > np.mean(down.paths[:, -1])
 
     def test_volatility_scales_dispersion(self) -> None:
-        from fincore.simulation import MonteCarlo
+        from fincore.simulation.monte_carlo import MonteCarlo
 
         rng = np.random.default_rng(42)
         returns = pd.Series(rng.normal(0.0, 0.02, 1000))

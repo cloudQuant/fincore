@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.optimization import efficient_frontier
+from fincore.optimization.frontier import efficient_frontier
 
 
 class TestFrontierEdgeCases:

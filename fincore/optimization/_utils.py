@@ -10,23 +10,11 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from fincore.optimization.exceptions import OptimizationError
+
 if TYPE_CHECKING:
     from numpy.typing import NDArray
     from scipy import optimize
-
-
-class OptimizationError(Exception):
-    """Raised when optimization fails to converge or finds invalid solution."""
-
-    def __init__(
-        self,
-        message: str,
-        status: int | None = None,
-        solver_message: str | None = None,
-    ) -> None:
-        self.status = status
-        self.solver_message = solver_message
-        super().__init__(message)
 
 
 def validate_result(

@@ -23,9 +23,9 @@ import pandas as pd
 
 from fincore import analyze, max_drawdown, sharpe_ratio
 from fincore.core.engine import RollingEngine
-from fincore.optimization import optimize
+from fincore.optimization.objectives import optimize
 from fincore.report import create_strategy_report
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 print("=" * 70)
 print("完整量化工作流示例")

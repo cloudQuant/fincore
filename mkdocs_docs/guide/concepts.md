@@ -72,7 +72,7 @@ controlled `fincore.exceptions.DependencyError` (which names the required extra)
 never a raw third-party error:
 
 ```python
-from fincore.data import YahooFinanceProvider
+from fincore.data.providers import YahooFinanceProvider
 
 provider = YahooFinanceProvider()  # raises DependencyError if yfinance is missing/broken
 ```

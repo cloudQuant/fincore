@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from fincore import max_drawdown, sharpe_ratio
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 print("=" * 70)
 print("蒙特卡洛模拟示例")

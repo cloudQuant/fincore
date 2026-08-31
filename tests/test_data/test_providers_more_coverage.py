@@ -33,7 +33,7 @@ def test_alpha_vantage_fetch_multiple_strict_and_nonstrict(monkeypatch) -> None:
 
 
 def test_tushare_fetch_multiple_and_get_info_empty(monkeypatch) -> None:
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
     from fincore.data.providers import BatchFetchError
 
     class _DummyPro:
@@ -67,7 +67,7 @@ def test_tushare_fetch_multiple_and_get_info_empty(monkeypatch) -> None:
 
 
 def test_akshare_fetch_multiple_and_get_info_exception(monkeypatch) -> None:
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
     from fincore.data.providers import BatchFetchError
 
     def stock_individual_info_em(symbol: str):
@@ -101,7 +101,7 @@ def test_akshare_fetch_multiple_and_get_info_exception(monkeypatch) -> None:
 
 
 def test_fetch_price_data_and_multiple_prices_provider_as_string_and_date_strings(monkeypatch) -> None:
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     calls: list[tuple[str, pd.Timestamp, pd.Timestamp, bool]] = []
 
@@ -162,7 +162,7 @@ def test_yahoo_finance_provider_with_session(monkeypatch) -> None:
 
 def test_tushare_provider_empty_data_raises(monkeypatch) -> None:
     """Test TushareProvider raises ValueError when data is empty (line 587)."""
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     class _EmptyPro:
         def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):
@@ -179,7 +179,7 @@ def test_tushare_provider_empty_data_raises(monkeypatch) -> None:
 
 def test_akshare_provider_import_error(monkeypatch) -> None:
     """Test AkShareProvider raises ImportError when akshare is not available (lines 683-684)."""
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     # Remove akshare from modules if it exists
     monkeypatch.delitem(sys.modules, "akshare", raising=False)
@@ -198,7 +198,7 @@ def test_akshare_provider_import_error(monkeypatch) -> None:
 
 def test_akshare_provider_empty_data_raises(monkeypatch) -> None:
     """Test AkShareProvider raises ValueError when data is empty (line 727)."""
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     dummy_ak = SimpleNamespace(
         stock_zh_a_hist=lambda **_kwargs: pd.DataFrame()  # Empty DataFrame

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.optimization import optimize
+from fincore.optimization.objectives import optimize
 
 
 @pytest.fixture

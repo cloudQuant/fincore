@@ -9,8 +9,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.optimization import efficient_frontier, optimize, risk_parity
-from fincore.optimization._utils import OptimizationError, normalize_weights
+from fincore.optimization._utils import normalize_weights
+from fincore.optimization.exceptions import OptimizationError
+from fincore.optimization.frontier import efficient_frontier
+from fincore.optimization.objectives import optimize
+from fincore.optimization.risk_parity import risk_parity
 
 
 @pytest.fixture

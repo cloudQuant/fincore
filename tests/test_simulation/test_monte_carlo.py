@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.simulation import MonteCarlo
+from fincore.simulation.monte_carlo import MonteCarlo
 
 
 @pytest.fixture

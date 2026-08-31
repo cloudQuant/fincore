@@ -151,7 +151,7 @@ def test_alpha_vantage_get_info_offline(monkeypatch) -> None:
 
 def test_tushare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) -> None:
     # Create a lightweight tushare stub to avoid external dependency.
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     class _DummyPro:
         def daily(self, ts_code: str, start_date: str, end_date: str, adj: str):
@@ -187,7 +187,7 @@ def test_tushare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) ->
 
 
 def test_akshare_provider_offline_fetch_and_info_via_stub_module(monkeypatch) -> None:
-    from fincore.data import providers as providers_mod
+    import fincore.data.providers as providers_mod
 
     def stock_zh_a_hist(symbol: str, period: str, start_date: str, end_date: str, adjust: str):
         return pd.DataFrame(

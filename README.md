@@ -139,7 +139,9 @@ results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 
 **Portfolio Optimization:**
 ```python
-from fincore.optimization import efficient_frontier, risk_parity, optimize
+from fincore.optimization.frontier import efficient_frontier
+from fincore.optimization.objectives import optimize
+from fincore.optimization.risk_parity import risk_parity
 
 returns_df = pd.DataFrame(
     {
@@ -362,7 +364,9 @@ results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
 
 **组合优化：**
 ```python
-from fincore.optimization import efficient_frontier, risk_parity, optimize
+from fincore.optimization.frontier import efficient_frontier
+from fincore.optimization.objectives import optimize
+from fincore.optimization.risk_parity import risk_parity
 
 returns_df = pd.DataFrame(
     {
