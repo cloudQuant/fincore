@@ -12,12 +12,12 @@
   "scope": "non_online_functional_collection_only",
   "source_facts": {
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "d86bf46ea49003e5b2dfd1522fad2a97d888dede00f8fab0aee875d7a376553a",
-    "node_count": 5621,
+    "sha256": "6ffed5ff1d0024affeec8850139a916ab089af0c5ac09725b87c99fe201df326",
+    "node_count": 5633,
     "source_provenance": {
       "clean": true,
-      "commit": "6de193c3a3c3bcbcbb38c5063fc93edbdba73b9a",
-      "tree": "c74c5598451cab50912bd1e981cbb6baa59b3767"
+      "commit": "d557ee07ef74193472792a6cd7b0e8e47fcc6ee7",
+      "tree": "0c3a8af646f6401485d0cf0f94d49e080d9fde10"
     }
   },
   "entries": [
@@ -15642,6 +15642,76 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
+      "nodeid": "tests/parity/test_optimization.py::test_optimization_error",
+      "disposition": "retain",
+      "target": "tests/parity/test_optimization.py::test_optimization_error",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_optimization.py::test_optimize",
+      "disposition": "retain",
+      "target": "tests/parity/test_optimization.py::test_optimize",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_optimization.py::test_risk_parity",
+      "disposition": "retain",
+      "target": "tests/parity/test_optimization.py::test_risk_parity",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_cashflow_adjusted_returns",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_cashflow_adjusted_returns",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_cashflow_adjusted_twr",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_cashflow_adjusted_twr",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_disclosure_context",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_disclosure_context",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_render_disclosure",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_render_disclosure",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_performance.py::test_sharpe_inference",
+      "disposition": "retain",
+      "target": "tests/parity/test_performance.py::test_sharpe_inference",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_simulation.py::test_monte_carlo",
+      "disposition": "retain",
+      "target": "tests/parity/test_simulation.py::test_monte_carlo",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/performance/test_hotspot_regressions.py::test_datetime_index_add_matches_legacy_semantics[delta0]",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -15892,6 +15962,20 @@
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
       "rule_id": "canonical-retention",
       "target": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes"
+    },
+    {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
     {
       "disposition": "retain",

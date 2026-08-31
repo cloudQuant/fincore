@@ -234,3 +234,48 @@ def test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios() ->
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios() -> None:
+    """Enhanced performance primitives must not remain unreviewed coverage gaps."""
+    ledger = _load()
+    expected = {
+        "performance.cashflow.cashflow_adjusted_returns": {
+            "tests/parity/test_performance.py::test_cashflow_adjusted_returns",
+        },
+        "performance.cashflow.cashflow_adjusted_twr": {
+            "tests/parity/test_performance.py::test_cashflow_adjusted_twr",
+        },
+        "performance.cashflow.cashflow_timing": {
+            "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment",
+        },
+        "performance.cashflow.fee_treatment": {
+            "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment",
+        },
+        "performance.disclosure.disclosure_context": {
+            "tests/parity/test_performance.py::test_disclosure_context",
+        },
+        "performance.disclosure.render_disclosure": {
+            "tests/parity/test_performance.py::test_render_disclosure",
+        },
+        "performance.inference.sharpe_confidence_interval": {
+            "tests/parity/test_performance.py::test_sharpe_inference",
+        },
+        "performance.inference.sharpe_standard_error": {
+            "tests/parity/test_performance.py::test_sharpe_inference",
+        },
+        "performance.inference.standard_error_of_mean": {
+            "tests/parity/test_performance.py::test_sharpe_inference",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "performance"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids

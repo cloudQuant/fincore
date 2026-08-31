@@ -226,42 +226,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "performance.cashflow.cashflow_adjusted_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.cashflow.cashflow_adjusted_twr",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.cashflow.cashflow_timing",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.cashflow.fee_treatment",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.disclosure.disclosure_context",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.disclosure.render_disclosure",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.inference.sharpe_confidence_interval",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.inference.sharpe_standard_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "performance.inference.standard_error_of_mean",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "portfolio.perf_stats.plot_perf_stats",
       "reason": "no_source_nodeid"
     },
@@ -5775,6 +5739,100 @@
       ]
     },
     {
+      "capability_id": "performance.cashflow.cashflow_adjusted_returns",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Global Investment Performance Standards (GIPS), CFA Institute",
+            "reference": "time-weighted period return with explicit external-cashflow timing",
+            "version": "2020"
+          },
+          "oracle_reference": "time-weighted period return with explicit external-cashflow timing",
+          "scenario_id": "end_timed_cashflow_period_return"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_adjusted_returns"
+      ],
+      "target_operation_id": "performance.cashflow.cashflow_adjusted_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_adjusted_returns"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.cashflow_adjusted_twr",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Global Investment Performance Standards (GIPS), CFA Institute",
+            "reference": "time-weighted return compounds cashflow-adjusted period factors",
+            "version": "2020"
+          },
+          "oracle_reference": "time-weighted return compounds cashflow-adjusted period factors",
+          "scenario_id": "end_timed_cashflow_compounding"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_adjusted_twr"
+      ],
+      "target_operation_id": "performance.cashflow.cashflow_adjusted_twr",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_adjusted_twr"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.cashflow_timing",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "performance.cashflow.cashflow_timing.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "start-timed and end-timed cashflows use their respective denominator and numerator adjustments"
+          },
+          "oracle_reference": "invariant contract performance.cashflow.cashflow_timing.invariant.v1",
+          "scenario_id": "start_and_end_timing_are_explicit"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment"
+      ],
+      "target_operation_id": "performance.cashflow.cashflow_timing",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment"
+      ]
+    },
+    {
+      "capability_id": "performance.cashflow.fee_treatment",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "performance.cashflow.fee_treatment.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "gross return adds charged fees back while net return retains them"
+          },
+          "oracle_reference": "invariant contract performance.cashflow.fee_treatment.invariant.v1",
+          "scenario_id": "gross_and_net_fee_treatment"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment"
+      ],
+      "target_operation_id": "performance.cashflow.fee_treatment",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_cashflow_timing_and_fee_treatment"
+      ]
+    },
+    {
       "capability_id": "performance.cashflow.mwr",
       "disposition": "required",
       "owner": "performance",
@@ -5866,6 +5924,121 @@
       "target_operation_id": "performance.cashflow.xirr",
       "wheel_nodeids": [
         "tests/parity/test_performance.py::test_xirr"
+      ]
+    },
+    {
+      "capability_id": "performance.disclosure.disclosure_context",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "performance.disclosure.disclosure_context.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a disclosure context preserves every explicit user assertion as immutable data"
+          },
+          "oracle_reference": "invariant contract performance.disclosure.disclosure_context.invariant.v1",
+          "scenario_id": "context_preserves_declared_values"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_disclosure_context"
+      ],
+      "target_operation_id": "performance.disclosure.disclosure_context",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_disclosure_context"
+      ]
+    },
+    {
+      "capability_id": "performance.disclosure.render_disclosure",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "performance.disclosure.render_disclosure.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "rendered disclosure exposes the declared convention and each supplied material caveat"
+          },
+          "oracle_reference": "invariant contract performance.disclosure.render_disclosure.invariant.v1",
+          "scenario_id": "rendered_context_contains_material_fields"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_render_disclosure"
+      ],
+      "target_operation_id": "performance.disclosure.render_disclosure",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_render_disclosure"
+      ]
+    },
+    {
+      "capability_id": "performance.inference.sharpe_confidence_interval",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Lo, A. W. (2002). The Statistics of Sharpe Ratios. Financial Analysts Journal.",
+            "reference": "asymptotic Sharpe-ratio standard error and normal confidence interval"
+          },
+          "oracle_reference": "Lo (2002) asymptotic Sharpe-ratio confidence interval",
+          "scenario_id": "normal_approximation_interval_is_centered_on_sample_sharpe"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
+      ],
+      "target_operation_id": "performance.inference.sharpe_confidence_interval",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
+      ]
+    },
+    {
+      "capability_id": "performance.inference.sharpe_standard_error",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Lo, A. W. (2002). The Statistics of Sharpe Ratios. Financial Analysts Journal.",
+            "reference": "asymptotic Sharpe-ratio standard error"
+          },
+          "oracle_reference": "Lo (2002) asymptotic Sharpe-ratio standard error",
+          "scenario_id": "sample_sharpe_has_positive_uncertainty"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
+      ],
+      "target_operation_id": "performance.inference.sharpe_standard_error",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
+      ]
+    },
+    {
+      "capability_id": "performance.inference.standard_error_of_mean",
+      "disposition": "required",
+      "owner": "performance",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "performance.inference.standard_error_of_mean.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "sample standard error equals the sample standard deviation divided by the square root of sample count"
+          },
+          "oracle_reference": "invariant contract performance.inference.standard_error_of_mean.invariant.v1",
+          "scenario_id": "sample_standard_error_formula"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
+      ],
+      "target_operation_id": "performance.inference.standard_error_of_mean",
+      "wheel_nodeids": [
+        "tests/parity/test_performance.py::test_sharpe_inference"
       ]
     },
     {
@@ -8576,7 +8749,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "d86bf46ea49003e5b2dfd1522fad2a97d888dede00f8fab0aee875d7a376553a",
+  "node_facts_sha256": "6ffed5ff1d0024affeec8850139a916ab089af0c5ac09725b87c99fe201df326",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }
