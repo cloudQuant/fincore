@@ -12,7 +12,6 @@ def test_perf_stats_bootstrap_resolves_callable_and_skips_none_entries(monkeypat
     - a None entry (fallthrough + skip branch)
     and replaces calc_bootstrap with a tiny deterministic stub to keep the test fast.
     """
-    import fincore.constants.style as style_const
     import fincore.metrics.perf_stats as perf_mod
 
     idx = pd.date_range("2024-01-01", periods=5, freq="B")
@@ -21,9 +20,9 @@ def test_perf_stats_bootstrap_resolves_callable_and_skips_none_entries(monkeypat
     def my_stat(x: pd.Series) -> float:
         return float(np.nanmean(np.asarray(x)))
 
-    monkeypatch.setattr(style_const, "SIMPLE_STAT_FUNCS", [my_stat, None], raising=True)
-    monkeypatch.setattr(style_const, "FACTOR_STAT_FUNCS", [None], raising=True)
-    monkeypatch.setattr(style_const, "STAT_FUNC_NAMES", {}, raising=True)
+    monkeypatch.setattr(perf_mod, "_SIMPLE_STAT_FUNCS", (my_stat, None), raising=True)
+    monkeypatch.setattr(perf_mod, "_FACTOR_STAT_FUNCS", (None,), raising=True)
+    monkeypatch.setattr(perf_mod, "_STAT_FUNC_NAMES", {}, raising=True)
 
     calls: list[object] = []
 

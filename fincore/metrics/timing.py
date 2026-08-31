@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 import numpy as np
 import pandas as pd
 
-from fincore.constants.interesting_periods import PERIODS
-from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
+from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
+
+from ._historical_periods import PERIODS
 
 __all__ = [
     "cornell_timing",

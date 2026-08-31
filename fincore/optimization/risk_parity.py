@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy import optimize as sp_opt
 
-from fincore.constants import APPROX_BDAYS_PER_YEAR
+from fincore.metrics.frequencies import APPROX_BDAYS_PER_YEAR
 from fincore.optimization._utils import normalize_weights, validate_result
 
 __all__ = ["risk_parity"]

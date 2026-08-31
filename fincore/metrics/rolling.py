@@ -23,12 +23,13 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
-from fincore.core.rolling_moments import roll_alpha_beta_vectorized, roll_max_drawdown_chunked
 from fincore.metrics.basic import annualization_factor
 from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import down_capture, sortino_ratio, up_capture
 from fincore.metrics.risk import annual_volatility
+from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
+
+from ._rolling_moments import roll_alpha_beta_vectorized, roll_max_drawdown_chunked
 
 __all__ = [
     "roll_alpha",

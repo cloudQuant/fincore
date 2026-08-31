@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import numpy as np
 
-from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
+from fincore.metrics.frequencies import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

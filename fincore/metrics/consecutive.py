@@ -22,8 +22,7 @@ from typing import TYPE_CHECKING, Callable, cast
 
 import numpy as np
 
-from fincore.constants import MONTHLY, WEEKLY
-from fincore.constants.periods import PERIOD_TO_FREQ
+from fincore.metrics.frequencies import MONTHLY, WEEKLY, pandas_frequency
 from fincore.metrics.returns import cum_returns_final
 
 if TYPE_CHECKING:
@@ -94,8 +93,8 @@ def consecutive_stats(returns: pd.Series) -> dict[str, float | int]:
         }
 
     # Resample once
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
+    weekly_returns = returns.resample(pandas_frequency(WEEKLY)).apply(_resample_apply_final)
+    monthly_returns = returns.resample(pandas_frequency(MONTHLY)).apply(_resample_apply_final)
 
     def up(s):
         """Check if a value is positive.
@@ -266,7 +265,7 @@ def max_consecutive_up_weeks(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
+    weekly_returns = returns.resample(pandas_frequency(WEEKLY)).apply(_resample_apply_final)
     return _max_consecutive_run(weekly_returns, lambda s: s > 0)
 
 
@@ -286,7 +285,7 @@ def max_consecutive_down_weeks(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    weekly_returns = returns.resample(PERIOD_TO_FREQ[WEEKLY]).apply(_resample_apply_final)
+    weekly_returns = returns.resample(pandas_frequency(WEEKLY)).apply(_resample_apply_final)
     return _max_consecutive_run(weekly_returns, lambda s: s < 0)
 
 
@@ -306,7 +305,7 @@ def max_consecutive_up_months(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
+    monthly_returns = returns.resample(pandas_frequency(MONTHLY)).apply(_resample_apply_final)
     return _max_consecutive_run(monthly_returns, lambda s: s > 0)
 
 
@@ -326,7 +325,7 @@ def max_consecutive_down_months(returns: pd.Series) -> float | int:
     """
     if len(returns) < 1:
         return np.nan
-    monthly_returns = returns.resample(PERIOD_TO_FREQ[MONTHLY]).apply(_resample_apply_final)
+    monthly_returns = returns.resample(pandas_frequency(MONTHLY)).apply(_resample_apply_final)
     return _max_consecutive_run(monthly_returns, lambda s: s < 0)
 
 

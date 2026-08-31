@@ -41,6 +41,41 @@ __all__ = [
     "perf_stats_bootstrap",
 ]
 
+_SIMPLE_STAT_FUNCS = (
+    "annual_return",
+    "cum_returns_final",
+    "annual_volatility",
+    "sharpe_ratio",
+    "calmar_ratio",
+    "stability_of_timeseries",
+    "max_drawdown",
+    "omega_ratio",
+    "sortino_ratio",
+    "stats.skew",
+    "stats.kurtosis",
+    "tail_ratio",
+    "value_at_risk",
+)
+_FACTOR_STAT_FUNCS = ("alpha", "beta")
+_STAT_FUNC_NAMES = {
+    "annual_return": "Annual return",
+    "cum_returns_final": "Cumulative returns",
+    "annual_volatility": "Annual volatility",
+    "sharpe_ratio": "Sharpe ratio",
+    "calmar_ratio": "Calmar ratio",
+    "stability_of_timeseries": "Stability",
+    "max_drawdown": "Max drawdown",
+    "omega_ratio": "Omega ratio",
+    "sortino_ratio": "Sortino ratio",
+    "skew": "Skew",
+    "kurtosis": "Kurtosis",
+    "tail_ratio": "Tail ratio",
+    "common_sense_ratio": "Common sense ratio",
+    "value_at_risk": "Daily value at risk",
+    "alpha": "Alpha",
+    "beta": "Beta",
+}
+
 
 def perf_stats(
     returns: pd.Series,
@@ -136,7 +171,6 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
     """
     from scipy import stats as scipy_stats
 
-    from fincore.constants.style import FACTOR_STAT_FUNCS, SIMPLE_STAT_FUNCS, STAT_FUNC_NAMES
     from fincore.metrics.alpha_beta import alpha, beta
     from fincore.metrics.ratios import omega_ratio, stability_of_timeseries
     from fincore.metrics.risk import tail_ratio, value_at_risk
@@ -179,20 +213,20 @@ def perf_stats_bootstrap(returns, factor_returns=None, return_stats=True, **_kwa
         return stat_entry, str(stat_entry)
 
     # Bootstrap for simple statistics
-    for entry in SIMPLE_STAT_FUNCS:
+    for entry in _SIMPLE_STAT_FUNCS:
         stat_func, stat_key = _resolve_stat_func(entry)
         if stat_func is None:
             continue
-        stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
+        stat_name = _STAT_FUNC_NAMES.get(stat_key, stat_key)
         bootstrap_values[stat_name] = calc_bootstrap(stat_func, returns)
 
     # Bootstrap for factor-based statistics, if provided
     if factor_returns is not None:
-        for entry in FACTOR_STAT_FUNCS:
+        for entry in _FACTOR_STAT_FUNCS:
             stat_func, stat_key = _resolve_stat_func(entry)
             if stat_func is None:
                 continue
-            stat_name = STAT_FUNC_NAMES.get(stat_key, stat_key)
+            stat_name = _STAT_FUNC_NAMES.get(stat_key, stat_key)
             bootstrap_values[stat_name] = calc_bootstrap(stat_func, returns, factor_returns=factor_returns)
 
     bootstrap_values = pd.DataFrame(bootstrap_values)

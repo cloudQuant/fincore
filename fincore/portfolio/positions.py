@@ -23,10 +23,10 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from fincore.constants import CAP_BUCKETS, SECTORS
-from fincore.contracts.time_series import align_time_series
 from fincore.exceptions import ValidationError
+from fincore.runtime.time_series import align_time_series
 
+from ._presentation import CAP_BUCKETS, SECTORS
 from .models import ExposureBundle, VolumeExposureBundle
 
 __all__ = [

@@ -398,7 +398,7 @@ def gen_round_trip_stats(round_trips: pd.DataFrame) -> dict:
         A dictionary where each value is a pandas DataFrame containing
         various round-trip statistics.
     """
-    from fincore.constants.style import (
+    from ._presentation import (
         DURATION_STATS,
         DURATION_STATS_GROUP,
         PNL_STATS,

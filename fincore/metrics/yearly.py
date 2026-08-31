@@ -23,13 +23,13 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 from fincore.metrics.basic import annualization_factor, ensure_datetime_index_series
 from fincore.metrics.drawdown import max_drawdown
 from fincore.metrics.frequencies import DAILY
 from fincore.metrics.ratios import sharpe_ratio
 from fincore.metrics.returns import cum_returns_final
 from fincore.metrics.risk import annual_volatility
+from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 __all__ = [
     "annual_active_return",

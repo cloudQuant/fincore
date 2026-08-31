@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
-from fincore.constants import DAILY
+from fincore.metrics.frequencies import DAILY
 
 if TYPE_CHECKING:
     import pandas as pd

@@ -1,9 +1,8 @@
 """Visualization backends for fincore.
 
 This package provides a pluggable visualization layer decoupled from
-the computation engine.  The existing ``tearsheets/`` module is left
-untouched; this new ``viz/`` package offers a lighter, backend-agnostic
-alternative accessible via :class:`~fincore.core.context.AnalysisContext`.
+domain computation. Renderers consume explicit domain or report models and
+can receive an immutable extension snapshot for custom backends.
 
 Available backends:
 - 'html': Self-contained HTML (no external dependencies)

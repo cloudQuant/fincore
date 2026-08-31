@@ -24,10 +24,10 @@ from typing import TYPE_CHECKING, Callable, cast
 import numpy as np
 import pandas as pd
 
-from fincore.contracts.time_series import AlignmentPolicy, align_binary_metric_inputs
 from fincore.metrics._numeric import nanmean
 from fincore.metrics.basic import adjust_returns, annualization_factor
 from fincore.metrics.frequencies import DAILY
+from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 if TYPE_CHECKING:
     from fincore._types import ReturnOrDataFrame

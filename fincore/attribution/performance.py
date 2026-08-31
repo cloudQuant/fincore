@@ -24,8 +24,10 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from fincore.contracts.time_series import AlignmentPolicy, align_time_series
 from fincore.exceptions import DataAlignmentError
+from fincore.runtime.time_series import AlignmentPolicy, align_time_series
+
+PERF_ATTRIB_TURNOVER_THRESHOLD = 0.25
 
 __all__ = [
     "align_and_warn",
@@ -512,8 +514,6 @@ def align_and_warn(
         (returns, positions, factor_returns, factor_loadings) aligned to common dates/tickers.
     """
     import warnings
-
-    from fincore.constants.style import PERF_ATTRIB_TURNOVER_THRESHOLD
 
     # Handle both DataFrame (unstacked) and Series (stacked) positions
     if isinstance(positions, pd.Series):
