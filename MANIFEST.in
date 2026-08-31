@@ -14,6 +14,7 @@ include fincore/py.typed
 recursive-exclude tests *
 recursive-exclude examples *
 recursive-exclude docs *
+prune benchmarks
 prune build
 prune dist
 prune *.egg-info
