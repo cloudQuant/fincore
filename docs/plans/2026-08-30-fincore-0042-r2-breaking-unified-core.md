@@ -122,7 +122,7 @@
 ### 1.3 当前证据边界
 
 - 旧 Empyrical/Pyfolio/Alphalens 聚焦语义测试实跑为 `1184 passed`；`tests/compat` 当前可收集约 1,386 个测试。它们是迁移语料，不是最终旧 API 保留门。
-- 当前质量 snapshot 绑定旧 commit，branch coverage 45%，低于 60% 门，不能作为 R2 D0。
+- 当前质量 snapshot 绑定旧 commit，branch coverage 45%，低于最终 60% 门，不能作为 R2 的可信 D0 原始测量或最终质量证据。
 - 当前 root worktree 含用户已有的治理、CI 和文档改动；它们保持用户所有权并与 clean R2 worktree 隔离，不能封印为正式 baseline。
 - `scripts/check_architecture_convergence.py` 已提供可测量的 architecture facts，但尚未构成 D0 或 legacy-zero 结论；`scripts/check_feature_parity.py` 当前不存在，Task 0 必须先以测试驱动新增并与完整 ledger/baseline 绑定，后续任务才能引用 parity 结论。
 - `scripts/profile_workloads.py` 当前只覆盖 metrics/factor；Task 0 先扩展 rolling/transactions/risk/report 并冻结输出 digest。
@@ -558,8 +558,8 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 15. 冻结 required gate manifest：`tests`（全部非在线 functional，含 slow/serial/offline integration）、`static`、`package`、`quality`、`parity`、`architecture`、`performance`、`report`、`installed`、`matrix-cell`、`matrix-aggregate`、`final`、`evidence-child`；`final` 缺任一技术 gate evidence 都 fail closed，`evidence-child` 单独验证 verdict 文档的 parent/allowlist。
 16. 冻结 matrix cell schema，并在 D0 bundle 中记录精确、有序的 `python_support_window`（目标为 3.11–3.14，实际集合以 D0 依赖矩阵为准）：candidate commit/tree、同一 wheel SHA256、D0 tooling/bundle digest、OS/runner image、Python full version、dependency lane/profile、固定 argv digest、test/output digest、时间和 verdict。`matrix-aggregate` 只接受 Linux/macOS/Windows × 该 D0-frozen Python 支持窗口的全部 cell；bundle 缺少该字段、字段为空或 cell 不完整均 fail closed。
 17. 先提交并冻结 `D0_TOOLING_SHA` 与 source-tracked architecture threshold policy；policy 只定义由 D0 原始测量派生的 candidate threshold rules，不能把 D0 自身当成已达到 final reduction 的候选。随后从该 SHA 的 detached worktree 执行工具测试，之后不允许 Tasks 1–9 修改 runner、checker、profiler、measurement schema、policy schema 或 threshold。
-18. 若 fresh coverage 仍低于 60%，启动独立 Task 0B coverage-gap sub-tranche：Quality owner 分配 domain test owners，只新增真实 branch/error/boundary 测试，不改生产语义、不使用无断言执行；发现 defect 时先交回独立 `fix:` tranche，修复和测试都落到 clean named commit 后再重测。
-19. Task 0B 达到 overall branch `>=60%`、critical modules `>=90%` 后，再从 clean exact-SHA worktree 执行 Task 0C D0 capture；证据先写到仓库外目录，再作为单独、可审查的 baseline commit materialize 到上述 `docs/quality/0042-r2-*` 文件。记录 `D0_TOOLING_SHA`、baseline source SHA/tree、acceptance lock digest 和外部 bundle digest。
+18. fresh D0 的职责是完整、可复现地记录旧实现的实际 quality/coverage，不把删除前 legacy 代码的最终覆盖率错当成 D0 前置门。`check_quality_snapshot --record-baseline` 仍要求 clean exact SHA、coverage 字段存在、全部测试 exit=0 与 disposable-copy integrity=true，但只记录实际值；它不能用于任何 candidate/final quality gate。
+19. 若 D0 记录的 coverage 低于 60%，启动独立 Task 0B coverage-gap sub-tranche，并按后续 canonical domain owner 分配真实 branch/error/boundary 测试；不改生产语义、不使用无断言执行。发现 defect 时先交回独立 `fix:` tranche。Task 0B 可以随 domain migration 提交推进，但 D-TECH 前必须达到 overall branch `>= max(D0, 60%)`、canonical critical modules `>=90%`。D0 capture 本身仍从 clean exact-SHA worktree 执行；证据先写到仓库外目录，再作为单独、可审查的 baseline commit materialize 到上述 `docs/quality/0042-r2-*` 文件。记录 `D0_TOOLING_SHA`、baseline source SHA/tree、acceptance lock digest 和外部 bundle digest。
 20. D0 bundle 必须包含 architecture baseline source provisioning manifest：baseline source commit/tree、architecture threshold policy 的 path/Git blob/SHA256，以及可验证地 materialize 为 clean detached checkout 的 source archive/object provenance。后续 architecture 比较必须将该 checkout 作为 `--baseline-source-root`；不得以 candidate checkout、`D0_TOOLING_ROOT` 或空临时目录替代。
 
 **先验证工具测试：**
@@ -580,7 +580,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" 
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_architecture_convergence.py --package fincore --capture "$FINCORE_0042R2_D0_DIR/architecture-baseline.json" --seal-baseline --threshold-policy tests/parity/fixtures/0042-r2-architecture-threshold-policy.json
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/profile_workloads.py --sizes small medium large --kinds metrics rolling transactions factor risk report --warmups 2 --repeats 5 --require-output-digest --output "$FINCORE_0042R2_D0_DIR/performance-baseline.json"
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/collect_quality_baseline.py --json "$FINCORE_0042R2_D0_DIR/current-baseline.json" --markdown "$FINCORE_0042R2_D0_DIR/current-baseline.md"
-/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_quality_snapshot.py --snapshot "$FINCORE_0042R2_D0_DIR/current-baseline.json"
+/Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_quality_snapshot.py --snapshot "$FINCORE_0042R2_D0_DIR/current-baseline.json" --record-baseline
 ```
 
 上述 committed fixture/golden 输入必须在 clean exact-SHA 内存在，并将每个输入及其 include/exclude manifest 的 digest 写入 D0 bundle；`FINCORE_0042R2_D0_DIR` 只承载本次 clean capture 的输出，不得把空临时目录当作账本、disposition 或 golden 的来源。`FINCORE_0042R2_D0_TOOLING_ROOT` 必须是与 candidate source root 分离的 clean detached tooling worktree；capture 会记录其 commit/tree 以及 capture/checker Git-blob SHA256，并拒绝 candidate 作为 tooling root。tooling SHA、baseline source SHA、clean status、平台和依赖 provenance 仍须按本任务的 D0 要求一并冻结。
@@ -605,7 +605,7 @@ runner 必须先验证自己的 blob/commit、acceptance lock 和 D0 bundle dige
 - 孤儿能力 0、未裁决差异 0、无 owner 项 0；所有 `correction_required` 均有独立 oracle 和具名修复 owner。
 - D0 记录 commit、tree、clean 状态、Python/依赖/平台、脚本 SHA、architecture threshold policy blob/digest、include/exclude manifest 和证据 digest；architecture baseline source provisioning manifest 能重建一个 clean exact baseline-source checkout。
 - `D0_TOOLING_SHA` 与 baseline source SHA 分离记录；tooling SHA 是后续正式 gate 的唯一 checker/profiler/runner 权威。
-- branch coverage 至少 60%；若 clean base 尚未达到，不得用旧 snapshot 代替，先补测试再冻结 D0。
+- D0 记录实际 branch coverage 且 coverage 字段、全部测试 exit、copy integrity 均有效；candidate/final quality gate 仍必须达到 `>= max(D0, 60%)`，并满足 changed-line/critical-module coverage 门。
 - 性能 baseline 非 pending，所有 workload 输出 digest 有效。
 
 **Rollback:** 整笔回滚 tooling/baseline commit；不得只删失败能力、改 tolerance 或重写历史 D0。

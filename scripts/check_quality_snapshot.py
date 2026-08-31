@@ -52,13 +52,18 @@ def check_snapshot(
     expected_commit: str | None = None,
     *,
     skip_commit_check: bool = False,
+    record_baseline: bool = False,
 ) -> list[str]:
     """Return the list of freshness violations for ``path`` (empty means pass).
 
     The check is fail-closed: missing provenance, dirty state, a mismatched
     commit, a non-zero run, an impure disposable copy, or absent/low branch
-    coverage are each reported as a violation.  ``expected_commit`` defaults to
-    the repository HEAD; pass an explicit value in tests.
+    coverage are each reported as a violation. ``record_baseline`` keeps all
+    provenance, test-exit, integrity, and coverage-presence checks, but records
+    a pre-refactor D0 measurement without pretending that it already meets the
+    final 60% quality threshold. The final candidate gate must leave this flag
+    unset. ``expected_commit`` defaults to the repository HEAD; pass an
+    explicit value in tests.
 
     ``skip_commit_check`` is for CI: the checked-in snapshot records the commit
     it was generated from, which is always an ancestor of (or equal to) the PR
@@ -91,7 +96,7 @@ def check_snapshot(
     coverage = branch_coverage(snapshot)
     if coverage is None:
         violations.append("branch coverage is missing")
-    elif coverage < MIN_BRANCH_COVERAGE:
+    elif not record_baseline and coverage < MIN_BRANCH_COVERAGE:
         violations.append(f"branch coverage {coverage}% is below the {MIN_BRANCH_COVERAGE}% threshold")
     return violations
 
@@ -108,13 +113,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Do not require source.commit to equal HEAD (CI-only mode).",
     )
+    parser.add_argument(
+        "--record-baseline",
+        action="store_true",
+        help=(
+            "Record a clean pre-refactor D0 coverage measurement without applying the final 60% threshold; "
+            "coverage must still be present and all test/integrity checks must pass."
+        ),
+    )
     args = parser.parse_args(argv)
-    violations = check_snapshot(args.snapshot, skip_commit_check=args.skip_commit_check)
+    violations = check_snapshot(
+        args.snapshot,
+        skip_commit_check=args.skip_commit_check,
+        record_baseline=args.record_baseline,
+    )
     if violations:
         for violation in violations:
             print(f"FAIL: {violation}")
         return 1
-    print("OK: quality snapshot is fresh, clean, and complete.")
+    if args.record_baseline:
+        print("OK: quality baseline is fresh, clean, complete, and records its actual branch coverage.")
+    else:
+        print("OK: quality snapshot is fresh, clean, and complete.")
     return 0
 
 

@@ -82,6 +82,31 @@ def test_rejects_missing_or_low_branch_coverage(tmp_path: Path) -> None:
     assert any("below the" in v for v in violations)
 
 
+def test_baseline_recording_keeps_coverage_presence_but_defers_final_threshold(tmp_path: Path) -> None:
+    snapshot = {
+        "schema_version": SCHEMA_VERSION,
+        "source": {"commit": "current", "dirty": False},
+        "outcome": "pass",
+        "runs": [
+            {
+                "label": "branch-coverage",
+                "returncode": 0,
+                "integrity_ok": True,
+                "branch_coverage_percent": MIN_BRANCH_COVERAGE - 1.0,
+            }
+        ],
+    }
+    path = tmp_path / "baseline.json"
+    path.write_text(json.dumps(snapshot))
+
+    assert check_snapshot(path, expected_commit="current", record_baseline=True) == []
+    assert check_snapshot(path, expected_commit="current")
+
+    snapshot["runs"][0].pop("branch_coverage_percent")
+    path.write_text(json.dumps(snapshot))
+    assert "branch coverage is missing" in check_snapshot(path, expected_commit="current", record_baseline=True)
+
+
 def test_rejects_failed_run_and_impure_copy(tmp_path: Path) -> None:
     snapshot = {
         "schema_version": SCHEMA_VERSION,
