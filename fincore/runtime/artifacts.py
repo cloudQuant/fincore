@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, Mapping
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class _ArtifactEntry:
+    name: str | None
     value: Any
     owned: bool
     closer: Callable[[], None] | None
@@ -25,8 +27,14 @@ class ArtifactBundle:
     once when the bundle closes.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, metadata: Mapping[str, Any] | None = None) -> None:
+        if metadata is not None and not isinstance(metadata, Mapping):
+            raise TypeError("metadata must be a mapping or None")
+        if metadata is not None and any(not isinstance(key, str) or not key for key in metadata):
+            raise TypeError("metadata keys must be non-empty strings")
         self._entries: list[_ArtifactEntry] = []
+        self._named_artifacts: dict[str, Any] = {}
+        self._metadata = MappingProxyType(dict(metadata or {}))
         self._closed = False
 
     @property
@@ -39,12 +47,25 @@ class ArtifactBundle:
         """Whether this bundle has completed its one lifecycle close attempt."""
         return self._closed
 
+    @property
+    def metadata(self) -> Mapping[str, Any]:
+        """Return immutable renderer/runtime metadata for this artifact bundle."""
+
+        return self._metadata
+
+    @property
+    def named_artifacts(self) -> Mapping[str, Any]:
+        """Return named artifacts without exposing lifecycle internals for mutation."""
+
+        return MappingProxyType(dict(self._named_artifacts))
+
     def add(
         self,
         artifact: Any,
         *,
         owned: bool,
         closer: Callable[[], None] | None = None,
+        name: str | None = None,
     ) -> Any:
         """Register one output with explicit resource ownership.
 
@@ -58,12 +79,18 @@ class ArtifactBundle:
             raise TypeError("owned must be a bool")
         if closer is not None and not callable(closer):
             raise TypeError("closer must be callable")
+        if name is not None and (not isinstance(name, str) or not name):
+            raise TypeError("name must be a non-empty string or None")
+        if name is not None and name in self._named_artifacts:
+            raise ValueError(f"duplicate artifact name: {name}")
         resolved_closer = closer
         if owned and resolved_closer is None:
             candidate = getattr(artifact, "close", None)
             if callable(candidate):
                 resolved_closer = candidate
-        self._entries.append(_ArtifactEntry(value=artifact, owned=owned, closer=resolved_closer))
+        self._entries.append(_ArtifactEntry(name=name, value=artifact, owned=owned, closer=resolved_closer))
+        if name is not None:
+            self._named_artifacts[name] = artifact
         return artifact
 
     def close(self) -> None:

@@ -13,6 +13,49 @@ from dataclasses import replace
 import numpy as np
 import pandas as pd
 
+from fincore.exceptions import InputContractError
+from fincore.metrics.alpha_beta import alpha_beta
+from fincore.metrics.consecutive import (
+    max_consecutive_down_days,
+    max_consecutive_down_months,
+    max_consecutive_down_weeks,
+    max_consecutive_up_days,
+    max_consecutive_up_months,
+    max_consecutive_up_weeks,
+)
+from fincore.metrics.drawdown import (
+    gen_drawdown_table,
+    max_drawdown,
+    max_drawdown_days,
+    max_drawdown_months,
+    max_drawdown_recovery_days,
+    max_drawdown_recovery_months,
+    max_drawdown_recovery_weeks,
+    max_drawdown_weeks,
+    second_max_drawdown,
+    third_max_drawdown,
+)
+from fincore.metrics.ratios import (
+    burke_ratio,
+    calmar_ratio,
+    common_sense_ratio,
+    down_capture,
+    information_ratio,
+    kappa_three_ratio,
+    omega_ratio,
+    sharpe_ratio,
+    sortino_ratio,
+    stability_of_timeseries,
+    sterling_ratio,
+    up_capture,
+)
+from fincore.metrics.returns import aggregate_returns, cum_returns, cum_returns_final
+from fincore.metrics.risk import annual_volatility, downside_risk, tail_ratio, tracking_error, value_at_risk
+from fincore.metrics.rolling import rolling_beta, rolling_sharpe, rolling_volatility
+from fincore.metrics.stats import hurst_exponent, kurtosis, loss_rate, serial_correlation, skewness, win_rate
+from fincore.metrics.yearly import annual_return, annual_return_by_year, max_drawdown_by_year, sharpe_ratio_by_year
+from fincore.portfolio.positions import gross_lev
+from fincore.portfolio.transactions import get_turnover
 from fincore.report.model import ReportModel
 
 __all__ = ["ReportModel", "compute_sections"]
@@ -195,30 +238,34 @@ def _disclosure_payload(context):
     }
 
 
-def _compute_core_perf(context, Empyrical, returns, benchmark_rets, period):
+def _compute_core_perf(
+    returns,
+    benchmark_rets,
+    period,
+    *,
+    positions=None,
+    transactions=None,
+    gross_leverage=None,
+    turnover=None,
+):
     """Compute core performance statistics."""
     period_title = _period_title(period)
     period_unit = _period_unit(period)
-    context_stats = context.perf_stats()
     perf = OrderedDict()
-    context_names = {
-        "Annual Return": "Annual return",
-        "Cumulative Returns": "Cumulative returns",
-        "Annual Volatility": "Annual volatility",
-        "Sharpe Ratio": "Sharpe ratio",
-        "Calmar Ratio": "Calmar ratio",
-        "Stability": "Stability",
-        "Max Drawdown": "Max drawdown",
-        "Omega Ratio": "Omega ratio",
-        "Sortino Ratio": "Sortino ratio",
-        "Skew": "Skew",
-        "Kurtosis": "Kurtosis",
-        "Tail Ratio": "Tail ratio",
-        f"{period_title} Value at Risk": "Daily value at risk",
-    }
-    for report_name, context_name in context_names.items():
-        perf[report_name] = context_stats[context_name]
-    perf["Downside Risk"] = Empyrical.downside_risk(returns, period=period)
+    perf["Annual Return"] = annual_return(returns, period=period)
+    perf["Cumulative Returns"] = cum_returns_final(returns)
+    perf["Annual Volatility"] = annual_volatility(returns, period=period)
+    perf["Sharpe Ratio"] = sharpe_ratio(returns, period=period)
+    perf["Calmar Ratio"] = calmar_ratio(returns, period=period)
+    perf["Stability"] = stability_of_timeseries(returns)
+    perf["Max Drawdown"] = max_drawdown(returns)
+    perf["Omega Ratio"] = omega_ratio(returns)
+    perf["Sortino Ratio"] = sortino_ratio(returns, period=period)
+    perf["Skew"] = skewness(returns)
+    perf["Kurtosis"] = kurtosis(returns)
+    perf["Tail Ratio"] = tail_ratio(returns)
+    perf[f"{period_title} Value at Risk"] = value_at_risk(returns)
+    perf["Downside Risk"] = downside_risk(returns, period=period)
 
     perf[f"{period_title} Mean Return"] = float(np.nanmean(returns))
     perf[f"{period_title} Std Return"] = float(np.nanstd(returns, ddof=1))
@@ -226,101 +273,101 @@ def _compute_core_perf(context, Empyrical, returns, benchmark_rets, period):
     perf[f"Worst {period_unit}"] = float(returns.min())
 
     if benchmark_rets is not None:
-        perf["Alpha"] = context_stats["Alpha"]
-        perf["Beta"] = context_stats["Beta"]
+        alpha_value, beta_value = alpha_beta(returns, benchmark_rets, period=period)
+        perf["Alpha"] = alpha_value
+        perf["Beta"] = beta_value
 
-    if context._positions is not None:
-        gross_leverage = context.gross_leverage
-        perf["Avg Gross Leverage"] = float(gross_leverage.mean())
-        perf["Max Gross Leverage"] = float(gross_leverage.max())
-    if context._positions is not None and context._transactions is not None:
-        perf[f"Avg {period_title} Turnover"] = float(context.turnover.mean())
+    if positions is not None:
+        leverage = gross_leverage if gross_leverage is not None else gross_lev(positions)
+        perf["Avg Gross Leverage"] = float(leverage.mean())
+        perf["Max Gross Leverage"] = float(leverage.max())
+    if positions is not None and transactions is not None and turnover is not None:
+        perf[f"Avg {period_title} Turnover"] = float(turnover.mean())
 
     return perf
 
 
-def _compute_extended_stats(Empyrical, returns, period):
+def _compute_extended_stats(returns, period):
     """Compute extended strategy statistics."""
     period_unit_plural = _period_unit_plural(period)
     period_unit = _period_unit(period)
     ext = OrderedDict()
-    emp = Empyrical(returns=returns)
-    ext[f"Win Rate ({period})"] = emp.win_rate()
-    ext[f"Loss Rate ({period})"] = emp.loss_rate()
-    ext["Serial Correlation"] = emp.serial_correlation()
-    ext["Common Sense Ratio"] = emp.common_sense_ratio()
-    ext["Sterling Ratio"] = emp.sterling_ratio(period=period)
-    ext["Burke Ratio"] = emp.burke_ratio(period=period)
-    ext["Kappa Three Ratio"] = emp.kappa_three_ratio(period=period)
-    ext["2nd Max Drawdown"] = emp.second_max_drawdown()
-    ext["3rd Max Drawdown"] = emp.third_max_drawdown()
+    ext[f"Win Rate ({period})"] = win_rate(returns)
+    ext[f"Loss Rate ({period})"] = loss_rate(returns)
+    ext["Serial Correlation"] = serial_correlation(returns)
+    ext["Common Sense Ratio"] = common_sense_ratio(returns)
+    ext["Sterling Ratio"] = sterling_ratio(returns, period=period)
+    ext["Burke Ratio"] = burke_ratio(returns, period=period)
+    ext["Kappa Three Ratio"] = kappa_three_ratio(returns, period=period)
+    ext["2nd Max Drawdown"] = second_max_drawdown(returns)
+    ext["3rd Max Drawdown"] = third_max_drawdown(returns)
     if period == "weekly":
-        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_weeks()
-        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_weeks()
-        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_weeks(returns)
-        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_weeks(returns)
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = max_drawdown_weeks(returns)
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = max_drawdown_recovery_weeks(returns)
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = max_consecutive_up_weeks(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = max_consecutive_down_weeks(returns)
     elif period == "monthly":
-        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_months()
-        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_months()
-        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_months(returns)
-        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_months(returns)
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = max_drawdown_months(returns)
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = max_drawdown_recovery_months(returns)
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = max_consecutive_up_months(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = max_consecutive_down_months(returns)
     else:
-        ext[f"Max Drawdown {period_unit_plural.title()}"] = emp.max_drawdown_days()
-        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = emp.max_drawdown_recovery_days()
-        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = Empyrical.max_consecutive_up_days(returns)
-        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = Empyrical.max_consecutive_down_days(returns)
+        ext[f"Max Drawdown {period_unit_plural.title()}"] = max_drawdown_days(returns)
+        ext[f"Max Drawdown Recovery {period_unit_plural.title()}"] = max_drawdown_recovery_days(returns)
+        ext[f"Max Consecutive Up {period_unit_plural.title()}"] = max_consecutive_up_days(returns)
+        ext[f"Max Consecutive Down {period_unit_plural.title()}"] = max_consecutive_down_days(returns)
     ext[f"Max Single {period_unit} Gain"] = float(returns.max())
     ext[f"Max Single {period_unit} Loss"] = float(returns.min())
-    ext["Hurst Exponent"] = Empyrical.hurst_exponent(returns)
+    ext["Hurst Exponent"] = hurst_exponent(returns)
     return ext
 
 
-def _compute_time_series(Empyrical, returns, rolling_window, period):
+def _compute_time_series(returns, rolling_window, period):
     """Compute time-series data for charts."""
     ts = {}
     ts["returns"] = returns
-    ts["cum_returns"] = Empyrical.cum_returns(returns, starting_value=1.0)
-    cum_ret_0 = Empyrical.cum_returns(returns, starting_value=0)
+    ts["cum_returns"] = cum_returns(returns, starting_value=1.0)
+    cum_ret_0 = cum_returns(returns, starting_value=0)
     running_max = (1 + cum_ret_0).cummax()
     ts["drawdown"] = (1 + cum_ret_0) / running_max - 1
-    ts["rolling_sharpe"] = Empyrical.rolling_sharpe(returns, rolling_sharpe_window=rolling_window, period=period)
-    ts["rolling_volatility"] = Empyrical.rolling_volatility(returns, rolling_vol_window=rolling_window, period=period)
-    ts["dd_table"] = Empyrical.gen_drawdown_table(returns, top=5)
+    ts["rolling_sharpe"] = rolling_sharpe(returns, rolling_sharpe_window=rolling_window, period=period)
+    ts["rolling_volatility"] = rolling_volatility(returns, rolling_vol_window=rolling_window, period=period)
+    ts["dd_table"] = gen_drawdown_table(returns, top=5)
 
     ts["yearly_stats"] = pd.DataFrame(
         {
-            "Annual Return": Empyrical.annual_return_by_year(returns, period=period),
-            "Sharpe Ratio": Empyrical.sharpe_ratio_by_year(returns, period=period),
-            "Max Drawdown": Empyrical.max_drawdown_by_year(returns),
+            "Annual Return": annual_return_by_year(returns, period=period),
+            "Sharpe Ratio": sharpe_ratio_by_year(returns, period=period),
+            "Max Drawdown": max_drawdown_by_year(returns),
         }
     )
-    ts["monthly_returns"] = Empyrical.aggregate_returns(returns, "monthly")
+    ts["monthly_returns"] = aggregate_returns(returns, "monthly")
     monthly_rets = ts["monthly_returns"]
     ts["best_month"] = float(monthly_rets.max())
     ts["worst_month"] = float(monthly_rets.min())
     ts["avg_month"] = float(monthly_rets.mean())
-    yearly_rets = Empyrical.aggregate_returns(returns, "yearly")
+    yearly_rets = aggregate_returns(returns, "yearly")
     ts["best_year"] = float(yearly_rets.max())
     ts["worst_year"] = float(yearly_rets.min())
     ts["return_quantiles"] = returns.quantile([0.01, 0.05, 0.25, 0.50, 0.75, 0.95, 0.99])
     return ts
 
 
-def _compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window, period):
+def _compute_benchmark(returns, benchmark_rets, perf, rolling_window, period):
     """Compute benchmark comparison stats."""
     bm = OrderedDict()
     bm["Alpha"] = perf["Alpha"]
     bm["Beta"] = perf["Beta"]
-    bm["Information Ratio"] = Empyrical.information_ratio(returns, benchmark_rets, period=period)
-    bm["Tracking Error"] = Empyrical.tracking_error(returns, benchmark_rets, period=period)
-    bm["Up Capture"] = Empyrical.up_capture(returns, benchmark_rets, period=period)
-    bm["Down Capture"] = Empyrical.down_capture(returns, benchmark_rets, period=period)
+    bm["Information Ratio"] = information_ratio(returns, benchmark_rets, period=period)
+    bm["Tracking Error"] = tracking_error(returns, benchmark_rets, period=period)
+    bm["Up Capture"] = up_capture(returns, benchmark_rets, period=period)
+    bm["Down Capture"] = down_capture(returns, benchmark_rets, period=period)
     bm["Capture Ratio"] = bm["Up Capture"] / bm["Down Capture"] if bm["Down Capture"] != 0 else np.nan
     bm["Correlation"] = float(returns.corr(benchmark_rets))
     return {
         "benchmark_stats": bm,
-        "benchmark_cum": Empyrical.cum_returns(benchmark_rets, starting_value=1.0),
-        "rolling_beta": Empyrical.rolling_beta(returns, benchmark_rets, rolling_window=rolling_window),
+        "benchmark_cum": cum_returns(benchmark_rets, starting_value=1.0),
+        "rolling_beta": rolling_beta(returns, benchmark_rets, rolling_window=rolling_window),
     }
 
 
@@ -356,7 +403,7 @@ def _compute_positions(positions, gross_leverage=None):
     return s
 
 
-def _compute_transactions(Empyrical, transactions, positions, turnover=None):
+def _compute_transactions(transactions, positions, turnover=None):
     """Compute transaction analysis."""
     s = {"has_transactions": True}
     txn = transactions.copy()
@@ -372,7 +419,7 @@ def _compute_transactions(Empyrical, transactions, positions, turnover=None):
         s["turnover"] = turnover
     elif positions is not None:
         try:
-            s["turnover"] = Empyrical.get_turnover(positions, transactions)
+            s["turnover"] = get_turnover(positions, transactions)
         except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
             logger.warning("Failed to calculate turnover from transactions: %s", e)
 
@@ -462,7 +509,7 @@ _PERIOD_DEFS = [
 ]
 
 
-def _compute_period_returns(Empyrical, returns, benchmark_rets, period):
+def _compute_period_returns(returns, benchmark_rets, period):
     """Compute period returns and win rates."""
     s = {}
     end_date = returns.index[-1]
@@ -472,10 +519,10 @@ def _compute_period_returns(Empyrical, returns, benchmark_rets, period):
 
     pr = OrderedDict()
     for label, days in _period_defs(period):
-        pr[label] = float(Empyrical.cum_returns_final(returns.iloc[-days:])) if len(returns) >= days else np.nan
+        pr[label] = float(cum_returns_final(returns.iloc[-days:])) if len(returns) >= days else np.nan
     if ytd_mask.sum() > 0:
-        pr["YTD"] = float(Empyrical.cum_returns_final(returns[ytd_mask]))
-    pr["Since Inception"] = float(Empyrical.cum_returns_final(returns))
+        pr["YTD"] = float(cum_returns_final(returns[ytd_mask]))
+    pr["Since Inception"] = float(cum_returns_final(returns))
     s["period_returns"] = pr
 
     if benchmark_rets is not None:
@@ -484,14 +531,12 @@ def _compute_period_returns(Empyrical, returns, benchmark_rets, period):
         bpr = OrderedDict()
         for label, days in _period_defs(period):
             bpr[label] = (
-                float(Empyrical.cum_returns_final(benchmark_rets.iloc[-days:]))
-                if len(benchmark_rets) >= days
-                else np.nan
+                float(cum_returns_final(benchmark_rets.iloc[-days:])) if len(benchmark_rets) >= days else np.nan
             )
         bm_ytd = benchmark_rets[benchmark_rets.index >= _bm_ytd_ts]
         if len(bm_ytd) > 0:
-            bpr["YTD"] = float(Empyrical.cum_returns_final(bm_ytd))
-        bpr["Since Inception"] = float(Empyrical.cum_returns_final(benchmark_rets))
+            bpr["YTD"] = float(cum_returns_final(bm_ytd))
+        bpr["Since Inception"] = float(cum_returns_final(benchmark_rets))
         s["benchmark_period_returns"] = bpr
 
     wr = OrderedDict()
@@ -547,6 +592,46 @@ def _compute_summary_text(perf, benchmark_rets):
     return txt
 
 
+def _validate_returns_input(value, *, parameter):
+    """Own one finite, chronological report input without entering a facade."""
+
+    if not isinstance(value, pd.Series):
+        raise InputContractError("must be a pandas Series", operation_id="report.compute_sections", parameter=parameter)
+    if value.empty:
+        raise InputContractError(
+            "must contain at least one observation",
+            operation_id="report.compute_sections",
+            parameter=parameter,
+        )
+    if not isinstance(value.index, pd.DatetimeIndex):
+        raise InputContractError(
+            "must use a DatetimeIndex",
+            operation_id="report.compute_sections",
+            parameter=parameter,
+        )
+    if not value.index.is_unique or not value.index.is_monotonic_increasing:
+        raise InputContractError(
+            "index must be unique and increasing",
+            operation_id="report.compute_sections",
+            parameter=parameter,
+        )
+    try:
+        copied = value.astype(float).copy(deep=True)
+    except (TypeError, ValueError) as error:
+        raise InputContractError(
+            "must contain numeric values",
+            operation_id="report.compute_sections",
+            parameter=parameter,
+        ) from error
+    if not bool(np.isfinite(copied.to_numpy()).all()):
+        raise InputContractError(
+            "must contain only finite values",
+            operation_id="report.compute_sections",
+            parameter=parameter,
+        )
+    return copied
+
+
 def compute_sections(
     returns,
     benchmark_rets,
@@ -566,20 +651,19 @@ def compute_sections(
         A dict-compatible, structured model consumed by the HTML/PDF and
         other renderers.  Compute once here, render many times there.
     """
-    from fincore import Empyrical
-    from fincore.core.context import AnalysisContext
-
-    context = AnalysisContext(
-        returns,
-        factor_returns=benchmark_rets,
-        positions=positions,
-        transactions=transactions,
-        period=period,
+    returns = _validate_returns_input(returns, parameter="returns")
+    benchmark_rets = (
+        _validate_returns_input(benchmark_rets, parameter="benchmark_rets") if benchmark_rets is not None else None
     )
-    returns = context._returns
-    benchmark_rets = context._factor_returns
-    positions = context._positions
-    transactions = context._transactions
+    positions = positions.copy(deep=True) if positions is not None else None
+    transactions = transactions.copy(deep=True) if transactions is not None else None
+    gross_leverage = gross_lev(positions) if positions is not None else None
+    turnover = None
+    if positions is not None and transactions is not None:
+        try:
+            turnover = get_turnover(positions, transactions)
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as error:
+            logger.warning("Failed to calculate turnover from transactions: %s", error)
 
     sections = {}
 
@@ -600,40 +684,41 @@ def compute_sections(
     )
 
     # ------ Core performance ------
-    perf = _compute_core_perf(context, Empyrical, returns, benchmark_rets, period)
+    perf = _compute_core_perf(
+        returns,
+        benchmark_rets,
+        period,
+        positions=positions,
+        transactions=transactions,
+        gross_leverage=gross_leverage,
+        turnover=turnover,
+    )
     sections["perf_stats"] = perf
 
     # ------ Extended stats ------
-    sections["extended_stats"] = _compute_extended_stats(Empyrical, returns, period)
+    sections["extended_stats"] = _compute_extended_stats(returns, period)
 
     # ------ Time series ------
-    sections.update(_compute_time_series(Empyrical, returns, rolling_window, period))
+    sections.update(_compute_time_series(returns, rolling_window, period))
 
     # ------ Benchmark ------
     if benchmark_rets is not None:
-        sections.update(_compute_benchmark(Empyrical, returns, benchmark_rets, perf, rolling_window, period))
+        sections.update(_compute_benchmark(returns, benchmark_rets, perf, rolling_window, period))
 
     # ------ Positions ------
     if positions is not None:
-        sections.update(_compute_positions(positions, context.gross_leverage))
+        sections.update(_compute_positions(positions, gross_leverage))
 
     # ------ Transactions ------
     if transactions is not None:
-        sections.update(
-            _compute_transactions(
-                Empyrical,
-                transactions,
-                positions,
-                context.turnover if positions is not None else None,
-            )
-        )
+        sections.update(_compute_transactions(transactions, positions, turnover if positions is not None else None))
 
     # ------ Trades ------
     if trades is not None and len(trades) > 0:
         sections.update(_compute_trades(trades))
 
     # ------ Period returns ------
-    sections.update(_compute_period_returns(Empyrical, returns, benchmark_rets, period))
+    sections.update(_compute_period_returns(returns, benchmark_rets, period))
 
     # ------ Summary text ------
     sections["summary_text"] = _compute_summary_text(perf, benchmark_rets)

@@ -11,8 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.core.context import AnalysisContext
-from fincore.exceptions import NumericalError
+from fincore.exceptions import InputContractError
 from fincore.report.compute import compute_sections
 
 
@@ -74,30 +73,34 @@ class TestComputeSections:
         assert isinstance(sections, dict)
         assert len(sections) > 0
 
-    def test_core_performance_consumes_one_analysis_context_snapshot(self, daily_returns, monkeypatch):
-        calls = 0
-        original = AnalysisContext.perf_stats
+    def test_core_performance_consumes_direct_metric_kernel_once(self, daily_returns, monkeypatch):
+        import fincore.report.compute as report_compute
 
-        def recording(context):
+        calls = 0
+        original = report_compute.sharpe_ratio
+
+        def recording(*args, **kwargs):
             nonlocal calls
             calls += 1
-            return original(context)
+            return original(*args, **kwargs)
 
-        monkeypatch.setattr(AnalysisContext, "perf_stats", recording)
+        monkeypatch.setattr(report_compute, "sharpe_ratio", recording)
 
         sections = compute_sections(daily_returns, None, None, None, None, 126)
 
         assert calls == 1
-        assert sections["perf_stats"]["Sharpe Ratio"] == AnalysisContext(daily_returns).sharpe_ratio
+        assert sections["perf_stats"]["Sharpe Ratio"] == original(daily_returns)
 
     def test_report_uses_context_validation_profile(self, daily_returns):
         invalid = daily_returns.copy()
         invalid.iloc[3] = np.inf
 
-        with pytest.raises(NumericalError, match="finite"):
+        with pytest.raises(InputContractError, match="finite"):
             compute_sections(invalid, None, None, None, None, 126)
 
-    def test_report_reuses_context_leverage_and_turnover_once(self, daily_returns, monkeypatch):
+    def test_report_reuses_direct_leverage_and_turnover_once(self, daily_returns, monkeypatch):
+        import fincore.report.compute as report_compute
+
         positions = pd.DataFrame(
             {"AAA": 100.0, "cash": 50.0},
             index=daily_returns.index,
@@ -107,16 +110,19 @@ class TestComputeSections:
             index=pd.DatetimeIndex([daily_returns.index[3] + pd.Timedelta(hours=10)]),
         )
         calls = {"gross": 0, "turnover": 0}
-        original_metric = AnalysisContext._metric
+        original_gross = report_compute.gross_lev
+        original_turnover = report_compute.get_turnover
 
-        def recording(context, name, *args, **kwargs):
-            if name == "gross_leverage":
-                calls["gross"] += 1
-            elif name == "turnover":
-                calls["turnover"] += 1
-            return original_metric(context, name, *args, **kwargs)
+        def recording_gross(*args, **kwargs):
+            calls["gross"] += 1
+            return original_gross(*args, **kwargs)
 
-        monkeypatch.setattr(AnalysisContext, "_metric", recording)
+        def recording_turnover(*args, **kwargs):
+            calls["turnover"] += 1
+            return original_turnover(*args, **kwargs)
+
+        monkeypatch.setattr(report_compute, "gross_lev", recording_gross)
+        monkeypatch.setattr(report_compute, "get_turnover", recording_turnover)
 
         sections = compute_sections(daily_returns, None, positions, transactions, None, 126)
 

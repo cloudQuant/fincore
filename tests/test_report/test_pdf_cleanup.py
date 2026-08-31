@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 from PyPDF2 import PdfWriter
 
-from fincore.exceptions import ValidationError
+from fincore.exceptions import InputContractError
 from fincore.report.render_pdf import generate_pdf
 
 
@@ -127,7 +127,7 @@ def test_html_generation_failure_leaves_no_temp_files(tmp_path) -> None:
     out = tmp_path / "report.pdf"
     empty = pd.Series(dtype=float)
 
-    with pytest.raises(ValidationError, match="cannot be empty"):
+    with pytest.raises(InputContractError, match="at least one"):
         generate_pdf(
             empty,
             benchmark_rets=None,

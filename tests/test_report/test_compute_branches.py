@@ -98,16 +98,12 @@ def test_risk_tag_nan() -> None:
 
 
 def test_compute_extended_stats_weekly() -> None:
-    from fincore import Empyrical
-
-    ext = _compute_extended_stats(Empyrical, _returns(), "weekly")
+    ext = _compute_extended_stats(_returns(), "weekly")
     assert "Max Drawdown Weeks" in ext
 
 
 def test_compute_extended_stats_monthly() -> None:
-    from fincore import Empyrical
-
-    ext = _compute_extended_stats(Empyrical, _returns(), "monthly")
+    ext = _compute_extended_stats(_returns(), "monthly")
     assert "Max Drawdown Months" in ext
 
 
@@ -117,9 +113,7 @@ def test_compute_extended_stats_monthly() -> None:
 
 
 def test_compute_transactions_with_positions() -> None:
-    from fincore import Empyrical
-
-    result = _compute_transactions(Empyrical, _transactions(), _positions())
+    result = _compute_transactions(_transactions(), _positions())
     assert result["has_transactions"] is True
     assert "txn_hours" in result
     assert "Unique Symbols Traded" in result["txn_summary"]
@@ -177,19 +171,15 @@ def test_compute_sections_monthly_with_benchmark() -> None:
 
 
 def test_compute_transactions_without_symbol() -> None:
-    from fincore import Empyrical
-
     idx = pd.to_datetime(["2020-01-02 10:00", "2020-01-03 11:00"])
     transactions = pd.DataFrame({"amount": [10.0, -5.0], "price": [150.0, 152.0]}, index=idx)
-    result = _compute_transactions(Empyrical, transactions, None)
+    result = _compute_transactions(transactions, None)
     assert "Unique Symbols Traded" not in result["txn_summary"]
 
 
 def test_compute_transactions_with_turnover_provided() -> None:
-    from fincore import Empyrical
-
     turnover = pd.Series([0.1, 0.2], index=pd.date_range("2020-01-01", periods=2))
-    result = _compute_transactions(Empyrical, _transactions(), None, turnover=turnover)
+    result = _compute_transactions(_transactions(), None, turnover=turnover)
     assert "turnover" in result
 
 

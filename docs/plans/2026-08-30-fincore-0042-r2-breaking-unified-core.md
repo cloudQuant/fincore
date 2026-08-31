@@ -883,7 +883,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda
 
 1. 先把 `report/compute.py` 对 Empyrical/Pyfolio 的调用改为 canonical metrics/portfolio/factor operations。
 2. 统一 portfolio/factor/risk 报告的 compute model；renderer 不重复计算。
-3. 合并 ReportArtifacts、factor artifacts 和 results ArtifactBundle。
+3. 新 `report/**` renderer 一律只返回 `runtime.ArtifactBundle`；迁移期的 `ReportArtifacts` 只保留给尚未切换的旧入口/测试 oracle，禁止新 renderer 接收、返回或 bridge 该对象。其与 runtime 生命周期语义不等价（失败后的 close 语义不同），因此不做半兼容合并；Task 8 在旧入口清零时原子删除它。
 4. 对表格、章节、单位、series/legend、offline assets、PDF/XLSX 内容建立 normalized semantic golden。
 5. 分离 Matplotlib、HTML/PDF/XLSX、Plotly/Bokeh renderer；optional import 保持 lazy。
 6. 使用真实 Chromium/PDF lane 验证交互、资源和分页；Agg lane 验证数据与 ownership，不以像素完全相同作为唯一门。
@@ -899,9 +899,9 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda
 /Users/yunjinqi/opt/anaconda3/bin/conda run -n base python scripts/check_feature_parity.py --baseline docs/quality/0042-r2-capability-baseline.json --ledger tests/parity/fixtures/capability-ledger-0042-r2.json --families report viz
 ```
 
-**Acceptance:** report/viz scenario missing 0；renderer 重新计算金融指标次数 0；artifact double-close/leak 0；新 report 对旧 façade/tearsheets import 为 0；所有领域 `operations()` 已由 `runtime.builtins` 完整聚合，Catalog coverage 100%、重复 operation/fingerprint 0；core-only source/wheel Catalog 构建成功且 optional import leakage 0；D-DOMAIN 通过后旧 registries 冻结为只读 oracle。
+**Acceptance:** report/viz scenario missing 0；renderer 重新计算金融指标次数 0；artifact double-close/leak 0；新 report path 只使用 `runtime.ArtifactBundle`，对 `ReportArtifacts`、旧 façade/tearsheets import 为 0；旧对象不新增 consumer、只作为 Task 8 前的隔离 oracle；所有领域 `operations()` 已由 `runtime.builtins` 完整聚合，Catalog coverage 100%、重复 operation/fingerprint 0；core-only source/wheel Catalog 构建成功且 optional import leakage 0；D-DOMAIN 通过后旧 registries 冻结为只读 oracle。
 
-**Rollback:** 回滚完整 reporting tranche；不得保留两套 ArtifactBundle。
+**Rollback:** 回滚完整 reporting tranche；不得让新 report path 回退到旧 artifact 对象，也不得在 Task 8 前修改旧对象的生命周期语义。
 
 **Suggested commit:** `refactor: unify report models renderers and artifacts`
 

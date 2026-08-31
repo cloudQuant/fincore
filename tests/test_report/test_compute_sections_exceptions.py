@@ -1,10 +1,11 @@
 import pandas as pd
 
-import fincore
 from fincore.report.compute import compute_sections
 
 
-def test_compute_sections_handles_turnover_and_leverage_exceptions(monkeypatch) -> None:
+def test_compute_sections_handles_turnover_exception_without_a_facade(monkeypatch) -> None:
+    import fincore.report.compute as report_compute
+
     idx = pd.date_range("2024-01-01", periods=80, freq="B", tz="UTC")
     returns = pd.Series([0.001 if (i % 2 == 0) else -0.0008 for i in range(len(idx))], index=idx, name="strategy")
 
@@ -15,8 +16,7 @@ def test_compute_sections_handles_turnover_and_leverage_exceptions(monkeypatch) 
     def _boom(*_args, **_kwargs):
         raise ValueError("boom")
 
-    monkeypatch.setattr(fincore.Empyrical, "get_turnover", staticmethod(_boom))
-    monkeypatch.setattr(fincore.Empyrical, "gross_lev", staticmethod(_boom))
+    monkeypatch.setattr(report_compute, "get_turnover", _boom)
 
     s = compute_sections(
         returns=returns,
@@ -34,10 +34,12 @@ def test_compute_sections_handles_turnover_and_leverage_exceptions(monkeypatch) 
 
 
 def test_compute_sections_summary_text_handles_nan_drawdown(monkeypatch) -> None:
+    import fincore.report.compute as report_compute
+
     idx = pd.date_range("2024-01-01", periods=80, freq="B", tz="UTC")
     returns = pd.Series([0.001 if (i % 2 == 0) else -0.0008 for i in range(len(idx))], index=idx, name="strategy")
 
-    monkeypatch.setattr(fincore.Empyrical, "max_drawdown", staticmethod(lambda _r: float("nan")))
+    monkeypatch.setattr(report_compute, "max_drawdown", lambda _r: float("nan"))
 
     s = compute_sections(
         returns=returns,

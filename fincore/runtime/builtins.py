@@ -23,6 +23,7 @@ _BUILTIN_PROVIDER_PATHS: tuple[str, ...] = (
     "fincore.extensions.operations:operations",
     "fincore.risk.operations:operations",
     "fincore.attribution.operations:operations",
+    "fincore.report.operations:operations",
 )
 
 
