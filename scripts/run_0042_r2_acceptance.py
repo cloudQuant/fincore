@@ -1343,6 +1343,12 @@ def _artifact_json(bundle: dict, name: str) -> dict:
     return _read_json(bundle["artifacts"][name], f"D0 {name} artifact")
 
 
+def _architecture_validation_passed(validation: dict) -> bool:
+    """Match the exact status field emitted by the frozen architecture checker."""
+
+    return validation.get("status") == "passed"
+
+
 def _run_architecture_gate(
     args: argparse.Namespace,
     bundle: dict,
@@ -1402,7 +1408,7 @@ def _run_architecture_gate(
         return {"command": record, "verdict": "FAIL"}
     candidate_artifact = _read_json(capture, "candidate architecture capture")
     validation = _require_mapping(candidate_artifact.get("baseline_validation"), "candidate architecture baseline_validation")
-    if validation.get("verdict") != "PASS":
+    if not _architecture_validation_passed(validation):
         return {"command": record, "validation": validation, "verdict": "FAIL"}
     legacy = _legacy_source_probe(candidate_root)
     if legacy["verdict"] != "PASS":

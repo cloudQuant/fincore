@@ -350,3 +350,13 @@ def test_materialized_baseline_cleanup_rejects_an_untrusted_path(tmp_path: Path)
 
     with pytest.raises(runner.RunnerBlockedError, match="runner-owned"):
         runner._cleanup_materialized_source(source_root)
+
+
+def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:
+    """The detached runner consumes the checker's documented lowercase status."""
+
+    runner = _load_runner_module()
+
+    assert runner._architecture_validation_passed({"status": "passed"})
+    assert not runner._architecture_validation_passed({"status": "failed"})
+    assert not runner._architecture_validation_passed({"verdict": "PASS"})
