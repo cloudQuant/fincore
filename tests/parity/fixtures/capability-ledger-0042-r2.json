@@ -2,6 +2,26 @@
   "artifact_type": "capability_ledger",
   "coverage_gaps": [
     {
+      "capability_id": "attribution.brinson",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "attribution.ff_factor_provider",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "attribution.performance.plot_factor_contribution_to_perf",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "attribution.performance.show_profit_attribution",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "attribution.style_factor_provider",
+      "reason": "no_source_nodeid"
+    },
+    {
       "capability_id": "factor.analysis.apply_factor_costs",
       "reason": "no_source_nodeid"
     },
@@ -130,6 +150,18 @@
       "reason": "no_source_nodeid"
     },
     {
+      "capability_id": "optimization.optimization_error",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "optimization.optimize",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "optimization.risk_parity",
+      "reason": "no_source_nodeid"
+    },
+    {
       "capability_id": "performance.cashflow.cashflow_adjusted_returns",
       "reason": "no_source_nodeid"
     },
@@ -164,7 +196,77 @@
     {
       "capability_id": "performance.inference.standard_error_of_mean",
       "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "portfolio.perf_stats.plot_perf_stats",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "portfolio.perf_stats.show_worst_drawdown_periods",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "portfolio.positions.show_and_plot_top_positions",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "portfolio.round_trips.print_round_trip_stats",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.basel_reference_disclosure",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.build_risk_validation_report",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.evt",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.risk_backtest_result",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.risk_model_spec",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.risk_validation_report",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.risk_validation_report_schema_version",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.walk_forward_va_r_result",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.walk_forward_validation",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "risk.walk_forward_var",
+      "reason": "no_source_nodeid"
+    },
+    {
+      "capability_id": "simulation.monte_carlo",
+      "reason": "no_source_nodeid"
     }
+  ],
+  "covered_families": [
+    "attribution",
+    "factor",
+    "metrics",
+    "optimization",
+    "performance",
+    "portfolio",
+    "risk",
+    "simulation"
   ],
   "decision_status": "scoped",
   "does_not_assert": [
@@ -174,6 +276,441 @@
     "legacy_zero"
   ],
   "entries": [
+    {
+      "capability_id": "attribution.analyze_performance_by_style",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Sharpe, W. F. (1992). Asset allocation: management style and performance measurement. Journal of Portfolio Management.",
+            "reference": "style-based performance decomposition"
+          },
+          "oracle_reference": "style-based performance decomposition",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_analyze_performance_by_style_returns_empty_when_exposures_empty",
+        "tests/test_attribution/test_performance_by_style.py::TestAnalyzePerformanceByStyle::test_analyze_performance_by_style_basic",
+        "tests/test_attribution/test_performance_by_style.py::TestAnalyzePerformanceByStyle::test_analyze_performance_by_style_empty_returns"
+      ],
+      "target_operation_id": "attribution.analyze_performance_by_style",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_analyze_performance_by_style"
+      ]
+    },
+    {
+      "capability_id": "attribution.brinson_attribution",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Brinson, G. P., Hood, L. R., & Beebower, G. L. (1986). Determinants of portfolio performance. Financial Analysts Journal.",
+            "reference": "Brinson attribution decomposition"
+          },
+          "oracle_reference": "Brinson attribution decomposition",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_apply_sector_mapping_rejects_bad_agg",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_bhb_identity_holds",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_class_creates_equal_weights_when_missing",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_class_method_validation",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_class_sector_mapping_aggregates_columns",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_class_sector_mapping_with_benchmark_returns",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_repr_includes_sector_count",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_residual_branch_via_monkeypatch",
+        "tests/test_attribution/test_brinson.py::test_brinson_attribution_shape_mismatch_raises"
+      ],
+      "target_operation_id": "attribution.brinson_attribution",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_brinson_attribution"
+      ]
+    },
+    {
+      "capability_id": "attribution.brinson_cumulative",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Brinson, G. P., Hood, L. R., & Beebower, G. L. (1986). Determinants of portfolio performance. Financial Analysts Journal.",
+            "reference": "cumulative Brinson attribution"
+          },
+          "oracle_reference": "cumulative Brinson attribution",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_attribution_reference_oracles.py::TestBrinsonLinking::test_brinson_cumulative_matches_carino_oracle",
+        "tests/numerical/test_attribution_reference_oracles.py::TestBrinsonLinking::test_brinson_cumulative_near_loss_boundary_matches_decimal_reference",
+        "tests/numerical/test_attribution_reference_oracles.py::TestBrinsonLinking::test_brinson_cumulative_reconciles_to_absolute_cumulative_active_return",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_accepts_total_loss_components_when_aggregate_returns_are_valid",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_handles_equal_return_period_without_nan",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_near_loss_boundary_preserves_absolute_active_return",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[benchmark--inf]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[benchmark-inf]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[benchmark-nan]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[portfolio--inf]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[portfolio-inf]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_nonfinite_component_returns[portfolio-nan]",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_rejects_weighted_period_return_at_or_below_total_loss",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_shape_mismatch_raises",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_single_period_from_1d_inputs",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_single_period_preserves_absolute_active_return",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_uses_carino_linking_and_reports_absolute_cumulative_active_return",
+        "tests/test_attribution/test_brinson.py::test_brinson_cumulative_zero_cumulative_active_return_is_finite"
+      ],
+      "target_operation_id": "attribution.brinson_cumulative",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_brinson_cumulative"
+      ]
+    },
+    {
+      "capability_id": "attribution.brinson_hood",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Brinson, G. P., Hood, L. R., & Beebower, G. L. (1986). Determinants of portfolio performance. Financial Analysts Journal.",
+            "reference": "Brinson-Hood-Beebower attribution"
+          },
+          "oracle_reference": "Brinson-Hood-Beebower attribution",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_brinson.py::test_brinson_hood_method_is_a_bhb_alias_with_independent_oracle"
+      ],
+      "target_operation_id": "attribution.brinson_hood",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_brinson_hood"
+      ]
+    },
+    {
+      "capability_id": "attribution.brinson_results",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Brinson, G. P., Hood, L. R., & Beebower, G. L. (1986). Determinants of portfolio performance. Financial Analysts Journal.",
+            "reference": "Brinson attribution result schema"
+          },
+          "oracle_reference": "Brinson attribution result schema",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_brinson.py::test_brinson_results_multiple_periods",
+        "tests/test_attribution/test_brinson.py::test_brinson_results_single_period_from_1d_inputs"
+      ],
+      "target_operation_id": "attribution.brinson_results",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_brinson_results"
+      ]
+    },
+    {
+      "capability_id": "attribution.calculate_regression_attribution",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Fama, E. F., & French, K. R. (1993). Common risk factors in the returns on stocks and bonds. Journal of Financial Economics.",
+            "reference": "factor regression attribution"
+          },
+          "oracle_reference": "factor regression attribution",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/coverage/test_regression_attrib_coverage.py::TestCalculateRegressionAttributionCoverage::test_calculate_regression_attribution_raises_when_missing_style_inputs_for_series",
+        "tests/test_attribution/coverage/test_regression_attrib_coverage.py::TestCalculateRegressionAttributionCoverage::test_calculate_regression_attribution_skip_and_short_series_branches"
+      ],
+      "target_operation_id": "attribution.calculate_regression_attribution",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_calculate_regression_attribution"
+      ]
+    },
+    {
+      "capability_id": "attribution.calculate_style_tilts",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Sharpe, W. F. (1992). Asset allocation: management style and performance measurement. Journal of Portfolio Management.",
+            "reference": "style tilt estimation"
+          },
+          "oracle_reference": "style tilt estimation",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/coverage/test_style_tilts_coverage.py::TestCalculateStyleTiltsCoverage::test_calculate_style_tilts_effective_window_too_small_returns_empty",
+        "tests/test_attribution/test_style_tilts.py::TestCalculateStyleTilts::test_calculate_style_tilts_basic",
+        "tests/test_attribution/test_style_tilts.py::TestCalculateStyleTilts::test_calculate_style_tilts_columns"
+      ],
+      "target_operation_id": "attribution.calculate_style_tilts",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_calculate_style_tilts"
+      ]
+    },
+    {
+      "capability_id": "attribution.exposure.compute_cap_exposures",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.exposure.compute_cap_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.exposure.compute_cap_exposures"
+          },
+          "oracle_reference": "invariant contract attribution.exposure.compute_cap_exposures.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_positions_metrics.py::test_compute_cap_exposures_returns_frozen_bucket_order"
+      ],
+      "target_operation_id": "attribution.exposure.compute_cap_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_compute_cap_exposures"
+      ]
+    },
+    {
+      "capability_id": "attribution.exposure.compute_sector_exposures",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.exposure.compute_sector_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.exposure.compute_sector_exposures"
+          },
+          "oracle_reference": "invariant contract attribution.exposure.compute_sector_exposures.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_positions_metrics.py::test_compute_sector_exposures_returns_named_normalized_bundle"
+      ],
+      "target_operation_id": "attribution.exposure.compute_sector_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_compute_sector_exposures"
+      ]
+    },
+    {
+      "capability_id": "attribution.exposure.compute_volume_exposures",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.exposure.compute_volume_exposures.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.exposure.compute_volume_exposures"
+          },
+          "oracle_reference": "invariant contract attribution.exposure.compute_volume_exposures.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_positions_metrics.py::test_compute_volume_exposures_returns_named_percentile_series"
+      ],
+      "target_operation_id": "attribution.exposure.compute_volume_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_compute_volume_exposures"
+      ]
+    },
+    {
+      "capability_id": "attribution.fama_french_model",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Fama, E. F., & French, K. R. (1993). Common risk factors in the returns on stocks and bonds. Journal of Financial Economics.",
+            "reference": "Fama-French factor model"
+          },
+          "oracle_reference": "Fama-French factor model",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/test_fama_french_patch.py::test_fama_french_model_patch_sets_factors_3factor",
+        "tests/test_attribution/test_fama_french_patch.py::test_fama_french_model_patch_sets_factors_4factor_mom",
+        "tests/test_attribution/test_fama_french_patch.py::test_fama_french_model_patch_sets_factors_5factor",
+        "tests/test_attribution/test_fama_french_patch.py::test_fama_french_model_patch_unknown_type_raises"
+      ],
+      "target_operation_id": "attribution.fama_french_model",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_fama_french_model"
+      ]
+    },
+    {
+      "capability_id": "attribution.performance.compute_exposures",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.compute_exposures",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:perf_attrib.py:compute_exposures",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[compute_exposures]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[compute_exposures]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[compute_exposures]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[compute_exposures]",
+        "tests/test_metrics/test_perf_attrib_more_coverage.py::test_compute_exposures_internal_requires_inputs",
+        "tests/test_metrics/test_perf_attrib_more_coverage.py::test_compute_exposures_wrapper_delegates"
+      ],
+      "target_operation_id": "attribution.performance.compute_exposures",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_compute_exposures"
+      ]
+    },
+    {
+      "capability_id": "attribution.performance.perf_attrib",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.perf_attrib",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:perf_attrib.py:perf_attrib",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[perf_attrib]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[perf_attrib]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[perf_attrib]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[perf_attrib]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalStatefulMethods::test_perf_attrib_stateful_resolution",
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_perf_attrib_with_instance_state",
+        "tests/test_empyrical/test_perf_attrib.py::PerfAttribTestCase::test_perf_attrib_regression",
+        "tests/test_empyrical/test_perf_attrib.py::PerfAttribTestCase::test_perf_attrib_simple",
+        "tests/test_metrics/test_perf_attrib_more_coverage.py::test_perf_attrib_core_requires_inputs",
+        "tests/test_metrics/test_perf_attrib_more_coverage.py::test_perf_attrib_core_tilt_returns_non_dataframe_branch_via_custom_dataframe_subclass",
+        "tests/test_metrics/test_perf_attrib_more_coverage.py::test_perf_attrib_requires_positions_factor_returns_factor_loadings",
+        "tests/test_pyfolio/perf_attrib/test_perf_attrib_regression.py::TestPerfAttribRegression::test_perf_attrib_regression",
+        "tests/test_pyfolio/perf_attrib/test_perf_attrib_simple.py::TestPerfAttribSimple::test_perf_attrib_simple",
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_perf_attrib_plot_helpers_smoke"
+      ],
+      "target_operation_id": "attribution.performance.perf_attrib",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_perf_attrib"
+      ]
+    },
+    {
+      "capability_id": "attribution.performance.show_perf_attrib_stats",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.performance.show_perf_attrib_stats.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.performance.show_perf_attrib_stats"
+          },
+          "oracle_reference": "invariant contract attribution.performance.show_perf_attrib_stats.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_perf_attrib_tearsheet.py::test_show_perf_attrib_stats_calls_print_table"
+      ],
+      "target_operation_id": "attribution.performance.show_perf_attrib_stats",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_show_perf_attrib_stats"
+      ]
+    },
+    {
+      "capability_id": "attribution.style_analysis",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Sharpe, W. F. (1992). Asset allocation: management style and performance measurement. Journal of Portfolio Management.",
+            "reference": "returns-based style analysis"
+          },
+          "oracle_reference": "returns-based style analysis",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/coverage/test_style_analysis_coverage.py::TestStyleAnalysisCoverage::test_style_analysis_value_scores_branch",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_analysis_basic",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_analysis_invalid_size_quantiles_raises",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_analysis_with_book_to_price",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_analysis_with_market_caps"
+      ],
+      "target_operation_id": "attribution.style_analysis",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_style_analysis"
+      ]
+    },
+    {
+      "capability_id": "attribution.style_result",
+      "disposition": "required",
+      "owner": "attribution",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "attribution.style_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for attribution.style_result"
+          },
+          "oracle_reference": "invariant contract attribution.style_result.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_dataframe_no_return_column",
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_empty_dataframe_in_summary",
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_empty_series_in_summary",
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_return_column_in_index",
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_series_no_return_in_index",
+        "tests/test_attribution/coverage/test_style_result_summary.py::TestStyleResultStyleSummary::test_style_result_style_summary_series_and_dataframe_variants",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_result_style_summary",
+        "tests/test_attribution/test_style_analysis.py::TestStyleAnalysis::test_style_result_to_dict"
+      ],
+      "target_operation_id": "attribution.style_result",
+      "wheel_nodeids": [
+        "tests/parity/test_attribution.py::test_style_result"
+      ]
+    },
     {
       "capability_id": "factor.analysis.analyze_factor",
       "disposition": "required",
@@ -2547,7 +3084,6 @@
       ],
       "source_nodeids": [
         "tests/compat/empyrical/test_numeric_contracts.py::test_legacy_annual_volatility_honors_all_period_constants[daily-0.3519943181359608]",
-        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_daily_value_at_risk",
         "tests/test_metrics/test_drawdown_detailed.py::TestMaxDrawdown::test_daily_returns",
         "tests/test_pyfolio/test_capacity.py::CapacityTestCase::test_daily_txns_with_bar_data"
       ],
@@ -4667,6 +5203,31 @@
       ]
     },
     {
+      "capability_id": "optimization.efficient_frontier",
+      "disposition": "required",
+      "owner": "optimization",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Markowitz, H. (1952). Portfolio selection. Journal of Finance.",
+            "reference": "mean-variance efficient frontier"
+          },
+          "oracle_reference": "mean-variance efficient frontier",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_optimization/test_frontier_missing_coverage.py::TestEfficientFrontierMissingCoverage::test_efficient_frontier_different_risk_free",
+        "tests/test_optimization/test_frontier_missing_coverage.py::TestEfficientFrontierMissingCoverage::test_efficient_frontier_two_assets",
+        "tests/test_optimization/test_frontier_missing_coverage.py::TestEfficientFrontierMissingCoverage::test_efficient_frontier_with_normal_returns"
+      ],
+      "target_operation_id": "optimization.efficient_frontier",
+      "wheel_nodeids": [
+        "tests/parity/test_optimization.py::test_efficient_frontier"
+      ]
+    },
+    {
       "capability_id": "performance.cashflow.mwr",
       "disposition": "required",
       "owner": "performance",
@@ -4759,11 +5320,690 @@
       "wheel_nodeids": [
         "tests/parity/test_performance.py::test_xirr"
       ]
+    },
+    {
+      "capability_id": "portfolio.perf_stats.show_perf_stats",
+      "disposition": "required",
+      "owner": "portfolio",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "portfolio.perf_stats.show_perf_stats.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for portfolio.perf_stats.show_perf_stats"
+          },
+          "oracle_reference": "invariant contract portfolio.perf_stats.show_perf_stats.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_tearsheets/test_returns_more_coverage.py::test_show_perf_stats_live_split_and_header_rows"
+      ],
+      "target_operation_id": "portfolio.perf_stats.show_perf_stats",
+      "wheel_nodeids": [
+        "tests/parity/test_portfolio.py::test_show_perf_stats"
+      ]
+    },
+    {
+      "capability_id": "risk.backtest_es",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Acerbi, C., & Szekely, B. (2014). Back-testing expected shortfall. Risk Magazine.",
+            "reference": "expected shortfall backtest"
+          },
+          "oracle_reference": "expected shortfall backtest",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/test_backtesting.py::test_backtest_es_reports_experimental_status"
+      ],
+      "target_operation_id": "risk.backtest_es",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_backtest_es"
+      ]
+    },
+    {
+      "capability_id": "risk.backtest_var",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Kupiec, P. H. (1995). Techniques for verifying the accuracy of risk measurement models. Journal of Derivatives.",
+            "reference": "unconditional VaR coverage backtest"
+          },
+          "oracle_reference": "unconditional VaR coverage backtest",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_backtest_var_walk_forward"
+      ],
+      "target_operation_id": "risk.backtest_var",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_backtest_var"
+      ]
+    },
+    {
+      "capability_id": "risk.conditional_var",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.conditional_var.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for risk.conditional_var"
+          },
+          "oracle_reference": "invariant contract risk.conditional_var.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_metrics/test_risk_complete.py::TestConditionalValueAtRiskEdgeCases::test_conditional_var_different_cutoffs",
+        "tests/test_metrics/test_risk_complete.py::TestConditionalValueAtRiskEdgeCases::test_conditional_var_no_observations",
+        "tests/test_risk/risk_models/test_garch.py::TestConditionalVar::test_conditional_var_garch",
+        "tests/test_risk/risk_models/test_garch.py::TestConditionalVar::test_conditional_var_gjr",
+        "tests/test_risk/test_garch_detailed.py::TestConditionalVar::test_conditional_var_different_alpha",
+        "tests/test_risk/test_garch_detailed.py::TestConditionalVar::test_conditional_var_garch"
+      ],
+      "target_operation_id": "risk.conditional_var",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_conditional_var"
+      ]
+    },
+    {
+      "capability_id": "risk.egarch",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Nelson, D. B. (1991). Conditional heteroskedasticity in asset returns: a new approach. Econometrica.",
+            "reference": "exponential GARCH model"
+          },
+          "oracle_reference": "exponential GARCH model",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_reference_oracles.py::TestGARCHFamilyIdentity::test_egarch_fit_uses_conditionally_standardized_innovations",
+        "tests/numerical/test_risk_reference_oracles.py::TestGARCHFamilyIdentity::test_egarch_rejects_unsupported_order",
+        "tests/test_risk/risk_models/test_garch.py::TestEGARCH::test_egarch_fit",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_fit",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_forecast",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_insufficient_data",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_likelihood_penalizes_an_overflowing_candidate",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_rejects_nonpositive_or_nonfinite_initial_variance[returns0]",
+        "tests/test_risk/test_garch_detailed.py::TestEGARCH::test_egarch_rejects_nonpositive_or_nonfinite_initial_variance[returns1]"
+      ],
+      "target_operation_id": "risk.egarch",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_egarch"
+      ]
+    },
+    {
+      "capability_id": "risk.evt_cvar",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "McNeil, A. J., & Frey, R. (2000). Estimation of tail-related risk measures for financial time series. Journal of Empirical Finance.",
+            "reference": "EVT conditional value-at-risk estimate"
+          },
+          "oracle_reference": "EVT conditional value-at-risk estimate",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_coverage_gaps.py::TestEvtEdgeCases::test_evt_cvar_unknown_model",
+        "tests/test_final_coverage_edges.py::TestEVTFinalEdgeCases::test_evt_cvar_unknown_model",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gev_gumbel_case",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gev_gumbel_case_line_440",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gev_near_zero_xi_branch",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gev_xi_ge_1_raises",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gev_xi_ge_1_raises_line_445",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gpd_exponential_case",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gpd_exponential_case_line_420",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gpd_near_zero_xi_branch",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_gpd_xi_ge_1_raises_line_425",
+        "tests/test_risk/evt/test_evt_cvar.py::TestEVTCVArEdgeCases::test_evt_cvar_unknown_model_line_447",
+        "tests/test_risk/evt/test_evt_nan.py::TestEVTWithNanData::test_evt_cvar_with_nans",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_evt_cvar_gev_general_case",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_evt_cvar_gev_gumbel_case",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_evt_cvar_gpd_xi_ge_1_raises",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_evt_cvar_unknown_model"
+      ],
+      "target_operation_id": "risk.evt_cvar",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_evt_cvar"
+      ]
+    },
+    {
+      "capability_id": "risk.evt_var",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "McNeil, A. J., & Frey, R. (2000). Estimation of tail-related risk measures for financial time series. Journal of Empirical Finance.",
+            "reference": "EVT value-at-risk estimate"
+          },
+          "oracle_reference": "EVT value-at-risk estimate",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/evt/test_evt_nan.py::TestEVTWithNanData::test_evt_var_with_nans",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gev_gumbel_case",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gev_gumbel_case_line_354",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gev_near_zero_xi_branch",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gpd_exponential_case",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gpd_exponential_case_line_335",
+        "tests/test_risk/evt/test_evt_var.py::TestEVTVarEdgeCases::test_evt_var_gpd_near_zero_xi_branch"
+      ],
+      "target_operation_id": "risk.evt_var",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_evt_var"
+      ]
+    },
+    {
+      "capability_id": "risk.extreme_risk",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "McNeil, A. J., & Frey, R. (2000). Estimation of tail-related risk measures for financial time series. Journal of Empirical Finance.",
+            "reference": "combined extreme risk estimate"
+          },
+          "oracle_reference": "combined extreme risk estimate",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_optimization/test_edge_cases.py::TestOptimizationEdgeCases::test_extreme_risk_budget",
+        "tests/test_optimization/test_optimization.py::TestOptimizationEdgeCases::test_extreme_risk_budget"
+      ],
+      "target_operation_id": "risk.extreme_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_extreme_risk"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast.conditional_value_at_risk",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.conditional_value_at_risk",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:conditional_value_at_risk",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[conditional_value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[conditional_value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[conditional_value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[conditional_value_at_risk]",
+        "tests/test_empyrical/stats/test_var.py::TestValueAtRisk::test_conditional_value_at_risk",
+        "tests/test_metrics/test_coverage_branches.py::test_conditional_value_at_risk_invalid_cutoff[-0.1]",
+        "tests/test_metrics/test_coverage_branches.py::test_conditional_value_at_risk_invalid_cutoff[1.1]",
+        "tests/test_metrics/test_coverage_branches.py::test_conditional_value_at_risk_nonfinite_returns"
+      ],
+      "target_operation_id": "risk.forecast.conditional_value_at_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_conditional_value_at_risk"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast.daily_value_at_risk",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Standard loss-quantile definition at the stated confidence level",
+            "reference": "daily value-at-risk quantile",
+            "version": "textbook"
+          },
+          "oracle_reference": "daily value-at-risk quantile",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_core/test_context.py::TestAnalysisContextBasic::test_daily_value_at_risk"
+      ],
+      "target_operation_id": "risk.forecast.daily_value_at_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_daily_value_at_risk"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast.gpd_risk_estimates",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.gpd_risk_estimates",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:gpd_risk_estimates",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[gpd_risk_estimates]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[gpd_risk_estimates]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[gpd_risk_estimates]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[gpd_risk_estimates]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_gpd_risk_estimates",
+        "tests/test_empyrical/test_missing_coverage.py::EmpyricalMissingCoverageTestCase::test_gpd_risk_estimates",
+        "tests/test_metrics/test_coverage_branches.py::test_gpd_risk_estimates_short_ndarray",
+        "tests/test_metrics/test_coverage_branches.py::test_gpd_risk_estimates_short_series",
+        "tests/test_metrics/test_coverage_branches.py::test_gpd_risk_estimates_valid_series",
+        "tests/test_metrics/test_risk_more_coverage.py::test_gpd_risk_estimates_covers_attributeerror_fallback_and_scale_only_path"
+      ],
+      "target_operation_id": "risk.forecast.gpd_risk_estimates",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_gpd_risk_estimates"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast.gpd_risk_estimates_aligned",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.gpd_risk_estimates_aligned",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:gpd_risk_estimates_aligned",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[gpd_risk_estimates_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[gpd_risk_estimates_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[gpd_risk_estimates_aligned]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[gpd_risk_estimates_aligned]",
+        "tests/test_empyrical/test_empyrical_wrapper_coverage.py::TestEmpyricalWrapperMethods::test_gpd_risk_estimates_aligned"
+      ],
+      "target_operation_id": "risk.forecast.gpd_risk_estimates_aligned",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_gpd_risk_estimates_aligned"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast.value_at_risk",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "artifact_digest": "git-commit:74655e974ed2935563820c548c339731f1fe0621",
+            "kind": "pinned_upstream_oracle",
+            "reference": "empyrical.value_at_risk",
+            "source_project": "empyrical",
+            "version": "0.6.0"
+          },
+          "oracle_reference": "empyrical@74655e974ed2:stats.py:value_at_risk",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_enforces_positional_arity_at_call_time[value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_has_frozen_signature[value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_every_legacy_callable_rejects_missing_required_arguments[value_at_risk]",
+        "tests/compat/empyrical/test_signatures.py::test_non_variadic_legacy_callables_reject_unexpected_keyword[value_at_risk]",
+        "tests/test_empyrical/stats/test_var.py::TestValueAtRisk::test_value_at_risk",
+        "tests/test_metrics/test_coverage_branches.py::test_value_at_risk_invalid_cutoff[-0.1]",
+        "tests/test_metrics/test_coverage_branches.py::test_value_at_risk_invalid_cutoff[1.1]",
+        "tests/test_metrics/test_coverage_branches.py::test_value_at_risk_nonfinite_returns",
+        "tests/test_metrics/test_risk_complete.py::TestValueAtRiskEdgeCases::test_value_at_risk_different_cutoffs",
+        "tests/test_metrics/test_risk_complete.py::TestValueAtRiskEdgeCases::test_value_at_risk_no_observations",
+        "tests/test_metrics/test_risk_more_coverage.py::test_value_at_risk_empty_returns_nan"
+      ],
+      "target_operation_id": "risk.forecast.value_at_risk",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_value_at_risk"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast_es",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Acerbi, C., & Tasche, D. (2002). On the coherence of expected shortfall. Journal of Banking and Finance.",
+            "reference": "expected shortfall forecast average beyond quantile"
+          },
+          "oracle_reference": "expected shortfall forecast average beyond quantile",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/test_models.py::test_forecast_es_evt_and_garch",
+        "tests/test_risk/test_models.py::test_forecast_es_insufficient_data_status",
+        "tests/test_risk/test_models.py::test_forecast_es_is_more_extreme_than_var_for_historical",
+        "tests/test_risk/test_models.py::test_forecast_es_rejects_unknown_method"
+      ],
+      "target_operation_id": "risk.forecast_es",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_forecast_es"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast_var",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Standard loss-quantile definition at the stated confidence level",
+            "reference": "value-at-risk forecast quantile",
+            "version": "textbook"
+          },
+          "oracle_reference": "value-at-risk forecast quantile",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/property/test_risk_invariants.py::test_forecast_var_does_not_mutate_input",
+        "tests/property/test_risk_invariants.py::test_forecast_var_matches_empirical_quantile",
+        "tests/test_risk/test_models.py::test_forecast_var_evt_and_garch_match_legacy_kernels",
+        "tests/test_risk/test_models.py::test_forecast_var_historical_is_negative_and_losses_negative",
+        "tests/test_risk/test_models.py::test_forecast_var_insufficient_data_status",
+        "tests/test_risk/test_models.py::test_forecast_var_rejects_duplicate_index",
+        "tests/test_risk/test_models.py::test_forecast_var_rejects_non_series",
+        "tests/test_risk/test_models.py::test_forecast_var_rejects_unknown_method",
+        "tests/test_risk/test_models.py::test_forecast_var_rejects_unsorted_index"
+      ],
+      "target_operation_id": "risk.forecast_var",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_forecast_var"
+      ]
+    },
+    {
+      "capability_id": "risk.forecast_volatility",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.forecast_volatility.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for risk.forecast_volatility"
+          },
+          "oracle_reference": "invariant contract risk.forecast_volatility.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/test_garch_detailed.py::TestForecastVolatility::test_forecast_volatility_egarch",
+        "tests/test_risk/test_garch_detailed.py::TestForecastVolatility::test_forecast_volatility_garch",
+        "tests/test_risk/test_garch_detailed.py::TestForecastVolatility::test_forecast_volatility_gjr_garch",
+        "tests/test_risk/test_garch_detailed.py::TestForecastVolatility::test_forecast_volatility_unknown_model"
+      ],
+      "target_operation_id": "risk.forecast_volatility",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_forecast_volatility"
+      ]
+    },
+    {
+      "capability_id": "risk.garch",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Bollerslev, T. (1986). Generalized autoregressive conditional heteroskedasticity. Journal of Econometrics.",
+            "reference": "generalized autoregressive conditional heteroskedasticity model"
+          },
+          "oracle_reference": "generalized autoregressive conditional heteroskedasticity model",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestRiskModelSpec::test_rejects_unsupported_or_invalid_model_contract[distribution-garch-distribution]",
+        "tests/numerical/test_risk_reference_oracles.py::TestGARCHFamilyIdentity::test_garch_rejects_unsupported_order",
+        "tests/numerical/test_risk_reference_oracles.py::TestVarEsForecastPair::test_garch_es_strictly_more_extreme_than_var",
+        "tests/test_risk/risk_models/test_garch.py::TestGARCH::test_garch_conditional_var",
+        "tests/test_risk/risk_models/test_garch.py::TestGARCH::test_garch_fit",
+        "tests/test_risk/risk_models/test_garch.py::TestGARCH::test_garch_forecast",
+        "tests/test_risk/risk_models/test_garch.py::TestGARCH::test_garch_insufficient_data_raises"
+      ],
+      "target_operation_id": "risk.garch",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_garch"
+      ]
+    },
+    {
+      "capability_id": "risk.gev_fit",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Fisher, R. A., & Tippett, L. H. C. (1928). Limiting forms of the frequency distribution of the largest and smallest member of a sample.",
+            "reference": "generalized extreme value block maxima fit"
+          },
+          "oracle_reference": "generalized extreme value block maxima fit",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/evt/test_evt_nan.py::TestEVTWithNanData::test_gev_fit_with_nans"
+      ],
+      "target_operation_id": "risk.gev_fit",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_gev_fit"
+      ]
+    },
+    {
+      "capability_id": "risk.gjrgarch",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Glosten, L. R., Jagannathan, R., & Runkle, D. E. (1993). On the relation between the expected value and the volatility of the nominal excess return on stocks. Journal of Finance.",
+            "reference": "GJR-GARCH leverage model"
+          },
+          "oracle_reference": "GJR-GARCH leverage model",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/risk_models/test_garch.py::TestGJRGARCH::test_gjr_garch_fit",
+        "tests/test_risk/risk_models/test_garch.py::TestGJRGARCH::test_gjr_garch_leverage_effect",
+        "tests/test_risk/test_garch_detailed.py::TestGJRGARCH::test_gjr_garch_fit",
+        "tests/test_risk/test_garch_detailed.py::TestGJRGARCH::test_gjr_garch_forecast",
+        "tests/test_risk/test_garch_detailed.py::TestGJRGARCH::test_gjr_garch_insufficient_data"
+      ],
+      "target_operation_id": "risk.gjrgarch",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_gjrgarch"
+      ]
+    },
+    {
+      "capability_id": "risk.gpd_fit",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "McNeil, A. J., & Frey, R. (2000). Estimation of tail-related risk measures for financial time series. Journal of Empirical Finance.",
+            "reference": "generalized Pareto distribution fit for exceedances"
+          },
+          "oracle_reference": "generalized Pareto distribution fit for exceedances",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_coverage_gaps.py::TestEvtEdgeCases::test_gpd_fit_near_exponential",
+        "tests/test_final_coverage_edges.py::TestEVTFinalEdgeCases::test_gpd_fit_beta_le_zero_in_neg_loglik",
+        "tests/test_final_coverage_edges.py::TestEVTFinalEdgeCases::test_gpd_fit_exponential_case_mle",
+        "tests/test_risk/evt/test_evt_nan.py::TestEVTWithNanData::test_gpd_fit_with_nans",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_gpd_fit_beta_le_zero_early_return",
+        "tests/test_risk/test_evt_remaining_coverage.py::TestEVTCVARCoverage::test_gpd_fit_exponential_case_mle"
+      ],
+      "target_operation_id": "risk.gpd_fit",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_gpd_fit"
+      ]
+    },
+    {
+      "capability_id": "risk.hill_estimator",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Hill, B. M. (1975). A simple general approach to inference about the tail of a distribution. Annals of Statistics.",
+            "reference": "Hill tail index estimator"
+          },
+          "oracle_reference": "Hill tail index estimator",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/evt/test_evt_nan.py::TestEVTWithNanData::test_hill_estimator_with_nans"
+      ],
+      "target_operation_id": "risk.hill_estimator",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_hill_estimator"
+      ]
+    },
+    {
+      "capability_id": "risk.risk_estimate",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.risk_estimate.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for risk.risk_estimate"
+          },
+          "oracle_reference": "invariant contract risk.risk_estimate.invariant.v1",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/test_models.py::test_risk_estimate_accepts_valid_forecast",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_duplicate_index",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_confidence_level[-0.1]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_confidence_level[0.0]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_confidence_level[1.0]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_confidence_level[1.1]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_horizon[-1]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_horizon[0]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_method[]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_method[bogus]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_invalid_method[monte_carlo]",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_non_datetime_forecast_index",
+        "tests/test_risk/test_models.py::test_risk_estimate_rejects_unsorted_index"
+      ],
+      "target_operation_id": "risk.risk_estimate",
+      "wheel_nodeids": [
+        "tests/parity/test_risk.py::test_risk_estimate"
+      ]
+    },
+    {
+      "capability_id": "simulation.bootstrap",
+      "disposition": "required",
+      "owner": "simulation",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Efron, B. (1979). Bootstrap methods: another look at the jackknife. Annals of Statistics.",
+            "reference": "iid bootstrap resampling"
+          },
+          "oracle_reference": "iid bootstrap resampling",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_pyfolio/test_timeseries.py::TestCone::test_bootstrap_cone_against_linear_cone_normal_returns",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_custom_statistic",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_empty",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_mean_convergence",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_returns_distribution",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_sharpe",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_summary",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_unknown_statistic"
+      ],
+      "target_operation_id": "simulation.bootstrap",
+      "wheel_nodeids": [
+        "tests/parity/test_simulation.py::test_bootstrap"
+      ]
+    },
+    {
+      "capability_id": "simulation.bootstrap_ci",
+      "disposition": "required",
+      "owner": "simulation",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Efron, B. (1979). Bootstrap methods: another look at the jackknife. Annals of Statistics.",
+            "reference": "bootstrap percentile confidence interval"
+          },
+          "oracle_reference": "bootstrap percentile confidence interval",
+          "scenario_id": "ordinary_inputs"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_ci",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_ci_different_alpha",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_ci_invalid_alpha_raises",
+        "tests/test_simulation/test_bootstrap.py::TestBootstrap::test_bootstrap_ci_method_not_implemented"
+      ],
+      "target_operation_id": "simulation.bootstrap_ci",
+      "wheel_nodeids": [
+        "tests/parity/test_simulation.py::test_bootstrap_ci"
+      ]
     }
   ],
   "not_for_d0": true,
   "schema_version": 1,
-  "scope": "metrics_performance_factor_families_only",
+  "scope": "analytical_families_only",
   "source_contract": {
     "alphalens_manifest_path": "tests/compat/fixtures/alphalens-0.4.0-cloudquant-api.json",
     "alphalens_manifest_sha256": "715ad55ae9483210938dfc6ffe1efb36690b7739a6b584383a9403d70b4f2125",
