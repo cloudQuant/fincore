@@ -17,6 +17,7 @@ import pytest
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
 SCRIPT = REPOSITORY_ROOT / "scripts" / "profile_workloads.py"
+HOTSPOT_SCRIPT = REPOSITORY_ROOT / "scripts" / "profile_hotspots.py"
 
 
 def _load_module():
@@ -29,6 +30,21 @@ def _load_module():
         specification.loader.exec_module(module)
     finally:
         sys.dont_write_bytecode = original
+    return module
+
+
+def _load_hotspot_module():
+    specification = importlib.util.spec_from_file_location("profile_hotspots_contract_test", HOTSPOT_SCRIPT)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    original = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    sys.modules[specification.name] = module
+    try:
+        specification.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = original
+        sys.modules.pop(specification.name, None)
     return module
 
 
@@ -74,6 +90,21 @@ def test_preregistered_hotspot_kinds_and_sizes_are_frozen() -> None:
     assert module.SIZES == ("small", "medium", "large")
     assert module.WORKLOAD_PROFILE_SCHEMA == "fincore-workload-profiles-v2"
     assert module.HOTSPOT_PROFILE_SCHEMA == "fincore-hotspot-profile-v2"
+
+
+def test_profiler_selects_the_explicit_pre_breaking_adapter_only_for_old_source_layouts(tmp_path: Path) -> None:
+    """D0 must execute the old implementation without restoring its API in the candidate."""
+
+    module = _load_hotspot_module()
+    old_root = tmp_path / "old"
+    canonical_root = tmp_path / "canonical"
+    (old_root / "fincore" / "metrics").mkdir(parents=True)
+    (old_root / "fincore" / "metrics" / "round_trips.py").write_text("# legacy\n", encoding="utf-8")
+    (canonical_root / "fincore" / "portfolio").mkdir(parents=True)
+    (canonical_root / "fincore" / "portfolio" / "round_trips.py").write_text("# canonical\n", encoding="utf-8")
+
+    assert module._source_api_generation(old_root) == "pre_breaking"
+    assert module._source_api_generation(canonical_root) == "canonical"
 
 
 def test_measurement_contract_is_deterministic_and_auditable() -> None:

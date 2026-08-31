@@ -59,6 +59,26 @@ WORKLOAD_KINDS = ("metrics", "rolling", "transactions", "factor", "risk", "repor
 HOTSPOT_PROFILE_SCHEMA = "fincore-hotspot-profile-v2"
 SEMANTIC_DIGEST_SCHEMA = "fincore-semantic-digest-v1"
 ROLLING_WINDOW = 63
+_REPORT_METRIC_LABELS = {
+    "annual_return": "Annual Return",
+    "cumulative_return": "Cumulative Returns",
+    "annual_volatility": "Annual Volatility",
+    "sharpe_ratio": "Sharpe Ratio",
+    "calmar_ratio": "Calmar Ratio",
+    "stability": "Stability",
+    "max_drawdown": "Max Drawdown",
+    "omega_ratio": "Omega Ratio",
+    "sortino_ratio": "Sortino Ratio",
+    "tail_ratio": "Tail Ratio",
+    "value_at_risk": "Daily Value at Risk",
+}
+_REPORT_SERIES = {
+    "returns": "returns",
+    "cumulative_returns": "cum_returns",
+    "drawdown": "drawdown",
+    "rolling_sharpe": "rolling_sharpe",
+    "rolling_volatility": "rolling_volatility",
+}
 
 
 @dataclass(frozen=True)
@@ -79,6 +99,45 @@ class _Execution:
     output_digest: str
     wall_seconds: float
     hotspots: list[dict[str, Any]]
+
+
+def _source_api_generation(root: Path = ROOT) -> str:
+    """Identify the one supported source layout without importing either surface.
+
+    D0 measures the pre-breaking implementation while candidate profiling must
+    exercise the post-cutover canonical modules.  The profiler is frozen
+    tooling, so this narrow adapter is allowed here; it never adds a runtime
+    compatibility import to the candidate package.
+    """
+
+    pre_breaking = root / "fincore" / "metrics" / "round_trips.py"
+    canonical = root / "fincore" / "portfolio" / "round_trips.py"
+    if pre_breaking.is_file() and not canonical.is_file():
+        return "pre_breaking"
+    if canonical.is_file() and not pre_breaking.is_file():
+        return "canonical"
+    raise RuntimeError("source layout must contain exactly one round-trip implementation path")
+
+
+def _report_projection(
+    metrics: Mapping[str, Any],
+    series: Mapping[str, Any],
+    *,
+    legacy_metric_labels: bool,
+    legacy_series_names: bool,
+) -> dict[str, Any]:
+    """Normalize equivalent old/new report results before digesting or timing."""
+
+    return {
+        "performance": {
+            canonical_name: metrics[legacy_name] if legacy_metric_labels else metrics[canonical_name]
+            for canonical_name, legacy_name in _REPORT_METRIC_LABELS.items()
+        },
+        "series": {
+            canonical_name: series[legacy_name] if legacy_series_names else series[canonical_name]
+            for canonical_name, legacy_name in _REPORT_SERIES.items()
+        },
+    }
 
 
 def _rss_bytes() -> int:
@@ -322,6 +381,7 @@ def _invocation_for(kind: str, scenario: str, seed: int) -> _Invocation:
 
     workload = _workload_for(kind, scenario, seed)
     workload_description = describe_workload(workload)
+    source_api_generation = _source_api_generation()
 
     if kind == "metrics":
         if workload.returns is None:
@@ -358,10 +418,19 @@ def _invocation_for(kind: str, scenario: str, seed: int) -> _Invocation:
         transactions = workload.transactions
         execution_inputs = {"kind": kind, "transactions": transactions, "matching": "fifo"}
 
-        def run_transactions() -> Any:
-            from fincore.portfolio.round_trips import extract_round_trips
+        if source_api_generation == "pre_breaking":
 
-            return extract_round_trips(transactions)
+            def run_transactions() -> Any:
+                from fincore.metrics.round_trips import extract_round_trips
+
+                return extract_round_trips(transactions)
+
+        else:
+
+            def run_transactions() -> Any:
+                from fincore.portfolio.round_trips import extract_round_trips
+
+                return extract_round_trips(transactions)
 
         run = run_transactions
 
@@ -432,14 +501,39 @@ def _invocation_for(kind: str, scenario: str, seed: int) -> _Invocation:
             "period": "daily",
         }
 
-        def run_report() -> Any:
-            from fincore.report.portfolio.compute import build_portfolio_report
+        if source_api_generation == "pre_breaking":
 
-            return build_portfolio_report(
-                returns,
-                period="daily",
-                rolling_window=ROLLING_WINDOW,
-            )
+            def run_report() -> Any:
+                from fincore.report.compute import compute_sections
+
+                legacy_model = cast(
+                    "Mapping[str, Any]",
+                    compute_sections(returns, None, None, None, None, ROLLING_WINDOW, period="daily"),
+                )
+                return _report_projection(
+                    legacy_model["perf_stats"],
+                    legacy_model,
+                    legacy_metric_labels=True,
+                    legacy_series_names=True,
+                )
+
+        else:
+
+            def run_report() -> Any:
+                from fincore.report.portfolio.compute import build_portfolio_report
+
+                document = build_portfolio_report(
+                    returns,
+                    period="daily",
+                    rolling_window=ROLLING_WINDOW,
+                )
+                performance = next(section for section in document.sections if section.key == "performance")
+                return _report_projection(
+                    performance.metrics,
+                    performance.series,
+                    legacy_metric_labels=False,
+                    legacy_series_names=False,
+                )
 
         run = run_report
 
