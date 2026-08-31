@@ -71,7 +71,7 @@
         "group": "tests/packaging"
       },
       {
-        "count": 47,
+        "count": 49,
         "group": "tests/parity"
       },
       {
@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 270,
+        "count": 272,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3147,
+        "count": 3151,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2788,
+        "count": 2792,
         "group": "<unmarked>"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5641,
+  "node_count": 5645,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20854,9 +20854,25 @@
       "directory_group": "tests/parity",
       "legacy_family": "other",
       "markers": [],
+      "nodeid": "tests/parity/test_portfolio_reporting.py::test_display_helpers_emit_named_table_contracts",
+      "test_blob_sha256": "4de6c486698fb553696a014b2aa273f70559a1a7e2f24a07c83631981132e1e0",
+      "test_path": "tests/parity/test_portfolio_reporting.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
       "nodeid": "tests/parity/test_simulation.py::test_monte_carlo",
       "test_blob_sha256": "8c37e4f39fa8d6c1aef925690bae55b4562f303d4d4ab742e57aac834e310035",
       "test_path": "tests/parity/test_simulation.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_viz.py::test_owned_figures_are_shown_and_closed_without_touching_caller_figures",
+      "test_blob_sha256": "0d987d3a9c9a4db11af1609fbef1adc66e70fa34baceb854f5c99e9cf31e71f7",
+      "test_path": "tests/parity/test_viz.py"
     },
     {
       "directory_group": "tests/performance",
@@ -21115,7 +21131,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21123,7 +21139,15 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_data_provider_contracts_have_offline_executable_scenarios",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_extension_snapshot_capabilities_have_canonical_scenarios",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21133,7 +21157,15 @@
         "p0"
       ],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_models_costs_pit_and_inference_have_canonical_scenarios",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21141,7 +21173,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21149,7 +21181,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21157,7 +21189,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_passes_the_frozen_capture_schema",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21165,7 +21197,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_contract_binds_the_committed_input_bytes",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21173,7 +21205,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21181,7 +21213,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21189,7 +21221,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21197,7 +21229,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21205,7 +21237,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_risk_contracts_are_backed_by_executable_reference_scenarios",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21213,7 +21245,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_upstream_capabilities_use_the_pinned_empyrical_oracle",
-      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_blob_sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -51923,16 +51955,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1106,
+    "regular_blob_count": 1108,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "034beb49628b5668fa2dc9baba6738375fcac7fe",
-    "tree": "4f2b5cf140a459403ce3d7f2e995d190c19af43c"
+    "commit": "f23a1b5fcb73d82f18fdcf005a966bf82bd1c287",
+    "tree": "c31b3129293a0130260e9adf678db6b86f7d1f35"
   },
-  "source_test_blob_count": 487,
+  "source_test_blob_count": 489,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -52460,9 +52492,19 @@
       "sha256": "75d5b906691c1f16a1037af1fcf05976e51f629ccae594621edc22cc8d441d54"
     },
     {
+      "git_object_id": "f6f1098cb61e5ee524ca297b0261076b30ab041f",
+      "path": "tests/parity/test_portfolio_reporting.py",
+      "sha256": "4de6c486698fb553696a014b2aa273f70559a1a7e2f24a07c83631981132e1e0"
+    },
+    {
       "git_object_id": "3f9049ebb0e8a17693b8eaae9749795558870e28",
       "path": "tests/parity/test_simulation.py",
       "sha256": "8c37e4f39fa8d6c1aef925690bae55b4562f303d4d4ab742e57aac834e310035"
+    },
+    {
+      "git_object_id": "3832d6b172d348da9bbc87d9cdf5d486abb59291",
+      "path": "tests/parity/test_viz.py",
+      "sha256": "0d987d3a9c9a4db11af1609fbef1adc66e70fa34baceb854f5c99e9cf31e71f7"
     },
     {
       "git_object_id": "308e74ee56d3ace78f8855c146f7dc7dc9ee588a",
@@ -52495,9 +52537,9 @@
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
     },
     {
-      "git_object_id": "1607e6b406f362b0aecc2d31fc34099296a257cd",
+      "git_object_id": "1578ae451bd75b6458fbe2dc4478cf94d7f78453",
       "path": "tests/quality/test_0042_r2_capability_ledger.py",
-      "sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd"
+      "sha256": "0cd75aec32ce044a565d750ca418234a569188e4a52186b834e43ca38935af22"
     },
     {
       "git_object_id": "7baf2dfc9819f4fe8c02766267dbb62363db2d91",
