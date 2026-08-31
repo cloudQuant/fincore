@@ -148,15 +148,26 @@ class TestFamaFrench:
         assert len(runtime_warnings) == 0
 
 
-class TestFetchPlaceholders:
-    """Tests that placeholder data fetchers raise NotImplementedError."""
+class TestProviderContracts:
+    """Tests for explicit, caller-owned attribution data providers."""
 
-    def test_fetch_ff_factors_raises(self):
-        """fetch_ff_factors must raise NotImplementedError."""
-        with pytest.raises(NotImplementedError, match="No Fama-French data provider"):
+    def test_fetch_ff_factors_requires_an_explicit_provider(self):
+        with pytest.raises(TypeError, match="provider"):
             fetch_ff_factors("2020-01-01", "2020-12-31")
 
-    def test_fetch_style_factors_raises(self):
-        """fetch_style_factors must raise NotImplementedError."""
-        with pytest.raises(NotImplementedError, match="No style factor data provider"):
+    def test_fetch_style_factors_requires_an_explicit_provider(self):
+        with pytest.raises(TypeError, match="provider"):
             fetch_style_factors(["AAPL", "GOOG"])
+
+    def test_fetch_style_factors_uses_the_supplied_provider_without_global_registration(self):
+        expected = pd.DataFrame({"value": [0.1, 0.2]}, index=["AAPL", "GOOG"])
+
+        def provider(tickers: list[str], factors: list[str] | None, library: str) -> pd.DataFrame:
+            assert tickers == ["AAPL", "GOOG"]
+            assert factors == ["value"]
+            assert library == "us"
+            return expected
+
+        actual = fetch_style_factors(["AAPL", "GOOG"], factors=["value"], provider=provider)
+
+        pd.testing.assert_frame_equal(actual, expected)

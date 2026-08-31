@@ -563,7 +563,7 @@ def test_pyfolio_module_missing_attribute() -> None:
 
 
 # =============================================================================
-# metrics/perf_attrib.py — attribution alignment rejection branches
+# attribution/performance.py — attribution alignment rejection branches
 # =============================================================================
 
 
@@ -588,7 +588,7 @@ def _loadings_for(dates: list[str]) -> pd.DataFrame:
 
 
 def test_perf_attrib_rejection_branches() -> None:
-    from fincore.metrics.perf_attrib import (
+    from fincore.attribution.performance import (
         _align_factor_columns,
         _normalize_attribution_index,
         _normalize_date_index,

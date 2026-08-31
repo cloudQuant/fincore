@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Performance attribution functions."""
+"""Direct performance-attribution kernels for the attribution domain."""
 
 from __future__ import annotations
 
@@ -653,9 +653,3 @@ def cumulative_returns_less_costs(
         # cum_returns mirrors the input container type for Series inputs.
         return cast("pd.Series", cum_returns(returns))
     return cast("pd.Series", cum_returns(returns - costs))
-
-
-from fincore._dispatch import install_metric_module_surface as _install_metric_module_surface
-
-_install_metric_module_surface(__name__)
-del _install_metric_module_surface

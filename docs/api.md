@@ -55,11 +55,10 @@ Some attribution/data workflows depend on provider callbacks to avoid hard depen
 Fama-French factors (provider injection):
 
 ```python
-from fincore.attribution import fama_french
+import fincore.attribution.fama_french as fama_french
 
 def my_provider(start: str, end: str, library: str):
     ...
 
-fama_french.set_ff_provider(my_provider)
-df = fama_french.fetch_ff_factors("2020-01-01", "2020-12-31", library="french")
+df = fama_french.fetch_ff_factors("2020-01-01", "2020-12-31", library="french", provider=my_provider)
 ```

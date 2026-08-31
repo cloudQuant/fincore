@@ -4,16 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.attribution import fama_french
+import fincore.attribution.fama_french as fama_french
 from fincore.attribution.fama_french import FamaFrenchModel
-
-
-@pytest.fixture(autouse=True)
-def _reset_ff_provider() -> None:
-    # Keep tests isolated: provider and cache are module-level globals.
-    fama_french.set_ff_provider(None)
-    yield
-    fama_french.set_ff_provider(None)
 
 
 def _make_factor_data(index: pd.Index, *, include_mom: bool = False) -> pd.DataFrame:
@@ -137,17 +129,14 @@ def test_fetch_ff_factors_provider_must_return_dataframe() -> None:
         fama_french.fetch_ff_factors("2020-01-01", "2020-01-31", provider=bad_provider)
 
 
-def test_cached_fetch_type_error_and_cache_clear() -> None:
+def test_fetch_ff_factors_rejects_a_provider_with_an_invalid_result() -> None:
     calls: dict[str, int] = {"n": 0}
 
     def provider(_start: str, _end: str, _library: str):  # type: ignore[no-untyped-def]
         calls["n"] += 1
         return ["not a df"]
 
-    fama_french.set_ff_provider(provider)  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="must return a pandas DataFrame"):
-        fama_french.fetch_ff_factors("2020-01-01", "2020-01-31")
+        fama_french.fetch_ff_factors("2020-01-01", "2020-01-31", provider=provider)
 
-    # Clearing cache should be a safe no-op even after an exception path.
-    fama_french.clear_ff_factor_cache()
     assert calls["n"] == 1

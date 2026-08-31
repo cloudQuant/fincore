@@ -45,7 +45,7 @@ release notice is finalized.
 | Source family | Fincore copied/modified candidates | Review state |
 | --- | --- | --- |
 | `empyrical/stats.py`, `periods.py` | `fincore/metrics/{alpha_beta,basic,drawdown,ratios,returns,risk,rolling,stats,yearly}.py`, `fincore/constants/` | Engineering provenance recorded; line-level/license review pending |
-| `empyrical/perf_attrib.py` | `fincore/metrics/perf_attrib.py`, `fincore/empyrical.py` | Engineering provenance recorded; line-level/license review pending |
+| `empyrical/perf_attrib.py` | `fincore/attribution/performance.py`, `fincore/empyrical.py` | Engineering provenance recorded; line-level/license review pending |
 | `pyfolio/tears.py`, `plotting.py` | `fincore/tearsheets/`, `fincore/pyfolio.py` | Engineering provenance recorded; line-level/license review pending |
 | pyfolio portfolio helpers | `fincore/metrics/{positions,transactions,round_trips}.py` | Engineering provenance recorded; line-level/license review pending |
 | Alphalens `performance.py`, `utils.py` | planned `fincore/alphalens/{performance,utils}.py`, `fincore/factor_analysis/{data,performance,portfolio}.py` | Snapshot only; no destination implementation or license decision in this task |

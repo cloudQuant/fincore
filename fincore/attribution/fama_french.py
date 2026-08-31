@@ -9,7 +9,6 @@ multi-factor framework:
 
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Protocol, TypedDict
 
 import numpy as np
@@ -24,9 +23,7 @@ __all__ = [
     "FamaFrenchModel",
     "FamaFrenchProvider",
     "calculate_idiosyncratic_risk",
-    "clear_ff_factor_cache",
     "fetch_ff_factors",
-    "set_ff_provider",
 ]
 
 
@@ -376,17 +373,13 @@ def fetch_ff_factors(
     end: str,
     library: str = "french",
     *,
-    provider: FamaFrenchProvider | None = None,
+    provider: FamaFrenchProvider,
     copy: bool = True,
 ) -> pd.DataFrame:
     """Fetch Fama-French factors.
 
-    .. note::
-
-       A concrete data provider must be configured before calling this
-       function.  Pass a ``provider`` that implements the
-       ``FamaFrenchProvider`` protocol, or set a module-level provider
-       via :func:`set_ff_provider`.
+    The caller owns provider selection and any caching policy. This boundary
+    deliberately keeps no process-global provider or cache state.
 
     Parameters
     ----------
@@ -396,25 +389,21 @@ def fetch_ff_factors(
         End date (YYYY-MM-DD).
     library : str, default "french"
         Data source. Options: 'french', 'chinese'.
+    provider : FamaFrenchProvider
+        Explicit offline or online data provider for this request.
+    copy : bool, default True
+        Whether to detach the returned frame from the provider-owned result.
 
     Returns
     -------
     pd.DataFrame
         DataFrame with factor returns. Columns depend on library.
 
-    Raises
-    ------
-    NotImplementedError
-        Raised when no provider is configured.
     """
-    if provider is not None:
-        df = provider(start, end, library)
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError("Fama-French provider must return a pandas DataFrame")
-        return df.copy(deep=True) if copy else df
-
-    df_cached = _fetch_ff_factors_cached(start, end, library)
-    return df_cached.copy(deep=True) if copy else df_cached
+    df = provider(start, end, library)
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Fama-French provider must return a pandas DataFrame")
+    return df.copy(deep=True) if copy else df
 
 
 class FamaFrenchProvider(Protocol):
@@ -441,36 +430,6 @@ class FamaFrenchProvider(Protocol):
         pd.DataFrame
             Factor returns with columns for each factor.
         """
-
-
-_ff_provider: FamaFrenchProvider | None = None
-
-
-def set_ff_provider(provider: FamaFrenchProvider | None) -> None:
-    """Set the module-level Fama-French factor provider and clear cache."""
-    global _ff_provider
-    _ff_provider = provider
-    _fetch_ff_factors_cached.cache_clear()
-
-
-def clear_ff_factor_cache() -> None:
-    """Clear the in-process factor cache used by :func:`fetch_ff_factors`."""
-    _fetch_ff_factors_cached.cache_clear()
-
-
-@lru_cache(maxsize=128)
-def _fetch_ff_factors_cached(start: str, end: str, library: str) -> pd.DataFrame:
-    provider = _ff_provider
-    if provider is None:
-        raise NotImplementedError(
-            "No Fama-French data provider is configured. "
-            "Pass `provider=` to fetch_ff_factors(), or set a module provider via set_ff_provider()."
-        )
-    df = provider(start, end, library)
-    if not isinstance(df, pd.DataFrame):
-        raise TypeError("Fama-French provider must return a pandas DataFrame")
-    # Freeze the cached value against accidental mutation; callers get copies by default.
-    return df.copy(deep=True)
 
 
 def calculate_idiosyncratic_risk(

@@ -21,7 +21,7 @@ class TestPerfAttribWarnings(unittest.TestCase):
 
     def test_missing_stocks_and_dates(self):
         """Exercise the upstream warning oracle against the unvalidated kernel."""
-        raw_perf_attrib = resolve_raw_metric("fincore.metrics.perf_attrib:perf_attrib")
+        raw_perf_attrib = resolve_raw_metric("fincore.attribution.performance:perf_attrib")
         (returns, positions, factor_returns, factor_loadings) = generate_toy_risk_model_output()
 
         # factor loadings missing a stock should raise a warning

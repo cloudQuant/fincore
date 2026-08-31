@@ -8,7 +8,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from fincore.attribution import style as style_mod
+import fincore.attribution.style as style_mod
 
 
 @pytest.mark.p2  # Medium: private helper tests

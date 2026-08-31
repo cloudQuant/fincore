@@ -19,8 +19,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import fincore.attribution.brinson as brinson
+import fincore.attribution.fama_french as fama_french
 from fincore import Empyrical
-from fincore.attribution import brinson, fama_french
 
 print("=" * 70)
 print("绩效归因分析示例")

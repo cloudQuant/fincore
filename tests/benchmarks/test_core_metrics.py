@@ -114,7 +114,7 @@ def test_rolling_sharpe_benchmark(benchmark, sample_returns_5000):
 @pytest.mark.benchmark(group="attribution")
 def test_perf_attrib_benchmark(benchmark):
     """Benchmark performance attribution (target: <100ms)."""
-    from fincore.metrics.perf_attrib import perf_attrib
+    from fincore.attribution.performance import perf_attrib
     from tests.test_pyfolio.perf_attrib.conftest import generate_toy_risk_model_output
 
     # Generate test data with proper structure

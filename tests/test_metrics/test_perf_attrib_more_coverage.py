@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import fincore.metrics.perf_attrib as pam
+import fincore.attribution.performance as pam
 
 
 def _make_core_inputs(periods: int = 10, n_tickers: int = 10, n_factors: int = 2):

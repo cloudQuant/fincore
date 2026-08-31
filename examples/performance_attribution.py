@@ -55,7 +55,7 @@ print()
 # =========================================================================
 # 2. Brinson Attribution
 # =========================================================================
-from fincore.attribution import brinson_attribution, brinson_results
+from fincore.attribution.brinson import brinson_attribution, brinson_results
 
 print("=" * 60)
 print("Brinson Attribution")
@@ -95,7 +95,7 @@ print(details.to_string())
 # =========================================================================
 # 3. Style Analysis
 # =========================================================================
-from fincore.attribution import calculate_style_tilts, style_analysis
+from fincore.attribution.style import calculate_style_tilts, style_analysis
 
 print("\n" + "=" * 60)
 print("Style Analysis")
@@ -120,7 +120,7 @@ print(tilts)
 # =========================================================================
 # 4. Regression Attribution
 # =========================================================================
-from fincore.attribution import calculate_regression_attribution
+from fincore.attribution.style import calculate_regression_attribution
 
 print("\n" + "=" * 60)
 print("Regression Attribution")

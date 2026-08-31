@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 
 import fincore.empyrical as ep
+from fincore.attribution.performance import perf_attrib
 from fincore.exceptions import DataAlignmentError
-from fincore.metrics.perf_attrib import perf_attrib
 
 
 @dataclass(frozen=True)

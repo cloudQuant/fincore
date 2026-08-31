@@ -23,9 +23,7 @@ __all__ = [
     "analyze_performance_by_style",
     "calculate_regression_attribution",
     "calculate_style_tilts",
-    "clear_style_factor_cache",
     "fetch_style_factors",
-    "set_style_provider",
     "style_analysis",
 ]
 
@@ -618,36 +616,17 @@ class StyleFactorProvider(Protocol):
         """Fetch style factor data."""
 
 
-_style_provider: StyleFactorProvider | None = None
-
-
-def set_style_provider(provider: StyleFactorProvider | None) -> None:
-    """Set the module-level style factor provider (None clears it)."""
-    global _style_provider
-    _style_provider = provider
-
-
-def clear_style_factor_cache() -> None:
-    """Clear any in-process style factor cache and reset the module provider."""
-    global _style_provider
-    _style_provider = None
-
-
 def fetch_style_factors(
     tickers: list[str],
     factors: list[str] | None = None,
     library: str = "us",
     *,
-    provider: StyleFactorProvider | None = None,
+    provider: StyleFactorProvider,
 ) -> pd.DataFrame:
     """Fetch style factor data.
 
-    .. note::
-
-       A concrete data provider must be configured before calling this
-       function.  Pass a ``provider`` that implements the
-       :class:`StyleFactorProvider` protocol, or set a module-level provider
-       via :func:`set_style_provider`.  No default network fetcher is bundled.
+    The caller owns provider selection and any caching policy. This boundary
+    deliberately keeps no process-global provider or cache state.
 
     Parameters
     ----------
@@ -657,26 +636,16 @@ def fetch_style_factors(
         Style factors to fetch.
     library : str, default "us"
         Data source library. Options: 'us', 'chinese'.
-    provider : StyleFactorProvider, optional
-        Injected provider for offline testing.
+    provider : StyleFactorProvider
+        Explicit offline or online data provider for this request.
 
     Returns
     -------
     pd.DataFrame
         Factor data with MultiIndex (date, factor).
 
-    Raises
-    ------
-    NotImplementedError
-        Raised when no provider is configured.
     """
-    active = provider if provider is not None else _style_provider
-    if active is not None:
-        df = active(tickers, factors, library)
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError("Style factor provider must return a pandas DataFrame")
-        return df.copy(deep=True)
-    raise NotImplementedError(
-        "No style factor data provider is configured. "
-        "Pass a provider to fetch_style_factors(), or set one via set_style_provider()."
-    )
+    df = provider(tickers, factors, library)
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Style factor provider must return a pandas DataFrame")
+    return df.copy(deep=True)

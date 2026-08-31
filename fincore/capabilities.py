@@ -112,7 +112,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     # --- attribution -------------------------------------------------------
     Capability(
         id="attribution.brinson",
-        public_path="fincore.attribution.brinson_attribution",
+        public_path="fincore.attribution.brinson.brinson_attribution",
         domain="attribution",
         status=STATUS_STABLE,
         input_contract="Portfolio/benchmark returns and weights of matching shape.",
@@ -122,7 +122,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     ),
     Capability(
         id="attribution.brinson_hood",
-        public_path="fincore.attribution.BrinsonAttribution.calculate",
+        public_path="fincore.attribution.brinson.BrinsonAttribution.calculate",
         domain="attribution",
         status=STATUS_STABLE,
         input_contract="Portfolio/benchmark return panels and optional portfolio weights.",
@@ -132,7 +132,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     ),
     Capability(
         id="attribution.fama_french_model",
-        public_path="fincore.attribution.FamaFrenchModel",
+        public_path="fincore.attribution.fama_french.FamaFrenchModel",
         domain="attribution",
         status=STATUS_STABLE,
         input_contract="Asset/portfolio returns plus factor returns (3/4/5 factor).",
@@ -142,7 +142,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     ),
     Capability(
         id="attribution.ff_factor_provider",
-        public_path="fincore.attribution.fetch_ff_factors",
+        public_path="fincore.attribution.fama_french.fetch_ff_factors",
         domain="attribution",
         status=STATUS_PROVIDER_REQUIRED,
         input_contract="Factor names and a date range; an injected provider is required.",
@@ -152,7 +152,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     ),
     Capability(
         id="attribution.style_analysis",
-        public_path="fincore.attribution.style_analysis",
+        public_path="fincore.attribution.style.style_analysis",
         domain="attribution",
         status=STATUS_STABLE,
         input_contract="Portfolio returns and optional style factor returns.",
@@ -162,7 +162,7 @@ _CAPABILITIES: tuple[Capability, ...] = (
     ),
     Capability(
         id="attribution.style_factor_provider",
-        public_path="fincore.attribution.fetch_style_factors",
+        public_path="fincore.attribution.style.fetch_style_factors",
         domain="attribution",
         status=STATUS_PROVIDER_REQUIRED,
         input_contract="Style factor identifiers and a date range; an injected provider is required.",

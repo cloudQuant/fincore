@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 import fincore.empyrical as strict_empyrical
-from fincore.metrics.perf_attrib import compute_exposures, perf_attrib
+from fincore.attribution.performance import compute_exposures, perf_attrib
 
 
 def _attribution_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.DataFrame]:

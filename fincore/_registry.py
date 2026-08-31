@@ -287,7 +287,7 @@ MODULE_PATHS = {
     "_positions": "fincore.portfolio.positions",
     "_transactions": "fincore.portfolio.transactions",
     "_round_trips": "fincore.portfolio.round_trips",
-    "_perf_attrib": "fincore.metrics.perf_attrib",
+    "_perf_attrib": "fincore.attribution.performance",
     "_perf_stats": "fincore.metrics.perf_stats",
     "_timing": "fincore.metrics.timing",
     "_yearly": "fincore.metrics.yearly",
@@ -415,8 +415,8 @@ _EMPYRICAL_KERNELS = {
     "up_capture": "fincore.metrics.ratios:up_capture",
     "up_down_capture": "fincore.metrics.ratios:up_down_capture",
     "value_at_risk": "fincore.metrics.risk:value_at_risk",
-    "perf_attrib": "fincore.metrics.perf_attrib:perf_attrib",
-    "compute_exposures": "fincore.metrics.perf_attrib:compute_exposures",
+    "perf_attrib": "fincore.attribution.performance:perf_attrib",
+    "compute_exposures": "fincore.attribution.performance:compute_exposures",
 }
 
 
