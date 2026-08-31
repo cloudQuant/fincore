@@ -1,6 +1,6 @@
 # Current Quality Baseline
 
-Generated: `2026-08-31T19:25:30.722136+00:00`
+Generated: `2026-08-31T20:19:40.270195+00:00`
 
 ## Provenance
 
@@ -23,11 +23,11 @@ Generated: `2026-08-31T19:25:30.722136+00:00`
 
 | Run | Selector | Discovered | Selected | Passed | Skipped | Warnings | Duration | Exit |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| trusted-baseline | `not slow and not integration` | 5657 | 5641 | 5620 | 21 | 99 | 642.290s | 0 |
-| serial | `serial` | 5657 | 7 | 6 | 1 | 1 | 9.742s | 0 |
-| non-serial-single | `not serial and not slow and not integration` | 5657 | 5635 | 5614 | 21 | 99 | 640.507s | 0 |
-| non-serial-xdist | `not serial and not slow and not integration` | 5657 | 5635 | 5614 | 21 | 106 | 262.076s | 0 |
-| branch-coverage | `not slow and not integration` | 5657 | 5641 | 5620 | 21 | 99 | 805.446s | 0 |
+| trusted-baseline | `not slow and not integration` | 5657 | 5641 | 5620 | 21 | 99 | 638.732s | 0 |
+| serial | `serial` | 5657 | 7 | 6 | 1 | 1 | 9.379s | 0 |
+| non-serial-single | `not serial and not slow and not integration` | 5657 | 5635 | 5614 | 21 | 99 | 642.348s | 0 |
+| non-serial-xdist | `not serial and not slow and not integration` | 5657 | 5635 | 5614 | 21 | 106 | 264.226s | 0 |
+| branch-coverage | `not slow and not integration` | 5657 | 5641 | 5620 | 21 | 99 | 804.535s | 0 |
 
 ## Branch Coverage
 
