@@ -1,64 +1,74 @@
 # API Guide
 
-This page documents the intended stable entry points. Internal modules may change.
+fincore 0.5 is a breaking, domain-oriented API. The package root is a
+namespace index, not a flat callable surface. Import each function or model
+from the leaf module that owns its financial contract.
 
-## Top-Level Flat API
-
-The `fincore` package re-exports a set of common metrics as flat functions:
-
-```python
-import fincore
-
-sr = fincore.sharpe_ratio(returns)
-md = fincore.max_drawdown(returns)
-```
-
-## `fincore.Empyrical`
-
-`Empyrical` provides:
-
-- Class-level access to a large registry of metrics (e.g. `Empyrical.sharpe_ratio(returns)`).
-- A small set of instance helpers that can auto-fill `returns` / `factor_returns`.
+## Metrics
 
 ```python
-from fincore import Empyrical
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
+from fincore.metrics.yearly import annual_return
 
-emp = Empyrical(returns=returns)
-dd_days = emp.max_drawdown_days()
+summary = {
+    "sharpe_ratio": sharpe_ratio(returns),
+    "maximum_drawdown": max_drawdown(returns),
+    "annual_return": annual_return(returns),
+}
 ```
 
-## `fincore.Pyfolio`
+Other metric families live in `fincore.metrics.returns`,
+`fincore.metrics.rolling`, `fincore.metrics.risk`, and
+`fincore.metrics.statistics`.
 
-`Pyfolio` extends `Empyrical` with tear sheet and plotting functions.
+## Runtime orchestration
+
+Use the runtime only when an application needs an immutable input boundary,
+catalog resolution, batch planning, or provenance-bearing `Result` objects.
+For a single domain calculation, call the leaf function directly.
 
 ```python
-from fincore import Pyfolio
+from fincore.runtime.builtins import builtin_catalog
+from fincore.runtime.engine import run
 
-pf = Pyfolio(returns=returns)
-pf.create_returns_tear_sheet(returns)
+result = run(
+    "metrics.ratios.sharpe_ratio",
+    {"returns": returns},
+    catalog=builtin_catalog(),
+)
+print(result.value)
 ```
 
-## Reports
+## Portfolio reports
 
-Generate a dynamic HTML or PDF report:
+Build one immutable report document and render that document without repeating
+financial calculation.
 
 ```python
-from fincore.report import create_strategy_report
+from fincore.report.portfolio.compute import build_portfolio_report
+from fincore.report.renderers.html import write_html
 
-create_strategy_report(returns, output="report.html")
+document = build_portfolio_report(returns, positions=positions)
+artifacts = write_html(document, "portfolio-report.html")
 ```
 
-## Data Providers
+PDF and XLSX renderers are in `fincore.report.renderers.pdf` and
+`fincore.report.renderers.xlsx` and require their matching capability extras.
 
-Some attribution/data workflows depend on provider callbacks to avoid hard dependencies on specific data sources.
+## Domain map
 
-Fama-French factors (provider injection):
+| Domain | Owning modules |
+| --- | --- |
+| Metrics and time-series analytics | `fincore.metrics.*` |
+| Cash-flow performance and inference | `fincore.performance.*` |
+| Positions, transactions, capacity, round trips | `fincore.portfolio.*` |
+| Factor preparation, analysis, portfolios, inference | `fincore.factor_analysis.*` |
+| Brinson and factor-performance attribution | `fincore.attribution.*` |
+| Risk models, calibration, backtesting, diagnostics | `fincore.risk.*` |
+| Allocation optimisation and simulation | `fincore.optimization.*`, `fincore.simulation.*` |
+| Report models and renderers | `fincore.report.*` |
+| Data providers, extensions, visualisation, runtime | `fincore.data.*`, `fincore.extensions.*`, `fincore.viz.*`, `fincore.runtime.*` |
 
-```python
-import fincore.attribution.fama_french as fama_french
-
-def my_provider(start: str, end: str, library: str):
-    ...
-
-df = fama_french.fetch_ff_factors("2020-01-01", "2020-12-31", library="french", provider=my_provider)
-```
+See [the migration guide](MIGRATION.md) for the 0.5 boundary and the
+[MkDocs API reference](../mkdocs_docs/api/index.md) for focused module pages.

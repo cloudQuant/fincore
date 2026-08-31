@@ -244,15 +244,18 @@ def test_evidence_child_blocks_merge_commits_with_two_parents(tmp_path: Path) ->
     (repo / "docs").mkdir(exist_ok=True)
     (repo / "docs" / "0042-r2-acceptance.md").write_text("# acceptance\n", encoding="utf-8")
     _commit(repo, "docs: record acceptance evidence")
-    merge = subprocess.run(
-        ["git", "merge", "-q", "--no-ff", "--no-edit", "side"],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip() or subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True
-    ).stdout.strip()
+    merge = (
+        subprocess.run(
+            ["git", "merge", "-q", "--no-ff", "--no-edit", "side"],
+            cwd=repo,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        or subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True
+        ).stdout.strip()
+    )
 
     result = _run(
         [

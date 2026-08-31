@@ -11,8 +11,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tests.raw_metric_kernels import raw_metric_kernel_suite as raw_metric_kernel_suite
-
 
 @pytest.fixture
 def small_returns():

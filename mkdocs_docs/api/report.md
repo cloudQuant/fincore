@@ -1,13 +1,20 @@
-# fincore.report
+# `fincore.report`
 
-## Create Strategy Report
-::: fincore.report.create_strategy_report
+Reports use a two-stage contract: compute an immutable `ReportDocument`, then
+render it through a selected output module. The renderer never recomputes
+financial metrics.
 
-## Audit Manifest
-::: fincore.report.provenance.ReportProvenance
+```python
+from fincore.report.portfolio.compute import build_portfolio_report
+from fincore.report.renderers.html import write_html
 
-## HTML Rendering
-::: fincore.report.render_html.generate_html
+document = build_portfolio_report(returns)
+artifact = write_html(document, "portfolio-report.html")
+```
 
-## PDF Rendering
-::: fincore.report.render_pdf.generate_pdf
+Available layers:
+
+- `models`: report documents and sections;
+- `portfolio.compute`, `risk`, and direct builders: canonical report calculations;
+- `renderers.html`, `matplotlib`, `pdf`, `xlsx`, and `interactive`: projections;
+- `runtime.artifacts`: caller-owned artifact lifecycle management.

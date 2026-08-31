@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from .catalog import OperationCatalog
 
@@ -44,7 +44,7 @@ def _load_provider(provider_path: str) -> Callable[[], Iterable[OperationSpec]]:
     provider = getattr(import_module(module_name), attribute)
     if not callable(provider):
         raise TypeError(f"builtin operation provider is not callable: {provider_path!r}")
-    return provider
+    return cast("Callable[[], Iterable[OperationSpec]]", provider)
 
 
 def builtin_catalog() -> OperationCatalog:

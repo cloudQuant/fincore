@@ -47,7 +47,7 @@ def test_matplotlib_renderer_records_fincore_ownership_but_never_closes_caller_a
 
 
 def test_xlsx_renderer_writes_the_precomputed_document(tmp_path) -> None:
-    pytest.importorskip("xlsxwriter")
+    pytest.importorskip("openpyxl")
 
     from fincore.report.renderers.xlsx import write_xlsx
 

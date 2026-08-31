@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from scipy import special, stats
 
-STATUS_PASS = "pass"
+STATUS_PASS = "pass"  # nosec B105
 STATUS_FAIL = "fail"
 STATUS_INCONCLUSIVE = "inconclusive"
 STATUS_EXPERIMENTAL = "experimental"

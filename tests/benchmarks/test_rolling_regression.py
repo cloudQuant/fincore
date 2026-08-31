@@ -89,9 +89,8 @@ def test_runner_covers_every_metric_case(tmp_path: Path) -> None:
         "sortino",
         "max_drawdown",
         "beta",
-        "mean_return",
         "roll_alpha",
         "roll_alpha_beta",
-        "engine_all",
+        "direct_bundle",
     }
     assert data["rss_unit"] == "bytes"

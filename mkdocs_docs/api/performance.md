@@ -1,21 +1,13 @@
-# fincore.performance
+# `fincore.performance`
 
-Enhanced performance-return semantics, cashflow adjustments, uncertainty, and
-disclosure helpers. This namespace is separate from the strict compatibility
-facades.
+The performance domain owns return semantics that depend on valuations, cash
+flows, fees, currency, or inference policy. It is distinct from scalar metric
+kernels in `fincore.metrics`.
 
-## Cashflow semantics
+```python
+from fincore.performance.cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
+from fincore.performance.returns import twr
+```
 
-::: fincore.performance.cashflows
-
-## Returns
-
-::: fincore.performance.returns
-
-## Inference
-
-::: fincore.performance.inference
-
-## Disclosures
-
-::: fincore.performance.disclosures
+The `cashflows`, `returns`, `inference`, and `disclosures` modules make timing,
+assumptions, and output status explicit.

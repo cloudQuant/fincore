@@ -57,6 +57,7 @@ class OperationSpec:
             raise ValueError("semantic_mode and mode_approval must be provided together")
         if self.semantic_mode is not None:
             _required_identifier(self.semantic_mode, "semantic_mode")
+            assert self.mode_approval is not None
             _required_identifier(self.mode_approval, "mode_approval")
         object.__setattr__(self, "input_schema", _freeze_metadata(self.input_schema))
         object.__setattr__(self, "output_schema", _freeze_metadata(self.output_schema))

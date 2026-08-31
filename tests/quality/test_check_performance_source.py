@@ -14,25 +14,31 @@ def test_direct_performance_gate_prefers_its_checkout_source(tmp_path: Path) -> 
 
     repository = tmp_path / "checkout"
     script_dir = repository / "scripts"
-    api_dir = repository / "fincore" / "api"
+    runtime_dir = repository / "fincore" / "runtime"
     script_dir.mkdir(parents=True)
-    api_dir.mkdir(parents=True)
-    shadow_api_dir = tmp_path / "shadow" / "fincore" / "api"
-    shadow_api_dir.mkdir(parents=True)
+    runtime_dir.mkdir(parents=True)
+    shadow_runtime_dir = tmp_path / "shadow" / "fincore" / "runtime"
+    shadow_runtime_dir.mkdir(parents=True)
     root = Path(__file__).resolve().parents[2]
     shutil.copy2(root / "scripts" / "check_performance.py", script_dir / "check_performance.py")
     (repository / "fincore" / "__init__.py").write_text("", encoding="utf-8")
-    (api_dir / "__init__.py").write_text(
-        "def build_builtin_catalog():\n    raise RuntimeError('checkout-performance-sentinel')\n",
+    (runtime_dir / "__init__.py").write_text(
+        "from .builtins import builtin_catalog\n",
         encoding="utf-8",
     )
-    (api_dir / "invoke.py").write_text("def invoke(*args, **kwargs):\n    return None\n", encoding="utf-8")
-    (shadow_api_dir.parent / "__init__.py").write_text("", encoding="utf-8")
-    (shadow_api_dir / "__init__.py").write_text(
-        "def build_builtin_catalog():\n    raise RuntimeError('shadow-performance-sentinel')\n",
+    (runtime_dir / "builtins.py").write_text(
+        "raise RuntimeError('checkout-performance-sentinel')\n",
         encoding="utf-8",
     )
-    (shadow_api_dir / "invoke.py").write_text("def invoke(*args, **kwargs):\n    return None\n", encoding="utf-8")
+    (shadow_runtime_dir.parent / "__init__.py").write_text("", encoding="utf-8")
+    (shadow_runtime_dir / "__init__.py").write_text(
+        "from .builtins import builtin_catalog\n",
+        encoding="utf-8",
+    )
+    (shadow_runtime_dir / "builtins.py").write_text(
+        "raise RuntimeError('shadow-performance-sentinel')\n",
+        encoding="utf-8",
+    )
     environment = dict(os.environ)
     environment["PYTHONPATH"] = os.pathsep.join((str(tmp_path / "shadow"), str(repository)))
 

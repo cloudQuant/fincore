@@ -1,75 +1,26 @@
-# fincore 文档索引 / Documentation Index
+# fincore Documentation Index
 
-## English
-
-| Document | Description |
-|----------|-------------|
-| [API Guide](api.md) | Stable entry points and usage patterns |
-| [API Stability](API_STABILITY.md) | Versioning guarantees and deprecation policy |
-| [Migration Guide](MIGRATION.md) | Migrating from empyrical to fincore |
-| [Development Guide](development.md) | Environment setup, testing, linting, type checking |
-| [Examples](examples.md) | Three usage patterns (Flat API, Empyrical, AnalysisContext) |
-| [User Guide](user_guide.md) | Core data model, quickstart, reports |
-| [Changelog](../CHANGELOG.md) | Release history |
-| [Contributing](../CONTRIBUTING.md) | How to contribute |
-
-### API Reference (API 文档)
+## Current 0.5 documentation
 
 | Document | Description |
-|----------|-------------|
-| [Top-Level API](api文档/01_顶层API.md) | `fincore.*` package-level functions and classes |
-| [Empyrical Metrics](api文档/02_Empyrical指标.md) | 100+ performance/risk metric functions |
-| [Pyfolio Visualization](api文档/03_Pyfolio可视化.md) | Tear sheets and plotting functions |
-| [Risk Models](api文档/04_风险模型.md) | EVT, GARCH conditional volatility |
-| [Portfolio Optimization](api文档/05_组合优化.md) | Efficient frontier, risk parity |
-| [Monte Carlo Simulation](api文档/06_蒙特卡洛模拟.md) | Path simulation, bootstrap inference |
-| [Performance Attribution](api文档/07_绩效归因.md) | Brinson, style analysis, factor regression |
-| [Report Generation](api文档/08_报告生成.md) | HTML/PDF strategy reports |
+| --- | --- |
+| [README](../README.md) | installation, direct-domain quickstart, capability extras |
+| [API guide](api.md) | canonical leaf-module and runtime entry points |
+| [Migration guide](MIGRATION.md) | breaking 0.5 migration boundary |
+| [User guide](user_guide.md) | inputs, metrics, reports, factor research |
+| [Examples](examples.md) | maintained executable examples |
+| [Development guide](development.md) | test, quality, and architecture workflow |
+| [API stability](API_STABILITY.md) | 0.5 public-contract policy |
+| [Public API map](architecture/public-api-map.md) | domain ownership and runtime map |
+| [MkDocs reference](../mkdocs_docs/index.md) | published focused reference pages |
 
----
+## Historical archive
 
-## 中文
+`api文档/`, `用户手册/`, `教程/`, old iteration plans, historical quality
+snapshots, and compatibility evidence describe the retired 0.4 package model.
+They are retained for provenance only and are not maintained executable 0.5
+documentation. Do not copy imports or commands from them into a 0.5 project.
 
-### 用户手册
-
-| 文档 | 说明 |
-|------|------|
-| [安装指南](用户手册/01_安装指南.md) | 安装方式、依赖管理、环境配置 |
-| [快速入门](用户手册/02_快速入门.md) | 5 分钟上手 fincore 核心功能 |
-| [核心概念](用户手册/03_核心概念.md) | 数据模型、API 架构、延迟加载 |
-| [数据准备](用户手册/04_数据准备.md) | 收益率序列、持仓、交易数据格式 |
-| [常见工作流](用户手册/05_常见工作流.md) | 策略分析、报告生成、风险管理 |
-| [FAQ](用户手册/06_FAQ.md) | 常见问题与解答 |
-
-### 教程
-
-| 文档 | 说明 |
-|------|------|
-| [入门：策略绩效分析](教程/01_入门_策略绩效分析.md) | 从零开始分析一个策略 |
-| [进阶：风险管理与压力测试](教程/02_进阶_风险管理与压力测试.md) | EVT、GARCH、蒙特卡洛 |
-| [进阶：组合优化](教程/03_进阶_组合优化.md) | 有效前沿、风险平价、约束优化 |
-| [高级：绩效归因与因子分析](教程/04_高级_绩效归因与因子分析.md) | Brinson、风格分析、多因子 |
-
----
-
-## 项目内部文档 (Internal)
-
-| 文档 | 说明 |
-|------|------|
-| [Benchmarks](BENCHMARKS.md) | 性能基准测试说明 |
-| [已实现函数索引](已实现函数索引.md) | Empyrical 已实现函数完整索引 |
-| [Code Quality Review](CODE_QUALITY_REVIEW.md) | 代码质量审查报告 |
-| [Improvements](IMPROVEMENTS.md) | 改进记录 |
-| [CI/CD 分析](CI_CD_ANALYSIS.md) | CI/CD、GitHub Pages、Read the Docs 分析 |
-| [文档配置分析](DOC_CONFIG_ANALYSIS.md) | mkdocs/readthedocs 为何保留在根目录 |
-
----
-
-## Project Stats
-
-- **Source**: 85 Python files, ~26,700 lines
-- **Tests**: 1800 tests, 243 files, ~27,000 lines
-- **Docs**: 93 markdown files, ~16,300 lines
-- **Examples**: 27 Python scripts
-- **Docstring coverage**: 92%
-- **Python**: 3.11 / 3.12 / 3.13
+The analytical capability ledger and upstream references remain under
+`docs/quality/` and `docs/compatibility/` as read-only oracle/provenance
+material; they do not restore a public compatibility surface.

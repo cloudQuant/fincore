@@ -43,7 +43,7 @@ PYPROJECT = REPO_ROOT / "pyproject.toml"
 CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 
 # Changelog versions follow PEP 440.  Development candidates (for example
-# ``0.4.0.dev0``) intentionally have no release tag, but they must still be
+# ``0.5.0.dev0``) intentionally have no release tag, but they must still be
 # cross-checked against project metadata before a candidate can be built.
 _VERSION_RE = re.compile(r"reports version \*\*([^*\s]+)\*\*")
 _RELEASE_SECTION_RE = re.compile(r"^## \[([^\]]+)\]", re.MULTILINE)
@@ -64,16 +64,26 @@ _REQUIRED_LEGAL_FILES = {
     "THIRD_PARTY_LICENSES/Apache-2.0.txt",
 }
 _REQUIRED_RUNTIME_MODULES = {
-    "fincore/alphalens/__init__.py",
-    "fincore/alphalens/performance.py",
-    "fincore/alphalens/plotting.py",
-    "fincore/alphalens/tears.py",
+    "fincore/__init__.py",
+    "fincore/attribution/performance.py",
     "fincore/factor_analysis/__init__.py",
     "fincore/factor_analysis/data.py",
     "fincore/factor_analysis/performance.py",
     "fincore/factor_analysis/portfolio.py",
+    "fincore/report/models.py",
+    "fincore/report/portfolio/compute.py",
+    "fincore/report/renderers/html.py",
+    "fincore/runtime/catalog.py",
     "fincore/py.typed",
 }
+_REMOVED_RUNTIME_PREFIXES = (
+    "fincore/alphalens/",
+    "fincore/empyrical.py",
+    "fincore/pyfolio.py",
+    "fincore/tearsheets/",
+    "fincore/core/",
+    "fincore/plugin/",
+)
 
 
 def _project() -> dict[str, Any]:
@@ -112,7 +122,12 @@ def _check_artifact_layout(
     """Check source-free runtime layout and retained legal material."""
     relative_names = {name.removeprefix(prefix) for name in names if name.startswith(prefix)}
     required = {prefix + module for module in _REQUIRED_RUNTIME_MODULES}
-    check(required <= names, f"{label} contains Alphalens and factor-analysis runtime modules")
+    check(required <= names, f"{label} contains the required canonical runtime modules")
+    removed = tuple(prefix + path for path in _REMOVED_RUNTIME_PREFIXES)
+    check(
+        not any(name.startswith(removed) for name in names),
+        f"{label} excludes removed compatibility runtime paths",
+    )
     forbidden_prefixes = tuple(prefix + directory for directory in ("tests/", "examples/", "docs/", "benchmarks/"))
     check(
         not any(name.startswith(forbidden_prefixes) for name in names),
@@ -165,13 +180,13 @@ def _check_artifact_layout(
         )
 
 
-def _is_allowed_compatibility_requirement(requirement: Requirement) -> bool:
-    """Return whether a requirement keeps integrated compatibility code local."""
+def _is_allowed_runtime_requirement(requirement: Requirement) -> bool:
+    """Return whether a requirement remains a direct, reproducible dependency."""
     return canonicalize_name(requirement.name) not in _PROHIBITED_EXTERNAL_REQUIREMENTS and requirement.url is None
 
 
 def _check_artifact_requirements(check: Callable[[bool, str], None], requirements: list[str], *, label: str) -> None:
-    """Reject external compatibility packages and direct URLs in built metadata."""
+    """Reject retired upstream packages and direct URLs in built metadata."""
     malformed: list[str] = []
     prohibited: list[str] = []
     for raw in requirements:
@@ -180,7 +195,7 @@ def _check_artifact_requirements(check: Callable[[bool, str], None], requirement
         except InvalidRequirement:
             malformed.append(raw)
             continue
-        if not _is_allowed_compatibility_requirement(requirement):
+        if not _is_allowed_runtime_requirement(requirement):
             prohibited.append(raw)
     check(
         not malformed,
@@ -188,7 +203,7 @@ def _check_artifact_requirements(check: Callable[[bool, str], None], requirement
     )
     check(
         not prohibited,
-        f"{label} Requires-Dist uses no external Alphalens/Empyrical or direct URL ({prohibited or 'clean'})",
+        f"{label} Requires-Dist uses no retired upstream package or direct URL ({prohibited or 'clean'})",
     )
 
 
@@ -209,9 +224,14 @@ def _failures(dist_dir: Path | None) -> list[str]:
     # ------------------------------------------------------------------
     # 1. Runtime __version__ (checkout import in a fresh subprocess).
     # ------------------------------------------------------------------
-    probe = "import fincore, pathlib; print(fincore.__version__); print(pathlib.Path(fincore.__file__).resolve())"
+    probe = (
+        "import sys, sysconfig; from pathlib import Path; "
+        "root = Path(sys.argv[1]).resolve(); "
+        "sys.path[:0] = [str(root), sysconfig.get_paths()['purelib']]; "
+        "import fincore; print(fincore.__version__); print(Path(fincore.__file__).resolve())"
+    )
     proc = subprocess.run(
-        [sys.executable, "-c", probe],
+        [sys.executable, "-S", "-E", "-c", probe, str(REPO_ROOT)],
         cwd=REPO_ROOT,
         env=_scrubbed_env(),
         capture_output=True,
@@ -328,8 +348,8 @@ def _failures(dist_dir: Path | None) -> list[str]:
             )
             parsed = Requirement(req)
             check(
-                _is_allowed_compatibility_requirement(parsed),
-                f"extra {extra_name!r} uses only integrated compatibility code ({req!r})",
+                _is_allowed_runtime_requirement(parsed),
+                f"extra {extra_name!r} uses no retired upstream package or direct URL ({req!r})",
             )
 
     # ------------------------------------------------------------------

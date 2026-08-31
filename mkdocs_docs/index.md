@@ -1,69 +1,38 @@
-# fincore | Quantitative Performance & Risk Analytics
+# fincore 0.5
 
-**fincore** is a Python library for calculating common financial risk and performance metrics. It continues the empyrical analytics stack under active maintenance by cloudQuant. Current development version: **0.4.0.dev0** (Beta), Python 3.11+.
+fincore is a unified Python platform for quantitative performance, portfolio,
+factor, attribution, and risk analysis. Version **0.5.0.dev0** reorganises
+those capabilities into focused canonical domains.
 
-## Four API surfaces
-
-- **Strict compatibility** — `fincore.empyrical`: the frozen empyrical 0.6.0 surface (54/54 C0, 49/49 C1, core callables C3).
-- **pyfolio façade** — `fincore.pyfolio`: the frozen pyfolio 0.9.6 profile of 11 workflows (C1 all, main chains C4). Requires `fincore[pyfolio]`.
-- **Alphalens façade** — `fincore.alphalens`: the strict cloudQuant-local Alphalens surface. Requires `fincore[alphalens]` for analysis/plotting dependencies.
-- **Enhanced semantics** — `fincore.metrics`, the flat API, and `AnalysisContext`: fincore's own interfaces with documented divergences.
-
-See [Compatibility](development/compatibility.md) for the full C0–C4 matrix.
-
-## Features
-
-- **150+ Financial Metrics** — returns, risk, drawdown, alpha/beta, capture ratios, timing
-- **AnalysisContext** — one-liner `fincore.analyze()` with lazy cached computation
-- **RollingEngine** — batch rolling metrics in a single call
-- **Pluggable Visualization** — Matplotlib, HTML, Plotly, Bokeh backends
-- **Portfolio Optimization** — efficient frontier, risk parity, constrained optimization
-- **Monte Carlo Simulation** — bootstrap, scenario testing, path simulation
-- **Performance Attribution** — Brinson, Fama-French, style analysis
-- **Lazy Imports** — `import fincore` in ~0.04s
-
-## Quick Example
+This is a breaking release: upstream-shaped Empyrical, Pyfolio, and Alphalens
+facades, root-level metric calls, and compatibility extras are retired. Import
+each operation from the owning module instead.
 
 ```python
 import pandas as pd
 
-import fincore
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
 
-index = pd.date_range("2024-01-02", periods=5, freq="B")
-returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
-benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
-
-ctx = fincore.analyze(returns, factor_returns=benchmark)
-
-print(f"Sharpe: {ctx.sharpe_ratio:.4f}")
-print(f"Max DD: {ctx.max_drawdown:.4f}")
-
-ctx.to_html(path="report.html")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004])
+print(sharpe_ratio(returns), max_drawdown(returns))
 ```
 
-The quick example above is executed with the same data and arguments by a
-matching test in `tests/docs/test_examples.py`.
+Start with [installation](getting-started/installation.md), the
+[quick start](getting-started/quickstart.md), and the
+[0.5 migration guide](getting-started/migration.md).
 
-## Installation
+## Canonical domains
 
-```bash
-pip install fincore
+- `fincore.metrics`: return, drawdown, ratio, rolling, and statistical kernels.
+- `fincore.performance`: cash-flow-aware return semantics and disclosures.
+- `fincore.portfolio` and `fincore.report`: portfolio inputs, immutable report
+  documents, and renderer-specific artifacts.
+- `fincore.factor_analysis`: factor preparation, analysis, inference, costs,
+  portfolios, and optional rendering.
+- `fincore.attribution`, `risk`, `optimization`, and `simulation`: specialised
+  financial analysis domains.
+- `fincore.data`, `extensions`, `runtime`, and `viz`: platform capabilities.
 
-# With visualization extras
-pip install "fincore[pyfolio]"
-pip install "fincore[interactive]"
-
-# Everything
-pip install "fincore[all]"
-```
-
-## Project status
-
-| Metric | Value | Source |
-|--------|-------|--------|
-| Version | 0.4.0.dev0 (Beta) | `pyproject.toml` (single metadata source) |
-| Python | 3.11, 3.12, 3.13 | `requires-python = ">=3.11"` |
-| Quality numbers | machine-generated | [current-baseline.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/current-baseline.md) |
-| Release readiness | itemized checklist | [release-candidate-checklist.md](https://github.com/cloudQuant/fincore/blob/master/docs/quality/release-candidate-checklist.md) |
-| Platforms | macOS, Linux, Windows | CI matrix |
-| License | MIT for Fincore; third-party notices retained | [LICENSE](https://github.com/cloudQuant/fincore/blob/master/LICENSE) / [NOTICE](https://github.com/cloudQuant/fincore/blob/master/NOTICE) |
+The [API reference](api/index.md) gives the single public implementation path
+for each area.

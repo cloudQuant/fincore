@@ -1,75 +1,42 @@
 # Installation
 
-## From PyPI (Recommended)
+## Core package
 
 ```bash
 pip install fincore
 ```
 
-## From Source
+fincore requires Python **3.11+**. The core package includes numerical metrics,
+portfolio and report models, risk, attribution, optimisation, simulation, and
+the capability runtime. Install optional dependencies only for capabilities you
+intend to use.
+
+## Capability extras
 
 ```bash
-# China users
-git clone https://gitee.com/yunjinqi/fincore
+pip install "fincore[factor-analysis]"       # statsmodels-backed factor inference
+pip install "fincore[visualization]"         # matplotlib, seaborn, Plotly, Bokeh
+pip install "fincore[interactive]"           # Plotly and Bokeh only
+pip install "fincore[report-pdf]"            # PDF report renderer
+pip install "fincore[report-xlsx]"           # XLSX report renderer
+pip install "fincore[bayesian]"              # Bayesian analysis
+pip install "fincore[data-yahoo]"            # Yahoo Finance provider
+pip install "fincore[data-alphavantage]"     # Alpha Vantage provider
+pip install "fincore[data-pandas-datareader]"# pandas-datareader provider
+pip install "fincore[data-cn]"               # Chinese data providers
+pip install "fincore[all]"                   # full functional union
+```
 
-# International users
+The extras above are the complete public set. There are no compatibility alias
+extras or package-profile extras in 0.5.
+
+## From source
+
+```bash
 git clone https://github.com/cloudQuant/fincore
-
 cd fincore
-pip install -U .
+pip install -e ".[dev]"
 ```
 
-## Optional Extras
-
-```bash
-# Pyfolio tear sheets (matplotlib, seaborn, ipython)
-pip install "fincore[pyfolio]"
-
-# Compute-only enhanced factor analysis
-pip install "fincore[factor-analysis]"
-
-# Strict Alphalens migration APIs and factor-analysis plotting
-pip install "fincore[alphalens]"
-
-# Interactive backends (plotly, bokeh)
-pip install "fincore[interactive]"
-
-# PDF report rendering
-pip install "fincore[report-pdf]"
-
-# XLSX report export
-pip install "fincore[report-xlsx]"
-
-# Bayesian analysis (pymc)
-pip install "fincore[bayesian]"
-
-# Data providers
-pip install "fincore[data-yahoo]"
-pip install "fincore[data-alphavantage]"
-pip install "fincore[data-pandas-datareader]"
-pip install "fincore[data-cn]"
-
-# Everything
-pip install "fincore[all]"
-
-# Development (pytest, ruff, mypy, etc.)
-pip install "fincore[dev]"
-```
-
-`viz` and `datareader` are 0.3.x compatibility aliases.
-
-`fincore[alphalens]` does not install a top-level `alphalens` package. Import
-the strict migration façade as `fincore.alphalens`, or use the enhanced
-`fincore.factor_analysis` workflow. The former source snapshot is identified
-by its pinned commit, not by its conflicting historical version strings.
-
-## Requirements
-
-Core dependencies (`pyproject.toml` is the single source of truth):
-
-- Python >= 3.11 (a documented breaking change relative to empyrical)
-- numpy >= 1.24.0
-- pandas >= 1.5.0
-- scipy >= 1.3.0
-- pytz >= 2023.3
-- packaging >= 21.0
+`pyproject.toml` is the single source of truth for supported dependencies and
+optional capability groups.

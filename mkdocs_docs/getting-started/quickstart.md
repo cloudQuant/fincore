@@ -1,109 +1,67 @@
-# Quick Start
+# Quick start
 
-The call forms in every block below are executed by matching tests in
-`tests/docs/test_examples.py` (with equivalent inputs). Each block defines its
-own inputs; later blocks do not inherit earlier variables.
+fincore 0.5 is a domain-oriented performance-analysis platform. The root
+package is a namespace index; import each operation from the focused module
+that owns it. The examples below are exercised by `tests/docs/test_examples.py`.
 
-## AnalysisContext (Recommended)
-
-```python
-import pandas as pd
-import numpy as np
-import fincore
-
-dates = pd.bdate_range('2020-01-01', periods=252)
-returns = pd.Series(np.random.default_rng(0).normal(0.001, 0.02, 252), index=dates)
-benchmark = pd.Series(np.random.default_rng(1).normal(0.0005, 0.015, 252), index=dates)
-
-ctx = fincore.analyze(returns, factor_returns=benchmark)
-
-print(f"Sharpe Ratio:     {ctx.sharpe_ratio:.4f}")
-print(f"Max Drawdown:     {ctx.max_drawdown:.4f}")
-print(f"Annual Return:    {ctx.annual_return:.4f}")
-
-# Export
-ctx.to_json(path="report.json")
-ctx.to_html(path="report.html")
-```
-
-## Flat API (Function Style)
-
-The flat API is bound to enhanced `fincore.metrics` semantics.
+## Metrics
 
 ```python
 import pandas as pd
 
-import fincore
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
+from fincore.metrics.yearly import annual_return
 
 returns = pd.Series([0.01, -0.005, 0.002, 0.004])
 
-sr = fincore.sharpe_ratio(returns)
-md = fincore.max_drawdown(returns)
-ar = fincore.annual_return(returns)
-
-print(sr, md, ar)
+print(sharpe_ratio(returns))
+print(max_drawdown(returns))
+print(annual_return(returns))
 ```
 
-## Strict Compatibility Module
+## Build a portfolio report, then render it
 
-For empyrical 0.6.0-shaped calls, import the strict surface explicitly.
+Report construction is analytical; rendering is a separate projection of the
+immutable `ReportDocument`.
 
 ```python
 import pandas as pd
 
-from fincore import empyrical
+from fincore.report.portfolio.compute import build_portfolio_report
+from fincore.report.renderers.html import write_html
 
-returns = pd.Series([0.01, -0.005, 0.002, 0.004])
+dates = pd.date_range("2024-01-02", periods=5, freq="B")
+returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=dates)
+positions = pd.DataFrame({"AAA": 100.0, "BBB": -30.0, "cash": 80.0}, index=dates)
 
-print(empyrical.sharpe_ratio(returns))
-print(empyrical.max_drawdown(returns))
+document = build_portfolio_report(returns, positions=positions, rolling_window=3)
+artifacts = write_html(document, "portfolio-report.html")
+print(artifacts.named_artifacts["file"])
 ```
 
-## Classic API (Empyrical Class)
+## Factor analysis
 
-```python
-import pandas as pd
+The checked-in quickstart is offline and deterministic. It covers canonical
+input preparation, analysis, portfolio inputs, and an optional headless
+matplotlib summary:
 
-from fincore import Empyrical
-
-returns = pd.Series([0.01, -0.005, 0.002, 0.004])
-benchmark = pd.Series([0.003, 0.002, -0.001, 0.005])
-
-sharpe = Empyrical.sharpe_ratio(returns, risk_free=0.02/252)
-alpha, beta = Empyrical.alpha_beta(returns, benchmark)
-
-print(sharpe, alpha, beta)
+```bash
+pip install "fincore[visualization]"
+MPLBACKEND=Agg python examples/factor_analysis_quickstart.py
 ```
 
-## Instance API (State-Bound)
+For a focused integration, import directly from the relevant owning module:
+`fincore.factor_analysis.data`, `analysis`, `performance`, `portfolio`,
+`costs`, `inference`, or `render_matplotlib`.
 
-```python
-import pandas as pd
+## More domains
 
-from fincore import Empyrical
+- Cash-flow-aware returns: `fincore.performance.cashflows`
+- Positions, transactions, and capacity: `fincore.portfolio`
+- Risk diagnostics and validation reports: `fincore.risk`
+- Attribution: `fincore.attribution.performance`
+- Optimisation: `fincore.optimization`
+- Simulation: `fincore.simulation`
 
-returns = pd.Series([0.01, -0.005, 0.002, 0.004])
-
-emp = Empyrical(returns=returns)
-print(emp.sharpe_ratio())
-print(emp.max_drawdown())
-```
-
-## RollingEngine
-
-```python
-import numpy as np
-import pandas as pd
-
-from fincore.core.engine import RollingEngine
-
-rng = np.random.default_rng(7)
-index = pd.date_range("2024-01-02", periods=60, freq="B")
-returns = pd.Series(rng.normal(0.001, 0.02, 60), index=index)
-benchmark = pd.Series(rng.normal(0.0005, 0.015, 60), index=index)
-
-engine = RollingEngine(returns, factor_returns=benchmark, window=30)
-results = engine.compute(['sharpe', 'volatility', 'max_drawdown', 'beta'])
-
-print(results.keys())
-```
+Use the [migration guide](migration.md) when replacing pre-0.5 imports.

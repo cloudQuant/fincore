@@ -1,11 +1,8 @@
 """Optional-extras union contract tests.
 
-``all`` must be the exact normalized union of the functional extras
-(pyfolio / factor-analysis / alphalens / interactive / report-pdf / report-xlsx / bayesian / data-*) —
+``all`` must be the exact normalized union of the direct 0.5 capabilities —
 never a self-reference such as ``fincore[...]`` and never dev-only tooling.
-The compatibility aliases (``viz``, ``datareader``) declare exactly which
-functional extras they cover, so a hand-edited alias list cannot drift past
-this test unnoticed.
+The breaking release deliberately has no compatibility-profile extras.
 """
 
 from __future__ import annotations
@@ -24,9 +21,8 @@ PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
 
 # Functional extras: every extra that installs runtime capability.
 FUNCTIONAL_EXTRAS = {
-    "pyfolio",
     "factor-analysis",
-    "alphalens",
+    "visualization",
     "interactive",
     "report-pdf",
     "report-xlsx",
@@ -37,8 +33,8 @@ FUNCTIONAL_EXTRAS = {
     "data-cn",
 }
 
-# 0.3.x compatibility aliases (kept for at least one documented minor cycle).
-ALIAS_EXTRAS = {"viz", "datareader"}
+# The breaking 0.5 distribution has no compatibility aliases.
+ALIAS_EXTRAS: set[str] = set()
 
 # Dev-only tooling must never leak into the ``all`` union.
 DEV_ONLY_TOOLS = {
@@ -142,34 +138,22 @@ def test_all_excludes_dev_only_tools() -> None:
     assert not (names_in_all & DEV_ONLY_TOOLS), f"dev-only tools leaked into all: {names_in_all & DEV_ONLY_TOOLS}"
 
 
-def test_alphalens_extras_cover_the_declared_runtime_boundaries() -> None:
-    """The recovery commands emitted by strict adapters name installable extras."""
+def test_visualization_extras_cover_the_declared_runtime_boundaries() -> None:
+    """Direct renderers name installable, non-alias extras."""
 
     extras = _extras()
     assert _normalized(extras["factor-analysis"]) == {"statsmodels>=0.14"}
-    assert _normalized(extras["alphalens"]) == {
-        "statsmodels>=0.14",
+    assert _normalized(extras["visualization"]) == {
         "matplotlib>=3.3",
         "seaborn>=0.11",
         "ipython>=7",
+        "plotly>=5",
+        "bokeh>=3",
     }
-    assert _normalized(extras["alphalens"]) <= _normalized(extras["dev"])
+    assert _normalized(extras["interactive"]) <= _normalized(extras["visualization"])
+    assert _normalized(extras["visualization"]) <= _normalized(extras["dev"])
 
 
-def test_datareader_alias_maps_exactly_to_data_pandas_datareader() -> None:
-    """The 0.3.x ``datareader`` alias must stay identical to the renamed extra."""
+def test_no_compatibility_profile_extra_remains() -> None:
     extras = _extras()
-    assert _normalized(extras["datareader"]) == _normalized(extras["data-pandas-datareader"])
-
-
-def test_viz_alias_covers_pyfolio_plus_interactive_plus_pypdf2() -> None:
-    """The 0.3.x ``viz`` alias covers pyfolio + interactive + the PyPDF2 report dep."""
-    extras = _extras()
-    expected = _normalized(extras["pyfolio"]) | _normalized(extras["interactive"]) | _normalized({"PyPDF2>=3"})
-    assert _normalized(extras["viz"]) == expected
-
-
-def test_viz_alias_is_subset_of_functional_union() -> None:
-    """Everything ``viz`` installs must be covered by the functional extras."""
-    extras = _extras()
-    assert _normalized(extras["viz"]) <= _functional_union(extras)
+    assert not {"alphalens", "pyfolio", "viz", "datareader"} & set(extras)

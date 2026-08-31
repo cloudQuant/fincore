@@ -57,18 +57,21 @@ def assess_liquidity(
 ) -> CapacityAssessment:
     """Compute the full capacity model without invoking a renderer or façade."""
     active_config = config or _DEFAULT_CONFIG
-    common = {
-        "max_bar_consumption": active_config.max_bar_consumption,
-        "capital_base": active_config.capital_base,
-        "mean_volume_window": active_config.mean_volume_window,
-    }
     return CapacityAssessment(
-        liquidation_days=days_to_liquidate_positions(positions, market_data, **common),
+        liquidation_days=days_to_liquidate_positions(
+            positions,
+            market_data,
+            max_bar_consumption=active_config.max_bar_consumption,
+            capital_base=active_config.capital_base,
+            mean_volume_window=active_config.mean_volume_window,
+        ),
         ticker_maximums=get_max_days_to_liquidate_by_ticker(
             positions,
             market_data,
+            max_bar_consumption=active_config.max_bar_consumption,
+            capital_base=active_config.capital_base,
+            mean_volume_window=active_config.mean_volume_window,
             last_n_days=active_config.last_n_days,
-            **common,
         ),
         low_liquidity_transactions=get_low_liquidity_transactions(
             transactions,

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def test_pyproject_version_is_next_dev() -> None:
-    assert _pyproject_version() == "0.4.0.dev0"
+    assert _pyproject_version() == "0.5.0.dev0"
 
 
 def test_sha256_is_deterministic(tmp_path: Path) -> None:
@@ -30,7 +30,7 @@ def _make_wheel(path: Path, version: str) -> Path:
     wheel = path / f"fincore-{version}-py3-none-any.whl"
     with zipfile.ZipFile(wheel, "w") as zf:
         zf.writestr(
-            "fincore-0.4.0.dev0.dist-info/METADATA", f"Metadata-Version: 2.1\nName: fincore\nVersion: {version}\n"
+            f"fincore-{version}.dist-info/METADATA", f"Metadata-Version: 2.1\nName: fincore\nVersion: {version}\n"
         )
     return wheel
 
@@ -60,8 +60,9 @@ def test_version_drift_is_detected(tmp_path: Path, capsys: pytest.CaptureFixture
 def test_matching_version_passes(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     dist = tmp_path / "dist"
     dist.mkdir()
-    _make_wheel(dist, "0.4.0.dev0")
-    (dist / "fincore-0.4.0.dev0.tar.gz").write_bytes(b"not a real sdist")
+    version = _pyproject_version()
+    _make_wheel(dist, version)
+    (dist / f"fincore-{version}.tar.gz").write_bytes(b"not a real sdist")
 
     rc = main(["--dist", str(dist)])
 
@@ -72,8 +73,9 @@ def test_matching_version_passes(tmp_path: Path, capsys: pytest.CaptureFixture[s
 def test_manifest_digest_mismatch_detected(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     dist = tmp_path / "dist"
     dist.mkdir()
-    _make_wheel(dist, "0.4.0.dev0")
-    sdist = dist / "fincore-0.4.0.dev0.tar.gz"
+    version = _pyproject_version()
+    _make_wheel(dist, version)
+    sdist = dist / f"fincore-{version}.tar.gz"
     sdist.write_bytes(b"payload")
 
     manifest = tmp_path / "manifest.json"

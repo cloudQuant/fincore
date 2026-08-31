@@ -13,14 +13,35 @@ from pathlib import Path
 
 import pytest
 
+from scripts.check_release_candidate import _pyproject_version
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RELEASE_CHECK = REPO_ROOT / "scripts" / "check_release_consistency.py"
+_BUILD_SOURCE_IGNORES = (
+    ".git",
+    "build",
+    "dist",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".hypothesis",
+)
+
+
+def _staged_build_source(out_dir: Path) -> Path:
+    """Build release artifacts from source, never a developer's build/lib."""
+
+    source = out_dir.parent / f"{out_dir.name}-source"
+    shutil.copytree(REPO_ROOT, source, ignore=shutil.ignore_patterns(*_BUILD_SOURCE_IGNORES))
+    return source
 
 
 def _build_dist(out_dir: Path) -> Path:
+    source = _staged_build_source(out_dir)
     proc = subprocess.run(
-        [sys.executable, "-m", "build", "--outdir", str(out_dir), str(REPO_ROOT)],
-        cwd=REPO_ROOT,
+        [sys.executable, "-m", "build", "--outdir", str(out_dir), str(source)],
+        cwd=source,
         capture_output=True,
         text=True,
         timeout=600,
@@ -121,5 +142,6 @@ def test_release_consistency_accepts_current_pep440_development_version(clean_di
     result = _release_check(clean_dist)
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "CHANGELOG version statement (0.4.0.dev0) equals pyproject (0.4.0.dev0)" in result.stdout
+    version = _pyproject_version()
+    assert f"CHANGELOG version statement ({version}) equals pyproject ({version})" in result.stdout
     assert "development version; skipping release-tag check" in result.stdout

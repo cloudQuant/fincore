@@ -33,8 +33,8 @@ def _plot_dependencies() -> tuple[Any, Any, Any, Any]:
         seaborn = importlib.import_module("seaborn")
     except ModuleNotFoundError as error:
         raise DependencyError(
-            "Factor-analysis plotting requires the optional 'alphalens' extra. "
-            "Install it with:\n    pip install fincore[alphalens]",
+            "Factor-analysis plotting requires the optional 'visualization' extra. "
+            "Install it with:\n    pip install fincore[visualization]",
             dependency="matplotlib/seaborn",
         ) from error
     return pyplot, cm, ticker, seaborn
@@ -47,7 +47,7 @@ def _require_statsmodels() -> Any:
         return importlib.import_module("statsmodels.api")
     except ModuleNotFoundError as error:
         raise DependencyError(
-            "plot_ic_qq requires the optional 'alphalens' extra. Install it with:\n    pip install fincore[alphalens]",
+            "plot_ic_qq requires the optional 'visualization' extra. Install it with:\n    pip install fincore[visualization]",
             dependency="statsmodels",
         ) from error
 
@@ -254,7 +254,7 @@ def build_information_table(ic_data: pd.DataFrame) -> pd.DataFrame:
         stats = importlib.import_module("scipy.stats")
     except ModuleNotFoundError as error:
         raise DependencyError(
-            "Information-table statistics require scipy. Install it with:\n    pip install fincore[alphalens]",
+            "Information-table statistics require scipy. Install it with:\n    pip install fincore[visualization]",
             dependency="scipy",
         ) from error
     t_stat, p_value = stats.ttest_1samp(data, 0.0, axis=0, nan_policy="propagate")
@@ -343,7 +343,7 @@ def plot_ic_qq(ic: pd.DataFrame, theoretical_dist: object = _DEFAULT_THEORETICAL
             theoretical_dist = importlib.import_module("scipy.stats").norm
         except ModuleNotFoundError as error:
             raise DependencyError(
-                "plot_ic_qq requires scipy. Install it with:\n    pip install fincore[alphalens]",
+                "plot_ic_qq requires scipy. Install it with:\n    pip install fincore[visualization]",
                 dependency="scipy",
             ) from error
     count = len(data.columns)

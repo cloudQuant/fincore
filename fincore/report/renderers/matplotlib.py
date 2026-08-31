@@ -40,6 +40,7 @@ def render_matplotlib(document: ReportDocument, *, axes: Mapping[str, Any] | Non
         for name, values in section.series.items():
             key = f"{section.key}.{name}"
             axis = supplied_axes.get(key)
+            closer: Any = None
             if axis is None:
                 figure, axis = plt.subplots(figsize=(10, 3.5))
 

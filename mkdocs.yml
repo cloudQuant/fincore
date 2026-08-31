@@ -64,36 +64,35 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quickstart.md
-    - Migration from empyrical: getting-started/migration.md
+    - Migration to 0.5: getting-started/migration.md
   - User Guide:
-    - Core Concepts: guide/concepts.md
-    - AnalysisContext: guide/analysis-context.md
-    - RollingEngine: guide/rolling-engine.md
+    - Domain model: guide/concepts.md
+    - Portfolio reporting: guide/reporting.md
     - Visualization: guide/visualization.md
     - Portfolio Optimization: guide/optimization.md
-    - Factor-analysis Migration: guide/factor-analysis.md
-    - Factor Research Protocol: concepts/factor-research-protocol.md
+    - Factor analysis: guide/factor-analysis.md
+    - Factor research protocol: concepts/factor-research-protocol.md
     - Performance Return Semantics: guide/performance-semantics.md
     - Risk Validation: guide/risk-validation.md
     - Reproducible Research: guide/reproducible-research.md
     - Performance: guide/performance.md
   - API Reference:
     - Overview: api/index.md
-    - fincore (top-level): api/fincore.md
+    - Root namespace: api/fincore.md
     - fincore.metrics: api/metrics.md
-    - fincore.core: api/core.md
+    - fincore.performance: api/performance.md
+    - fincore.portfolio: api/portfolio.md
+    - fincore.report: api/report.md
+    - fincore.factor_analysis: api/factor-analysis.md
+    - fincore.runtime and extensions: api/runtime.md
     - fincore.viz: api/viz.md
     - fincore.optimization: api/optimization.md
     - fincore.simulation: api/simulation.md
     - fincore.attribution: api/attribution.md
     - fincore.risk: api/risk.md
-    - fincore.report: api/report.md
-    - fincore.performance: api/performance.md
-    - Factor-analysis: api/factor-analysis.md
   - Development:
     - Contributing: development/contributing.md
     - Development Guide: development/guide.md
-    - Compatibility: development/compatibility.md
     - API Stability: development/api-stability.md
     - Changelog: development/changelog.md
   - Ecosystem: ecosystem.md

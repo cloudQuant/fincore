@@ -143,9 +143,7 @@ def _run_evidence_child(args: argparse.Namespace, manifest: dict) -> dict:
 
     parents = _git(candidate_root, "rev-list", "--parents", "-n", "1", evidence_head).split()
     if len(parents) != 2:
-        raise RunnerBlockedError(
-            f"evidence head must have exactly one parent; found {max(len(parents) - 1, 0)}"
-        )
+        raise RunnerBlockedError(f"evidence head must have exactly one parent; found {max(len(parents) - 1, 0)}")
     if parents[1] != tested_parent:
         raise RunnerBlockedError("evidence head parent is not the tested candidate commit")
 
@@ -229,9 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest = _load_gate_manifest()
         gate = args.gate
         if gate not in manifest["gates"]:
-            raise RunnerUsageError(
-                f"unknown gate {gate!r}; required gates: {', '.join(manifest['required_gates'])}"
-            )
+            raise RunnerUsageError(f"unknown gate {gate!r}; required gates: {', '.join(manifest['required_gates'])}")
 
         if gate == "evidence-child":
             details = _run_evidence_child(args, manifest)

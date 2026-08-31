@@ -1,42 +1,21 @@
-# Development Guide
+# Development guide
 
 ## Environment
 
 ```bash
-pip install -e ".[dev,viz]"
+pip install -e ".[dev,visualization]"
 ```
 
-## Tests
+## Verification
 
 ```bash
-# All tests (parallel)
-pytest tests/
-
-# Sequential (debugging)
-pytest tests/ --override-ini="addopts="
-
-# With coverage
-pytest tests/ --cov=fincore --cov-report=term-missing
+pytest -o addopts='' tests -q --tb=short --maxfail=0
+ruff check fincore tests scripts examples benchmarks
+ruff format --check fincore tests scripts examples benchmarks
+python -m mypy fincore --ignore-missing-imports
+python -m mkdocs build --strict
 ```
 
-## Linting
-
-```bash
-ruff check fincore/ tests/
-ruff format fincore/ tests/
-```
-
-## Type Checking
-
-```bash
-python -m mypy fincore/core fincore/metrics fincore/plugin fincore/data \
-    fincore/optimization fincore/attribution fincore/report fincore/risk \
-    fincore/simulation fincore/utils fincore/viz fincore/empyrical.py \
-    fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
-```
-
-## Architecture
-
-- **Lazy imports**: `import fincore` ~0.04s
-- **Registry-based methods**: `fincore/_registry.py` auto-generates 100+ `Empyrical` class methods
-- **Star import elimination**: All `__init__.py` use explicit imports + `__all__`
+Package checks build source-only staging copies so ignored `build/lib` output
+cannot contaminate a wheel. Use the canonical operation and domain test suites
+when modifying an API; do not add root aliases or compatibility profiles.

@@ -16,7 +16,7 @@ import sys
 from fincore.runtime.builtins import builtin_catalog
 
 catalog = builtin_catalog()
-forbidden = ("bokeh", "matplotlib", "playwright", "plotly", "xlsxwriter")
+forbidden = ("bokeh", "matplotlib", "openpyxl", "playwright", "plotly")
 print(json.dumps({
     "report_operation": "report.portfolio.build_portfolio_report" in catalog.operation_ids,
     "loaded": sorted(name for name in sys.modules if name.split('.', 1)[0] in forbidden),

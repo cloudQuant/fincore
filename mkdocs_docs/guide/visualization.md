@@ -1,37 +1,15 @@
 # Visualization
 
-fincore provides pluggable visualization backends via the `VizBackend` protocol.
+Visualisation is explicit and backend-specific. Use `fincore.viz.get_backend`
+when plotting a domain result, or use report renderers for document output.
 
-## Built-in Backends
-
-### Matplotlib
 ```python
 from fincore.viz import get_backend
-viz = get_backend("matplotlib")
-viz.plot_returns(cum_returns)
-viz.plot_drawdown(drawdown)
-viz.plot_rolling_sharpe(rolling_sharpe)
-viz.plot_monthly_heatmap(returns)
+
+backend = get_backend("matplotlib")
+figure = backend.plot_returns(cumulative_returns)
 ```
 
-### HTML (no extra dependencies)
-```python
-from fincore.viz.html_backend import HtmlReportBuilder
-builder = HtmlReportBuilder()
-builder.add_title("My Report")
-builder.add_stats_table(stats)
-builder.save("report.html")
-```
-
-### Via AnalysisContext
-```python
-ctx = fincore.analyze(returns, factor_returns=benchmark)
-ctx.plot(backend="matplotlib")
-ctx.to_html(path="report.html")
-```
-
-## API Reference
-
-The backend protocol is documented on the [`viz` API page](../api/viz.md).
-
-::: fincore.viz.html_backend.HtmlReportBuilder
+Install `fincore[visualization]` for matplotlib, seaborn, Plotly, and Bokeh;
+install `fincore[interactive]` when only Plotly/Bokeh is required. Backends
+receive already-computed data and do not own financial calculation semantics.

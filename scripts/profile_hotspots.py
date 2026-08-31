@@ -426,10 +426,12 @@ def _invocation_for(kind: str, scenario: str, seed: int) -> _Invocation:
         }
 
         def run_report() -> Any:
-            from fincore.report.compute import compute_sections
+            from fincore.report.portfolio.compute import build_portfolio_report
 
-            return cast(
-                "Mapping[str, Any]", compute_sections(returns, None, None, None, None, ROLLING_WINDOW, period="daily")
+            return build_portfolio_report(
+                returns,
+                period="daily",
+                rolling_window=ROLLING_WINDOW,
             )
 
         run = run_report

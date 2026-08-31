@@ -1,19 +1,10 @@
-"""Executable documentation examples.
-
-Every code block shown in README.md, docs/MIGRATION.md, and the MkDocs
-getting-started pages that claims to run against the current fincore release is
-mirrored here as a real test. Documentation code must never be written first and
-guessed later: this file is the executable contract for those snippets.
-
-Keep each test aligned with the corresponding documentation block.  When a
-doc example changes, update the matching test (and vice versa).
-"""
+"""Executable documentation examples for the 0.5 canonical surface."""
 
 from __future__ import annotations
 
 import json
+import re
 import runpy
-import tempfile
 from pathlib import Path
 
 import matplotlib
@@ -23,101 +14,107 @@ import pytest
 
 import fincore
 
-# Real tear-sheet chains must stay headless and deterministic.
 matplotlib.use("Agg", force=True)
-
 
 _ROOT = Path(__file__).resolve().parents[2]
 _FACTOR_ANALYSIS_QUICKSTART = _ROOT / "examples" / "factor_analysis_quickstart.py"
+_METRICS_REPORT = _ROOT / "examples" / "metrics_report.py"
+_PORTFOLIO_OPTIMIZATION = _ROOT / "examples" / "portfolio_optimization.py"
+_RISK_VALIDATION = _ROOT / "examples" / "risk_validation.py"
+_MAINTAINED_MARKDOWN = (
+    _ROOT / "README.md",
+    _ROOT / "docs" / "API_STABILITY.md",
+    _ROOT / "docs" / "MIGRATION.md",
+    _ROOT / "docs" / "api.md",
+    _ROOT / "docs" / "development.md",
+    _ROOT / "docs" / "examples.md",
+    _ROOT / "docs" / "user_guide.md",
+    *sorted((_ROOT / "mkdocs_docs").rglob("*.md")),
+)
+_EXECUTABLE_FENCE = re.compile(r"```(?:python|bash)\n(.*?)```", re.DOTALL)
+_RETIRED_EXECUTABLE_REFERENCE = re.compile(
+    r"(?:"
+    r"(?:from|import)\s+fincore\.(?:empyrical|pyfolio|alphalens)"
+    r"|from\s+fincore\s+import\s+[^\n]*(?:Empyrical|Pyfolio|analyze|create_strategy_report|sharpe_ratio|max_drawdown)"
+    r"|fincore\.(?:sharpe_ratio|max_drawdown|analyze|create_strategy_report)\b"
+    r"|fincore\[(?:viz|pyfolio|alphalens|alphalens-pyfolio)\]"
+    r"|\.\[dev,viz\]"
+    r")"
+)
 
 
 def _load_factor_analysis_quickstart() -> dict[str, object]:
-    """Load the documented offline quickstart without executing its CLI entry point."""
-
     return runpy.run_path(str(_FACTOR_ANALYSIS_QUICKSTART))
 
 
-def _series(start: str = "2024-01-02", periods: int = 5, seed: int = 0) -> pd.Series:
-    index = pd.date_range(start, periods=periods, freq="B")
-    return pd.Series([0.01, -0.005, 0.002, 0.004, -0.001][:periods], index=index)
-
-
-def _benchmark(periods: int = 5) -> pd.Series:
+def _series(periods: int = 12) -> pd.Series:
     index = pd.date_range("2024-01-02", periods=periods, freq="B")
-    return pd.Series([0.008, -0.003, 0.001, 0.002, 0.0][:periods], index=index)
+    return pd.Series(np.resize([0.01, -0.005, 0.002, 0.004, -0.001], periods), index=index, name="strategy")
 
 
-# ---------------------------------------------------------------------------
-# README Quick Start: flat API
-# ---------------------------------------------------------------------------
+def test_readme_quick_start_uses_direct_metric_modules() -> None:
+    from fincore.metrics.drawdown import max_drawdown
+    from fincore.metrics.ratios import sharpe_ratio
+    from fincore.metrics.yearly import annual_return
 
+    returns = _series()
 
-def test_readme_quick_start_flat_api() -> None:
-    # import fincore
-    # import pandas as pd
-    returns = pd.Series([0.01, -0.005, 0.002, 0.004])
-
-    sharpe = fincore.sharpe_ratio(returns)
-    max_dd = fincore.max_drawdown(returns)
-
-    assert np.isfinite(sharpe)
-    assert max_dd < 0
-
-
-# ---------------------------------------------------------------------------
-# README / migration: strict module API (from fincore import empyrical)
-# ---------------------------------------------------------------------------
-
-
-def test_strict_module_api_example() -> None:
-    import pandas as pd
-
-    from fincore import empyrical
-
-    returns = pd.Series([0.01, -0.005, 0.002, 0.004])
-
-    sharpe = empyrical.sharpe_ratio(returns)
-    max_dd = empyrical.max_drawdown(returns)
-
-    assert np.isfinite(sharpe)
-    assert max_dd < 0
-
-
-def test_migration_flat_import_example() -> None:
-    # docs/MIGRATION.md "enhanced flat API" example runs unchanged.
-    import pandas as pd
-
-    from fincore import max_drawdown, sharpe_ratio
-
-    returns = pd.Series([0.01, -0.005, 0.002, 0.004])
     assert np.isfinite(sharpe_ratio(returns))
     assert max_drawdown(returns) < 0
+    assert np.isfinite(annual_return(returns))
 
 
-def test_quickstart_flat_api_example() -> None:
-    # mkdocs_docs/getting-started/quickstart.md "Flat API" block.
-    import pandas as pd
+def test_documented_root_is_only_a_canonical_namespace_index() -> None:
+    assert fincore.__all__ == [
+        "__version__",
+        "attribution",
+        "data",
+        "errors",
+        "extensions",
+        "factor_analysis",
+        "metrics",
+        "optimization",
+        "performance",
+        "portfolio",
+        "report",
+        "risk",
+        "runtime",
+        "simulation",
+        "viz",
+    ]
 
-    import fincore
 
-    returns = pd.Series([0.01, -0.005, 0.002, 0.004])
+def test_maintained_markdown_has_no_retired_executable_surface() -> None:
+    """Historical names may be prose, never runnable 0.5 documentation."""
 
-    sr = fincore.sharpe_ratio(returns)
-    md = fincore.max_drawdown(returns)
-    ar = fincore.annual_return(returns)
+    violations = [
+        str(path.relative_to(_ROOT))
+        for path in _MAINTAINED_MARKDOWN
+        if any(
+            _RETIRED_EXECUTABLE_REFERENCE.search(block)
+            for block in _EXECUTABLE_FENCE.findall(path.read_text(encoding="utf-8"))
+        )
+    ]
 
-    assert np.isfinite(sr)
-    assert md < 0
-    assert np.isfinite(ar)
+    assert not violations, "retired executable examples: " + ", ".join(violations)
 
 
-# ---------------------------------------------------------------------------
-# Performance-return semantics guide
-# ---------------------------------------------------------------------------
+def test_portfolio_report_workflow_builds_once_and_writes_html(tmp_path: Path) -> None:
+    from fincore.report.portfolio.compute import build_portfolio_report
+    from fincore.report.renderers.html import write_html
+
+    returns = _series()
+    positions = pd.DataFrame({"AAA": 100.0, "BBB": -30.0, "cash": 80.0}, index=returns.index)
+    document = build_portfolio_report(returns, positions=positions, rolling_window=3)
+    artifact = write_html(document, tmp_path / "portfolio-report.html")
+
+    assert document.domain == "portfolio"
+    assert "annual_return" in document.section("performance").metrics
+    assert artifact.named_artifacts["file"].is_file()
+    assert "Portfolio Report" in artifact.named_artifacts["html"]
 
 
 def test_performance_cashflow_semantics_example() -> None:
-    # mkdocs_docs/guide/performance-semantics.md "Cashflow-adjusted" block.
     from fincore.performance.cashflows import cashflow_adjusted_returns, cashflow_adjusted_twr
 
     dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
@@ -131,30 +128,7 @@ def test_performance_cashflow_semantics_example() -> None:
     assert round(total_return, 12) == 0.1
 
 
-def test_performance_transaction_ledger_example() -> None:
-    # mkdocs_docs/guide/performance-semantics.md transaction ledger block.
-    from fincore.performance.cashflows import cashflow_adjusted_twr
-
-    dates = pd.to_datetime(["2024-01-31", "2024-02-29", "2024-03-31"], utc=True)
-    ledger = pd.DataFrame(
-        {"amount": [10.0, -5.0], "timing": ["start", "end"]},
-        index=[dates[1], dates[1]],
-    )
-    one_period = cashflow_adjusted_twr(
-        pd.Series([100.0, 116.0], index=dates[:2]),
-        ledger,
-    )
-
-    assert round(one_period, 12) == 0.1
-
-
-# ---------------------------------------------------------------------------
-# Risk-validation guide
-# ---------------------------------------------------------------------------
-
-
 def test_risk_validation_report_example(tmp_path: Path) -> None:
-    # mkdocs_docs/guide/risk-validation.md "Auditable walk-forward VaR" block.
     from fincore.risk.diagnostics import walk_forward_var
     from fincore.risk.report import build_risk_validation_report
     from fincore.risk.specs import RiskModelSpec
@@ -172,244 +146,20 @@ def test_risk_validation_report_example(tmp_path: Path) -> None:
     assert json.loads(output.read_text(encoding="utf-8"))["inputs_digest"] == walk_forward.inputs_digest
 
 
-# ---------------------------------------------------------------------------
-# Quick Start: classic API (Empyrical class-level call)
-# ---------------------------------------------------------------------------
-
-
-def test_classic_api_class_level_example() -> None:
-    from fincore import Empyrical
-
-    returns = _series()
-    benchmark = _benchmark()
-
-    sharpe = Empyrical.sharpe_ratio(returns, risk_free=0.02 / 252)
-    alpha, beta = Empyrical.alpha_beta(returns, benchmark)
-
-    assert np.isfinite(sharpe)
-    assert np.isfinite(alpha) and np.isfinite(beta)
-
-
-# ---------------------------------------------------------------------------
-# Quick Start: instance API (state-bound Empyrical instance)
-# ---------------------------------------------------------------------------
-
-
-def test_instance_api_example() -> None:
-    from fincore import Empyrical
-
-    returns = _series()
-
-    emp = Empyrical(returns=returns)
-    sharpe = emp.sharpe_ratio()
-    max_dd = emp.max_drawdown()
-
-    assert np.isfinite(sharpe)
-    assert max_dd < 0
-
-
-def test_class_and_instance_calls_share_the_same_metric() -> None:
-    from fincore import Empyrical
-
-    returns = _series()
-
-    class_level = Empyrical.sharpe_ratio(returns)
-    instance_level = Empyrical(returns=returns).sharpe_ratio()
-
-    assert class_level == instance_level
-
-
-# ---------------------------------------------------------------------------
-# AnalysisContext: analyze / export / plot chain
-# ---------------------------------------------------------------------------
-
-
-def test_analysis_context_export_chain() -> None:
-    returns = _series()
-    benchmark = _benchmark()
-
-    ctx = fincore.analyze(returns, factor_returns=benchmark)
-
-    assert np.isfinite(ctx.sharpe_ratio)
-    assert ctx.max_drawdown < 0
-
-    # JSON round-trip (text) and file export.
-    payload = json.loads(ctx.to_json())
-    assert "Sharpe ratio" in payload
-
-    with tempfile.TemporaryDirectory() as tmp:
-        json_path = Path(tmp) / "report.json"
-        ctx.to_json(path=json_path)
-        assert json_path.is_file() and json_path.stat().st_size > 0
-
-        html_path = Path(tmp) / "report.html"
-        ctx.to_html(path=html_path)
-        assert html_path.is_file() and html_path.stat().st_size > 0
-
-    assert ctx.perf_stats() is not None
-    assert ctx.to_dict()
-
-
-def test_analysis_context_plot_returns_report_artifacts() -> None:
-    from fincore.report.artifacts import ReportArtifacts
-
-    ctx = fincore.analyze(_series(), factor_returns=_benchmark())
-
-    artifacts = ctx.plot(backend="matplotlib")
-
-    assert isinstance(artifacts, ReportArtifacts)
-
-
-def test_analysis_context_replace_data_invalidates_cache() -> None:
-    returns = _series()
-
-    ctx = fincore.analyze(returns)
-    before = ctx.sharpe_ratio
-
-    ctx.replace_data(returns=returns + 0.001)
-    after = ctx.sharpe_ratio
-
-    assert before != after
-
-
-def test_analysis_context_snapshot_immune_to_external_mutation() -> None:
-    returns = _series()
-
-    ctx = fincore.analyze(returns)
-    before = ctx.sharpe_ratio
-
-    # Mutating the caller's series must not stale the cached snapshot.
-    returns.iloc[0] = 99.0
-    assert ctx.sharpe_ratio == before
-
-
-# ---------------------------------------------------------------------------
-# RollingEngine batch computation
-# ---------------------------------------------------------------------------
-
-
-def test_rolling_engine_example() -> None:
-    from fincore.core.engine import RollingEngine
-
-    rng = np.random.default_rng(7)
-    index = pd.date_range("2024-01-02", periods=60, freq="B")
-    returns = pd.Series(rng.normal(0.001, 0.02, 60), index=index)
-    benchmark = pd.Series(rng.normal(0.0005, 0.015, 60), index=index)
-
-    engine = RollingEngine(returns, factor_returns=benchmark, window=30)
-    results = engine.compute(["sharpe", "volatility", "max_drawdown", "beta"])
-
-    assert set(results) == {"sharpe", "volatility", "max_drawdown", "beta"}
-
-
-# ---------------------------------------------------------------------------
-# Pyfolio main chain: enhanced class and functional facade share workflows
-# ---------------------------------------------------------------------------
-
-
-def _pyfolio_block_data() -> tuple[pd.Series, pd.Series]:
-    # The exact data of the README "Pyfolio main chain" block (which reuses
-    # the AnalysisContext block's series above it).
-    index = pd.date_range("2024-01-02", periods=5, freq="B")
-    returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
-    benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
-    return returns, benchmark
-
-
-def test_pyfolio_class_main_chain() -> None:
-    # README block, executed as written:
-    # from fincore import Pyfolio  # requires fincore[pyfolio]
-    from fincore import Pyfolio
-
-    returns, benchmark = _pyfolio_block_data()
-
-    pyfolio = Pyfolio(returns=returns, benchmark_rets=benchmark)
-    pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
-
-
-def test_pyfolio_functional_facade_main_chain() -> None:
-    import fincore.pyfolio as pyfolio
-
-    returns, benchmark = _pyfolio_block_data()
-
-    pyfolio.create_returns_tear_sheet(returns, benchmark_rets=benchmark)
-
-
-# ---------------------------------------------------------------------------
-# Portfolio optimization examples
-# ---------------------------------------------------------------------------
-
-
-def test_portfolio_optimization_examples() -> None:
-    # README block, executed as written (variable names and arguments match).
+def test_portfolio_optimization_example() -> None:
     from fincore.optimization.frontier import efficient_frontier
     from fincore.optimization.objectives import optimize
     from fincore.optimization.risk_parity import risk_parity
 
-    returns_df = pd.DataFrame(
-        {
-            "asset_a": [0.01, -0.005, 0.004, 0.002],
-            "asset_b": [0.003, 0.002, -0.001, 0.005],
-        }
-    )
-    ef = efficient_frontier(returns_df, n_points=5)
-    rp = risk_parity(returns_df)
-    w = optimize(returns_df, objective="max_sharpe")
+    returns = pd.DataFrame({"asset_a": [0.01, -0.005, 0.004, 0.002], "asset_b": [0.003, 0.002, -0.001, 0.005]})
 
-    assert isinstance(ef, dict)
-    assert isinstance(rp, dict)
-    assert isinstance(w, dict)
-
-
-# ---------------------------------------------------------------------------
-# API-stability surfaces referenced by the docs
-# ---------------------------------------------------------------------------
-
-
-def test_stability_documented_top_level_imports() -> None:
-    from fincore import Empyrical, Pyfolio, analyze, create_strategy_report
-
-    assert callable(analyze)
-    assert callable(create_strategy_report)
-    assert Empyrical is not None
-    assert Pyfolio is not None
-
-
-def test_stability_documented_flat_api_names() -> None:
-    names = [
-        "sharpe_ratio",
-        "sortino_ratio",
-        "max_drawdown",
-        "annual_return",
-        "annual_volatility",
-        "cum_returns",
-        "cum_returns_final",
-        "alpha",
-        "beta",
-        "alpha_beta",
-        "calmar_ratio",
-        "omega_ratio",
-        "information_ratio",
-        "stability_of_timeseries",
-        "tail_ratio",
-        "value_at_risk",
-        "capture",
-        "downside_risk",
-        "simple_returns",
-        "aggregate_returns",
-    ]
-    for name in names:
-        assert callable(getattr(fincore, name)), name
-
-
-# ---------------------------------------------------------------------------
-# Factor-analysis migration quickstart: deterministic, offline, headless
-# ---------------------------------------------------------------------------
+    assert "frontier_returns" in efficient_frontier(returns, n_points=5)
+    assert "weights" in risk_parity(returns)
+    assert "weights" in optimize(returns, objective="max_sharpe")
 
 
 def test_factor_analysis_quickstart_builds_offline_canonical_inputs() -> None:
     example = _load_factor_analysis_quickstart()
-
     factor, prices = example["synthetic_factor_inputs"]()
 
     assert isinstance(factor, pd.Series)
@@ -417,9 +167,22 @@ def test_factor_analysis_quickstart_builds_offline_canonical_inputs() -> None:
     assert factor.index.names == ["date", "asset"]
 
 
-def test_factor_analysis_quickstart_prepares_and_analyzes_enhanced_model() -> None:
-    example = _load_factor_analysis_quickstart()
+def test_canonical_core_examples_execute_without_legacy_imports(tmp_path: Path) -> None:
+    """The retained examples exercise only direct 0.5 domain APIs."""
 
+    metrics_example = runpy.run_path(str(_METRICS_REPORT))
+    optimization_example = runpy.run_path(str(_PORTFOLIO_OPTIMIZATION))
+    risk_example = runpy.run_path(str(_RISK_VALIDATION))
+
+    metrics_example["main"](tmp_path / "portfolio-report.html")
+    optimization_example["main"]()
+    risk_example["main"]()
+
+    assert (tmp_path / "portfolio-report.html").is_file()
+
+
+def test_factor_analysis_quickstart_prepares_and_analyzes_model() -> None:
+    example = _load_factor_analysis_quickstart()
     prepared, model = example["enhanced_prepare_and_analyze"]()
 
     assert prepared.loss_report.total_loss <= 0.35
@@ -429,7 +192,6 @@ def test_factor_analysis_quickstart_prepares_and_analyzes_enhanced_model() -> No
 
 def test_factor_analysis_quickstart_builds_portfolio_inputs() -> None:
     example = _load_factor_analysis_quickstart()
-
     inputs = example["factor_portfolio_inputs"]()
 
     assert inputs.returns.index.isin(inputs.positions.index).all()
@@ -438,7 +200,6 @@ def test_factor_analysis_quickstart_builds_portfolio_inputs() -> None:
 
 def test_factor_analysis_quickstart_renders_and_closes_headless_summary() -> None:
     example = _load_factor_analysis_quickstart()
-
     artifacts = example["summary_tear_sheet"]()
 
     assert artifacts.figures
@@ -446,7 +207,7 @@ def test_factor_analysis_quickstart_renders_and_closes_headless_summary() -> Non
     assert not matplotlib.pyplot.fignum_exists(artifacts.figures[0].number)
 
 
-def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_factor_analysis_quickstart_names_the_visualization_extra(monkeypatch: pytest.MonkeyPatch) -> None:
     example = _load_factor_analysis_quickstart()
     import fincore.factor_analysis.render_matplotlib as render_matplotlib
     from fincore.exceptions import DependencyError
@@ -459,13 +220,12 @@ def test_factor_analysis_quickstart_documents_missing_extra_message(monkeypatch:
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(render_matplotlib.importlib, "import_module", missing_matplotlib)
-    with pytest.raises(DependencyError, match=r"pip install fincore\[alphalens\]"):
+    with pytest.raises(DependencyError, match=r"pip install fincore\[visualization\]"):
         render_matplotlib._plot_dependencies()
-    assert example["OPTIONAL_EXTRA_INSTALL"] == "fincore[alphalens]"
+    assert example["OPTIONAL_EXTRA_INSTALL"] == "fincore[visualization]"
 
 
 def test_factor_cost_and_capacity_ledger_example() -> None:
-    # mkdocs_docs/concepts/factor-research-protocol.md cost/capacity block.
     from fincore.factor_analysis.costs import FactorCostModel, apply_factor_costs
 
     dates = pd.date_range("2024-01-02", periods=2, freq="B", tz="UTC", name="date")
@@ -484,10 +244,7 @@ def test_factor_cost_and_capacity_ledger_example() -> None:
         dollar_volume,
         portfolio_value=250.0,
         model=FactorCostModel(
-            half_spread_bps=10.0,
-            impact_coefficient=0.01,
-            impact_exponent=0.5,
-            max_participation=0.50,
+            half_spread_bps=10.0, impact_coefficient=0.01, impact_exponent=0.5, max_participation=0.50
         ),
         borrow_rates=borrow_rates,
         borrow_available=borrow_available,
@@ -498,7 +255,6 @@ def test_factor_cost_and_capacity_ledger_example() -> None:
 
 
 def test_fama_macbeth_newey_west_example() -> None:
-    # mkdocs_docs/concepts/factor-research-protocol.md Newey-West block.
     from fincore.factor_analysis.inference import fama_macbeth
 
     dates = pd.date_range("2024-01-02", periods=5, freq="B", tz="UTC")
@@ -510,12 +266,7 @@ def test_fama_macbeth_newey_west_example() -> None:
         columns=assets,
     )
 
-    result = fama_macbeth(
-        returns,
-        exposures,
-        covariance="newey-west",
-        newey_west_lags=3,
-    )
+    result = fama_macbeth(returns, exposures, covariance="newey-west", newey_west_lags=3)
 
     assert result.attrs["covariance"] == "newey-west"
     assert result.attrs["newey_west_lags"] == 3

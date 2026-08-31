@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from fincore.factor_analysis.tears import FactorTearSheetArtifacts
 
 # The renderer uses this documented, optional distribution extra.
-OPTIONAL_EXTRA_INSTALL = "fincore[alphalens]"
+OPTIONAL_EXTRA_INSTALL = "fincore[visualization]"
 
 
 def synthetic_factor_inputs(seed: int = 7) -> tuple[pd.Series, pd.DataFrame]:

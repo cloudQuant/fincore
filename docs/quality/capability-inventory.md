@@ -1,6 +1,10 @@
-# Capability Inventory
+# Historical Capability Source Inventory
 
-> Machine-generated from `fincore.capabilities`. Do not edit by hand.
+> This is a retained 0.4 source inventory used as read-only oracle/provenance
+> input for the 0.5 capability ledger. It is not generated from the 0.5 source
+> tree, does not describe a supported public import surface, and must not be
+> copied into executable 0.5 documentation. The canonical evidence is the
+> immutable 0042-R2 ledger and its registered domain operation IDs.
 
 | id | domain | status | public path | input contract | output contract | docs |
 | --- | --- | --- | --- | --- | --- | --- |

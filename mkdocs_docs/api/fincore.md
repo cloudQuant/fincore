@@ -1,18 +1,21 @@
-# fincore (top-level)
+# `fincore` root namespace
 
-## Flat API Functions
+The root package is an intentionally small namespace index. It exposes the
+version and canonical domains only:
 
 ```python
 import fincore
 
-fincore.sharpe_ratio(returns)
-fincore.max_drawdown(returns)
-fincore.annual_return(returns)
-fincore.alpha_beta(returns, benchmark)
+print(fincore.__version__)
+print(fincore.metrics)
+print(fincore.report)
 ```
 
-## Main Classes
+It does not re-export metrics, façade classes, stateful contexts, or upstream
+package compatibility modules. Import executable APIs from their focused leaf
+module, for example:
 
-::: fincore.core.context.AnalysisContext
-
-::: fincore.core.engine.RollingEngine
+```python
+from fincore.metrics.ratios import sharpe_ratio
+from fincore.report.portfolio.compute import build_portfolio_report
+```

@@ -1,35 +1,25 @@
-# API Reference
+# API reference
 
-## Package Structure
+The 0.5 API is organised by analytical responsibility. Package namespaces do
+not duplicate leaf functions or install aliases; import the operation from its
+owning module.
 
-```
+```text
 fincore/
-├── __init__.py          # Flat API: sharpe_ratio, max_drawdown, ...
-├── empyrical.py         # Empyrical facade class (150+ methods)
-├── pyfolio.py           # Pyfolio tearsheet class
-├── core/
-│   ├── context.py       # AnalysisContext
-│   └── engine.py        # RollingEngine
-├── metrics/             # 17 metric modules
-├── viz/                 # Visualization backends
-├── optimization/        # Portfolio optimization
-├── simulation/          # Monte Carlo, bootstrap
-├── attribution/         # Brinson, Fama-French
-├── performance/         # Enhanced cashflow and return semantics
-├── risk/                # EVT, GARCH
-└── report/              # HTML/PDF reports
+├── metrics/          quantitative metric kernels
+├── performance/      cash-flow and return semantics
+├── portfolio/        positions, transactions, capacity, round trips
+├── report/           report models, builders, renderers
+├── factor_analysis/  factor research workflow layers
+├── attribution/      allocation and factor attribution
+├── risk/             risk models and validation
+├── optimization/     allocation optimisation
+├── simulation/       simulation and scenarios
+├── data/             provider and snapshot boundaries
+├── extensions/       immutable extension discovery/snapshots
+├── runtime/          catalog, session, errors, artifacts
+└── viz/              explicit visualisation backends
 ```
 
-## Module Pages
-
-- [fincore (top-level)](fincore.md) — Flat API and main classes
-- [fincore.metrics](metrics.md) — All metric functions
-- [fincore.core](core.md) — AnalysisContext and RollingEngine
-- [fincore.viz](viz.md) — Visualization backends
-- [fincore.optimization](optimization.md) — Portfolio optimization
-- [fincore.simulation](simulation.md) — Monte Carlo simulation
-- [fincore.attribution](attribution.md) — Performance attribution
-- [fincore.performance](performance.md) — Enhanced return and cashflow semantics
-- [fincore.risk](risk.md) — Risk models
-- [fincore.report](report.md) — Report generation
-- [Factor-analysis](factor-analysis.md) — Strict Alphalens migration and enhanced factor analysis
+Use the module pages in this section as the public API contract. Private
+modules prefixed with `_` are implementation details.

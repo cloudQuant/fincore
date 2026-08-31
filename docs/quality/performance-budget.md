@@ -1,9 +1,10 @@
 # Performance Budget
 
-Iteration 0042 — the platform layer (catalog dispatch, invocation pipeline,
-DAG executor) must not add order-of-magnitude overhead to a single scalar
-metric.  The budgets below are the fixed overhead ceilings; they are enforced
-by `scripts/check_performance.py` and the benchmarks in `benchmarks/`.
+Iteration 0042 — the canonical runtime (catalog resolution, request planning,
+and immutable snapshot construction) must not add order-of-magnitude overhead
+to a single scalar metric. The budgets below are the fixed overhead ceilings;
+they are enforced by `scripts/check_performance.py` and the benchmarks in
+`benchmarks/`.
 
 ## Principles
 
@@ -20,8 +21,8 @@ by `scripts/check_performance.py` and the benchmarks in `benchmarks/`.
 
 | Layer | Operation | Budget (p95) |
 | --- | --- | --- |
-| Catalog dispatch | resolve + invoke one scalar metric | ≤ 500 µs |
-| DAG executor | plan + execute a 3-node chain | ≤ 1 ms |
+| Catalog resolution | resolve one canonical scalar operation | ≤ 500 µs |
+| Request planning | isolate and validate one runtime request | ≤ 1 ms |
 | Snapshot | copy-on-ingest a medium series | ≤ 10 ms |
 
 ## Regression thresholds (vs approved baseline)

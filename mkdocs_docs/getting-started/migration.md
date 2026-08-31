@@ -1,83 +1,58 @@
-# Migration from empyrical
+# Migration to fincore 0.5
 
-The current fincore development version is **0.4.0.dev0**. There is no current 1.0.0 release, so
-do not require `fincore>=1.0.0`.
+fincore **0.5.0.dev0** is a breaking unified-core release. It retains the
+analytical capability areas associated with Empyrical, Pyfolio, and Alphalens,
+but it intentionally removes their path-shaped compatibility layers. There is
+no deprecated fallback period and no compatibility extra to install.
 
-> **Breaking change:** fincore requires **Python 3.11+**; empyrical supports
-> older interpreters.
+## Replace imports by purpose
 
-## The four API surfaces
+| Previous purpose | 0.5 destination |
+| --- | --- |
+| scalar and rolling performance metrics | focused modules below `fincore.metrics` |
+| cash-flow-aware performance calculation | `fincore.performance.cashflows` |
+| tear-sheet style portfolio analysis | `fincore.report.portfolio.compute` plus a renderer below `fincore.report.renderers` |
+| factor cleaning, returns, IC, turnover, and factor portfolios | focused modules below `fincore.factor_analysis` |
+| performance attribution | `fincore.attribution.performance` |
+| root-level flat functions, stateful analysis contexts, or rolling engines | compose direct domain operations for the required workflow |
 
-1. **Strict compatibility** — `fincore.empyrical` is the frozen empyrical
-   0.6.0 surface (54 public symbols, 49 callables): all symbols C0, all
-   callables C1, core callables C3.
-2. **pyfolio façade** — `fincore.pyfolio` implements the frozen pyfolio 0.9.6
-   profile of 11 workflows: all entries C1, risk/returns/perf-attrib/full-sheet
-   main chains C4. `from fincore import Pyfolio` requires `fincore[pyfolio]`.
-3. **Alphalens façade** — `fincore.alphalens` is the frozen cloudQuant-local
-   Alphalens compatibility surface. It remains distinct from the enhanced
-   factor-analysis kernel and uses `fincore[alphalens]` for optional analysis
-   and plotting dependencies.
-4. **Enhanced semantics** — `fincore.metrics`, the flat API, and
-   `AnalysisContext` are fincore's own interfaces with documented divergences.
-   Recommended for new code; not evidence of empyrical equality.
-
-Details and the full C0–C4 matrix: [Compatibility](../development/compatibility.md).
-Frozen manifests: `tests/compat/fixtures/`; executable gates: `tests/compat/`
-(CI job `compat`).
-
-## 0.4 development imports
-
-Existing flat imports remain mapped to enhanced `fincore.metrics` functions in
-the 0.4 development line:
+For example:
 
 ```python
 import pandas as pd
 
-from fincore import max_drawdown, sharpe_ratio
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
 
 returns = pd.Series([0.01, -0.005, 0.002, 0.004])
-print(sharpe_ratio(returns))
-print(max_drawdown(returns))
+print(sharpe_ratio(returns), max_drawdown(returns))
 ```
 
-Equal names do not imply equal empyrical signatures or edge-case behavior.
-For empyrical-shaped calls, import the strict module explicitly:
+## Reporting model
+
+Instead of invoking a tear-sheet façade, build one report model and choose a
+renderer explicitly:
 
 ```python
-from fincore import empyrical
+from fincore.report.portfolio.compute import build_portfolio_report
+from fincore.report.renderers.html import write_html
 
-empyrical.sharpe_ratio(returns)
+document = build_portfolio_report(returns)
+write_html(document, "portfolio-report.html")
 ```
 
-Do not blindly replace package imports. Inventory each used symbol, check its
-compatibility level in the frozen manifest, and run differential tests on
-production-shaped inputs before migrating it.
+This separates computational semantics from presentation and lets HTML, PDF,
+XLSX, and interactive output share a single document model.
 
-The generated flat-API migration manifest records every current target,
-recommended future target, and deprecation state. No switch is scheduled; any
-change requires a deprecation period and a future major release.
+## Migration checklist
 
-## Recommended destination: AnalysisContext
+1. Raise your project to Python 3.11 or newer.
+2. Inventory all old imports and identify the capability each call supplies.
+3. Replace each call with the owning 0.5 domain module; do not substitute a
+   root-level alias.
+4. Select only the required capability extras.
+5. Validate numerical outputs and generated reports against your own production
+   data and edge cases.
 
-```python
-import pandas as pd
-
-import fincore
-
-index = pd.date_range("2024-01-02", periods=5, freq="B")
-returns = pd.Series([0.01, -0.005, 0.002, 0.004, -0.001], index=index)
-benchmark = pd.Series([0.008, -0.003, 0.001, 0.002, 0.0], index=index)
-
-ctx = fincore.analyze(returns, factor_returns=benchmark)
-ctx.sharpe_ratio
-ctx.to_json(path="report.json")
-```
-
-## License/provenance review
-
-Pyfolio's pinned checkout has MIT text in its root `LICENSE` and Apache-2.0
-headers in inspected source files. Human/license review is pending. The project
-does not infer a legal conclusion, but it does distribute the retained
-third-party NOTICE and Apache-2.0 terms. CI/CD validates that inventory and
-does not treat the pending review as an automated approval.
+The detailed repository-level guide is also available in the
+[repository migration document](https://github.com/cloudQuant/fincore/blob/master/docs/MIGRATION.md).

@@ -2,10 +2,9 @@
 
 ## Scope and API boundary
 
-`fincore.factor_analysis` offers an enhanced point-in-time (PIT) input route
-for new research. It is additive: `fincore.alphalens` remains the strict,
-source-shaped compatibility facade and is not silently reinterpreted as a PIT
-workflow.
+`fincore.factor_analysis` offers the canonical point-in-time (PIT) input route
+for new research. It is the only factor-analysis workflow surface in 0.5;
+legacy source-shaped routes are retired rather than reinterpreted as PIT.
 
 The current PIT route establishes causal factor materialization and causal
 factor-data preparation. It does not by itself certify a research result,
@@ -79,19 +78,16 @@ later long horizon cannot rebucket an already available short-horizon row.
 The API therefore computes factor bins from the finite factor/universe panel
 before applying each horizon's return-availability mask.
 
-This is an enhanced-only API. The strict `fincore.alphalens` route deliberately
-retains its source-shaped all-horizon cleaning semantics. Horizon labels must
-be unique, every horizon separately enforces `max_loss`, and full-sample
-`filter_zscore` is rejected to keep this route causal. The API does not yet
-provide corporate-action/calendar provenance or a complete research-trial
-workflow.
+Horizon labels must be unique, every horizon separately enforces `max_loss`,
+and full-sample `filter_zscore` is rejected to keep this route causal. The API
+does not yet provide corporate-action/calendar provenance or a complete
+research-trial workflow.
 
 ## Explicit factor cost, borrow, slippage and capacity ledger
 
-Use `apply_factor_costs` after constructing the enhanced factor portfolio.
-It is deliberately a separate, labelled accounting step: the strict
-`fincore.alphalens` facade is not changed, and the API does not silently choose
-an execution, liquidity, FX, or borrow policy for the caller.
+Use `apply_factor_costs` after constructing the factor portfolio. It is a
+separate, labelled accounting step; the API does not silently choose an
+execution, liquidity, FX, or borrow policy for the caller.
 
 ```python
 import pandas as pd

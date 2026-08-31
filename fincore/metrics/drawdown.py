@@ -136,11 +136,11 @@ def _identify_drawdown_periods(
     if not isinstance(returns, pd.Series):
         returns = pd.Series(returns)
 
-    cum_ret = _cum_returns(returns, starting_value=100)
-    rolling_max = cum_ret.expanding().max()  # type: ignore[union-attr]
+    cum_ret = cast("pd.Series", _cum_returns(returns, starting_value=100))
+    rolling_max = cum_ret.expanding().max()
     drawdown = (cum_ret - rolling_max) / rolling_max
 
-    dd_vals = drawdown.values
+    dd_vals = drawdown.to_numpy(dtype=float, copy=False)
     is_dd = dd_vals < 0
 
     if not is_dd.any():
@@ -240,8 +240,8 @@ def get_max_drawdown(
         The date of recovery or NaT if not recovered.
     """
     returns = returns.copy()
-    df_cum = _cum_returns(returns, 1.0)
-    running_max = np.maximum.accumulate(df_cum)
+    df_cum = cast("pd.Series", _cum_returns(returns, 1.0))
+    running_max = pd.Series(np.maximum.accumulate(df_cum.to_numpy()), index=df_cum.index)
     underwater = df_cum / running_max - 1
     return get_max_drawdown_underwater(underwater)
 
@@ -310,8 +310,8 @@ def get_top_drawdowns(
         List of (peak, valley, recovery) tuples.
     """
     returns = returns.copy()
-    df_cum = _cum_returns(returns, starting_value=1.0)
-    running_max = np.maximum.accumulate(df_cum)
+    df_cum = cast("pd.Series", _cum_returns(returns, starting_value=1.0))
+    running_max = pd.Series(np.maximum.accumulate(df_cum.to_numpy()), index=df_cum.index)
     underwater = df_cum / running_max - 1
 
     drawdowns = []

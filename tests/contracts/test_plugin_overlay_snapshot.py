@@ -1,30 +1,30 @@
-"""Plugin discovery and overlay tests."""
+"""Contracts for explicit extension discovery without a global plugin registry."""
 
 from __future__ import annotations
 
-from fincore.plugin.discovery import ENTRY_POINT_GROUPS, discover_plugins
+import sys
+
+from fincore.extensions.discovery import ENTRY_POINT_GROUPS, discover_extensions
 
 
-def test_discover_plugins_returns_immutable_records() -> None:
-    plugins = discover_plugins()
-    assert isinstance(plugins, tuple)
-    for plugin in plugins:
-        assert plugin.name
-        assert plugin.group in ENTRY_POINT_GROUPS
-        assert plugin.distribution
-        assert plugin.value
+def test_discovery_returns_immutable_records() -> None:
+    extensions = discover_extensions()
+
+    assert isinstance(extensions, tuple)
+    for extension in extensions:
+        assert extension.name
+        assert extension.group in ENTRY_POINT_GROUPS
+        assert extension.distribution
+        assert extension.value
 
 
-def test_discovery_does_not_import_third_party_code() -> None:
-    import sys
-
+def test_discovery_does_not_import_extension_code_or_heavy_dependencies() -> None:
     before = set(sys.modules)
-    discover_plugins()
+    discover_extensions()
     after = set(sys.modules)
-    # Discovery must not pull in any new heavy module (matplotlib, yfinance, ...).
-    heavy = {"matplotlib", "yfinance", "akshare", "tushare"}
-    assert not (heavy & (after - before))
+
+    assert not ({"matplotlib", "yfinance", "akshare", "tushare"} & (after - before))
 
 
-def test_entry_point_groups_are_documented() -> None:
-    assert ENTRY_POINT_GROUPS == ("fincore.metrics", "fincore.providers", "fincore.renderers", "fincore.exporters")
+def test_entry_point_group_has_one_canonical_extension_namespace() -> None:
+    assert ENTRY_POINT_GROUPS == ("fincore.extensions",)

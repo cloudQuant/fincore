@@ -1,25 +1,22 @@
-# Factor-analysis API
+# `fincore.factor_analysis`
 
-`fincore.alphalens` is the source-shaped strict façade. For new code, prefer
-the enhanced `fincore.factor_analysis` API: prepare factor data once, analyze
-the resulting clean table once, and render returned artifacts explicitly.
+Factor analysis is a first-class canonical domain. Its layers are explicit:
 
-Plotting is optional and resolved only when a renderer runs. Install
-`fincore[alphalens]` for rendering; compute-only enhanced workflows use
-`fincore[factor-analysis]`.
+| Module | Responsibility |
+| --- | --- |
+| `data` | factor cleaning and forward-return preparation |
+| `analysis` | factor model calculation |
+| `performance` | returns, information coefficient, turnover, weights |
+| `portfolio` | typed portfolio inputs |
+| `costs` | transaction-cost, borrow, and capacity ledger |
+| `inference` | post-analysis and Fama-MacBeth inference |
+| `pit` | causal point-in-time factor materialisation |
+| `render_matplotlib` and `tears` | optional explicit renderers |
 
-## Enhanced API
+```python
+from fincore.factor_analysis.analysis import analyze_factor
+from fincore.factor_analysis.data import get_clean_factor_and_forward_returns
+from fincore.factor_analysis.performance import mean_return_by_quantile
+```
 
-::: fincore.factor_analysis
-
-## Strict utilities
-
-::: fincore.alphalens.utils
-
-## Strict performance
-
-::: fincore.alphalens.performance
-
-## Strict tear sheets
-
-::: fincore.alphalens.tears
+Install `fincore[visualization]` only when invoking matplotlib rendering.

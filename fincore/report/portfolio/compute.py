@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
@@ -132,7 +132,9 @@ def _performance_metrics(returns: pd.Series, benchmark_returns: pd.Series | None
 def _benchmark_section(
     returns: pd.Series, benchmark_returns: pd.Series, *, period: str, rolling_window: int
 ) -> ReportSection:
-    aligned_returns, aligned_benchmark = returns.align(benchmark_returns, join="inner")
+    aligned_returns, aligned_benchmark = (
+        cast("pd.Series", value) for value in returns.align(benchmark_returns, join="inner")
+    )
     if aligned_returns.empty:
         raise _input_error("must share at least one timestamp with returns", "benchmark_returns")
     up = _scalar(up_capture(aligned_returns, aligned_benchmark, period=period))
@@ -149,8 +151,10 @@ def _benchmark_section(
         title="Benchmark comparison",
         metrics=metrics,
         series={
-            "benchmark_cumulative_returns": cum_returns(aligned_benchmark, starting_value=1.0),
-            "rolling_beta": rolling_beta(aligned_returns, aligned_benchmark, rolling_window=rolling_window),
+            "benchmark_cumulative_returns": cast("pd.Series", cum_returns(aligned_benchmark, starting_value=1.0)),
+            "rolling_beta": cast(
+                "pd.Series", rolling_beta(aligned_returns, aligned_benchmark, rolling_window=rolling_window)
+            ),
         },
         units={"benchmark_cumulative_returns": "growth_multiple", "rolling_beta": "beta"},
         legends={"benchmark_cumulative_returns": "Benchmark", "rolling_beta": "Strategy beta"},
@@ -185,7 +189,7 @@ def _portfolio_section(
 
 def _transactions_section(transactions: pd.DataFrame) -> ReportSection:
     normalized = transactions.copy(deep=True)
-    normalized.index = normalized.index.normalize()
+    normalized.index = pd.DatetimeIndex(normalized.index).normalize()
     daily_count = normalized.groupby(level=0).size().astype(float)
     daily_value = (normalized["amount"].abs() * normalized["price"]).groupby(level=0).sum()
     metrics: dict[str, int | float] = {
@@ -235,8 +239,8 @@ def build_portfolio_report(
     validated_positions = _validated_positions(positions, returns=validated_returns) if positions is not None else None
     validated_transactions = _validated_transactions(transactions) if transactions is not None else None
 
-    cumulative = cum_returns(validated_returns, starting_value=1.0)
-    drawdown_basis = cum_returns(validated_returns, starting_value=0.0)
+    cumulative = cast("pd.Series", cum_returns(validated_returns, starting_value=1.0))
+    drawdown_basis = cast("pd.Series", cum_returns(validated_returns, starting_value=0.0))
     drawdown = (1.0 + drawdown_basis) / (1.0 + drawdown_basis).cummax() - 1.0
     sections: list[ReportSection] = [
         ReportSection(
@@ -248,15 +252,18 @@ def build_portfolio_report(
                 "returns": validated_returns,
                 "cumulative_returns": cumulative,
                 "drawdown": drawdown,
-                "rolling_sharpe": rolling_sharpe(
-                    validated_returns, rolling_sharpe_window=rolling_window, period=period
+                "rolling_sharpe": cast(
+                    "pd.Series", rolling_sharpe(validated_returns, rolling_sharpe_window=rolling_window, period=period)
                 ),
-                "rolling_volatility": rolling_volatility(
-                    validated_returns,
-                    rolling_vol_window=rolling_window,
-                    period=period,
+                "rolling_volatility": cast(
+                    "pd.Series",
+                    rolling_volatility(
+                        validated_returns,
+                        rolling_vol_window=rolling_window,
+                        period=period,
+                    ),
                 ),
-                "monthly_returns": aggregate_returns(validated_returns, "monthly"),
+                "monthly_returns": cast("pd.Series", aggregate_returns(validated_returns, "monthly")),
             },
             units={
                 "returns": "decimal_return",

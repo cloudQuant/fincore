@@ -76,7 +76,8 @@ def check_fincore_imports():
             [
                 sys.executable,
                 "-c",
-                "from fincore import sharpe_ratio, max_drawdown; print('OK')",
+                "from fincore.metrics.drawdown import max_drawdown; "
+                "from fincore.metrics.ratios import sharpe_ratio; print('OK')",
             ],
             capture_output=True,
             text=True,
@@ -146,7 +147,7 @@ def main():
         return 0
     print("\n❌ Some checks failed. Please fix the issues above.")
     print("\nTo install dependencies:")
-    print("  pip install -e '.[dev,viz]'")
+    print("  pip install -e '.[dev,visualization]'")
     return 1
 
 

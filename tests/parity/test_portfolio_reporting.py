@@ -1,55 +1,26 @@
-"""Direct migration-oracle scenarios for display-only portfolio behaviors."""
+"""Direct portfolio-report contracts replacing display-only tear-sheet tests."""
 
 from __future__ import annotations
 
 import pandas as pd
 
 
-def test_display_helpers_emit_named_table_contracts(monkeypatch) -> None:
-    """Portfolio display helpers preserve their analytical table boundaries.
+def test_portfolio_report_emits_named_sections_and_tables_without_a_facade() -> None:
+    from fincore.report.portfolio.compute import build_portfolio_report
 
-    This calls the underlying functions rather than the Pyfolio class facade;
-    the final report/portfolio APIs will retain these named-table observables
-    without retaining the class or its forwarding methods.
-    """
-    from fincore.tearsheets import returns as returns_tears
-    from fincore.tearsheets import round_trips as round_trip_tears
+    dates = pd.date_range("2024-01-02", periods=8, freq="B")
+    returns = pd.Series([0.01, -0.02, 0.003, 0.002, -0.001, 0.004, 0.0, 0.002], index=dates)
+    positions = pd.DataFrame({"AAA": 100.0, "BBB": -30.0, "cash": 80.0}, index=dates)
+    transactions = pd.DataFrame(
+        {"symbol": ["AAA", "BBB"], "amount": [2.0, -1.0], "price": [10.0, 20.0]},
+        index=pd.DatetimeIndex([dates[2], dates[5]]),
+    )
 
-    observed: list[str] = []
+    document = build_portfolio_report(returns, positions=positions, transactions=transactions, rolling_window=3)
 
-    def record_table(_table, *, name=None, **_kwargs) -> None:
-        observed.append(name or "")
-
-    monkeypatch.setattr(returns_tears, "print_table", record_table)
-    monkeypatch.setattr(round_trip_tears, "print_table", record_table)
-
-    class Metrics:
-        def gen_drawdown_table(self, _returns: pd.Series, *, top: int) -> pd.DataFrame:
-            assert top == 1
-            return pd.DataFrame({"Net drawdown in %": [-12.5]}, index=["period-1"])
-
-        def gen_round_trip_stats(self, _round_trips: pd.DataFrame) -> dict[str, pd.Series | pd.DataFrame]:
-            return {
-                "summary": pd.Series({"count": 2.0}),
-                "pnl": pd.Series({"mean": 1.0}),
-                "duration": pd.Series({"mean": 3.0}),
-                "returns": pd.Series({"mean": 0.05}),
-                "symbols": pd.DataFrame({"A": [0.05]}, index=["mean"]),
-            }
-
-    returns = pd.Series([0.01, -0.02], index=pd.date_range("2024-01-02", periods=2, freq="B"))
-    round_trips = pd.DataFrame({"symbol": ["A", "B"], "pnl": [3.0, -1.0]})
-
-    returns_tears.show_worst_drawdown_periods(Metrics(), returns, top=1)
-    round_trip_tears.print_round_trip_stats(Metrics(), round_trips)
-    round_trip_tears.show_profit_attribution(round_trips)
-
-    assert observed == [
-        "Worst drawdown periods",
-        "Summary stats",
-        "PnL stats",
-        "Duration stats",
-        "Return stats",
-        "Symbol stats",
-        "Profitability (PnL / PnL total) per name",
-    ]
+    assert tuple(section.key for section in document.sections) == ("performance", "portfolio", "transactions")
+    performance = document.section("performance")
+    assert "drawdowns" in performance.tables
+    assert "cumulative_returns" in performance.series
+    assert document.section("portfolio").metrics["asset_count"] == 2
+    assert document.section("transactions").metrics["transaction_count"] == 2

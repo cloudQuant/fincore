@@ -2,8 +2,7 @@
 
 Builds the wheel from the checkout and asserts the artifact layout:
 
-- runtime assets ship (vendored ECharts for offline reports, the report model
-  module, ``py.typed``);
+- runtime assets ship (the report model module and ``py.typed``);
 - no stray assets: tests/examples/docs never ship, and the only ``.js`` is
   the report asset; no example CSV/XLSX anywhere;
 - METADATA carries the single-source version, the full extras set, the Beta
@@ -13,6 +12,7 @@ Builds the wheel from the checkout and asserts the artifact layout:
 from __future__ import annotations
 
 import email
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -28,9 +28,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 FUNCTIONAL_EXTRAS = {
-    "pyfolio",
     "factor-analysis",
-    "alphalens",
+    "visualization",
     "interactive",
     "report-pdf",
     "report-xlsx",
@@ -40,9 +39,19 @@ FUNCTIONAL_EXTRAS = {
     "data-pandas-datareader",
     "data-cn",
 }
-ALIAS_EXTRAS = {"viz", "datareader"}
+ALIAS_EXTRAS: set[str] = set()
 PROHIBITED_EXTERNAL_REQUIREMENTS = {"alphalens", "empyrical"}
 CONTRIBUTOR_REQUIREMENTS = {"requirements.txt", "requirements-test.txt"}
+_BUILD_SOURCE_IGNORES = (
+    ".git",
+    "build",
+    "dist",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".hypothesis",
+)
 
 
 def _pyproject() -> dict:
@@ -54,10 +63,26 @@ def _pyproject_version() -> str:
     return str(_pyproject()["project"]["version"])
 
 
+def _staged_build_source(out_dir: Path) -> Path:
+    """Copy a source-only build context next to an artifact directory.
+
+    Setuptools can otherwise reuse an ignored, stale ``build/lib`` directory
+    from a developer checkout and silently package files no longer present in
+    source.  A fresh staged source makes the artifact contract independent of
+    local generated outputs while still exercising the actual checkout files.
+    """
+
+    source = out_dir.parent / f"{out_dir.name}-source"
+    shutil.copytree(REPO_ROOT, source, ignore=shutil.ignore_patterns(*_BUILD_SOURCE_IGNORES))
+    return source
+
+
 def _build_wheel(out_dir: Path) -> Path:
-    """Build a wheel from the checkout; skip only when build tooling is absent."""
+    """Build a wheel from a source-only checkout copy."""
+
+    source = _staged_build_source(out_dir)
     attempts: list[list[str]] = [
-        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out_dir), str(REPO_ROOT)],
+        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out_dir), str(source)],
         [
             sys.executable,
             "-m",
@@ -67,12 +92,12 @@ def _build_wheel(out_dir: Path) -> Path:
             "--no-build-isolation",
             "--wheel-dir",
             str(out_dir),
-            str(REPO_ROOT),
+            str(source),
         ],
     ]
     for cmd in attempts:
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600, cwd=REPO_ROOT)
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600, cwd=source)
         except FileNotFoundError as exc:  # interpreter missing (should not happen)
             raise AssertionError(f"cannot run {cmd[0]}: {exc}") from exc
         if proc.returncode == 0:
@@ -90,13 +115,15 @@ def _build_wheel(out_dir: Path) -> Path:
 
 
 def _build_sdist(out_dir: Path) -> Path:
-    """Build the source distribution used by release consistency checks."""
+    """Build the source distribution from the same source-only staging rule."""
+
+    source = _staged_build_source(out_dir)
     proc = subprocess.run(
-        [sys.executable, "-m", "build", "--sdist", "--outdir", str(out_dir), str(REPO_ROOT)],
+        [sys.executable, "-m", "build", "--sdist", "--outdir", str(out_dir), str(source)],
         capture_output=True,
         text=True,
         timeout=600,
-        cwd=REPO_ROOT,
+        cwd=source,
     )
     if proc.returncode != 0:
         raise AssertionError(f"sdist build failed:\n{proc.stdout}\n{proc.stderr}")
@@ -144,6 +171,15 @@ def _assert_metadata_requirement_is_integrated(raw: str) -> None:
     assert requirement.url is None, raw
 
 
+def test_build_source_staging_excludes_generated_outputs(tmp_path: Path) -> None:
+    """Ignored build products can never re-enter a wheel through setuptools."""
+
+    source = _staged_build_source(tmp_path / "artifacts")
+
+    assert not (source / "build").exists()
+    assert not (source / "dist").exists()
+
+
 # ---------------------------------------------------------------------------
 # Artifact layout
 # ---------------------------------------------------------------------------
@@ -151,20 +187,23 @@ def _assert_metadata_requirement_is_integrated(raw: str) -> None:
 
 def test_runtime_assets_ship_in_wheel(wheel_path: Path) -> None:
     names = _names(wheel_path)
-    assert "fincore/report/assets/echarts.min.js" in names, "vendored ECharts asset missing from wheel"
-    assert "fincore/report/model.py" in names, "report model module missing from wheel"
+    assert "fincore/report/models.py" in names, "report model module missing from wheel"
+    assert "fincore/report/portfolio/compute.py" in names, "portfolio report workflow missing from wheel"
+    assert "fincore/report/renderers/html.py" in names, "HTML report renderer missing from wheel"
     assert "fincore/py.typed" in names, "py.typed marker missing from wheel"
     required_modules = {
-        "fincore/alphalens/__init__.py",
-        "fincore/alphalens/performance.py",
-        "fincore/alphalens/plotting.py",
-        "fincore/alphalens/tears.py",
         "fincore/factor_analysis/__init__.py",
         "fincore/factor_analysis/data.py",
         "fincore/factor_analysis/performance.py",
         "fincore/factor_analysis/portfolio.py",
+        "fincore/attribution/performance.py",
+        "fincore/runtime/catalog.py",
     }
-    assert required_modules <= names, f"Alphalens runtime modules missing: {sorted(required_modules - names)}"
+    assert required_modules <= names, f"canonical runtime modules missing: {sorted(required_modules - names)}"
+    assert not any(
+        name.startswith(("fincore/alphalens/", "fincore/empyrical", "fincore/pyfolio", "fincore/tearsheets/"))
+        for name in names
+    )
 
 
 def test_wheel_includes_mit_project_license_and_third_party_notices(wheel_path: Path) -> None:

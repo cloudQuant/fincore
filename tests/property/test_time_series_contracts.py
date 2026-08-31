@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-import fincore
+from fincore.metrics.ratios import sharpe_ratio
 from fincore.metrics.returns import cum_returns, cum_returns_final
 
 
@@ -64,8 +64,8 @@ def test_sharpe_ratio_is_scale_invariant(values: list[float]) -> None:
     returns = pd.Series(values, index=pd.RangeIndex(len(values)))
     scaled = returns * 2.0
 
-    a = fincore.sharpe_ratio(returns)
-    b = fincore.sharpe_ratio(scaled)
+    a = sharpe_ratio(returns)
+    b = sharpe_ratio(scaled)
     assert (np.isnan(a) and np.isnan(b)) or np.isclose(a, b, rtol=1e-9, atol=1e-9)
 
 

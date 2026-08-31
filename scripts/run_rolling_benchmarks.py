@@ -36,10 +36,10 @@ _ROOT = str(Path(__file__).resolve().parent.parent)
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-ENGINE_METRICS = ("sharpe", "volatility", "sortino", "max_drawdown", "beta", "mean_return")
+DIRECT_METRICS = ("sharpe", "volatility", "sortino", "max_drawdown", "beta")
 BINARY_ROLL_METRICS = ("roll_alpha", "roll_alpha_beta")
-BATCH_METRICS = ("engine_all",)
-METRICS = ENGINE_METRICS + BINARY_ROLL_METRICS + BATCH_METRICS
+BUNDLE_METRICS = ("direct_bundle",)
+METRICS = DIRECT_METRICS + BINARY_ROLL_METRICS + BUNDLE_METRICS
 RSS_UNIT = "bytes"
 
 _KNOWN_RSS_UNITS = {"bytes"}
@@ -75,7 +75,6 @@ def run_case(metric: str, size: int, window: int) -> dict:
     All imports (fincore included) happen before the RSS baseline so
     import cost never pollutes the workload measurement.
     """
-    from fincore.core.engine import RollingEngine
     from fincore.metrics import rolling as rolling_module
 
     returns, factor_returns = _build_inputs(size)
@@ -86,10 +85,24 @@ def run_case(metric: str, size: int, window: int) -> dict:
         rolling_module.roll_alpha(returns, factor_returns, window=window)
     elif metric == "roll_alpha_beta":
         rolling_module.roll_alpha_beta(returns, factor_returns, window=window)
-    elif metric == "engine_all":
-        RollingEngine(returns, factor_returns=factor_returns, window=window).compute("all")
+    elif metric == "direct_bundle":
+        rolling_module.roll_sharpe_ratio(returns, window=window)
+        rolling_module.roll_annual_volatility(returns, window=window)
+        rolling_module.roll_sortino_ratio(returns, window=window)
+        rolling_module.roll_max_drawdown(returns, window=window)
+        rolling_module.roll_beta(returns, factor_returns, window=window)
+    elif metric == "sharpe":
+        rolling_module.roll_sharpe_ratio(returns, window=window)
+    elif metric == "volatility":
+        rolling_module.roll_annual_volatility(returns, window=window)
+    elif metric == "sortino":
+        rolling_module.roll_sortino_ratio(returns, window=window)
+    elif metric == "max_drawdown":
+        rolling_module.roll_max_drawdown(returns, window=window)
+    elif metric == "beta":
+        rolling_module.roll_beta(returns, factor_returns, window=window)
     else:
-        RollingEngine(returns, factor_returns=factor_returns, window=window).compute([metric])
+        raise ValueError(f"unsupported rolling benchmark metric: {metric}")
     elapsed = time.perf_counter() - start
     _current, tracemalloc_peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -150,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     payload = {
-        "schema": "fincore-rolling-benchmarks-v1",
+        "schema": "fincore-rolling-benchmarks-v2",
         "kind": "rolling",
         "rss_unit": RSS_UNIT,
         "known_rss_units": sorted(_KNOWN_RSS_UNITS),

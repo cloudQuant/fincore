@@ -1,8 +1,8 @@
 """Shared rolling moments plus vectorised rolling alpha/beta kernels.
 
 The moments module computes first/second moments ONCE per window and
-reuses them across metrics, so ``RollingEngine.compute([...])`` costs a
-single pass per moment instead of one pass per metric.  It also provides
+reuses them across a direct bundled metric workload, so a batch costs a
+single pass per moment instead of one pass per metric. It also provides
 the vectorised rolling alpha/beta kernel (no per-window Python loop) and
 a bounded-memory chunked rolling max drawdown kernel with numeric parity
 to the legacy implementations.
@@ -34,10 +34,9 @@ __all__ = [
     "volatility_from_moments",
 ]
 
-# Which moments each engine metric consumes.  ``RollingEngine.compute``
-# unions these across the requested metric set so a single-metric call
-# pays for exactly the moments it used to compute inline and a
-# multi-metric call shares them.
+# Which moments each direct bundled workload metric consumes. Callers union
+# these across their requested metric set so a single-metric call pays for
+# exactly its own moments and a multi-metric workload shares them.
 MOMENT_NEEDS: dict[str, frozenset[str]] = {
     "sharpe": frozenset({"mean", "std"}),
     "volatility": frozenset({"std"}),
@@ -51,8 +50,8 @@ MOMENT_NEEDS: dict[str, frozenset[str]] = {
 class RollingMoments:
     """First/second moments of one rolling window configuration.
 
-    Computed once per engine ``compute`` call and shared by every
-    moment-based metric.  ``needs`` selects which moments are computed;
+    Computed once per direct bundle and shared by every moment-based metric.
+    ``needs`` selects which moments are computed;
     metrics only read the moments declared in :data:`MOMENT_NEEDS`.
 
     Attributes

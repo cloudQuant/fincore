@@ -20,16 +20,16 @@ def write_xlsx(document: ReportDocument, target: str | Path) -> ArtifactBundle:
     """Write precomputed metrics/tables/series to an XLSX workbook."""
 
     try:
-        import xlsxwriter
+        import openpyxl
     except ImportError as error:
         raise DependencyError(
-            "optional_dependency_missing: xlsxwriter is required for XLSX report rendering",
-            dependency="xlsxwriter",
+            "optional_dependency_missing: openpyxl is required for XLSX report rendering",
+            dependency="openpyxl",
             extra="report-xlsx",
         ) from error
     output = Path(target)
     output.parent.mkdir(parents=True, exist_ok=True)
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
         for section in document.sections:
             sheet = section.key[:31]
             metrics = pd.Series(section.metrics, name="value")

@@ -2,105 +2,54 @@
 
 ## Environment
 
-This project targets **Python 3.11+** (see `pyproject.toml`).
-
-Install editable with dev tooling:
+fincore targets Python 3.11+. Install the editable source with development and
+visualisation dependencies:
 
 ```bash
-pip install -e ".[dev,viz]"
+pip install -e ".[dev,visualization]"
 ```
 
 ## Tests
 
-The test suite currently has **1800 tests** across multiple modules.
+The source tree uses canonical-domain tests, runtime contracts, packaging
+checks, documentation examples, and benchmark regressions.
 
 ```bash
-# Run all tests (parallel by default via pytest-xdist)
-pytest tests/
+# Full suite, overriding local parallel defaults when diagnosis needs one process
+pytest -o addopts='' tests -q --tb=short --maxfail=0
 
-# Run tests sequentially (useful for debugging)
-pytest tests/ --override-ini="addopts="
-
-# Run specific test suites
-pytest tests/test_empyrical/          # Empyrical metrics tests
-pytest tests/test_core/               # AnalysisContext, RollingEngine, Viz tests
-pytest tests/test_pyfolio/            # Pyfolio tearsheet tests
-pytest tests/test_tearsheets/         # Tearsheet plotting tests
-pytest tests/benchmarks/              # Performance benchmarks
-
-# Run a single test
-pytest tests/test_core/test_context.py::TestCaching -v
+# Focused domains
+pytest -o addopts='' tests/test_metrics tests/portfolio tests/factor_analysis -q
+pytest -o addopts='' tests/runtime tests/parity tests/packaging tests/docs -q
+pytest -o addopts='' tests/benchmarks -q
 ```
 
-Integration tests are gated to avoid network dependency in CI:
+The local performance budget gate is part of the canonical runtime contract:
 
 ```bash
-FINCORE_RUN_INTEGRATION_TESTS=1 pytest tests/test_data/test_providers_integration.py -q
+python scripts/check_performance.py
 ```
 
-## Linting and Formatting
-
-[Ruff](https://docs.astral.sh/ruff/) is used for both linting and formatting:
+## Quality tools
 
 ```bash
-# Check for lint issues (includes scripts/)
-ruff check fincore/ tests/ scripts/
-
-# Auto-fix lint issues
-ruff check --fix fincore/ tests/ scripts/
-
-# Format code
-ruff format fincore/ tests/ scripts/
+ruff check fincore tests scripts examples benchmarks .github
+ruff format --check fincore tests scripts examples benchmarks .github
+python -m mkdocs build --strict
 ```
 
-Configuration is in `pyproject.toml` under `[tool.ruff]`.
+## Architecture rules
 
-### Pre-commit (Optional)
+- Each public capability has one owning leaf implementation and one registered
+  `operation_id`.
+- Domain kernels do not depend on report rendering, runtime orchestration, or
+  compatibility-era support packages.
+- `runtime` provides immutable snapshots, catalog composition, execution
+  records, and extension boundaries; it does not duplicate domain formulas.
+- Report builders compute models once; renderer modules only project those
+  models and manage artifacts.
+- Optional dependencies are capability-oriented extras, never package-family
+  aliases.
 
-To run Ruff and common hooks automatically before each commit:
-
-```bash
-pip install pre-commit
-pre-commit install
-```
-
-Then `pre-commit run --all-files` to validate the repo or let hooks run on `git commit`.
-
-## Type Checking
-
-Mypy is run over selected modules:
-
-```bash
-python -m mypy fincore/core fincore/constants fincore/metrics fincore/plugin fincore/data \
-    fincore/optimization fincore/attribution fincore/report fincore/risk \
-    fincore/simulation fincore/utils fincore/viz fincore/empyrical.py \
-    fincore/tearsheets fincore/pyfolio.py --ignore-missing-imports
-```
-
-## Coverage
-
-```bash
-# Terminal report with missing lines
-pytest tests/ --cov=fincore --cov-report=term-missing
-
-# HTML report
-pytest tests/ --cov=fincore --cov-report=html
-open htmlcov/index.html
-```
-
-## Cross-Platform Testing
-
-```bash
-# Unix/Linux/macOS
-./scripts/test_python_versions_simple.sh
-
-# Windows
-scripts\test_python_versions_simple.bat
-```
-
-## Key Architecture Decisions
-
-- **Lazy imports**: `import fincore` loads in ~0.04s; heavy submodules (matplotlib, scipy) are deferred via `__getattr__`
-- **Registry-based methods**: `fincore/_registry.py` auto-generates 100+ `Empyrical` class methods via metaclass
-- **Star import elimination**: All `__init__.py` files use explicit imports + `__all__`
-- **Docstring coverage**: Target is 90%+ across all public modules
+Use the current [API map](architecture/public-api-map.md) and
+[migration guide](MIGRATION.md) when moving a capability between modules.

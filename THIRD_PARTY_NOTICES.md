@@ -31,7 +31,7 @@ Do not hand-edit the JSON block without updating the paired evidence in
   "schema_version": 2,
   "project": {
     "name": "fincore",
-    "version": "0.4.0.dev0",
+    "version": "0.5.0.dev0",
     "license": "MIT"
   },
   "empyrical": {

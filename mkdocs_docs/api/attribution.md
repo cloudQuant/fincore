@@ -1,16 +1,16 @@
-# fincore.attribution
+# `fincore.attribution`
 
-## Brinson Attribution
+Attribution capabilities are direct kernels grouped by analytical method:
 
-`BrinsonAttribution.calculate(..., method="brinson_hood")` is retained as a
-compatibility alias for the standard Brinson--Hood--Beebower (BHB) arithmetic
-decomposition.  It is formula-tested and no longer selects an unimplemented
-path.
+- `brinson`: allocation and selection attribution;
+- `fama_french`: factor-model attribution;
+- `style`: style analysis;
+- `performance`: portfolio performance attribution;
+- `operations`: direct operation registration.
 
-::: fincore.attribution.brinson
+```python
+from fincore.attribution.performance import perf_attrib
+```
 
-## Fama-French
-::: fincore.attribution.fama_french
-
-## Style Analysis
-::: fincore.attribution.style
+Inputs and outputs retain labelled pandas structures so reporting and downstream
+analysis can reconcile them without a façade-specific object.

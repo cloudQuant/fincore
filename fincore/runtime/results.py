@@ -165,9 +165,15 @@ def _decode(value: Any) -> Any:
     if type_name == "pandas_na":
         return pd.NA
     if type_name == "pandas_timestamp":
-        return pd.Timestamp(value.get("value"))
+        encoded = value.get("value")
+        if encoded is None:
+            raise ValueError("serialized timestamp value is required")
+        return pd.Timestamp(encoded)
     if type_name == "pandas_timedelta":
-        return pd.Timedelta(value.get("value"))
+        encoded = value.get("value")
+        if encoded is None:
+            raise ValueError("serialized timedelta value is required")
+        return pd.Timedelta(encoded)
     if type_name == "pandas_index":
         return pd.Index(_decode(value.get("values")), name=_decode(value.get("name")), dtype=value.get("dtype"))
     if type_name == "pandas_series":

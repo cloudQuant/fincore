@@ -39,7 +39,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[viz]"
+          pip install -e ".[visualization]"
           pip install mkdocs-material "mkdocstrings[python]" mkdocs-gen-files mkdocs-literate-nav
 
       - name: Build docs

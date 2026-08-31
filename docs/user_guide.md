@@ -1,82 +1,72 @@
 # User Guide
 
-## Installation
-
-From source (recommended for development):
+## Install
 
 ```bash
-pip install -e ".[dev]"
+pip install fincore
+pip install "fincore[visualization]"     # optional charts
+pip install "fincore[report-pdf]"        # optional PDF renderer
+pip install "fincore[report-xlsx]"       # optional XLSX renderer
 ```
 
-Minimal runtime install:
+For source work, install `pip install -e ".[dev]"`. Python 3.11+ is required.
 
-```bash
-pip install .
-```
+## Inputs
 
-## Core Data Model
+Canonical functions consume explicit labelled inputs:
 
-Most APIs operate on daily (or intraday) return series and related optional inputs.
+- `returns`: simple periodic `pd.Series`, normally with a `DatetimeIndex`.
+- `benchmark_returns`: optional return series aligned by timestamp.
+- `positions`: portfolio-value panel with one column per asset and any required
+  cash column.
+- `transactions`: timestamped transaction panel with the fields required by the
+  particular portfolio workflow.
 
-- `returns`: `pd.Series` of simple (non-cumulative) returns indexed by `pd.DatetimeIndex`.
-- `benchmark_rets`: optional `pd.Series` aligned to `returns`.
-- `positions`: optional `pd.DataFrame` indexed like `returns`, with one column per asset plus a `cash` column.
-- `transactions`: optional `pd.DataFrame` indexed by timestamp, with at least `amount`, `price`, `symbol` columns.
+The runtime's `AnalysisSnapshot` copies inputs on ingest. Direct domain calls
+remain the most compact option for one calculation.
 
-Timezone handling:
-
-- Prefer timezone-aware indices (e.g. UTC). Many utilities assume consistent timezone handling when aligning data.
-
-## Quickstart
-
-### Flat API (function style)
+## Metrics
 
 ```python
 import numpy as np
 import pandas as pd
-import fincore
 
-dates = pd.date_range("2023-01-01", periods=252, freq="B", tz="UTC")
-returns = pd.Series(np.random.normal(0.0003, 0.01, len(dates)), index=dates, name="strategy")
+from fincore.metrics.drawdown import max_drawdown
+from fincore.metrics.ratios import sharpe_ratio
+from fincore.metrics.yearly import annual_return
 
-print("Sharpe:", fincore.sharpe_ratio(returns))
-print("MaxDD:", fincore.max_drawdown(returns))
-print("CAGR:", fincore.annual_return(returns))
+dates = pd.date_range("2024-01-02", periods=252, freq="B", tz="UTC")
+returns = pd.Series(np.random.default_rng(42).normal(0.0003, 0.01, len(dates)), index=dates)
+
+print("Sharpe:", sharpe_ratio(returns))
+print("Max drawdown:", max_drawdown(returns))
+print("Annual return:", annual_return(returns))
 ```
 
-### `Empyrical` (class interface)
+## Report workflow
 
 ```python
-from fincore import Empyrical
+from fincore.report.portfolio.compute import build_portfolio_report
+from fincore.report.renderers.html import write_html
 
-stats = Empyrical.perf_stats(returns)
-dd_table = Empyrical.gen_drawdown_table(returns, top=5)
+document = build_portfolio_report(returns, positions=positions)
+write_html(document, "portfolio-report.html")
 ```
 
-You can also bind data to an instance and call selected helpers without re-passing `returns`:
+The report model is independent from its renderer, so the same document can be
+rendered as HTML, PDF, XLSX, or an interactive chart after installing the
+matching optional capability.
 
-```python
-emp = Empyrical(returns=returns)
-print(emp.max_drawdown_days())
-print(emp.win_rate())
-```
+## Factor research
 
-## Strategy Reports (HTML/PDF)
+Use `fincore.factor_analysis.data` to prepare factor data, then call the
+specific owning module for analysis, portfolio construction, inference, costs,
+or rendering. The executable end-to-end reference is
+[`examples/factor_analysis_quickstart.py`](../examples/factor_analysis_quickstart.py).
 
-Generate a report with progressively richer sections as you provide more inputs:
+## Breaking-change boundary
 
-```python
-from fincore.report import create_strategy_report
-
-out = create_strategy_report(
-    returns,
-    title="My Strategy",
-    output="report.html",  # or report.pdf
-)
-print(out)
-```
-
-Notes:
-
-- PDF rendering requires the optional PDF toolchain used by `fincore.report.render_pdf`.
-- If you only have returns, the report will only include the returns-focused sections.
+0.5 does not provide old package-shaped imports, façade classes, root metric
+aliases, or compatibility extras. Map an integration to a business capability
+and select its canonical leaf module; do not use an import shim. See
+[MIGRATION.md](MIGRATION.md).
