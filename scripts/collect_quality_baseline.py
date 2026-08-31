@@ -130,39 +130,106 @@ def _copy_source_tree(source_root: Path, copy_root: Path, manifest: dict[str, st
         shutil.copy2(source, destination)
 
 
-def _initialize_copy_git_repository(copy_root: Path) -> None:
-    """Give the isolated tree its own HEAD for proof fixtures that require one.
+def _git_command(
+    command: list[str], *, cwd: Path, failure_message: str, timeout: int = 30
+) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False, timeout=timeout)
+    if result.returncode != 0:
+        raise RuntimeError(f"{failure_message}: {result.stdout}{result.stderr}")
+    return result
 
-    The source repository is never touched. The disposable commit is excluded
-    from the write inventory together with all other `.git` metadata.
+
+def _source_head(source_root: Path) -> str | None:
+    """Return a usable source HEAD, or ``None`` for small standalone tests."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "HEAD"],
+        cwd=source_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def _initialize_copy_git_repository(copy_root: Path, source_root: Path | None = None) -> None:
+    """Give a disposable copy an isolated Git state without losing history.
+
+    Fixture-reproducibility tests intentionally check out the historical commit
+    recorded in a discovery artifact. A one-commit replacement repository
+    cannot resolve those commits, so a quality baseline would fail before it
+    tested the code. For a real source checkout, fetch only its local object
+    graph into the copy, set its HEAD to the source HEAD, then commit only any
+    copied dirty/untracked delta. The source repository remains read-only.
+
+    ``source_root=None`` keeps the helper useful for tiny non-Git unit-test
+    fixtures, where a fresh disposable commit is sufficient.
     """
 
-    commands = (
-        ("git", "init", "--quiet"),
-        ("git", "add", "--all"),
-        (
-            "git",
-            "-c",
-            "user.name=Fincore baseline",
-            "-c",
-            "user.email=fincore-baseline@example.invalid",
-            "commit",
-            "--quiet",
-            "-m",
-            "disposable baseline snapshot",
-        ),
+    _git_command(
+        ["git", "init", "--quiet"], cwd=copy_root, failure_message="could not initialize disposable Git repository"
     )
-    for command in commands:
-        result = subprocess.run(command, cwd=copy_root, capture_output=True, text=True, check=False, timeout=30)
-        if result.returncode != 0:
-            raise RuntimeError(f"could not initialize disposable Git repository: {result.stdout}{result.stderr}")
+    source_head = _source_head(source_root) if source_root is not None else None
+    if source_head is not None:
+        _git_command(
+            ["git", "fetch", "--quiet", "--no-tags", str(source_root.resolve()), source_head],
+            cwd=copy_root,
+            failure_message="could not import source Git history into disposable copy",
+        )
+        _git_command(
+            ["git", "update-ref", "refs/heads/baseline", source_head],
+            cwd=copy_root,
+            failure_message="could not set disposable baseline ref",
+        )
+        _git_command(
+            ["git", "symbolic-ref", "HEAD", "refs/heads/baseline"],
+            cwd=copy_root,
+            failure_message="could not set disposable baseline HEAD",
+        )
+        # Populate the index before adding copied files. Otherwise Git treats
+        # paths ignored by a copied .gitignore as absent rather than as tracked
+        # source files, silently deleting historical fixtures from the
+        # disposable baseline commit.
+        _git_command(
+            ["git", "read-tree", source_head],
+            cwd=copy_root,
+            failure_message="could not initialize disposable baseline index",
+        )
+
+    _git_command(["git", "add", "--all"], cwd=copy_root, failure_message="could not stage disposable baseline snapshot")
+    staged = subprocess.run(
+        ["git", "diff", "--cached", "--quiet"],
+        cwd=copy_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    if staged.returncode not in {0, 1}:
+        raise RuntimeError(f"could not inspect disposable baseline index: {staged.stdout}{staged.stderr}")
+    if staged.returncode == 1 or source_head is None:
+        _git_command(
+            [
+                "git",
+                "-c",
+                "user.name=Fincore baseline",
+                "-c",
+                "user.email=fincore-baseline@example.invalid",
+                "commit",
+                "--quiet",
+                "-m",
+                "disposable baseline snapshot",
+            ],
+            cwd=copy_root,
+            failure_message="could not commit disposable baseline snapshot",
+        )
 
 
 def _prepare_disposable_copy(source_root: Path, copy_root: Path, manifest: dict[str, str]) -> None:
     """Create one pristine, self-contained tree for exactly one pytest run."""
 
     _copy_source_tree(source_root, copy_root, manifest)
-    _initialize_copy_git_repository(copy_root)
+    _initialize_copy_git_repository(copy_root, source_root)
 
 
 def _parse_count(output: str, name: str) -> int:

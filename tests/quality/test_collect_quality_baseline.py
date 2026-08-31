@@ -216,6 +216,62 @@ def test_disposable_baseline_copy_has_an_isolated_git_head(tmp_path) -> None:
     assert len(revision.stdout.strip()) == 40
 
 
+def test_disposable_copy_preserves_source_history_for_reproducibility_fixtures(tmp_path) -> None:
+    collector = _collector_module()
+    source = tmp_path / "source"
+    source.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=source, check=True)
+    (source / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+    (source / "ignored").mkdir()
+    (source / "ignored" / "provenance.json").write_text('{"historical": true}\n', encoding="utf-8")
+    (source / "tracked.py").write_text("value = 1\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-f", ".gitignore", "tracked.py", "ignored/provenance.json"], cwd=source, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "first"],
+        cwd=source,
+        check=True,
+    )
+    first_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=source, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    (source / "tracked.py").write_text("value = 2\n", encoding="utf-8")
+    subprocess.run(["git", "add", "tracked.py"], cwd=source, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "second"],
+        cwd=source,
+        check=True,
+    )
+    source_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=source, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    manifest = collector._source_file_manifest(source, set())
+    copy_root = tmp_path / "copy"
+
+    collector._prepare_disposable_copy(source, copy_root, manifest)
+
+    copied_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=copy_root, capture_output=True, text=True, check=True
+    ).stdout.strip()
+    history = subprocess.run(
+        ["git", "cat-file", "-e", f"{first_head}^{{commit}}"], cwd=copy_root, capture_output=True, text=True
+    )
+    status = subprocess.run(
+        ["git", "status", "--porcelain=v1"], cwd=copy_root, capture_output=True, text=True, check=True
+    ).stdout
+    tracked_ignored = subprocess.run(
+        ["git", "ls-tree", "--name-only", "HEAD", "ignored/provenance.json"],
+        cwd=copy_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+
+    assert copied_head == source_head
+    assert history.returncode == 0, history.stderr
+    assert status == ""
+    assert tracked_ignored == "ignored/provenance.json\n"
+
+
 def test_disposable_copies_are_fresh_between_quality_runs(tmp_path) -> None:
     """One baseline run cannot leave source state for the next run to inherit."""
 
