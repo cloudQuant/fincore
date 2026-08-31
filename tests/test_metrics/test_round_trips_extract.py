@@ -14,7 +14,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_negative_price_warning(self):
         """Test extract_round_trips with negative price (warning case)."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=5, freq="D")
         df = pd.DataFrame(
@@ -35,7 +35,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_empty_result(self):
         """Test extract_round_trips with no complete round trips."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=3, freq="D")
         # Only buys, no sells - no complete round trips
@@ -56,7 +56,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_with_portfolio_value_tz_aware(self):
         """Test extract_round_trips with timezone-aware portfolio value."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=5, freq="D", tz="UTC")
         df = pd.DataFrame(
@@ -79,7 +79,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_with_tz_naive_portfolio_and_tz_aware_pv(self):
         """Test extract_round_trips with mixed timezone awareness."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         # Naive datetime for transactions
         idx = pd.date_range("2020-01-01", periods=4, freq="D")
@@ -103,7 +103,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_crossing_from_long_to_short(self):
         """Test extract_round_trips handles crossing from long to short position."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=5, freq="D")
         # Buy 10, sell 15 (covers long and goes short)
@@ -125,7 +125,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_invested_zero_division(self):
         """Test extract_round_trips handles zero invested amount."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=6, freq="D")
         # Create scenario where we have complete round trips
@@ -149,7 +149,7 @@ class TestExtractRoundTrips:
 
     def test_extract_round_trips_partial_fill(self):
         """Test extract_round_trips with partial position closing."""
-        from fincore.metrics.round_trips import extract_round_trips
+        from fincore.portfolio.round_trips import extract_round_trips
 
         idx = pd.date_range("2020-01-01", periods=6, freq="D")
         # Buy 15 @ 100, sell 10 @ 105 (partial close), sell 5 @ 102 (close remainder)
@@ -174,7 +174,7 @@ class TestAddClosingTransactions:
 
     def test_add_closing_transactions_with_zero_amount(self):
         """Test add_closing_transactions skips zero-amount positions."""
-        from fincore.metrics.round_trips import add_closing_transactions
+        from fincore.portfolio.round_trips import add_closing_transactions
 
         # Create a case where buys and sells cancel out
         transactions = pd.DataFrame(
@@ -203,7 +203,7 @@ class TestAddClosingTransactions:
 
     def test_add_closing_transactions_negative_amount(self):
         """Test add_closing_transactions with negative ending amount."""
-        from fincore.metrics.round_trips import add_closing_transactions
+        from fincore.portfolio.round_trips import add_closing_transactions
 
         idx = pd.date_range("2020-01-01", periods=3, freq="D")
         transactions = pd.DataFrame(

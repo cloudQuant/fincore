@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.metrics.round_trips import extract_round_trips
+from fincore.portfolio.round_trips import extract_round_trips
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 MIB = 1024 * 1024

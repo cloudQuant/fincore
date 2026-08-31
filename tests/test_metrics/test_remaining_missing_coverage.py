@@ -12,7 +12,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fincore.metrics import alpha_beta, drawdown, ratios, round_trips, stats, yearly
+from fincore.metrics import alpha_beta, drawdown, ratios, stats, yearly
+from fincore.portfolio import round_trips
 
 
 class TestDrawdownMissingCoverage:

@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from fincore.metrics import transactions
+from fincore.portfolio import transactions
 
 
 class TestTransactionsEdgeCases:

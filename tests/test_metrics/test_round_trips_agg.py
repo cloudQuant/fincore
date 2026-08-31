@@ -15,7 +15,7 @@ class TestAggAllLongShort:
 
     def test_agg_all_long_short_with_exception_handling(self):
         """Test agg_all_long_short with stats that raise exceptions."""
-        from fincore.metrics.round_trips import agg_all_long_short
+        from fincore.portfolio.round_trips import agg_all_long_short
 
         # Create round trips dataframe
         df = pd.DataFrame(
@@ -43,7 +43,7 @@ class TestAggAllLongShort:
 
     def test_agg_all_long_short_with_string_methods(self):
         """Test agg_all_long_short with string method names."""
-        from fincore.metrics.round_trips import agg_all_long_short
+        from fincore.portfolio.round_trips import agg_all_long_short
 
         df = pd.DataFrame(
             {
@@ -72,7 +72,7 @@ class TestAggAllLongShort:
 
     def test_agg_all_long_short_with_invalid_stat_type(self):
         """Test agg_all_long_short with non-callable, non-string stat type."""
-        from fincore.metrics.round_trips import agg_all_long_short
+        from fincore.portfolio.round_trips import agg_all_long_short
 
         df = pd.DataFrame(
             {
@@ -96,7 +96,7 @@ class TestAggAllLongShort:
 
     def test_agg_all_long_short_exception_in_all_trades(self):
         """Test exception handling when computing 'All trades' statistics."""
-        from fincore.metrics.round_trips import agg_all_long_short
+        from fincore.portfolio.round_trips import agg_all_long_short
 
         df = pd.DataFrame(
             {
@@ -127,7 +127,7 @@ class TestAggAllLongShort:
 
     def test_agg_all_long_short_empty_dataframe(self):
         """Test agg_all_long_short with empty round trips."""
-        from fincore.metrics.round_trips import agg_all_long_short
+        from fincore.portfolio.round_trips import agg_all_long_short
 
         df = pd.DataFrame({"long": [], "pnl": [], "rt_returns": []})
 

@@ -56,7 +56,7 @@ def _build_transactions(amount: float, rows: int):
 
 def run_case(amount: float, rows: int) -> dict:
     """Measure one extraction workload in this interpreter."""
-    from fincore.metrics.round_trips import extract_round_trips
+    from fincore.portfolio.round_trips import extract_round_trips
 
     transactions = _build_transactions(amount, rows)
     rss_before = rss_bytes()

@@ -8,7 +8,7 @@ import unittest
 
 import pandas as pd
 
-from fincore.metrics import transactions
+from fincore.portfolio import transactions
 
 
 class TransactionsMissingCoverageTestCase(unittest.TestCase):

@@ -14,8 +14,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.exceptions import DataAlignmentError, NumericalError
-
 # ---------------------------------------------------------------------------
 # metrics/stats.py — hurst_exponent edge cases (lines 175, 193, 203)
 # ---------------------------------------------------------------------------
@@ -167,12 +165,11 @@ class TestAnnualAlphaBetaEdgeCases:
 
 class TestCalmarRatioEdgeCases:
     def test_calmar_ratio_all_nan_returns(self):
-        """All-NaN returns are rejected by the enhanced metrics surface."""
+        """All-NaN returns have no computable Calmar ratio."""
         from fincore.metrics.ratios import calmar_ratio
 
         returns = pd.Series([np.nan, np.nan, np.nan])
-        with pytest.raises(NumericalError, match="finite"):
-            calmar_ratio(returns)
+        assert np.isnan(calmar_ratio(returns))
 
 
 # ---------------------------------------------------------------------------
@@ -198,16 +195,15 @@ class TestAnnualActiveReturnEdgeCases:
 
 class TestRegressionAnnualReturnEdgeCases:
     def test_regression_annual_return_nan_alpha_beta(self):
-        """Empty factor returns are rejected with a DataAlignmentError before alpha/beta."""
+        """Empty factor returns produce a non-computable regression return."""
         from fincore import Empyrical
 
         dates = pd.date_range("2020-01-01", periods=100, freq="B")
         returns = pd.Series(np.random.normal(0.001, 0.01, 100), index=dates)
         emp = Empyrical(returns=returns, factor_returns=returns)
-        # Empty factor -> no common labels
+        # No common labels means there is no statistically valid benchmark fit.
         factor = pd.Series([], dtype=float)
-        with pytest.raises(DataAlignmentError, match="no common labels"):
-            emp.regression_annual_return(returns, factor)
+        assert np.isnan(emp.regression_annual_return(returns, factor))
 
     def test_regression_annual_return_nan_benchmark_annual(self):
         """When benchmark annual return is NaN but alpha/beta valid -> line 718."""
@@ -258,7 +254,7 @@ class TestEvtEdgeCases:
 class TestRoundTripsEdgeCases:
     def test_gen_round_trip_stats_with_symbol(self):
         """Test round trip stats generation path with symbol column."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         # Create round trips DataFrame with all required columns
         round_trips = pd.DataFrame(

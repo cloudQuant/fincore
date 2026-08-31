@@ -39,6 +39,7 @@ def test_builtin_catalog_loads_only_the_domain_providers_explicitly_registered_b
 
     assert "metrics.ratios.sharpe_ratio" in catalog.operation_ids
     assert "performance.returns.twr" in catalog.operation_ids
+    assert "portfolio.positions.get_long_short_pos" in catalog.operation_ids
 
 
 def test_builtin_catalog_runtime_execution_invokes_the_domain_kernel_directly() -> None:

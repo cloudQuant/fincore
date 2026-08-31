@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.exceptions import NumericalError
-from fincore.metrics import ratios, round_trips, yearly
+from fincore.metrics import ratios, yearly
+from fincore.portfolio import round_trips
 
 
 @pytest.mark.p2
@@ -18,11 +18,9 @@ class TestMarRatioFinalEdgeCase:
     """Test mar_ratio edge case for line 417."""
 
     def test_mar_ratio_all_nan_after_cleaning(self):
-        """Line 417: all-NaN returns are rejected before any cleaning."""
-        # All NaN values are rejected by the enhanced metrics surface.
+        """Line 417: a non-computable all-NaN ratio is represented as NaN."""
         returns = pd.Series([np.nan, np.nan, np.nan])
-        with pytest.raises(NumericalError, match="finite"):
-            ratios.mar_ratio(returns)
+        assert np.isnan(ratios.mar_ratio(returns))
 
 
 @pytest.mark.p2

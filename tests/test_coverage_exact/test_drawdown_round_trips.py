@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from fincore.metrics.drawdown import get_all_drawdowns
-from fincore.metrics.round_trips import gen_round_trip_stats
+from fincore.portfolio.round_trips import gen_round_trip_stats
 
 
 @pytest.mark.p2

@@ -13,7 +13,7 @@ from pandas.testing import assert_frame_equal, assert_index_equal, assert_series
 
 from fincore.constants import CAP_BUCKETS, SECTORS
 from fincore.exceptions import DataAlignmentError, ValidationError
-from fincore.metrics import positions as positions_metrics
+from fincore.portfolio import positions as positions_metrics
 from fincore.pyfolio import Pyfolio
 
 PORTFOLIO_CONTRACT_FIXTURE = Path(__file__).parents[1] / "fixtures" / "pyfolio-0.9.6-portfolio-contracts.json"

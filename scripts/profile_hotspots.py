@@ -352,7 +352,7 @@ def _invocation_for(kind: str, scenario: str, seed: int) -> _Invocation:
         execution_inputs = {"kind": kind, "transactions": transactions, "matching": "fifo"}
 
         def run_transactions() -> Any:
-            from fincore.metrics.round_trips import extract_round_trips
+            from fincore.portfolio.round_trips import extract_round_trips
 
             return extract_round_trips(transactions)
 

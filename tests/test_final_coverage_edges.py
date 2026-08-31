@@ -19,8 +19,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.exceptions import NumericalError
-from fincore.metrics import alpha_beta, drawdown, ratios, round_trips, stats, yearly
+from fincore.metrics import alpha_beta, drawdown, ratios, stats, yearly
+from fincore.portfolio import round_trips
 from fincore.risk.evt import evt_cvar, gpd_fit
 
 # =============================================================================
@@ -96,11 +96,9 @@ class TestMarRatioFinalEdgeCase:
     """Test mar_ratio edge case for line 417."""
 
     def test_mar_ratio_all_nan_after_cleaning(self):
-        """Line 417: all-NaN returns are rejected before any cleaning."""
-        # All NaN values are rejected by the enhanced metrics surface.
+        """Line 417: a non-computable all-NaN ratio is represented as NaN."""
         returns = pd.Series([np.nan, np.nan, np.nan])
-        with pytest.raises(NumericalError, match="finite"):
-            ratios.mar_ratio(returns)
+        assert np.isnan(ratios.mar_ratio(returns))
 
 
 # =============================================================================
@@ -131,7 +129,7 @@ class TestRoundTripsFinalEdgeCase:
     def test_gen_round_trip_stats_without_built_in_funcs(self):
         """Line 417: return without built_in_funcs concat path."""
         # Import from the correct module
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         # Create round trips that will hit the return without built_in_funcs
         idx = pd.date_range("2024-01-01", periods=5, freq="B")

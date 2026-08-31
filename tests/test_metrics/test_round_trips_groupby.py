@@ -14,7 +14,7 @@ class TestGroupbyConsecutive:
 
     def test_groupby_consecutive_with_zero_shares_warning(self):
         """Test groupby_consecutive with zero shares (warning case)."""
-        from fincore.metrics.round_trips import groupby_consecutive
+        from fincore.portfolio.round_trips import groupby_consecutive
 
         idx = pd.date_range("2020-01-01", periods=5, freq="D")
         df = pd.DataFrame(
@@ -35,7 +35,7 @@ class TestGroupbyConsecutive:
 
     def test_groupby_consecutive_multiple_symbols(self):
         """Test groupby_consecutive with multiple symbols."""
-        from fincore.metrics.round_trips import groupby_consecutive
+        from fincore.portfolio.round_trips import groupby_consecutive
 
         idx = pd.date_range("2020-01-01", periods=6, freq="D")
         df = pd.DataFrame(
@@ -55,7 +55,7 @@ class TestGroupbyConsecutive:
 
     def test_groupby_consecutive_max_delta_parameter(self):
         """Test groupby_consecutive with custom max_delta."""
-        from fincore.metrics.round_trips import groupby_consecutive
+        from fincore.portfolio.round_trips import groupby_consecutive
 
         idx = pd.date_range("2020-01-01", periods=5, freq="h")
         df = pd.DataFrame(
@@ -78,7 +78,7 @@ class TestGroupbyConsecutive:
 
     def test_vwap_calculation_edge_cases(self):
         """Test VWAP calculation with edge cases."""
-        from fincore.metrics.round_trips import groupby_consecutive
+        from fincore.portfolio.round_trips import groupby_consecutive
 
         idx = pd.date_range("2020-01-01", periods=4, freq="D")
         df = pd.DataFrame(

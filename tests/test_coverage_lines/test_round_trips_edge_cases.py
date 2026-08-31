@@ -12,7 +12,7 @@ class TestRoundTripsReturnPath:
 
     def test_gen_round_trip_stats_return_path(self):
         """Line 417: return without built_in_funcs."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         idx = pd.date_range("2024-01-01", periods=5, freq="B")
         round_trips = pd.DataFrame(

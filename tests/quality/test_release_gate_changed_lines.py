@@ -516,7 +516,7 @@ def test_information_ratio_per_year_array() -> None:
 
 
 def test_transaction_records_rejection_branches() -> None:
-    from fincore.metrics.transactions import make_transaction_frame, map_transaction
+    from fincore.portfolio.transactions import make_transaction_frame, map_transaction
 
     nested_sid = {
         "dt": pd.Timestamp("2024-01-02"),

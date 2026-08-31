@@ -9,7 +9,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fincore.metrics import drawdown, positions
+from fincore.metrics import drawdown
+from fincore.portfolio import positions
 
 
 def test_gross_leverage() -> None:

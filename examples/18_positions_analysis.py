@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from fincore import max_drawdown, sharpe_ratio
-from fincore.metrics.positions import (
+from fincore.portfolio.positions import (
     get_max_median_position_concentration,
     get_percent_alloc,
     get_top_long_short_abs,

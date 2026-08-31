@@ -9,7 +9,7 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_index_equal
 
 from fincore.exceptions import ValidationError
-from fincore.metrics.transactions import make_transaction_frame
+from fincore.portfolio.transactions import make_transaction_frame
 
 EXPECTED_COLUMNS = [
     "dt",

@@ -14,18 +14,19 @@ from pandas.testing import assert_series_equal
 
 matplotlib.use("Agg", force=True)
 
+from fincore._pyfolio_impl import _project_legacy_exposure_bundle
 from fincore.constants import CAP_BUCKETS, SECTORS
 from fincore.contracts.portfolio import ExposureBundle
 from fincore.empyrical import Empyrical
 from fincore.exceptions import DataAlignmentError, ValidationError
-from fincore.metrics.positions import (
+from fincore.portfolio.positions import (
     compute_cap_exposures,
     compute_sector_exposures,
     compute_style_factor_exposures,
     compute_volume_exposures,
     get_long_short_notional,
 )
-from fincore.metrics.transactions import make_transaction_frame
+from fincore.portfolio.transactions import make_transaction_frame
 from fincore.pyfolio import Pyfolio
 
 
@@ -299,7 +300,7 @@ def test_exposure_bundle_projection_rejects_invalid_category_order(branch: str) 
         order = [columns[0], columns[0], columns[1]]
 
     with pytest.raises(ValidationError, match=branch):
-        bundle.as_legacy_tuple(order)
+        _project_legacy_exposure_bundle(bundle, order)
 
 
 def test_contract_constants_keep_pinned_cap_and_sector_order() -> None:

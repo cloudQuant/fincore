@@ -24,9 +24,10 @@ import numpy as np
 import pandas as pd
 
 from fincore.constants import CAP_BUCKETS, SECTORS
-from fincore.contracts.portfolio import ExposureBundle, VolumeExposureBundle
 from fincore.contracts.time_series import align_time_series
 from fincore.exceptions import ValidationError
+
+from .models import ExposureBundle, VolumeExposureBundle
 
 __all__ = [
     "compute_cap_exposures",

@@ -14,7 +14,7 @@ class TestGenRoundTripStats:
 
     def test_gen_round_trip_stats_empty_roundtrips(self):
         """Test gen_round_trip_stats with empty round trips DataFrame."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         empty_df = pd.DataFrame({"pnl": [], "rt_returns": [], "duration": []})
 
@@ -31,7 +31,7 @@ class TestGenRoundTripStats:
 
     def test_gen_round_trip_stats_custom_functions_only(self):
         """Test gen_round_trip_stats with only custom functions."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         df = pd.DataFrame(
             {
@@ -59,7 +59,7 @@ class TestGenRoundTripStats:
 
     def test_gen_round_trip_stats_with_returns_column(self):
         """Test gen_round_trip_stats uses 'returns' column when available."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         df = pd.DataFrame(
             {
@@ -83,7 +83,7 @@ class TestGenRoundTripStats:
 
     def test_gen_round_trip_stats_exercise_custom_functions_only_path(self):
         """Test gen_round_trip_stats that exercises custom functions only path."""
-        from fincore.metrics.round_trips import gen_round_trip_stats
+        from fincore.portfolio.round_trips import gen_round_trip_stats
 
         df = pd.DataFrame(
             {
@@ -112,7 +112,7 @@ class TestSectorMappings:
 
     def test_apply_sector_mappings_to_round_trips(self):
         """Test apply_sector_mappings_to_round_trips function."""
-        from fincore.metrics.round_trips import apply_sector_mappings_to_round_trips
+        from fincore.portfolio.round_trips import apply_sector_mappings_to_round_trips
 
         df = pd.DataFrame(
             {
@@ -136,7 +136,7 @@ class TestSectorMappings:
 
     def test_apply_sector_mappings_no_symbol_column(self):
         """Test apply_sector_mappings when no symbol column exists."""
-        from fincore.metrics.round_trips import apply_sector_mappings_to_round_trips
+        from fincore.portfolio.round_trips import apply_sector_mappings_to_round_trips
 
         df = pd.DataFrame({"pnl": [10.0, -5.0], "value": [100, 200]})
 

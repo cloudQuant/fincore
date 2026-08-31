@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.metrics import positions as pm
+from fincore.portfolio import positions as pm
 
 
 def test_get_percent_alloc_replaces_inf_and_neg_inf_with_nan():

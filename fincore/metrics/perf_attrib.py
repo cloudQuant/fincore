@@ -359,7 +359,7 @@ def normalize_and_stack_positions(
 ) -> pd.Series:
     """Normalize dollar positions to percentage weights and stack.
 
-    Unlike :func:`fincore.metrics.positions.stack_positions`, this version
+    Unlike :func:`fincore.portfolio.positions.stack_positions`, this version
     converts dollar positions to percentage weights when ``pos_in_dollars``
     is True, which is required by the performance attribution pipeline.
 
@@ -444,7 +444,8 @@ def create_perf_attrib_stats(
     from collections import OrderedDict
 
     from fincore.metrics.ratios import sharpe_ratio
-    from fincore.metrics.returns import annual_return, cum_returns_final
+    from fincore.metrics.returns import cum_returns_final
+    from fincore.metrics.yearly import annual_return
 
     summary = OrderedDict()
     total_returns = perf_attrib_["total_returns"]
@@ -606,7 +607,7 @@ def align_and_warn(
         factor_returns = factor_returns.drop(missing_factor_loadings_index, errors="ignore")
 
     if transactions is not None and pos_in_dollars:
-        from fincore.metrics.transactions import get_turnover
+        from fincore.portfolio.transactions import get_turnover
 
         # get_turnover expects an unstacked DataFrame; Series inputs fail the
         # same way at runtime either way (preexisting contract).

@@ -284,9 +284,9 @@ MODULE_PATHS = {
     "_consecutive": "fincore.metrics.consecutive",
     "_rolling": "fincore.metrics.rolling",
     "_bayesian": "fincore.metrics.bayesian",
-    "_positions": "fincore.metrics.positions",
-    "_transactions": "fincore.metrics.transactions",
-    "_round_trips": "fincore.metrics.round_trips",
+    "_positions": "fincore.portfolio.positions",
+    "_transactions": "fincore.portfolio.transactions",
+    "_round_trips": "fincore.portfolio.round_trips",
     "_perf_attrib": "fincore.metrics.perf_attrib",
     "_perf_stats": "fincore.metrics.perf_stats",
     "_timing": "fincore.metrics.timing",
@@ -737,8 +737,8 @@ _CONTEXT_EXTRA_KERNELS = {
     "skewness": "fincore.metrics.stats:skewness",
     "kurtosis": "fincore.metrics.stats:kurtosis",
     "information_ratio": "fincore.metrics.ratios:information_ratio",
-    "gross_lev": "fincore.metrics.positions:gross_lev",
-    "get_turnover": "fincore.metrics.transactions:get_turnover",
+    "gross_lev": "fincore.portfolio.positions:gross_lev",
+    "get_turnover": "fincore.portfolio.transactions:get_turnover",
 }
 _CONTEXT_BINDINGS: dict[str, Binding] = {
     "gross_leverage": "positions",

@@ -25,6 +25,8 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
+from .positions import get_percent_alloc
+
 __all__ = [
     "adjust_returns_for_slippage",
     "apply_slippage_penalty",
@@ -267,26 +269,6 @@ def apply_slippage_penalty(
 
     adj_returns = returns - (daily_penalty / portfolio_value)
     return adj_returns.fillna(returns)
-
-
-def get_percent_alloc(values: pd.DataFrame) -> pd.DataFrame:
-    """Determine a portfolio's allocations.
-
-    Delegates to :func:`fincore.metrics.positions.get_percent_alloc`.
-
-    Parameters
-    ----------
-    values : pd.DataFrame
-        Contains position values or amounts.
-
-    Returns
-    -------
-    pd.DataFrame
-        Positions and their allocations.
-    """
-    from fincore.metrics.positions import get_percent_alloc as _gpa
-
-    return _gpa(values)
 
 
 def map_transaction(txn: dict[str, Any]) -> dict[str, Any]:

@@ -21,6 +21,7 @@ from fincore.constants import (
     FACTOR_PARTITIONS,
     SECTORS,
 )
+from fincore.exceptions import ValidationError
 from fincore.utils.common_utils import customize
 
 DisplayFunc = Callable[..., Any]
@@ -47,6 +48,34 @@ else:
     Markdown = getattr(_ipy_display_mod, "Markdown", _fallback_markdown)
 
 cmap = plt.get_cmap("gist_rainbow")
+
+
+def _project_legacy_exposure_bundle(bundle, category_order):
+    """Keep the legacy tuple projection inside the retiring Pyfolio façade."""
+    order = list(category_order)
+    if len(order) != len(set(order)):
+        raise ValidationError(
+            "legacy category order contains duplicate columns",
+            param_name="category_order",
+            value=order,
+        )
+    actual = list(bundle.long.columns)
+    missing = [category for category in order if category not in bundle.long.columns]
+    unexpected = [category for category in actual if category not in order]
+    if missing or unexpected:
+        raise ValidationError(
+            f"legacy exposure projection has missing={missing!r}, unexpected={unexpected!r}",
+            param_name="category_order",
+            value=actual,
+        )
+    return tuple(
+        [frame[category] for category in order] for frame in (bundle.long, bundle.short, bundle.gross, bundle.net)
+    )
+
+
+def _project_legacy_volume_bundle(bundle):
+    """Keep the legacy volume tuple projection inside the retiring façade."""
+    return bundle.long, bundle.short, bundle.gross
 
 
 from fincore.empyrical import Empyrical
@@ -367,27 +396,27 @@ class Pyfolio(Empyrical):
     def compute_sector_exposures(self, positions, sectors, sector_dict=None):
         """Project the named sector bundle to pyfolio's ordered 4-tuple."""
 
-        from fincore.metrics.positions import compute_sector_exposures
+        from fincore.portfolio.positions import compute_sector_exposures
 
         bundle = compute_sector_exposures(positions, sectors, sector_dict=sector_dict)
         category_order = list(SECTORS.values()) if sector_dict is None else list(sector_dict.values())
-        return bundle.as_legacy_tuple(category_order)
+        return _project_legacy_exposure_bundle(bundle, category_order)
 
     def compute_cap_exposures(self, positions, caps):
         """Project the named cap bundle to pyfolio's ordered 4-tuple."""
 
-        from fincore.metrics.positions import compute_cap_exposures
+        from fincore.portfolio.positions import compute_cap_exposures
 
         bundle = compute_cap_exposures(positions, caps)
-        return bundle.as_legacy_tuple(CAP_BUCKETS)
+        return _project_legacy_exposure_bundle(bundle, CAP_BUCKETS)
 
     def compute_volume_exposures(self, shares_held, volumes, percentile):
         """Project the named volume bundle to pyfolio's ordered 3-tuple."""
 
-        from fincore.metrics.positions import compute_volume_exposures
+        from fincore.portfolio.positions import compute_volume_exposures
 
         bundle = compute_volume_exposures(shares_held, volumes, percentile)
-        return bundle.as_legacy_tuple()
+        return _project_legacy_volume_bundle(bundle)
 
     def plot_bayes_cone(self, returns_train, returns_test, ppc, plot_train_len=50, ax=None):
         """

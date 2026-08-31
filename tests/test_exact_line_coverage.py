@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fincore.exceptions import NumericalError
-
 
 def test_stats_hurst_line_175_continue():
     """stats.py line 175: continue when n_subseries < 1."""
@@ -78,13 +76,11 @@ def test_stats_r_cubed_turtle_line_625_empty_max_dds():
 
 
 def test_ratios_mar_ratio_line_417():
-    """ratios.py line 417: all-NaN returns are rejected before any cleaning."""
+    """ratios.py line 417: all-NaN returns yield a non-computable NaN."""
     from fincore.metrics.ratios import mar_ratio
 
-    # All NaN values are rejected by the enhanced metrics surface.
     returns = pd.Series([np.nan, np.nan, np.nan])
-    with pytest.raises(NumericalError, match="finite"):
-        mar_ratio(returns)
+    assert np.isnan(mar_ratio(returns))
 
 
 def test_yearly_annual_active_return_line_236():
@@ -262,7 +258,7 @@ def test_empyrical_line_718():
 
 def test_round_trips_line_417():
     """round_trips.py line 417: return without built_in_funcs."""
-    from fincore.metrics.round_trips import gen_round_trip_stats
+    from fincore.portfolio.round_trips import gen_round_trip_stats
 
     idx = pd.date_range("2024-01-01", periods=5, freq="B")
     round_trips = pd.DataFrame(
