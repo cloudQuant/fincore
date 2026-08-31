@@ -1,0 +1,2419 @@
+{
+  "cases": [
+    {
+      "cold_import_seconds": 0.022890541,
+      "execution_input_digest": "184c482b15fadb628f6a13f104b05d8cd8be2c8b27b11c29f5ce5c284d95c74d",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run_metrics (profile_hotspots.py:392)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "perf_stats (perf_stats.py:45)"
+        },
+        {
+          "calls": "36",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.002,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.001,
+          "function": "axis_nan_policy_wrapper (_axis_nan_policy.py:426)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.001,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "skewness (stats.py:78)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "stability_of_timeseries (ratios.py:1198)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "omega_ratio (ratios.py:481)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "kurtosis (_stats_py.py:1356)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (base.py:460)"
+        }
+      ],
+      "kind": "metrics",
+      "measured_output_digests": [
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+      "peak_rss_bytes": 164593664,
+      "profiled_output_digest": "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+      "profiled_wall_seconds": 0.003711458,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.001525125,
+        "median_seconds": 0.001424375,
+        "minimum_seconds": 0.001398666,
+        "p95_seconds": 0.00152
+      },
+      "timing_samples_seconds": [
+        0.001525125,
+        0.0014995,
+        0.001424375,
+        0.001419917,
+        0.001398666
+      ],
+      "warmup_output_digests": [
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58",
+        "932462e95b43fcc3ba3ef8638233c6448893b9e723c836ef10a1e02af5b5fe58"
+      ],
+      "workload": {
+        "expected_rows": 252,
+        "input_digest": "9d2a9025b6ae9b22b1f212fee29aff08ebe645d1fc7cb6464a83f900076cd5a0",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.0228545,
+      "execution_input_digest": "13d2ccdaff999d8d03479a00b7d54dbafb6cc42dc9cb147b1f937fceb5370edf",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run_metrics (profile_hotspots.py:392)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "perf_stats (perf_stats.py:45)"
+        },
+        {
+          "calls": "36",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.002,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.001,
+          "function": "axis_nan_policy_wrapper (_axis_nan_policy.py:426)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.001,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "stability_of_timeseries (ratios.py:1198)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "skewness (stats.py:78)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "omega_ratio (ratios.py:481)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "kurtosis (_stats_py.py:1356)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (_stats_py.py:10819)"
+        }
+      ],
+      "kind": "metrics",
+      "measured_output_digests": [
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+      "peak_rss_bytes": 165806080,
+      "profiled_output_digest": "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+      "profiled_wall_seconds": 0.00385425,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.001638083,
+        "median_seconds": 0.001560208,
+        "minimum_seconds": 0.001544375,
+        "p95_seconds": 0.001634408
+      },
+      "timing_samples_seconds": [
+        0.001638083,
+        0.001619709,
+        0.001560208,
+        0.00155025,
+        0.001544375
+      ],
+      "warmup_output_digests": [
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527",
+        "2e56c12bd7cf279b2852a1cd2be657ace48e7daf11b1e47cfbf4348c0cfe8527"
+      ],
+      "workload": {
+        "expected_rows": 1260,
+        "input_digest": "e1ccde04ea31e9a2d1e3b959b73f2cdb83a6196b08bc4d369deb55c303483776",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022870792,
+      "execution_input_digest": "fa674a019624f282496302fb0df877389881f02a255f1d1404574f6a2759fb0d",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "run_metrics (profile_hotspots.py:392)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "perf_stats (perf_stats.py:45)"
+        },
+        {
+          "calls": "36",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.002,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.001,
+          "function": "axis_nan_policy_wrapper (_axis_nan_policy.py:426)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.001,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "omega_ratio (ratios.py:481)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.001,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "stability_of_timeseries (ratios.py:1198)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "skewness (stats.py:78)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "kurtosis (_stats_py.py:1356)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "9",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (_stats_py.py:10819)"
+        }
+      ],
+      "kind": "metrics",
+      "measured_output_digests": [
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+      "peak_rss_bytes": 164741120,
+      "profiled_output_digest": "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+      "profiled_wall_seconds": 0.004009208,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.001783375,
+        "median_seconds": 0.001693583,
+        "minimum_seconds": 0.001676416,
+        "p95_seconds": 0.001781742
+      },
+      "timing_samples_seconds": [
+        0.001775209,
+        0.001783375,
+        0.001693583,
+        0.001676416,
+        0.001677
+      ],
+      "warmup_output_digests": [
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64",
+        "21cfd0eec63eec9e0ffec41b98ce2d07941f11e3c6a5fc86f21f309a8db9aa64"
+      ],
+      "workload": {
+        "expected_rows": 2520,
+        "input_digest": "6755415bd8b6364268997e03a1eaefb9a4e3450bb3eb61d4b178afb072e2314a",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "large"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022861,
+      "execution_input_digest": "f9032569c1303d8d63999f7c95e14f2033e5e97bee6edc977746dde8c31aa13d",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_rolling (profile_hotspots.py:405)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_sharpe (rolling.py:556)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply (rolling.py:538)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_columnwise (rolling.py:444)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_series (rolling.py:424)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_arith_method (base.py:1633)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (managers.py:2014)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "std (rolling.py:1729)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_volatility (rolling.py:527)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "mean (rolling.py:1686)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_construct_result (series.py:6813)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__mul__ (arraylike.py:204)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "homogeneous_func (rolling.py:571)"
+        }
+      ],
+      "kind": "rolling",
+      "measured_output_digests": [
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+      "peak_rss_bytes": 108298240,
+      "profiled_output_digest": "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+      "profiled_wall_seconds": 0.000545167,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000204667,
+        "median_seconds": 0.000167333,
+        "minimum_seconds": 0.000165083,
+        "p95_seconds": 0.000198517
+      },
+      "timing_samples_seconds": [
+        0.000204667,
+        0.000173917,
+        0.000167333,
+        0.000165083,
+        0.000165084
+      ],
+      "warmup_output_digests": [
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67",
+        "58f5be47a9cf40b9db6fdddbd7d3f5b92977026a1c9f655bea8377da728a4f67"
+      ],
+      "workload": {
+        "expected_rows": 252,
+        "input_digest": "0d8ae4790c18f476ecfe77973e0739eb09149d3718038a2385f28bdf97f9e44d",
+        "name": "rolling_returns",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022905875,
+      "execution_input_digest": "7eec3d9b9ef37cc3a31fe48bb8d8609d7bce92abdec7c0bd86bfd7d7b4f28e31",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_rolling (profile_hotspots.py:405)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_sharpe (rolling.py:556)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply (rolling.py:538)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_columnwise (rolling.py:444)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_series (rolling.py:424)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_arith_method (base.py:1633)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (managers.py:2014)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "std (rolling.py:1729)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_volatility (rolling.py:527)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "homogeneous_func (rolling.py:571)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "mean (rolling.py:1686)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_construct_result (series.py:6813)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__mul__ (arraylike.py:204)"
+        }
+      ],
+      "kind": "rolling",
+      "measured_output_digests": [
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+      "peak_rss_bytes": 108429312,
+      "profiled_output_digest": "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+      "profiled_wall_seconds": 0.000584416,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000246583,
+        "median_seconds": 0.00020875,
+        "minimum_seconds": 0.000202417,
+        "p95_seconds": 0.00024055
+      },
+      "timing_samples_seconds": [
+        0.000246583,
+        0.000216417,
+        0.00020875,
+        0.000202417,
+        0.000203416
+      ],
+      "warmup_output_digests": [
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee",
+        "f2d08e5aa3d6deb9e828ba1ee27f74acb23f5eacb1cd6b032c4a3f46dafd9cee"
+      ],
+      "workload": {
+        "expected_rows": 1260,
+        "input_digest": "2e4d2230f364458585ffcd0c59a428cd5703de9b1a5865750ff765a09e696a97",
+        "name": "rolling_returns",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022948375,
+      "execution_input_digest": "fc8813472e0dafca62ad30d61065617606ae6a46064166fc6593ed91956914dd",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_rolling (profile_hotspots.py:405)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_sharpe (rolling.py:556)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply (rolling.py:538)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_columnwise (rolling.py:444)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_apply_series (rolling.py:424)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "std (rolling.py:1729)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_arith_method (base.py:1633)"
+        },
+        {
+          "calls": "6",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (managers.py:2014)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "homogeneous_func (rolling.py:571)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "rolling_volatility (rolling.py:527)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "mean (rolling.py:1686)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "calc (rolling.py:577)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "_construct_result (series.py:6813)"
+        }
+      ],
+      "kind": "rolling",
+      "measured_output_digests": [
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+      "peak_rss_bytes": 107806720,
+      "profiled_output_digest": "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+      "profiled_wall_seconds": 0.00067475,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000288375,
+        "median_seconds": 0.000267042,
+        "minimum_seconds": 0.000256583,
+        "p95_seconds": 0.000285625
+      },
+      "timing_samples_seconds": [
+        0.000288375,
+        0.000256583,
+        0.000267042,
+        0.000274625,
+        0.000265458
+      ],
+      "warmup_output_digests": [
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083",
+        "0ec588e44602bc1474d496e83a76bf40b1919a71dd18cd9856f46476f176b083"
+      ],
+      "workload": {
+        "expected_rows": 2520,
+        "input_digest": "cc7dde85e911ba6cf5d5aea8ae146c394ce0218ff634cc6753a0fe196560eeda",
+        "name": "rolling_returns",
+        "seed": 20260817,
+        "size": "large"
+      }
+    },
+    {
+      "cold_import_seconds": 0.023000541,
+      "execution_input_digest": "ec534cc4c5bc17b02a8e9ac476710d64b1234ab889d8d74e465f92e71cd2b18b",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.159,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.159,
+          "function": "run_transactions (profile_hotspots.py:423)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.159,
+          "function": "extract_round_trips (round_trips.py:199)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.152,
+          "function": "groupby_consecutive (round_trips.py:140)"
+        },
+        {
+          "calls": "8",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.129,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.128,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "500",
+          "cumtime_seconds": 0.12,
+          "function": "vwap (round_trips.py:159)"
+        },
+        {
+          "calls": "30",
+          "cumtime_seconds": 0.0,
+          "function": "__getattr__ (groupby.py:1109)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "__getitem__ (typing.py:492)"
+        },
+        {
+          "calls": "2053",
+          "cumtime_seconds": 0.037,
+          "function": "_get_item (frame.py:4966)"
+        },
+        {
+          "calls": "2065",
+          "cumtime_seconds": 0.035,
+          "function": "_ixs (frame.py:4292)"
+        },
+        {
+          "calls": "525/517",
+          "cumtime_seconds": 0.034,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "504",
+          "cumtime_seconds": 0.031,
+          "function": "_arith_method (base.py:1633)"
+        },
+        {
+          "calls": "500",
+          "cumtime_seconds": 0.032,
+          "function": "__mul__ (arraylike.py:204)"
+        }
+      ],
+      "kind": "transactions",
+      "measured_output_digests": [
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+      "peak_rss_bytes": 112984064,
+      "profiled_output_digest": "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+      "profiled_wall_seconds": 0.158605625,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.058182584,
+        "median_seconds": 0.058123375,
+        "minimum_seconds": 0.057935958,
+        "p95_seconds": 0.058179651
+      },
+      "timing_samples_seconds": [
+        0.057935958,
+        0.058167917,
+        0.058182584,
+        0.058123375,
+        0.058115959
+      ],
+      "warmup_output_digests": [
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9",
+        "d640cdf626c9f9111b15123bd7c97bef5b37027ac92df2b4592ecba54fb324a9"
+      ],
+      "workload": {
+        "expected_rows": 500,
+        "input_digest": "d7689e2851abdcad8bd9d75b317064d1127415f8bf4421ef30f39cffe2ccc8e6",
+        "name": "transactions",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022843875,
+      "execution_input_digest": "f0beec2d4b4d43c8047d25646ad729348586916af4967d55f77cfebff4fa5c9f",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.343,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.343,
+          "function": "run_transactions (profile_hotspots.py:423)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.343,
+          "function": "extract_round_trips (round_trips.py:199)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.299,
+          "function": "groupby_consecutive (round_trips.py:140)"
+        },
+        {
+          "calls": "8",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 1.273,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 1.272,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "5000",
+          "cumtime_seconds": 1.203,
+          "function": "vwap (round_trips.py:159)"
+        },
+        {
+          "calls": "30",
+          "cumtime_seconds": 0.0,
+          "function": "__getattr__ (groupby.py:1109)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "__getitem__ (typing.py:492)"
+        },
+        {
+          "calls": "20047",
+          "cumtime_seconds": 0.364,
+          "function": "_get_item (frame.py:4966)"
+        },
+        {
+          "calls": "20059",
+          "cumtime_seconds": 0.341,
+          "function": "_ixs (frame.py:4292)"
+        },
+        {
+          "calls": "5023/5015",
+          "cumtime_seconds": 0.324,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "4998",
+          "cumtime_seconds": 0.315,
+          "function": "__mul__ (arraylike.py:204)"
+        },
+        {
+          "calls": "5002",
+          "cumtime_seconds": 0.304,
+          "function": "_arith_method (base.py:1633)"
+        }
+      ],
+      "kind": "transactions",
+      "measured_output_digests": [
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+      "peak_rss_bytes": 115408896,
+      "profiled_output_digest": "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+      "profiled_wall_seconds": 1.342959833,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.486168208,
+        "median_seconds": 0.479678625,
+        "minimum_seconds": 0.477598625,
+        "p95_seconds": 0.485709308
+      },
+      "timing_samples_seconds": [
+        0.479301542,
+        0.483873708,
+        0.479678625,
+        0.477598625,
+        0.486168208
+      ],
+      "warmup_output_digests": [
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7",
+        "45676df5507fc86a042ff6ed126b48247f9f65043f5e3c92f606a3bc282bd9f7"
+      ],
+      "workload": {
+        "expected_rows": 5000,
+        "input_digest": "239a1410a0b6fd2e6730dc458b8c7e3afc92a540027d54603383e8c6dbe55c4b",
+        "name": "transactions",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.023001875,
+      "execution_input_digest": "6e676a23739a44a0a6db11f9233c0a8723ffe13163bfb15ee8f78d8353555806",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 13.139,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 13.139,
+          "function": "run_transactions (profile_hotspots.py:423)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 13.139,
+          "function": "extract_round_trips (round_trips.py:199)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 12.709,
+          "function": "groupby_consecutive (round_trips.py:140)"
+        },
+        {
+          "calls": "8",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 12.65,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 12.646,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "50000",
+          "cumtime_seconds": 11.926,
+          "function": "vwap (round_trips.py:159)"
+        },
+        {
+          "calls": "30",
+          "cumtime_seconds": 0.0,
+          "function": "__getattr__ (groupby.py:1109)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "__getitem__ (typing.py:492)"
+        },
+        {
+          "calls": "199984",
+          "cumtime_seconds": 3.601,
+          "function": "_get_item (frame.py:4966)"
+        },
+        {
+          "calls": "199996",
+          "cumtime_seconds": 3.378,
+          "function": "_ixs (frame.py:4292)"
+        },
+        {
+          "calls": "50002/49994",
+          "cumtime_seconds": 3.202,
+          "function": "new_method (common.py:67)"
+        },
+        {
+          "calls": "49977",
+          "cumtime_seconds": 3.118,
+          "function": "__mul__ (arraylike.py:204)"
+        },
+        {
+          "calls": "49981",
+          "cumtime_seconds": 3.012,
+          "function": "_arith_method (base.py:1633)"
+        }
+      ],
+      "kind": "transactions",
+      "measured_output_digests": [
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+      "peak_rss_bytes": 160284672,
+      "profiled_output_digest": "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+      "profiled_wall_seconds": 13.139350083,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 4.715171542,
+        "median_seconds": 4.7055075,
+        "minimum_seconds": 4.692093792,
+        "p95_seconds": 4.71483805
+      },
+      "timing_samples_seconds": [
+        4.713504083,
+        4.715171542,
+        4.692093792,
+        4.694599708,
+        4.7055075
+      ],
+      "warmup_output_digests": [
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908",
+        "9a2203c6f089bb9323440c7adfbeab240fdaf68ec7300ae688762dad5e091908"
+      ],
+      "workload": {
+        "expected_rows": 50000,
+        "input_digest": "98625b8fe9207624601bc888933200a1d499d1bac02763313576f40325506ee2",
+        "name": "transactions",
+        "seed": 20260817,
+        "size": "large"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022825,
+      "execution_input_digest": "8edd8a60f9a36215b6c9b9a811bab4b3d4d4e8ec9cd2da3662ba4c94c45fae33",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.31,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.31,
+          "function": "run_factor (profile_hotspots.py:449)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.31,
+          "function": "prepare_factor_data (data.py:400)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.259,
+          "function": "_prepare_from_forward_returns (data.py:339)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.248,
+          "function": "quantize_factor (data.py:238)"
+        },
+        {
+          "calls": "16",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.246,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.201,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "14",
+          "cumtime_seconds": 0.0,
+          "function": "f (datetimes.py:139)"
+        },
+        {
+          "calls": "247",
+          "cumtime_seconds": 0.19,
+          "function": "_quantile_calculation (data.py:210)"
+        },
+        {
+          "calls": "247",
+          "cumtime_seconds": 0.172,
+          "function": "qcut (tile.py:295)"
+        },
+        {
+          "calls": "247",
+          "cumtime_seconds": 0.016,
+          "function": "quantile (function_base.py:4292)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__new__ (range.py:151)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.045,
+          "function": "_wrap_applied_output (generic.py:538)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.045,
+          "function": "_concat_objects (groupby.py:1153)"
+        }
+      ],
+      "kind": "factor",
+      "measured_output_digests": [
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+      "peak_rss_bytes": 194871296,
+      "profiled_output_digest": "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+      "profiled_wall_seconds": 0.31024875,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.141913667,
+        "median_seconds": 0.128659667,
+        "minimum_seconds": 0.127097709,
+        "p95_seconds": 0.13932265
+      },
+      "timing_samples_seconds": [
+        0.128958584,
+        0.128659667,
+        0.141913667,
+        0.127097709,
+        0.1285985
+      ],
+      "warmup_output_digests": [
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1",
+        "ff28bc49d6ae0ee4f8f782c4f94b6b0d227e41d63290a1e72ffe05ed3b7439d1"
+      ],
+      "workload": {
+        "expected_rows": 25200,
+        "input_digest": "8cc68f1e2acfc4391a978fc91c01e822d397b2ae790f628032d0f6a64f3c7b01",
+        "name": "factor_panel",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.02305075,
+      "execution_input_digest": "14389313cc9c7c9d75714e227d436a9e44f79a191e5586ac5bdb6d8e0401e07c",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.877,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.877,
+          "function": "run_factor (profile_hotspots.py:449)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.876,
+          "function": "prepare_factor_data (data.py:400)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.496,
+          "function": "_prepare_from_forward_returns (data.py:339)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.32,
+          "function": "quantize_factor (data.py:238)"
+        },
+        {
+          "calls": "16",
+          "cumtime_seconds": 0.002,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.311,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 1.077,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "14",
+          "cumtime_seconds": 0.0,
+          "function": "f (datetimes.py:139)"
+        },
+        {
+          "calls": "1255",
+          "cumtime_seconds": 1.014,
+          "function": "_quantile_calculation (data.py:210)"
+        },
+        {
+          "calls": "1255",
+          "cumtime_seconds": 0.922,
+          "function": "qcut (tile.py:295)"
+        },
+        {
+          "calls": "1255",
+          "cumtime_seconds": 0.108,
+          "function": "quantile (function_base.py:4292)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__new__ (range.py:151)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (ops.py:590)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.234,
+          "function": "_wrap_applied_output (generic.py:538)"
+        }
+      ],
+      "kind": "factor",
+      "measured_output_digests": [
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+      "peak_rss_bytes": 547225600,
+      "profiled_output_digest": "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+      "profiled_wall_seconds": 1.876616541,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.991614125,
+        "median_seconds": 0.989341584,
+        "minimum_seconds": 0.98319875,
+        "p95_seconds": 0.991432567
+      },
+      "timing_samples_seconds": [
+        0.990706333,
+        0.989341584,
+        0.991614125,
+        0.98319875,
+        0.987027916
+      ],
+      "warmup_output_digests": [
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13",
+        "8203473981be829461a7be8ca039ba1be1888c9e687ce674dc56fb06392c6d13"
+      ],
+      "workload": {
+        "expected_rows": 630000,
+        "input_digest": "5f5989529aa8fd8d6cc165b6d84f74573dea8e704f5865c991de604c9a510ef8",
+        "name": "factor_panel",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.030854167,
+      "execution_input_digest": "2bf0a5d52660c5957356f4a8bc6cb54c12d4de2cdc6709632ce0cf2aecd44178",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 4.618,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 4.618,
+          "function": "run_factor (profile_hotspots.py:449)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 4.616,
+          "function": "prepare_factor_data (data.py:400)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 3.441,
+          "function": "_prepare_from_forward_returns (data.py:339)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 2.738,
+          "function": "quantize_factor (data.py:238)"
+        },
+        {
+          "calls": "16",
+          "cumtime_seconds": 0.008,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 2.703,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 2.222,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "14",
+          "cumtime_seconds": 0.001,
+          "function": "f (datetimes.py:139)"
+        },
+        {
+          "calls": "2515",
+          "cumtime_seconds": 2.077,
+          "function": "_quantile_calculation (data.py:210)"
+        },
+        {
+          "calls": "2515",
+          "cumtime_seconds": 1.893,
+          "function": "qcut (tile.py:295)"
+        },
+        {
+          "calls": "2515",
+          "cumtime_seconds": 0.233,
+          "function": "quantile (function_base.py:4292)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "__new__ (range.py:151)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.012,
+          "function": "unique (_mixins.py:231)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.71,
+          "function": "compute_forward_returns (data.py:155)"
+        }
+      ],
+      "kind": "factor",
+      "measured_output_digests": [
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+      "peak_rss_bytes": 1338408960,
+      "profiled_output_digest": "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+      "profiled_wall_seconds": 4.617736875,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 2.901952291,
+        "median_seconds": 2.892829042,
+        "minimum_seconds": 2.887073041,
+        "p95_seconds": 2.901439058
+      },
+      "timing_samples_seconds": [
+        2.887073041,
+        2.888336333,
+        2.899386125,
+        2.901952291,
+        2.892829042
+      ],
+      "warmup_output_digests": [
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd",
+        "3c73923b8dc45086359ea3ee1ff116d0863de6c7e2875dcf98e3d338f92123fd"
+      ],
+      "workload": {
+        "expected_rows": 2520000,
+        "input_digest": "7845ebeaf27510d307977fe36519a50fba8735776f2676fd01061ca945cb2291",
+        "name": "factor_panel",
+        "seed": 20260817,
+        "size": "large"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022903125,
+      "execution_input_digest": "1a40469186066101a01d4d7246b0597cdcbbea1b43b964c53ee20144f4006a8d",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_risk (profile_hotspots.py:474)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (function.py:65)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.001,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "conditional_value_at_risk (risk.py:234)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "percentile (function_base.py:3992)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_unchecked (function_base.py:4547)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_ureduce (function_base.py:3763)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "value_at_risk (risk.py:203)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_ureduce_func (function_base.py:4697)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile (function_base.py:4765)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        }
+      ],
+      "kind": "risk",
+      "measured_output_digests": [
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+      "peak_rss_bytes": 107954176,
+      "profiled_output_digest": "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+      "profiled_wall_seconds": 0.001326375,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000476458,
+        "median_seconds": 0.000450542,
+        "minimum_seconds": 0.000440209,
+        "p95_seconds": 0.000473025
+      },
+      "timing_samples_seconds": [
+        0.000476458,
+        0.000459291,
+        0.000447833,
+        0.000450542,
+        0.000440209
+      ],
+      "warmup_output_digests": [
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545",
+        "b2752b7123565614f3ba82e02e089be5e5827b9af4159c30cff0674d4da9f545"
+      ],
+      "workload": {
+        "expected_rows": 252,
+        "input_digest": "9d2a9025b6ae9b22b1f212fee29aff08ebe645d1fc7cb6464a83f900076cd5a0",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022840458,
+      "execution_input_digest": "eaaa247aba8d8c326616de72cd90aa32372d26007b0fd260c354e35d98dd6365",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_risk (profile_hotspots.py:474)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (function.py:65)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.001,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "conditional_value_at_risk (risk.py:234)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "percentile (function_base.py:3992)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_unchecked (function_base.py:4547)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_ureduce (function_base.py:3763)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_ureduce_func (function_base.py:4697)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile (function_base.py:4765)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "value_at_risk (risk.py:203)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "new_method (common.py:67)"
+        }
+      ],
+      "kind": "risk",
+      "measured_output_digests": [
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+      "peak_rss_bytes": 108920832,
+      "profiled_output_digest": "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+      "profiled_wall_seconds": 0.0014195,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000558375,
+        "median_seconds": 0.00050375,
+        "minimum_seconds": 0.000492042,
+        "p95_seconds": 0.000549917
+      },
+      "timing_samples_seconds": [
+        0.000558375,
+        0.000516084,
+        0.00050375,
+        0.000496709,
+        0.000492042
+      ],
+      "warmup_output_digests": [
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed",
+        "541d4b479c4599e4f6f2d7310b0247ed223e1dab0b4296b841c99619d8578fed"
+      ],
+      "workload": {
+        "expected_rows": 1260,
+        "input_digest": "e1ccde04ea31e9a2d1e3b959b73f2cdb83a6196b08bc4d369deb55c303483776",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022823417,
+      "execution_input_digest": "62648e4e8ce018779dba5e3ba23fc3f943881fecaa5636eaf69436ffe55d4ceb",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "run_risk (profile_hotspots.py:474)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (function.py:65)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.001,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.001,
+          "function": "conditional_value_at_risk (risk.py:234)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "percentile (function_base.py:3992)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "_validated_arguments (_dispatch.py:126)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_unchecked (function_base.py:4547)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_ureduce (function_base.py:3763)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile_ureduce_func (function_base.py:4697)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_metric_arguments (validation.py:388)"
+        },
+        {
+          "calls": "4",
+          "cumtime_seconds": 0.0,
+          "function": "_quantile (function_base.py:4765)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.0,
+          "function": "value_at_risk (risk.py:203)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.0,
+          "function": "validate_returns_schema (validation.py:115)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "tail_ratio (risk.py:265)"
+        }
+      ],
+      "kind": "risk",
+      "measured_output_digests": [
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+      "peak_rss_bytes": 109232128,
+      "profiled_output_digest": "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+      "profiled_wall_seconds": 0.001471416,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.000609834,
+        "median_seconds": 0.00057175,
+        "minimum_seconds": 0.00056425,
+        "p95_seconds": 0.000604409
+      },
+      "timing_samples_seconds": [
+        0.000609834,
+        0.000582708,
+        0.00057175,
+        0.00056425,
+        0.000564666
+      ],
+      "warmup_output_digests": [
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975",
+        "caf75573541855a92a60aa237d532443b27935aa698b7cbb1725cdd9cd634975"
+      ],
+      "workload": {
+        "expected_rows": 2520,
+        "input_digest": "6755415bd8b6364268997e03a1eaefb9a4e3450bb3eb61d4b178afb072e2314a",
+        "name": "single_series",
+        "seed": 20260817,
+        "size": "large"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022840666,
+      "execution_input_digest": "d6abcadba55a016ae19e9aa5e8e1c47623b7e71406221fae5dec4c42a9b07db0",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.028,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.028,
+          "function": "run_report (profile_hotspots.py:506)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.028,
+          "function": "compute_sections (compute.py:550)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.014,
+          "function": "_compute_time_series (compute.py:278)"
+        },
+        {
+          "calls": "36",
+          "cumtime_seconds": 0.013,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "74",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.008,
+          "function": "_compute_extended_stats (compute.py:242)"
+        },
+        {
+          "calls": "26",
+          "cumtime_seconds": 0.006,
+          "function": "cum_returns (returns.py:113)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.005,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.005,
+          "function": "aggregate_returns (returns.py:214)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.005,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "11",
+          "cumtime_seconds": 0.005,
+          "function": "bound (empyrical.py:181)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.004,
+          "function": "gen_drawdown_table (drawdown.py:350)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (_stats_py.py:10819)"
+        }
+      ],
+      "kind": "report",
+      "measured_output_digests": [
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+      "peak_rss_bytes": 168738816,
+      "profiled_output_digest": "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+      "profiled_wall_seconds": 0.028420333,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.011700375,
+        "median_seconds": 0.01155775,
+        "minimum_seconds": 0.011316833,
+        "p95_seconds": 0.01167825
+      },
+      "timing_samples_seconds": [
+        0.011700375,
+        0.01155775,
+        0.011379291,
+        0.01158975,
+        0.011316833
+      ],
+      "warmup_output_digests": [
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed",
+        "917d7532d730571a4d99fc29632fe4aed8afdd2b681e9588f30d4688c2da40ed"
+      ],
+      "workload": {
+        "expected_rows": 252,
+        "input_digest": "7cdc1b33988c123f3d4519f17a0dc7dc56e630f1fb6d06fb2f2bf487ebf19e86",
+        "name": "report",
+        "seed": 20260817,
+        "size": "small"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022891041,
+      "execution_input_digest": "88f5d8e81a9265655c94c12c71ff36fee3278354af5895b6b47550459be223fc",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.053,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.053,
+          "function": "run_report (profile_hotspots.py:506)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.053,
+          "function": "compute_sections (compute.py:550)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.036,
+          "function": "_compute_time_series (compute.py:278)"
+        },
+        {
+          "calls": "38",
+          "cumtime_seconds": 0.029,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "74",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.021,
+          "function": "aggregate_returns (returns.py:214)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.02,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.02,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "80",
+          "cumtime_seconds": 0.017,
+          "function": "cum_returns (returns.py:113)"
+        },
+        {
+          "calls": "63",
+          "cumtime_seconds": 0.015,
+          "function": "cumulate_returns (returns.py:242)"
+        },
+        {
+          "calls": "220/147",
+          "cumtime_seconds": 0.012,
+          "function": "__array_ufunc__ (generic.py:2056)"
+        },
+        {
+          "calls": "220/147",
+          "cumtime_seconds": 0.012,
+          "function": "array_ufunc (arraylike.py:257)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.01,
+          "function": "gen_drawdown_table (drawdown.py:350)"
+        }
+      ],
+      "kind": "report",
+      "measured_output_digests": [
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+      "peak_rss_bytes": 168738816,
+      "profiled_output_digest": "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+      "profiled_wall_seconds": 0.052605208,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.0254715,
+        "median_seconds": 0.023976875,
+        "minimum_seconds": 0.023758542,
+        "p95_seconds": 0.025190066
+      },
+      "timing_samples_seconds": [
+        0.024064333,
+        0.023926042,
+        0.023758542,
+        0.0254715,
+        0.023976875
+      ],
+      "warmup_output_digests": [
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23",
+        "685f540f1dce8a9a1cd142d2d4687033e898adf09427a9054f1dc442eca37b23"
+      ],
+      "workload": {
+        "expected_rows": 1260,
+        "input_digest": "17583f3ad3e821f46327b22e0e735d8c2a9a8f7a02ceec6f1c1652519c6b39e0",
+        "name": "report",
+        "seed": 20260817,
+        "size": "medium"
+      }
+    },
+    {
+      "cold_import_seconds": 0.022901083,
+      "execution_input_digest": "faf2469c2c59d25811650e185cdb86b2cdbd2f78f5bd47807756f7d5d22d2d04",
+      "hotspots": [
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.078,
+          "function": "run (profile_hotspots.py:555)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.078,
+          "function": "run_report (profile_hotspots.py:506)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.078,
+          "function": "compute_sections (compute.py:550)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.06,
+          "function": "_compute_time_series (compute.py:278)"
+        },
+        {
+          "calls": "38",
+          "cumtime_seconds": 0.049,
+          "function": "enhanced_identity_adapter (_dispatch.py:42)"
+        },
+        {
+          "calls": "74",
+          "cumtime_seconds": 0.0,
+          "function": "__call__ (enum.py:686)"
+        },
+        {
+          "calls": "2",
+          "cumtime_seconds": 0.04,
+          "function": "aggregate_returns (returns.py:214)"
+        },
+        {
+          "calls": "3",
+          "cumtime_seconds": 0.0,
+          "function": "apply (blocks.py:341)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.038,
+          "function": "_python_apply_general (groupby.py:1652)"
+        },
+        {
+          "calls": "5",
+          "cumtime_seconds": 0.038,
+          "function": "apply_groupwise (ops.py:1013)"
+        },
+        {
+          "calls": "148",
+          "cumtime_seconds": 0.031,
+          "function": "cum_returns (returns.py:113)"
+        },
+        {
+          "calls": "126",
+          "cumtime_seconds": 0.03,
+          "function": "cumulate_returns (returns.py:242)"
+        },
+        {
+          "calls": "409/273",
+          "cumtime_seconds": 0.022,
+          "function": "__array_ufunc__ (generic.py:2056)"
+        },
+        {
+          "calls": "409/273",
+          "cumtime_seconds": 0.022,
+          "function": "array_ufunc (arraylike.py:257)"
+        },
+        {
+          "calls": "1",
+          "cumtime_seconds": 0.0,
+          "function": "__init__ (_stats_py.py:10819)"
+        }
+      ],
+      "kind": "report",
+      "measured_output_digests": [
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688"
+      ],
+      "measurement": {
+        "percentile_method": "linear",
+        "repeats": 5,
+        "require_output_digest": true,
+        "timing_unit": "seconds",
+        "warmups": 2
+      },
+      "output_digest": "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+      "peak_rss_bytes": 168345600,
+      "profiled_output_digest": "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+      "profiled_wall_seconds": 0.077796375,
+      "provenance": {
+        "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+        "dirty": false,
+        "numpy": "1.26.4",
+        "pandas": "3.0.3",
+        "platform_label": "darwin-arm64",
+        "python": "3.11.8"
+      },
+      "schema": "fincore-hotspot-profile-v2",
+      "timing": {
+        "maximum_seconds": 0.037740125,
+        "median_seconds": 0.037442334,
+        "minimum_seconds": 0.037283041,
+        "p95_seconds": 0.037682067
+      },
+      "timing_samples_seconds": [
+        0.037740125,
+        0.037449834,
+        0.037442334,
+        0.037283041,
+        0.037325125
+      ],
+      "warmup_output_digests": [
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688",
+        "3c9cbfe9d3638bb8d687710ab6567bc2d9eb2af334ff140159b72e67e9110688"
+      ],
+      "workload": {
+        "expected_rows": 2520,
+        "input_digest": "f82962aa19c016a335f3d7b4ac682d3fea6b2cb52223805566a1045a4d7b748b",
+        "name": "report",
+        "seed": 20260817,
+        "size": "large"
+      }
+    }
+  ],
+  "kinds": [
+    "metrics",
+    "rolling",
+    "transactions",
+    "factor",
+    "risk",
+    "report"
+  ],
+  "measurement": {
+    "percentile_method": "linear",
+    "repeats": 5,
+    "require_output_digest": true,
+    "timing_unit": "seconds",
+    "warmups": 2
+  },
+  "schema": "fincore-workload-profiles-v2",
+  "sizes": [
+    "small",
+    "medium",
+    "large"
+  ]
+}

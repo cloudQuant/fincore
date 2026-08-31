@@ -1,0 +1,74 @@
+{
+  "artifact_type": "fincore_0042_r2_d0_bundle",
+  "artifacts": {
+    "architecture_baseline": {
+      "path": "architecture-baseline.json",
+      "sha256": "99f870c392a8bfec2af0ae76fdeb54920b7a4e67f3306ec92d0b0a78de74d746"
+    },
+    "capability_baseline": {
+      "path": "capability-baseline.json",
+      "sha256": "aac507f56ec2e1eb093a75196bc88567daabcd1e5fd6c76ec9ce5ac3c60505eb"
+    },
+    "performance_baseline": {
+      "path": "performance-baseline.json",
+      "sha256": "888d403d8e824e568d27f523ace4f3cf82254bc40e10906371d1c3eef9b43dc6"
+    },
+    "quality_baseline": {
+      "path": "quality-baseline.json",
+      "sha256": "44a2315a4e5ca0bfaf97c7162ef23b5cb364767cbd398050430e7c53e21c4865"
+    }
+  },
+  "baseline_source": {
+    "commit": "129cb26327e7caa2f8e4adf0654b69797766653f",
+    "provisioning": {
+      "architecture_threshold_policy": {
+        "git_blob": "d82d90b0b01f684792e3e1f8f50c9a8dab1b55b6",
+        "path": "tests/parity/fixtures/0042-r2-architecture-threshold-policy.json",
+        "sha256": "d216ff3a35026b9f9deea65a34d489fe4592cc8a5767beff6f4686b5b99e4c88"
+      },
+      "git_bundle": {
+        "path": "baseline-source.bundle",
+        "sha256": "9b5244da3f8fc6374afa98f8d39130cc7b72a15c679dc8b5bbe448a4686fc63d"
+      }
+    },
+    "tree": "1644614afdfa14d9642305203a9dbd7942e812e1"
+  },
+  "capture": {
+    "capability_input_capture_sha256": "207ab3153637aeab8bdc0c15d18cfdf34647241ed6a06b9f3619bbf3461133fa",
+    "quality_baseline_markdown_sha256": "998e7391626314be04de22dcc6b32cfcec6397d144f70804c80963a65156def7",
+    "quality_d0_branch_coverage": 42.0
+  },
+  "python_support_window": [
+    "3.11.8"
+  ],
+  "quality_contract": {
+    "changed_lines_min": 95.0,
+    "critical_modules": {
+      "fincore/runtime/catalog.py": 90.0,
+      "fincore/runtime/engine.py": 90.0,
+      "fincore/runtime/validation.py": 90.0
+    }
+  },
+  "schema_version": 1,
+  "tooling": {
+    "commit": "a1a000153fb4017582e4a2f9b5f2358a3610f20c",
+    "files": {
+      "scripts/_0042_r2_tooling.py": "aedd8c91888224ee2238d1bccf685f6bb3b99f1c589447d0ef378d507cab30c3",
+      "scripts/capture_capability_baseline.py": "6adaf0c07dc292ae536c79b235a95fc66a9fd607b28baf4f7e4b5e5b136a0773",
+      "scripts/check_architecture_convergence.py": "9651356112147518ea67536d374749dc905d6193e7e41c202a4d6125e969b2e3",
+      "scripts/check_coverage_baseline.py": "10cae8fa504a20beb858a35ea88369b882ad0f60e6f3a54b9927e9f320ff4a9c",
+      "scripts/check_dependency_matrix.py": "0d4055245da7bd71961c45a87ed6805d244b304fc78386da939f666428950f55",
+      "scripts/check_feature_parity.py": "4d9b8dfa3e3d95dcb2a37c22f8870d2a29f3a6ed2ed00c492923c42d7095cab2",
+      "scripts/check_performance.py": "40e37ad87e699983570a9fa95b30c6ccd1666f7a77caaff60573bdc17fbf6a23",
+      "scripts/check_quality_snapshot.py": "24e73f218b058d3c0d6e411b107d5ac6a2725e6b7ccc1ddeb5a4c7571275c581",
+      "scripts/check_release_consistency.py": "ea877037db1137788f38e41468c3edfb4e7111a860b777994a692f104f3f96e7",
+      "scripts/collect_quality_baseline.py": "9b36c511f756746b9e35fab10f730c5fa75ef8cd56c3042c79e6a9a5a42bde7b",
+      "scripts/evaluate_0042_r2_capability_scenarios.py": "270fd80ea36b5aeece57c6ec26d85f0d4a846cc748a3c2ba28b586fe2f976729",
+      "scripts/profile_hotspots.py": "820fa01cba3c036e4190486d3ba15b5488aa1109a2eba2badaee5cd25453c624",
+      "scripts/profile_workloads.py": "9b48ef144bbfe19f6cf94644248fc4182708579b8f478bd8b6ee19605242e08e",
+      "scripts/run_0042_r2_acceptance.py": "d52e006729619a61844f35f326001e781d68e6898c00c74ff1604da30a95dd5a",
+      "scripts/test_installed_wheel.py": "19ea9e70fe50810021717d8af974d42c9332e66b135ce47dac531387c550c600"
+    },
+    "tree": "130927a12b6810462967c76de0de67713f1e5095"
+  }
+}
