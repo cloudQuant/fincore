@@ -71,7 +71,7 @@
         "group": "tests/packaging"
       },
       {
-        "count": 42,
+        "count": 47,
         "group": "tests/parity"
       },
       {
@@ -83,7 +83,7 @@
         "group": "tests/property"
       },
       {
-        "count": 267,
+        "count": 270,
         "group": "tests/quality"
       },
       {
@@ -253,7 +253,7 @@
         "group": "empyrical"
       },
       {
-        "count": 3139,
+        "count": 3147,
         "group": "other"
       },
       {
@@ -263,7 +263,7 @@
     ],
     "marker": [
       {
-        "count": 2780,
+        "count": 2788,
         "group": "<unmarked>"
       },
       {
@@ -316,7 +316,7 @@
       }
     ]
   },
-  "node_count": 5633,
+  "node_count": 5641,
   "nodes": [
     {
       "directory_group": "tests/compat/alphalens",
@@ -20425,6 +20425,46 @@
     {
       "directory_group": "tests/parity",
       "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+      "test_blob_sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3",
+      "test_path": "tests/parity/test_extensions.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution",
+      "test_blob_sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3",
+      "test_path": "tests/parity/test_extensions.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+      "test_blob_sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3",
+      "test_path": "tests/parity/test_extensions.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+      "test_blob_sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3",
+      "test_path": "tests/parity/test_extensions.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+      "test_blob_sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3",
+      "test_path": "tests/parity/test_extensions.py"
+    },
+    {
+      "directory_group": "tests/parity",
+      "legacy_family": "other",
       "markers": [
         "parametrize"
       ],
@@ -21075,7 +21115,15 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_data_provider_contracts_have_offline_executable_scenarios",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21085,7 +21133,7 @@
         "p0"
       ],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21093,7 +21141,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21101,7 +21149,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21109,7 +21157,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_passes_the_frozen_capture_schema",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21117,7 +21165,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_contract_binds_the_committed_input_bytes",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21125,7 +21173,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21133,7 +21181,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_metrics_drawdown_and_leverage_coverage_is_backed_by_real_scenarios",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21141,7 +21189,23 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
+      "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
+    },
+    {
+      "directory_group": "tests/quality",
+      "legacy_family": "other",
+      "markers": [],
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_risk_contracts_are_backed_by_executable_reference_scenarios",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21149,7 +21213,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_upstream_capabilities_use_the_pinned_empyrical_oracle",
-      "test_blob_sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a",
+      "test_blob_sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -51859,16 +51923,16 @@
   "schema_version": 1,
   "source_archive": {
     "git_object_format": "sha1",
-    "regular_blob_count": 1105,
+    "regular_blob_count": 1106,
     "scope": "full_repository",
     "verified_against_regular_blobs": true
   },
   "source_provenance": {
     "clean": true,
-    "commit": "d557ee07ef74193472792a6cd7b0e8e47fcc6ee7",
-    "tree": "0c3a8af646f6401485d0cf0f94d49e080d9fde10"
+    "commit": "034beb49628b5668fa2dc9baba6738375fcac7fe",
+    "tree": "4f2b5cf140a459403ce3d7f2e995d190c19af43c"
   },
-  "source_test_blob_count": 486,
+  "source_test_blob_count": 487,
   "source_test_blobs": [
     {
       "git_object_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
@@ -52371,6 +52435,11 @@
       "sha256": "ef0fcd1c508a4886e459c4aedc9d52bdd96ac92b2090a934a19449c394dd0432"
     },
     {
+      "git_object_id": "438d02ae0ade48a32af3ca186c1e58d9157cbb2b",
+      "path": "tests/parity/test_extensions.py",
+      "sha256": "0209bf73f19ec95c490818823912b50c4255dee20ce8f07cd42b104083cdccb3"
+    },
+    {
       "git_object_id": "a0b16a0ac37e27e0777d531e3a6c4419037a50bc",
       "path": "tests/parity/test_ledger.py",
       "sha256": "85a25b80ce2e584ad901af95601630d4dfad188e04a20625214ffe43d441e9d8"
@@ -52426,9 +52495,9 @@
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
     },
     {
-      "git_object_id": "9f62de8cbbbbbbba864a409cb9b402d9e56bfa32",
+      "git_object_id": "1607e6b406f362b0aecc2d31fc34099296a257cd",
       "path": "tests/quality/test_0042_r2_capability_ledger.py",
-      "sha256": "04b91fd1f21326645739b69eee0aba26a4c0d42088ac8d104f0546f22efe742a"
+      "sha256": "fb71041c9b8b5c22ca047e07954d9e6d480af64839567b3e4adc35f3955a8bfd"
     },
     {
       "git_object_id": "7baf2dfc9819f4fe8c02766267dbb62363db2d91",

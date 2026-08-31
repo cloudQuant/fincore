@@ -357,3 +357,75 @@ def test_data_provider_contracts_have_offline_executable_scenarios() -> None:
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_extension_snapshot_capabilities_have_canonical_scenarios() -> None:
+    """Every extension registry behavior needs an executable isolation contract."""
+    ledger = _load()
+    expected = {
+        "extensions.snapshot.clear_registry": {
+            "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+        },
+        "extensions.snapshot.default_metric_family": {
+            "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+        },
+        "extensions.snapshot.duplicate_policy": {
+            "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+        },
+        "extensions.snapshot.duplicate_registration_error": {
+            "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+        },
+        "extensions.snapshot.extension_kind": {
+            "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+        },
+        "extensions.snapshot.extension_registry": {
+            "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+        },
+        "extensions.snapshot.get_metric": {
+            "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+        },
+        "extensions.snapshot.get_registry": {
+            "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+        },
+        "extensions.snapshot.get_viz_backend": {
+            "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+        },
+        "extensions.snapshot.isolated_registry": {
+            "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+        },
+        "extensions.snapshot.list_hooks": {
+            "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution",
+        },
+        "extensions.snapshot.list_metrics": {
+            "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+        },
+        "extensions.snapshot.list_viz_backends": {
+            "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+        },
+        "extensions.snapshot.register_hook": {
+            "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution",
+        },
+        "extensions.snapshot.register_metric": {
+            "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+        },
+        "extensions.snapshot.register_viz_backend": {
+            "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+        },
+        "extensions.snapshot.registration": {
+            "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+        },
+        "extensions.snapshot.rolling_family": {
+            "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "extensions"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids

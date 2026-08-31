@@ -12,12 +12,12 @@
   "scope": "non_online_functional_collection_only",
   "source_facts": {
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "6ffed5ff1d0024affeec8850139a916ab089af0c5ac09725b87c99fe201df326",
-    "node_count": 5633,
+    "sha256": "501c7d2713d27d2de0f68f5bf4cc78fafa54bd5392b65ce4aad289f96d733f4a",
+    "node_count": 5641,
     "source_provenance": {
       "clean": true,
-      "commit": "d557ee07ef74193472792a6cd7b0e8e47fcc6ee7",
-      "tree": "0c3a8af646f6401485d0cf0f94d49e080d9fde10"
+      "commit": "034beb49628b5668fa2dc9baba6738375fcac7fe",
+      "tree": "4f2b5cf140a459403ce3d7f2e995d190c19af43c"
     }
   },
   "entries": [
@@ -15418,6 +15418,41 @@
       "target": "tests/packaging/test_wheel_contents.py::test_wheel_metadata_guard_rejects_mixed_case_external_names[Empyrical>=1]"
     },
     {
+      "nodeid": "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+      "disposition": "retain",
+      "target": "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution",
+      "disposition": "retain",
+      "target": "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+      "disposition": "retain",
+      "target": "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+      "disposition": "retain",
+      "target": "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+      "disposition": "retain",
+      "target": "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/parity/test_ledger.py::test_disposition_documents_must_not_be_empty[inventory]",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -15922,6 +15957,13 @@
       "target": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence"
     },
     {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_data_provider_contracts_have_offline_executable_scenarios",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_data_provider_contracts_have_offline_executable_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
       "disposition": "retain",
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it.",
@@ -15974,6 +16016,20 @@
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
       "disposition": "retain",
       "target": "tests/quality/test_0042_r2_capability_ledger.py::test_optimization_and_simulation_gaps_are_backed_by_canonical_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_risk_contracts_are_backed_by_executable_reference_scenarios",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_risk_contracts_are_backed_by_executable_reference_scenarios",
       "rule_id": "canonical-retention",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },

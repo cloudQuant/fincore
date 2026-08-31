@@ -22,78 +22,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "extensions.snapshot.clear_registry",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.default_metric_family",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.duplicate_policy",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.duplicate_registration_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.extension_kind",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.extension_registry",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.get_metric",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.get_registry",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.get_viz_backend",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.isolated_registry",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.list_hooks",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.list_metrics",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.list_viz_backends",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.register_hook",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.register_metric",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.register_viz_backend",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.registration",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "extensions.snapshot.rolling_family",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "factor.analysis.apply_factor_costs",
       "reason": "no_source_nodeid"
     },
@@ -1114,6 +1042,420 @@
       "target_operation_id": "extensions.snapshot.scope",
       "wheel_nodeids": [
         "tests/parity/test_data_extensions.py::test_scope"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.clear_registry",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.clear_registry.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "clearing removes ordinary registrations while preserving builtin-scoped entries unless explicitly instructed otherwise"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.clear_registry.invariant.v1",
+          "scenario_id": "clear_preserves_builtin_scope"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.clear_registry",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.default_metric_family",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.default_metric_family.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the user metric family and rolling metric family are distinct explicit stable identifiers"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.default_metric_family.invariant.v1",
+          "scenario_id": "default_and_rolling_family_identifiers"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ],
+      "target_operation_id": "extensions.snapshot.default_metric_family",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.duplicate_policy",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.duplicate_policy.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a named extension collision follows an explicit overwrite, ignore, or error policy rather than implicit mutable-state behavior"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.duplicate_policy.invariant.v1",
+          "scenario_id": "duplicate_metric_policy_is_explicit"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.duplicate_policy",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.duplicate_registration_error",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.duplicate_registration_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "an error-policy collision retains the existing registration and raises the dedicated duplicate-registration error"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.duplicate_registration_error.invariant.v1",
+          "scenario_id": "error_policy_rejects_duplicate_without_mutation"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.duplicate_registration_error",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.extension_kind",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.extension_kind.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "metric, visualization-backend, and hook registrations use a closed explicit kind vocabulary"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.extension_kind.invariant.v1",
+          "scenario_id": "closed_extension_kind_vocabulary"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ],
+      "target_operation_id": "extensions.snapshot.extension_kind",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.extension_registry",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.extension_registry.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "one registry controls registration lookup, scope, and lifecycle for every extension kind"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.extension_registry.invariant.v1",
+          "scenario_id": "singleton_registry_controls_lifecycle"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.extension_registry",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.get_metric",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.get_metric.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a registered metric is retrievable by its logical name while an absent name resolves to none"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.get_metric.invariant.v1",
+          "scenario_id": "metric_lookup_after_registration"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.get_metric",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.get_registry",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.get_registry.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "registry lookup returns the stable process-wide extension registry identity"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.get_registry.invariant.v1",
+          "scenario_id": "registry_lookup_is_singleton"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.get_registry",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.get_viz_backend",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.get_viz_backend.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a registered visualization backend is retrievable as its class and can construct with caller-supplied settings"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.get_viz_backend.invariant.v1",
+          "scenario_id": "viz_backend_lookup_returns_registered_class"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ],
+      "target_operation_id": "extensions.snapshot.get_viz_backend",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.isolated_registry",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.isolated_registry.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a scoped registry change does not escape the surrounding isolation boundary"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.isolated_registry.invariant.v1",
+          "scenario_id": "registry_state_is_restored_after_isolation"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.isolated_registry",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_registry_lookup_isolation_and_clear_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.list_hooks",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.list_hooks.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "hook listing preserves the event key and priority-ordered callable sequence"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.list_hooks.invariant.v1",
+          "scenario_id": "hook_listing_preserves_priority_order"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution"
+      ],
+      "target_operation_id": "extensions.snapshot.list_hooks",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.list_metrics",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.list_metrics.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "metric listing reflects the current default-family registration map"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.list_metrics.invariant.v1",
+          "scenario_id": "metric_listing_after_registration"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.list_metrics",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.list_viz_backends",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.list_viz_backends.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "visualization backend listing exposes the registered logical name and class"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.list_viz_backends.invariant.v1",
+          "scenario_id": "viz_backend_listing_after_registration"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ],
+      "target_operation_id": "extensions.snapshot.list_viz_backends",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.register_hook",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.register_hook.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "hook registration orders transforms by priority and propagates the transformed first argument"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.register_hook.invariant.v1",
+          "scenario_id": "priority_ordered_hook_registration"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution"
+      ],
+      "target_operation_id": "extensions.snapshot.register_hook",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_hook_registration_listing_and_execution"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.register_metric",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.register_metric.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "metric registration stores an executable callable under its logical name and honors collision policy"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.register_metric.invariant.v1",
+          "scenario_id": "metric_registration_and_collision_policy"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ],
+      "target_operation_id": "extensions.snapshot.register_metric",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_metric_registration_lookup_and_duplicate_policy"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.register_viz_backend",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.register_viz_backend.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "visualization backend registration stores an instantiable class under its logical name"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.register_viz_backend.invariant.v1",
+          "scenario_id": "viz_backend_registration"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ],
+      "target_operation_id": "extensions.snapshot.register_viz_backend",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_viz_backend_registration_lookup_and_listing"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.registration",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.registration.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a registration is an immutable record of kind, name, target, family, priority, and scope"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.registration.invariant.v1",
+          "scenario_id": "registration_record_defaults"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ],
+      "target_operation_id": "extensions.snapshot.registration",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ]
+    },
+    {
+      "capability_id": "extensions.snapshot.rolling_family",
+      "disposition": "required",
+      "owner": "extensions",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "extensions.snapshot.rolling_family.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the rolling metric family has an explicit identifier distinct from user default metrics"
+          },
+          "oracle_reference": "invariant contract extensions.snapshot.rolling_family.invariant.v1",
+          "scenario_id": "rolling_family_identifier"
+        }
+      ],
+      "source_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
+      ],
+      "target_operation_id": "extensions.snapshot.rolling_family",
+      "wheel_nodeids": [
+        "tests/parity/test_extensions.py::test_extension_types_and_default_metric_families"
       ]
     },
     {
@@ -9016,7 +9358,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-  "node_facts_sha256": "6ffed5ff1d0024affeec8850139a916ab089af0c5ac09725b87c99fe201df326",
+  "node_facts_sha256": "501c7d2713d27d2de0f68f5bf4cc78fafa54bd5392b65ce4aad289f96d733f4a",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }
