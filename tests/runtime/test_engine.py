@@ -61,6 +61,18 @@ def test_runtime_run_does_not_rewrite_a_domain_error_as_an_orchestration_error()
         run("metrics.guarded", {"value": -1.0}, catalog=catalog)
 
 
+def test_runtime_reports_unknown_operations_as_structured_resolution_failures() -> None:
+    from fincore.exceptions import OperationResolutionError
+    from fincore.runtime import OperationCatalog, run
+
+    with pytest.raises(OperationResolutionError) as caught:
+        run("metrics.unknown", {"value": 1.0}, catalog=OperationCatalog(()))
+
+    assert caught.value.category == "resolution_failure"
+    assert caught.value.operation_id == "metrics.unknown"
+    assert caught.value.remediation == "list catalog.operation_ids and select a registered operation"
+
+
 def test_runtime_plan_and_batch_preserve_request_order_and_bind_one_catalog_snapshot() -> None:
     from fincore.runtime import OperationCatalog, OperationRequest, OperationSpec, batch, plan
 

@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Mapping
 
+from fincore.exceptions import OperationResolutionError
+
 from .specs import OperationSpec
 
 
@@ -80,4 +82,4 @@ class OperationCatalog:
         try:
             return self._by_operation_id[operation_id]
         except KeyError as exc:
-            raise KeyError(f"unknown operation_id: {operation_id}") from exc
+            raise OperationResolutionError(operation_id) from exc

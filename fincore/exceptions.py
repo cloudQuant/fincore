@@ -6,11 +6,14 @@ Provides specific exception classes for better error handling.
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import numpy as np
 
 from fincore.constants import DAILY, MONTHLY, QUARTERLY, WEEKLY, YEARLY
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 __all__ = [
     "AlignmentError",
@@ -23,8 +26,10 @@ __all__ = [
     "MissingDataError",
     "NumericalConvergenceError",
     "NumericalError",
+    "OperationResolutionError",
     "ResourceLifecycleError",
     "ResultContractError",
+    "RuntimeDiagnosticError",
     "UnsupportedFormatError",
     "ValidationError",
     "check_dependencies",
@@ -341,6 +346,51 @@ class DependencyError(FincoreError, ImportError):
             message=data["message"],
             dependency=data.get("dependency"),
             extra=data.get("extra"),
+        )
+
+
+class RuntimeDiagnosticError(FincoreError):
+    """A machine-readable orchestration failure that never wraps domain errors."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        category: str,
+        operation_id: str | None = None,
+        capability_id: str | None = None,
+        details: Mapping[str, Any] | None = None,
+        remediation: str | None = None,
+    ) -> None:
+        self.message = message
+        self.category = category
+        self.operation_id = operation_id
+        self.capability_id = capability_id
+        self.details = dict(details or {})
+        self.remediation = remediation
+        super().__init__(message)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a stable diagnostic payload suitable for Result provenance."""
+        return {
+            "category": self.category,
+            "operation_id": self.operation_id,
+            "capability_id": self.capability_id,
+            "details": self.details,
+            "message": self.message,
+            "remediation": self.remediation,
+        }
+
+
+class OperationResolutionError(RuntimeDiagnosticError):
+    """Raised only when the runtime cannot resolve a requested operation ID."""
+
+    def __init__(self, operation_id: str) -> None:
+        super().__init__(
+            f"unknown operation_id: {operation_id}",
+            category="resolution_failure",
+            operation_id=operation_id,
+            remediation="list catalog.operation_ids and select a registered operation",
         )
 
 
