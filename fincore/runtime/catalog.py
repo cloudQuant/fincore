@@ -6,11 +6,14 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 from fincore.exceptions import OperationResolutionError
 
 from .specs import OperationSpec
+
+if TYPE_CHECKING:
+    from fincore.extensions.snapshot import ExtensionSnapshot
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,9 +21,15 @@ class OperationCatalog:
     """Resolve each operation ID to one direct domain callable in constant time."""
 
     operations: tuple[OperationSpec, ...]
+    extension_digest: str | None = None
     _by_operation_id: Mapping[str, OperationSpec] = field(init=False, repr=False, compare=False)
+    _extension_snapshot: object | None = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
+        if self.extension_digest is not None and (
+            not isinstance(self.extension_digest, str) or not self.extension_digest
+        ):
+            raise ValueError("extension_digest must be a non-empty string or None")
         by_operation_id: dict[str, OperationSpec] = {}
         by_capability_id: dict[str, OperationSpec] = {}
         ordered_operations = tuple(sorted(self.operations, key=lambda item: item.operation_id))
@@ -51,11 +60,18 @@ class OperationCatalog:
             by_capability_id.setdefault(spec.capability_id, spec)
         object.__setattr__(self, "operations", ordered_operations)
         object.__setattr__(self, "_by_operation_id", MappingProxyType(dict(by_operation_id)))
+        object.__setattr__(self, "_extension_snapshot", None)
 
     @property
     def operation_ids(self) -> tuple[str, ...]:
         """Return the catalog's deterministic operation-ID order."""
         return tuple(self._by_operation_id)
+
+    @property
+    def extension_snapshot(self) -> object | None:
+        """Return the exact immutable extension snapshot pinned by this catalog."""
+
+        return self._extension_snapshot
 
     @property
     def digest(self) -> str:
@@ -74,6 +90,7 @@ class OperationCatalog:
             }
             for spec in self.operations
         ]
+        payload.append({"extension_digest": self.extension_digest})
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
         return hashlib.sha256(encoded).hexdigest()
 
@@ -83,3 +100,25 @@ class OperationCatalog:
             return self._by_operation_id[operation_id]
         except KeyError as exc:
             raise OperationResolutionError(operation_id) from exc
+
+    def with_extensions(self, extension_snapshot: ExtensionSnapshot) -> OperationCatalog:
+        """Return a new catalog pinned to one immutable extension snapshot.
+
+        Runtime deliberately uses only the snapshot protocol here instead of
+        importing the extensions domain. This keeps the runtime independent of
+        optional extension implementations while rejecting malformed objects.
+        """
+
+        if self.extension_digest is not None:
+            raise ValueError("catalog is already bound to an extension snapshot")
+        operations: Any = getattr(extension_snapshot, "operations", None)
+        digest: Any = getattr(extension_snapshot, "digest", None)
+        if not isinstance(operations, tuple) or not all(
+            isinstance(operation, OperationSpec) for operation in operations
+        ):
+            raise TypeError("extension_snapshot must expose a tuple of OperationSpec operations")
+        if not isinstance(digest, str) or not digest:
+            raise TypeError("extension_snapshot must expose a non-empty digest")
+        catalog = OperationCatalog((*self.operations, *operations), extension_digest=digest)
+        object.__setattr__(catalog, "_extension_snapshot", extension_snapshot)
+        return catalog
