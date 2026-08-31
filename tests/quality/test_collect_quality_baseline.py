@@ -247,6 +247,35 @@ def test_baseline_environment_forces_the_headless_matplotlib_backend(monkeypatch
     assert environment["MPLBACKEND"] == "Agg"
 
 
+def test_branch_coverage_binds_to_the_disposable_copy_not_a_relative_child_cwd(tmp_path) -> None:
+    collector = _collector_module()
+    copy_root = tmp_path / "copy"
+    (copy_root / "fincore").mkdir(parents=True)
+
+    args = collector._coverage_pytest_args(
+        copy_root,
+        ["--ignore=tests/benchmarks", "--cov=fincore", "--cov-branch"],
+        coverage=True,
+    )
+
+    assert "--cov=fincore" not in args
+    assert f"--cov={(copy_root / 'fincore').resolve()}" in args
+
+
+def test_non_coverage_runs_do_not_rewrite_pytest_arguments(tmp_path) -> None:
+    collector = _collector_module()
+    original = ["--ignore=tests/benchmarks", "-m", "not slow"]
+
+    assert collector._coverage_pytest_args(tmp_path, original, coverage=False) == original
+
+
+def test_branch_coverage_requires_its_single_explicit_target(tmp_path) -> None:
+    collector = _collector_module()
+
+    with pytest.raises(RuntimeError, match="exactly one --cov=fincore"):
+        collector._coverage_pytest_args(tmp_path, ["--cov=elsewhere"], coverage=True)
+
+
 def test_full_quality_runs_have_a_thirty_minute_timeout_budget() -> None:
     """Coverage has a larger, explicit budget than normal subprocess probes."""
 

@@ -345,6 +345,17 @@ def _collection_environment(plugin_directory: Path, snapshot_root: Path, report_
     environment.pop("PYTHONPATH", None)
     environment.pop("PYTEST_ADDOPTS", None)
     environment.pop("PYTEST_PLUGINS", None)
+    # pytest-cov propagates its active session through COV_CORE_* variables.
+    # This collector deliberately starts a nested pytest process over a
+    # short-lived archive snapshot.  Letting that subprocess inherit coverage
+    # would add vanished snapshot files to the parent coverage data, which can
+    # make a later report fail to parse or report a meaningless denominator.
+    # Collection facts are metadata only, so this nested process must never
+    # contribute coverage to its caller.
+    for key in list(environment):
+        if key.startswith("COV_CORE"):
+            environment.pop(key, None)
+    environment.pop("COVERAGE_PROCESS_START", None)
     environment.update(
         {
             "FINCORE_0042_R2_NODE_REPORT": str(report_path),

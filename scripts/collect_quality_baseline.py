@@ -229,6 +229,31 @@ def _baseline_environment() -> dict[str, str]:
     return environment
 
 
+def _coverage_pytest_args(copy_root: Path, pytest_args: list[str], coverage: bool) -> list[str]:
+    """Bind coverage to this disposable copy rather than a child process cwd.
+
+    Several quality contracts create clean clones or archive snapshots and run
+    subprocesses from those directories. pytest-cov forwards its configuration
+    to child processes, so a relative ``--cov=fincore`` can otherwise resolve
+    to every transient clone and distort the one baseline's denominator.
+    """
+    if not coverage:
+        return list(pytest_args)
+
+    target = (copy_root / "fincore").resolve()
+    rewritten: list[str] = []
+    replacements = 0
+    for argument in pytest_args:
+        if argument == "--cov=fincore":
+            rewritten.append(f"--cov={target}")
+            replacements += 1
+        else:
+            rewritten.append(argument)
+    if replacements != 1:
+        raise RuntimeError("branch-coverage baseline must contain exactly one --cov=fincore target")
+    return rewritten
+
+
 def _run_checked(
     copy_root: Path,
     tracked_package_files: list[str],
@@ -249,7 +274,7 @@ def _run_checked(
         "addopts=",
         "-p",
         "no:cacheprovider",
-        *pytest_args,
+        *_coverage_pytest_args(copy_root, pytest_args, coverage),
     ]
     started = time.perf_counter()
     try:

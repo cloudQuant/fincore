@@ -390,6 +390,9 @@ def test_collection_environment_excludes_ambient_pytest_plugins(
     collector = _load_collector_module()
     monkeypatch.setenv("PYTEST_PLUGINS", "untrusted_plugin")
     monkeypatch.setenv("GIT_DIR", "/untrusted/git-dir")
+    monkeypatch.setenv("COV_CORE_SOURCE", "fincore")
+    monkeypatch.setenv("COV_CORE_DATAFILE", "/untrusted/coverage-data")
+    monkeypatch.setenv("COVERAGE_PROCESS_START", "/untrusted/coveragerc")
 
     environment = collector._collection_environment(
         tmp_path / "plugin",
@@ -401,6 +404,8 @@ def test_collection_environment_excludes_ambient_pytest_plugins(
     assert "PYTEST_PLUGINS" not in environment
     assert environment["GIT_NO_REPLACE_OBJECTS"] == "1"
     assert "GIT_DIR" not in environment
+    assert not any(key.startswith("COV_CORE") for key in environment)
+    assert "COVERAGE_PROCESS_START" not in environment
 
 
 def test_rejects_non_regular_test_blob_before_overwriting_output(tmp_path: Path) -> None:
