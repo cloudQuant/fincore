@@ -22,22 +22,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "data.provider.ak_share_provider",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "data.provider.alpha_vantage_provider",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "data.provider.alphavantage",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "data.provider.data_provider",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "extensions.snapshot.clear_registry",
       "reason": "no_source_nodeid"
     },
@@ -319,46 +303,6 @@
     },
     {
       "capability_id": "report.portfolio.strategy_report",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.basel_reference_disclosure",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.build_risk_validation_report",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.evt",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.risk_backtest_result",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.risk_model_spec",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.risk_validation_report",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.risk_validation_report_schema_version",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.walk_forward_va_r_result",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.walk_forward_validation",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "risk.walk_forward_var",
       "reason": "no_source_nodeid"
     },
     {
@@ -829,6 +773,29 @@
       ]
     },
     {
+      "capability_id": "data.provider.ak_share_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.ak_share_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the AkShare adapter normalizes its documented Chinese-market payload into the standard OHLCV schema and symbol metadata without a network call"
+          },
+          "oracle_reference": "invariant contract data.provider.ak_share_provider.invariant.v1",
+          "scenario_id": "offline_akshare_payload_normalization"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_akshare_provider_offline_fetch_and_info_via_stub_module"
+      ],
+      "target_operation_id": "data.provider.ak_share_provider",
+      "wheel_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_akshare_provider_offline_fetch_and_info_via_stub_module"
+      ]
+    },
+    {
       "capability_id": "data.provider.akshare",
       "disposition": "required",
       "owner": "data",
@@ -853,6 +820,75 @@
       "target_operation_id": "data.provider.akshare",
       "wheel_nodeids": [
         "tests/parity/test_data_extensions.py::test_akshare"
+      ]
+    },
+    {
+      "capability_id": "data.provider.alpha_vantage_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.alpha_vantage_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the Alpha Vantage adapter converts a documented daily response to an adjusted price frame and rejects service error payloads"
+          },
+          "oracle_reference": "invariant contract data.provider.alpha_vantage_provider.invariant.v1",
+          "scenario_id": "offline_alpha_vantage_success_and_error_payloads"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_alpha_vantage_fetch_success_and_error_are_offline"
+      ],
+      "target_operation_id": "data.provider.alpha_vantage_provider",
+      "wheel_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_alpha_vantage_fetch_success_and_error_are_offline"
+      ]
+    },
+    {
+      "capability_id": "data.provider.alphavantage",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.alphavantage.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the documented av provider selector resolves to the Alpha Vantage adapter when an API key is supplied"
+          },
+          "oracle_reference": "invariant contract data.provider.alphavantage.invariant.v1",
+          "scenario_id": "selector_resolves_alpha_vantage_adapter"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_av"
+      ],
+      "target_operation_id": "data.provider.alphavantage",
+      "wheel_nodeids": [
+        "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_av"
+      ]
+    },
+    {
+      "capability_id": "data.provider.data_provider",
+      "disposition": "required",
+      "owner": "data",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "data.provider.data_provider.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "provider-agnostic fetch conveniences calculate default dates and preserve the supplied provider interface for single and batch requests"
+          },
+          "oracle_reference": "invariant contract data.provider.data_provider.invariant.v1",
+          "scenario_id": "default_date_conveniences_use_provider_contract"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_fetch_price_data_and_multiple_prices_default_date_logic"
+      ],
+      "target_operation_id": "data.provider.data_provider",
+      "wheel_nodeids": [
+        "tests/test_data/test_providers_offline_fetch.py::test_fetch_price_data_and_multiple_prices_default_date_logic"
       ]
     },
     {
@@ -7946,6 +7982,30 @@
       ]
     },
     {
+      "capability_id": "risk.basel_reference_disclosure",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "published_standard",
+            "publication": "Basel Committee on Banking Supervision, Supervisory framework for the use of backtesting in conjunction with the internal models approach to market risk capital requirements",
+            "reference": "traffic-light and VaR backtesting disclosure fields",
+            "version": "1996"
+          },
+          "oracle_reference": "Basel traffic-light and VaR backtesting disclosure fields",
+          "scenario_id": "audit_report_carries_reference_disclosure"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ],
+      "target_operation_id": "risk.basel_reference_disclosure",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ]
+    },
+    {
       "capability_id": "risk.backtest_es",
       "disposition": "required",
       "owner": "risk",
@@ -7989,6 +8049,29 @@
       "target_operation_id": "risk.backtest_var",
       "wheel_nodeids": [
         "tests/parity/test_risk.py::test_backtest_var"
+      ]
+    },
+    {
+      "capability_id": "risk.build_risk_validation_report",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.build_risk_validation_report.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "a report preserves every validated forecast, realized return, exception, refit, and replay-relevant provenance field"
+          },
+          "oracle_reference": "invariant contract risk.build_risk_validation_report.invariant.v1",
+          "scenario_id": "report_reconstructs_walk_forward_audit_trail"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ],
+      "target_operation_id": "risk.build_risk_validation_report",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
       ]
     },
     {
@@ -8048,6 +8131,29 @@
       "target_operation_id": "risk.egarch",
       "wheel_nodeids": [
         "tests/parity/test_risk.py::test_egarch"
+      ]
+    },
+    {
+      "capability_id": "risk.evt",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Hosking, J. R. M., & Wallis, J. R. (1987). Parameter and Quantile Estimation for the Generalized Pareto Distribution. Technometrics.",
+            "reference": "probability-weighted-moment generalized Pareto parameter estimation"
+          },
+          "oracle_reference": "Hosking and Wallis (1987) probability-weighted-moment generalized Pareto estimator",
+          "scenario_id": "gpd_pwm_matches_independent_l_moment_estimator"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_reference_oracles.py::TestEVTSemantics::test_gpd_pwm_matches_independent_l_moment_estimator"
+      ],
+      "target_operation_id": "risk.evt",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_reference_oracles.py::TestEVTSemantics::test_gpd_pwm_matches_independent_l_moment_estimator"
       ]
     },
     {
@@ -8543,6 +8649,167 @@
       "target_operation_id": "risk.risk_estimate",
       "wheel_nodeids": [
         "tests/parity/test_risk.py::test_risk_estimate"
+      ]
+    },
+    {
+      "capability_id": "risk.risk_backtest_result",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.risk_backtest_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "an aligned VaR backtest records the common time index, observation count, exception count, and calibrated diagnostic fields"
+          },
+          "oracle_reference": "invariant contract risk.risk_backtest_result.invariant.v1",
+          "scenario_id": "aligned_forecast_backtest_records_exceptions"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_risk/test_backtesting.py::test_var_backtest_keeps_time_alignment_and_exception_count"
+      ],
+      "target_operation_id": "risk.risk_backtest_result",
+      "wheel_nodeids": [
+        "tests/test_risk/test_backtesting.py::test_var_backtest_keeps_time_alignment_and_exception_count"
+      ]
+    },
+    {
+      "capability_id": "risk.risk_model_spec",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.risk_model_spec.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the immutable risk model specification exposes conservative defaults for confidence, one-period horizon, and negative-loss sign convention"
+          },
+          "oracle_reference": "invariant contract risk.risk_model_spec.invariant.v1",
+          "scenario_id": "default_model_specification"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestRiskModelSpec::test_defaults"
+      ],
+      "target_operation_id": "risk.risk_model_spec",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestRiskModelSpec::test_defaults"
+      ]
+    },
+    {
+      "capability_id": "risk.risk_validation_report",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.risk_validation_report.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the immutable report is a replayable, JSON-compatible representation of a validated walk-forward VaR result"
+          },
+          "oracle_reference": "invariant contract risk.risk_validation_report.invariant.v1",
+          "scenario_id": "replayable_walk_forward_audit_report"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ],
+      "target_operation_id": "risk.risk_validation_report",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ]
+    },
+    {
+      "capability_id": "risk.risk_validation_report_schema_version",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.risk_validation_report_schema_version.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "the serialized risk validation report carries one explicit, stable schema version"
+          },
+          "oracle_reference": "invariant contract risk.risk_validation_report_schema_version.invariant.v1",
+          "scenario_id": "report_serializes_explicit_schema_version"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ],
+      "target_operation_id": "risk.risk_validation_report_schema_version",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit"
+      ]
+    },
+    {
+      "capability_id": "risk.walk_forward_va_r_result",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "risk.walk_forward_va_r_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "each result status has a distinct valid combination of forecast path, refit history, provenance, and backtest evidence"
+          },
+          "oracle_reference": "invariant contract risk.walk_forward_va_r_result.invariant.v1",
+          "scenario_id": "status_specific_result_invariants"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_walk_forward_result_enforces_status_specific_state_invariants"
+      ],
+      "target_operation_id": "risk.walk_forward_va_r_result",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_walk_forward_result_enforces_status_specific_state_invariants"
+      ]
+    },
+    {
+      "capability_id": "risk.walk_forward_validation",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Hyndman, R. J., & Fan, Y. (1996). Sample Quantiles in Statistical Packages. The American Statistician.",
+            "reference": "finite-sample Hyndman-Fan type-6 historical quantile with strictly out-of-sample evaluation"
+          },
+          "oracle_reference": "Hyndman and Fan (1996) type-6 finite-sample quantile and out-of-sample boundary",
+          "scenario_id": "historical_forecast_is_strictly_out_of_sample_and_backtestable"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable"
+      ],
+      "target_operation_id": "risk.walk_forward_validation",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable"
+      ]
+    },
+    {
+      "capability_id": "risk.walk_forward_var",
+      "disposition": "required",
+      "owner": "risk",
+      "scenarios": [
+        {
+          "authority": {
+            "kind": "peer_reviewed_paper",
+            "publication": "Hyndman, R. J., & Fan, Y. (1996). Sample Quantiles in Statistical Packages. The American Statistician.",
+            "reference": "one-step historical VaR forecast from a finite-sample type-6 lower-tail quantile"
+          },
+          "oracle_reference": "Hyndman and Fan (1996) type-6 lower-tail quantile",
+          "scenario_id": "historical_one_step_var_forecast"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable"
+      ],
+      "target_operation_id": "risk.walk_forward_var",
+      "wheel_nodeids": [
+        "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable"
       ]
     },
     {

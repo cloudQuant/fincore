@@ -279,3 +279,81 @@ def test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios(
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_risk_contracts_are_backed_by_executable_reference_scenarios() -> None:
+    """Risk models, diagnostics, and audit reports cannot remain generic gaps."""
+    ledger = _load()
+    expected = {
+        "risk.basel_reference_disclosure": {
+            "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit",
+        },
+        "risk.build_risk_validation_report": {
+            "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit",
+        },
+        "risk.evt": {
+            "tests/numerical/test_risk_reference_oracles.py::TestEVTSemantics::test_gpd_pwm_matches_independent_l_moment_estimator",
+        },
+        "risk.risk_backtest_result": {
+            "tests/test_risk/test_backtesting.py::test_var_backtest_keeps_time_alignment_and_exception_count",
+        },
+        "risk.risk_model_spec": {
+            "tests/numerical/test_risk_model_validation.py::TestRiskModelSpec::test_defaults",
+        },
+        "risk.risk_validation_report": {
+            "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit",
+        },
+        "risk.risk_validation_report_schema_version": {
+            "tests/numerical/test_risk_validation_report.py::test_report_reconstructs_every_forecast_exception_and_refit",
+        },
+        "risk.walk_forward_va_r_result": {
+            "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_walk_forward_result_enforces_status_specific_state_invariants",
+        },
+        "risk.walk_forward_validation": {
+            "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable",
+        },
+        "risk.walk_forward_var": {
+            "tests/numerical/test_risk_model_validation.py::TestWalkForward::test_public_historical_forecast_is_strictly_out_of_sample_and_backtestable",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "risk"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_data_provider_contracts_have_offline_executable_scenarios() -> None:
+    """Network integrations need hermetic provider and error-path evidence."""
+    ledger = _load()
+    expected = {
+        "data.provider.ak_share_provider": {
+            "tests/test_data/test_providers_offline_fetch.py::test_akshare_provider_offline_fetch_and_info_via_stub_module",
+        },
+        "data.provider.alpha_vantage_provider": {
+            "tests/test_data/test_providers_offline_fetch.py::test_alpha_vantage_fetch_success_and_error_are_offline",
+        },
+        "data.provider.alphavantage": {
+            "tests/test_data/providers_unit/test_convenience.py::TestConvenienceFunctionsUnit::test_get_provider_av",
+        },
+        "data.provider.data_provider": {
+            "tests/test_data/test_providers_offline_fetch.py::test_fetch_price_data_and_multiple_prices_default_date_logic",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "data"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids
