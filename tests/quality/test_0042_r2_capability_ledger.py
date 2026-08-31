@@ -429,3 +429,113 @@ def test_extension_snapshot_capabilities_have_canonical_scenarios() -> None:
         assert entry["disposition"] == "required"
         assert entry["source_nodeids"]
         assert set(entry["wheel_nodeids"]) == wheel_nodeids
+
+
+def test_factor_models_costs_pit_and_inference_have_canonical_scenarios() -> None:
+    """Bind the factor-analysis kernel to direct numerical and model scenarios.
+
+    The retained source cases exercise the enhanced domain implementation; the
+    strict profile tests referenced by the two legacy error identities are
+    temporary migration-oracle evidence and do not authorize a final facade.
+    """
+    ledger = _load()
+    expected = {
+        "factor.analysis.apply_factor_costs": {
+            "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity",
+        },
+        "factor.analysis.estimate_factor_capacity": {
+            "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity",
+        },
+        "factor.analysis.event_analysis_model": {
+            "tests/parity/test_factor_analysis.py::test_factor_analysis_models",
+        },
+        "factor.analysis.factor_capacity_result": {
+            "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity",
+        },
+        "factor.analysis.factor_cost_model": {
+            "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity",
+        },
+        "factor.analysis.factor_cost_result": {
+            "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity",
+        },
+        "factor.analysis.factor_function_spec": {
+            "tests/parity/test_factor_analysis.py::test_factor_spec_disposition",
+        },
+        "factor.analysis.factor_group_analysis": {
+            "tests/parity/test_factor_analysis.py::test_factor_analysis_models",
+        },
+        "factor.analysis.factor_tear_sheet_artifacts": {
+            "tests/parity/test_factor_analysis.py::test_factor_workflow_artifacts",
+        },
+        "factor.analysis.factor_workflow_spec": {
+            "tests/parity/test_factor_analysis.py::test_factor_spec_disposition",
+        },
+        "factor.analysis.fama_macbeth": {
+            "tests/parity/test_factor_analysis.py::test_fama_macbeth",
+        },
+        "factor.analysis.ic_inference_result": {
+            "tests/parity/test_factor_analysis.py::test_factor_inference",
+        },
+        "factor.analysis.pyfolio_factor_inputs": {
+            "tests/parity/test_factor_analysis.py::test_pyfolio_factor_inputs",
+        },
+        "factor.fama_macbeth": {
+            "tests/parity/test_factor_analysis.py::test_fama_macbeth",
+        },
+        "factor.inference": {
+            "tests/parity/test_factor_analysis.py::test_factor_inference",
+        },
+        "factor.pit_prepare": {
+            "tests/parity/test_factor_analysis.py::test_pit_preparation",
+        },
+        "factor.prepare.enhanced_non_matching_timezone_error": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.factor_analysis_config": {
+            "tests/parity/test_factor_analysis.py::test_factor_analysis_models",
+        },
+        "factor.prepare.factor_data_error": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.factor_loss_exceeded_error": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.factor_loss_report": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.materialize_pit_factor": {
+            "tests/parity/test_factor_analysis.py::test_pit_preparation",
+        },
+        "factor.prepare.max_loss_exceeded_error": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.multi_horizon_prepared_factor_data": {
+            "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon",
+        },
+        "factor.prepare.non_matching_timezone_error": {
+            "tests/parity/test_factor_analysis.py::test_preparation_error_categories",
+        },
+        "factor.prepare.prepare_factor_data_by_horizon": {
+            "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon",
+        },
+        "factor.prepare.prepare_factor_data_from_forward_returns": {
+            "tests/parity/test_factor_analysis.py::test_prepare_factor_data_from_forward_returns",
+        },
+        "factor.prepare.validate_pit_alignment": {
+            "tests/parity/test_factor_analysis.py::test_pit_preparation",
+        },
+        "factor.prepare_by_horizon": {
+            "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon",
+        },
+    }
+
+    gap_ids = {gap["capability_id"] for gap in ledger["coverage_gaps"]}
+    entries = {entry["capability_id"]: entry for entry in ledger["entries"]}
+
+    assert not expected.keys() & gap_ids
+    for capability_id, wheel_nodeids in expected.items():
+        entry = entries[capability_id]
+        assert entry["owner"] == "factor"
+        assert entry["disposition"] == "required"
+        assert entry["source_nodeids"]
+        assert set(entry["wheel_nodeids"]) == wheel_nodeids

@@ -22,122 +22,6 @@
       "reason": "no_source_nodeid"
     },
     {
-      "capability_id": "factor.analysis.apply_factor_costs",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.estimate_factor_capacity",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.event_analysis_model",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_capacity_result",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_cost_model",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_cost_result",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_function_spec",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_group_analysis",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_tear_sheet_artifacts",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.factor_workflow_spec",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.fama_macbeth",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.ic_inference_result",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.analysis.pyfolio_factor_inputs",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.fama_macbeth",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.inference",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.pit_prepare",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.enhanced_non_matching_timezone_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.factor_analysis_config",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.factor_data_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.factor_loss_exceeded_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.factor_loss_report",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.materialize_pit_factor",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.max_loss_exceeded_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.multi_horizon_prepared_factor_data",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.non_matching_timezone_error",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.prepare_factor_data_by_horizon",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.prepare_factor_data_from_forward_returns",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare.validate_pit_alignment",
-      "reason": "no_source_nodeid"
-    },
-    {
-      "capability_id": "factor.prepare_by_horizon",
-      "reason": "no_source_nodeid"
-    },
-    {
       "capability_id": "portfolio.perf_stats.plot_perf_stats",
       "reason": "no_source_nodeid"
     },
@@ -1486,6 +1370,673 @@
       "target_operation_id": "factor.analysis.analyze_factor",
       "wheel_nodeids": [
         "tests/parity/test_factor_analysis.py::test_analyze_factor"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.apply_factor_costs",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.apply_factor_costs.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.apply_factor_costs"
+          },
+          "oracle_reference": "invariant contract factor.analysis.apply_factor_costs.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_costs_and_capacity_reconcile_to_a_hand_computed_ledger"
+      ],
+      "target_operation_id": "factor.analysis.apply_factor_costs",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.estimate_factor_capacity",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.estimate_factor_capacity.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.estimate_factor_capacity"
+          },
+          "oracle_reference": "invariant contract factor.analysis.estimate_factor_capacity.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_capacity_is_the_minimum_trade_liquidity_bound_and_respects_labels"
+      ],
+      "target_operation_id": "factor.analysis.estimate_factor_capacity",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.event_analysis_model",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.event_analysis_model.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.event_analysis_model"
+          },
+          "oracle_reference": "invariant contract factor.analysis.event_analysis_model.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_models.py::test_group_and_event_sections_are_optional_typed_models"
+      ],
+      "target_operation_id": "factor.analysis.event_analysis_model",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_analysis_models"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_capacity_result",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_capacity_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_capacity_result"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_capacity_result.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_capacity_is_the_minimum_trade_liquidity_bound_and_respects_labels"
+      ],
+      "target_operation_id": "factor.analysis.factor_capacity_result",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_cost_model",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_cost_model.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_cost_model"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_cost_model.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_costs_and_capacity_reconcile_to_a_hand_computed_ledger"
+      ],
+      "target_operation_id": "factor.analysis.factor_cost_model",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_cost_result",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_cost_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_cost_result"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_cost_result.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_costs.py::test_result_snapshots_do_not_expose_mutable_internal_ledgers"
+      ],
+      "target_operation_id": "factor.analysis.factor_cost_result",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_apply_factor_costs_and_capacity"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_function_spec",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_function_spec.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_function_spec"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_function_spec.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_static_contract_registry_keeps_source_and_introspection_facts_separate"
+      ],
+      "target_operation_id": "factor.analysis.factor_function_spec",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_spec_disposition"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_group_analysis",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_group_analysis.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_group_analysis"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_group_analysis.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_models.py::test_group_and_event_sections_are_optional_typed_models"
+      ],
+      "target_operation_id": "factor.analysis.factor_group_analysis",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_analysis_models"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_tear_sheet_artifacts",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_tear_sheet_artifacts.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_tear_sheet_artifacts"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_tear_sheet_artifacts.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_tears.py::test_enhanced_summary_tear_sheet_consumes_one_model_and_leaves_figures_to_the_caller"
+      ],
+      "target_operation_id": "factor.analysis.factor_tear_sheet_artifacts",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_workflow_artifacts"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.factor_workflow_spec",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.factor_workflow_spec.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.factor_workflow_spec"
+          },
+          "oracle_reference": "invariant contract factor.analysis.factor_workflow_spec.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_public_api.py::test_static_contract_registry_keeps_source_and_introspection_facts_separate"
+      ],
+      "target_operation_id": "factor.analysis.factor_workflow_spec",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_spec_disposition"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.fama_macbeth",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.fama_macbeth.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.fama_macbeth"
+          },
+          "oracle_reference": "invariant contract factor.analysis.fama_macbeth.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_inference.py::TestFamaMacBeth::test_matches_statsmodels_cross_sectional_oracle"
+      ],
+      "target_operation_id": "factor.analysis.fama_macbeth",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_fama_macbeth"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.ic_inference_result",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.ic_inference_result.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.ic_inference_result"
+          },
+          "oracle_reference": "invariant contract factor.analysis.ic_inference_result.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_model_inference.py::test_information_coefficient_inference_matches_scipy_and_statsmodels_oracles"
+      ],
+      "target_operation_id": "factor.analysis.ic_inference_result",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_inference"
+      ]
+    },
+    {
+      "capability_id": "factor.analysis.pyfolio_factor_inputs",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.analysis.pyfolio_factor_inputs.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.analysis.pyfolio_factor_inputs"
+          },
+          "oracle_reference": "invariant contract factor.analysis.pyfolio_factor_inputs.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_portfolio.py::test_enhanced_pyfolio_input_is_frozen_and_preserves_daily_alignment_timezone_and_cash"
+      ],
+      "target_operation_id": "factor.analysis.pyfolio_factor_inputs",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_pyfolio_factor_inputs"
+      ]
+    },
+    {
+      "capability_id": "factor.fama_macbeth",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.fama_macbeth.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.fama_macbeth"
+          },
+          "oracle_reference": "invariant contract factor.fama_macbeth.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_inference.py::TestFamaMacBeth::test_matches_statsmodels_cross_sectional_oracle"
+      ],
+      "target_operation_id": "factor.fama_macbeth",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_fama_macbeth"
+      ]
+    },
+    {
+      "capability_id": "factor.inference",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.inference.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.inference"
+          },
+          "oracle_reference": "invariant contract factor.inference.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_inference.py::TestIC::test_t_stat_matches_scipy_and_zero_constant_sample_is_zero"
+      ],
+      "target_operation_id": "factor.inference",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_inference"
+      ]
+    },
+    {
+      "capability_id": "factor.pit_prepare",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.pit_prepare.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.pit_prepare"
+          },
+          "oracle_reference": "invariant contract factor.pit_prepare.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_prepare_pit_factor_data_uses_causal_materialization_and_forbids_global_zscore_filter"
+      ],
+      "target_operation_id": "factor.pit_prepare",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_pit_preparation"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.enhanced_non_matching_timezone_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.enhanced_non_matching_timezone_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.enhanced_non_matching_timezone_error"
+          },
+          "oracle_reference": "invariant contract factor.prepare.enhanced_non_matching_timezone_error.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_forward_returns.py::test_forward_returns_reject_timezone_mismatch_and_preserve_inputs"
+      ],
+      "target_operation_id": "factor.prepare.enhanced_non_matching_timezone_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.factor_analysis_config",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.factor_analysis_config.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.factor_analysis_config"
+          },
+          "oracle_reference": "invariant contract factor.prepare.factor_analysis_config.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_models.py::test_config_and_result_fingerprints_cover_options_and_input"
+      ],
+      "target_operation_id": "factor.prepare.factor_analysis_config",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_factor_analysis_models"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.factor_data_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.factor_data_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.factor_data_error"
+          },
+          "oracle_reference": "invariant contract factor.prepare.factor_data_error.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_contracts.py::test_max_loss_boundary_uses_structured_report_and_legacy_projection"
+      ],
+      "target_operation_id": "factor.prepare.factor_data_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.factor_loss_exceeded_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.factor_loss_exceeded_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.factor_loss_exceeded_error"
+          },
+          "oracle_reference": "invariant contract factor.prepare.factor_loss_exceeded_error.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_multihorizon_preparation.py::test_rejects_ambiguous_duplicate_horizons_and_enforces_each_loss_budget"
+      ],
+      "target_operation_id": "factor.prepare.factor_loss_exceeded_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.factor_loss_report",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.factor_loss_report.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.factor_loss_report"
+          },
+          "oracle_reference": "invariant contract factor.prepare.factor_loss_report.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_contracts.py::test_prepare_factor_data_returns_structured_loss_report_without_stdout"
+      ],
+      "target_operation_id": "factor.prepare.factor_loss_report",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.materialize_pit_factor",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.materialize_pit_factor.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.materialize_pit_factor"
+          },
+          "oracle_reference": "invariant contract factor.prepare.materialize_pit_factor.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_selects_only_values_known_and_effective_on_each_evaluation_date"
+      ],
+      "target_operation_id": "factor.prepare.materialize_pit_factor",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_pit_preparation"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.max_loss_exceeded_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.max_loss_exceeded_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.max_loss_exceeded_error"
+          },
+          "oracle_reference": "invariant contract factor.prepare.max_loss_exceeded_error.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/test_factor_analysis/test_contracts.py::test_max_loss_boundary_uses_structured_report_and_legacy_projection"
+      ],
+      "target_operation_id": "factor.prepare.max_loss_exceeded_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.multi_horizon_prepared_factor_data",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.multi_horizon_prepared_factor_data.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.multi_horizon_prepared_factor_data"
+          },
+          "oracle_reference": "invariant contract factor.prepare.multi_horizon_prepared_factor_data.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_multihorizon_preparation.py::test_prepares_each_horizon_without_discarding_short_horizon_rows"
+      ],
+      "target_operation_id": "factor.prepare.multi_horizon_prepared_factor_data",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.non_matching_timezone_error",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.non_matching_timezone_error.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.non_matching_timezone_error"
+          },
+          "oracle_reference": "invariant contract factor.prepare.non_matching_timezone_error.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/compat/alphalens/test_forward_returns.py::test_forward_returns_reject_timezone_mismatch_and_preserve_inputs"
+      ],
+      "target_operation_id": "factor.prepare.non_matching_timezone_error",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_preparation_error_categories"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.prepare_factor_data_by_horizon",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.prepare_factor_data_by_horizon.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.prepare_factor_data_by_horizon"
+          },
+          "oracle_reference": "invariant contract factor.prepare.prepare_factor_data_by_horizon.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_multihorizon_preparation.py::test_prepares_each_horizon_without_discarding_short_horizon_rows"
+      ],
+      "target_operation_id": "factor.prepare.prepare_factor_data_by_horizon",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.prepare_factor_data_from_forward_returns",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.prepare_factor_data_from_forward_returns.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.prepare_factor_data_from_forward_returns"
+          },
+          "oracle_reference": "invariant contract factor.prepare.prepare_factor_data_from_forward_returns.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_model_inference.py::test_factor_model_inference_consumes_the_aggregate_enhanced_ic_snapshot"
+      ],
+      "target_operation_id": "factor.prepare.prepare_factor_data_from_forward_returns",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_factor_data_from_forward_returns"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare.validate_pit_alignment",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare.validate_pit_alignment.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare.validate_pit_alignment"
+          },
+          "oracle_reference": "invariant contract factor.prepare.validate_pit_alignment.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_pit_materialization.py::TestPITFactorMaterialization::test_pit_point_enforces_the_event_time_contract"
+      ],
+      "target_operation_id": "factor.prepare.validate_pit_alignment",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_pit_preparation"
+      ]
+    },
+    {
+      "capability_id": "factor.prepare_by_horizon",
+      "disposition": "required",
+      "owner": "factor",
+      "scenarios": [
+        {
+          "authority": {
+            "invariant_id": "factor.prepare_by_horizon.invariant.v1",
+            "kind": "property_invariant",
+            "reference": "deterministic invariant contract for factor.prepare_by_horizon"
+          },
+          "oracle_reference": "invariant contract factor.prepare_by_horizon.invariant.v1",
+          "scenario_id": "canonical_domain_scenario"
+        }
+      ],
+      "source_nodeids": [
+        "tests/numerical/test_factor_multihorizon_preparation.py::test_prepares_each_horizon_without_discarding_short_horizon_rows"
+      ],
+      "target_operation_id": "factor.prepare_by_horizon",
+      "wheel_nodeids": [
+        "tests/parity/test_factor_analysis.py::test_prepare_factor_data_by_horizon"
       ]
     },
     {
@@ -9358,7 +9909,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-  "node_facts_sha256": "501c7d2713d27d2de0f68f5bf4cc78fafa54bd5392b65ce4aad289f96d733f4a",
+    "node_facts_sha256": "501c7d2713d27d2de0f68f5bf4cc78fafa54bd5392b65ce4aad289f96d733f4a",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }
