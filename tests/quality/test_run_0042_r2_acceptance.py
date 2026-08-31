@@ -365,8 +365,8 @@ def test_baseline_relative_file_normalizes_a_symlinked_root() -> None:
         assert runner._baseline_relative_file(baseline_root, "ledger.json") == ledger.resolve()
 
 
-def test_candidate_parity_uses_the_frozen_new_api_nodeids() -> None:
-    """D0 oracle nodes must not be replayed after the breaking cutover."""
+def test_candidate_parity_uses_the_frozen_new_api_scenario_files() -> None:
+    """A consolidated candidate executes canonical modules, never D0 oracle nodes."""
 
     runner = _load_runner_module()
     ledger = {
@@ -374,14 +374,15 @@ def test_candidate_parity_uses_the_frozen_new_api_nodeids() -> None:
             {
                 "disposition": "required",
                 "source_nodeids": ["tests/compat/empyrical/test_legacy.py::test_legacy_oracle"],
-                "wheel_nodeids": ["tests/parity/test_metrics.py::test_gross_leverage"],
+                "wheel_nodeids": [
+                    "tests/parity/test_metrics.py::test_gross_leverage",
+                    "tests/parity/test_metrics.py::test_second_max_drawdown",
+                ],
             }
         ]
     }
 
-    assert runner._required_candidate_parity_nodeids(ledger) == [
-        str(REPOSITORY_ROOT / "tests/parity/test_metrics.py::test_gross_leverage")
-    ]
+    assert runner._required_candidate_parity_paths(ledger) == [str(REPOSITORY_ROOT / "tests/parity/test_metrics.py")]
 
 
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:
