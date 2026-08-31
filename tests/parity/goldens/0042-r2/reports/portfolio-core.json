@@ -1,0 +1,108 @@
+{
+  "artifact_type": "report_semantic_golden",
+  "capability_id": "report.portfolio.create_strategy_report",
+  "expected": {
+    "benchmark_metrics": {
+      "capture_ratio": -0.5237835650955194,
+      "down_capture": -1.6558422877623862,
+      "information_ratio": 2.6695733476647994,
+      "tracking_error": 0.0412987341578162,
+      "up_capture": 0.8673029767201036
+    },
+    "cumulative_returns_digest": "e6cf1d2586d4cdfd0e7ea20a0a38785aec33a376e59e818adaa6d480bae11b84",
+    "gross_leverage_digest": "0d3208c6f015932a874804c2fed9976bbce4dbce8222ac99033e47efcd7d05a4",
+    "performance_metrics": {
+      "alpha": 0.3815314943986854,
+      "annual_return": 0.3907315407858247,
+      "annual_volatility": 0.03776865789232311,
+      "beta": 0.03333333333333369,
+      "calmar_ratio": 195.36577039289622,
+      "cumulative_return": 0.1103862234090014,
+      "max_drawdown": -0.0020000000000001653,
+      "omega_ratio": 2.944444444444444,
+      "sharpe_ratio": 8.757261138136146,
+      "sortino_ratio": 17.932163840429304,
+      "stability": 0.99805596360749,
+      "tail_ratio": 1.5,
+      "value_at_risk": -0.002
+    },
+    "portfolio_metrics": {
+      "asset_count": 2,
+      "average_gross_leverage": 0.8666666666666669,
+      "average_turnover": 0.0038461538461538464,
+      "maximum_gross_leverage": 0.8666666666666667
+    },
+    "transaction_metrics": {
+      "average_daily_notional": 20.0,
+      "average_daily_transactions": 1.0,
+      "symbol_count": 2,
+      "trading_days": 2,
+      "transaction_count": 2
+    }
+  },
+  "inputs": {
+    "benchmark_returns": {
+      "frequency": "B",
+      "name": "benchmark",
+      "pattern": [
+        -0.001,
+        0.0015,
+        0.0015,
+        0.0015
+      ],
+      "size": 80,
+      "start": "2024-01-02",
+      "timezone": "UTC"
+    },
+    "period": "daily",
+    "positions": {
+      "AAA": 100.0,
+      "BBB": -30.0,
+      "cash": 80.0
+    },
+    "returns": {
+      "frequency": "B",
+      "name": "strategy",
+      "pattern": [
+        -0.002,
+        0.003,
+        0.003
+      ],
+      "size": 80,
+      "start": "2024-01-02",
+      "timezone": "UTC"
+    },
+    "rolling_window": 20,
+    "title": "0042-R2 Portfolio Core Golden",
+    "transaction_offsets": [
+      [
+        5,
+        9
+      ],
+      [
+        7,
+        10
+      ]
+    ],
+    "transactions": {
+      "amount": [
+        2.0,
+        -1.0
+      ],
+      "price": [
+        10.0,
+        20.0
+      ],
+      "symbol": [
+        "AAA",
+        "BBB"
+      ]
+    }
+  },
+  "legacy_source": {
+    "commit": "66ef3c9ad2fc000229a80ee0dec9762a96ad1770",
+    "tree": "5bea028ad3b8d8d2476e0aab9ba94583628cebb1"
+  },
+  "scenario_id": "ordinary_inputs",
+  "schema_version": 1
+}

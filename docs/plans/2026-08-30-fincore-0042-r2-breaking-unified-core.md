@@ -510,6 +510,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.json`
 - Create after clean capture: `docs/quality/0042-r2-quality-baseline.md`
 - Create: `scripts/capture_capability_baseline.py`
+- Create: `scripts/evaluate_0042_r2_capability_scenarios.py`
 - Create: `scripts/materialize_0042_r2_complete_surface_inventory.py`
 - Create: `scripts/check_0042_r2_complete_surface_inventory.py`
 - Create: `scripts/check_0042_r2_repository_surface_disposition.py`
@@ -520,6 +521,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 - Create: `requirements-0042-r2-acceptance.txt`
 - Create: `tests/parity/test_ledger.py`
 - Create: `tests/quality/test_capture_capability_baseline.py`
+- Create: `tests/quality/test_evaluate_0042_r2_capability_scenarios.py`
 - Create: `tests/quality/test_materialize_0042_r2_complete_surface_inventory.py`
 - Create: `tests/quality/test_check_0042_r2_complete_surface_inventory.py`
 - Create: `tests/quality/test_check_feature_parity.py`
@@ -548,6 +550,7 @@ D-ID -> D-BREAK -> D-BASE -> D-RUNTIME
 5. 冻结全部 257 个现有 Catalog binding（Empyrical class 100、Empyrical module 49、metrics 50、flat API 20、context 18、performance 9、Pyfolio module 11），另行盘点 Pyfolio 类的 69 个 methods（其中 67 个 non-private）、Alphalens 61 个 function specs + 7 个 workflows，以及所有未入 Catalog 的增强领域能力；这些是 legacy surfaces，不得直接等同为 257 个独立 capabilities，alias/quirk 必须逐项 disposition。
 6. 每个数值 scenario 登记 expected authority、来源版本/digest、tolerance 和 `preserve/correction_required`；候选或当前输出不能成为唯一 oracle。
 7. 把旧 compatibility tests 中真实 numerical/container/error/plot/report 断言迁成独立 golden 或 invariant；纯签名/MRO/alias 断言仅进入 disposition。
+7A. `capture_capability_baseline.py` 只冻结 initial-HEAD 输入、fixture manifest 与 tooling provenance；它本身不得凭 ledger 推断或写入 capability `status=ok`。新增冻结的 scenario evaluator，逐项执行 ledger 所绑定的 golden/oracle/invariant 与 source/wheel nodeid，输出带 `capabilities` 映射的 evaluated baseline；每个 `ok` 必须同时绑定 input-capture SHA、ledger SHA、scenario ID、实际 argv/exit、output/golden digest 和 source/wheel identity。任一条目未执行、无 authority、无 output digest 或仅由 candidate 声明时，输出 `pending` 并使 parity `BLOCKED`，不得降格为 PASS/FAIL 的伪结论。
 8. 实现可复现 physical/logical LOC、normalized AST duplication、import graph、cycle、optional-import leakage 和 implementation fingerprint 测量；该通用 architecture checker 只提供可度量架构事实，不能替代第 12 项 Catalog/DAG/snapshot budget，也不能自行宣称 legacy-zero。
 9. 修复 public snapshot：识别 callable kind、signature/default/kw-only，禁止静默跳过空 surface，并支持 source/wheel 比较。
 10. 将 release consistency 改为版本化 contract：D0 可验证当前包，0.5 candidate contract 明确不要求 Alphalens/Pyfolio/Empyrical 文件；contract expected 来自冻结 bundle，不由 candidate 版本字符串选择。
@@ -585,7 +588,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg MPLCONFIGDIR="$FINCORE_0042R2_MPL_DIR" 
 
 上述 committed fixture/golden 输入必须在 clean exact-SHA 内存在，并将每个输入及其 include/exclude manifest 的 digest 写入 D0 bundle；`FINCORE_0042R2_D0_DIR` 只承载本次 clean capture 的输出，不得把空临时目录当作账本、disposition 或 golden 的来源。`FINCORE_0042R2_D0_TOOLING_ROOT` 必须是与 candidate source root 分离的 clean detached tooling worktree；capture 会记录其 commit/tree 以及 capture/checker Git-blob SHA256，并拒绝 candidate 作为 tooling root。tooling SHA、baseline source SHA、clean status、平台和依赖 provenance 仍须按本任务的 D0 要求一并冻结。
 
-上述 `check_feature_parity.py` 和扩展后的 profiler CLI 只有在本任务实现并通过测试后才可执行；现有 `check_architecture_convergence.py` 只能采集/比较受冻结 policy 约束的架构事实，不能单独签署 D0 或 legacy-zero。
+上述 `check_feature_parity.py` 只有在 scenario evaluator 已将 input capture materialize 为带完整 `capabilities` 映射的 evaluated baseline 后才可执行；input-only capture 缺少该映射时必须 `BLOCKED`。扩展后的 profiler CLI 也只有在本任务实现并通过测试后才可执行；现有 `check_architecture_convergence.py` 只能采集/比较受冻结 policy 约束的架构事实，不能单独签署 D0 或 legacy-zero。
 
 正式 tranche/final gate 不从 candidate checkout 执行这些脚本，而使用 detached `D0_TOOLING_SHA`：
 
@@ -601,7 +604,7 @@ runner 必须先验证自己的 blob/commit、acceptance lock 和 D0 bundle dige
 
 - legacy surface、生产模块、旧 test nodeid 映射率均为 100%。
 - active workflow/script/maintained-doc/template disposition 为 100%；historical/provenance allowlist 的原始 digest 已冻结。
-- required capability 的适用 happy/boundary/error/optional/provider/documented scenario 覆盖率为 100%。
+- required capability 的适用 happy/boundary/error/optional/provider/documented scenario 覆盖率为 100%，且 evaluated baseline 中每个 `ok` 都能回溯 input-capture SHA、ledger SHA、scenario authority、实际执行与输出 digest。
 - 孤儿能力 0、未裁决差异 0、无 owner 项 0；所有 `correction_required` 均有独立 oracle 和具名修复 owner。
 - D0 记录 commit、tree、clean 状态、Python/依赖/平台、脚本 SHA、architecture threshold policy blob/digest、include/exclude manifest 和证据 digest；architecture baseline source provisioning manifest 能重建一个 clean exact baseline-source checkout。
 - `D0_TOOLING_SHA` 与 baseline source SHA 分离记录；tooling SHA 是后续正式 gate 的唯一 checker/profiler/runner 权威。
@@ -876,6 +879,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda
 - Create: `tests/parity/test_report_models.py`
 - Create: `tests/parity/test_report_renderers.py`
 - Create: `tests/parity/test_artifact_lifecycle.py`
+- Create: `tests/parity/test_report_golden.py`
 - Create: `tests/runtime/test_builtin_catalog_optional_isolation.py`
 - Create: `tests/parity/goldens/0042-r2/reports/`
 
@@ -884,7 +888,7 @@ PYTHONDONTWRITEBYTECODE=1 MPLBACKEND=Agg /Users/yunjinqi/opt/anaconda3/bin/conda
 1. 先把 `report/compute.py` 对 Empyrical/Pyfolio 的调用改为 canonical metrics/portfolio/factor operations。
 2. 统一 portfolio/factor/risk 报告的 compute model；renderer 不重复计算。
 3. 新 `report/**` renderer 一律只返回 `runtime.ArtifactBundle`；迁移期的 `ReportArtifacts` 只保留给尚未切换的旧入口/测试 oracle，禁止新 renderer 接收、返回或 bridge 该对象。其与 runtime 生命周期语义不等价（失败后的 close 语义不同），因此不做半兼容合并；Task 8 在旧入口清零时原子删除它。
-4. 对表格、章节、单位、series/legend、offline assets、PDF/XLSX 内容建立 normalized semantic golden。
+4. 对表格、章节、单位、series/legend、offline assets、PDF/XLSX 内容建立 normalized semantic golden；report core golden 必须在 refactor 前 clean source 生成并记录 source commit/tree，候选测试只读取该冻结文件，禁止用候选输出重写它。
 5. 分离 Matplotlib、HTML/PDF/XLSX、Plotly/Bokeh renderer；optional import 保持 lazy。
 6. 使用真实 Chromium/PDF lane 验证交互、资源和分页；Agg lane 验证数据与 ownership，不以像素完全相同作为唯一门。
 7. 删除旧 tearsheet 内部依赖；旧入口仍留到 Task 8 原子切换。
