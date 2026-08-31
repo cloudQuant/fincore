@@ -238,6 +238,20 @@ def test_rejects_scoped_or_not_for_d0_inventory_header(tmp_path: Path) -> None:
         checker.validate_complete_inventory(legacy_path, union_path, inventory_path)
 
 
+def test_rejects_required_entry_without_real_source_and_wheel_nodeids(tmp_path: Path) -> None:
+    legacy_path, union_path, inventory_path = _write_pair(tmp_path)
+    inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+    required = inventory["entries"][0]
+    assert isinstance(required, dict)
+    required["source_nodeids"] = []
+    required["wheel_nodeids"] = []
+    _write_json(inventory_path, inventory)
+    checker = _load_checker()
+
+    with pytest.raises(checker.CompleteInventoryValidationError, match="source_nodeids and wheel_nodeids"):
+        checker.validate_complete_inventory(legacy_path, union_path, inventory_path)
+
+
 def test_rejects_duplicate_policy_keys(tmp_path: Path) -> None:
     legacy_path, union_path, inventory_path = _write_pair(tmp_path)
     payload = inventory_path.read_bytes().replace(

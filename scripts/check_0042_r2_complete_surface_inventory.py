@@ -364,8 +364,12 @@ def _validate_inventory_entry(
     scenario_ids = _require_sorted_strings(entry.get("scenario_ids"), "scenario_ids", subject)
     if not all(_CAPABILITY_ID.fullmatch(scenario_id) for scenario_id in scenario_ids):
         raise CompleteInventoryValidationError(f"{subject} scenario_ids must be controlled scenario identifiers")
-    _require_sorted_strings(entry.get("source_nodeids"), "source_nodeids", subject, allow_empty=True)
-    _require_sorted_strings(entry.get("wheel_nodeids"), "wheel_nodeids", subject, allow_empty=True)
+    source_nodeids = _require_sorted_strings(entry.get("source_nodeids"), "source_nodeids", subject, allow_empty=True)
+    wheel_nodeids = _require_sorted_strings(entry.get("wheel_nodeids"), "wheel_nodeids", subject, allow_empty=True)
+    if disposition == "required" and (not source_nodeids or not wheel_nodeids):
+        raise CompleteInventoryValidationError(
+            f"{subject} required disposition needs non-empty source_nodeids and wheel_nodeids"
+        )
     evidence = entry.get("evidence")
     if not isinstance(evidence, dict) or not any(
         isinstance(value, str) and value.strip()
