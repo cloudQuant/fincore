@@ -55,7 +55,11 @@ def test_portfolio_operations_are_direct_domain_callables_and_runtime_reuses_the
 
 
 def test_portfolio_domain_does_not_depend_on_facades_or_legacy_dispatch() -> None:
-    package_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "portfolio"
+    package_root = (
+        Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
+        / "fincore"
+        / "portfolio"
+    )
     forbidden = ("fincore._registry", "fincore._dispatch", "fincore.empyrical", "fincore.pyfolio", "fincore.alphalens")
 
     violations = {

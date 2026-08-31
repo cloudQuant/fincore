@@ -17,7 +17,9 @@ _DIRECT_MODULES = (
 
 
 def test_canonical_metric_kernels_do_not_import_or_install_legacy_dispatch_surfaces() -> None:
-    metrics_root = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "metrics"
+    metrics_root = (
+        Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "fincore" / "metrics"
+    )
     violations = {
         module_name: [
             forbidden

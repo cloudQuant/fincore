@@ -14,7 +14,11 @@ from tests.support.complete_surface_inputs import write_minimal_complete_surface
 from tests.support.frozen_capture_tooling import create_frozen_capture_tooling_root
 from tests.support.repository_surface_inputs import write_minimal_repository_surface_inputs
 
-SCRIPT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "scripts" / "capture_capability_baseline.py"
+SCRIPT = (
+    Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
+    / "scripts"
+    / "capture_capability_baseline.py"
+)
 
 
 def _write_json(path: Path, value: object) -> None:

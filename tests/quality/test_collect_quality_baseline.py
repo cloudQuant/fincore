@@ -9,7 +9,11 @@ import pytest
 
 
 def _collector_module():
-    path = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve() / "scripts" / "collect_quality_baseline.py"
+    path = (
+        Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
+        / "scripts"
+        / "collect_quality_baseline.py"
+    )
     spec = importlib.util.spec_from_file_location("collect_quality_baseline", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

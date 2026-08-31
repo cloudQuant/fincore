@@ -17,7 +17,9 @@ from pathlib import Path
 
 import pytest
 
-SCRIPTS_DIR = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve() / "scripts"
+SCRIPTS_DIR = (
+    Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve() / "scripts"
+)
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="runner uses resource.getrusage")
 

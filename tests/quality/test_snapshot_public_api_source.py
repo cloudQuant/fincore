@@ -47,7 +47,11 @@ def test_direct_snapshot_script_prefers_its_checkout_source(tmp_path: Path) -> N
 
 
 def _snapshot_script() -> Path:
-    return Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve() / "scripts" / "snapshot_public_api.py"
+    return (
+        Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
+        / "scripts"
+        / "snapshot_public_api.py"
+    )
 
 
 def _write_package(root: Path, source: str) -> None:

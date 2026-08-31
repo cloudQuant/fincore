@@ -23,7 +23,9 @@ import pytest
 
 from fincore.portfolio.round_trips import extract_round_trips
 
-SCRIPTS_DIR = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve() / "scripts"
+SCRIPTS_DIR = (
+    Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve() / "scripts"
+)
 MIB = 1024 * 1024
 AMOUNT_SCALE = 1_000_000
 
