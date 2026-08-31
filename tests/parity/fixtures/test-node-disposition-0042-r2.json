@@ -40037,11 +40037,11 @@
   "source_facts": {
     "node_count": 5608,
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "9ea982f45f969d9ef9dea4df02a12f824d805b5a238b7abaf89c8cf9a7dd7474",
+    "sha256": "963360197b3fa6a0146d90005073d38f07964b20d9fa69492c8a56f42e2622dd",
     "source_provenance": {
       "clean": true,
-      "commit": "be89c525ea219b3d99959fad8c36af253ef96a59",
-      "tree": "005ebd5735ac0767461c73466a9846040b439556"
+      "commit": "c6e2005b5bc7fb52fa8834976b55501dddc0748e",
+      "tree": "5d89c47f6983586daf31dc3aa688265242e6f768"
     }
   }
 }

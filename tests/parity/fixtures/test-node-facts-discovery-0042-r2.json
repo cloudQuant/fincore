@@ -20967,7 +20967,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_coverage_gaps_declare_only_missing_source_evidence",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20977,7 +20977,7 @@
         "p0"
       ],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_factor_capabilities_use_the_pinned_alphalens_oracle",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20985,7 +20985,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_covers_every_covered_inventory_target_exactly_once",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -20993,7 +20993,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_header_is_scoped_and_fail_closed",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21001,7 +21001,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_passes_the_frozen_capture_schema",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21009,7 +21009,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_contract_binds_the_committed_input_bytes",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21017,7 +21017,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_ledger_source_nodeids_are_real_collected_nodes",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -21025,7 +21025,7 @@
       "legacy_family": "other",
       "markers": [],
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_upstream_capabilities_use_the_pinned_empyrical_oracle",
-      "test_blob_sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1",
+      "test_blob_sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08",
       "test_path": "tests/quality/test_0042_r2_capability_ledger.py"
     },
     {
@@ -51661,8 +51661,8 @@
   },
   "source_provenance": {
     "clean": true,
-    "commit": "be89c525ea219b3d99959fad8c36af253ef96a59",
-    "tree": "005ebd5735ac0767461c73466a9846040b439556"
+    "commit": "c6e2005b5bc7fb52fa8834976b55501dddc0748e",
+    "tree": "5d89c47f6983586daf31dc3aa688265242e6f768"
   },
   "source_test_blob_count": 480,
   "source_test_blobs": [
@@ -52202,9 +52202,9 @@
       "sha256": "e559acb89fb6bf764d31dbca16824964a9a6e5a20b966e1d46f8964ea00a9afc"
     },
     {
-      "git_object_id": "7fa8b35f043505b05588b2331a3a6a1b9a730292",
+      "git_object_id": "3b06bcbcad06519e6180d3df4fb58f92133425bd",
       "path": "tests/quality/test_0042_r2_capability_ledger.py",
-      "sha256": "fd57911cc7003195c64983273ef85cc0133ad0a22c794cd107bbb62f4e2288f1"
+      "sha256": "af659c3121db6361bb3c9a979e96498f9a1047facf2cf958f105dacfa1003f08"
     },
     {
       "git_object_id": "7baf2dfc9819f4fe8c02766267dbb62363db2d91",
