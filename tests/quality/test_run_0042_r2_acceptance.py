@@ -12,6 +12,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -350,6 +351,18 @@ def test_materialized_baseline_cleanup_rejects_an_untrusted_path(tmp_path: Path)
 
     with pytest.raises(runner.RunnerBlockedError, match="runner-owned"):
         runner._cleanup_materialized_source(source_root)
+
+
+def test_baseline_relative_file_normalizes_a_symlinked_root() -> None:
+    """A materialized baseline may use a lexical temporary path such as /tmp."""
+
+    runner = _load_runner_module()
+    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        baseline_root = Path(directory)
+        ledger = baseline_root / "ledger.json"
+        ledger.write_text("{}\n", encoding="utf-8")
+
+        assert runner._baseline_relative_file(baseline_root, "ledger.json") == ledger.resolve()
 
 
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:

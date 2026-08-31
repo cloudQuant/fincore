@@ -231,6 +231,18 @@ def _bundle_file(bundle: Path, relative: object, label: str) -> Path:
     return candidate
 
 
+def _baseline_relative_file(baseline_root: Path, relative: str) -> Path:
+    """Resolve a D0 source-relative path without trusting lexical temp prefixes."""
+
+    resolved_root = baseline_root.resolve()
+    candidate = (resolved_root / relative).resolve()
+    try:
+        candidate.relative_to(resolved_root)
+    except ValueError as exc:
+        raise RunnerBlockedError("D0 capability ledger path escapes the baseline source") from exc
+    return candidate
+
+
 def _load_d0_bundle(bundle: Path, tooling_identity: dict[str, str]) -> dict:
     """Validate the immutable D0 inputs before any candidate command starts."""
 
@@ -960,11 +972,7 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
     ledger_relative = _require_string(ledger_info.get("path"), "D0 capability evaluation ledger path")
     baseline_root = _materialize_baseline_source(bundle)
     try:
-        ledger_path = (baseline_root / ledger_relative).resolve()
-        try:
-            ledger_path.relative_to(baseline_root)
-        except ValueError as exc:
-            raise RunnerBlockedError("D0 capability ledger path escapes the baseline source") from exc
+        ledger_path = _baseline_relative_file(baseline_root, ledger_relative)
         if not ledger_path.is_file() or _sha256_file(ledger_path) != _require_sha256(
             ledger_info.get("sha256"), "D0 capability evaluation ledger SHA256"
         ):
