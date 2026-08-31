@@ -68,7 +68,9 @@ def test_root_shape_is_namespace_only_without_flat_callables() -> None:
     root = planned["root_shape"]
 
     assert root["namespace_only"] is True
-    assert set(root["allowed_symbols"]) == {"__version__", "errors"}
+    expected_namespaces = {surface.rsplit(".", 1)[1] for surface in planned["target_namespaces"]}
+    expected_namespaces.remove("exceptions")
+    assert set(root["allowed_symbols"]) == {"__version__", "errors", *expected_namespaces}
     assert root["rule"].strip()
 
 
@@ -94,16 +96,12 @@ def test_removed_surfaces_match_the_module_disposition_decisions() -> None:
     for surface in planned["removed_surfaces"]:
         relative = surface.replace(".", "/")
         covered = [
-            entry
-            for path, entry in by_path.items()
-            if path == f"{relative}.py" or path.startswith(f"{relative}/")
+            entry for path, entry in by_path.items() if path == f"{relative}.py" or path.startswith(f"{relative}/")
         ]
         assert covered, f"removed surface {surface} has no module disposition rows"
         for entry in covered:
             keeps_legacy_path = entry["disposition"] == "keep" and entry["target_path"] == entry["path"]
-            assert not keeps_legacy_path, (
-                f"removed surface {surface} keeps legacy path {entry['path']} in place"
-            )
+            assert not keeps_legacy_path, f"removed surface {surface} keeps legacy path {entry['path']} in place"
 
 
 def test_source_contract_binds_the_plan_and_disposition_documents() -> None:

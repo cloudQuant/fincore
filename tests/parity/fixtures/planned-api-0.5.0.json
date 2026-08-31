@@ -52,7 +52,20 @@
   "root_shape": {
     "allowed_symbols": [
       "__version__",
-      "errors"
+      "attribution",
+      "data",
+      "errors",
+      "extensions",
+      "factor_analysis",
+      "metrics",
+      "optimization",
+      "performance",
+      "portfolio",
+      "report",
+      "risk",
+      "runtime",
+      "simulation",
+      "viz"
     ],
     "namespace_only": true,
     "rule": "the root package exposes version, the error model, and domain namespaces only; no flat callables and no facade classes"

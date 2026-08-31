@@ -30,7 +30,7 @@ from fincore.metrics.frequencies import DAILY
 from fincore.runtime.time_series import AlignmentPolicy, align_binary_metric_inputs
 
 if TYPE_CHECKING:
-    from fincore._types import ReturnOrDataFrame
+    from fincore.runtime.types import ReturnOrDataFrame
 
 __all__ = [
     "alpha",

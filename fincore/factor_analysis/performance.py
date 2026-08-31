@@ -1,10 +1,9 @@
 """Standalone pre-cleaned factor-performance kernels.
 
-The enhanced API in this module is deliberately profile-free.  Strict
-Alphalens output projection is kept in :mod:`fincore.alphalens.performance`.
-Task 4 is built in small, independently characterized function families; the
-information-coefficient family is defined first so it can also be reused by
-later model/report work without importing optional plotting dependencies.
+The API in this module is profile-free. Its canonical outputs are consumed
+directly by factor workflows and reports. The information-coefficient family
+is kept independently characterized so it can be reused without importing
+optional plotting dependencies.
 """
 
 from __future__ import annotations

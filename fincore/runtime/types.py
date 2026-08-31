@@ -9,5 +9,6 @@ import numpy as np
 import pandas as pd
 
 ArrayLike: TypeAlias = np.ndarray | pd.Series | pd.DataFrame | Sequence[float]
+ReturnOrDataFrame: TypeAlias = np.ndarray | pd.Series | pd.DataFrame
 Schema: TypeAlias = Mapping[str, Any]
 Scalar: TypeAlias = bool | int | float | str | None

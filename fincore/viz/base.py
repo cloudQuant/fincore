@@ -1,11 +1,10 @@
-"""Visualization backend protocol and registry.
+"""Visualization backend protocol and explicit snapshot resolution.
 
 Defines the :class:`VizBackend` protocol that all visualization backends
 must satisfy, a :class:`RenderModel` (the structured inputs passed to a
 custom backend's ``render`` method), plus a helper :func:`get_backend` to
-resolve a backend by name.  Custom backends registered through
-:func:`fincore.plugin.register_viz_backend` take precedence over the
-built-in backends.
+resolve a backend by name. Custom backends are supplied through one immutable
+extension snapshot rather than a mutable process-wide registry.
 """
 
 from __future__ import annotations
@@ -70,8 +69,8 @@ class RenderModel:
     """Structured, side-effect-free inputs passed to a custom backend's ``render``.
 
     Custom viz backends may define ``render(model, **kwargs)`` instead of
-    the ``plot_*`` protocol; ``AnalysisContext.plot`` builds this model from
-    the stored snapshot and passes it through.
+    the ``plot_*`` protocol; an explicit caller builds this model and passes
+    it through the selected snapshot.
     """
 
     returns: pd.Series
@@ -79,13 +78,13 @@ class RenderModel:
     period: str = DAILY
 
 
-def get_backend(name: str = "matplotlib") -> VizBackend:
+def get_backend(name: str = "matplotlib", *, extension_snapshot: object | None = None) -> VizBackend:
     """Resolve a visualization backend by name.
 
-    Backends registered in the single extension registry
-    (:func:`fincore.plugin.register_viz_backend`) take precedence over the
-    built-in backends.  Registered classes must be instantiable without
-    arguments.
+    A renderer from ``extension_snapshot`` takes precedence over built-in
+    backends. The snapshot protocol is intentionally small: it must provide a
+    callable ``renderer(name)`` method, and the returned renderer must be
+    instantiable without arguments.
 
     Parameters
     ----------
@@ -110,12 +109,14 @@ def get_backend(name: str = "matplotlib") -> VizBackend:
     """
     name = name.lower().strip()
 
-    from fincore.plugin.registry import get_viz_backend
-
-    registered = get_viz_backend(name)
-    if registered is not None:
-        backend: Any = registered() if callable(registered) else registered
-        return cast("VizBackend", backend)
+    if extension_snapshot is not None:
+        resolve = getattr(extension_snapshot, "renderer", None)
+        if not callable(resolve):
+            raise TypeError("extension_snapshot must provide renderer(name)")
+        registered = resolve(name)
+        if registered is not None:
+            backend: Any = registered() if callable(registered) else registered
+            return cast("VizBackend", backend)
 
     if name == "matplotlib":
         from fincore.viz.matplotlib_backend import MatplotlibBackend

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fincore"
-version = "0.4.0.dev0"
+version = "0.5.0.dev0"
 description = "Quantitative performance and risk analytics for Python"
 readme = "README.md"
 license = "MIT"
@@ -17,7 +17,7 @@ authors = [
     {name = "cloudQuant", email = "yunjinqi@gmail.com"},
 ]
 classifiers = [
-    # Beta until the compatibility gates (empyrical/pyfolio manifests) pass.
+    # 0.5 is a breaking, pre-release unified-core migration.
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -38,12 +38,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Functional extras — one per installable capability.  These lists are the
-# only runtime dependency metadata; integrated compatibility facades never
-# re-install external alphalens or empyrical distributions.
-pyfolio = ["matplotlib>=3.3", "seaborn>=0.11", "ipython>=7"]
+# Functional extras — one per installable capability. These lists are the
+# only runtime dependency metadata; no legacy package/profile alias remains.
 factor-analysis = ["statsmodels>=0.14"]
-alphalens = ["statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7"]
+visualization = ["matplotlib>=3.3", "seaborn>=0.11", "ipython>=7", "plotly>=5", "bokeh>=3"]
 interactive = ["plotly>=5", "bokeh>=3"]
 report-pdf = ["playwright>=1.40", "PyPDF2>=3"]
 report-xlsx = ["openpyxl>=3"]
@@ -52,13 +50,6 @@ data-yahoo = ["yfinance>=0.2"]
 data-alphavantage = ["requests>=2.31"]
 data-pandas-datareader = ["pandas-datareader>=0.8"]
 data-cn = ["tushare>=1", "akshare>=1"]
-
-# 0.3.x compatibility aliases: keep for at least one documented minor cycle.
-datareader = ["pandas-datareader>=0.8"]
-viz = [
-  "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7",
-  "PyPDF2>=3", "bokeh>=3", "plotly>=5",
-]
 
 # Preserve the existing contributor installation contract.
 # setuptools/wheel mirror [build-system].requires so in-place `pip wheel
@@ -76,7 +67,7 @@ dev = [
   "setuptools>=68.0", "wheel", "build>=1.2",
 ]
 
-# Exact normalized union of functional extras above; excludes dev and aliases.
+# Exact normalized union of functional extras above; excludes dev.
 all = [
   "statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7",
   "plotly>=5", "bokeh>=3", "playwright>=1.40", "PyPDF2>=3",
@@ -129,9 +120,6 @@ filterwarnings = [
     "ignore:This axis already has a converter:UserWarning",
     "ignore:Legend does not support handles:UserWarning",
     "ignore:PeriodDtype\\[B\\] is deprecated:FutureWarning",
-    # Expected in tests: synthetic returns may not overlap with predefined stress periods.
-    "ignore:Passed returns do not overlap with any interesting times\\.:UserWarning:fincore\\.tearsheets\\.sheets",
-    "ignore:Passed returns do not overlap with any interesting times\\.:UserWarning:fincore\\.pyfolio",
 ]
 
 [tool.coverage.run]
@@ -169,19 +157,13 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
-# Staged typing policy (Task 10): contracts, risk and data are the first
-# annotated boundary.  Frozen legacy kernels (EVT/GARCH), the report renderers,
-# and the strict façades predate this policy; their untyped function bodies are
-# checked later when the boundary widens, so --check-untyped-defs does not flag
-# their pre-existing annotations today.
+# Staged typing policy: numerical risk kernels and report renderers widen their
+# annotation coverage independently while preserving the canonical boundaries.
 [[tool.mypy.overrides]]
 module = [
     "fincore.risk.evt",
     "fincore.risk.garch",
     "fincore.report.*",
-    "fincore.empyrical",
-    "fincore.utils.*",
-    "fincore._pyfolio_impl",
 ]
 check_untyped_defs = false
 

@@ -1,8 +1,7 @@
 """HTML report generator backend.
 
-Builds a self-contained HTML report from an
-:class:`~fincore.core.context.AnalysisContext` without requiring
-matplotlib or any other visualization library.
+Builds a self-contained HTML visualization from explicit precomputed inputs
+without requiring Matplotlib or another visualization library.
 """
 
 from __future__ import annotations
