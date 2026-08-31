@@ -10479,7 +10479,7 @@
     "inventory_artifact_type": "legacy_surface_inventory",
     "inventory_sha256": "f52766fb0f3a69a9f5d7717a7613e93588d6f2d80524121bd449966a6c5c9e9a",
     "node_facts_path": "test-node-facts-discovery-0042-r2.json",
-    "node_facts_sha256": "03cf340b345b77876a915fe55929d4cf5e65dbf58a94b8b2ec7d220ea9979aa9",
+    "node_facts_sha256": "78b097d9a88cccb13522660548803d9a7b29f3e590aa32696bf13e3783a99977",
     "upstream_manifest_path": "tests/compat/fixtures/empyrical-0.6.0-api.json",
     "upstream_manifest_sha256": "7abeea3cc56885de365e409fee4232ea486ba2e976fc31becd536bdf937fb937"
   }

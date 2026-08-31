@@ -12,12 +12,12 @@
   "scope": "non_online_functional_collection_only",
   "source_facts": {
     "path": "test-node-facts-discovery-0042-r2.json",
-    "sha256": "03cf340b345b77876a915fe55929d4cf5e65dbf58a94b8b2ec7d220ea9979aa9",
-    "node_count": 5645,
+    "sha256": "78b097d9a88cccb13522660548803d9a7b29f3e590aa32696bf13e3783a99977",
+    "node_count": 5646,
     "source_provenance": {
       "clean": true,
-      "commit": "f23a1b5fcb73d82f18fdcf005a966bf82bd1c287",
-      "tree": "c31b3129293a0130260e9adf678db6b86f7d1f35"
+      "commit": "ed4b9f024ea0d6f16944c353fd5c34686a63c780",
+      "tree": "edd1629c3d346349027c698f66f2d23f172f3158"
     }
   },
   "entries": [
@@ -16051,6 +16051,13 @@
       "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
       "disposition": "retain",
       "target": "tests/quality/test_0042_r2_capability_ledger.py::test_performance_cashflow_disclosure_and_inference_have_canonical_scenarios",
+      "rule_id": "canonical-retention",
+      "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
+    },
+    {
+      "nodeid": "tests/quality/test_0042_r2_capability_ledger.py::test_reporting_portfolio_and_attribution_migration_scenarios_are_bound",
+      "disposition": "retain",
+      "target": "tests/quality/test_0042_r2_capability_ledger.py::test_reporting_portfolio_and_attribution_migration_scenarios_are_bound",
       "rule_id": "canonical-retention",
       "rationale": "Node already exercises canonical or R2-tooling behavior and continues to bind it."
     },
