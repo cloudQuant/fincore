@@ -956,6 +956,20 @@ def _required_capability_nodeids(ledger: dict, field: str) -> list[str]:
     return sorted(nodeids)
 
 
+def _required_candidate_parity_nodeids(ledger: dict) -> list[str]:
+    """Select the cutover-safe direct-API scenarios for source and wheel.
+
+    ``source_nodeids`` are part of the immutable D0 oracle: they exercise the
+    legacy implementation before the breaking cutover.  Replaying them against
+    the candidate would require retaining deleted compatibility test modules
+    and old import surfaces.  ``wheel_nodeids`` are the frozen canonical
+    scenarios, so the candidate source and its installed wheel must execute
+    that same set.
+    """
+
+    return _required_capability_nodeids(ledger, "wheel_nodeids")
+
+
 def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Path, output_dir: Path) -> dict:
     if args.families != ["all"]:
         raise RunnerBlockedError("parity requires --families all")
@@ -978,8 +992,7 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
         ):
             raise RunnerBlockedError("D0 capability ledger bytes do not match the evaluated baseline")
         ledger = _read_json(ledger_path, "D0 capability ledger")
-        source_nodeids = _required_capability_nodeids(ledger, "source_nodeids")
-        wheel_nodeids = _required_capability_nodeids(ledger, "wheel_nodeids")
+        candidate_nodeids = _required_candidate_parity_nodeids(ledger)
         parity_checker = _frozen_tool(bundle, "scripts/check_feature_parity.py")
         d0_check_output = output_dir / "d0-parity-check.json"
         if d0_check_output.exists():
@@ -1012,7 +1025,7 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
                 "no:rerunfailures",
                 "--tb=short",
                 "--maxfail=0",
-                *source_nodeids,
+                *candidate_nodeids,
             ],
             timeout_seconds=1800,
         )
@@ -1048,7 +1061,7 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
                     "no:rerunfailures",
                     "--tb=short",
                     "--maxfail=0",
-                    *wheel_nodeids,
+                    *candidate_nodeids,
                 ],
                 timeout_seconds=1800,
             )
@@ -1060,6 +1073,7 @@ def _run_parity_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pat
     return {
         "d0_baseline_check": d0_record,
         "source_scenarios": source_record,
+        "candidate_nodeids_sha256": _canonical_sha256(candidate_nodeids),
         "wheel_install": install_record,
         "wheel_scenarios": wheel_record,
         "wheel_sha256": _sha256_file(wheel),
