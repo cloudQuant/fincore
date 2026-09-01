@@ -30,12 +30,13 @@ class OperationCatalog:
             not isinstance(self.extension_digest, str) or not self.extension_digest
         ):
             raise ValueError("extension_digest must be a non-empty string or None")
+        raw_operations = tuple(self.operations)
+        if not all(isinstance(spec, OperationSpec) for spec in raw_operations):
+            raise TypeError("operations must contain OperationSpec instances")
         by_operation_id: dict[str, OperationSpec] = {}
         by_capability_id: dict[str, OperationSpec] = {}
-        ordered_operations = tuple(sorted(self.operations, key=lambda item: item.operation_id))
+        ordered_operations = tuple(sorted(raw_operations, key=lambda item: item.operation_id))
         for spec in ordered_operations:
-            if not isinstance(spec, OperationSpec):
-                raise TypeError("operations must contain OperationSpec instances")
             if spec.operation_id in by_operation_id:
                 raise ValueError(f"duplicate operation_id: {spec.operation_id}")
             previous = by_capability_id.get(spec.capability_id)
