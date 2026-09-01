@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+import scripts.check_quality_snapshot as quality_snapshot
 from scripts.check_quality_snapshot import (
     MIN_BRANCH_COVERAGE,
     SCHEMA_VERSION,
@@ -17,6 +18,34 @@ from scripts.check_quality_snapshot import (
 )
 
 ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).resolve().parents[2])).resolve()
+
+
+def _git(root: Path, *args: str) -> str:
+    """Run a small Git fixture command and return stdout."""
+    import subprocess
+
+    result = subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True)
+    return result.stdout.strip()
+
+
+def _complete_snapshot(source_commit: str) -> dict[str, object]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": {"commit": source_commit, "dirty": False},
+        "outcome": "pass",
+        "copy_manifest_excluded_paths": [
+            "docs/quality/current-baseline.json",
+            "docs/quality/current-baseline.md",
+        ],
+        "runs": [
+            {
+                "label": "branch-coverage",
+                "returncode": 0,
+                "integrity_ok": True,
+                "branch_coverage_percent": MIN_BRANCH_COVERAGE + 2.0,
+            }
+        ],
+    }
 
 
 def test_rejects_dirty_or_wrong_commit_snapshot(tmp_path: Path) -> None:
@@ -49,6 +78,50 @@ def test_accepts_a_fresh_clean_complete_snapshot(tmp_path: Path) -> None:
     path.write_text(json.dumps(snapshot))
 
     assert check_snapshot(path, expected_commit="current") == []
+
+
+def test_accepts_only_snapshot_output_commit_after_a_fresh_collection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A committed baseline artifact is valid, but a later code edit is not."""
+    _git(tmp_path, "init", "--quiet")
+    _git(tmp_path, "config", "user.name", "Fincore tests")
+    _git(tmp_path, "config", "user.email", "fincore-tests@example.invalid")
+    (tmp_path / "fincore").mkdir()
+    (tmp_path / "fincore" / "core.py").write_text("VALUE = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "fincore/core.py")
+    _git(tmp_path, "commit", "--quiet", "-m", "source")
+    source_commit = _git(tmp_path, "rev-parse", "HEAD")
+
+    baseline_dir = tmp_path / "docs" / "quality"
+    baseline_dir.mkdir(parents=True)
+    snapshot_path = baseline_dir / "current-baseline.json"
+    snapshot_path.write_text(json.dumps(_complete_snapshot(source_commit)), encoding="utf-8")
+    (baseline_dir / "current-baseline.md").write_text("# Quality baseline\n", encoding="utf-8")
+    _git(tmp_path, "add", "docs/quality/current-baseline.json", "docs/quality/current-baseline.md")
+    _git(tmp_path, "commit", "--quiet", "-m", "quality baseline")
+    baseline_commit = _git(tmp_path, "rev-parse", "HEAD")
+    monkeypatch.setattr(quality_snapshot, "SOURCE_ROOT", tmp_path)
+
+    assert (
+        check_snapshot(
+            snapshot_path,
+            expected_commit=baseline_commit,
+            allow_snapshot_output_commit=True,
+        )
+        == []
+    )
+
+    (tmp_path / "fincore" / "core.py").write_text("VALUE = 2\n", encoding="utf-8")
+    _git(tmp_path, "add", "fincore/core.py")
+    _git(tmp_path, "commit", "--quiet", "-m", "code change")
+    code_commit = _git(tmp_path, "rev-parse", "HEAD")
+    violations = check_snapshot(
+        snapshot_path,
+        expected_commit=code_commit,
+        allow_snapshot_output_commit=True,
+    )
+    assert "source.commit does not match HEAD" in violations
 
 
 def test_rejects_missing_or_low_branch_coverage(tmp_path: Path) -> None:

@@ -82,6 +82,23 @@ def test_manual_r2_dispatch_skips_ordinary_ci_jobs() -> None:
             assert job["if"] == "github.event_name != 'workflow_dispatch'"
 
 
+def test_ordinary_windows_matrix_keeps_git_fixture_bytes_deterministic() -> None:
+    test_job = _jobs()["test"]
+    fixture_bytes = _step_named(test_job, "Keep Git fixture bytes deterministic")
+
+    assert fixture_bytes["if"] == "runner.os == 'Windows'"
+    assert fixture_bytes["shell"] == "bash"
+    assert fixture_bytes["run"] == "git config --global core.autocrlf false"
+
+
+def test_quality_snapshot_gate_allows_only_a_snapshot_output_commit() -> None:
+    freshness = _jobs()["quality-snapshot-freshness"]
+    freshness_run = _run_text(freshness)
+
+    assert "--allow-snapshot-output-commit" in freshness_run
+    assert "--skip-commit-check" not in freshness_run
+
+
 def test_r2_build_job_creates_and_uploads_the_only_distribution() -> None:
     build = _jobs()[BUILD_JOB]
 

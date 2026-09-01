@@ -46,6 +46,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Tests create throwaway Git repositories and compare their blob hashes
+      # to byte-level evidence.  Disable Windows' checkout conversion for
+      # those fixtures, matching the repository's LF policy in .gitattributes.
+      - name: Keep Git fixture bytes deterministic
+        if: runner.os == 'Windows'
+        shell: bash
+        run: git config --global core.autocrlf false
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
         with:
@@ -558,10 +566,9 @@ jobs:
 
   # Freshness gate for the checked-in quality snapshot.  A release claim can
   # only cite a snapshot that is clean (dirty=false), complete, and above the
-  # branch-coverage minimum.  The commit-equality check is skipped here because
-  # CI HEAD is the PR/release commit while the snapshot records the commit it
-  # was generated from (always an ancestor); the local checker still enforces
-  # exact HEAD equality at generation time.
+  # branch-coverage minimum.  The collector necessarily records its source
+  # before it writes its two checked-in outputs, so the gate accepts that one
+  # output-only descendant but rejects every intervening source change.
   quality-snapshot-freshness:
     if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -576,14 +583,9 @@ jobs:
 
       - name: Check quality snapshot freshness
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            python scripts/check_quality_snapshot.py \
-              --snapshot docs/quality/current-baseline.json
-          else
-            python scripts/check_quality_snapshot.py \
-              --snapshot docs/quality/current-baseline.json \
-              --skip-commit-check
-          fi
+          python scripts/check_quality_snapshot.py \
+            --snapshot docs/quality/current-baseline.json \
+            --allow-snapshot-output-commit
 
   # Clean-environment smoke for the optional data extras.  Installs each extra,
   # imports its SDK in a fresh interpreter, and runs the fake-client provider
