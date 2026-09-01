@@ -641,11 +641,15 @@ def _critical_coverage_violations(
 
 
 def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list[str]:
-    """Run coverage only against the submitted source tree, never test fixtures."""
+    """Run frozen oracle tests plus the candidate's scoped coverage-gap tranche."""
 
     source_root = candidate_root / "fincore"
     if not source_root.is_dir():
         raise RunnerBlockedError(f"candidate package root is missing: {source_root}")
+    test_roots = [str(_tooling_root() / "tests")]
+    coverage_gap_root = candidate_root / "tests" / "coverage_gaps" / "0042_r2"
+    if coverage_gap_root.is_dir():
+        test_roots.append(str(coverage_gap_root))
     return [
         "-o",
         "addopts=",
@@ -660,7 +664,7 @@ def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list
         f"--cov-report=json:{coverage_json}",
         "-m",
         "not integration_online and not benchmark",
-        str(_tooling_root() / "tests"),
+        *test_roots,
     ]
 
 

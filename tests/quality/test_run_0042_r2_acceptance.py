@@ -399,6 +399,24 @@ def test_quality_coverage_is_bound_to_the_candidate_source_root(tmp_path: Path) 
     assert "--cov=fincore" not in arguments
 
 
+def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(tmp_path: Path) -> None:
+    """Candidate-owned gap tests supplement, but never replace, frozen oracle tests."""
+
+    runner = _load_runner_module()
+    candidate_root = tmp_path / "candidate"
+    (candidate_root / "fincore").mkdir(parents=True)
+    coverage_root = candidate_root / "tests" / "coverage_gaps" / "0042_r2"
+
+    without_gap_tests = runner._quality_pytest_arguments(candidate_root, tmp_path / "without.json")
+    assert str(coverage_root) not in without_gap_tests
+
+    coverage_root.mkdir(parents=True)
+    with_gap_tests = runner._quality_pytest_arguments(candidate_root, tmp_path / "with.json")
+
+    assert str(REPOSITORY_ROOT / "tests") in with_gap_tests
+    assert str(coverage_root) in with_gap_tests
+
+
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:
     """The detached runner consumes the checker's documented lowercase status."""
 
