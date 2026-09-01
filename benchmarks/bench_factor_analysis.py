@@ -155,7 +155,7 @@ def build_workload(scenario_name: str, kernel: str) -> Callable[[], object]:
     if kernel == "factor-returns":
         return lambda: factor_returns(clean)
     if kernel == "full-model":
-        return lambda: analyze_factor(clean, include_pyfolio=True)
+        return lambda: analyze_factor(clean)
     raise AssertionError(f"unhandled benchmark kernel {kernel!r}")
 
 

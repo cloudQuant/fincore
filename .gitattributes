@@ -1,0 +1,14 @@
+# 0042 provenance artifacts bind SHA-256 to repository bytes. Keep every
+# tracked text file LF-normalized on every checkout so Windows cannot silently
+# rewrite audited JSON, Python, workflow, or vendored JavaScript bytes.
+* text=auto eol=lf
+
+# Binary artifacts must never participate in text conversion.
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.pdf -text
+*.whl -text
+*.gz -text
+*.zip -text

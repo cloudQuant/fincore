@@ -65,6 +65,8 @@ def _git_repo(tmp_path: Path) -> Path:
     repo.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
     subprocess.run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "0042-R2 acceptance test"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "0042-r2-acceptance@example.invalid"], cwd=repo, check=True)
     (repo / "README.md").write_text("candidate\n", encoding="utf-8")
     _commit(repo, "candidate base")
     return repo
@@ -353,11 +355,11 @@ def test_materialized_baseline_cleanup_rejects_an_untrusted_path(tmp_path: Path)
         runner._cleanup_materialized_source(source_root)
 
 
-def test_baseline_relative_file_normalizes_a_symlinked_root() -> None:
-    """A materialized baseline may use a lexical temporary path such as /tmp."""
+def test_baseline_relative_file_normalizes_a_temporary_root() -> None:
+    """A materialized baseline may use any platform's lexical temporary path."""
 
     runner = _load_runner_module()
-    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+    with tempfile.TemporaryDirectory() as directory:
         baseline_root = Path(directory)
         ledger = baseline_root / "ledger.json"
         ledger.write_text("{}\n", encoding="utf-8")

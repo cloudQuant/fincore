@@ -134,10 +134,17 @@ class ImportOccurrence:
 
 @dataclass(frozen=True)
 class CaptureOutput:
-    """A capture path bound to the directory descriptor validated for writing."""
+    """A capture path bound to a validated parent directory identity.
+
+    POSIX hosts retain an open directory descriptor so every final write is
+    descriptor-relative.  Windows exposes no equivalent through ``os``; that
+    path therefore records the parent identity and revalidates it before each
+    mutating operation instead of pretending to provide descriptor semantics.
+    """
 
     path: Path
-    parent_fd: int
+    parent_fd: int | None
+    parent_identity: tuple[int, int]
 
 
 def _sha256_bytes(payload: bytes) -> str:
@@ -1800,23 +1807,40 @@ def _validate_against_baseline(
     return {"status": "passed", "thresholds": thresholds}
 
 
-def _open_capture_parent(parent: Path) -> int:
-    """Open and identity-check the output parent without following a late symlink."""
+def _capture_parent_identity(parent: Path) -> tuple[int, int]:
+    """Return the identity of a real output directory without following a link."""
+    try:
+        observed = parent.stat(follow_symlinks=False)
+    except OSError as exc:
+        raise ArchitectureContractError(f"cannot inspect capture output parent: {exc}") from exc
+    if not stat.S_ISDIR(observed.st_mode):
+        raise ArchitectureContractError("capture output parent directory must be a real directory")
+    return (observed.st_dev, observed.st_ino)
+
+
+def _open_capture_parent(parent: Path) -> tuple[int | None, tuple[int, int]]:
+    """Open and identity-check an output parent without following a late symlink.
+
+    Python's Windows ``os`` layer cannot open a directory as a descriptor or
+    perform descriptor-relative replacement.  Return a stable identity there
+    and let the write path revalidate it around every mutation.  POSIX retains
+    the stronger descriptor-bound implementation below.
+    """
+    expected_identity = _capture_parent_identity(parent)
+    if os.name == "nt":
+        return None, expected_identity
     flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_CLOEXEC", 0)
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     try:
-        expected = parent.stat(follow_symlinks=False)
-        if not stat.S_ISDIR(expected.st_mode):
-            raise ArchitectureContractError("capture output parent directory must be a real directory")
         parent_fd = os.open(parent, flags)
     except OSError as exc:
         raise ArchitectureContractError(f"cannot safely open capture output parent: {exc}") from exc
     try:
         actual = os.fstat(parent_fd)
-        if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+        if (actual.st_dev, actual.st_ino) != expected_identity:
             raise ArchitectureContractError("capture output parent changed while being opened")
-        return parent_fd
+        return parent_fd, expected_identity
     except BaseException:
         with suppress(OSError):
             os.close(parent_fd)
@@ -1837,7 +1861,8 @@ def _validate_capture_path(source_root: Path, path: Path) -> CaptureOutput:
         raise ArchitectureContractError("capture output parent directory must already exist")
     if resolved.exists() and not resolved.is_file():
         raise ArchitectureContractError("capture output must be a regular file when it already exists")
-    return CaptureOutput(path=resolved, parent_fd=_open_capture_parent(parent))
+    parent_fd, parent_identity = _open_capture_parent(parent)
+    return CaptureOutput(path=resolved, parent_fd=parent_fd, parent_identity=parent_identity)
 
 
 def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
@@ -1855,16 +1880,102 @@ def _git_control_paths(source_root: Path) -> tuple[Path, ...]:
 
 
 def _close_capture_output(output: CaptureOutput) -> None:
-    with suppress(OSError):
-        os.close(output.parent_fd)
+    if output.parent_fd is not None:
+        with suppress(OSError):
+            os.close(output.parent_fd)
+
+
+def _require_stable_capture_parent(output: CaptureOutput) -> None:
+    """Fail closed if the path-based Windows parent changed after validation."""
+    if _capture_parent_identity(output.path.parent) != output.parent_identity:
+        raise ArchitectureContractError("capture output parent changed after validation")
+
+
+def _require_safe_capture_entry(output: CaptureOutput) -> None:
+    """Reject a late final-target swap to a symlink or a non-regular file."""
+    try:
+        entry = output.path.stat(follow_symlinks=False)
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        raise ArchitectureContractError(f"cannot inspect capture output target: {exc}") from exc
+    if stat.S_ISLNK(entry.st_mode):
+        raise ArchitectureContractError("capture output must not be a symbolic link")
+    if not stat.S_ISREG(entry.st_mode):
+        raise ArchitectureContractError("capture output must be a regular file when it already exists")
+
+
+def _write_capture_atomically_without_directory_fd(
+    output: CaptureOutput, serialized: bytes, source_root: Path, provenance: Mapping[str, Any]
+) -> None:
+    """Write a capture on platforms without descriptor-relative filesystem APIs.
+
+    This branch is intentionally conservative: every path-based mutating step
+    is bracketed by a parent-identity check, and cleanup never follows a parent
+    that changed after validation.  POSIX uses the descriptor-bound path below
+    for the stronger resistance to a concurrent directory replacement.
+    """
+    temporary_path: Path | None = None
+    temporary_fd: int | None = None
+    _verify_source_provenance(source_root, provenance)
+    try:
+        _require_stable_capture_parent(output)
+        _require_safe_capture_entry(output)
+        for _ in range(128):
+            candidate = output.path.parent / f".{output.path.name}.{secrets.token_hex(16)}.tmp"
+            try:
+                temporary_fd = os.open(
+                    candidate,
+                    os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_CLOEXEC", 0),
+                    0o600,
+                )
+            except FileExistsError:
+                continue
+            temporary_path = candidate
+            break
+        if (
+            temporary_path is None or temporary_fd is None
+        ):  # pragma: no cover - cryptographic collisions are implausible.
+            raise ArchitectureContractError("cannot reserve a unique capture temporary file")
+        _require_stable_capture_parent(output)
+        temporary = os.fdopen(temporary_fd, "wb")
+        temporary_fd = None
+        with temporary:
+            temporary.write(serialized)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        _verify_source_provenance(source_root, provenance)
+        _require_stable_capture_parent(output)
+        _require_safe_capture_entry(output)
+        temporary_path.replace(output.path)
+        temporary_path = None
+        _require_stable_capture_parent(output)
+    except OSError as exc:
+        raise ArchitectureContractError(f"cannot atomically write capture output: {exc}") from exc
+    finally:
+        if temporary_fd is not None:
+            with suppress(OSError):
+                os.close(temporary_fd)
+        if temporary_path is not None:
+            try:
+                _require_stable_capture_parent(output)
+            except ArchitectureContractError:
+                pass
+            else:
+                with suppress(OSError):
+                    temporary_path.unlink()
 
 
 def _write_capture_atomically(
     output: CaptureOutput, serialized: bytes, source_root: Path, provenance: Mapping[str, Any]
 ) -> None:
+    if output.parent_fd is None:
+        _write_capture_atomically_without_directory_fd(output, serialized, source_root, provenance)
+        return
     temporary_name: str | None = None
     temporary_fd: int | None = None
     _verify_source_provenance(source_root, provenance)
+    parent_fd = output.parent_fd
     try:
         for _ in range(128):
             candidate = f".{output.path.name}.{secrets.token_hex(16)}.tmp"
@@ -1873,7 +1984,7 @@ def _write_capture_atomically(
                     candidate,
                     os.O_CREAT | os.O_EXCL | os.O_WRONLY | getattr(os, "O_CLOEXEC", 0),
                     0o600,
-                    dir_fd=output.parent_fd,
+                    dir_fd=parent_fd,
                 )
             except FileExistsError:
                 continue
@@ -1893,10 +2004,10 @@ def _write_capture_atomically(
         os.replace(
             temporary_name,
             output.path.name,
-            src_dir_fd=output.parent_fd,
-            dst_dir_fd=output.parent_fd,
+            src_dir_fd=parent_fd,
+            dst_dir_fd=parent_fd,
         )
-        os.fsync(output.parent_fd)
+        os.fsync(parent_fd)
         temporary_name = None
     except OSError as exc:
         raise ArchitectureContractError(f"cannot atomically write capture output: {exc}") from exc
@@ -1906,7 +2017,7 @@ def _write_capture_atomically(
                 os.close(temporary_fd)
         if temporary_name is not None:
             with suppress(OSError):
-                os.unlink(temporary_name, dir_fd=output.parent_fd)
+                os.unlink(temporary_name, dir_fd=parent_fd)
 
 
 def _serialize_artifact(artifact: Mapping[str, Any]) -> bytes:

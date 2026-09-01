@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+import pytest
+
 SCRIPT = (
     Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
     / "scripts"
@@ -270,6 +272,10 @@ def test_rejects_dirty_source_and_output_inside_source_without_overwriting(tmp_p
     assert not (source_root / "architecture.json").exists()
 
 
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Windows does not expose Python descriptor-relative directory replacement APIs",
+)
 def test_capture_write_keeps_the_validated_parent_descriptor_across_a_path_swap(tmp_path: Path) -> None:
     source_root = _make_clean_source(tmp_path / "source")
     output_parent = tmp_path / "capture"

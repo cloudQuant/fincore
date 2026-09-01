@@ -10,13 +10,12 @@ invocations in ``.github/workflows/ci.yml``:
 * ``serial-suite``       ``serial and not slow and not integration``
 * ``non-serial-suite``   ``not serial and not slow and not integration``
 * ``integration-offline`` ``integration_offline``
-* ``compat-suite``       ``tests/compat`` (path selector, no marker expression)
+* ``slow``               ``slow`` in ``tests/benchmarks/test_0042_r2_workloads.py``
 
-``slow`` is deliberately absent from the non-empty audit: the repository
-currently has zero slow-marked tests and therefore no slow CI job.  The day
-someone adds the first slow-marked test, this audit fails and demands that a
-CI owner register the ``slow`` selector here and add a matching slow job to
-``.github/workflows/ci.yml``, so the selector can never rot silently.
+The former ``tests/compat`` suite was retired with the 0.5 breaking API. Its
+frozen inputs remain provenance fixtures, not executable compatibility tests.
+The offline integration and slow selectors instead exercise canonical 0.5
+workflows and registered workload profiling respectively.
 
 Every test carrying ``integration`` must also carry exactly one subtype
 (``integration_offline`` or ``integration_online``); a test with a subtype
@@ -49,11 +48,8 @@ RELEASE_SELECTORS: tuple[tuple[str, str | None, list[str]], ...] = (
     ("serial-suite", "serial and not slow and not integration", ["tests/", "--ignore=tests/benchmarks"]),
     ("non-serial-suite", "not serial and not slow and not integration", ["tests/", "--ignore=tests/benchmarks"]),
     ("integration-offline", "integration_offline", ["tests/"]),
-    ("compat-suite", None, ["tests/compat"]),
+    ("slow", "slow", ["tests/benchmarks/test_0042_r2_workloads.py"]),
 )
-
-#: Selector with no CI owner yet; the audit fails as soon as it collects a test.
-UNOWNED_SELECTORS: tuple[str, ...] = ("slow",)
 
 
 class MarkerAuditError(RuntimeError):
@@ -163,15 +159,6 @@ def audit_selectors() -> None:
         print(f"{label}: {count} test(s) collected")
         if count < 1:
             failures.append(f"release-required selector {label!r} collected zero tests; fix the marker or the selector")
-    for unowned in UNOWNED_SELECTORS:
-        count = _collect(unowned, ["tests/"])
-        if count >= 1:
-            failures.append(
-                f"selector {unowned!r} now collects {count} test(s); a CI owner must add a {unowned} job "
-                f"to .github/workflows/ci.yml and register {unowned!r} in RELEASE_SELECTORS"
-            )
-        else:
-            print(f"{unowned}: 0 tests (no CI owner yet; audit fails as soon as one appears)")
     violations = _integration_violations()
     failures.extend(violations)
     print(f"integration markers: {len(violations)} violation(s)")
