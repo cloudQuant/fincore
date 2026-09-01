@@ -728,6 +728,19 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      # GitHub's Windows image enables CRLF checkout conversion by default.
+      # The D0 contract intentionally hashes the exact runner bytes, so put
+      # this ephemeral checkout back into the blob's LF representation before
+      # the frozen runner verifies itself.
+      - name: Normalize frozen tooling bytes on Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C tooling config core.autocrlf false
+          git -C tooling reset --hard "${{ inputs.tooling_ref }}"
+          test -z "$(git -C tooling status --porcelain=v1 --untracked-files=all)"
+
       - name: Set up D0-frozen Python
         uses: actions/setup-python@v6
         with:
@@ -861,6 +874,47 @@ jobs:
             --dependency-profile all \
             --runner-image "${{ matrix.runner }}" \
             --output-dir "$GITHUB_WORKSPACE/r2-matrix-cell/${{ matrix.os }}"
+
+      # The frozen runner intentionally records command-output digests only.
+      # On a failed cell, retain a second, diagnostic-only invocation so the
+      # artifact exposes the concrete pytest failure.  This does not alter the
+      # frozen contract verdict or any matrix-cell evidence fields.
+      - name: Capture failed matrix contract diagnostics
+        if: failure()
+        shell: bash
+        working-directory: candidate
+        run: |
+          set -uo pipefail
+          output="$GITHUB_WORKSPACE/r2-matrix-cell/${{ matrix.os }}"
+          diagnostic="$output/matrix-contract-diagnostic.log"
+          {
+            echo "diagnostic only; it does not alter the frozen contract verdict"
+            if [ ! -d "$output/wheel-target" ]; then
+              echo "matrix runner did not reach wheel-target creation"
+              test -f "$output/evidence.json" && cat "$output/evidence.json"
+            else
+              export MPLBACKEND=Agg
+              export PYTHONDONTWRITEBYTECODE=1
+              python -I -c "import sys; from pathlib import Path; candidate=Path(sys.argv[1]).resolve(); tooling=Path(sys.argv[2]).resolve(); sys.path[:]=[str(candidate),*[entry for entry in sys.path if Path(entry or '.').resolve()!=tooling]]; import pytest; raise SystemExit(pytest.main(sys.argv[3:]))" \
+                "$output/wheel-target" \
+                "$GITHUB_WORKSPACE/tooling" \
+                --import-mode=importlib \
+                -c "$GITHUB_WORKSPACE/tooling/pyproject.toml" \
+                -o addopts= \
+                -p no:cacheprovider \
+                -p no:rerunfailures \
+                --tb=short \
+                --maxfail=0 \
+                -m "not integration_online and not benchmark" \
+                --ignore "$GITHUB_WORKSPACE/tooling/tests/architecture" \
+                --ignore "$GITHUB_WORKSPACE/tooling/tests/benchmarks" \
+                --ignore "$GITHUB_WORKSPACE/tooling/tests/docs" \
+                --ignore "$GITHUB_WORKSPACE/tooling/tests/packaging" \
+                --ignore "$GITHUB_WORKSPACE/tooling/tests/quality" \
+                "$GITHUB_WORKSPACE/tooling/tests"
+              echo "diagnostic_pytest_exit_code=$?"
+            fi
+          } > "$diagnostic" 2>&1 || true
 
       - name: Upload R2 matrix-cell evidence
         if: always()

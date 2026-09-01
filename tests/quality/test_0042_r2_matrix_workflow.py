@@ -101,7 +101,9 @@ def test_r2_matrix_cells_download_the_single_wheel_and_run_the_frozen_contract()
 
     matrix = cell["strategy"]["matrix"]["include"]
     download = _step_named(cell, "Download the immutable R2 distribution")
+    frozen_bytes = _step_named(cell, "Normalize frozen tooling bytes on Windows")
     dependencies = _step_named(cell, "Install R2 matrix-cell dependencies")
+    diagnostics = _step_named(cell, "Capture failed matrix contract diagnostics")
     upload = _step_named(cell, "Upload R2 matrix-cell evidence")
     cell_run = _run_text(cell)
 
@@ -113,6 +115,17 @@ def test_r2_matrix_cells_download_the_single_wheel_and_run_the_frozen_contract()
     }
     assert download["uses"] == "actions/download-artifact@v4"
     assert download["with"]["name"] == DIST_ARTIFACT
+    assert frozen_bytes["if"] == "runner.os == 'Windows'"
+    assert frozen_bytes["shell"] == "bash"
+    assert "git -C tooling config core.autocrlf false" in frozen_bytes["run"]
+    assert 'git -C tooling reset --hard "${{ inputs.tooling_ref }}"' in frozen_bytes["run"]
+    assert "git -C tooling status --porcelain=v1 --untracked-files=all" in frozen_bytes["run"]
+    assert diagnostics["if"] == "failure()"
+    assert diagnostics["working-directory"] == "candidate"
+    assert "matrix-contract-diagnostic.log" in diagnostics["run"]
+    assert "diagnostic only; it does not alter the frozen contract verdict" in diagnostics["run"]
+    assert "--import-mode=importlib" in diagnostics["run"]
+    assert "--tb=short" in diagnostics["run"]
     assert "python -m build" not in cell_run
     assert 'python -m pip install "$wheel[' in dependencies["run"]
     assert "./candidate[" not in dependencies["run"]
