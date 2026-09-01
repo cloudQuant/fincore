@@ -140,7 +140,7 @@ jobs:
           python-version: "3.11"
 
       - name: Download JUnit reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: junit-reports
           merge-multiple: true
@@ -743,7 +743,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Download the immutable R2 distribution
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: r2-acceptance-dist
           path: r2-acceptance-dist
@@ -947,13 +947,13 @@ jobs:
           python-version: "3.11.8"
 
       - name: Download the immutable R2 distribution
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: r2-acceptance-dist
           path: r2-acceptance-dist
 
       - name: Download all R2 matrix-cell evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: r2-acceptance-matrix-cell-*
           path: r2-matrix-evidence
