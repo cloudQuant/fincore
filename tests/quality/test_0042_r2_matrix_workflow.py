@@ -95,6 +95,9 @@ def test_quality_snapshot_gate_allows_only_a_snapshot_output_commit() -> None:
     freshness = _jobs()["quality-snapshot-freshness"]
     freshness_run = _run_text(freshness)
 
+    checkout = _steps(freshness)[0]
+    assert checkout["uses"] == "actions/checkout@v4"
+    assert checkout["with"]["fetch-depth"] == "0"
     assert "--allow-snapshot-output-commit" in freshness_run
     assert "--skip-commit-check" not in freshness_run
 

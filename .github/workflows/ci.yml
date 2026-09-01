@@ -575,6 +575,12 @@ jobs:
     needs: [coverage-branch]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The snapshot source commit is intentionally the parent of the
+          # output-only evidence commit.  The checker verifies that ancestry,
+          # so a depth-one checkout would incorrectly make the proof
+          # unavailable on both branch and tag CI.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
