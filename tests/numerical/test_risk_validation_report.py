@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from dateutil import tz
 
+import fincore.risk.report as risk_report
 from fincore.risk.backtesting import backtest_var
 from fincore.risk.calibration import basel_traffic_light
 from fincore.risk.diagnostics import walk_forward_var
@@ -286,3 +287,14 @@ def test_report_serializes_dateutil_timezones_as_portable_tokens(
     assert "zoneinfo" not in payload["timestamp_timezone"]
     assert not payload["timestamp_timezone"].startswith("/")
     assert payload["backtest"]["inputs_digest"] == replayed.inputs_digest
+
+
+def test_report_resolves_dateutil_zoneinfo_when_filesystem_lookup_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    timezone = tz.gettz("America/New_York")
+    assert timezone is not None
+    index = pd.date_range("2024-03-01", periods=12, freq="B", tz=timezone)
+    monkeypatch.setattr(risk_report, "_iana_token_from_zoneinfo_filename", lambda _filename: None)
+
+    assert risk_report._timestamp_timezone(index) == "America/New_York"

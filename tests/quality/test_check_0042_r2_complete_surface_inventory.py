@@ -203,6 +203,22 @@ def test_complete_inventory_binds_every_source_fact_exactly_once(tmp_path: Path)
     assert result["not_a_d0_verdict"] is True
 
 
+def test_complete_inventory_reader_preserves_regular_file_identity_without_no_follow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    legacy_path, union_path, inventory_path = _write_pair(tmp_path)
+    checker = _load_checker()
+    monkeypatch.delattr(checker.os, "O_NOFOLLOW", raising=False)
+
+    result = checker.validate_complete_inventory(legacy_path, union_path, inventory_path)
+    assert result["entry_count"] == 9
+
+    alias = tmp_path / "inventory-alias.json"
+    alias.symlink_to(inventory_path)
+    with pytest.raises(checker.CompleteInventoryValidationError, match="symbolic link"):
+        checker._read_regular_file(alias, "complete inventory")
+
+
 def test_rejects_inventory_which_omits_one_union_fact(tmp_path: Path) -> None:
     legacy_path, union_path, inventory_path = _write_pair(tmp_path)
     inventory = json.loads(inventory_path.read_text(encoding="utf-8"))

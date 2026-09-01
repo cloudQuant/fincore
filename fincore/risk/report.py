@@ -312,6 +312,10 @@ def _timestamp_timezone(index: pd.DatetimeIndex) -> str | None:
     if candidate is not None and _timezone_token_replays(index, candidate):
         return candidate
 
+    candidate = _dateutil_zoneinfo_token(index)
+    if candidate is not None:
+        return candidate
+
     candidate = _fixed_offset_token(index)
     if candidate is not None and _timezone_token_replays(index, candidate):
         return candidate
@@ -332,6 +336,32 @@ def _iana_token_from_zoneinfo_filename(filename: object) -> str | None:
     if not token or token.startswith(("posix/", "right/")):
         return None
     return token
+
+
+def _dateutil_zoneinfo_token(index: pd.DatetimeIndex) -> str | None:
+    """Resolve a dateutil zonefile through its bundled IANA name mapping.
+
+    On Windows, dateutil can load an IANA zone without exposing a filesystem
+    path.  The package's zoneinfo instance still maps equivalent zone objects
+    to their portable IANA names, which lets report replay remain independent
+    of the host's timezone-file layout.
+    """
+    try:
+        from dateutil import zoneinfo
+
+        zones = zoneinfo.get_zonefile_instance().zones
+    except (AttributeError, ImportError, OSError, TypeError):
+        return None
+
+    timezone = index.tz
+    candidates = sorted(
+        token
+        for token, candidate_timezone in zones.items()
+        if isinstance(token, str) and timezone == candidate_timezone and _timezone_token_replays(index, token)
+    )
+    if not candidates:
+        return None
+    return next((token for token in candidates if "/" in token), candidates[0])
 
 
 def _fixed_offset_token(index: pd.DatetimeIndex) -> str | None:
