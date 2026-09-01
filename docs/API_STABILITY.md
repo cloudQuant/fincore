@@ -1,6 +1,6 @@
 # API Stability Policy
 
-This policy describes the Fincore **0.5.0.dev0** breaking API.
+This policy describes the Fincore **0.5.0** breaking API.
 
 ## Public contract
 
@@ -33,7 +33,7 @@ locations during this pre-1.0 series.
 
 ## Versioning
 
-- `0.5.0.dev0` is a breaking development release.
+- `0.5.0` is a breaking release.
 - Any public domain-path or semantic change before 1.0 is recorded in the
   changelog and migration guide.
 - Capability-level semantic tests, immutable snapshots, and numerical oracle

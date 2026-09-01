@@ -1,11 +1,13 @@
 # Changelog
 
-All notable changes to Fincore are documented here. This changelog reports version **0.5.0.dev0**, the current development version.
+All notable changes to Fincore are documented here. This changelog reports version **0.5.0**, the current release.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and version labels follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.5.0] - 2026-09-01
 
 ### Changed
 

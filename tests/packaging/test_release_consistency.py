@@ -138,11 +138,14 @@ def test_release_consistency_rejects_prohibited_artifact_requirements(
 
 
 @pytest.mark.p3
-def test_release_consistency_accepts_current_pep440_development_version(clean_dist: Path) -> None:
-    """A development build has a PEP 440 version but deliberately no release tag."""
+def test_release_consistency_accepts_current_release_before_or_after_tag(clean_dist: Path) -> None:
+    """The release check accepts both branch candidates and the tagged release commit."""
     result = _release_check(clean_dist)
 
     assert result.returncode == 0, result.stdout + result.stderr
     version = _pyproject_version()
     assert f"CHANGELOG version statement ({version}) equals pyproject ({version})" in result.stdout
-    assert "development version; skipping release-tag check" in result.stdout
+    assert (
+        f"no release tag for {version} is present; treating checkout as a pre-tag candidate" in result.stdout
+        or f"git tag for version {version} points at HEAD" in result.stdout
+    )

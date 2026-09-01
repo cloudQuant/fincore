@@ -1,7 +1,7 @@
 # fincore 0.5
 
 fincore is a unified Python platform for quantitative performance, portfolio,
-factor, attribution, and risk analysis. Version **0.5.0.dev0** reorganises
+factor, attribution, and risk analysis. Version **0.5.0** reorganises
 those capabilities into focused canonical domains.
 
 This is a breaking release: upstream-shaped Empyrical, Pyfolio, and Alphalens

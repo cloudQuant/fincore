@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     import pytest
 
 
-def test_pyproject_version_is_next_dev() -> None:
-    assert _pyproject_version() == "0.5.0.dev0"
+def test_pyproject_version_is_current_release() -> None:
+    assert _pyproject_version() == "0.5.0"
 
 
 def test_sha256_is_deterministic(tmp_path: Path) -> None:

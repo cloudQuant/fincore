@@ -1,4 +1,4 @@
-# Migrating to fincore 0.5.0.dev0
+# Migrating to fincore 0.5.0
 
 ## Scope of the breaking change
 
@@ -94,7 +94,7 @@ shows the complete preparation-to-render path. Install
 
 ## Upgrade checklist
 
-1. Upgrade to Python 3.11+ and install `fincore>=0.5.0.dev0`.
+1. Upgrade to Python 3.11+ and install `fincore>=0.5.0`.
 2. Classify every old integration by business capability rather than by package
    or function name.
 3. Replace it with the owning domain operation in the table above.

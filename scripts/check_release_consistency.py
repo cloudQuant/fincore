@@ -11,8 +11,9 @@ pyproject.toml is the single project-metadata source.  This script cross-checks:
    set, the wheel filename, and the absence of a ``Requires-Dist: fincore[...]``
    self-dependency;
 4. source-level extras: no extra may reference ``fincore[...]``;
-5. git tag agreement, enforced only when tags are present in the checkout
-   (shallow CI clones carry none; release checkouts do).
+5. git tag agreement: a matching release tag must resolve to the checked
+   commit; an untagged stable checkout remains a pre-tag candidate so the
+   branch CI can validate the exact source before the tag exists.
 
 Exit code is 0 when every available fact is consistent, 1 otherwise.
 """
@@ -377,7 +378,29 @@ def _failures(dist_dir: Path | None) -> list[str]:
         elif not tags:
             print("NOTE: no git tags present in checkout (shallow clone); skipping tag check")
         else:
-            check(version in tags or f"v{version}" in tags, f"git tag for version {version} exists")
+            release_tags = sorted({version, f"v{version}"} & tags)
+            if not release_tags:
+                print(f"NOTE: no release tag for {version} is present; treating checkout as a pre-tag candidate")
+            else:
+                head = subprocess.run(
+                    ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                ).stdout.strip()
+                tagged_commits = {
+                    tag: subprocess.run(
+                        ["git", "-C", str(REPO_ROOT), "rev-parse", f"{tag}^{{commit}}"],
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                    ).stdout.strip()
+                    for tag in release_tags
+                }
+                check(
+                    head in tagged_commits.values(),
+                    f"git tag for version {version} points at HEAD ({tagged_commits})",
+                )
 
     return failures
 

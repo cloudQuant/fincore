@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fincore"
-version = "0.5.0.dev0"
+version = "0.5.0"
 description = "Quantitative performance and risk analytics for Python"
 readme = "README.md"
 license = "MIT"
@@ -17,7 +17,7 @@ authors = [
     {name = "cloudQuant", email = "yunjinqi@gmail.com"},
 ]
 classifiers = [
-    # 0.5 is a breaking, pre-release unified-core migration.
+    # 0.5 is a breaking unified-core release.
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -78,7 +78,7 @@ all = [
 
 [project.urls]
 Homepage = "https://github.com/cloudQuant/fincore"
-Documentation = "https://github.com/cloudQuant/fincore#readme"
+Documentation = "https://cloudquant.github.io/fincore/"
 Repository = "https://github.com/cloudQuant/fincore"
 Issues = "https://github.com/cloudQuant/fincore/issues"
 Changelog = "https://github.com/cloudQuant/fincore/blob/master/CHANGELOG.md"

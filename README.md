@@ -1,7 +1,7 @@
 # fincore | Quantitative Performance & Risk Analytics
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0.dev0-blueviolet.svg" alt="Version 0.5.0.dev0"/>
+  <img src="https://img.shields.io/badge/version-0.5.0-blueviolet.svg" alt="Version 0.5.0"/>
   <img src="https://img.shields.io/badge/status-Beta-orange.svg" alt="Status: Beta"/>
   <img src="https://img.shields.io/badge/python-3.11%2B-brightgreen.svg" alt="Python 3.11+"/>
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License"/>
@@ -22,7 +22,7 @@ Pyfolio, and Alphalens, but rebuilds them as one low-coupling core rather than
 three package-shaped APIs. The public contract is organized by domain and each
 capability has one canonical implementation path.
 
-Version **0.5.0.dev0** is a deliberately breaking pre-release. It does **not**
+Version **0.5.0** is a deliberately breaking release. It does **not**
 provide `fincore.empyrical`, `fincore.pyfolio`, `fincore.alphalens`, flat root
 metric functions, compatibility aliases, or façade classes. Update imports to
 the focused domain modules described in the [migration guide](docs/MIGRATION.md).

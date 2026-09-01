@@ -95,4 +95,5 @@ nav:
     - Development Guide: development/guide.md
     - API Stability: development/api-stability.md
     - Changelog: development/changelog.md
+    - Release notes 0.5.0: development/releases/0.5.0.md
   - Ecosystem: ecosystem.md

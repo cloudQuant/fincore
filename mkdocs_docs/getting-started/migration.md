@@ -1,6 +1,6 @@
 # Migration to fincore 0.5
 
-fincore **0.5.0.dev0** is a breaking unified-core release. It retains the
+fincore **0.5.0** is a breaking unified-core release. It retains the
 analytical capability areas associated with Empyrical, Pyfolio, and Alphalens,
 but it intentionally removes their path-shaped compatibility layers. There is
 no deprecated fallback period and no compatibility extra to install.
