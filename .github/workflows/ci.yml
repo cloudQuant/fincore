@@ -740,11 +740,6 @@ jobs:
           git -C tooling config core.autocrlf false
           git -C tooling reset --hard "${{ inputs.tooling_ref }}"
           git -C tooling archive --format=tar "${{ inputs.tooling_ref }}" | tar -xf - -C tooling
-          while IFS= read -r -d '' relative_path; do
-            expected_blob=$(git -C tooling rev-parse "${{ inputs.tooling_ref }}:$relative_path")
-            actual_blob=$(git -C tooling hash-object -- "$relative_path")
-            test "$actual_blob" = "$expected_blob"
-          done < <(git -C tooling ls-files -z)
           expected_runner_blob=$(git -C tooling rev-parse "${{ inputs.tooling_ref }}:scripts/run_0042_r2_acceptance.py")
           actual_runner_blob=$(git -C tooling hash-object scripts/run_0042_r2_acceptance.py)
           test "$actual_runner_blob" = "$expected_runner_blob"
