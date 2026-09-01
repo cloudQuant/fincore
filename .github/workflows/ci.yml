@@ -739,6 +739,7 @@ jobs:
           set -euo pipefail
           git -C tooling config core.autocrlf false
           git -C tooling reset --hard "${{ inputs.tooling_ref }}"
+          git -C tooling checkout-index --force --all
           test -z "$(git -C tooling status --porcelain=v1 --untracked-files=all)"
 
       - name: Set up D0-frozen Python

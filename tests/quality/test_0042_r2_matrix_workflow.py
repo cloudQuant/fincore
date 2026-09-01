@@ -118,7 +118,7 @@ def test_r2_matrix_cells_download_the_single_wheel_and_run_the_frozen_contract()
     assert frozen_bytes["if"] == "runner.os == 'Windows'"
     assert frozen_bytes["shell"] == "bash"
     assert "git -C tooling config core.autocrlf false" in frozen_bytes["run"]
-    assert 'git -C tooling reset --hard "${{ inputs.tooling_ref }}"' in frozen_bytes["run"]
+    assert "git -C tooling checkout-index --force --all" in frozen_bytes["run"]
     assert "git -C tooling status --porcelain=v1 --untracked-files=all" in frozen_bytes["run"]
     assert diagnostics["if"] == "failure()"
     assert diagnostics["working-directory"] == "candidate"
