@@ -215,7 +215,11 @@ class FamaFrenchModel:
             std_errors = np.sqrt(np.diag(cov))
         elif newey_west_lags > 0:
             cov = _newey_west_covariance(X_with_const, residuals, newey_west_lags)
-            std_errors = np.sqrt(np.diag(cov))
+            # A covariance diagonal is mathematically non-negative, but a
+            # rank-deficient short sample can leave tiny negative round-off
+            # values.  Clamp only at the square-root boundary so standard
+            # errors remain well-defined across supported NumPy versions.
+            std_errors = np.sqrt(np.maximum(np.diag(cov), 0.0))
         else:
             resid_var = np.sum(residuals**2) / max(n - k, 1)
             std_errors = np.sqrt(np.diag(resid_var * np.linalg.inv(X_with_const.T @ X_with_const)))

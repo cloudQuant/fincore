@@ -58,6 +58,22 @@ def test_fit_newey_west_handles_lags_longer_than_sample() -> None:
     assert out["std_errors"].shape[0] == 6
 
 
+def test_fit_newey_west_clamps_negative_roundoff_variances_before_sqrt(monkeypatch: pytest.MonkeyPatch) -> None:
+    idx = pd.RangeIndex(8)
+    returns = pd.Series(np.linspace(-0.02, 0.03, len(idx)), index=idx)
+    factor_data = _make_factor_data(idx)
+    covariance = np.diag([1.0, 0.5, 0.25, 0.125, 0.0625, -np.finfo(float).eps])
+
+    monkeypatch.setattr(fama_french, "_newey_west_covariance", lambda *_args: covariance)
+
+    model = FamaFrenchModel(model_type="5factor")
+    with np.errstate(invalid="raise"):
+        out = model.fit(returns, factor_data, newey_west_lags=1)
+
+    assert np.all(np.isfinite(out["std_errors"]))
+    assert np.all(out["std_errors"] >= 0.0)
+
+
 def test_fit_simple_ols_std_errors_path_when_newey_west_disabled() -> None:
     idx = pd.RangeIndex(60)
     rng = np.random.default_rng(7)

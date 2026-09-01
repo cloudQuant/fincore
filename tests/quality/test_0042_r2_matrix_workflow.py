@@ -74,6 +74,14 @@ def test_manual_r2_dispatch_requires_immutable_d0_and_tooling_inputs() -> None:
     assert inputs["tooling_ref"]["default"] == _d0_tooling_commit()
 
 
+def test_manual_r2_dispatch_skips_ordinary_ci_jobs() -> None:
+    r2_jobs = {BUILD_JOB, CELL_JOB, AGGREGATE_JOB}
+
+    for name, job in _jobs().items():
+        if name not in r2_jobs:
+            assert job["if"] == "github.event_name != 'workflow_dispatch'"
+
+
 def test_r2_build_job_creates_and_uploads_the_only_distribution() -> None:
     build = _jobs()[BUILD_JOB]
 
@@ -113,6 +121,7 @@ def test_r2_matrix_cells_download_the_single_wheel_and_run_the_frozen_contract()
     assert "--expected-bundle" in cell_run
     assert '--os "${{ matrix.os }}"' in cell_run
     assert "--python-full-version \"$(python -c 'import platform; print(platform.python_version())')\"" in cell_run
+    assert "--dependency-lane latest" in cell_run
     assert upload["uses"] == "actions/upload-artifact@v4"
     assert upload["with"]["name"] == "r2-acceptance-matrix-cell-${{ matrix.os }}"
 

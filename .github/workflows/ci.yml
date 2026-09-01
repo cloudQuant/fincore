@@ -35,6 +35,7 @@ concurrency:
 jobs:
   # Cross-platform matrix: fast suite + serial suite, full failure evidence.
   test:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -67,6 +68,7 @@ jobs:
 
   # Comparable non-serial runs: single-process vs xdist, JUnit-verified.
   non-serial-single:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -96,6 +98,7 @@ jobs:
           path: non-serial-single.xml
 
   non-serial-parallel:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,6 +128,7 @@ jobs:
           path: non-serial-parallel.xml
 
   compare-nonserial:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: [non-serial-single, non-serial-parallel]
     steps:
@@ -147,6 +151,7 @@ jobs:
             junit-reports/non-serial-single.xml junit-reports/non-serial-parallel.xml
 
   integration-offline:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -168,6 +173,7 @@ jobs:
           pytest -o addopts='' tests/ -q --tb=short --maxfail=0 -m integration_offline
 
   lint:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -188,6 +194,7 @@ jobs:
         run: ruff format --check fincore/ tests/ scripts/ examples/ benchmarks/
 
   typecheck:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -212,6 +219,7 @@ jobs:
           python -m compileall -q fincore
 
   security:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -229,6 +237,7 @@ jobs:
         run: bandit -r fincore/ -c pyproject.toml
 
   marker-audit:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -252,6 +261,7 @@ jobs:
   # (which includes serial tests in a single process) so the comparison is
   # apples-to-apples, plus a changed-line coverage floor of 95%.
   coverage-branch:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -290,6 +300,7 @@ jobs:
           path: coverage.json
 
   docs:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -309,6 +320,7 @@ jobs:
         run: python -m mkdocs build --strict
 
   perf:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -389,6 +401,7 @@ jobs:
   # Deliberately separate from the fast/xdist test matrix: these real enhanced
   # factor-analysis artifacts measure process RSS in fresh subprocesses.
   factor-benchmark-artifacts:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -432,6 +445,7 @@ jobs:
 
   # Release build gate: depends on every blocking job, not only tests.
   build:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs:
       [test, non-serial-single, non-serial-parallel, compare-nonserial,
@@ -527,6 +541,7 @@ jobs:
   # was generated from (always an ancestor); the local checker still enforces
   # exact HEAD equality at generation time.
   quality-snapshot-freshness:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: [coverage-branch]
     steps:
@@ -553,6 +568,7 @@ jobs:
   # tests.  It never contacts a market-data service, so a broken native TLS
   # stack on a developer machine cannot block the release gate.
   optional-extra-smoke:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -581,6 +597,7 @@ jobs:
   # Property tests run serially (-n 0) so Hypothesis shrinking and the global
   # seed stay reproducible; examples are bounded to keep CI time predictable.
   property-tests:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -840,7 +857,7 @@ jobs:
             --gate matrix-cell \
             --os "${{ matrix.os }}" \
             --python-full-version "$(python -c 'import platform; print(platform.python_version())')" \
-            --dependency-lane pinned \
+            --dependency-lane latest \
             --dependency-profile all \
             --runner-image "${{ matrix.runner }}" \
             --output-dir "$GITHUB_WORKSPACE/r2-matrix-cell/${{ matrix.os }}"
