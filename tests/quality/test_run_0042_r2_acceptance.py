@@ -385,6 +385,20 @@ def test_candidate_parity_uses_the_frozen_new_api_scenario_files() -> None:
     assert runner._required_candidate_parity_paths(ledger) == [str(REPOSITORY_ROOT / "tests/parity/test_metrics.py")]
 
 
+def test_quality_coverage_is_bound_to_the_candidate_source_root(tmp_path: Path) -> None:
+    """Fixture clones and wheel extracts must not inflate candidate coverage."""
+
+    runner = _load_runner_module()
+    candidate_root = tmp_path / "candidate"
+    candidate_root.mkdir()
+    (candidate_root / "fincore").mkdir()
+
+    arguments = runner._quality_pytest_arguments(candidate_root, tmp_path / "coverage.json")
+
+    assert f"--cov={candidate_root.resolve() / 'fincore'}" in arguments
+    assert "--cov=fincore" not in arguments
+
+
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:
     """The detached runner consumes the checker's documented lowercase status."""
 

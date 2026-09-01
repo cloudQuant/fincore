@@ -640,6 +640,30 @@ def _critical_coverage_violations(
     return violations
 
 
+def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list[str]:
+    """Run coverage only against the submitted source tree, never test fixtures."""
+
+    source_root = candidate_root / "fincore"
+    if not source_root.is_dir():
+        raise RunnerBlockedError(f"candidate package root is missing: {source_root}")
+    return [
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-p",
+        "no:rerunfailures",
+        "--tb=short",
+        "--maxfail=0",
+        f"--cov={source_root.resolve()}",
+        "--cov-branch",
+        f"--cov-report=json:{coverage_json}",
+        "-m",
+        "not integration_online and not benchmark",
+        str(_tooling_root() / "tests"),
+    ]
+
+
 def _run_quality_gate(args: argparse.Namespace, bundle: dict, candidate_root: Path, output_dir: Path) -> dict:
     _require_requested_flag(args.require_fresh_coverage, "require-fresh-coverage", "quality")
     if args.require_changed_lines is None or args.require_changed_lines < 95.0:
@@ -663,22 +687,7 @@ def _run_quality_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pa
         raise RunnerUsageError(f"quality coverage output already exists: {coverage_json}")
     pytest_record = _run_frozen_pytest(
         candidate_root=candidate_root,
-        pytest_arguments=[
-            "-o",
-            "addopts=",
-            "-p",
-            "no:cacheprovider",
-            "-p",
-            "no:rerunfailures",
-            "--tb=short",
-            "--maxfail=0",
-            "--cov=fincore",
-            "--cov-branch",
-            f"--cov-report=json:{coverage_json}",
-            "-m",
-            "not integration_online and not benchmark",
-            str(_tooling_root() / "tests"),
-        ],
+        pytest_arguments=_quality_pytest_arguments(candidate_root, coverage_json),
         timeout_seconds=1800,
     )
     if pytest_record["exit_code"] != 0 or not coverage_json.is_file():
