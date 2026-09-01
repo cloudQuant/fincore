@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "record_kind": "0042-r2-evidence-only-child",
+  "technical_candidate": {
+    "tested_parent_sha": "b1dd88b7ca34756043539ff65d8e198989c2bc3e",
+    "tested_parent_tree": "8ad871d540cd82a9856773a2da827bde3e4786fd",
+    "technical_verdict": "PASS",
+    "final_verdict_recorded_at": "2026-09-01T10:12:21.859533+00:00"
+  },
+  "remote_workflow": {
+    "run_id": 33493997878,
+    "url": "https://github.com/cloudQuant/fincore/actions/runs/33493997878",
+    "head_sha": "b1dd88b7ca34756043539ff65d8e198989c2bc3e",
+    "head_tree": "8ad871d540cd82a9856773a2da827bde3e4786fd",
+    "conclusion": "success"
+  },
+  "build_artifacts": {
+    "wheel": {
+      "filename": "fincore-0.5.0.dev0-py3-none-any.whl",
+      "sha256": "0249952b38c74e76be00ff873cba201da2585817ed341a6047080315e11432b8"
+    },
+    "sdist": {
+      "filename": "fincore-0.5.0.dev0.tar.gz",
+      "sha256": "ca91fd06fa3046afd3c77bdffa11c255aba01437e2ce0c2de043f154eed7d670"
+    },
+    "github_artifact_zip_sha256": "01ba4041d870ff651f9feec713c9d2df6d1837b83727a2ab52cb0591c7c23866"
+  },
+  "d0_bundle": {
+    "host_commit": "84cecf71dfdf1d9f9c0025c51b1b3eacffd20e2b",
+    "archive_sha256": "e83465765d038f6a4b0ab51aa632df34981b79a968d80d5b8218305b49d9ead6",
+    "bundle_digest": "c619685559664eafc531bf76e9f8f9b23857ee05a345b62d65ae054366c0db01"
+  },
+  "frozen_tooling": {
+    "commit": "cf45d01d922b77283135fc82678635a662f22ddb",
+    "tree": "02a8a922b25804292f3768e331f527bb2fbde169",
+    "runner_blob_sha256": "566ef5f3e7f2730478c64abf9df1877aa067bf2a9b514fb01f976c0aedf89dab"
+  },
+  "external_evidence_locator": {
+    "local_root": "/Users/yunjinqi/Documents/new_projects/fincore-0042-r2-evidence/final-evidence.b1dd88b.remote-33493997878",
+    "remote_artifact_root": "/Users/yunjinqi/Documents/new_projects/fincore-0042-r2-evidence/remote-run-33493997878"
+  },
+  "gate_evidence_sha256": {
+    "tests": "e3986425a8e7b839e7de7cf59dfb1d890ba6797db4cfd33501a9795e8e9d057f",
+    "static": "067aabe73cf083e7bba00d1b6ae261d3262a4c537e1d0f835ec6284aea4f1c7c",
+    "package": "49f679167017329b5d481da18096ddca44c191c21011b2dcc3b8e5ad59d3b2e8",
+    "quality": "b5d8c63d2326c094794ae29ad32b8dd13a372f6eca1b29976cc8e5a8a3720eba",
+    "parity": "eebaef8724a586501371beff16e2ce571f42e55e550bd7acfa3f2e9b152e3874",
+    "architecture": "41bcfdd22286253524be2ec1cbe5c2a34ab4c70056f67c8ffd5c716e922a6753",
+    "performance": "d5785391add058ab72e5aa9faa67eb8b0226e687d90c775c3303a32ade8b4990",
+    "report": "d6135f70dcc0f2c4e5083015677c52b38e5c7700e418546a9adff0637847ad44",
+    "installed": "1e9631924032cfbbf3cb6f990fd9febebe8542bf5a957e09eaa714fe2172eda9",
+    "matrix-aggregate": "7f2a324e64d30f0ea08e8521a5c8a79516817524bbec6b37f45bbda7a48dc681",
+    "final": "93af2dd23c8687c6800a81b439e2d07967ae413f9dc16cedcedb58195ccac23c"
+  },
+  "remote_matrix_artifact_zip_sha256": {
+    "linux": "1ebfc64676e30184eb8e47ba02021ffafa3c84102e3614665966d024ee4fdf8d",
+    "macos": "0e9ffa1640a7d511db6bbfefa0b4cb92ed1a5982ed67335ecbe91d3cfd1f3ae6",
+    "windows": "8327421c2d55915b603423f8f77e113e751838c1a1d3b433045476f0c661a17b",
+    "aggregate": "f56ab143032dab302526b0fa09dcb86432238140a8683de85db54c7c97967f17"
+  },
+  "release_boundary": {
+    "d_tech": "PASS",
+    "d_release": "NOT_AUTHORIZED",
+    "master_merge": "NOT_PERFORMED",
+    "tag": "NOT_PERFORMED",
+    "publish": "NOT_PERFORMED"
+  }
+}
