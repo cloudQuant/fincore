@@ -8,6 +8,7 @@ always reads the candidate workflow rather than the tooling checkout.
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,15 @@ BUILD_JOB = "r2-acceptance-build"
 CELL_JOB = "r2-acceptance-matrix-cell"
 AGGREGATE_JOB = "r2-acceptance-matrix-aggregate"
 DIST_ARTIFACT = "r2-acceptance-dist"
-TOOLING_SHA = "c0410399cec31b52ba154bae1b4909175da339f1"
+
+
+def _d0_tooling_commit() -> str:
+    manifest = json.loads(
+        (Path(SOURCE_ROOT or ".") / "docs" / "quality" / "0042-r2-d0-bundle-manifest.json").read_text(encoding="utf-8")
+    )
+    commit = manifest["tooling"]["commit"]
+    assert isinstance(commit, str)
+    return commit
 
 
 def _workflow() -> dict[str, Any]:
@@ -66,7 +75,7 @@ def test_manual_r2_dispatch_requires_immutable_d0_and_tooling_inputs() -> None:
     assert workflow["permissions"] == {"contents": "read"}
     assert inputs["d0_bundle_url"]["required"] == "true"
     assert inputs["d0_bundle_sha256"]["required"] == "true"
-    assert inputs["tooling_ref"]["default"] == TOOLING_SHA
+    assert inputs["tooling_ref"]["default"] == _d0_tooling_commit()
 
 
 def test_r2_build_job_creates_and_uploads_the_only_distribution() -> None:
