@@ -366,17 +366,17 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install -e ".[dev]"
 
-      # The previous run's results act as the platform-labelled baseline
-      # (cache keyed by runner OS/arch).  On a cold cache the comparison
-      # still enforces the structural gates (superlinearity, window RSS
-      # scaling, round-trip share-amount scaling).
+      # The previous run's results act as the platform-labelled baseline.
+      # Cache v2 proved non-comparable across otherwise unchanged candidates;
+      # v3 binds the cache to the benchmark-runner and comparison protocol so
+      # a runner change starts a fresh, structural-gates-only measurement.
+      # On a cold cache the comparison still enforces superlinearity, window
+      # RSS scaling, and round-trip share-amount scaling.
       - name: Restore previous benchmark baseline
         uses: actions/cache@v6
         with:
           path: .benchmarks/
-          key: perf-baseline-v2-${{ runner.os }}-${{ runner.arch }}
-          restore-keys: |
-            perf-baseline-v2-${{ runner.os }}-${{ runner.arch }}
+          key: perf-baseline-v3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/run_rolling_benchmarks.py', 'scripts/run_round_trip_benchmarks.py', 'scripts/compare_benchmarks.py') }}
           save-always: true
 
       - name: Run rolling benchmarks

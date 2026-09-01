@@ -102,6 +102,19 @@ def test_quality_snapshot_gate_allows_only_a_snapshot_output_commit() -> None:
     assert "--skip-commit-check" not in freshness_run
 
 
+def test_perf_cache_is_bound_to_the_benchmark_protocol() -> None:
+    perf = _jobs()["perf"]
+    cache = _step_named(perf, "Restore previous benchmark baseline")
+    cache_key = cache["with"]["key"]
+
+    assert "perf-baseline-v3-" in cache_key
+    assert "hashFiles(" in cache_key
+    assert "run_rolling_benchmarks.py" in cache_key
+    assert "run_round_trip_benchmarks.py" in cache_key
+    assert "compare_benchmarks.py" in cache_key
+    assert "restore-keys" not in cache["with"]
+
+
 def test_r2_build_job_creates_and_uploads_the_only_distribution() -> None:
     build = _jobs()[BUILD_JOB]
 
