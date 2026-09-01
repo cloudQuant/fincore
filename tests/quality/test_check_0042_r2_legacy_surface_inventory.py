@@ -248,6 +248,11 @@ def test_accepts_dot_separated_capability_ids_from_the_existing_registry(tmp_pat
 
     assert result["record_count"] == 2
 
+    alias = tmp_path / "raw-discovery-alias.json"
+    alias.symlink_to(raw_path)
+    with pytest.raises(checker.LegacySurfaceInventoryValidationError, match="symbolic link"):
+        checker._read_regular_file(alias, "raw discovery")
+
 
 def test_preparatory_inventory_refuses_alias_only_until_full_independent_evidence_exists(tmp_path: Path) -> None:
     checker = _load_checker()
@@ -369,15 +374,16 @@ def test_path_wrapper_binds_parse_and_hash_to_the_same_raw_bytes(
     assert original_raw != raw_path.read_bytes()
 
 
-def test_protected_reader_fails_closed_when_the_platform_lacks_no_follow(
+def test_protected_reader_preserves_regular_file_identity_without_no_follow(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     checker = _load_checker()
     raw_path, inventory_path = _write_minimal_pair(tmp_path)
     monkeypatch.delattr(checker.os, "O_NOFOLLOW", raising=False)
 
-    with pytest.raises(checker.LegacySurfaceInventoryValidationError, match="O_NOFOLLOW"):
-        checker.validate_legacy_surface_inventory(raw_path, inventory_path)
+    result = checker.validate_legacy_surface_inventory(raw_path, inventory_path)
+
+    assert result["record_count"] == 2
 
 
 def test_cli_emits_a_scoped_success_summary(tmp_path: Path) -> None:

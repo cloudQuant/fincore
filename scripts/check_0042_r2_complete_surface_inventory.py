@@ -113,16 +113,24 @@ def canonical_sha256(value: object) -> str:
 
 
 def _read_regular_file(path: Path, label: str) -> bytes:
-    if not hasattr(os, "O_NOFOLLOW"):
-        raise CompleteInventoryValidationError(
-            "protected complete-inventory reads require os.O_NOFOLLOW and fail closed when unavailable"
-        )
+    try:
+        expected_metadata = path.stat(follow_symlinks=False)
+    except OSError as exc:
+        raise CompleteInventoryValidationError(f"cannot safely inspect {label}: {exc}") from exc
+    if not stat.S_ISREG(expected_metadata.st_mode):
+        raise CompleteInventoryValidationError(f"{label} must be a regular file, not a symbolic link: {path}")
+
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
     descriptor: int | None = None
     try:
-        descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | os.O_NOFOLLOW)
+        descriptor = os.open(path, flags)
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
             raise CompleteInventoryValidationError(f"{label} must be a regular file, not a symbolic link: {path}")
+        if (metadata.st_dev, metadata.st_ino) != (expected_metadata.st_dev, expected_metadata.st_ino):
+            raise CompleteInventoryValidationError(f"{label} changed identity while opening: {path}")
         with os.fdopen(descriptor, "rb") as stream:
             descriptor = None
             return stream.read()
