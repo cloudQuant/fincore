@@ -21,7 +21,7 @@ on:
         type: string
       tooling_ref:
         description: Frozen 0042-R2 acceptance tooling commit available in this repository
-        default: 4b2b0ede6bcf8ed30c2811246d08b5db80e04375
+        default: 1d2371a3937250560aa85681992b3ee9efb2ce54
         required: true
         type: string
 
