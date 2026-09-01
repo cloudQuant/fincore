@@ -441,6 +441,17 @@ def _require_requested_flag(value: bool, name: str, gate: str) -> None:
         raise RunnerBlockedError(f"{gate} requires --{name}")
 
 
+def _non_benchmark_selector_arguments() -> list[str]:
+    """Exclude benchmark modules during collection as well as execution."""
+
+    return [
+        "-m",
+        "not integration_online and not benchmark",
+        "--ignore",
+        str(_tooling_root() / "tests" / "benchmarks"),
+    ]
+
+
 def _run_tests_gate(args: argparse.Namespace, candidate_root: Path) -> dict:
     _require_requested_flag(args.include_slow, "include-slow", "tests")
     _require_requested_flag(args.include_serial, "include-serial", "tests")
@@ -458,8 +469,7 @@ def _run_tests_gate(args: argparse.Namespace, candidate_root: Path) -> dict:
             "no:rerunfailures",
             "--tb=short",
             "--maxfail=0",
-            "-m",
-            "not integration_online and not benchmark",
+            *_non_benchmark_selector_arguments(),
             str(_tooling_root() / "tests"),
         ],
         timeout_seconds=1800,
@@ -665,8 +675,7 @@ def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path | None) 
         f"--cov={source_root.resolve()}",
         "--cov-branch",
         coverage_report,
-        "-m",
-        "not integration_online and not benchmark",
+        *_non_benchmark_selector_arguments(),
         str(_tooling_root() / "tests"),
     ]
 
@@ -693,8 +702,7 @@ def _candidate_coverage_gap_pytest_arguments(candidate_root: Path, coverage_json
         "--cov-branch",
         "--cov-append",
         f"--cov-report=json:{coverage_json}",
-        "-m",
-        "not integration_online and not benchmark",
+        *_non_benchmark_selector_arguments(),
         str(coverage_gap_root),
     ]
 
@@ -1267,8 +1275,7 @@ def _run_matrix_cell_gate(
                 "no:rerunfailures",
                 "--tb=short",
                 "--maxfail=0",
-                "-m",
-                "not integration_online and not benchmark",
+                *_non_benchmark_selector_arguments(),
                 str(_tooling_root() / "tests"),
             ],
             timeout_seconds=1800,
@@ -1281,6 +1288,7 @@ def _run_matrix_cell_gate(
             {
                 "gate": "matrix-cell",
                 "selector": "not integration_online and not benchmark",
+                "collection_exclusion": "tests/benchmarks",
                 "tooling_tests": "tests",
             }
         ),

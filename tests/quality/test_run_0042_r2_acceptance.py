@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import inspect
 import json
 import subprocess
 import sys
@@ -397,6 +398,26 @@ def test_quality_coverage_is_bound_to_the_candidate_source_root(tmp_path: Path) 
 
     assert f"--cov={candidate_root.resolve() / 'fincore'}" in arguments
     assert "--cov=fincore" not in arguments
+
+
+def test_non_benchmark_selector_ignores_benchmark_collection_tree() -> None:
+    """Marker filtering alone is too late for wheel-target benchmark imports."""
+
+    runner = _load_runner_module()
+
+    arguments = runner._non_benchmark_selector_arguments()
+
+    assert arguments[:2] == ["-m", "not integration_online and not benchmark"]
+    assert arguments[2:] == ["--ignore", str(REPOSITORY_ROOT / "tests" / "benchmarks")]
+
+
+def test_tests_and_matrix_gates_use_collection_exclusion() -> None:
+    """Both broad gates must apply the collection-time exclusion."""
+
+    runner = _load_runner_module()
+
+    for gate in (runner._run_tests_gate, runner._run_matrix_cell_gate):
+        assert "_non_benchmark_selector_arguments()" in inspect.getsource(gate)
 
 
 def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(tmp_path: Path) -> None:
