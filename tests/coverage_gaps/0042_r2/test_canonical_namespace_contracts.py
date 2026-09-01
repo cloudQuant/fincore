@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-
 _EMPTY_CANONICAL_NAMESPACES = (
     "fincore.attribution",
     "fincore.data",
@@ -29,10 +28,7 @@ _EMPTY_CANONICAL_NAMESPACES = (
 def test_canonical_namespaces_load_without_package_root_compatibility_exports() -> None:
     """Domain roots remain importable but keep leaf APIs at their owner paths."""
 
-    namespaces = {
-        name: importlib.reload(importlib.import_module(name))
-        for name in _EMPTY_CANONICAL_NAMESPACES
-    }
+    namespaces = {name: importlib.reload(importlib.import_module(name)) for name in _EMPTY_CANONICAL_NAMESPACES}
     runtime = importlib.reload(importlib.import_module("fincore.runtime"))
     root = importlib.reload(importlib.import_module("fincore"))
 
@@ -131,9 +127,9 @@ def test_capacity_assessment_delegates_to_each_direct_liquidity_kernel(
 
 
 def test_shared_kernel_and_runtime_boundaries_reject_invalid_direct_inputs() -> None:
+    from fincore.metrics._rolling import rolling_window
     from fincore.metrics.basic import ensure_datetime_index_series
     from fincore.metrics.frequencies import annualization_factor, pandas_frequency
-    from fincore.metrics._rolling import rolling_window
     from fincore.runtime.backends import NumPyBackend
     from fincore.runtime.engine import OperationRequest
 
