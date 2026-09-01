@@ -11,7 +11,7 @@ numpy==1.24.0
 pandas==1.5.3
 scipy==1.9.3
 pytz==2023.3
-packaging==21.0
+packaging==26.3
 
 # data-yahoo / data-cn transitives: keep a working TLS stack.
 pyOpenSSL==25.0.0
