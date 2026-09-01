@@ -6,6 +6,27 @@ on:
     tags: ["*"]
   pull_request:
     branches: [master, main]
+  # 0042-R2 technical matrix is deliberately manual.  It requires an
+  # independently retained D0 bundle and frozen tooling commit; ordinary PR
+  # CI must never manufacture either expected input from candidate code.
+  workflow_dispatch:
+    inputs:
+      d0_bundle_url:
+        description: HTTPS URL for the immutable ZIP whose root contains d0-bundle-manifest.json
+        required: true
+        type: string
+      d0_bundle_sha256:
+        description: SHA256 of the immutable D0 bundle ZIP
+        required: true
+        type: string
+      tooling_ref:
+        description: Frozen 0042-R2 acceptance tooling commit available in this repository
+        default: 8c9bac19c4cddbb6f707b948aee210d264f61c6e
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -579,3 +600,414 @@ jobs:
       - name: Run property and oracle suites (serial)
         run: |
           pytest -o addopts='' tests/property -q --tb=short -n 0
+
+  # This is intentionally distinct from ordinary editable-install CI.  It
+  # builds exactly one wheel/sdist pair, hands that immutable artifact to the
+  # three OS cells, and consumes the frozen runner/D0 contract.  A missing D0
+  # archive, frozen tooling ref, or cell remains a failure/blocker rather than
+  # falling back to mutable candidate expectations.
+  r2-acceptance-build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ steps.candidate.outputs.sha }}
+      candidate_tree: ${{ steps.candidate.outputs.tree }}
+      dist_artifact_id: ${{ steps.upload-dist.outputs.artifact-id }}
+      dist_manifest_sha256: ${{ steps.manifest.outputs.sha256 }}
+    steps:
+      - name: Checkout the selected R2 candidate
+        uses: actions/checkout@v4
+        with:
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up R2 build Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11.8"
+
+      - name: Build the one R2 distribution
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          python -m pip install --upgrade pip build twine
+          python -m build --outdir ../r2-acceptance-dist
+          python -m twine check ../r2-acceptance-dist/*.whl ../r2-acceptance-dist/*.tar.gz
+          python - <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          from pathlib import Path
+
+          dist = Path("../r2-acceptance-dist")
+          artifacts = [*sorted(dist.glob("*.whl")), *sorted(dist.glob("*.tar.gz"))]
+          if len(artifacts) != 2:
+              raise SystemExit(f"expected one wheel and one sdist, found: {artifacts}")
+          manifest = "".join(
+              f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n" for path in artifacts
+          )
+          (dist / "build-artifacts.sha256").write_text(manifest, encoding="utf-8")
+          PY
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Record immutable build identity
+        id: candidate
+        working-directory: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+
+      - name: Record immutable distribution manifest digest
+        id: manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "sha256=$(sha256sum r2-acceptance-dist/build-artifacts.sha256 | cut -d ' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the immutable R2 distribution
+        id: upload-dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2-acceptance-dist
+          path: r2-acceptance-dist
+          if-no-files-found: error
+
+  r2-acceptance-matrix-cell:
+    if: github.event_name == 'workflow_dispatch'
+    needs: r2-acceptance-build
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            runner: ubuntu-latest
+            python: "3.11.8"
+          - os: macos
+            runner: macos-latest
+            python: "3.11.8"
+          - os: windows
+            runner: windows-latest
+            python: "3.11.8"
+    steps:
+      - name: Checkout the exact R2 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout frozen R2 acceptance tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tooling_ref }}
+          path: tooling
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up D0-frozen Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Download the immutable R2 distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: r2-acceptance-dist
+          path: r2-acceptance-dist
+
+      - name: Verify the immutable R2 distribution
+        shell: python
+        working-directory: r2-acceptance-dist
+        run: |
+          import hashlib
+          from pathlib import Path
+
+          manifest = Path("build-artifacts.sha256")
+          expected = {}
+          for line in manifest.read_text(encoding="utf-8").splitlines():
+              digest, name = line.split(maxsplit=1)
+              expected[name.strip()] = digest
+          artifacts = [*sorted(Path(".").glob("*.whl")), *sorted(Path(".").glob("*.tar.gz"))]
+          if len(artifacts) != 2 or set(expected) != {path.name for path in artifacts}:
+              raise SystemExit("the build artifact does not contain exactly one wheel and one sdist")
+          for artifact in artifacts:
+              if hashlib.sha256(artifact.read_bytes()).hexdigest() != expected[artifact.name]:
+                  raise SystemExit(f"distribution digest mismatch: {artifact.name}")
+
+      - name: Materialize the immutable D0 bundle
+        shell: python
+        env:
+          D0_BUNDLE_URL: ${{ inputs.d0_bundle_url }}
+          D0_BUNDLE_SHA256: ${{ inputs.d0_bundle_sha256 }}
+        run: |
+          import hashlib
+          import os
+          import string
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          expected = os.environ["D0_BUNDLE_SHA256"].lower()
+          url = os.environ["D0_BUNDLE_URL"]
+          if not url.startswith("https://"):
+              raise SystemExit("D0 bundle URL must use HTTPS")
+          if len(expected) != 64 or any(char not in string.hexdigits for char in expected):
+              raise SystemExit("D0 bundle SHA256 must be a 64-character hexadecimal digest")
+          archive = Path("r2-d0-bundle.zip").resolve()
+          with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as target:
+              while chunk := response.read(1024 * 1024):
+                  target.write(chunk)
+          if hashlib.sha256(archive.read_bytes()).hexdigest() != expected:
+              raise SystemExit("D0 bundle archive digest mismatch")
+          destination = Path("r2-d0").resolve()
+          destination.mkdir()
+          with zipfile.ZipFile(archive) as bundle:
+              for member in bundle.infolist():
+                  target = (destination / member.filename).resolve()
+                  if target != destination and destination not in target.parents:
+                      raise SystemExit(f"unsafe D0 archive member: {member.filename}")
+              bundle.extractall(destination)
+          if not (destination / "d0-bundle-manifest.json").is_file():
+              raise SystemExit("D0 bundle root must contain d0-bundle-manifest.json")
+
+      - name: Install R2 matrix-cell dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel=$(find "$GITHUB_WORKSPACE/r2-acceptance-dist" -maxdepth 1 -type f -name '*.whl' -print)
+          test "$(printf '%s\n' "$wheel" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install "$wheel[dev,visualization,report-pdf,report-xlsx,bayesian,data-yahoo,data-alphavantage,data-pandas-datareader,data-cn]"
+          python -m pip install -r candidate/requirements-test.txt
+
+      - name: Bind the immutable build artifact to this matrix cell
+        shell: python
+        env:
+          BUILD_ARTIFACT_ID: ${{ needs.r2-acceptance-build.outputs.dist_artifact_id }}
+          BUILD_MANIFEST_SHA256: ${{ needs.r2-acceptance-build.outputs.dist_manifest_sha256 }}
+          CANDIDATE_SHA: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          CANDIDATE_TREE: ${{ needs.r2-acceptance-build.outputs.candidate_tree }}
+          MATRIX_OS: ${{ matrix.os }}
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          output = Path("r2-matrix-cell") / os.environ["MATRIX_OS"]
+          output.mkdir(parents=True)
+          (output / "r2-build-handoff.json").write_text(
+              json.dumps(
+                  {
+                      "artifact_id": os.environ["BUILD_ARTIFACT_ID"],
+                      "artifact_name": "r2-acceptance-dist",
+                      "build_manifest_sha256": os.environ["BUILD_MANIFEST_SHA256"],
+                      "candidate_commit": os.environ["CANDIDATE_SHA"],
+                      "candidate_tree": os.environ["CANDIDATE_TREE"],
+                      "matrix_os": os.environ["MATRIX_OS"],
+                      "workflow_ref": os.environ["GITHUB_WORKFLOW_REF"],
+                      "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+                  },
+                  indent=2,
+                  sort_keys=True,
+              )
+              + "\n",
+              encoding="utf-8",
+          )
+
+      - name: Run the frozen R2 matrix-cell contract
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
+        run: |
+          set -euo pipefail
+          test -z "$(git -C candidate status --porcelain=v1 --untracked-files=all)"
+          wheel=$(find "$GITHUB_WORKSPACE/r2-acceptance-dist" -maxdepth 1 -type f -name '*.whl' -print)
+          test "$(printf '%s\n' "$wheel" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1
+          python -I "$GITHUB_WORKSPACE/tooling/scripts/run_0042_r2_acceptance.py" \
+            --candidate-root "$GITHUB_WORKSPACE/candidate" \
+            --candidate-head "$CANDIDATE_SHA" \
+            --candidate-wheel "$wheel" \
+            --expected-bundle "$GITHUB_WORKSPACE/r2-d0" \
+            --gate matrix-cell \
+            --os "${{ matrix.os }}" \
+            --python-full-version "$(python -c 'import platform; print(platform.python_version())')" \
+            --dependency-lane pinned \
+            --dependency-profile all \
+            --runner-image "${{ matrix.runner }}" \
+            --output-dir "$GITHUB_WORKSPACE/r2-matrix-cell/${{ matrix.os }}"
+
+      - name: Upload R2 matrix-cell evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2-acceptance-matrix-cell-${{ matrix.os }}
+          path: r2-matrix-cell/${{ matrix.os }}
+          if-no-files-found: warn
+
+  r2-acceptance-matrix-aggregate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [r2-acceptance-build, r2-acceptance-matrix-cell]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the exact R2 candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout frozen R2 acceptance tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tooling_ref }}
+          path: tooling
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up D0-frozen Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11.8"
+
+      - name: Download the immutable R2 distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: r2-acceptance-dist
+          path: r2-acceptance-dist
+
+      - name: Download all R2 matrix-cell evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: r2-acceptance-matrix-cell-*
+          path: r2-matrix-evidence
+          merge-multiple: false
+
+      - name: Verify the immutable R2 distribution
+        shell: python
+        working-directory: r2-acceptance-dist
+        run: |
+          import hashlib
+          from pathlib import Path
+
+          manifest = Path("build-artifacts.sha256")
+          expected = {}
+          for line in manifest.read_text(encoding="utf-8").splitlines():
+              digest, name = line.split(maxsplit=1)
+              expected[name.strip()] = digest
+          artifacts = [*sorted(Path(".").glob("*.whl")), *sorted(Path(".").glob("*.tar.gz"))]
+          if len(artifacts) != 2 or set(expected) != {path.name for path in artifacts}:
+              raise SystemExit("the build artifact does not contain exactly one wheel and one sdist")
+          for artifact in artifacts:
+              if hashlib.sha256(artifact.read_bytes()).hexdigest() != expected[artifact.name]:
+                  raise SystemExit(f"distribution digest mismatch: {artifact.name}")
+
+      - name: Materialize the immutable D0 bundle
+        shell: python
+        env:
+          D0_BUNDLE_URL: ${{ inputs.d0_bundle_url }}
+          D0_BUNDLE_SHA256: ${{ inputs.d0_bundle_sha256 }}
+        run: |
+          import hashlib
+          import os
+          import string
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+
+          expected = os.environ["D0_BUNDLE_SHA256"].lower()
+          url = os.environ["D0_BUNDLE_URL"]
+          if not url.startswith("https://"):
+              raise SystemExit("D0 bundle URL must use HTTPS")
+          if len(expected) != 64 or any(char not in string.hexdigits for char in expected):
+              raise SystemExit("D0 bundle SHA256 must be a 64-character hexadecimal digest")
+          archive = Path("r2-d0-bundle.zip").resolve()
+          with urllib.request.urlopen(url, timeout=60) as response, archive.open("wb") as target:
+              while chunk := response.read(1024 * 1024):
+                  target.write(chunk)
+          if hashlib.sha256(archive.read_bytes()).hexdigest() != expected:
+              raise SystemExit("D0 bundle archive digest mismatch")
+          destination = Path("r2-d0").resolve()
+          destination.mkdir()
+          with zipfile.ZipFile(archive) as bundle:
+              for member in bundle.infolist():
+                  target = (destination / member.filename).resolve()
+                  if target != destination and destination not in target.parents:
+                      raise SystemExit(f"unsafe D0 archive member: {member.filename}")
+              bundle.extractall(destination)
+          if not (destination / "d0-bundle-manifest.json").is_file():
+              raise SystemExit("D0 bundle root must contain d0-bundle-manifest.json")
+
+      - name: Validate R2 build handoff sidecars
+        shell: python
+        env:
+          BUILD_ARTIFACT_ID: ${{ needs.r2-acceptance-build.outputs.dist_artifact_id }}
+          BUILD_MANIFEST_SHA256: ${{ needs.r2-acceptance-build.outputs.dist_manifest_sha256 }}
+          CANDIDATE_SHA: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          CANDIDATE_TREE: ${{ needs.r2-acceptance-build.outputs.candidate_tree }}
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          expected_os = {"linux", "macos", "windows"}
+          records = {}
+          for path in Path("r2-matrix-evidence").rglob("r2-build-handoff.json"):
+              record = json.loads(path.read_text(encoding="utf-8"))
+              operating_system = record.get("matrix_os")
+              if operating_system in records:
+                  raise SystemExit(f"duplicate matrix handoff: {operating_system}")
+              records[operating_system] = record
+          if set(records) != expected_os:
+              raise SystemExit(f"matrix handoff set mismatch: {sorted(records)}")
+          for operating_system, record in records.items():
+              expected = {
+                  "artifact_id": os.environ["BUILD_ARTIFACT_ID"],
+                  "artifact_name": "r2-acceptance-dist",
+                  "build_manifest_sha256": os.environ["BUILD_MANIFEST_SHA256"],
+                  "candidate_commit": os.environ["CANDIDATE_SHA"],
+                  "candidate_tree": os.environ["CANDIDATE_TREE"],
+                  "matrix_os": operating_system,
+                  "workflow_run_id": os.environ["GITHUB_RUN_ID"],
+              }
+              if any(record.get(key) != value for key, value in expected.items()):
+                  raise SystemExit(f"invalid matrix handoff: {operating_system}")
+
+      - name: Run the frozen R2 matrix aggregate contract
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ needs.r2-acceptance-build.outputs.candidate_sha }}
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
+        run: |
+          set -euo pipefail
+          test -z "$(git -C candidate status --porcelain=v1 --untracked-files=all)"
+          wheel=$(find "$GITHUB_WORKSPACE/r2-acceptance-dist" -maxdepth 1 -type f -name '*.whl' -print)
+          test "$(printf '%s\n' "$wheel" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1
+          python -I "$GITHUB_WORKSPACE/tooling/scripts/run_0042_r2_acceptance.py" \
+            --candidate-root "$GITHUB_WORKSPACE/candidate" \
+            --candidate-head "$CANDIDATE_SHA" \
+            --candidate-wheel "$wheel" \
+            --expected-bundle "$GITHUB_WORKSPACE/r2-d0" \
+            --gate matrix-aggregate \
+            --matrix-evidence-dir "$GITHUB_WORKSPACE/r2-matrix-evidence" \
+            --require-os linux macos windows \
+            --require-support-window-from-bundle \
+            --output-dir "$GITHUB_WORKSPACE/r2-matrix-aggregate"
+
+      - name: Upload R2 matrix aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2-acceptance-matrix-aggregate
+          path: r2-matrix-aggregate
+          if-no-files-found: warn

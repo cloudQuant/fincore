@@ -7,6 +7,7 @@ pytest-benchmark>=3.2
 pytest-sugar>=0.9
 parameterized>=0.7
 hypothesis>=6.100
+PyYAML>=6.0
 
 # Numerical dependencies (align with pyproject.toml)
 numpy>=1.24.0

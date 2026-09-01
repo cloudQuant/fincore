@@ -59,6 +59,7 @@ dev = [
   "pytest>=6", "pytest-xdist>=2", "pytest-cov>=2.10",
   "pytest-benchmark>=3.2", "pytest-sugar>=0.9", "parameterized>=0.7",
   "hypothesis>=6.100",
+  "PyYAML>=6.0",
   "ruff>=0.4", "mypy>=1.5", "types-requests>=2.25",
   "yfinance>=0.2", "requests>=2.25",
   "statsmodels>=0.14", "matplotlib>=3.3", "seaborn>=0.11", "ipython>=7", "PyPDF2>=3",
