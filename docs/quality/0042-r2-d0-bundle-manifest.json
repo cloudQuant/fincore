@@ -7,7 +7,7 @@
     },
     "capability_baseline": {
       "path": "capability-baseline.json",
-      "sha256": "f00a38f6d31ca8cba334a55e24368cbf6a1f3d21cbd0217961900b1b13a6b8c1"
+      "sha256": "2b12e2e52a281567d012bbd58b327dee84b666ba00153a5b21d334b18e7f21c0"
     },
     "performance_baseline": {
       "path": "performance-baseline.json",
@@ -28,13 +28,13 @@
       },
       "git_bundle": {
         "path": "baseline-source.bundle",
-        "sha256": "039c5736ddd5a6bac38033e092c003060a5d1b6ead451f9b7ff0fa9717c66de3"
+        "sha256": "e617b9648e1be01225d4155f67e4a84d485b6736d75d64fe6bc3949b1c54b425"
       }
     },
     "tree": "1644614afdfa14d9642305203a9dbd7942e812e1"
   },
   "capture": {
-    "capability_input_capture_sha256": "e9068b94aea3eb072467f2b26e603b29b86fdcd9901db7875b11776f6fe95968",
+    "capability_input_capture_sha256": "21ff38e4c80b25a5eac015a34ae86e6c103dfaf2c9a9decfa412cb45199873d4",
     "quality_baseline_markdown_sha256": "2d2263a961246375b0e00e32a67757d02259b2181fb2ac5e76c77fda076f2f81",
     "quality_d0_branch_coverage": 42.0
   },
