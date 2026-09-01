@@ -17,7 +17,7 @@ def canonical_sha256(value: object) -> str:
 
 
 def _write_json(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    path.write_bytes((json.dumps(value, indent=2) + "\n").encode("utf-8"))
 
 
 def _sha256(path: Path) -> str:

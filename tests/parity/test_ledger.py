@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -136,6 +137,63 @@ def _capture(source_root: Path, paths: dict[str, Path], output: Path) -> subproc
         text=True,
         check=False,
     )
+
+
+def test_complete_surface_inputs_bind_initial_git_blobs_after_windows_line_ending_normalization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    paths = {
+        "legacy_discovery": source_root / "legacy-discovery.json",
+        "surface_union": source_root / "surface-union.json",
+        "inventory": source_root / "inventory.json",
+    }
+
+    def write_text_with_windows_newlines(
+        path: Path,
+        data: str,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> int:
+        del newline
+        return path.write_bytes(data.replace("\n", "\r\n").encode(encoding or "utf-8", errors or "strict"))
+
+    monkeypatch.setattr(Path, "write_text", write_text_with_windows_newlines)
+    write_minimal_complete_surface_inputs(paths)
+
+    subprocess.run(["git", "init", "-q"], cwd=source_root, check=True)
+    subprocess.run(["git", "config", "core.autocrlf", "true"], cwd=source_root, check=True)
+    subprocess.run(["git", "add", "."], cwd=source_root, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=0042-R2 test",
+            "-c",
+            "user.email=0042-r2@example.invalid",
+            "commit",
+            "-qm",
+            "baseline inputs",
+        ],
+        cwd=source_root,
+        check=True,
+    )
+
+    inventory = json.loads(paths["inventory"].read_text(encoding="utf-8"))
+    source_artifacts = {artifact["source_id"]: artifact for artifact in inventory["source_artifacts"]}
+    for source_id, path_key in (("legacy_surface_discovery", "legacy_discovery"), ("surface_union", "surface_union")):
+        path = paths[path_key]
+        result = subprocess.run(
+            ["git", "cat-file", "blob", f"HEAD:{path.name}"],
+            cwd=source_root,
+            capture_output=True,
+            check=True,
+        )
+
+        assert b"\r\n" not in result.stdout
+        assert source_artifacts[source_id]["sha256"] == hashlib.sha256(result.stdout).hexdigest()
 
 
 def test_valid_minimal_ledger_is_accepted(tmp_path: Path) -> None:
