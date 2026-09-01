@@ -400,21 +400,25 @@ def test_quality_coverage_is_bound_to_the_candidate_source_root(tmp_path: Path) 
 
 
 def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(tmp_path: Path) -> None:
-    """Candidate-owned gap tests supplement, but never replace, frozen oracle tests."""
+    """Candidate-owned gap tests supplement frozen oracle tests in a second process."""
 
     runner = _load_runner_module()
     candidate_root = tmp_path / "candidate"
     (candidate_root / "fincore").mkdir(parents=True)
     coverage_root = candidate_root / "tests" / "coverage_gaps" / "0042_r2"
 
-    without_gap_tests = runner._quality_pytest_arguments(candidate_root, tmp_path / "without.json")
-    assert str(coverage_root) not in without_gap_tests
+    oracle_arguments = runner._quality_pytest_arguments(candidate_root, tmp_path / "oracle.json")
+    assert str(REPOSITORY_ROOT / "tests") in oracle_arguments
+    assert str(coverage_root) not in oracle_arguments
+    assert runner._candidate_coverage_gap_pytest_arguments(candidate_root, tmp_path / "without.json") is None
 
     coverage_root.mkdir(parents=True)
-    with_gap_tests = runner._quality_pytest_arguments(candidate_root, tmp_path / "with.json")
+    gap_arguments = runner._candidate_coverage_gap_pytest_arguments(candidate_root, tmp_path / "with.json")
 
-    assert str(REPOSITORY_ROOT / "tests") in with_gap_tests
-    assert str(coverage_root) in with_gap_tests
+    assert gap_arguments is not None
+    assert str(coverage_root) in gap_arguments
+    assert str(REPOSITORY_ROOT / "tests") not in gap_arguments
+    assert "--cov-append" in gap_arguments
 
 
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:

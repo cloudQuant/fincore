@@ -404,6 +404,7 @@ def _run_frozen_pytest(
     pytest_arguments: list[str],
     timeout_seconds: int,
     package_root: Path | None = None,
+    environment: dict[str, str] | None = None,
 ) -> dict:
     """Run frozen test files while forcing imports to resolve to candidate source."""
 
@@ -427,7 +428,12 @@ def _run_frozen_pytest(
         str(tooling_root / "pyproject.toml"),
         *pytest_arguments,
     ]
-    return _run_frozen_command(command=command, candidate_root=candidate_root, timeout_seconds=timeout_seconds)
+    return _run_frozen_command(
+        command=command,
+        candidate_root=candidate_root,
+        timeout_seconds=timeout_seconds,
+        environment=environment,
+    )
 
 
 def _require_requested_flag(value: bool, name: str, gate: str) -> None:
@@ -640,16 +646,13 @@ def _critical_coverage_violations(
     return violations
 
 
-def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list[str]:
-    """Run frozen oracle tests plus the candidate's scoped coverage-gap tranche."""
+def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path | None) -> list[str]:
+    """Run the immutable oracle tests against the submitted source tree."""
 
     source_root = candidate_root / "fincore"
     if not source_root.is_dir():
         raise RunnerBlockedError(f"candidate package root is missing: {source_root}")
-    test_roots = [str(_tooling_root() / "tests")]
-    coverage_gap_root = candidate_root / "tests" / "coverage_gaps" / "0042_r2"
-    if coverage_gap_root.is_dir():
-        test_roots.append(str(coverage_gap_root))
+    coverage_report = "--cov-report=" if coverage_json is None else f"--cov-report=json:{coverage_json}"
     return [
         "-o",
         "addopts=",
@@ -661,10 +664,38 @@ def _quality_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list
         "--maxfail=0",
         f"--cov={source_root.resolve()}",
         "--cov-branch",
+        coverage_report,
+        "-m",
+        "not integration_online and not benchmark",
+        str(_tooling_root() / "tests"),
+    ]
+
+
+def _candidate_coverage_gap_pytest_arguments(candidate_root: Path, coverage_json: Path) -> list[str] | None:
+    """Return a separate, append-only invocation for reviewed candidate gap tests."""
+
+    source_root = candidate_root / "fincore"
+    if not source_root.is_dir():
+        raise RunnerBlockedError(f"candidate package root is missing: {source_root}")
+    coverage_gap_root = candidate_root / "tests" / "coverage_gaps" / "0042_r2"
+    if not coverage_gap_root.is_dir():
+        return None
+    return [
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-p",
+        "no:rerunfailures",
+        "--tb=short",
+        "--maxfail=0",
+        f"--cov={source_root.resolve()}",
+        "--cov-branch",
+        "--cov-append",
         f"--cov-report=json:{coverage_json}",
         "-m",
         "not integration_online and not benchmark",
-        *test_roots,
+        str(coverage_gap_root),
     ]
 
 
@@ -689,13 +720,34 @@ def _run_quality_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pa
     coverage_json = output_dir / "coverage.json"
     if coverage_json.exists():
         raise RunnerUsageError(f"quality coverage output already exists: {coverage_json}")
+    coverage_data = output_dir / ".coverage"
+    if coverage_data.exists():
+        raise RunnerUsageError(f"quality coverage data output already exists: {coverage_data}")
+    environment = {"COVERAGE_FILE": str(coverage_data)}
+    coverage_gap_arguments = _candidate_coverage_gap_pytest_arguments(candidate_root, coverage_json)
     pytest_record = _run_frozen_pytest(
         candidate_root=candidate_root,
-        pytest_arguments=_quality_pytest_arguments(candidate_root, coverage_json),
+        pytest_arguments=_quality_pytest_arguments(
+            candidate_root,
+            None if coverage_gap_arguments is not None else coverage_json,
+        ),
         timeout_seconds=1800,
+        environment=environment,
     )
-    if pytest_record["exit_code"] != 0 or not coverage_json.is_file():
-        return {"pytest": pytest_record, "verdict": "FAIL"}
+    coverage_gap_record = None
+    if pytest_record["exit_code"] == 0 and coverage_gap_arguments is not None:
+        coverage_gap_record = _run_frozen_pytest(
+            candidate_root=candidate_root,
+            pytest_arguments=coverage_gap_arguments,
+            timeout_seconds=900,
+            environment=environment,
+        )
+    if (
+        pytest_record["exit_code"] != 0
+        or (coverage_gap_record is not None and coverage_gap_record["exit_code"] != 0)
+        or not coverage_json.is_file()
+    ):
+        return {"coverage_gap_pytest": coverage_gap_record, "pytest": pytest_record, "verdict": "FAIL"}
     coverage = _read_json(coverage_json, "fresh candidate coverage")
     overall = _coverage_percent(coverage)
     threshold = max(float(baseline_coverage), 60.0)
@@ -724,6 +776,7 @@ def _run_quality_gate(args: argparse.Namespace, bundle: dict, candidate_root: Pa
         "coverage_gate": coverage_record,
         "critical_violations": critical_violations,
         "overall_branch_coverage": overall,
+        "coverage_gap_pytest": coverage_gap_record,
         "pytest": pytest_record,
         "required_branch_coverage": threshold,
         "verdict": (
@@ -1278,12 +1331,13 @@ def _run_frozen_command(
     command: list[str],
     candidate_root: Path,
     timeout_seconds: int,
+    environment: dict[str, str] | None = None,
 ) -> dict:
     try:
         completed = subprocess.run(
             command,
             cwd=candidate_root,
-            env=_candidate_environment(candidate_root),
+            env=_candidate_environment(candidate_root) | (environment or {}),
             capture_output=True,
             text=True,
             check=False,
