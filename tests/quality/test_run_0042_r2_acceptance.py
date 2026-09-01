@@ -411,14 +411,14 @@ def test_non_benchmark_selector_ignores_benchmark_collection_tree() -> None:
 
 
 def test_matrix_argv_builder_includes_collection_exclusion() -> None:
-    """The matrix command builder must prevent benchmark collection imports."""
+    """The matrix command builder must exclude source/tooling-only roots."""
 
     runner = _load_runner_module()
 
     arguments = runner._matrix_cell_pytest_arguments()
 
-    assert "--ignore" in arguments
-    assert arguments[arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+    ignored = [arguments[index + 1] for index, value in enumerate(arguments) if value == "--ignore"]
+    assert ignored == [str(REPOSITORY_ROOT / path) for path in runner._MATRIX_COLLECTION_EXCLUSIONS]
 
 
 def test_tests_gate_passes_collection_exclusion_to_pytest(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -440,6 +440,7 @@ def test_tests_gate_passes_collection_exclusion_to_pytest(monkeypatch: pytest.Mo
 
     assert runner._run_tests_gate(args, tmp_path)["verdict"] == "PASS"
     assert captured["arguments"][captured["arguments"].index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+    assert all(path not in captured["arguments"] for path in ("architecture", "docs", "packaging", "quality"))
 
 
 def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(tmp_path: Path) -> None:
@@ -454,6 +455,7 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     assert str(REPOSITORY_ROOT / "tests") in oracle_arguments
     assert str(coverage_root) not in oracle_arguments
     assert oracle_arguments[oracle_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+    assert all(f"{REPOSITORY_ROOT}/tests/{name}" not in oracle_arguments for name in ("architecture", "docs", "packaging", "quality"))
     assert runner._candidate_coverage_gap_pytest_arguments(candidate_root, tmp_path / "without.json") is None
 
     coverage_root.mkdir(parents=True)
@@ -464,6 +466,7 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     assert str(REPOSITORY_ROOT / "tests") not in gap_arguments
     assert "--cov-append" in gap_arguments
     assert gap_arguments[gap_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+    assert all(f"{REPOSITORY_ROOT}/tests/{name}" not in gap_arguments for name in ("architecture", "docs", "packaging", "quality"))
 
 
 def test_matrix_cell_rejects_an_unexpected_argv_digest() -> None:

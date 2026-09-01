@@ -45,6 +45,13 @@ _REQUIRED_D0_ARTIFACTS = frozenset(
 _GIT_OBJECT_ID = re.compile(r"^[0-9a-f]{40,64}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _PYTHON_FULL_VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+_MATRIX_COLLECTION_EXCLUSIONS = (
+    "tests/architecture",
+    "tests/benchmarks",
+    "tests/docs",
+    "tests/packaging",
+    "tests/quality",
+)
 _MATRIX_CELL_FIELDS = frozenset(
     {
         "argv_digest",
@@ -464,7 +471,13 @@ def _matrix_cell_pytest_arguments() -> list[str]:
         "no:rerunfailures",
         "--tb=short",
         "--maxfail=0",
-        *_non_benchmark_selector_arguments(),
+        "-m",
+        "not integration_online and not benchmark",
+        *[
+            argument
+            for path in _MATRIX_COLLECTION_EXCLUSIONS
+            for argument in ("--ignore", str(_tooling_root() / path))
+        ],
         str(_tooling_root() / "tests"),
     ]
 
@@ -476,7 +489,7 @@ def _matrix_argv_digest() -> str:
         {
             "gate": "matrix-cell",
             "selector": "not integration_online and not benchmark",
-            "collection_exclusion": "tests/benchmarks",
+            "collection_exclusions": list(_MATRIX_COLLECTION_EXCLUSIONS),
             "tooling_tests": "tests",
         }
     )
