@@ -137,12 +137,16 @@ def _runner_identity() -> dict[str, str]:
     try:
         commit = _git(tooling_root, "rev-parse", "--verify", "HEAD")
         tree = _git(tooling_root, "rev-parse", "--verify", "HEAD^{tree}")
+        runner_relative = script.relative_to(tooling_root).as_posix()
+        runner_blob_sha256 = _git_blob_sha256(tooling_root, commit, runner_relative)
     except RunnerBlockedError as exc:
         raise RunnerUsageError(f"runner must execute from a Git tooling worktree: {exc}") from exc
+    except ValueError as exc:
+        raise RunnerUsageError("runner must live inside the Git tooling worktree") from exc
     return {
         "commit": commit,
         "runner_path": str(script),
-        "runner_blob_sha256": _sha256_file(script),
+        "runner_blob_sha256": runner_blob_sha256,
         "tree": tree,
     }
 
@@ -176,6 +180,22 @@ def _git(candidate_root: Path, *arguments: str) -> str:
         detail = (result.stderr or result.stdout).strip()
         raise RunnerBlockedError(f"git {' '.join(arguments)} failed: {detail or 'unknown error'}")
     return result.stdout.strip()
+
+
+def _git_blob_sha256(repository_root: Path, revision: str, relative: str) -> str:
+    """Hash the canonical Git blob, independent of worktree EOL conversion."""
+
+    result = subprocess.run(
+        ["git", "show", f"{revision}:{relative}"],
+        cwd=repository_root,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).decode("utf-8", errors="replace").strip()
+        raise RunnerBlockedError(f"cannot load frozen Git blob {revision}:{relative}: {detail or 'unknown error'}")
+    return _sha256_bytes(result.stdout)
 
 
 def _require_existing_path(value: str | None, label: str) -> Path:
@@ -367,7 +387,8 @@ def _canonical_sha256(value: object) -> str:
 
 
 def _frozen_tool(bundle: dict, relative: str) -> Path:
-    specification = _require_mapping(bundle["manifest"]["tooling"].get("files"), "D0 bundle tooling.files")
+    tooling = _require_mapping(bundle["manifest"].get("tooling"), "D0 bundle tooling")
+    specification = _require_mapping(tooling.get("files"), "D0 bundle tooling.files")
     expected = _require_sha256(specification.get(relative), f"D0 bundle tooling.files[{relative!r}]")
     script = (_tooling_root() / relative).resolve()
     try:
@@ -376,8 +397,9 @@ def _frozen_tool(bundle: dict, relative: str) -> Path:
         raise RunnerUsageError(f"frozen tool path escapes the tooling worktree: {relative}") from exc
     if not script.is_file():
         raise RunnerBlockedError(f"frozen tool is missing: {relative}")
-    if _sha256_file(script) != expected:
-        raise RunnerBlockedError(f"frozen tool bytes do not match the D0 tooling manifest: {relative}")
+    tooling_commit = _require_git_object(tooling.get("commit"), "D0 bundle tooling.commit")
+    if _git_blob_sha256(_tooling_root(), tooling_commit, relative) != expected:
+        raise RunnerBlockedError(f"frozen tool Git blob does not match the D0 tooling manifest: {relative}")
     return script
 
 
@@ -392,17 +414,11 @@ def _validate_frozen_tooling(bundle: dict, tooling_identity: dict[str, str]) -> 
     if bundle["manifest"]["tooling"].get("tree") != tooling_identity["tree"]:
         raise RunnerBlockedError("the acceptance tooling tree is not the D0-frozen tree")
     runner_relative = "scripts/run_0042_r2_acceptance.py"
-    frozen_runner = subprocess.run(
-        ["git", "show", f"{tooling_identity['commit']}:{runner_relative}"],
-        cwd=tooling_root,
-        capture_output=True,
-        check=False,
-        timeout=30,
-    )
-    if frozen_runner.returncode != 0:
-        raise RunnerBlockedError("cannot load the acceptance runner blob from the frozen tooling commit")
-    if _sha256_bytes(frozen_runner.stdout) != tooling_identity["runner_blob_sha256"]:
-        raise RunnerBlockedError("executing runner bytes do not match the frozen tooling Git blob")
+    if (
+        _git_blob_sha256(tooling_root, tooling_identity["commit"], runner_relative)
+        != tooling_identity["runner_blob_sha256"]
+    ):
+        raise RunnerBlockedError("executing runner identity does not match the frozen tooling Git blob")
 
 
 def _run_frozen_pytest(
@@ -473,11 +489,7 @@ def _matrix_cell_pytest_arguments() -> list[str]:
         "--maxfail=0",
         "-m",
         "not integration_online and not benchmark",
-        *[
-            argument
-            for path in _MATRIX_COLLECTION_EXCLUSIONS
-            for argument in ("--ignore", str(_tooling_root() / path))
-        ],
+        *[argument for path in _MATRIX_COLLECTION_EXCLUSIONS for argument in ("--ignore", str(_tooling_root() / path))],
         str(_tooling_root() / "tests"),
     ]
 

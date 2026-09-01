@@ -138,8 +138,63 @@ def test_evidence_is_bound_to_the_runner_blob(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     evidence = json.loads((tmp_path / "out" / "evidence.json").read_text(encoding="utf-8"))
-    expected_digest = hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
+    frozen_runner = subprocess.run(
+        ["git", "show", "HEAD:scripts/run_0042_r2_acceptance.py"],
+        cwd=REPOSITORY_ROOT,
+        capture_output=True,
+        check=True,
+    )
+    expected_digest = hashlib.sha256(frozen_runner.stdout).hexdigest()
     assert evidence["runner"]["runner_blob_sha256"] == expected_digest
+
+
+def _crlf_tooling_script(tmp_path: Path, relative: str) -> tuple[Path, Path, str, bytes]:
+    """Create a clean Git blob whose Windows-style worktree bytes differ."""
+
+    tooling = tmp_path / "tooling"
+    tooling.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=tooling, check=True)
+    subprocess.run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=tooling, check=True)
+    script = tooling / relative
+    script.parent.mkdir(parents=True)
+    source = b"print('frozen tooling')\n"
+    script.write_bytes(source)
+    commit = _commit(tooling, "freeze tooling script")
+    script.write_bytes(source.replace(b"\n", b"\r\n"))
+    return tooling, script, commit, source
+
+
+def test_runner_identity_uses_the_git_blob_when_worktree_uses_crlf(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A clean Windows checkout may rewrite line endings without changing the frozen blob."""
+
+    runner = _load_runner_module()
+    _, script, _, source = _crlf_tooling_script(tmp_path, "scripts/run_0042_r2_acceptance.py")
+    monkeypatch.setattr(runner, "__file__", str(script))
+
+    identity = runner._runner_identity()
+
+    assert identity["runner_blob_sha256"] == hashlib.sha256(source).hexdigest()
+    assert identity["runner_blob_sha256"] != hashlib.sha256(script.read_bytes()).hexdigest()
+
+
+def test_frozen_tool_uses_the_git_blob_when_worktree_uses_crlf(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """D0 tool checks bind the clean Git object, not platform line endings."""
+
+    runner = _load_runner_module()
+    _, script, commit, source = _crlf_tooling_script(tmp_path, "scripts/check_example.py")
+    monkeypatch.setattr(runner, "__file__", str(script.parent / "run_0042_r2_acceptance.py"))
+    bundle = {
+        "manifest": {
+            "tooling": {
+                "commit": commit,
+                "files": {"scripts/check_example.py": hashlib.sha256(source).hexdigest()},
+            }
+        }
+    }
+
+    assert runner._frozen_tool(bundle, "scripts/check_example.py") == script.resolve()
 
 
 def test_evidence_child_passes_for_an_allowlisted_single_parent_child(tmp_path: Path) -> None:
@@ -435,11 +490,18 @@ def test_tests_gate_passes_collection_exclusion_to_pytest(monkeypatch: pytest.Mo
     args = type(
         "Args",
         (),
-        {"include_slow": True, "include_serial": True, "include_offline_integration": True, "benchmarks_covered_by": "performance"},
+        {
+            "include_slow": True,
+            "include_serial": True,
+            "include_offline_integration": True,
+            "benchmarks_covered_by": "performance",
+        },
     )()
 
     assert runner._run_tests_gate(args, tmp_path)["verdict"] == "PASS"
-    assert captured["arguments"][captured["arguments"].index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+    assert captured["arguments"][captured["arguments"].index("--ignore") + 1] == str(
+        REPOSITORY_ROOT / "tests" / "benchmarks"
+    )
     assert all(path not in captured["arguments"] for path in ("architecture", "docs", "packaging", "quality"))
 
 
@@ -455,7 +517,10 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     assert str(REPOSITORY_ROOT / "tests") in oracle_arguments
     assert str(coverage_root) not in oracle_arguments
     assert oracle_arguments[oracle_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
-    assert all(f"{REPOSITORY_ROOT}/tests/{name}" not in oracle_arguments for name in ("architecture", "docs", "packaging", "quality"))
+    assert all(
+        f"{REPOSITORY_ROOT}/tests/{name}" not in oracle_arguments
+        for name in ("architecture", "docs", "packaging", "quality")
+    )
     assert runner._candidate_coverage_gap_pytest_arguments(candidate_root, tmp_path / "without.json") is None
 
     coverage_root.mkdir(parents=True)
@@ -466,7 +531,10 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     assert str(REPOSITORY_ROOT / "tests") not in gap_arguments
     assert "--cov-append" in gap_arguments
     assert gap_arguments[gap_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
-    assert all(f"{REPOSITORY_ROOT}/tests/{name}" not in gap_arguments for name in ("architecture", "docs", "packaging", "quality"))
+    assert all(
+        f"{REPOSITORY_ROOT}/tests/{name}" not in gap_arguments
+        for name in ("architecture", "docs", "packaging", "quality")
+    )
 
 
 def test_matrix_cell_rejects_an_unexpected_argv_digest() -> None:
