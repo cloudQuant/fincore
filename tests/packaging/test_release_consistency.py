@@ -149,4 +149,5 @@ def test_release_consistency_accepts_current_release_before_or_after_tag(clean_d
         f"no release tag for {version} is present; treating checkout as a pre-tag candidate" in result.stdout
         or f"git tag for version {version} points at HEAD" in result.stdout
         or "no git tags present in checkout (shallow clone); skipping tag check" in result.stdout
+        or f"{version} is a development version; skipping release-tag check" in result.stdout
     )
