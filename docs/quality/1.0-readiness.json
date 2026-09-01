@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
   "status": "blocked",
-  "generated_at": "2026-08-21",
+  "generated_at": "2026-09-01",
   "target_version": "1.0",
   "gates": {
     "numerical": {"status": "pass", "evidence": "tests/numerical + tests/oracles, all P0 errors closed"},
     "compatibility": {"status": "pass", "evidence": "tests/compat C0-C4 green"},
     "semantics": {"status": "pass", "evidence": "OperationCatalog covers 100% of registry entries"},
-    "quality": {"status": "pass", "evidence": "docs/quality/current-baseline.json, branch coverage 97.0%"},
+    "quality": {"status": "pass", "evidence": "docs/quality/current-baseline.json, branch coverage 76.0%"},
     "types": {"status": "blocked", "evidence": "installed-wheel pyright/stubtest not yet run; .pyi generation incomplete"},
     "performance": {"status": "pass", "evidence": "scripts/check_performance.py within budget"},
     "packaging": {"status": "pass", "evidence": "single candidate artifact with SHA256 manifest"},
     "supply_chain": {"status": "blocked", "evidence": "SBOM/provenance/attestation generation not yet wired"},
     "legal": {"status": "blocked", "evidence": "adapted-component license approval pending (THIRD_PARTY_NOTICES.md)"},
     "governance": {"status": "blocked", "evidence": "branch protection, required checks, PyPI reviewer require GitHub configuration"},
-    "documentation": {"status": "pass", "evidence": "mkdocs strict, README/CHANGELOG consistent at 0.4.0.dev0"}
+    "documentation": {"status": "pass", "evidence": "mkdocs strict, README/CHANGELOG consistent at 0.5.0"}
   }
 }
