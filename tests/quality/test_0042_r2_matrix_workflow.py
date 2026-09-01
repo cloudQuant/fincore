@@ -107,12 +107,16 @@ def test_perf_cache_is_bound_to_the_benchmark_protocol() -> None:
     cache = _step_named(perf, "Restore previous benchmark baseline")
     cache_key = cache["with"]["key"]
 
-    assert "perf-baseline-v3-" in cache_key
+    assert "perf-baseline-${{ env.PERF_BENCHMARK_PROTOCOL }}-" in cache_key
+    assert perf["env"]["PERF_BENCHMARK_PROTOCOL"] == "v4-r5-n2520-25200-w21-63-252-504-a10-10000000-r100-10000"
     assert "hashFiles(" in cache_key
     assert "run_rolling_benchmarks.py" in cache_key
     assert "run_round_trip_benchmarks.py" in cache_key
     assert "compare_benchmarks.py" in cache_key
     assert "restore-keys" not in cache["with"]
+
+    assert "--repeats 5" in _step_named(perf, "Run rolling benchmarks")["run"]
+    assert "--repeats 5" in _step_named(perf, "Run round-trip benchmarks")["run"]
 
 
 def test_r2_build_job_creates_and_uploads_the_only_distribution() -> None:

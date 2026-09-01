@@ -352,6 +352,11 @@ jobs:
   perf:
     if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
+    env:
+      # Cache reuse is valid only when the complete benchmark invocation and
+      # comparison implementation match.  Keep this identifier in sync with
+      # every fixed input or repeat-count change below.
+      PERF_BENCHMARK_PROTOCOL: v4-r5-n2520-25200-w21-63-252-504-a10-10000000-r100-10000
     steps:
       - uses: actions/checkout@v4
 
@@ -367,16 +372,17 @@ jobs:
           pip install -e ".[dev]"
 
       # The previous run's results act as the platform-labelled baseline.
-      # Cache v2 proved non-comparable across otherwise unchanged candidates;
-      # v3 binds the cache to the benchmark-runner and comparison protocol so
-      # a runner change starts a fresh, structural-gates-only measurement.
+      # Earlier cache keys proved non-comparable across otherwise unchanged
+      # candidates. v4 binds the cache to fixed invocation inputs, repeat
+      # counts, and benchmark/comparison implementations, so a protocol
+      # change starts a fresh, structural-gates-only measurement.
       # On a cold cache the comparison still enforces superlinearity, window
       # RSS scaling, and round-trip share-amount scaling.
       - name: Restore previous benchmark baseline
         uses: actions/cache@v6
         with:
           path: .benchmarks/
-          key: perf-baseline-v3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/run_rolling_benchmarks.py', 'scripts/run_round_trip_benchmarks.py', 'scripts/compare_benchmarks.py') }}
+          key: perf-baseline-${{ env.PERF_BENCHMARK_PROTOCOL }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/run_rolling_benchmarks.py', 'scripts/run_round_trip_benchmarks.py', 'scripts/compare_benchmarks.py') }}
           save-always: true
 
       - name: Run rolling benchmarks
@@ -384,13 +390,13 @@ jobs:
           mkdir -p .benchmarks
           python scripts/run_rolling_benchmarks.py \
             --sizes 2520 25200 --windows 21 63 252 504 \
-            --repeats 3 --output .benchmarks/rolling-candidate.json
+            --repeats 5 --output .benchmarks/rolling-candidate.json
 
       - name: Run round-trip benchmarks
         run: |
           python scripts/run_round_trip_benchmarks.py \
             --amounts 10 10000000 --rows 100 10000 \
-            --repeats 3 --output .benchmarks/round-trips-candidate.json
+            --repeats 5 --output .benchmarks/round-trips-candidate.json
 
       # Performance regressions fail CI; no continue-on-error.  A missing
       # baseline file only downgrades to the structural gates, which still
