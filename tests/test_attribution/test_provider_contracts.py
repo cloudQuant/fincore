@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import builtins
 import sys
 
 import pandas as pd
@@ -10,6 +9,7 @@ import pytest
 
 from fincore.data.providers import YahooFinanceProvider
 from fincore.exceptions import DependencyError
+from fincore.runtime import validation
 
 
 class FakeYahooClient:
@@ -44,14 +44,14 @@ def test_provider_fetch_uses_injected_client_offline() -> None:
 
 def test_broken_optional_sdk_raises_dependency_error_not_attribute_error(monkeypatch) -> None:
     """A broken SDK import must surface as a controlled DependencyError."""
-    real_import = builtins.__import__
+    real_import_module = validation.importlib.import_module
 
-    def broken_import(name, *args, **kwargs):
+    def broken_import_module(name, *args, **kwargs):
         if name == "yfinance":
             raise AttributeError("module 'lib' has no attribute 'GEN_EMAIL'")
-        return real_import(name, *args, **kwargs)
+        return real_import_module(name, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "__import__", broken_import)
+    monkeypatch.setattr(validation.importlib, "import_module", broken_import_module)
     monkeypatch.delitem(sys.modules, "yfinance", raising=False)
 
     with pytest.raises(DependencyError, match="data-yahoo") as excinfo:
@@ -63,14 +63,14 @@ def test_broken_optional_sdk_raises_dependency_error_not_attribute_error(monkeyp
 
 
 def test_missing_optional_sdk_raises_dependency_error(monkeypatch) -> None:
-    real_import = builtins.__import__
+    real_import_module = validation.importlib.import_module
 
-    def missing_import(name, *args, **kwargs):
+    def missing_import_module(name, *args, **kwargs):
         if name == "yfinance":
             raise ImportError("No module named 'yfinance'")
-        return real_import(name, *args, **kwargs)
+        return real_import_module(name, *args, **kwargs)
 
-    monkeypatch.setattr(builtins, "__import__", missing_import)
+    monkeypatch.setattr(validation.importlib, "import_module", missing_import_module)
     monkeypatch.delitem(sys.modules, "yfinance", raising=False)
 
     with pytest.raises(DependencyError, match="data-yahoo"):
