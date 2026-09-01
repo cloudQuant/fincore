@@ -728,21 +728,13 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      # GitHub's Windows image can materialize a CRLF worktree even after the
-      # Git config is changed.  The D0 contract hashes exact frozen-tool bytes,
-      # so materialize the selected Git tree as a binary archive and attest the
-      # runner blob before the frozen runner verifies itself.
-      - name: Normalize frozen tooling bytes on Windows
+      # The frozen runner identifies its immutable Git blobs directly, while
+      # clean Windows worktrees may legitimately use CRLF physical bytes.
+      - name: Verify frozen tooling checkout on Windows
         if: runner.os == 'Windows'
         shell: bash
         run: |
           set -euo pipefail
-          git -C tooling config core.autocrlf false
-          git -C tooling reset --hard "${{ inputs.tooling_ref }}"
-          git -C tooling archive --format=tar "${{ inputs.tooling_ref }}" | tar -xf - -C tooling
-          expected_runner_blob=$(git -C tooling rev-parse "${{ inputs.tooling_ref }}:scripts/run_0042_r2_acceptance.py")
-          actual_runner_blob=$(git -C tooling hash-object scripts/run_0042_r2_acceptance.py)
-          test "$actual_runner_blob" = "$expected_runner_blob"
           test -z "$(git -C tooling status --porcelain=v1 --untracked-files=all)"
 
       - name: Set up D0-frozen Python
