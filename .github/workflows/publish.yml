@@ -3,6 +3,15 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Published release tag whose CI candidate should be published"
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
 
 permissions:
   contents: read
@@ -19,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -91,7 +100,7 @@ jobs:
         id: candidate
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
           release_sha="$(git rev-parse "${RELEASE_TAG}^{commit}")"
           ci_run_id="$(gh run list --repo "${{ github.repository }}" --workflow ci.yml \
@@ -138,6 +147,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Download verified CI candidate
         env:
@@ -149,10 +160,15 @@ jobs:
       - name: Verify candidate digest
         run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json
 
+      - name: Stage distributable artifacts for PyPI
+        run: |
+          mkdir -p publish-dist
+          cp dist/*.whl dist/*.tar.gz publish-dist/
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          packages-dir: publish-dist/
         # Uses trusted publishing (OIDC) — no API token needed
         # Configure at: https://pypi.org/manage/project/fincore/settings/publishing/
         # Add GitHub Actions as a trusted publisher with:
