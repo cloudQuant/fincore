@@ -26,6 +26,17 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def _write_text_with_windows_newlines(
+    path: Path,
+    data: str,
+    encoding: str | None = None,
+    errors: str | None = None,
+    newline: str | None = None,
+) -> int:
+    del newline
+    return path.write_bytes(data.replace("\n", "\r\n").encode(encoding or "utf-8", errors or "strict"))
+
+
 def _commit_source(source_root: Path) -> None:
     subprocess.run(["git", "init", "-q"], cwd=source_root, check=True)
     subprocess.run(["git", "add", "."], cwd=source_root, check=True)
@@ -150,17 +161,7 @@ def test_complete_surface_inputs_bind_initial_git_blobs_after_windows_line_endin
         "inventory": source_root / "inventory.json",
     }
 
-    def write_text_with_windows_newlines(
-        path: Path,
-        data: str,
-        encoding: str | None = None,
-        errors: str | None = None,
-        newline: str | None = None,
-    ) -> int:
-        del newline
-        return path.write_bytes(data.replace("\n", "\r\n").encode(encoding or "utf-8", errors or "strict"))
-
-    monkeypatch.setattr(Path, "write_text", write_text_with_windows_newlines)
+    monkeypatch.setattr(Path, "write_text", _write_text_with_windows_newlines)
     write_minimal_complete_surface_inputs(paths)
 
     subprocess.run(["git", "init", "-q"], cwd=source_root, check=True)
@@ -194,6 +195,68 @@ def test_complete_surface_inputs_bind_initial_git_blobs_after_windows_line_endin
 
         assert b"\r\n" not in result.stdout
         assert source_artifacts[source_id]["sha256"] == hashlib.sha256(result.stdout).hexdigest()
+
+
+def test_repository_surface_inputs_bind_initial_git_blobs_after_windows_line_ending_normalization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+
+    monkeypatch.setattr(Path, "write_text", _write_text_with_windows_newlines)
+    paths = write_minimal_repository_surface_inputs(source_root)
+
+    subprocess.run(["git", "init", "-q"], cwd=source_root, check=True)
+    subprocess.run(["git", "config", "core.autocrlf", "true"], cwd=source_root, check=True)
+    subprocess.run(["git", "add", "."], cwd=source_root, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=0042-R2 test",
+            "-c",
+            "user.email=0042-r2@example.invalid",
+            "commit",
+            "-qm",
+            "baseline inputs",
+        ],
+        cwd=source_root,
+        check=True,
+    )
+
+    def git_blob(relative_path: str) -> bytes:
+        return subprocess.run(
+            ["git", "cat-file", "blob", f"HEAD:{relative_path}"],
+            cwd=source_root,
+            capture_output=True,
+            check=True,
+        ).stdout
+
+    facts_blob = git_blob(paths["repository_surface_facts"].name)
+    disposition_blob = git_blob(paths["repository_surface_disposition"].name)
+    source_blob = git_blob("scripts/check_quality.py")
+    disposition = json.loads(disposition_blob)
+    facts = json.loads(facts_blob)
+
+    assert b"\r\n" not in facts_blob
+    assert b"\r\n" not in disposition_blob
+    assert b"\r\n" not in source_blob
+    assert disposition["source_facts"]["sha256"] == hashlib.sha256(facts_blob).hexdigest()
+    assert facts["records"][0]["blob_sha256"] == hashlib.sha256(source_blob).hexdigest()
+
+
+def test_minimal_ledger_is_accepted_after_windows_git_line_ending_normalization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(Path, "write_text", _write_text_with_windows_newlines)
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", "true")
+    source_root, paths = _minimal_inputs(tmp_path)
+
+    result = _capture(source_root, paths, tmp_path / "capture.json")
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_valid_minimal_ledger_is_accepted(tmp_path: Path) -> None:

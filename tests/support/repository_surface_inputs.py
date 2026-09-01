@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 def _write_json(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    path.write_bytes((json.dumps(value, indent=2) + "\n").encode("utf-8"))
 
 
 def _canonical_sha256(value: object) -> str:
@@ -23,7 +23,7 @@ def write_minimal_repository_surface_inputs(source_root: Path) -> dict[str, Path
     """Create a valid scoped, explicitly non-D0 facts/disposition pair."""
     source_script = source_root / "scripts" / "check_quality.py"
     source_script.parent.mkdir()
-    source_script.write_text("# fixture-owned quality command\n", encoding="utf-8")
+    source_script.write_bytes(b"# fixture-owned quality command\n")
     facts_path = source_root / "repository-surface-facts.json"
     disposition_path = source_root / "repository-surface-disposition.json"
     boundaries = {
