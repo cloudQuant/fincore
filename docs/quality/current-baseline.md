@@ -1,14 +1,14 @@
 # Current Quality Baseline
 
-Generated: `2026-09-01T11:51:29.563275+00:00`
+Generated: `2026-09-01T12:28:31.193619+00:00`
 
 ## Provenance
 
-- Source commit: `9cf0dc22eb95444496b2768258a91581d5ebf66f`
+- Source commit: `34a5a0f1f1db88e6ac369efb27c164c242c227b9`
 - Dirty state: `False`
 - Tracked diff SHA256: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 - Untracked manifest SHA256: `44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a`
-- Disposable-copy manifest SHA256: `fb7b858565effa3ec89249b0fc0d8e75b26a1aad2a0260711dfbb1c217984fd9`
+- Disposable-copy manifest SHA256: `0043ac423e0f2186413ab36da0b1f8616185f0b13263930a18a5f03872d8830e`
 - Manifest exclusions: `docs/quality/current-baseline.json, docs/quality/current-baseline.md`
 
 ## Environment
@@ -23,11 +23,11 @@ Generated: `2026-09-01T11:51:29.563275+00:00`
 
 | Run | Selector | Discovered | Selected | Passed | Skipped | Warnings | Duration | Exit |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| trusted-baseline | `not slow and not integration` | 1853 | 1852 | 1837 | 15 | 1 | 99.774s | 0 |
-| serial | `serial` | 1853 | 3 | 3 | 0 | 0 | 6.032s | 0 |
-| non-serial-single | `not serial and not slow and not integration` | 1853 | 1849 | 1834 | 15 | 1 | 98.251s | 0 |
-| non-serial-xdist | `not serial and not slow and not integration` | 1853 | 1849 | 1834 | 15 | 1 | 56.483s | 0 |
-| branch-coverage | `not slow and not integration` | 1853 | 1852 | 1837 | 15 | 1 | 136.243s | 0 |
+| trusted-baseline | `not slow and not integration` | 1854 | 1853 | 1838 | 15 | 1 | 101.800s | 0 |
+| serial | `serial` | 1854 | 3 | 3 | 0 | 0 | 6.005s | 0 |
+| non-serial-single | `not serial and not slow and not integration` | 1854 | 1850 | 1835 | 15 | 1 | 99.927s | 0 |
+| non-serial-xdist | `not serial and not slow and not integration` | 1854 | 1850 | 1835 | 15 | 1 | 51.056s | 0 |
+| branch-coverage | `not slow and not integration` | 1854 | 1853 | 1838 | 15 | 1 | 130.234s | 0 |
 
 ## Branch Coverage
 
