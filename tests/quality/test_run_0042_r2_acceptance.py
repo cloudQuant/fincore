@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
-import inspect
 import json
 import subprocess
 import sys
@@ -411,13 +410,36 @@ def test_non_benchmark_selector_ignores_benchmark_collection_tree() -> None:
     assert arguments[2:] == ["--ignore", str(REPOSITORY_ROOT / "tests" / "benchmarks")]
 
 
-def test_tests_and_matrix_gates_use_collection_exclusion() -> None:
-    """Both broad gates must apply the collection-time exclusion."""
+def test_matrix_argv_builder_includes_collection_exclusion() -> None:
+    """The matrix command builder must prevent benchmark collection imports."""
 
     runner = _load_runner_module()
 
-    for gate in (runner._run_tests_gate, runner._run_matrix_cell_gate):
-        assert "_non_benchmark_selector_arguments()" in inspect.getsource(gate)
+    arguments = runner._matrix_cell_pytest_arguments()
+
+    assert "--ignore" in arguments
+    assert arguments[arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+
+
+def test_tests_gate_passes_collection_exclusion_to_pytest(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """The ordinary tests gate must pass the ignore flag to pytest itself."""
+
+    runner = _load_runner_module()
+    captured: dict[str, list[str]] = {}
+
+    def fake_pytest(**kwargs: object) -> dict[str, int]:
+        captured["arguments"] = kwargs["pytest_arguments"]  # type: ignore[assignment]
+        return {"exit_code": 0}
+
+    monkeypatch.setattr(runner, "_run_frozen_pytest", fake_pytest)
+    args = type(
+        "Args",
+        (),
+        {"include_slow": True, "include_serial": True, "include_offline_integration": True, "benchmarks_covered_by": "performance"},
+    )()
+
+    assert runner._run_tests_gate(args, tmp_path)["verdict"] == "PASS"
+    assert captured["arguments"][captured["arguments"].index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
 
 
 def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(tmp_path: Path) -> None:
@@ -431,6 +453,7 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     oracle_arguments = runner._quality_pytest_arguments(candidate_root, tmp_path / "oracle.json")
     assert str(REPOSITORY_ROOT / "tests") in oracle_arguments
     assert str(coverage_root) not in oracle_arguments
+    assert oracle_arguments[oracle_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
     assert runner._candidate_coverage_gap_pytest_arguments(candidate_root, tmp_path / "without.json") is None
 
     coverage_root.mkdir(parents=True)
@@ -440,6 +463,41 @@ def test_quality_includes_only_the_candidate_coverage_gap_tranche_when_present(t
     assert str(coverage_root) in gap_arguments
     assert str(REPOSITORY_ROOT / "tests") not in gap_arguments
     assert "--cov-append" in gap_arguments
+    assert gap_arguments[gap_arguments.index("--ignore") + 1] == str(REPOSITORY_ROOT / "tests" / "benchmarks")
+
+
+def test_matrix_cell_rejects_an_unexpected_argv_digest() -> None:
+    """Aggregate validation must bind cells to the frozen selector contract."""
+
+    runner = _load_runner_module()
+    candidate = {"commit": "a" * 40, "tree": "b" * 40, "root": "/candidate"}
+    bundle = {"manifest_sha256": "c" * 64, "manifest": {"tooling": {"commit": "d" * 40}}}
+    cell = {
+        "argv_digest": "e" * 64,
+        "candidate_commit": candidate["commit"],
+        "candidate_tree": candidate["tree"],
+        "d0_bundle_digest": bundle["manifest_sha256"],
+        "d0_tooling_digest": runner._canonical_sha256(bundle["manifest"]["tooling"]),
+        "dependency_lane": "pinned",
+        "dependency_profile": "test",
+        "evidence_time": "2026-09-01T00:00:00Z",
+        "matrix_contract_version": 1,
+        "os": "linux",
+        "output_digest": "f" * 64,
+        "python_full_version": "3.11.8",
+        "runner_image": "test",
+        "verdict": "PASS",
+        "wheel_sha256": "1" * 64,
+    }
+
+    with pytest.raises(runner.RunnerBlockedError, match="argv digest"):
+        runner._validate_matrix_cell(
+            cell,
+            candidate=candidate,
+            bundle=bundle,
+            tooling_identity={},
+            wheel_sha256=cell["wheel_sha256"],
+        )
 
 
 def test_architecture_validation_accepts_the_frozen_checker_status_contract() -> None:

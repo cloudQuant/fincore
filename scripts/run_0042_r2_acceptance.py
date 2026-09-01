@@ -452,6 +452,36 @@ def _non_benchmark_selector_arguments() -> list[str]:
     ]
 
 
+def _matrix_cell_pytest_arguments() -> list[str]:
+    """Build the frozen matrix-cell test argv, including collection guards."""
+
+    return [
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-p",
+        "no:rerunfailures",
+        "--tb=short",
+        "--maxfail=0",
+        *_non_benchmark_selector_arguments(),
+        str(_tooling_root() / "tests"),
+    ]
+
+
+def _matrix_argv_digest() -> str:
+    """Digest the immutable matrix test selection contract."""
+
+    return _canonical_sha256(
+        {
+            "gate": "matrix-cell",
+            "selector": "not integration_online and not benchmark",
+            "collection_exclusion": "tests/benchmarks",
+            "tooling_tests": "tests",
+        }
+    )
+
+
 def _run_tests_gate(args: argparse.Namespace, candidate_root: Path) -> dict:
     _require_requested_flag(args.include_slow, "include-slow", "tests")
     _require_requested_flag(args.include_serial, "include-serial", "tests")
@@ -1266,32 +1296,14 @@ def _run_matrix_cell_gate(
         _run_frozen_pytest(
             candidate_root=Path(candidate["root"]),
             package_root=wheel_target,
-            pytest_arguments=[
-                "-o",
-                "addopts=",
-                "-p",
-                "no:cacheprovider",
-                "-p",
-                "no:rerunfailures",
-                "--tb=short",
-                "--maxfail=0",
-                *_non_benchmark_selector_arguments(),
-                str(_tooling_root() / "tests"),
-            ],
+            pytest_arguments=_matrix_cell_pytest_arguments(),
             timeout_seconds=1800,
         )
         if install["exit_code"] == 0
         else None
     )
     cell = {
-        "argv_digest": _canonical_sha256(
-            {
-                "gate": "matrix-cell",
-                "selector": "not integration_online and not benchmark",
-                "collection_exclusion": "tests/benchmarks",
-                "tooling_tests": "tests",
-            }
-        ),
+        "argv_digest": _matrix_argv_digest(),
         "candidate_commit": candidate["commit"],
         "candidate_tree": candidate["tree"],
         "d0_bundle_digest": bundle["manifest_sha256"],
@@ -1564,6 +1576,8 @@ def _validate_matrix_cell(
         _require_git_object(cell.get(field), f"matrix cell {field}")
     for field in ("wheel_sha256", "d0_tooling_digest", "d0_bundle_digest", "argv_digest", "output_digest"):
         _require_sha256(cell.get(field), f"matrix cell {field}")
+    if cell.get("argv_digest") != _matrix_argv_digest():
+        raise RunnerBlockedError("matrix cell argv digest does not match the frozen matrix test contract")
     if cell.get("candidate_commit") != candidate["commit"] or cell.get("candidate_tree") != candidate["tree"]:
         raise RunnerBlockedError("matrix cell candidate identity does not match the aggregate candidate")
     if cell.get("wheel_sha256") != wheel_sha256:
