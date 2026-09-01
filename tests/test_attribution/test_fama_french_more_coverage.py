@@ -58,6 +58,17 @@ def test_fit_newey_west_handles_lags_longer_than_sample() -> None:
     assert out["std_errors"].shape[0] == 6
 
 
+def test_newey_west_covariance_handles_rank_deficient_design() -> None:
+    design = np.array([[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]])
+    residuals = np.array([0.01, -0.02, 0.03])
+
+    covariance = fama_french._newey_west_covariance(design, residuals, nlags=1)
+
+    assert covariance.shape == (2, 2)
+    assert np.all(np.isfinite(covariance))
+    np.testing.assert_allclose(covariance[:, 1], 0.0)
+
+
 def test_fit_newey_west_clamps_negative_roundoff_variances_before_sqrt(monkeypatch: pytest.MonkeyPatch) -> None:
     idx = pd.RangeIndex(8)
     returns = pd.Series(np.linspace(-0.02, 0.03, len(idx)), index=idx)

@@ -36,6 +36,19 @@ FF4MOM_FACTORS = ["MKT", "SMB", "HML", "MOM"]
 _MIN_STD = 1e-15
 
 
+def _stable_gram_inverse(gram: np.ndarray) -> np.ndarray:
+    """Invert a design Gram matrix, preserving the least-squares solution for deficient rank.
+
+    ``np.linalg.lstsq`` used by the fit paths returns a minimum-norm estimate.
+    A short sample can make the corresponding normal-equation matrix singular,
+    so use its Moore-Penrose pseudoinverse for covariance estimation instead
+    of allowing platform-specific direct-inverse failures.
+    """
+    if np.linalg.matrix_rank(gram) < gram.shape[0]:
+        return np.asarray(np.linalg.pinv(gram), dtype=float)
+    return np.asarray(np.linalg.inv(gram), dtype=float)
+
+
 def _newey_west_covariance(X: np.ndarray, residuals: np.ndarray, nlags: int) -> np.ndarray:
     """Newey-West (HAC) sandwich covariance ``(X'X)^{-1} S (X'X)^{-1}``.
 
@@ -43,7 +56,7 @@ def _newey_west_covariance(X: np.ndarray, residuals: np.ndarray, nlags: int) -> 
     ``w_j = 1 - j/(L+1)``.
     """
     k = X.shape[1]
-    XtX_inv = np.linalg.inv(X.T @ X)
+    XtX_inv = _stable_gram_inverse(X.T @ X)
     e = residuals
     S = np.zeros((k, k))
     for j in range(nlags + 1):
@@ -63,7 +76,7 @@ def _newey_west_covariance(X: np.ndarray, residuals: np.ndarray, nlags: int) -> 
 def _wls_covariance(X: np.ndarray, residuals: np.ndarray, weights: np.ndarray, n: int, k: int) -> np.ndarray:
     """Weighted-least-squares covariance ``scale * (X'WX)^{-1}``."""
     W = np.diag(weights)
-    XtWX_inv = np.linalg.inv(X.T @ W @ X)
+    XtWX_inv = _stable_gram_inverse(X.T @ W @ X)
     scale = float(np.sum(weights * residuals**2) / max(n - k, 1))
     return np.asarray(scale * XtWX_inv, dtype=float)
 
@@ -222,7 +235,7 @@ class FamaFrenchModel:
             std_errors = np.sqrt(np.maximum(np.diag(cov), 0.0))
         else:
             resid_var = np.sum(residuals**2) / max(n - k, 1)
-            std_errors = np.sqrt(np.diag(resid_var * np.linalg.inv(X_with_const.T @ X_with_const)))
+            std_errors = np.sqrt(np.diag(resid_var * _stable_gram_inverse(X_with_const.T @ X_with_const)))
 
         # Calculate t-statistics and p-values
         t_stats = beta_coeffs / np.where(std_errors > 0, std_errors, 1e-10)
