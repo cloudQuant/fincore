@@ -7,7 +7,7 @@
 # the matrix reproducible; ``scripts/check_dependency_matrix.py`` enforces that
 # the minimum file is pinned while the latest file remains a floor.
 
-numpy==1.24.0
+numpy==2.4.6
 pandas==1.5.3
 scipy==1.9.3
 pytz==2023.3
