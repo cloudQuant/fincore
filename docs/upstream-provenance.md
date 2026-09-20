@@ -107,3 +107,10 @@ That review has not occurred in this task. The distributed NOTICE and Apache
 license copy preserve observed attribution and terms. Pending review does not
 block CI/CD, but it also does not create a release-approval claim or legal
 conclusion.
+
+## 2026-09-20 Release-identity refresh
+
+Only the Fincore product version advances from the development identifier
+`0.5.1.dev0` to stable `0.5.1`. Upstream commit identifiers, content digests,
+observed license information, and all `pending-human-review` statuses remain
+unchanged. This identity update is not a legal approval or review.
