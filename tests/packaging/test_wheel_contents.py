@@ -49,6 +49,7 @@ _BUILD_SOURCE_IGNORES = (
     "dist",
     "__pycache__",
     ".pytest_cache",
+    ".pytest_tmp",
     ".mypy_cache",
     ".ruff_cache",
     ".hypothesis",
@@ -179,6 +180,7 @@ def test_build_source_staging_excludes_generated_outputs(tmp_path: Path) -> None
 
     assert not (source / "build").exists()
     assert not (source / "dist").exists()
+    assert not (source / ".pytest_tmp").exists()
 
 
 # ---------------------------------------------------------------------------

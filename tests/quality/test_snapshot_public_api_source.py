@@ -176,6 +176,53 @@ def test_static_snapshot_does_not_import_optional_or_heavy_dependencies(tmp_path
     assert '"available"' in result.stdout
 
 
+def test_static_snapshot_resolves_explicitly_exported_value_from_call(tmp_path: Path) -> None:
+    """A statically exported private assignment is included without executing it."""
+
+    source_root = tmp_path / "source"
+    _write_package(source_root, '__all__ = ["__version__"]\n__version__ = resolve_version()\n')
+    output = tmp_path / "snapshot.json"
+
+    result = _run_snapshot(
+        "--source-root",
+        str(source_root),
+        "--surface",
+        "fincore",
+        "--output",
+        str(output),
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    snapshot = json.loads(output.read_text(encoding="utf-8"))
+    assert snapshot["schema_version"] == 2
+    assert snapshot["surfaces"]["fincore"]["entries"]["__version__"] == {
+        "kind": "value",
+        "public_path": "fincore.__version__",
+    }
+
+
+def test_repository_fincore_surface_is_statically_resolvable(tmp_path: Path) -> None:
+    """The real root namespace can be scanned without importing its dependencies."""
+
+    source_root = _snapshot_script().parent.parent
+    output = tmp_path / "fincore-snapshot.json"
+
+    result = _run_snapshot(
+        "--source-root",
+        str(source_root),
+        "--surface",
+        "fincore",
+        "--output",
+        str(output),
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    snapshot = json.loads(output.read_text(encoding="utf-8"))
+    assert snapshot["surfaces"]["fincore"]["entries"]["__version__"]["kind"] == "value"
+
+
 def test_selected_empty_public_surface_fails_closed(tmp_path: Path) -> None:
     """An explicitly selected surface cannot disappear behind an empty export list."""
 
