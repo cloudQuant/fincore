@@ -342,7 +342,9 @@ def _localized_table(
         *[labels.get(str(column), {}).get(language, str(column)) for column in frame.columns],
     ]
     data.columns = headers
-    return data.to_html(
+    # pandas declares to_html() loosely, so an untyped return trips
+    # warn_return_any on the CI toolchain even though the value is a str.
+    rendered: str = data.to_html(
         index=False,
         border=0,
         classes="data-table",
@@ -350,6 +352,7 @@ def _localized_table(
         float_format=lambda value: f"{value:.6g}",
         escape=True,
     )
+    return rendered
 
 
 def _table_card(title_key: str, zh_table: str, en_table: str) -> str:
