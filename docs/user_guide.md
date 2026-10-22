@@ -64,6 +64,33 @@ specific owning module for analysis, portfolio construction, inference, costs,
 or rendering. The executable end-to-end reference is
 [`examples/factor_analysis_quickstart.py`](../examples/factor_analysis_quickstart.py).
 
+### Bilingual factor HTML report
+
+`fincore.report.factor.write_factor_report` prepares, analyzes, and renders one
+factor in a single call. The result is a self-contained HTML file with
+interactive ECharts charts, metric tables, and a 中文/EN switch; no CDN or
+network access is required.
+
+```python
+from fincore.report.factor import write_factor_report
+
+write_factor_report(
+    factor,                 # Series indexed by (date, asset)
+    prices,                 # wide DataFrame, dates x assets
+    "factor-report.html",
+    periods=(1, 5, 20),
+    quantiles=5,
+    language="zh",          # default language; the HTML also has an EN switch
+)
+```
+
+`next_open=True` (the default) shifts prices by one grid row so forward returns
+start at the next open after the signal. Use `language="en"` for an English
+default. If the factor model already exists, call
+`write_factor_report_from_model(model, "report.html", loss_report=prepared.loss_report)`.
+The lower-level `build_factor_report(model)` still returns the canonical
+`ReportDocument` for other renderers.
+
 ## Breaking-change boundary
 
 0.5 does not provide old package-shaped imports, façade classes, root metric

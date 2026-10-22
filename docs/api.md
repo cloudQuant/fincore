@@ -56,6 +56,26 @@ artifacts = write_html(document, "portfolio-report.html")
 PDF and XLSX renderers are in `fincore.report.renderers.pdf` and
 `fincore.report.renderers.xlsx` and require their matching capability extras.
 
+## Factor HTML reports
+
+`fincore.report.factor` owns the factor report document and a self-contained,
+bilingual HTML renderer with offline ECharts charts.
+
+```python
+from fincore.report.factor import write_factor_report
+
+write_factor_report(
+    factor, prices, "factor-report.html",
+    periods=(1, 5, 20), quantiles=5, language="zh",
+)
+```
+
+`factor` is a `Series` indexed by `(date, asset)`; `prices` is a wide `DataFrame`
+indexed by date with one column per asset. The HTML contains both Chinese and
+English text and a language switch. `write_factor_report_from_model(...)` and
+`build_factor_report(...)` are available for precomputed models and custom
+renderers.
+
 ## Domain map
 
 | Domain | Owning modules |
