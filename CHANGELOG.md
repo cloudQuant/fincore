@@ -1,11 +1,29 @@
 # Changelog
 
-All notable changes to Fincore are documented here. This changelog reports version **0.5.1.dev0**, the current development version; **0.5.0** is the latest release.
+All notable changes to Fincore are documented here. This changelog reports version **0.5.1**, the current release; **0.5.0** is the preceding breaking unified-core release.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and version labels follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.1] - 2026-09-20
+
+### Fixed
+
+- **Quality gates** — repaired the MyPy pre-commit hook so it checks the
+  current `fincore` package rather than paths removed by the 0.5 cutover.
+- **Reproducible packaging contracts** — excluded pytest's repository-local
+  temporary staging directory from clean-source copies used by wheel and sdist
+  contract tests.
+- **Static root contract** — made the source-only public-API scanner recognise
+  the explicitly exported `fincore.__version__` value, allowing the source and
+  built wheel root namespaces to be compared without importing optional
+  dependencies.
+
+### Changed
+
+- Release validation now treats the frozen 0.4 API snapshot as historical
+  compatibility evidence and validates the 0.5 root namespace through the
+  schema-v2 static contract instead. No public API or runtime behavior changed.
 
 ## [0.5.0] - 2026-09-01
 

@@ -551,7 +551,7 @@ class _StaticResolver:
             if isinstance(node, (ast.Assign, ast.AnnAssign)):
                 targets = node.targets if isinstance(node, ast.Assign) else [node.target]
                 for target in targets:
-                    if isinstance(target, ast.Name) and not target.id.startswith("_"):
+                    if isinstance(target, ast.Name):
                         bindings.setdefault(target.id, _Binding("direct", _ResolvedExport("value", None)))
         bindings.update(self._dynamic_bindings(module_path, tree, source))
         self._bindings[module_path] = bindings

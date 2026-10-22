@@ -12,6 +12,8 @@ import json
 import os
 from pathlib import Path
 
+from scripts.snapshot_public_api import build_static_snapshot
+
 REPOSITORY_ROOT = Path(os.environ.get("FINCORE_0042R2_SOURCE_ROOT", Path(__file__).parents[2])).resolve()
 FIXTURES = REPOSITORY_ROOT / "tests" / "parity" / "fixtures"
 PLANNED_API = FIXTURES / "planned-api-0.5.0.json"
@@ -73,6 +75,19 @@ def test_root_shape_is_namespace_only_without_flat_callables() -> None:
     expected_namespaces.remove("exceptions")
     assert set(root["allowed_symbols"]) == {"__version__", "errors", *expected_namespaces}
     assert root["rule"].strip()
+
+
+def test_actual_source_root_matches_planned_root_shape() -> None:
+    planned = _load_planned()
+    actual = build_static_snapshot(source_root=REPOSITORY_ROOT, surfaces=("fincore",))["surfaces"]["fincore"]
+
+    allowed_symbols = set(planned["root_shape"]["allowed_symbols"])
+    assert set(actual["public_symbols"]) == allowed_symbols
+
+    entries = actual["entries"]
+    assert entries["__version__"]["kind"] == "value"
+    namespace_symbols = allowed_symbols - {"__version__", "errors"}
+    assert all(entries[name]["kind"] == "module" for name in namespace_symbols)
 
 
 def test_target_namespaces_are_disjoint_from_removed_surfaces() -> None:

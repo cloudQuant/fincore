@@ -118,6 +118,33 @@ jobs:
       - name: Verify candidate digest
         run: python scripts/check_release_candidate.py --dist dist/ --manifest dist/release-manifest.json
 
+      - name: Compare static root API with candidate wheel
+        run: |
+          # This schema-v2 source scan does not import optional dependencies.
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          wheels = sorted(Path("dist").glob("fincore-*.whl"))
+          if len(wheels) != 1:
+              raise SystemExit(f"expected exactly one fincore wheel in dist/, found {len(wheels)}")
+          subprocess.run(
+              [
+                  sys.executable,
+                  "scripts/snapshot_public_api.py",
+                  "--source-root",
+                  ".",
+                  "--wheel",
+                  str(wheels[0]),
+                  "--surface",
+                  "fincore",
+                  "--compare",
+              ],
+              check=True,
+          )
+          PY
+
       - name: Verify release consistency
         run: python scripts/check_release_consistency.py --dist dist/
 
