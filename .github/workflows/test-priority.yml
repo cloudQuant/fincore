@@ -3,7 +3,7 @@
 # This workflow runs different test suites based on priority:
 # - P0 tests: Run on every push (smoke test)
 # - P0+P1 tests: Run on pull_request
-# - Full tests: Run on push to master/main
+# - Full tests: Run on push to master/dev (release line + integration line)
 #
 # Counts are intentionally not hardcoded here; scripts/audit_test_markers.py
 # enforces that every release-gate selector still collects tests.
@@ -12,9 +12,9 @@ name: Test Priority
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, dev]
   pull_request:
-    branches: [master, main]
+    branches: [master, dev]
 
 jobs:
   # P0: Critical tests - fast smoke test
@@ -72,7 +72,7 @@ jobs:
     name: Full Test Suite
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev')
 
     strategy:
       matrix:

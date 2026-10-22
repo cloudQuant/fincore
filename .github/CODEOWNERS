@@ -1,4 +1,50 @@
-# Code ownership.  Add real GitHub usernames before enabling the branch
-# protection / required-review workflow.
+# fincore code ownership — iteration 0041, decision D2.
+# Every owner below is a real account with write access. The maintainer roster
+# and known gaps are documented in MAINTAINERS.md; do not add placeholder
+# accounts or teams that do not exist on this user-owned repository.
+#
+# NOTE: GitHub requests review from the LAST matching rule for each file, so
+# broad documentation rules come first and governance-critical paths last.
 
-*   @cloudQuant
+# Documentation tier (R0)
+*.md @cloudQuant
+/docs/ @cloudQuant
+/mkdocs_docs/ @cloudQuant
+/examples/ @cloudQuant
+
+# General library code (unlisted paths stay explicitly unowned rather than
+# being assigned to fictitious accounts; see MAINTAINERS.md gap #2)
+
+# Core compatibility & numerical surfaces (R2)
+/fincore/empyrical.py @cloudQuant
+/fincore/pyfolio.py @cloudQuant
+/fincore/_dispatch.py @cloudQuant
+/fincore/_registry.py @cloudQuant
+/fincore/core/ @cloudQuant
+/fincore/contracts/ @cloudQuant
+/fincore/metrics/ @cloudQuant
+/fincore/alphalens/ @cloudQuant
+/fincore/factor_analysis/ @cloudQuant
+/tests/compat/ @cloudQuant
+/tests/numerical/ @cloudQuant
+/tests/oracles/ @cloudQuant
+/tests/property/ @cloudQuant
+
+# Governance, CI, release & supply-chain surfaces (R3) — must win over *.md
+/.github/ @cloudQuant
+/scripts/ @cloudQuant
+/pyproject.toml @cloudQuant
+/setup.py @cloudQuant
+/setup.cfg @cloudQuant
+/MANIFEST.in @cloudQuant
+/requirements.txt @cloudQuant
+/requirements-test.txt @cloudQuant
+/constraints/ @cloudQuant
+/LICENSE @cloudQuant
+/NOTICE @cloudQuant
+/CITATION.cff @cloudQuant
+/THIRD_PARTY_NOTICES.md @cloudQuant
+/THIRD_PARTY_LICENSES/ @cloudQuant
+/SECURITY.md @cloudQuant
+/GOVERNANCE.md @cloudQuant
+/MAINTAINERS.md @cloudQuant

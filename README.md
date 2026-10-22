@@ -60,8 +60,17 @@ pip install "fincore[data-cn]"
 pip install "fincore[all]"
 ```
 
-For a source checkout, use `pip install -e ".[dev]"`. Python **3.11+** is
-required. `pyproject.toml` is the dependency source of truth.
+For a source checkout:
+
+```bash
+git clone https://github.com/cloudQuant/fincore   # International
+# China mirror: https://gitee.com/yunjinqi/fincore is TEMPORARILY UNAVAILABLE
+# (publicly unreadable, verified 2026-08-23). Use the GitHub URL until a
+# verified mirror returns; see docs/governance/branch-governance.md.
+cd fincore && pip install -e ".[dev]"
+```
+
+Python **3.11+** is required. `pyproject.toml` is the dependency source of truth.
 
 ## Quick start: metrics
 
@@ -137,6 +146,23 @@ as `fincore.factor_analysis.data`, `analysis`, `performance`, `portfolio`, or
 
 The release-quality and provenance records live under `docs/quality/`. A local
 test pass is not a published-release claim.
+
+## Related projects
+
+fincore is part of cloudQuant's quantitative research ecosystem. The other
+members cover backtesting, strategy authoring, tooling, and web workflows:
+
+| Project | Description |
+| --- | --- |
+| [backtrader](https://github.com/cloudQuant/backtrader) | Professional Python algorithmic-trading framework for backtesting and live trading, actively maintained by cloudQuant. |
+| [backtrader-skills](https://github.com/cloudQuant/backtrader-skills) | Offline author/review/test tooling for the backtrader fork: turns local datasets and typed `StrategySpec v1` into pytest strategies or three-file bundles, reviews candidates without importing them, and runs approved candidates in isolated child processes. |
+| [backtrader-mcp](https://github.com/cloudQuant/backtrader-mcp) | Local-first MCP server for building and running reproducible backtrader strategies: immutable datasets, private strategy drafts, and bounded subprocess runs with durable status and reports. Offline and backtest-only. |
+| [backtrader_web](https://github.com/cloudQuant/backtrader_web) | "AI for Investor": a web-based full-cycle backtrader strategy management platform (Vue 3 + FastAPI) covering research, strategy generation, backtesting analysis, paper trading, live execution, and data management. |
+| [backtrader-agent](https://github.com/cloudQuant/backtrader-agent) | Offline-first strategy-authoring agent runtime: content-addressed data storage, canonical strategy specifications, static review, hash-bound approvals, and a fixed child-process execution profile with recoverable session provenance. |
+| [fincore](https://github.com/cloudQuant/fincore) | This repository: unified Python platform for quantitative performance analysis and risk analytics. |
+
+More details on how these projects fit together:
+[Ecosystem](https://cloudquant.github.io/fincore/ecosystem/) in the online docs.
 
 ## License and third-party notices
 

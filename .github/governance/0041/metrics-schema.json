@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "fincore 0041 weekly governance metrics",
+  "description": "7-day rolling governance metrics for iteration 0041. One file per week under .github/governance/0041/metrics/. Metric definitions are normative; weekly files must instantiate exactly these keys. An empty or unobservable week records null, never 0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "iteration",
+    "window_start_utc",
+    "window_end_utc",
+    "generated_at_utc",
+    "data_sources",
+    "metrics"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "iteration": {"const": "0041"},
+    "window_start_utc": {"type": "string", "format": "date-time"},
+    "window_end_utc": {"type": "string", "format": "date-time"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "data_sources": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Commands or API endpoints used, e.g. 'gh pr list --repo cloudQuant/fincore --state all --limit 200 --json number,createdAt'. Raw payloads stay out of the repository."
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pr_count_new",
+        "first_response_p50_hours",
+        "first_substantive_review_p50_hours",
+        "merge_cycle_p50_hours",
+        "ci_failure_rate",
+        "ci_flake_rate",
+        "r2_pr_ratio",
+        "r2_evidence_completeness_rate",
+        "target_branch_misroute_count",
+        "bypass_count",
+        "d3_exception_open_count",
+        "required_check_unexplained_pending_count"
+      ],
+      "properties": {
+        "pr_count_new": {
+          "type": ["integer", "null"],
+          "definition": "Pull requests opened in the window (any base branch)."
+        },
+        "first_response_p50_hours": {
+          "type": ["number", "null"],
+          "definition": "Median hours from PR open to first comment/review by someone other than the author."
+        },
+        "first_substantive_review_p50_hours": {
+          "type": ["number", "null"],
+          "definition": "Median hours from PR open to first review that is an approval, request-changes, or a code-level comment by a non-author."
+        },
+        "merge_cycle_p50_hours": {
+          "type": ["number", "null"],
+          "definition": "Median hours from open to merge, merged PRs only."
+        },
+        "ci_failure_rate": {
+          "type": ["number", "null"],
+          "definition": "Failed check-run conclusions / total completed check-runs on PR heads in the window."
+        },
+        "ci_flake_rate": {
+          "type": ["number", "null"],
+          "definition": "Re-run-passed-without-change events / total failed check-runs on PR heads in the window."
+        },
+        "r2_pr_ratio": {
+          "type": ["number", "null"],
+          "definition": "PRs classified R2 / total implementation PRs in the window, per scripts/ci/classify_pr_risk.py output plus maintainer overrides."
+        },
+        "r2_evidence_completeness_rate": {
+          "type": ["number", "null"],
+          "definition": "R2 PRs with compat/oracle/property evidence declared and linked / total R2 PRs in the window."
+        },
+        "target_branch_misroute_count": {
+          "type": ["integer", "null"],
+          "definition": "PRs whose base branch contradicted the D0 decision table and required retargeting before merge."
+        },
+        "bypass_count": {
+          "type": ["integer", "null"],
+          "definition": "Admin bypass events on protected branches (Ruleset bypass list), each requiring a linked issue with reason."
+        },
+        "d3_exception_open_count": {
+          "type": ["integer", "null"],
+          "definition": "Open D3 single-maintainer exceptions at window end (label governance-exception, expiry <= 30 days)."
+        },
+        "required_check_unexplained_pending_count": {
+          "type": ["integer", "null"],
+          "definition": "PRs waiting indefinitely on a required check that never reported, at window end."
+        }
+      }
+    }
+  },
+  "empty_baseline_instance": {
+    "schema_version": 1,
+    "iteration": "0041",
+    "window_note": "Baseline only; no observation window has closed yet.",
+    "captured_at_utc": "2026-08-23T07:55:27Z",
+    "baseline_source_commit": "2bcb65773f01dd836b5fb4d928741ff1b072179e",
+    "data_sources": [],
+    "metrics": {
+      "pr_count_new": null,
+      "first_response_p50_hours": null,
+      "first_substantive_review_p50_hours": null,
+      "merge_cycle_p50_hours": null,
+      "ci_failure_rate": null,
+      "ci_flake_rate": null,
+      "r2_pr_ratio": null,
+      "r2_evidence_completeness_rate": null,
+      "target_branch_misroute_count": null,
+      "bypass_count": null,
+      "d3_exception_open_count": null,
+      "required_check_unexplained_pending_count": null
+    }
+  }
+}

@@ -1,0 +1,72 @@
+name: Bug report（缺陷报告）
+description: 报告 fincore 的行为缺陷或数值错误
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告问题。请先搜索现有 issue 避免重复。
+        **安全漏洞不要用此表单**——见 SECURITY.md 的私密报告渠道。
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境（Environment）
+      description: 操作系统、Python 版本、fincore 版本、相关 extras
+      placeholder: |
+        - OS: macOS 15 / Ubuntu 24.04 / Windows 11
+        - Python: 3.11.x
+        - fincore: 0.4.0.dev0（pip install 的确切版本或 commit）
+        - extras: [pyfolio] 等
+    validations:
+      required: true
+
+  - type: dropdown
+    id: api_surface
+    attributes:
+      label: 受影响的 API 表面（API surface）
+      description: 哪个界面出现该问题？
+      options:
+        - "fincore.empyrical（严格兼容表面）"
+        - "fincore.pyfolio（pyfolio 门面）"
+        - "fincore.metrics / flat API / AnalysisContext（增强语义）"
+        - "fincore.alphalens / fincore.factor_analysis"
+        - "其他/不确定"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 最小复现（Minimal reproduction）
+      description: 可直接运行的最短代码与输入数据；随机数据请固定 seed
+      placeholder: |
+        import fincore, pandas as pd
+        returns = pd.Series([0.01, -0.005, 0.002])
+        print(fincore.sharpe_ratio(returns))
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: 预期结果 vs 实际结果（Expected / Actual）
+      description: 期望得到什么、实际得到什么；涉及数值时给出参考值及来源
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 完整 traceback
+      description: 完整错误输出，不要截断关键帧
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索现有 issue 与 Discussions，未发现重复
+        - label: 复现代码不包含任何凭据、密钥或账户信息

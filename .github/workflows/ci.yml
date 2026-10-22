@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, dev]
     tags: ["*"]
   pull_request:
-    branches: [master, main]
+    branches: [master, dev]
   # 0042-R2 technical matrix is deliberately manual.  It requires an
   # independently retained D0 bundle and frozen tooling commit; ordinary PR
   # CI must never manufacture either expected input from candidate code.

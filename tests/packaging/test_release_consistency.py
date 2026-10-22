@@ -24,6 +24,7 @@ _BUILD_SOURCE_IGNORES = (
     "dist",
     "__pycache__",
     ".pytest_cache",
+    ".pytest_tmp",
     ".mypy_cache",
     ".ruff_cache",
     ".hypothesis",

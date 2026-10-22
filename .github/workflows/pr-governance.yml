@@ -1,0 +1,99 @@
+name: PR Governance
+
+# Iteration 0041 / M3. Runs on every PR with no paths filter so the required
+# check always reports (never stuck Pending). Report-only until the admin
+# flips GOVERNANCE_ENFORCE after the M4 Ruleset drills (decisions.md D3/D4).
+
+on:
+  pull_request:
+    branches: [master, dev]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-governance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    name: PR Governance / policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Classify changed paths
+        run: |
+          git fetch --no-tags --quiet origin "${{ github.base_ref }}"
+          git diff --name-only "origin/${{ github.base_ref }}...HEAD" > /tmp/changed-paths.txt
+          python scripts/ci/classify_pr_risk.py \
+            --paths-file /tmp/changed-paths.txt \
+            --output /tmp/classification.json
+
+      - name: Evaluate governance policy
+        env:
+          GOVERNANCE_ENFORCE: "false"
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          LEVEL=$(python -c "import json;print(json.load(open('/tmp/classification.json'))['risk_level'])")
+          PR_META=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --json baseRefName,title,body,labels)
+          BASE=$(python -c "import json,sys;print(json.loads(sys.argv[1])['baseRefName'])" "$PR_META")
+          BODY=$(python -c "import json,sys;print(json.loads(sys.argv[1]).get('body') or '')" "$PR_META")
+
+          violations=()
+
+          if [ "$BASE" = "master" ]; then
+            TITLE=$(python -c "import json,sys;print(json.loads(sys.argv[1])['title'])" "$PR_META")
+            case "$TITLE" in
+              promotion:*|hotfix:*) : ;;
+              *) violations+=("routine-pr-targeting-master: daily contributions must target dev; master only accepts promotion:/hotfix: titled PRs") ;;
+            esac
+          fi
+
+          if [ "$LEVEL" = "R2" ]; then
+            if ! printf '%s' "$BODY" | grep -Eq 'tests/(compat|numerical|oracles|property)|snapshot_public_api'; then
+              violations+=("r2-missing-evidence-declaration: R2 changes must declare compat/numerical/oracle/property evidence or an API snapshot check in the PR body")
+            fi
+          fi
+
+          {
+            echo "## PR Governance report"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Risk level (path floor) | \`$LEVEL\` |"
+            echo "| Base branch | \`$BASE\` |"
+            echo "| Enforcement mode | \`${{ env.GOVERNANCE_ENFORCE }}\` |"
+            echo ""
+            if [ "${#violations[@]}" -gt 0 ]; then
+              echo "### Violations"
+              for v in "${violations[@]}"; do echo "- $v"; done
+            else
+              echo "No governance violations detected."
+            fi
+            echo ""
+            echo "_Report-only mode: violations are recorded but do not fail this check_"
+            echo "_until the administrator enables enforcement after M4 drills._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for v in "${violations[@]:-}"; do
+            [ -n "$v" ] && echo "::warning::$v"
+          done
+
+          if [ "${{ env.GOVERNANCE_ENFORCE }}" = "true" ] && [ "${#violations[@]}" -gt 0 ]; then
+            echo "::error::Governance enforcement is enabled and ${#violations[@]} violation(s) were found."
+            exit 1
+          fi

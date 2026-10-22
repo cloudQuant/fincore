@@ -96,7 +96,27 @@ fincore/
 6. **Lint your code**: `ruff check fincore/ tests/`
 7. **Commit** with a clear message: `git commit -m "Add: new metric X"`
 8. **Push** to your fork: `git push origin feature/my-feature`
-9. **Open a Pull Request** against the `main` branch
+9. **Open a Pull Request against the `dev` branch**
+
+> **Target branch rule:** `dev` is the daily contribution entry; `master` is the
+> stable release line and only accepts promotion PRs from `dev` or `hotfix/*`
+> security/release-blocking PRs. Until the GitHub default branch is switched to
+> `dev`, GitHub may pre-select `master` as the base when you open a fork PR —
+> **manually change the base to `dev`** unless you are submitting a hotfix.
+> See [branch governance](docs/governance/branch-governance.md) for the full
+> decision table, the R0–R3 risk levels, and the evidence each level requires.
+
+## Branch & Review Model
+
+| Change | Target | Minimum evidence |
+| --- | --- | --- |
+| Docs, examples, non-behavioral tooling (R0) | `dev` | affected docs strict build / static check |
+| Local fix/feature, no public behavior or numerical change (R1) | `dev` | regression test + fast suite |
+| Public API, strict-compat facade, numerical kernel, frozen manifests, cross-module integration (R2) | `dev` | compat/numerical/oracles/property suites, current API snapshot, ADR if semantics diverge |
+| Security / supply-chain / release config (R3) | `hotfix/* → master` via the private channel first | minimal repro, regression, R3 checklist |
+
+Numerical-correctness changes require an independent oracle and a property test
+before merge — CI green alone is not review approval.
 
 ## Coding Conventions
 
@@ -150,9 +170,13 @@ def sharpe_ratio(
 
 ## Reporting Issues
 
-- Use GitHub Issues for bug reports and feature requests
+- Use the **Bug report** / **Feature request** issue forms; general usage
+  questions go to [GitHub Discussions](https://github.com/cloudQuant/fincore/discussions)
 - Include a minimal reproducible example when reporting bugs
 - Mention your Python version and OS
+- **Security vulnerabilities are never reported via public issues** — see
+  [SECURITY.md](SECURITY.md) for the private reporting channel
+- Maintainer roles and known gaps are listed in [MAINTAINERS.md](MAINTAINERS.md)
 
 ## License
 

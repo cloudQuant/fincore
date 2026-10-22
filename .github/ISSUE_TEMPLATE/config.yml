@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用疑问 / 问答（Discussions）
+    url: https://github.com/cloudQuant/fincore/discussions
+    about: 一般使用问题、最佳实践讨论请到 GitHub Discussions，不要开 issue。
+  - name: 安全漏洞私密报告
+    url: https://github.com/cloudQuant/fincore/security/advisories/new
+    about: 安全问题必须走私密渠道（GitHub Private Vulnerability Reporting），见 SECURITY.md。切勿公开提交漏洞细节。

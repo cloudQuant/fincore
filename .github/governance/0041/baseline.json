@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "iteration": "0041",
+  "repository": "cloudQuant/fincore",
+  "captured_at_utc": "2026-08-23T07:55:27Z",
+  "baseline_source_commit": "2bcb65773f01dd836b5fb4d928741ff1b072179e",
+  "note": "Read-only baseline collected before any governance change. Results are sanitized summaries; raw API payloads stay outside the repository. An API failure must be recorded as a failure, never as 'no rules'.",
+  "probes": [
+    {
+      "id": "B1",
+      "fact": "Public repository; default branch is master; Discussions enabled.",
+      "command": "gh api repos/cloudQuant/fincore --jq '{default_branch:.default_branch,has_discussions:.has_discussions,is_fork:.fork,visibility:.visibility}'",
+      "exit_code": 0,
+      "result": {
+        "default_branch": "master",
+        "has_issues": true,
+        "has_discussions": true,
+        "is_fork": false,
+        "visibility": "public"
+      }
+    },
+    {
+      "id": "B2",
+      "fact": "No GitHub Rulesets configured.",
+      "command": "gh api repos/cloudQuant/fincore/rulesets",
+      "exit_code": 0,
+      "result": []
+    },
+    {
+      "id": "B3",
+      "fact": "Neither master nor dev has traditional Branch Protection.",
+      "command": "gh api repos/cloudQuant/fincore/branches/{master,dev}/protection",
+      "exit_code": 0,
+      "result": {
+        "master": {"status": 404, "message": "Branch not protected"},
+        "dev": {"status": 404, "message": "Branch not protected"}
+      }
+    },
+    {
+      "id": "B4",
+      "fact": "CODEOWNERS parses without errors, but its content is a single global placeholder rule.",
+      "command": "gh api repos/cloudQuant/fincore/codeowners/errors",
+      "exit_code": 0,
+      "result": {"errors": []},
+      "local_content_summary": ".github/CODEOWNERS contains one global '*' -> @cloudQuant rule"
+    },
+    {
+      "id": "B5",
+      "fact": "Long-lived remote branch heads at capture time.",
+      "command": "git ls-remote --heads origin master dev gh-pages",
+      "exit_code": 0,
+      "result": {
+        "refs/heads/master": "2bcb65773f01dd836b5fb4d928741ff1b072179e",
+        "refs/heads/dev": "2bcb65773f01dd836b5fb4d928741ff1b072179e",
+        "refs/heads/gh-pages": "e340aa65324a107c7ea2a2ba5f0a8879042166fe"
+      }
+    },
+    {
+      "id": "B6",
+      "fact": "master and dev point to the same commit; divergence is 0/0.",
+      "command": "git rev-list --left-right --count master...dev",
+      "exit_code": 0,
+      "result": {"ahead_master_only": 0, "ahead_dev_only": 0}
+    },
+    {
+      "id": "B7",
+      "fact": "GitHub Private Vulnerability Reporting is currently DISABLED.",
+      "command": "gh api repos/cloudQuant/fincore/private-vulnerability-reporting",
+      "exit_code": 0,
+      "result": {"enabled": false},
+      "implication": "D6 requires the administrator to enable PVR in repository Settings before SECURITY.md can describe it as live."
+    },
+    {
+      "id": "B8",
+      "fact": "Repository labels are the GitHub defaults plus a few generic ones; no governance label scheme exists.",
+      "command": "gh api 'repos/cloudQuant/fincore/labels?per_page=100' --jq '.[].name'",
+      "exit_code": 0,
+      "result": [
+        "bug", "dependencies", "documentation", "duplicate", "enhancement",
+        "github_actions", "good first issue", "help wanted", "invalid",
+        "python", "question", "wontfix"
+      ]
+    },
+    {
+      "id": "B9",
+      "fact": "The Gitee mirror advertised in README is not publicly readable.",
+      "command": "curl -s -o /dev/null -w '%{http_code}' https://gitee.com/yunjinqi/fincore ; git ls-remote https://gitee.com/yunjinqi/fincore.git HEAD",
+      "exit_code": 0,
+      "result": {
+        "web_http_status": 404,
+        "git_probe": "fatal: repository 'https://gitee.com/yunjinqi/fincore.git/' not found"
+      }
+    },
+    {
+      "id": "B10",
+      "fact": "Tracked workflow inventory.",
+      "command": "find .github/workflows -type f | sort",
+      "exit_code": 0,
+      "result": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/docs.yml",
+        ".github/workflows/publish.yml",
+        ".github/workflows/test-priority.yml"
+      ]
+    },
+    {
+      "id": "B11",
+      "fact": "ci.yml and test-priority.yml trigger on [master, main]; no branch named main exists locally or on origin.",
+      "command": "rg -n 'branches:' .github/workflows/ci.yml .github/workflows/test-priority.yml",
+      "exit_code": 0,
+      "result": {
+        "ci_yml_push": "[master, main]",
+        "ci_yml_pull_request": "[master, main]",
+        "test_priority_push": "[master, main]",
+        "test_priority_pull_request": "[master, main]",
+        "test_priority_full_job_condition_refs": ["refs/heads/master", "refs/heads/main"]
+      }
+    },
+    {
+      "id": "B12",
+      "fact": "PR template still cites the retired API fixture public-api-0.3.x.json; the current snapshot fixture is public-api-0.4.0.dev0.json.",
+      "command": "ls tests/contracts/fixtures/ && rg -n 'public-api-0\\.3\\.x' .github/pull_request_template.md",
+      "exit_code": 0,
+      "result": {
+        "fixtures_present": [
+          "public-api-0.3.x.json",
+          "public-api-0.4.0.dev0.json",
+          "public-api-probes-0.3.x.json"
+        ],
+        "pr_template_reference": "tests/contracts/fixtures/public-api-0.3.x.json"
+      }
+    },
+    {
+      "id": "B13",
+      "fact": "CONTRIBUTING.md instructs contributors to open PRs against 'main', a branch that does not exist.",
+      "command": "rg -n 'against the .main. branch|Target: main' CONTRIBUTING.md",
+      "exit_code": 0,
+      "result": {"contribution_workflow_step_9": "Open a Pull Request against the `main` branch"}
+    },
+    {
+      "id": "B14",
+      "fact": "docs/迭代计划/README.md registers historical iterations only; no active-iteration table exists and 0041 was untracked at baseline time.",
+      "command": "git status --porcelain -- 'docs/迭代计划/0041-社区PR治理与双分支协作/'",
+      "exit_code": 0,
+      "result": {"untracked_directory": true, "active_iteration_table": false}
+    }
+  ]
+}

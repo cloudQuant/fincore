@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "decision_source": ".github/governance/0041/decisions.md",
+  "note": "Governance labels maintained by triage maintainers. Labels are NOT a Ruleset capability; the PR Governance / policy check validates declared labels, Rulesets cannot. Existing GitHub default labels (bug, enhancement, ...) are out of scope and never treated as drift when extra.",
+  "labels": [
+    {"name": "target:dev", "color": "0e8a16", "description": "Routine contribution targeting the dev integration branch"},
+    {"name": "target:promotion", "color": "0e8a16", "description": "dev -> master promotion candidate PR"},
+    {"name": "target:hotfix", "color": "d93f0b", "description": "hotfix/* -> master security or release-blocking fix"},
+    {"name": "risk:r0", "color": "c2e0c6", "description": "Docs/metadata/non-behavioral tooling; lowest review tier"},
+    {"name": "risk:r1", "color": "bfd4f2", "description": "Local implementation with no public behavior or numerical change"},
+    {"name": "risk:r2", "color": "fbca04", "description": "Behavior/compatibility/numerical kernel/frozen manifest; requires compat+numerical+oracle+property evidence"},
+    {"name": "risk:r3", "color": "b60205", "description": "Security/governance/release/supply chain; core maintainer approval required"},
+    {"name": "needs-repro", "color": "ededed", "description": "Blocked until a minimal reproduction is provided"},
+    {"name": "needs-oracle", "color": "ededed", "description": "Numerical change missing an independent oracle"},
+    {"name": "needs-compat-evidence", "color": "ededed", "description": "R2 change missing compat/snapshot evidence declaration"},
+    {"name": "ready-to-merge", "color": "0e8a16", "description": "All gates satisfied; awaiting merge window"},
+    {"name": "blocked", "color": "b60205", "description": "Progress blocked by an external dependency or decision"},
+    {"name": "governance-exception", "color": "5319e7", "description": "D3 single-maintainer exception applied (24h cooling, <=30-day expiry); NOT independent double review"}
+  ]
+}

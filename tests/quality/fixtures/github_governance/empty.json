@@ -1,0 +1,15 @@
+{
+  "captured_at_utc": "2026-08-23T08:00:00Z",
+  "repo": "cloudQuant/fincore",
+  "default_branch": "master",
+  "source_commands": [
+    "gh api repos/cloudQuant/fincore/rules/branches/master",
+    "gh api repos/cloudQuant/fincore/rules/branches/dev",
+    "gh api repos/cloudQuant/fincore/rulesets",
+    "gh api repos/cloudQuant/fincore/codeowners/errors"
+  ],
+  "branch_rules": {},
+  "rulesets": [],
+  "codeowners_errors": [],
+  "labels": []
+}

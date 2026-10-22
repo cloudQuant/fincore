@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "branch": "dev",
+  "decision_source": ".github/governance/0041/decisions.md",
+  "role": "daily-contribution-entry",
+  "requires_pull_request": true,
+  "review_policy": {
+    "min_approvals": 1,
+    "require_code_owner": true,
+    "require_last_push_approval": true,
+    "dismiss_stale_reviews": true,
+    "require_conversation_resolution": true
+  },
+  "allow_force_push": false,
+  "allow_deletion": false,
+  "allow_direct_update": false,
+  "bypass_actors": [],
+  "second_reviewer_pending": true,
+  "d3_exception": {
+    "enabled": true,
+    "cooling_hours": 24,
+    "max_age_days": 30,
+    "label": "governance-exception",
+    "note": "Single-maintainer risk acceptance for R2 self-PRs; NOT independent double review. See decisions.md D3."
+  },
+  "required_checks": [
+    {"name": "pr_governance_policy", "context": "pending-evidence", "app_id": "pending-evidence"},
+    {"name": "ci_build", "context": "pending-evidence", "app_id": "pending-evidence"}
+  ],
+  "required_checks_note": "D4: expected contexts are 'PR Governance / policy' and 'CI / build'; both stay pending-evidence until M4 drill PRs collect real check-run context/app ids."
+}

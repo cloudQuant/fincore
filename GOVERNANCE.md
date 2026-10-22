@@ -5,6 +5,14 @@ records how decisions are made and how the release is governed. Third-party
 Apache-2.0 attribution and terms remain in [NOTICE](NOTICE) and do not change
 the Fincore project license.
 
+## Branch model
+
+Daily contributions target `dev`; `master` is the stable release line. The
+full decision table, R0–R3 risk levels, promotion/hotfix protocols, and the
+single-maintainer exception policy live in
+[branch-governance.md](docs/governance/branch-governance.md). Maintainers,
+role boundaries, and known gaps are listed in [MAINTAINERS.md](MAINTAINERS.md).
+
 ## Roles
 
 | Role | Responsibility |
