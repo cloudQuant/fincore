@@ -18,17 +18,28 @@ _EMPTY_CANONICAL_NAMESPACES = (
     "fincore.performance",
     "fincore.portfolio",
     "fincore.report",
-    "fincore.report.factor",
     "fincore.report.portfolio",
     "fincore.report.renderers",
     "fincore.risk",
 )
 
+# `fincore.report.factor` is the one report root that ships a documented
+# package-level entry point (see docs/api.md and docs/user_guide.md), so its
+# export set is pinned here instead of being asserted empty.
+_FACTOR_REPORT_EXPORTS = [
+    "build_factor_report",
+    "render_factor_html",
+    "write_factor_html",
+    "write_factor_report",
+    "write_factor_report_from_model",
+]
+
 
 def test_canonical_namespaces_load_without_package_root_compatibility_exports() -> None:
     """Domain roots remain importable but keep leaf APIs at their owner paths."""
 
-    namespaces = {name: importlib.reload(importlib.import_module(name)) for name in _EMPTY_CANONICAL_NAMESPACES}
+    names = (*_EMPTY_CANONICAL_NAMESPACES, "fincore.report.factor")
+    namespaces = {name: importlib.reload(importlib.import_module(name)) for name in names}
     runtime = importlib.reload(importlib.import_module("fincore.runtime"))
     root = importlib.reload(importlib.import_module("fincore"))
 
@@ -49,7 +60,8 @@ def test_canonical_namespaces_load_without_package_root_compatibility_exports() 
         "simulation",
         "viz",
     ]
-    assert all(module.__all__ == [] for module in namespaces.values())
+    assert all(namespaces[name].__all__ == [] for name in _EMPTY_CANONICAL_NAMESPACES)
+    assert namespaces["fincore.report.factor"].__all__ == _FACTOR_REPORT_EXPORTS
     assert {"OperationCatalog", "OperationSpec", "run"}.issubset(runtime.__all__)
     assert not hasattr(root, "empyrical")
     assert not hasattr(root, "pyfolio")
