@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -75,6 +76,53 @@ def test_factor_html_report_from_model_includes_preparation_coverage(tmp_path: P
     assert "IC statistics" in rendered
     assert "Input cells" in rendered
     assert "Finite factor cells" in rendered
+
+
+def test_factor_html_model_rerenders_without_repreparing_or_reanalyzing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fincore.factor_analysis import analysis as analysis_module
+    from fincore.factor_analysis import data as data_module
+    from fincore.factor_analysis.analysis import analyze_factor
+    from fincore.factor_analysis.data import prepare_factor_data
+    from fincore.report.factor import write_factor_report_from_model
+
+    factor, prices = _factor_data()
+    prepared = prepare_factor_data(factor, prices, periods=(1, 5), quantiles=5, max_loss=1.0)
+    model = analyze_factor(prepared.data, periods=None, turnover_periods=(1, 5))
+    before = json.dumps(model.to_serializable(), ensure_ascii=False, sort_keys=True, allow_nan=False)
+    fingerprint = model.result_fingerprint
+
+    def must_not_recompute(*args: object, **kwargs: object) -> None:
+        raise AssertionError("model-only rendering must not prepare or analyze the factor again")
+
+    monkeypatch.setattr(data_module, "prepare_factor_data", must_not_recompute)
+    monkeypatch.setattr(analysis_module, "analyze_factor", must_not_recompute)
+
+    chinese = write_factor_report_from_model(
+        model,
+        tmp_path / "rerender-zh.html",
+        title="同一模型中文标题",
+        language="zh",
+        loss_report=prepared.loss_report,
+    )
+    english = write_factor_report_from_model(
+        model,
+        tmp_path / "rerender-en.html",
+        title="Same model English title",
+        language="en",
+        loss_report=prepared.loss_report,
+    )
+
+    chinese_html = chinese.read_text(encoding="utf-8")
+    english_html = english.read_text(encoding="utf-8")
+    assert '<html lang="zh">' in chinese_html
+    assert "同一模型中文标题" in chinese_html
+    assert '<html lang="en">' in english_html
+    assert "Same model English title" in english_html
+    assert model.result_fingerprint == fingerprint
+    assert json.dumps(model.to_serializable(), ensure_ascii=False, sort_keys=True, allow_nan=False) == before
 
 
 def test_factor_html_report_rejects_an_unknown_language(tmp_path: Path) -> None:
