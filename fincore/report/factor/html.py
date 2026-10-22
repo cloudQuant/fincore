@@ -17,7 +17,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 import numpy as np
 import pandas as pd
@@ -248,7 +248,7 @@ def _number(value: Any) -> float | None:
 def _timestamp_points(values: pd.Series) -> list[list[Any]]:
     points = []
     for index, value in values.items():
-        points.append([pd.Timestamp(index).isoformat(), _number(value)])
+        points.append([pd.Timestamp(cast("Any", index)).isoformat(), _number(value)])
     return points
 
 

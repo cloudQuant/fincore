@@ -84,8 +84,11 @@ def build_factor_report(model: FactorAnalysisModel, *, title: str = "Factor Anal
     information_summary = build_information_table(model.information_coefficient)
     quantile_statistics = build_quantile_statistics_table(model.factor_data)
     returns_summary = build_returns_table(model.alpha_beta, model.mean_returns_by_quantile, model.mean_return_spread)
-    autocorrelation = {int(lag): model.rank_autocorrelation[lag] for lag in model.rank_autocorrelation.columns}
-    turnover_summary, autocorrelation_summary = build_turnover_tables(autocorrelation, model.quantile_turnover)
+    autocorrelation: dict[object, pd.Series] = {
+        int(lag): model.rank_autocorrelation[lag] for lag in model.rank_autocorrelation.columns
+    }
+    turnover_input: dict[object, pd.DataFrame] = {int(lag): values for lag, values in model.quantile_turnover.items()}
+    turnover_summary, autocorrelation_summary = build_turnover_tables(autocorrelation, turnover_input)
     turnover_by_quantile = _turnover_by_quantile(model)
 
     summary_metrics: dict[str, Any] = {
