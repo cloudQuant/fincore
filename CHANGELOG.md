@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Fincore are documented here. This changelog reports version **0.5.1**, the current release; **0.5.0** is the preceding breaking unified-core release.
+All notable changes to Fincore are documented here. This changelog reports version **0.5.2.dev0**, the current development version; **0.5.1** is the latest release.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and version labels follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

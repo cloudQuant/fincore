@@ -114,3 +114,11 @@ Only the Fincore product version advances from the development identifier
 `0.5.1.dev0` to stable `0.5.1`. Upstream commit identifiers, content digests,
 observed license information, and all `pending-human-review` statuses remain
 unchanged. This identity update is not a legal approval or review.
+
+## 2026-10-22 Development-identity refresh after the 0.5.1 sync
+
+`dev` now carries the released `0.5.1` line, so its product version moves from
+stable `0.5.1` to the development identifier `0.5.2.dev0`; the released tag
+stays on `master`. Upstream commit identifiers, content digests, observed
+license information, and all `pending-human-review` statuses remain unchanged.
+This identity update is not a legal approval or review.
