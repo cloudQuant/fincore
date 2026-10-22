@@ -601,6 +601,7 @@ def _analyze_factor(
             long_short=long_short,
             group_neutral=group_neutral,
             equal_weight=equal_weight,
+            weights=weights,
         )
         for period in selected_periods
     }
@@ -612,6 +613,7 @@ def _analyze_factor(
             long_short=long_short,
             group_neutral=group_neutral,
             equal_weight=equal_weight,
+            weights=weights,
         )
         for period in selected_periods
     }
@@ -624,6 +626,7 @@ def _analyze_factor(
             group_neutral=group_neutral,
             equal_weight=equal_weight,
             benchmark_period=config.portfolio_benchmark_period,
+            weights=weights,
         )
         if include_portfolio_inputs
         else None

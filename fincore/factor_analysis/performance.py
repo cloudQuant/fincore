@@ -209,6 +209,7 @@ def factor_returns(
     group_adjust: bool = False,
     equal_weight: bool = False,
     by_asset: bool = False,
+    weights: pd.Series | None = None,
 ) -> pd.DataFrame:
     """Compute weighted forward returns, optionally retaining individual assets.
 
@@ -219,12 +220,13 @@ def factor_returns(
 
     copied = _copy_factor_data(factor_data)
     columns = _forward_columns(copied)
-    weights = factor_weights(
-        copied,
-        demeaned=demeaned,
-        group_adjust=group_adjust,
-        equal_weight=equal_weight,
-    )
+    if weights is None:
+        weights = factor_weights(
+            copied,
+            demeaned=demeaned,
+            group_adjust=group_adjust,
+            equal_weight=equal_weight,
+        )
     weighted = copied.loc[:, columns].multiply(weights, axis=0)
     if by_asset:
         return weighted

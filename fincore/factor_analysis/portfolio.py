@@ -118,6 +118,7 @@ def _factor_portfolio_returns(
     equal_weight: bool,
     quantiles: Sequence[int] | None,
     groups: Sequence[str] | None,
+    weights: "pd.Series | None" = None,
 ) -> pd.Series:
     """Compute one non-cumulative factor-portfolio return series on a copy."""
 
@@ -132,6 +133,7 @@ def _factor_portfolio_returns(
         demeaned=long_short,
         group_adjust=group_neutral,
         equal_weight=equal_weight,
+        weights=weights,
     )
     selected = returns[period]
     if not isinstance(selected, pd.Series):
@@ -147,6 +149,7 @@ def factor_cumulative_returns(
     equal_weight: bool = False,
     quantiles: Sequence[int] | None = None,
     groups: Sequence[str] | None = None,
+    weights: "pd.Series | None" = None,
 ) -> pd.Series:
     """Simulate and compound a filtered factor portfolio for one return period."""
 
@@ -158,6 +161,7 @@ def factor_cumulative_returns(
         equal_weight=equal_weight,
         quantiles=quantiles,
         groups=groups,
+        weights=weights,
     )
     return cast("pd.Series", _performance.cumulative_returns(returns))
 
@@ -170,6 +174,7 @@ def factor_positions(
     equal_weight: bool = False,
     quantiles: Sequence[int] | None = None,
     groups: Sequence[str] | None = None,
+    weights: "pd.Series | None" = None,
 ) -> pd.DataFrame:
     """Simulate gross-normalized asset positions for a filtered factor portfolio."""
 
@@ -179,12 +184,13 @@ def factor_positions(
         quantiles=quantiles,
         groups=groups,
     )
-    weights = _performance.factor_weights(
-        portfolio_data,
-        demeaned=long_short,
-        group_adjust=group_neutral,
-        equal_weight=equal_weight,
-    )
+    if weights is None:
+        weights = _performance.factor_weights(
+            portfolio_data,
+            demeaned=long_short,
+            group_adjust=group_neutral,
+            equal_weight=equal_weight,
+        )
     return positions(weights, period)
 
 
@@ -206,6 +212,7 @@ def build_factor_portfolio_inputs(
     quantiles: Sequence[int] | None = None,
     groups: Sequence[str] | None = None,
     benchmark_period: object = "1D",
+    weights: "pd.Series | None" = None,
 ) -> FactorPortfolioInputs:
     """Build typed daily returns, positions, and an optional benchmark series."""
 
@@ -217,6 +224,7 @@ def build_factor_portfolio_inputs(
         equal_weight=equal_weight,
         quantiles=quantiles,
         groups=groups,
+        weights=weights,
     )
     daily_cumulative, returns = _daily_cumulative_returns(cumulative)
 
@@ -228,6 +236,7 @@ def build_factor_portfolio_inputs(
         equal_weight=equal_weight,
         quantiles=quantiles,
         groups=groups,
+        weights=weights,
     )
     daily_positions = raw_positions.resample("1D").sum().ffill()
     asset_gross = daily_positions.abs().sum(axis=1)
