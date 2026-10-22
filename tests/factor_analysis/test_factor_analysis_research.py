@@ -102,7 +102,7 @@ def test_capabilities_expose_the_required_contract() -> None:
     assert capabilities["entrypoint"] == "fincore.factor_analysis.research.evaluate_factor_research"
     assert capabilities["spec"] == "fincore.factor_analysis.research.ResearchEvaluationSpec"
     assert capabilities["normalizer"] == "fincore.factor_analysis.research.normalize_research_evaluation_spec"
-    assert capabilities["labels"] == ("close_to_close", "next_open_to_open")
+    assert capabilities["labels"] == ("close_to_close", "next_open_to_open", "precomputed")
     assert capabilities["preprocess"] == ("cross_section_rank", "cross_section_zscore", "none")
     assert capabilities["metrics"] == (
         "pearson_ic",
@@ -111,6 +111,7 @@ def test_capabilities_expose_the_required_contract() -> None:
         "quantile_returns",
         "spread",
         "rank_autocorrelation",
+        "quantile_turnover",
         "factor_correlation",
         "paired_comparison",
     )
@@ -120,6 +121,7 @@ def test_capabilities_expose_the_required_contract() -> None:
         "ic",
         "ic_summary",
         "quantile_returns",
+        "turnover",
         "spreads",
         "stability",
         "correlation",

@@ -40,6 +40,7 @@ from fincore.factor_analysis.performance import (
     factor_information_coefficient,
     factor_rank_autocorrelation,
     mean_return_by_quantile,
+    quantile_turnover,
 )
 
 if TYPE_CHECKING:
@@ -49,7 +50,7 @@ API_VERSION = "1.0"
 RESULT_SCHEMA_VERSION = 1
 EVALUATION_CONFIG_SCHEMA_VERSION = 1
 
-LABELS = ("close_to_close", "next_open_to_open")
+LABELS = ("close_to_close", "next_open_to_open", "precomputed")
 PREPROCESS_METHODS = ("cross_section_rank", "cross_section_zscore", "none")
 METRICS = (
     "pearson_ic",
@@ -58,6 +59,7 @@ METRICS = (
     "quantile_returns",
     "spread",
     "rank_autocorrelation",
+    "quantile_turnover",
     "factor_correlation",
     "paired_comparison",
 )
@@ -67,6 +69,7 @@ RESULT_TABLES = (
     "ic",
     "ic_summary",
     "quantile_returns",
+    "turnover",
     "spreads",
     "stability",
     "correlation",
@@ -77,7 +80,8 @@ RESULT_TABLES = (
 EXPORT_FORMATS = ("json", "csv")
 RESULT_STATUSES = ("OK", "PARTIAL", "UNEVALUABLE")
 
-# ``precomputed`` is an input-selection sentinel rather than a label
+# ``precomputed`` is supported only when ``precomputed_returns`` is supplied;
+# the entry rejects it explicitly otherwise.  It is not a derived price label.
 # definition: it selects a caller-supplied forward-return frame and therefore
 # is accepted by the normalizer without being advertised as a computable label.
 PRECOMPUTED_LABEL = "precomputed"
@@ -203,6 +207,7 @@ class ResearchEvaluationResult:
     ic: pd.DataFrame
     ic_summary: pd.DataFrame
     quantile_returns: pd.DataFrame
+    turnover: pd.DataFrame
     spreads: pd.DataFrame
     stability: pd.DataFrame
     correlation: pd.DataFrame
@@ -996,6 +1001,15 @@ def _validate_universe(
 ) -> tuple[np.ndarray, int]:
     if universe is None:
         return np.ones((len(study_dates), len(spec.targets)), dtype=bool), 0
+    if isinstance(universe, pd.Series) and isinstance(universe.index, pd.MultiIndex):
+        # Accept the long (time, asset) boolean form as well as a wide frame.
+        if tuple(universe.index.names) != ("time", "asset"):
+            raise DatasetError(
+                "long universe index must be named (time, asset)",
+                code="universe_index",
+                report={"names": list(universe.index.names)},
+            )
+        universe = universe.unstack("asset")
     frame = _require_wide_frame(universe, field="universe", code="universe")
     _require_utc_index(frame.index, field="universe", code="universe")
     missing = [target for target in spec.targets if target not in frame.columns]
@@ -1135,6 +1149,7 @@ def _evaluate_period(
     ic_rows: list[dict[str, object]] = []
     quantile_rows: list[dict[str, object]] = []
     spread_rows: list[dict[str, object]] = []
+    turnover_rows: list[dict[str, object]] = []
 
     finite_factor = np.isfinite(values)
     finite_label = np.isfinite(label_values)
@@ -1147,7 +1162,7 @@ def _evaluate_period(
             code="no_finite_factor",
             message=f"factor {factor!r} has no finite values in the study window",
         )
-        return ic_rows, quantile_rows, spread_rows
+        return ic_rows, quantile_rows, spread_rows, turnover_rows
     if not finite_label.any():
         _diagnose(
             diagnostics,
@@ -1157,7 +1172,7 @@ def _evaluate_period(
             code="no_labels",
             message=f"forward returns {label!r} are unavailable for every {factor!r} cell",
         )
-        return ic_rows, quantile_rows, spread_rows
+        return ic_rows, quantile_rows, spread_rows, turnover_rows
 
     factor_series = pd.Series(values, index=panel_index, name="factor")
     forward = pd.DataFrame({label: label_values}, index=panel_index)
@@ -1178,7 +1193,7 @@ def _evaluate_period(
             code="max_loss_exceeded",
             message=f"{error} (period {label}, factor {factor!r})",
         )
-        return ic_rows, quantile_rows, spread_rows
+        return ic_rows, quantile_rows, spread_rows, turnover_rows
     except (KeyError, ValueError) as error:
         _diagnose(
             diagnostics,
@@ -1188,7 +1203,7 @@ def _evaluate_period(
             code="preparation_failed",
             message=f"period {label}, factor {factor!r}: {error}",
         )
-        return ic_rows, quantile_rows, spread_rows
+        return ic_rows, quantile_rows, spread_rows, turnover_rows
 
     data = prepared.data
     if data.empty or label not in data.columns:
@@ -1200,7 +1215,7 @@ def _evaluate_period(
             code="no_evaluable_cells",
             message=f"period {label}, factor {factor!r} has no rows after cleaning and binning",
         )
-        return ic_rows, quantile_rows, spread_rows
+        return ic_rows, quantile_rows, spread_rows, turnover_rows
 
     grouped = data.groupby(level="date", observed=False, sort=True)
     counts = grouped["factor"].size()
@@ -1343,7 +1358,31 @@ def _evaluate_period(
             code="quantile_spread_unavailable",
             message=f"period {label}, factor {factor!r} has fewer than two populated quantiles",
         )
-    return ic_rows, quantile_rows, spread_rows
+
+    # Quantile turnover reuses the same cleaned quantile assignments; the lag
+    # is the label's bar count (5D -> 5), matching the HTML report contract.
+    try:
+        lag = int(str(label).rstrip("D"))
+    except ValueError:
+        lag = 1
+    for quantile_number in available:
+        try:
+            series = quantile_turnover(data["factor_quantile"], quantile_number, period=lag)
+        except (KeyError, ValueError, TypeError):
+            continue
+        for date, value in series.items():
+            if pd.isna(value) or not np.isfinite(float(value)):
+                continue
+            turnover_rows.append(
+                {
+                    "time": date,
+                    "factor": factor,
+                    "period": label,
+                    "quantile": int(quantile_number),
+                    "turnover": float(value),
+                }
+            )
+    return ic_rows, quantile_rows, spread_rows, turnover_rows
 
 
 def _stability_rows(
@@ -1725,9 +1764,10 @@ def evaluate_factor_research(
     ic_rows: list[dict[str, object]] = []
     quantile_rows: list[dict[str, object]] = []
     spread_rows: list[dict[str, object]] = []
+    turnover_rows: list[dict[str, object]] = []
     for name in factor_names:
         for period, label in zip(normalized.periods, labels, strict=True):
-            period_ic, period_quantile, period_spread = _evaluate_period(
+            period_ic, period_quantile, period_spread, period_turnover = _evaluate_period(
                 factor=name,
                 label=label,
                 values=row_values[name],
@@ -1740,6 +1780,7 @@ def evaluate_factor_research(
             ic_rows.extend(period_ic)
             quantile_rows.extend(period_quantile)
             spread_rows.extend(period_spread)
+            turnover_rows.extend(period_turnover)
 
     processed: dict[str, np.ndarray] = {
         name: processed_matrices[name][time_positions, asset_positions] for name in factor_names
@@ -1772,7 +1813,7 @@ def evaluate_factor_research(
                 message=f"combination {name!r} blends {sorted(weights)}",
             )
             for label in labels:
-                period_ic, period_quantile, period_spread = _evaluate_period(
+                period_ic, period_quantile, period_spread, period_turnover = _evaluate_period(
                     factor=name,
                     label=label,
                     values=blended,
@@ -1857,6 +1898,10 @@ def evaluate_factor_research(
         quantile_rows,
         columns=["time", "factor", "period", "quantile", "mean_return", "n_assets"],
     )
+    turnover_table = pd.DataFrame(
+        turnover_rows,
+        columns=["time", "factor", "period", "quantile", "turnover"],
+    )
     spread_table = pd.DataFrame(
         spread_rows,
         columns=["time", "factor", "period", "spread", "top_quantile", "bottom_quantile"],
@@ -1910,6 +1955,7 @@ def evaluate_factor_research(
         "ic": ic_table,
         "ic_summary": ic_summary,
         "quantile_returns": quantile_table,
+        "turnover": turnover_table,
         "spreads": spread_table,
         "stability": stability_table,
         "correlation": correlation_table,
@@ -1985,6 +2031,7 @@ def evaluate_factor_research(
         ic=ic_table,
         ic_summary=ic_summary,
         quantile_returns=quantile_table,
+        turnover=turnover_table,
         spreads=spread_table,
         stability=stability_table,
         correlation=correlation_table,
