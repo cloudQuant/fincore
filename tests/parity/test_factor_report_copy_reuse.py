@@ -221,6 +221,36 @@ def test_factor_report_reads_each_public_model_field_once_and_preserves_semantic
     assert actual.semantic_digest == expected.semantic_digest
 
 
+def test_returns_table_keeps_empty_quantile_rows_as_unavailable_values() -> None:
+    from fincore.factor_analysis.render_matplotlib import build_returns_table
+
+    alpha_beta = pd.DataFrame(
+        {"1D": [np.nan, np.nan], "5D": [np.nan, np.nan]},
+        index=("Ann. alpha", "beta"),
+    )
+    mean_returns = pd.DataFrame(columns=("1D", "5D"), dtype=float)
+    spread = pd.DataFrame(columns=("1D", "5D"), dtype=float)
+    alpha_beta_before = alpha_beta.copy(deep=True)
+    mean_returns_before = mean_returns.copy(deep=True)
+    spread_before = spread.copy(deep=True)
+
+    result = build_returns_table(alpha_beta, mean_returns, spread)
+
+    expected_rows = (
+        "Ann. alpha",
+        "beta",
+        "Mean Period Wise Return Top Quantile (bps)",
+        "Mean Period Wise Return Bottom Quantile (bps)",
+        "Mean Period Wise Spread (bps)",
+    )
+    assert tuple(result.index) == expected_rows
+    assert result.columns.equals(alpha_beta.columns)
+    assert result.loc[list(expected_rows[2:]), :].isna().all().all()
+    pd.testing.assert_frame_equal(alpha_beta, alpha_beta_before)
+    pd.testing.assert_frame_equal(mean_returns, mean_returns_before)
+    pd.testing.assert_frame_equal(spread, spread_before)
+
+
 def test_factor_report_results_are_isolated_between_models_and_from_model_data() -> None:
     from fincore.factor_analysis.analysis import analyze_factor
     from fincore.report.factor.compute import build_factor_report
