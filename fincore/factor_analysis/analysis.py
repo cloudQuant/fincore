@@ -468,6 +468,7 @@ def _analyze_factor(
         demeaned=long_short,
         group_adjust=group_neutral,
         equal_weight=equal_weight,
+        weights=weights,
     )
     alpha_beta = performance.factor_alpha_beta(
         analysis_data,
