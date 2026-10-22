@@ -12,7 +12,7 @@ import datetime as dt
 import pickle  # nosec B403 # round-trips trusted in-process data only; never deserializes external input
 import re
 import struct
-from collections.abc import Hashable, Mapping, Sequence
+from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass
 from decimal import Decimal
 from hashlib import sha256
@@ -1326,9 +1326,189 @@ def _fingerprint_bytes(value: object) -> bytes:
     raise TypeError(f"factor-analysis fingerprint does not support {value!r} ({type(value).__name__})")
 
 
+_STREAMING_FINGERPRINT_MIN_PANDAS_SIZE = 1_000_000
+
+
+@dataclass(frozen=True, slots=True)
+class _FingerprintStreamPlan:
+    """One encoded leaf or length-prefixed envelope in a streaming fingerprint."""
+
+    length: int
+    payload: bytes | None = None
+    producer: Callable[[], bytes] | None = None
+    tag: bytes | None = None
+    parts: tuple[_FingerprintStreamPlan, ...] = ()
+
+
+def _fingerprint_stream_leaf(payload: bytes) -> _FingerprintStreamPlan:
+    return _FingerprintStreamPlan(length=len(payload), payload=payload)
+
+
+def _fingerprint_stream_deferred(
+    length: int,
+    producer: Callable[[], bytes],
+) -> _FingerprintStreamPlan:
+    return _FingerprintStreamPlan(length=length, producer=producer)
+
+
+def _fingerprint_stream_envelope(
+    tag: str,
+    parts: tuple[_FingerprintStreamPlan, ...],
+) -> _FingerprintStreamPlan:
+    tag_bytes = tag.encode("utf-8")
+    length = 4 + len(tag_bytes) + sum(8 + part.length for part in parts)
+    return _FingerprintStreamPlan(length=length, tag=tag_bytes, parts=parts)
+
+
+def _fingerprint_stream_chunks(plan: _FingerprintStreamPlan):
+    """Yield the exact legacy envelope bytes without joining the complete value."""
+
+    if plan.payload is not None:
+        yield plan.payload
+        return
+    if plan.producer is not None:
+        payload = plan.producer()
+        if len(payload) != plan.length:
+            raise RuntimeError("factor-analysis fingerprint input changed during streaming")
+        yield payload
+        return
+    if plan.tag is None:  # pragma: no cover - stream plans are built locally
+        raise AssertionError("invalid factor-analysis fingerprint stream plan")
+    yield len(plan.tag).to_bytes(4, "big")
+    yield plan.tag
+    for part in plan.parts:
+        yield part.length.to_bytes(8, "big")
+        yield from _fingerprint_stream_chunks(part)
+
+
+def _contains_large_pandas_in_mapping(value: object) -> bool:
+    """Find threshold-sized pandas values reachable through model containers."""
+
+    if isinstance(value, (pd.Series, pd.DataFrame)):
+        return value.size >= _STREAMING_FINGERPRINT_MIN_PANDAS_SIZE
+    if is_dataclass(value) and not isinstance(value, type):
+        return any(_contains_large_pandas_in_mapping(getattr(value, item.name)) for item in fields(value))
+    if isinstance(value, Mapping):
+        return any(_contains_large_pandas_in_mapping(item) for item in value.values())
+    if isinstance(value, (tuple, list)):
+        return any(_contains_large_pandas_in_mapping(item) for item in value)
+    return False
+
+
+def _fingerprint_stream_pandas(value: pd.Series | pd.DataFrame) -> _FingerprintStreamPlan:
+    """Plan the legacy pandas envelope while retaining only one value column."""
+
+    if isinstance(value, pd.Series):
+
+        def series_values() -> bytes:
+            return _fingerprint_bytes(tuple(value.astype(object).tolist()))
+
+        values_length = len(series_values())
+        return _fingerprint_stream_envelope(
+            "series",
+            (
+                _fingerprint_stream_leaf(_fingerprint_bytes(value.name)),
+                _fingerprint_stream_leaf(_fingerprint_index(value.index)),
+                _fingerprint_stream_leaf(_fingerprint_dtype(value.dtype)),
+                _fingerprint_stream_leaf(_fingerprint_bytes(value.attrs)),
+                _fingerprint_stream_leaf(_fingerprint_bytes(value.flags.allows_duplicate_labels)),
+                _fingerprint_stream_deferred(values_length, series_values),
+            ),
+        )
+
+    columns: list[_FingerprintStreamPlan] = []
+    for position in range(value.shape[1]):
+        column = value.iloc[:, position]
+
+        def column_values(position: int = position) -> bytes:
+            current = value.iloc[:, position]
+            return _fingerprint_bytes(tuple(current.astype(object).tolist()))
+
+        values_length = len(column_values())
+        column_envelope = _fingerprint_stream_envelope(
+            "dataframe-column",
+            (
+                _fingerprint_stream_leaf(_fingerprint_dtype(column.dtype)),
+                _fingerprint_stream_deferred(values_length, column_values),
+            ),
+        )
+        # The legacy tuple encoder wraps each column-envelope bytes value in a
+        # ``bytes`` envelope before the DataFrame envelope consumes it.
+        columns.append(_fingerprint_stream_envelope("bytes", (column_envelope,)))
+    return _fingerprint_stream_envelope(
+        "dataframe",
+        (
+            _fingerprint_stream_leaf(_fingerprint_index(value.index)),
+            _fingerprint_stream_leaf(_fingerprint_index(value.columns)),
+            _fingerprint_stream_leaf(_fingerprint_bytes(value.attrs)),
+            _fingerprint_stream_leaf(_fingerprint_bytes(value.flags.allows_duplicate_labels)),
+            _fingerprint_stream_envelope("tuple", tuple(columns)),
+        ),
+    )
+
+
+def _fingerprint_stream_plan(value: object) -> _FingerprintStreamPlan:
+    """Build a bounded-size plan for large pandas values in a mapping payload."""
+
+    if isinstance(value, (pd.Series, pd.DataFrame)):
+        if value.size >= _STREAMING_FINGERPRINT_MIN_PANDAS_SIZE:
+            return _fingerprint_stream_pandas(value)
+        return _fingerprint_stream_leaf(_fingerprint_bytes(value))
+    if is_dataclass(value) and not isinstance(value, type):
+        parts = [
+            _fingerprint_stream_leaf(type(value).__module__.encode("utf-8")),
+            _fingerprint_stream_leaf(type(value).__qualname__.encode("utf-8")),
+        ]
+        for item in fields(value):
+            parts.extend(
+                (
+                    _fingerprint_stream_leaf(item.name.encode("utf-8")),
+                    _fingerprint_stream_plan(getattr(value, item.name)),
+                )
+            )
+        return _fingerprint_stream_envelope("dataclass", tuple(parts))
+    if isinstance(value, Mapping):
+        key_bytes = [(key, _fingerprint_bytes(key)) for key in value]
+        encoded_keys = [encoded for _, encoded in key_bytes]
+        if len(set(encoded_keys)) != len(encoded_keys):
+            # Legacy mapping ordering compares complete entry bytes when key encodings tie.
+            return _fingerprint_stream_leaf(_fingerprint_bytes(value))
+        entries = [(encoded, item) for (key, encoded), item in zip(key_bytes, value.values(), strict=True)]
+        entries.sort(key=lambda entry: (len(entry[0]), entry[0]))
+        return _fingerprint_stream_envelope(
+            "mapping",
+            tuple(
+                _fingerprint_stream_envelope(
+                    "mapping-entry",
+                    (
+                        _fingerprint_stream_leaf(encoded),
+                        _fingerprint_stream_plan(item),
+                    ),
+                )
+                for encoded, item in entries
+            ),
+        )
+    if isinstance(value, tuple):
+        return _fingerprint_stream_envelope(
+            "tuple",
+            tuple(_fingerprint_stream_plan(item) for item in value),
+        )
+    if isinstance(value, list):
+        return _fingerprint_stream_envelope(
+            "list",
+            tuple(_fingerprint_stream_plan(item) for item in value),
+        )
+    return _fingerprint_stream_leaf(_fingerprint_bytes(value))
+
+
 def fingerprint_value(value: object) -> str:
     """Return a deterministic, lossless SHA-256 fingerprint for model data."""
 
+    if isinstance(value, Mapping) and _contains_large_pandas_in_mapping(value):
+        digest = sha256()
+        for chunk in _fingerprint_stream_chunks(_fingerprint_stream_plan(value)):
+            digest.update(chunk)
+        return digest.hexdigest()
     return sha256(_fingerprint_bytes(value)).hexdigest()
 
 
