@@ -1342,6 +1342,8 @@ _FINGERPRINT_OBJECT_STRING_MAX_UNIQUES = 8192
 _FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS = 1024
 _FINGERPRINT_OBJECT_STRING_SAMPLE_MIN_TRANSITION_RATIO = 0.8
 _FINGERPRINT_OBJECT_STRING_MAX_CHARS = 256
+_FINGERPRINT_DATETIME_RUN_MIN_ROWS = 8
+_FINGERPRINT_DATETIME_RUN_MAX_TRANSITIONS_DIVISOR = 4
 
 
 class _FingerprintDigestWriter:
@@ -2038,6 +2040,68 @@ def _stream_write_integer_tuple(
         writer.write(frame)
 
 
+def _stream_write_datetime_run_chunk(
+    chunk: np.ndarray[Any, Any],
+    unit: bytes,
+    timezone: bytes,
+    writer: Any,
+) -> None:
+    """Write adjacent equal timestamp leaves as bounded exact v1 frames."""
+
+    run_starts = np.flatnonzero(chunk[1:] != chunk[:-1]) + 1
+    parts: list[bytes] = []
+    buffered_bytes = 0
+
+    def flush() -> None:
+        nonlocal buffered_bytes
+        if parts:
+            writer.write(b"".join(parts))
+            parts.clear()
+            buffered_bytes = 0
+
+    def append_repetitions(framed: bytes, repetitions: int) -> None:
+        nonlocal buffered_bytes
+        if len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES:
+            flush()
+            for _ in range(repetitions):
+                writer.write(framed)
+            return
+
+        while repetitions:
+            if parts and (
+                buffered_bytes + len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES
+                or len(parts) >= _FINGERPRINT_LEAF_BATCH_ENTRIES
+            ):
+                flush()
+            available_bytes = _FINGERPRINT_LEAF_BATCH_BYTES - buffered_bytes
+            take = min(repetitions, available_bytes // len(framed))
+            if take <= 0:
+                flush()
+                continue
+            block = framed if take == 1 else framed * take
+            parts.append(block)
+            buffered_bytes += len(block)
+            repetitions -= take
+
+    position = 0
+    for run_index in range(len(run_starts) + 1):
+        end = int(run_starts[run_index]) if run_index < len(run_starts) else len(chunk)
+        raw_value = int(chunk[position])
+        if raw_value == np.iinfo(np.int64).min:
+            encoded = _fingerprint_bytes(pd.NaT)
+        else:
+            encoded = _fingerprint_envelope(
+                "timestamp",
+                unit,
+                str(raw_value).encode("ascii"),
+                timezone,
+            )
+        framed = len(encoded).to_bytes(8, "big") + encoded
+        append_repetitions(framed, end - position)
+        position = end
+    flush()
+
+
 def _stream_write_datetime_tuple(
     raw_values: np.ndarray[Any, Any],
     unit: bytes,
@@ -2050,6 +2114,16 @@ def _stream_write_datetime_tuple(
     nat_value = np.iinfo(np.int64).min
     for start in range(0, len(raw_values), rows_per_chunk):
         chunk = np.asarray(raw_values[start : start + rows_per_chunk])
+        # Pay for Python leaf construction only when runs average at least four
+        # rows; unique-heavy chunks stay on the vectorized formatter.
+        if len(chunk) >= _FINGERPRINT_DATETIME_RUN_MIN_ROWS:
+            transitions = int(np.count_nonzero(chunk[1:] != chunk[:-1]))
+            if (
+                transitions + 1
+                <= len(chunk) // _FINGERPRINT_DATETIME_RUN_MAX_TRANSITIONS_DIVISOR
+            ):
+                _stream_write_datetime_run_chunk(chunk, unit, timezone, writer)
+                continue
         widths = _stream_integer_decimal_widths_chunk(chunk)
         decimal_bytes = np.char.mod("%d", chunk).astype("S20", copy=False)
         decimal_matrix = decimal_bytes.view(np.uint8).reshape(len(chunk), 20)

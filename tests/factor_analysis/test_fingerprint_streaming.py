@@ -1028,6 +1028,152 @@ def test_datetime_frames_are_bounded_before_writer_receives_them() -> None:
     assert sum(size > 1_000_000 for size in writer.sizes) >= 2
 
 
+@pytest.mark.parametrize(
+    ("unit", "timezone"),
+    [
+        ("ns", "UTC"),
+        ("us", "America/New_York"),
+        ("ms", "UTC"),
+    ],
+)
+def test_datetime_adjacent_runs_match_legacy_bytes(
+    unit: str, timezone: str
+) -> None:
+    raw_values = np.repeat(
+        np.array(
+            [
+                1_700_000_000,
+                -1,
+                0,
+                1_700_000_000,
+                np.iinfo(np.int64).min,
+                2,
+                3,
+            ],
+            dtype=np.int64,
+        ),
+        [6, 4, 4, 4, 4, 4, 6],
+    )
+    timestamps = pd.to_datetime(raw_values, unit=unit, utc=True).tz_convert(timezone)
+    series = pd.Series(timestamps, name="timestamps")
+    frame = pd.DataFrame({"timestamps": timestamps})
+
+    _assert_stream_matches_legacy(series)
+    _assert_stream_matches_legacy(frame)
+
+
+def test_datetime_all_nat_runs_match_legacy_bytes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    timestamps = pd.Series(
+        pd.to_datetime(
+            np.full(32, np.iinfo(np.int64).min, dtype=np.int64),
+            unit="ns",
+            utc=True,
+        ),
+        name="all-nat",
+    )
+    calls = 0
+    original = models._stream_write_datetime_run_chunk
+
+    def record_run_chunk(
+        chunk: np.ndarray[Any, Any],
+        unit: bytes,
+        timezone: bytes,
+        writer: Any,
+    ) -> None:
+        nonlocal calls
+        calls += 1
+        original(chunk, unit, timezone, writer)
+
+    monkeypatch.setattr(models, "_stream_write_datetime_run_chunk", record_run_chunk)
+    _assert_stream_matches_legacy(timestamps)
+
+    assert calls > 0
+
+
+def test_datetime_run_crossing_chunk_boundary_matches_legacy_bytes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw_values = np.repeat(np.array([1, 2, 3], dtype=np.int64), [4, 8, 4])
+    series = pd.Series(pd.to_datetime(raw_values, unit="ns", utc=True))
+    original_plan = models._stream_datetime_plan
+    original_writer = models._stream_write_datetime_run_chunk
+    written_chunks: list[tuple[int, ...]] = []
+
+    def small_plan(
+        values: Any,
+        dtype: pd.DatetimeTZDtype,
+        context: models._FingerprintStreamContext,
+    ) -> tuple[np.ndarray[Any, Any], bytes, bytes, int, int]:
+        raw, unit, timezone, length, _ = original_plan(values, dtype, context)
+        return raw, unit, timezone, length, 8
+
+    def record_run_chunk(
+        chunk: np.ndarray[Any, Any],
+        unit: bytes,
+        timezone: bytes,
+        writer: Any,
+    ) -> None:
+        written_chunks.append(tuple(int(value) for value in chunk))
+        original_writer(chunk, unit, timezone, writer)
+
+    monkeypatch.setattr(models, "_stream_datetime_plan", small_plan)
+    monkeypatch.setattr(models, "_stream_write_datetime_run_chunk", record_run_chunk)
+    _assert_stream_matches_legacy(series)
+
+    assert written_chunks[0][-1] == written_chunks[1][0] == 2
+
+
+def test_unique_heavy_datetime_chunk_keeps_vector_writer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw_values = np.arange(10_000, dtype=np.int64) * 1_000_000
+    series = pd.Series(pd.to_datetime(raw_values, unit="ns", utc=True))
+    run_writer_calls = 0
+    original = models._stream_write_datetime_run_chunk
+
+    def record_run_chunk(
+        chunk: np.ndarray[Any, Any],
+        unit: bytes,
+        timezone: bytes,
+        writer: Any,
+    ) -> None:
+        nonlocal run_writer_calls
+        run_writer_calls += 1
+        original(chunk, unit, timezone, writer)
+
+    monkeypatch.setattr(models, "_stream_write_datetime_run_chunk", record_run_chunk)
+    _assert_stream_matches_legacy(series)
+
+    assert run_writer_calls == 0
+
+
+def test_repeated_datetime_writes_remain_bounded() -> None:
+    raw_values = np.repeat(np.arange(500, dtype=np.int64) * 1_000_000, 100)
+    series = pd.Series(pd.to_datetime(raw_values, unit="ns", utc=True))
+    expected = sha256(models._fingerprint_bytes(series)).hexdigest()
+
+    class _DigestSizeSpy:
+        def __init__(self) -> None:
+            self.digest = sha256()
+            self.sizes: list[int] = []
+            self.total = 0
+
+        def write(self, data: bytes | bytearray | memoryview) -> None:
+            self.sizes.append(len(data))
+            self.total += len(data)
+            self.digest.update(data)
+
+    writer = _DigestSizeSpy()
+    encoded_length = models._stream_fingerprint(series, writer)
+
+    assert writer.sizes
+    assert writer.total == encoded_length
+    assert max(writer.sizes) <= models._FINGERPRINT_CHUNK_BYTES
+    assert writer.digest.hexdigest() == expected
+
+
 def test_large_dataframe_uses_streaming_path_and_keeps_digest_updates_bounded(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
