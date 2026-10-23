@@ -31,6 +31,25 @@ class _CustomCell:
         self.label = label
 
 
+class _HashEqualityTrap:
+    def __init__(self, label: str) -> None:
+        self.label = label
+
+    def __hash__(self) -> int:
+        raise AssertionError("custom hash must not be called")
+
+    def __eq__(self, other: object) -> bool:
+        raise AssertionError("custom equality must not be called")
+
+
+class _StringSubclassWithHashEqualityTrap(str):
+    def __hash__(self) -> int:
+        raise AssertionError("string-subclass hash must not be called")
+
+    def __eq__(self, other: object) -> bool:
+        raise AssertionError("string-subclass equality must not be called")
+
+
 class _ChangingDescriptor:
     def __init__(self) -> None:
         self.reads = 0
@@ -242,6 +261,196 @@ def test_repeated_object_scalar_runs_use_bounded_frames_and_skip_generic_length(
     )
     assert cache_entries <= models._FINGERPRINT_LEAF_CACHE_ENTRIES
     assert context._cache_bytes <= models._FINGERPRINT_LEAF_CACHE_BYTES
+
+
+def test_interleaved_builtin_string_chunks_match_v1_with_bounded_batches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    chunk_rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+    count = chunk_rows * 2 + 137
+    labels = ("", "资产/α", "e\u0301", "é", "asset\x00x")
+    values = np.empty(count, dtype=object)
+    values[:] = [labels[position % len(labels)] for position in range(count)]
+    series = pd.Series(values, name="asset")
+    expected = models._fingerprint_bytes(series)
+    original_factorize = models.pd.factorize
+    factorized_sizes: list[int] = []
+
+    def factorize(values: Any, **kwargs: Any) -> tuple[Any, Any]:
+        assert kwargs == {"sort": False}
+        chunk = np.asarray(values, dtype=object)
+        assert len(chunk) <= chunk_rows
+        assert all(type(item) is str for item in chunk)
+        factorized_sizes.append(len(chunk))
+        return original_factorize(values, **kwargs)
+
+    monkeypatch.setattr(models.pd, "factorize", factorize)
+    writer = _CaptureWriter()
+    encoded_length = models._stream_fingerprint(series, writer)
+
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert factorized_sizes == [
+        min(chunk_rows, count - start)
+        for start in range(0, count, chunk_rows)
+    ] * 2
+    assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
+
+
+def test_low_run_string_column_keeps_the_run_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = np.empty(20_000, dtype=object)
+    values[:8_000] = "first"
+    values[8_000:17_000] = "second"
+    values[17_000:] = "third"
+    series = pd.Series(values, name="group")
+    expected = models._fingerprint_bytes(series)
+
+    def unexpected_factorize(values: Any, **kwargs: Any) -> tuple[Any, Any]:
+        raise AssertionError("low-run strings should use the adjacent-run path")
+
+    monkeypatch.setattr(models.pd, "factorize", unexpected_factorize)
+    _assert_stream_matches_legacy(series)
+    assert _stream_bytes(series) == expected
+
+
+def test_mixed_builtin_type_chunk_keeps_the_run_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = np.empty(16_384, dtype=object)
+    values[:] = ["A", 7] * (len(values) // 2)
+    series = pd.Series(values, name="mixed")
+    expected = models._fingerprint_bytes(series)
+
+    def unexpected_factorize(values: Any, **kwargs: Any) -> tuple[Any, Any]:
+        raise AssertionError("mixed scalar types should use the adjacent-run path")
+
+    monkeypatch.setattr(models.pd, "factorize", unexpected_factorize)
+    _assert_stream_matches_legacy(series)
+    assert _stream_bytes(series) == expected
+
+
+def test_unsampled_non_string_values_fallback_without_custom_hash_or_equality(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = np.empty(16_384, dtype=object)
+    values[:] = ["A", "B"] * (len(values) // 2)
+    # The sample checks indexes 0/1, 16/17, ...; the first actual chunk scan
+    # must still reject these unsampled values before pandas hashes the chunk.
+    values[2] = _StringSubclassWithHashEqualityTrap("A")
+    values[3] = _HashEqualityTrap("custom")
+    series = pd.Series(values, name="mixed")
+    expected = models._fingerprint_bytes(series)
+
+    def unexpected_factorize(values: Any, **kwargs: Any) -> tuple[Any, Any]:
+        raise AssertionError("a non-exact string chunk must not be factorized")
+
+    monkeypatch.setattr(models.pd, "factorize", unexpected_factorize)
+    with pytest.raises(models._FingerprintNotStreamable):
+        models._stream_fingerprint(series, _CaptureWriter())
+    assert models.fingerprint_value(series) == sha256(expected).hexdigest()
+
+
+def _assert_string_array_writer_matches_legacy(
+    values: np.ndarray[Any, Any],
+) -> _CaptureWriter:
+    expected = models._fingerprint_bytes(tuple(values.tolist()))
+    context = models._FingerprintStreamContext()
+    encoded_length = models._stream_object_string_array_length(values, context)
+    writer = _CaptureWriter()
+    models._stream_write_object_string_array(values, writer, context)
+
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert all(
+        len(part) <= models._FINGERPRINT_LEAF_BATCH_BYTES for part in writer.parts
+    )
+    return writer
+
+
+def test_string_writer_joins_exactly_one_mib() -> None:
+    rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+    leaf_bytes = len(models._FingerprintStreamContext().scalar_bytes("x" * 105)) + 8
+    assert leaf_bytes * rows == models._FINGERPRINT_LEAF_BATCH_BYTES
+    values = np.empty(rows, dtype=object)
+    values[::2] = "x" * 105
+    values[1::2] = "y" * 105
+    assert models._stream_object_string_array_batch_worthwhile(values)
+    writer = _CaptureWriter()
+
+    expected = models._fingerprint_bytes(tuple(values.tolist()))
+    context = models._FingerprintStreamContext()
+    encoded_length = models._stream_object_string_array_length(values, context)
+    models._stream_write_object_string_array(values, writer, context)
+
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert models._FINGERPRINT_LEAF_BATCH_BYTES in map(len, writer.parts)
+    assert all(
+        len(part) <= models._FINGERPRINT_LEAF_BATCH_BYTES for part in writer.parts
+    )
+
+
+def test_interleaved_string_writer_falls_back_above_one_mib(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+    leaf_bytes = len(models._FingerprintStreamContext().scalar_bytes("x" * 106)) + 8
+    assert leaf_bytes * rows > models._FINGERPRINT_LEAF_BATCH_BYTES
+    values = np.empty(rows, dtype=object)
+    values[::2] = "x" * 106
+    values[1::2] = "y" * 106
+    assert models._stream_object_string_array_batch_worthwhile(values)
+    original_write_runs = models._stream_write_object_scalar_runs
+    fallback_calls = 0
+
+    def record_fallback(
+        items: np.ndarray[Any, Any],
+        writer: Any,
+        context: models._FingerprintStreamContext,
+    ) -> None:
+        nonlocal fallback_calls
+        fallback_calls += 1
+        original_write_runs(items, writer, context)
+
+    monkeypatch.setattr(models, "_stream_write_object_scalar_runs", record_fallback)
+    writer = _assert_string_array_writer_matches_legacy(values)
+
+    assert fallback_calls == 1
+    assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
+
+
+def test_interleaved_string_writer_falls_back_above_unique_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+    values = np.array([f"asset-{position:04d}" for position in range(rows)], dtype=object)
+    original_write_runs = models._stream_write_object_scalar_runs
+    fallback_calls = 0
+
+    def record_fallback(
+        items: np.ndarray[Any, Any],
+        writer: Any,
+        context: models._FingerprintStreamContext,
+    ) -> None:
+        nonlocal fallback_calls
+        fallback_calls += 1
+        original_write_runs(items, writer, context)
+
+    monkeypatch.setattr(models, "_stream_write_object_scalar_runs", record_fallback)
+    writer = _assert_string_array_writer_matches_legacy(values)
+
+    assert fallback_calls == 1
+    assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
+
+
+def test_empty_object_string_array_matches_empty_tuple_oracle() -> None:
+    values = np.empty(0, dtype=object)
+    writer = _assert_string_array_writer_matches_legacy(values)
+
+    assert writer.getvalue() == models._fingerprint_bytes(())
+    assert writer.parts == [len(b"tuple").to_bytes(4, "big"), b"tuple"]
 
 
 def test_custom_object_column_uses_legacy_fallback() -> None:

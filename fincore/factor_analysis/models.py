@@ -1337,6 +1337,12 @@ _FINGERPRINT_LEAF_CACHE_BYTES = 256 * 1024
 _FINGERPRINT_LEAF_BATCH_BYTES = 1024 * 1024
 _FINGERPRINT_LEAF_BATCH_ENTRIES = 8192
 _FINGERPRINT_INTEGER_BATCH_ROWS = 32768
+_FINGERPRINT_OBJECT_STRING_CHUNK_ROWS = 8192
+_FINGERPRINT_OBJECT_STRING_MAX_UNIQUES = 1024
+_FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS = 1024
+_FINGERPRINT_OBJECT_STRING_SAMPLE_MIN_TRANSITION_RATIO = 0.8
+_FINGERPRINT_OBJECT_STRING_SAMPLE_MAX_UNIQUE_RATIO = 0.75
+_FINGERPRINT_OBJECT_STRING_MAX_CHARS = 256
 
 
 class _FingerprintDigestWriter:
@@ -1760,6 +1766,152 @@ def _stream_object_scalar_supported(value: object) -> bool:
     )
 
 
+def _stream_object_string_array_batch_worthwhile(
+    values: np.ndarray[Any, Any],
+) -> bool:
+    """Route only long, highly interleaved, repeated builtin-string arrays."""
+
+    count = len(values)
+    if count < _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS:
+        return False
+
+    sample_count = min(_FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS, count - 1)
+    sampled_values: list[str] = []
+    transitions = 0
+    for sample in range(sample_count):
+        position = sample * (count - 2) // (sample_count - 1)
+        value = values[position]
+        following = values[position + 1]
+        if (
+            type(value) is not str
+            or type(following) is not str
+            or len(value) > _FINGERPRINT_OBJECT_STRING_MAX_CHARS
+            or len(following) > _FINGERPRINT_OBJECT_STRING_MAX_CHARS
+        ):
+            return False
+        sampled_values.append(value)
+        if value != following:
+            transitions += 1
+
+    if (
+        transitions / sample_count
+        < _FINGERPRINT_OBJECT_STRING_SAMPLE_MIN_TRANSITION_RATIO
+    ):
+        return False
+    return (
+        len(set(sampled_values)) / sample_count
+        <= _FINGERPRINT_OBJECT_STRING_SAMPLE_MAX_UNIQUE_RATIO
+    )
+
+
+def _stream_object_string_chunk_supported(values: np.ndarray[Any, Any]) -> bool:
+    """Check a bounded chunk before factorization can hash any cell."""
+
+    return all(
+        type(value) is str
+        and len(value) <= _FINGERPRINT_OBJECT_STRING_MAX_CHARS
+        for value in values
+    )
+
+
+def _stream_factorize_object_string_chunk(
+    values: np.ndarray[Any, Any],
+) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+    """Return first-seen codes and counts for an already-validated string chunk."""
+
+    codes, uniques = pd.factorize(values, sort=False)
+    if codes.size and np.any(codes < 0):
+        raise _FingerprintNotStreamable
+    counts = np.bincount(codes, minlength=len(uniques))
+    return codes, uniques, counts
+
+
+def _stream_object_string_array_length(
+    values: np.ndarray[Any, Any], context: _FingerprintStreamContext
+) -> int:
+    """Count v1 tuple frames while retaining only one bounded code chunk."""
+
+    length = 9
+    for start in range(0, len(values), _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS):
+        chunk = values[start : start + _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS]
+        if not _stream_object_string_chunk_supported(chunk):
+            for item, repetitions in _stream_object_scalar_runs(chunk):
+                if not _stream_object_scalar_supported(item):
+                    raise _FingerprintNotStreamable
+                length += repetitions * (8 + len(context.scalar_bytes(item)))
+            continue
+
+        codes, uniques, counts = _stream_factorize_object_string_chunk(chunk)
+        if len(uniques) > _FINGERPRINT_OBJECT_STRING_MAX_UNIQUES:
+            del codes, uniques, counts
+            for item, repetitions in _stream_object_scalar_runs(chunk):
+                length += repetitions * (8 + len(context.scalar_bytes(item)))
+            continue
+        for position in range(len(uniques)):
+            item = uniques[position]
+            repetitions = counts[position]
+            length += int(repetitions) * (8 + len(context.scalar_bytes(item)))
+        del codes, uniques, counts
+    return length
+
+
+def _stream_write_object_string_chunk(
+    values: np.ndarray[Any, Any],
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    """Write one exact-string chunk, using legacy runs when batching is unsafe."""
+
+    if not _stream_object_string_chunk_supported(values):
+        _stream_write_object_scalar_runs(values, writer, context)
+        return
+
+    codes, uniques, counts = _stream_factorize_object_string_chunk(values)
+    if len(uniques) > _FINGERPRINT_OBJECT_STRING_MAX_UNIQUES:
+        del codes, uniques, counts
+        _stream_write_object_scalar_runs(values, writer, context)
+        return
+
+    framed_by_unique = np.empty(len(uniques), dtype=object)
+    output_bytes = 0
+    for position in range(len(uniques)):
+        item = uniques[position]
+        repetitions = counts[position]
+        encoded = context.scalar_bytes(item)
+        framed_bytes = 8 + len(encoded)
+        repeated_bytes = int(repetitions) * framed_bytes
+        if (
+            framed_bytes > _FINGERPRINT_LEAF_BATCH_BYTES
+            or output_bytes + repeated_bytes > _FINGERPRINT_LEAF_BATCH_BYTES
+        ):
+            del codes, uniques, counts, framed_by_unique, encoded
+            _stream_write_object_scalar_runs(values, writer, context)
+            return
+
+        framed = context.framed_part(encoded)
+        if framed is None:
+            framed = len(encoded).to_bytes(8, "big") + encoded
+        framed_by_unique[position] = framed
+        output_bytes += int(repetitions) * len(framed)
+
+    selected_frames = np.take(framed_by_unique, codes)
+    writer.write(b"".join(selected_frames))
+
+
+def _stream_write_object_string_array(
+    values: np.ndarray[Any, Any],
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    """Write interleaved exact strings in small, v1-identical factorized chunks."""
+
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    for start in range(0, len(values), _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS):
+        chunk = values[start : start + _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS]
+        _stream_write_object_string_chunk(chunk, writer, context)
+
+
 def _stream_write_object_scalar_runs(
     values: np.ndarray[Any, Any],
     writer: Any,
@@ -1973,6 +2125,10 @@ def _stream_tuple_array_length(
     if dtype.kind == "b":
         return 9 + 25 * count
     if dtype.kind == "O" and type(values) is np.ndarray:
+        if _stream_object_string_array_batch_worthwhile(values):
+            return _stream_object_string_array_length(
+                values, context
+            )
         # Exact ndarray object cells cannot override indexing. Keep the same
         # standard-scalar allowlist as emission, but avoid generic recursive
         # dispatch for every cell. Adjacent equal strings/integers share one
@@ -2026,11 +2182,16 @@ def _stream_tuple_array(
     if dtype.kind in "iu" and type(values) is np.ndarray:
         _stream_write_integer_tuple(values, writer)
         return
-    writer.write((5).to_bytes(4, "big"))
-    writer.write(b"tuple")
     if dtype.kind == "O" and type(values) is np.ndarray:
+        if _stream_object_string_array_batch_worthwhile(values):
+            _stream_write_object_string_array(values, writer, context)
+            return
+        writer.write((5).to_bytes(4, "big"))
+        writer.write(b"tuple")
         _stream_write_object_scalar_runs(values, writer, context)
         return
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
     _stream_write_scalar_part_batch(
         (_stream_item_from_array(values, dtype, position) for position in range(len(values))),
         writer,
