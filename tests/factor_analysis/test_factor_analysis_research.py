@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 
@@ -722,11 +723,28 @@ def test_combination_errors_are_rejected() -> None:
     assert excinfo.value.code == "combination_name_conflict"
 
 
-def test_export_writes_tables_and_manifest_and_refuses_overwrite(tmp_path) -> None:
+def test_export_writes_tables_and_manifest_and_refuses_overwrite(
+    tmp_path, monkeypatch
+) -> None:
     panel = _panel()
     result = research.evaluate_factor_research(_factor(panel), **_inputs(panel, _spec(panel)))
 
+    fastpath_calls = []
+    original_writer = research._write_repeated_utc_datetime_csv
+
+    def observe_writer(frame, path, **csv_options):
+        handled = original_writer(frame, path, **csv_options)
+        fastpath_calls.append(handled)
+        return handled
+
+    monkeypatch.setattr(research, "_write_repeated_utc_datetime_csv", observe_writer)
     target = result.export(tmp_path, charts=False)
+
+    assert fastpath_calls == [True, True]
+    for name in ("labels", "signals"):
+        expected = io.BytesIO()
+        result.table(name).to_csv(expected, index=False, encoding="utf-8")
+        assert (target / f"{name}.csv").read_bytes() == expected.getvalue()
 
     assert target.name == result.manifest["evaluation_id"]
     manifest = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
@@ -744,6 +762,100 @@ def test_export_writes_tables_and_manifest_and_refuses_overwrite(tmp_path) -> No
         chart_target = result.export(tmp_path / "charts")
         assert (chart_target / "ic_series.png").exists()
         assert (chart_target / "quantile_returns.png").exists()
+
+
+def test_repeated_utc_time_csv_matches_pandas_bytes_and_keeps_frame_unchanged(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(research, "_EXPORT_CSV_CHUNK_CELLS", 32)
+    times = pd.to_datetime(
+        [
+            "2024-12-31T23:59:59.123456789Z",
+            "2025-01-01T00:00:00.000000001Z",
+            None,
+            "2025-01-02T12:34:56.987654321Z",
+        ],
+        utc=True,
+    )
+    rows = 21
+    time_values = times.take(np.resize(np.arange(len(times)), rows))
+    values = np.linspace(-1.0, 1.0, rows)
+    values[5] = np.nan
+    frame = pd.DataFrame(
+        {
+            "time": time_values,
+            "asset": np.resize(np.array(["A,1", 'B"2', "C\n3", "雪"], dtype=object), rows),
+            "value": values,
+            "note": np.resize(np.array(["plain", 'comma,quote"', "line\nbreak"], dtype=object), rows),
+        }
+    )
+    before = frame.copy(deep=True)
+    original_identity = id(frame)
+    expected = io.BytesIO()
+    frame.to_csv(expected, index=False, encoding="utf-8")
+    path = tmp_path / "utc.csv"
+
+    assert research._write_repeated_utc_datetime_csv(
+        frame, path, index=False, encoding="utf-8"
+    )
+
+    assert path.read_bytes() == expected.getvalue()
+    assert id(frame) == original_identity
+    pd.testing.assert_frame_equal(frame, before)
+
+
+def test_repeated_utc_time_csv_falls_back_for_unsupported_types_and_options(tmp_path) -> None:
+    times = pd.date_range("2025-01-01", periods=3, tz="UTC")
+    frames = [
+        pd.DataFrame({"time": pd.date_range("2025-01-01", periods=3), "value": [1.0, 2.0, 3.0]}),
+        pd.DataFrame(
+            {"time": pd.date_range("2025-01-01", periods=3, tz="America/New_York"), "value": [1.0, 2.0, 3.0]}
+        ),
+        pd.DataFrame({"time": pd.Categorical(times), "value": [1.0, 2.0, 3.0]}),
+    ]
+    for position, frame in enumerate(frames):
+        assert not research._write_repeated_utc_datetime_csv(
+            frame, tmp_path / f"fallback-{position}.csv", index=False, encoding="utf-8"
+        )
+    assert not research._write_repeated_utc_datetime_csv(
+        pd.DataFrame({"time": times}),
+        tmp_path / "unsupported-options.csv",
+        index=False,
+        encoding="utf-8",
+        sep=";",
+    )
+def test_repeated_utc_time_csv_handles_all_nat_and_all_unique_chunks(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(research, "_EXPORT_CSV_CHUNK_CELLS", 8)
+    all_nat = pd.DataFrame(
+        {"time": pd.to_datetime([None] * 8, utc=True), "value": np.arange(8, dtype=float)}
+    )
+    formatted_nat = research._format_repeated_utc_datetime_chunk(all_nat["time"])
+    assert formatted_nat is not None
+    assert formatted_nat.tolist() == [""] * len(all_nat)
+    expected_nat = io.BytesIO()
+    all_nat.to_csv(expected_nat, index=False, encoding="utf-8")
+    nat_path = tmp_path / "all-nat.csv"
+    assert research._write_repeated_utc_datetime_csv(
+        all_nat, nat_path, index=False, encoding="utf-8"
+    )
+    assert nat_path.read_bytes() == expected_nat.getvalue()
+
+    all_unique = pd.DataFrame(
+        {
+            "time": pd.date_range("2025-01-01", periods=8, freq="ns", tz="UTC"),
+            "value": np.arange(8, dtype=float),
+        }
+    )
+    assert research._format_repeated_utc_datetime_chunk(all_unique["time"].iloc[:4]) is None
+    expected_unique = io.BytesIO()
+    all_unique.to_csv(expected_unique, index=False, encoding="utf-8")
+    unique_path = tmp_path / "all-unique.csv"
+    assert research._write_repeated_utc_datetime_csv(
+        all_unique, unique_path, index=False, encoding="utf-8"
+    )
+    assert unique_path.read_bytes() == expected_unique.getvalue()
 
 
 def test_result_fingerprint_is_stable_and_input_sensitive() -> None:

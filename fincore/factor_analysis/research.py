@@ -267,11 +267,80 @@ class ResearchEvaluationResult:
             manifest["exports"].extend(["ic_series.png", "quantile_returns.png"])
         payload = _json_ready(manifest)
         manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False), encoding="utf-8")
+        csv_options = {"index": False, "encoding": "utf-8"}
         for name in RESULT_TABLES:
-            self.table(name).to_csv(target / f"{name}.csv", index=False, encoding="utf-8")
+            table = self.table(name)
+            destination = target / f"{name}.csv"
+            if name in {"labels", "signals"} and _write_repeated_utc_datetime_csv(
+                table, destination, **csv_options
+            ):
+                continue
+            table.to_csv(destination, **csv_options)
         if charts:
             _write_charts(self, target)
         return target
+
+
+_EXPORT_CSV_CHUNK_CELLS = 100_000
+
+
+def _format_repeated_utc_datetime_chunk(values: pd.Series) -> np.ndarray | None:
+    """Format repeated UTC timestamps with pandas' own native CSV formatter."""
+
+    codes, unique = pd.factorize(values.array, sort=False)
+    if len(unique) >= len(codes):
+        return None
+    unique_array = unique
+    formatter = getattr(unique_array, "_format_native_types", None)
+    if not callable(formatter):
+        return None
+    unique_text = formatter(na_rep="", date_format=None)
+    if len(unique_text) != len(unique):
+        return None
+    formatted = np.empty(len(codes), dtype=object)
+    missing = codes < 0
+    formatted[missing] = ""
+    present = ~missing
+    if present.any():
+        formatted[present] = unique_text[codes[present]]
+    return formatted
+
+
+def _write_repeated_utc_datetime_csv(
+    frame: pd.DataFrame, path: Path, **csv_options: Any
+) -> bool:
+    """Write repeated UTC times in bounded chunks through pandas' CSV writer."""
+
+    if csv_options != {"index": False, "encoding": "utf-8"}:
+        return False
+    if frame.empty or frame.columns.has_duplicates or "time" not in frame.columns:
+        return False
+    time_dtype = frame["time"].dtype
+    if (
+        type(time_dtype) is not pd.DatetimeTZDtype
+        or time_dtype.unit != "ns"
+        or str(time_dtype.tz) != "UTC"
+    ):
+        return False
+    if not callable(getattr(frame["time"].array, "_format_native_types", None)):
+        return False
+
+    rows_per_chunk = max(1, _EXPORT_CSV_CHUNK_CELLS // len(frame.columns))
+    with path.open("w", encoding="utf-8", newline="") as output:
+        for start in range(0, len(frame), rows_per_chunk):
+            end = min(start + rows_per_chunk, len(frame))
+            time_values = frame["time"].iloc[start:end]
+            formatted_time = _format_repeated_utc_datetime_chunk(time_values)
+            chunk = frame.iloc[start:end].copy(deep=False)
+            if formatted_time is not None:
+                chunk["time"] = formatted_time
+            chunk.to_csv(
+                output,
+                header=start == 0,
+                na_rep="",
+                **csv_options,
+            )
+    return True
 
 
 def _spec_values(spec: ResearchEvaluationSpec) -> dict[str, Any]:
