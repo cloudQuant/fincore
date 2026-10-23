@@ -202,6 +202,51 @@ def _daily_cumulative_returns(cumulative: pd.Series) -> tuple[pd.Series, pd.Seri
     return daily_cumulative, daily_returns
 
 
+def _build_factor_portfolio_inputs_from_outputs(
+    factor_data: pd.DataFrame,
+    daily_cumulative: pd.Series,
+    returns: pd.Series,
+    raw_positions: pd.DataFrame,
+    *,
+    capital: float | None,
+    benchmark_period: object,
+) -> FactorPortfolioInputs:
+    """Project already-computed factor outputs into typed daily portfolio inputs."""
+
+    daily_positions = raw_positions.resample("1D").sum().ffill()
+    asset_gross = daily_positions.abs().sum(axis=1)
+    daily_positions = daily_positions.div(asset_gross, axis=0).fillna(0.0)
+    daily_positions["cash"] = 1.0 - daily_positions.sum(axis=1)
+    if capital is not None:
+        # Holding periods can extend past the final factor-return observation.
+        # The enhanced bridge keeps the last known portfolio value through
+        # that active-position horizon instead of manufacturing trailing NaN
+        # dollar positions during ``reindex``.
+        capital_curve = daily_cumulative.reindex(daily_positions.index).ffill()
+        daily_positions = daily_positions.mul(capital_curve * capital, axis=0)
+
+    forward_columns = get_forward_returns_columns(factor_data.columns)
+    benchmark_returns: pd.Series | None = None
+    if benchmark_period in forward_columns:
+        benchmark_data = _performance._copy_factor_data(factor_data)
+        benchmark_data["factor"] = benchmark_data["factor"].abs()
+        benchmark_cumulative = factor_cumulative_returns(
+            benchmark_data,
+            benchmark_period,
+            long_short=False,
+            group_neutral=False,
+            equal_weight=True,
+        )
+        _, benchmark_returns = _daily_cumulative_returns(benchmark_cumulative)
+        benchmark_returns.name = "benchmark"
+
+    return FactorPortfolioInputs(
+        returns=returns.copy(deep=True),
+        positions=daily_positions.copy(deep=True),
+        benchmark_returns=None if benchmark_returns is None else benchmark_returns.copy(deep=True),
+    )
+
+
 def build_factor_portfolio_inputs(
     factor_data: pd.DataFrame,
     period: object,
@@ -238,37 +283,13 @@ def build_factor_portfolio_inputs(
         groups=groups,
         weights=weights,
     )
-    daily_positions = raw_positions.resample("1D").sum().ffill()
-    asset_gross = daily_positions.abs().sum(axis=1)
-    daily_positions = daily_positions.div(asset_gross, axis=0).fillna(0.0)
-    daily_positions["cash"] = 1.0 - daily_positions.sum(axis=1)
-    if capital is not None:
-        # Holding periods can extend past the final factor-return observation.
-        # The enhanced bridge keeps the last known portfolio value through
-        # that active-position horizon instead of manufacturing trailing NaN
-        # dollar positions during ``reindex``.
-        capital_curve = daily_cumulative.reindex(daily_positions.index).ffill()
-        daily_positions = daily_positions.mul(capital_curve * capital, axis=0)
-
-    forward_columns = get_forward_returns_columns(factor_data.columns)
-    benchmark_returns: pd.Series | None = None
-    if benchmark_period in forward_columns:
-        benchmark_data = _performance._copy_factor_data(factor_data)
-        benchmark_data["factor"] = benchmark_data["factor"].abs()
-        benchmark_cumulative = factor_cumulative_returns(
-            benchmark_data,
-            benchmark_period,
-            long_short=False,
-            group_neutral=False,
-            equal_weight=True,
-        )
-        _, benchmark_returns = _daily_cumulative_returns(benchmark_cumulative)
-        benchmark_returns.name = "benchmark"
-
-    return FactorPortfolioInputs(
-        returns=returns.copy(deep=True),
-        positions=daily_positions.copy(deep=True),
-        benchmark_returns=None if benchmark_returns is None else benchmark_returns.copy(deep=True),
+    return _build_factor_portfolio_inputs_from_outputs(
+        factor_data,
+        daily_cumulative,
+        returns,
+        raw_positions,
+        capital=capital,
+        benchmark_period=benchmark_period,
     )
 
 

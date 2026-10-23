@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import wraps
+from inspect import signature
 
 import numpy as np
 import pandas as pd
@@ -60,6 +61,117 @@ def _analyze(factor_data: pd.DataFrame) -> analysis.FactorAnalysisModel:
     )
 
 
+def test_cached_portfolio_projection_matches_builder_and_isolates_inputs() -> None:
+    factor_data = _clean_factor_data()
+    weights = performance.factor_weights(
+        factor_data,
+        demeaned=True,
+        group_adjust=True,
+        equal_weight=False,
+    )
+    cumulative = portfolio.factor_cumulative_returns(
+        factor_data,
+        "1D",
+        long_short=True,
+        group_neutral=True,
+        equal_weight=False,
+        weights=weights,
+    )
+    daily_cumulative, daily_returns = portfolio._daily_cumulative_returns(cumulative)
+    raw_positions = portfolio.factor_positions(
+        factor_data,
+        "1D",
+        long_short=True,
+        group_neutral=True,
+        equal_weight=False,
+        weights=weights,
+    )
+    cumulative_before = daily_cumulative.copy(deep=True)
+    returns_before = daily_returns.copy(deep=True)
+    positions_before = raw_positions.copy(deep=True)
+    factor_data_before = factor_data.copy(deep=True)
+
+    # This is the pre-reuse builder projection, kept independent of the new
+    # helper so exact values, names, indexes, and dtypes remain pinned.
+    expected_positions = raw_positions.resample("1D").sum().ffill()
+    asset_gross = expected_positions.abs().sum(axis=1)
+    expected_positions = expected_positions.div(asset_gross, axis=0).fillna(0.0)
+    expected_positions["cash"] = 1.0 - expected_positions.sum(axis=1)
+    capital_curve = daily_cumulative.reindex(expected_positions.index).ffill()
+    expected_positions = expected_positions.mul(capital_curve * 100_000.0, axis=0)
+    benchmark_data = performance._copy_factor_data(factor_data)
+    benchmark_data["factor"] = benchmark_data["factor"].abs()
+    benchmark_cumulative = portfolio.factor_cumulative_returns(
+        benchmark_data,
+        "1D",
+        long_short=False,
+        group_neutral=False,
+        equal_weight=True,
+    )
+    _, expected_benchmark = portfolio._daily_cumulative_returns(benchmark_cumulative)
+    expected_benchmark.name = "benchmark"
+
+    expected = portfolio.FactorPortfolioInputs(
+        returns=daily_returns.copy(deep=True),
+        positions=expected_positions.copy(deep=True),
+        benchmark_returns=expected_benchmark.copy(deep=True),
+    )
+    projected = portfolio._build_factor_portfolio_inputs_from_outputs(
+        factor_data,
+        daily_cumulative,
+        daily_returns,
+        raw_positions,
+        capital=100_000.0,
+        benchmark_period="1D",
+    )
+    public = portfolio.build_factor_portfolio_inputs(
+        factor_data,
+        "1D",
+        capital=100_000.0,
+        long_short=True,
+        group_neutral=True,
+        equal_weight=False,
+        benchmark_period="1D",
+        weights=weights,
+    )
+
+    expected_parameters = (
+        "factor_data",
+        "period",
+        "capital",
+        "long_short",
+        "group_neutral",
+        "equal_weight",
+        "quantiles",
+        "groups",
+        "benchmark_period",
+        "weights",
+    )
+    assert tuple(signature(portfolio.build_factor_portfolio_inputs).parameters) == (
+        expected_parameters
+    )
+    for actual in (projected, public):
+        pd.testing.assert_series_equal(actual.returns, expected.returns, check_exact=True)
+        pd.testing.assert_frame_equal(actual.positions, expected.positions, check_exact=True)
+        assert actual.benchmark_returns is not None
+        pd.testing.assert_series_equal(
+            actual.benchmark_returns,
+            expected.benchmark_returns,
+            check_exact=True,
+        )
+
+    assert projected.returns is not daily_returns
+    assert projected.positions is not raw_positions
+    projected.returns.iloc[0] = 123.0
+    projected.positions.iloc[0, 0] = 456.0
+    assert projected.benchmark_returns is not None
+    projected.benchmark_returns.iloc[0] = 789.0
+    pd.testing.assert_series_equal(daily_cumulative, cumulative_before, check_exact=True)
+    pd.testing.assert_series_equal(daily_returns, returns_before, check_exact=True)
+    pd.testing.assert_frame_equal(raw_positions, positions_before, check_exact=True)
+    pd.testing.assert_frame_equal(factor_data, factor_data_before, check_exact=True)
+
+
 def test_analyze_factor_builds_one_weight_vector_and_reuses_it(monkeypatch: pytest.MonkeyPatch) -> None:
     clean = _clean_factor_data()
     analysis_data = clean.drop(columns=["2D"]).copy(deep=True)
@@ -99,9 +211,10 @@ def test_analyze_factor_builds_one_weight_vector_and_reuses_it(monkeypatch: pyte
     original_returns = performance.factor_returns
     original_cumulative = portfolio.factor_cumulative_returns
     original_positions = portfolio.factor_positions
-    original_inputs = portfolio.build_factor_portfolio_inputs
+    original_projection = portfolio._build_factor_portfolio_inputs_from_outputs
     weight_calls: list[dict[str, object]] = []
     public_calls: dict[str, list[dict[str, object]]] = defaultdict(list)
+    projection_calls: list[dict[str, object]] = []
 
     @wraps(original_weights)
     def factor_weights_spy(*args: object, **kwargs: object) -> pd.Series:
@@ -136,7 +249,20 @@ def test_analyze_factor_builds_one_weight_vector_and_reuses_it(monkeypatch: pyte
     monkeypatch.setattr(performance, "factor_returns", record_call("factor_returns", original_returns))
     monkeypatch.setattr(portfolio, "factor_cumulative_returns", record_call("cumulative", original_cumulative))
     monkeypatch.setattr(portfolio, "factor_positions", record_call("positions", original_positions))
-    monkeypatch.setattr(portfolio, "build_factor_portfolio_inputs", record_call("portfolio_inputs", original_inputs))
+
+    @wraps(original_projection)
+    def projection_spy(*args: object, **kwargs: object) -> portfolio.FactorPortfolioInputs:
+        projection_calls.append(dict(kwargs))
+        return original_projection(*args, **kwargs)  # type: ignore[arg-type]
+
+    def unexpected_public_builder(
+        *args: object,
+        **kwargs: object,
+    ) -> portfolio.FactorPortfolioInputs:
+        pytest.fail("analysis should project its already-computed first-period outputs")
+
+    monkeypatch.setattr(portfolio, "_build_factor_portfolio_inputs_from_outputs", projection_spy)
+    monkeypatch.setattr(portfolio, "build_factor_portfolio_inputs", unexpected_public_builder)
 
     model = _analyze(clean)
 
@@ -154,6 +280,18 @@ def test_analyze_factor_builds_one_weight_vector_and_reuses_it(monkeypatch: pyte
         for call in weight_calls
     )
     assert all(public_calls.values()), "all exposed portfolio calculations should be exercised"
+    assert len(public_calls["cumulative"]) == 1
+    assert len(public_calls["positions"]) == 1
+    assert len(projection_calls) == 1
+    projected_daily_curve, projected_daily_returns = portfolio._daily_cumulative_returns(
+        expected_cumulative
+    )
+    pd.testing.assert_series_equal(
+        projection_calls[0]["daily_cumulative"],
+        projected_daily_curve,
+    )
+    pd.testing.assert_series_equal(projection_calls[0]["returns"], projected_daily_returns)
+    pd.testing.assert_frame_equal(projection_calls[0]["raw_positions"], expected_positions)
     for calls in public_calls.values():
         for call in calls:
             assert (call["long_short"], call["group_neutral"], call["equal_weight"]) == (True, True, False)

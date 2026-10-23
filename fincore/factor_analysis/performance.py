@@ -355,15 +355,14 @@ def cumulative_returns(returns: pd.Series | pd.DataFrame | np.ndarray) -> pd.Ser
     return cast("np.ndarray", np.cumprod(source + 1.0, axis=0))
 
 
-def mean_return_by_quantile(
+def _mean_return_by_quantile_per_date(
     factor_data: pd.DataFrame,
-    by_date: bool = False,
-    by_group: bool = False,
-    demeaned: bool = True,
-    group_adjust: bool = False,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return mean forward returns and standard errors by factor quantile."""
-
+    *,
+    by_group: bool,
+    demeaned: bool,
+    group_adjust: bool,
+) -> pd.DataFrame:
+    """Build the canonical per-date mean/std/count table once for reuse."""
     copied = _copy_factor_data(factor_data)
     if "factor_quantile" not in copied.columns:
         raise ValueError("factor_data must contain a 'factor_quantile' column")
@@ -377,16 +376,31 @@ def mean_return_by_quantile(
     groupers: list[object] = [copied["factor_quantile"], _date_key(copied)]
     if by_group:
         groupers.append(copied["group"])
-    per_date = copied.groupby(groupers, observed=False, sort=True)[list(columns)].agg(["mean", "std", "count"])
-    per_date_mean = per_date.xs("mean", axis=1, level=1)
-    if by_date:
-        mean_returns = cast("pd.DataFrame", per_date_mean)
-        standard_error = cast(
-            "pd.DataFrame",
-            per_date.xs("std", axis=1, level=1) / np.sqrt(per_date.xs("count", axis=1, level=1)),
-        )
-        return mean_returns, standard_error
+    return copied.groupby(groupers, observed=False, sort=True)[list(columns)].agg(["mean", "std", "count"])
 
+
+def _mean_return_by_quantile_per_date_views(
+    per_date: pd.DataFrame,
+    *,
+    by_group: bool,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Project both existing aggregate and per-date views from one exact table."""
+    per_date_mean = per_date.xs("mean", axis=1, level=1)
+    mean_by_date = cast("pd.DataFrame", per_date_mean)
+    standard_error_by_date = cast(
+        "pd.DataFrame",
+        per_date.xs("std", axis=1, level=1) / np.sqrt(per_date.xs("count", axis=1, level=1)),
+    )
+    mean_returns, standard_error = _aggregate_mean_return_by_quantile(per_date_mean, by_group=by_group)
+    return mean_returns, standard_error, mean_by_date, standard_error_by_date
+
+
+def _aggregate_mean_return_by_quantile(
+    per_date_mean: pd.DataFrame,
+    *,
+    by_group: bool,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Keep the source two-stage aggregate over per-date means unchanged."""
     aggregate_keys: list[object] = [per_date_mean.index.get_level_values("factor_quantile")]
     if by_group:
         aggregate_keys.append(per_date_mean.index.get_level_values("group"))
@@ -397,6 +411,50 @@ def mean_return_by_quantile(
         aggregate.xs("std", axis=1, level=1) / np.sqrt(aggregate.xs("count", axis=1, level=1)),
     )
     return mean_returns, standard_error
+
+
+def _mean_return_by_quantile_views(
+    factor_data: pd.DataFrame,
+    *,
+    by_group: bool,
+    demeaned: bool,
+    group_adjust: bool,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Compute report aggregate and date views from one matching grouping."""
+    per_date = _mean_return_by_quantile_per_date(
+        factor_data,
+        by_group=by_group,
+        demeaned=demeaned,
+        group_adjust=group_adjust,
+    )
+    return _mean_return_by_quantile_per_date_views(per_date, by_group=by_group)
+
+
+def mean_return_by_quantile(
+    factor_data: pd.DataFrame,
+    by_date: bool = False,
+    by_group: bool = False,
+    demeaned: bool = True,
+    group_adjust: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return mean forward returns and standard errors by factor quantile."""
+
+    per_date = _mean_return_by_quantile_per_date(
+        factor_data,
+        by_group=by_group,
+        demeaned=demeaned,
+        group_adjust=group_adjust,
+    )
+    if by_date:
+        per_date_mean = per_date.xs("mean", axis=1, level=1)
+        mean_returns = cast("pd.DataFrame", per_date_mean)
+        standard_error = cast(
+            "pd.DataFrame",
+            per_date.xs("std", axis=1, level=1) / np.sqrt(per_date.xs("count", axis=1, level=1)),
+        )
+        return mean_returns, standard_error
+    per_date_mean = per_date.xs("mean", axis=1, level=1)
+    return _aggregate_mean_return_by_quantile(per_date_mean, by_group=by_group)
 
 
 def compute_mean_returns_spread(

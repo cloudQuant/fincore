@@ -477,15 +477,8 @@ def _analyze_factor(
         group_adjust=group_neutral,
         equal_weight=equal_weight,
     )
-    mean_returns, std_error = performance.mean_return_by_quantile(
+    mean_returns, std_error, mean_by_date, std_error_by_date = performance._mean_return_by_quantile_views(
         analysis_data,
-        by_group=effective_by_group,
-        demeaned=long_short,
-        group_adjust=group_neutral,
-    )
-    mean_by_date, std_error_by_date = performance.mean_return_by_quantile(
-        analysis_data,
-        by_date=True,
         by_group=effective_by_group,
         demeaned=long_short,
         group_adjust=group_neutral,
@@ -494,15 +487,13 @@ def _analyze_factor(
     # They cannot be recovered by averaging group means when group sizes differ,
     # and retaining both lets renderers stay compute-free after assembly.
     if effective_by_group:
-        aggregate_mean_returns, aggregate_std_error = performance.mean_return_by_quantile(
+        (
+            aggregate_mean_returns,
+            aggregate_std_error,
+            aggregate_mean_by_date,
+            aggregate_std_error_by_date,
+        ) = performance._mean_return_by_quantile_views(
             analysis_data,
-            by_group=False,
-            demeaned=long_short,
-            group_adjust=group_neutral,
-        )
-        aggregate_mean_by_date, aggregate_std_error_by_date = performance.mean_return_by_quantile(
-            analysis_data,
-            by_date=True,
             by_group=False,
             demeaned=long_short,
             group_adjust=group_neutral,
@@ -618,20 +609,21 @@ def _analyze_factor(
         )
         for period in selected_periods
     }
-    portfolio_inputs = (
-        portfolio.build_factor_portfolio_inputs(
-            analysis_data,
-            selected_periods[0],
-            capital=config.portfolio_capital,
-            long_short=long_short,
-            group_neutral=group_neutral,
-            equal_weight=equal_weight,
-            benchmark_period=config.portfolio_benchmark_period,
-            weights=weights,
+    if include_portfolio_inputs:
+        first_period = selected_periods[0]
+        daily_cumulative, daily_returns = portfolio._daily_cumulative_returns(
+            cumulative[first_period]
         )
-        if include_portfolio_inputs
-        else None
-    )
+        portfolio_inputs = portfolio._build_factor_portfolio_inputs_from_outputs(
+            factor_data=analysis_data,
+            daily_cumulative=daily_cumulative,
+            returns=daily_returns,
+            raw_positions=positions[first_period],
+            capital=config.portfolio_capital,
+            benchmark_period=config.portfolio_benchmark_period,
+        )
+    else:
+        portfolio_inputs = None
 
     grouped: dict[Hashable, FactorGroupAnalysis] = {}
     if effective_by_group:

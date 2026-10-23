@@ -36,10 +36,10 @@ from fincore.factor_analysis.data import (
 )
 from fincore.factor_analysis.models import fingerprint_value
 from fincore.factor_analysis.performance import (
+    _mean_return_by_quantile_per_date,
     compute_mean_returns_spread,
     factor_information_coefficient,
     factor_rank_autocorrelation,
-    mean_return_by_quantile,
     quantile_turnover,
 )
 
@@ -1279,7 +1279,14 @@ def _evaluate_period(
         )
 
     try:
-        mean_returns, _ = mean_return_by_quantile(data, by_date=True, demeaned=False)
+        per_date_statistics = _mean_return_by_quantile_per_date(
+            data,
+            by_group=False,
+            demeaned=False,
+            group_adjust=False,
+        )
+        mean_returns = per_date_statistics.xs("mean", axis=1, level=1)
+        count_frame = per_date_statistics.xs("count", axis=1, level=1)[label]
     except (KeyError, ValueError) as error:
         raise FactorComputationError(
             "quantile return aggregation failed",
@@ -1297,11 +1304,6 @@ def _evaluate_period(
         names=("factor_quantile", "date"),
     )
 
-    count_frame = data.groupby(
-        [data["factor_quantile"], data.index.get_level_values("date")],
-        observed=False,
-        sort=True,
-    )[label].count()
     count_lookup = {
         (int(quantile), date): int(count) for (quantile, date), count in count_frame.items() if pd.notna(quantile)
     }
