@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 
 import numpy as np
 import pandas as pd
@@ -503,7 +504,9 @@ def test_precomputed_returns_are_used_only_when_selected() -> None:
     assert excinfo.value.code == "precomputed_returns_unused"
 
 
-def test_long_tables_match_legacy_concat_contract_without_input_aliases() -> None:
+def test_long_tables_match_legacy_concat_contract_without_input_aliases(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     panel = _panel(n_dates=4, n_assets=3)
     dates = panel["dates"]
     if hasattr(dates, "as_unit"):
@@ -537,16 +540,77 @@ def test_long_tables_match_legacy_concat_contract_without_input_aliases() -> Non
         "min_quantile_assets": 1,
         "quantiles": 2,
         "stability_lags": (),
+        "combinations": {"blend": {"beta": 0.5, "alpha": 0.5}},
     }
 
-    result = research.evaluate_factor_research(
-        factors,
-        grid=None,
-        prices=None,
-        universe=None,
-        groups=groups,
-        precomputed_returns=precomputed_returns,
-        spec=spec,
+    output_rows = len(factors) * len(labels)
+    allocation_events: list[tuple[int, str, tuple[int, int, bool, bool]]] = []
+    phase = {"periods": 0, "stability": 0, "correlation": False, "coverage": False}
+    original_empty = np.empty
+    original_period = research._evaluate_period
+    original_stability = research._stability_rows
+    original_correlation = research._correlation_rows
+    original_coverage = research._coverage_rows
+
+    def observe_empty(shape, *args, **kwargs):
+        caller = sys._getframe(1)
+        dtype = kwargs.get("dtype", args[0] if args else float)
+        if caller.f_code is research.evaluate_factor_research.__code__ and shape == output_rows:
+            allocation_events.append(
+                (
+                    int(shape),
+                    np.dtype(dtype).name,
+                    (
+                        phase["periods"],
+                        phase["stability"],
+                        phase["correlation"],
+                        phase["coverage"],
+                    ),
+                )
+            )
+        return original_empty(shape, *args, **kwargs)
+
+    def observe_period(**kwargs):
+        phase["periods"] += 1
+        return original_period(**kwargs)
+
+    def observe_stability(*args, **kwargs):
+        phase["stability"] += 1
+        return original_stability(*args, **kwargs)
+
+    def observe_correlation(*args, **kwargs):
+        result = original_correlation(*args, **kwargs)
+        phase["correlation"] = True
+        return result
+
+    def observe_coverage(*args, **kwargs):
+        result = original_coverage(*args, **kwargs)
+        phase["coverage"] = True
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(research.np, "empty", observe_empty)
+        patch.setattr(research, "_evaluate_period", observe_period)
+        patch.setattr(research, "_stability_rows", observe_stability)
+        patch.setattr(research, "_correlation_rows", observe_correlation)
+        patch.setattr(research, "_coverage_rows", observe_coverage)
+        result = research.evaluate_factor_research(
+            factors,
+            grid=None,
+            prices=None,
+            universe=None,
+            groups=groups,
+            precomputed_returns=precomputed_returns,
+            spec=spec,
+        )
+
+    assert sorted((rows, dtype) for rows, dtype, _ in allocation_events) == sorted(
+        [(output_rows, "object")] * 4
+        + [(output_rows, "float64")] * 3
+        + [(output_rows, "int64")]
+    )
+    assert all(
+        state == (6, 3, True, True) for _, _, state in allocation_events
     )
 
     expected_labels, expected_signals = _legacy_long_table_oracle(

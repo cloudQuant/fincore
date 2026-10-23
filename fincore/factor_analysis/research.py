@@ -1580,6 +1580,7 @@ def evaluate_factor_research(
     if panel_frame.empty:
         raise DatasetError("factors contain no cells inside the requested window", code="factors_empty_window")
     panel_frame = panel_frame.copy(deep=True)
+    del times, in_window
     panel_frame.index = pd.MultiIndex.from_arrays(
         (
             pd.DatetimeIndex(panel_frame.index.get_level_values(0)),
@@ -1625,6 +1626,7 @@ def evaluate_factor_research(
     panel_frame = panel_frame.loc[in_universe]
     if panel_frame.empty:
         raise DatasetError("universe excludes every factor cell in the window", code="universe_empty")
+    del in_universe, universe_values
     row_times = pd.DatetimeIndex(panel_frame.index.get_level_values("time"))
     row_assets = pd.Index(panel_frame.index.get_level_values("asset"))
     time_positions = time_lookup.get_indexer(row_times)
@@ -1676,6 +1678,9 @@ def evaluate_factor_research(
         for label in labels:
             series = precomputed_frame[label].reindex(panel_index)
             label_values[label] = series.to_numpy(dtype=float)
+        del precomputed_frame
+        if labels:
+            del series
     else:
         price_frames = _validate_prices(prices, normalized, grid_index)
         basis = _price_basis(normalized, price_frames)
@@ -1695,33 +1700,17 @@ def evaluate_factor_research(
             )
             matrix = wide.to_numpy(dtype=float)
             label_values[label] = matrix[time_positions, asset_positions]
+        del price_frames, basis, full_price_frame
+        if labels:
+            del wide, matrix
 
-    label_row_count = panel_cell_count * len(labels)
-    if label_row_count:
-        label_period_values = np.empty(label_row_count, dtype=object)
-        label_values_out = np.empty(label_row_count, dtype=np.float64)
-        for block, label in enumerate(labels):
-            start = block * panel_cell_count
-            end = start + panel_cell_count
-            label_period_values[start:end] = label
-            label_values_out[start:end] = label_values[label]
-        label_table = pd.DataFrame(
-            {
-                "time": _repeat_index_blocks(row_times, len(labels)),
-                "asset": _repeat_index_blocks(row_assets, len(labels)),
-                "period": label_period_values,
-                "value": label_values_out,
-            },
-            copy=False,
-        )
-        del label_period_values, label_values_out
-    else:
-        label_table = _empty_frame(["time", "asset", "period", "value"])
+    # Keep per-label vectors for evaluation; build the public long table later.
     label_any = np.zeros(panel_cell_count, dtype=bool)
     for label in labels:
         label_any |= np.isfinite(label_values[label])
 
     group_map = _resolve_groups(groups, panel_assets)
+    del panel_assets
     directions = _direction_map(factors, normalized)
     factor_names = [str(name) for name in panel_frame.columns]
     reserved_names = {"factor", "group", "factor_quantile", *labels}
@@ -1735,25 +1724,8 @@ def evaluate_factor_research(
 
     processed_matrices: dict[str, np.ndarray] = {}
     row_values: dict[str, np.ndarray] = {}
-    signal_row_count = panel_cell_count * len(factor_names)
-    if signal_row_count:
-        signal_factor_values = np.empty(signal_row_count, dtype=object)
-        signal_direction_values = np.empty(signal_row_count, dtype=np.int64)
-        signal_value_values = np.empty(signal_row_count, dtype=np.float64)
-        signal_processed_values = np.empty(signal_row_count, dtype=np.float64)
-        signal_preprocess_values = np.empty(signal_row_count, dtype=object)
-        signal_group_values = np.empty(signal_row_count, dtype=object)
-        group_values = np.array([group_map[asset] for asset in row_assets], dtype=object)
-    else:
-        signal_factor_values = np.empty(0, dtype=object)
-        signal_direction_values = np.empty(0, dtype=np.int64)
-        signal_value_values = np.empty(0, dtype=np.float64)
-        signal_processed_values = np.empty(0, dtype=np.float64)
-        signal_preprocess_values = np.empty(0, dtype=object)
-        signal_group_values = np.empty(0, dtype=object)
-        group_values = np.empty(0, dtype=object)
     collapse_reports: list[tuple[str, int]] = []
-    for block, name in enumerate(factor_names):
+    for name in factor_names:
         raw = panel_frame[name].to_numpy(dtype=float)
         direction = directions[name]
         adjusted = raw * float(direction)
@@ -1764,41 +1736,6 @@ def evaluate_factor_research(
             collapse_reports.append((name, collapsed))
         processed_matrices[name] = processed_matrix
         row_values[name] = processed_matrix[time_positions, asset_positions]
-        start = block * panel_cell_count
-        end = start + panel_cell_count
-        signal_factor_values[start:end] = name
-        signal_direction_values[start:end] = direction
-        signal_value_values[start:end] = adjusted
-        signal_processed_values[start:end] = row_values[name]
-        signal_preprocess_values[start:end] = normalized.preprocess
-        signal_group_values[start:end] = group_values
-    if signal_row_count:
-        signals = pd.DataFrame(
-            {
-                "time": _repeat_index_blocks(row_times, len(factor_names)),
-                "asset": _repeat_index_blocks(row_assets, len(factor_names)),
-                "factor": signal_factor_values,
-                "direction": signal_direction_values,
-                "value": signal_value_values,
-                "processed_value": signal_processed_values,
-                "preprocess": signal_preprocess_values,
-                "group": signal_group_values,
-            },
-            copy=False,
-        )
-        del (
-            signal_factor_values,
-            signal_direction_values,
-            signal_value_values,
-            signal_processed_values,
-            signal_preprocess_values,
-            signal_group_values,
-            group_values,
-        )
-    else:
-        signals = _empty_frame(
-            ["time", "asset", "factor", "direction", "value", "processed_value", "preprocess", "group"]
-        )
     if factor_names:
         del raw, adjusted, matrix, processed_matrix
     for name, collapsed in collapse_reports:
@@ -1923,6 +1860,96 @@ def evaluate_factor_research(
         labels=labels,
     )
     status = _overall_status(factor_names, summary_lookup, labels)
+    # Metric-only aliases and masks are dead after coverage; release them before
+    # allocating the long output tables.
+    del evaluated_row_values, label_any, panel_index, time_positions, asset_positions
+
+    # Long public tables are outputs only; defer their full-size buffers until
+    # all metric kernels have finished using the per-cell vectors and matrices.
+    label_row_count = panel_cell_count * len(labels)
+    if label_row_count:
+        label_period_values = np.empty(label_row_count, dtype=object)
+        label_values_out = np.empty(label_row_count, dtype=np.float64)
+        for block, label in enumerate(labels):
+            start = block * panel_cell_count
+            end = start + panel_cell_count
+            label_period_values[start:end] = label
+            label_values_out[start:end] = label_values[label]
+        label_table = pd.DataFrame(
+            {
+                "time": _repeat_index_blocks(row_times, len(labels)),
+                "asset": _repeat_index_blocks(row_assets, len(labels)),
+                "period": label_period_values,
+                "value": label_values_out,
+            },
+            copy=False,
+        )
+        del label_period_values, label_values_out
+    else:
+        label_table = _empty_frame(["time", "asset", "period", "value"])
+    del label_values
+
+    signal_row_count = panel_cell_count * len(factor_names)
+    if signal_row_count:
+        signal_factor_values = np.empty(signal_row_count, dtype=object)
+        signal_direction_values = np.empty(signal_row_count, dtype=np.int64)
+        signal_value_values = np.empty(signal_row_count, dtype=np.float64)
+        signal_processed_values = np.empty(signal_row_count, dtype=np.float64)
+        signal_preprocess_values = np.empty(signal_row_count, dtype=object)
+        signal_group_values = np.empty(signal_row_count, dtype=object)
+        group_values = np.array([group_map[asset] for asset in row_assets], dtype=object)
+        for block, name in enumerate(factor_names):
+            raw = panel_frame[name].to_numpy(dtype=float)
+            direction = directions[name]
+            adjusted = raw * float(direction)
+            start = block * panel_cell_count
+            end = start + panel_cell_count
+            signal_factor_values[start:end] = name
+            signal_direction_values[start:end] = direction
+            signal_value_values[start:end] = adjusted
+            signal_processed_values[start:end] = row_values.pop(name)
+            signal_preprocess_values[start:end] = normalized.preprocess
+            signal_group_values[start:end] = group_values
+        signals = pd.DataFrame(
+            {
+                "time": _repeat_index_blocks(row_times, len(factor_names)),
+                "asset": _repeat_index_blocks(row_assets, len(factor_names)),
+                "factor": signal_factor_values,
+                "direction": signal_direction_values,
+                "value": signal_value_values,
+                "processed_value": signal_processed_values,
+                "preprocess": signal_preprocess_values,
+                "group": signal_group_values,
+            },
+            copy=False,
+        )
+        del (
+            signal_factor_values,
+            signal_direction_values,
+            signal_value_values,
+            signal_processed_values,
+            signal_preprocess_values,
+            signal_group_values,
+            group_values,
+        )
+        if factor_names:
+            del raw, adjusted
+    else:
+        signals = _empty_frame(
+            ["time", "asset", "factor", "direction", "value", "processed_value", "preprocess", "group"]
+        )
+
+    del row_values
+
+    # Inputs have already been fingerprinted through the original arguments;
+    # these are private evaluation-only aliases no longer needed by the result.
+    del (
+        panel_frame,
+        row_times,
+        row_assets,
+        group_map,
+        directions,
+    )
 
     ic_table = pd.DataFrame(
         ic_rows,
