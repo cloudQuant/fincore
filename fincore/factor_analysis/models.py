@@ -2250,14 +2250,15 @@ def _stream_mapping_items(
         raise _FingerprintNotStreamable
     items = list(mapping.items())
     if type(value) is not globals().get("_FrozenMapping") and any(
-        type(key) is not str for key, _ in items
+        type(key) not in (str, int) for key, _ in items
     ):
         raise _FingerprintNotStreamable
     encoded_keys = [(context.scalar_bytes(key), key, item) for key, item in items]
-    # A mapping-entry starts with the same tag and an eight-byte key-part
-    # length, so its byte sort is exactly (encoded-key length, encoded key).
-    # Equal encodings are rejected because the legacy sort would then compare
-    # the encoded values too.
+    # The legacy encoder sorts complete mapping-entry envelopes. Every entry
+    # has the same tag prefix, followed by the eight-byte key-part length and
+    # encoded key, so unique key encodings establish the same order as sorting
+    # the complete entries. Equal encodings are rejected because legacy then
+    # compares the encoded values too.
     encoded_keys.sort(key=lambda row: (len(row[0]), row[0]))
     if any(
         encoded_keys[i - 1][0] == encoded_keys[i][0]

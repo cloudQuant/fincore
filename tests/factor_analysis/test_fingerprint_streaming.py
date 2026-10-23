@@ -252,6 +252,148 @@ def test_nested_mappingproxy_and_dataclass_payload_match_legacy() -> None:
 @pytest.mark.parametrize(
     "value",
     [
+        {
+            "zeta": "text-key",
+            -9: "negative-small",
+            0: "zero",
+            23: "positive-small",
+            -(10**80): "negative-large",
+            10**95: "positive-large",
+        },
+        {
+            "nested": {
+                2: pd.Series([1.25, -0.0], name="positive"),
+                -12: pd.Series([np.inf, np.nan], name="negative"),
+                "label": "mixed-keys",
+            },
+            "outer": 10**64,
+        },
+    ],
+)
+def test_exact_string_and_integer_mapping_keys_keep_legacy_sort_order(
+    value: dict[object, object],
+) -> None:
+    expected = models._fingerprint_bytes(value)
+    actual = _stream_bytes(value)
+
+    assert actual == expected
+    assert models.fingerprint_value(value) == sha256(expected).hexdigest()
+
+
+def test_custom_mapping_key_and_encoded_key_collision_keep_legacy_fallback() -> None:
+    class IntKey(int):
+        pass
+
+    class SameEncodingKey:
+        pass
+
+    first = SameEncodingKey()
+    second = SameEncodingKey()
+    assert first is not second
+    assert models._fingerprint_bytes(first) == models._fingerprint_bytes(second)
+
+    values = (
+        {IntKey(7): "int-subclass"},
+        {first: "z-value", second: "a-value"},
+    )
+    for value in values:
+        expected = models._fingerprint_bytes(value)
+        with pytest.raises(models._FingerprintNotStreamable):
+            models._stream_fingerprint(value, _CaptureWriter())
+        assert models.fingerprint_value(value) == sha256(expected).hexdigest()
+
+
+def test_duplicate_encoded_builtin_keys_trigger_legacy_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    value = {1: "first", 2: "second"}
+    expected = models._fingerprint_bytes(value)
+    original_scalar_bytes = models._FingerprintStreamContext.scalar_bytes
+
+    def colliding_scalar_bytes(
+        context: models._FingerprintStreamContext, key: object
+    ) -> bytes:
+        if type(key) in (str, int):
+            return b"same-encoded-key"
+        return original_scalar_bytes(context, key)
+
+    monkeypatch.setattr(
+        models._FingerprintStreamContext, "scalar_bytes", colliding_scalar_bytes
+    )
+    with pytest.raises(models._FingerprintNotStreamable):
+        models._stream_fingerprint(value, _CaptureWriter())
+    assert models.fingerprint_value(value) == sha256(expected).hexdigest()
+
+
+def test_prepared_report_result_with_integer_turnover_keys_streams_exactly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fincore.factor_analysis import analysis, data
+
+    dates = pd.bdate_range("2024-01-02", periods=10, tz="UTC")
+    assets = tuple(f"A{position:02d}" for position in range(8))
+    factor_dates = dates[:-2]
+    index = pd.MultiIndex.from_product(
+        (factor_dates, assets), names=("date", "asset")
+    )
+    cross_section = np.linspace(-1.0, 1.0, len(assets))
+    factor = pd.Series(
+        np.tile(cross_section, len(factor_dates))
+        + np.repeat(np.arange(len(factor_dates), dtype=float) * 0.025, len(assets)),
+        index=index,
+        name="factor",
+    )
+    prices = pd.DataFrame(
+        {
+            asset: (100.0 + position)
+            * (1.0 + np.arange(len(dates), dtype=float) * (position + 1) * 0.0007)
+            for position, asset in enumerate(assets)
+        },
+        index=dates,
+    )
+    prepared = data.prepare_factor_data(
+        factor,
+        prices,
+        periods=(1,),
+        quantiles=4,
+        max_loss=1.0,
+    )
+
+    result_payloads: list[tuple[int, str]] = []
+
+    def compare_streamed_result_payload(value: object) -> str:
+        assert type(value) is dict
+        payload = value
+        turnover = payload["quantile_turnover"]
+        assert type(turnover) is dict
+        assert turnover
+        assert all(type(key) is int for key in turnover)
+
+        expected = models._fingerprint_bytes(payload)
+        actual = _stream_bytes(payload)
+        assert actual == expected
+        digest = sha256(actual).hexdigest()
+        assert digest == sha256(expected).hexdigest()
+        result_payloads.append((len(actual), digest))
+        return digest
+
+    monkeypatch.setattr(analysis, "fingerprint_value", compare_streamed_result_payload)
+    model = analysis.analyze_factor(
+        prepared.data,
+        periods=None,
+        turnover_periods=(1, 2),
+        time_aggregation=(),
+        include_portfolio_inputs=True,
+        portfolio_benchmark_period="1D",
+    )
+
+    assert len(result_payloads) == 1
+    assert model.result_fingerprint == result_payloads[0][1]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
         [],
         ["x", 1, []],
         [[], ["a", [1, 2]], {"nested": [[], "b"]}],
