@@ -87,6 +87,51 @@ def _inputs(
     }
 
 
+def _legacy_long_table_oracle(
+    factors: pd.DataFrame,
+    precomputed_returns: pd.DataFrame,
+    groups: dict[object, object],
+    labels: tuple[str, ...],
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Reproduce the pre-G2b per-block DataFrame plus concat assembly."""
+
+    panel = factors.sort_index()
+    panel_index = panel.index
+    row_times = pd.DatetimeIndex(panel_index.get_level_values("time"))
+    row_assets = pd.Index(panel_index.get_level_values("asset"))
+    label_parts = []
+    for label in labels:
+        label_values = precomputed_returns[label].reindex(panel_index).to_numpy(dtype=float)
+        label_parts.append(
+            pd.DataFrame(
+                {"time": row_times, "asset": row_assets, "period": label, "value": label_values}
+            )
+        )
+
+    signal_parts = []
+    for name in panel.columns:
+        adjusted = panel[name].to_numpy(dtype=float) * 1.0
+        signal_parts.append(
+            pd.DataFrame(
+                {
+                    "time": row_times,
+                    "asset": row_assets,
+                    "factor": name,
+                    "direction": 1,
+                    "value": adjusted,
+                    "processed_value": adjusted.copy(),
+                    "preprocess": "none",
+                    "group": np.array([groups[asset] for asset in row_assets], dtype=object),
+                }
+            )
+        )
+
+    return (
+        pd.concat(label_parts, ignore_index=True),
+        pd.concat(signal_parts, ignore_index=True),
+    )
+
+
 def _mean_ic(result: research.ResearchEvaluationResult, factor: str = "momentum") -> float:
     rows = result.ic_summary[result.ic_summary["factor"] == factor]
     return float(rows["mean_ic"].iloc[0])
@@ -458,7 +503,106 @@ def test_precomputed_returns_are_used_only_when_selected() -> None:
     assert excinfo.value.code == "precomputed_returns_unused"
 
 
-def test_combination_and_comparison_tables() -> None:
+def test_long_tables_match_legacy_concat_contract_without_input_aliases() -> None:
+    panel = _panel(n_dates=4, n_assets=3)
+    dates = panel["dates"]
+    if hasattr(dates, "as_unit"):
+        dates = dates.as_unit("s")
+    index = pd.MultiIndex.from_product((dates, panel["assets"]), names=("time", "asset"))
+    values = np.asarray(panel["values"], dtype=float).reshape(-1)
+    beta = values.copy()
+    beta[:4] = (-0.0, np.nan, np.inf, -np.inf)
+    factors = pd.DataFrame({"beta": beta, "alpha": values * 2.0}, index=index)
+    permutation = np.arange(len(factors))[::-1]
+    factors = factors.iloc[permutation].copy(deep=True)
+
+    one_day = values * 0.1
+    two_day = values * 0.2
+    one_day[:4] = (-0.0, np.nan, np.inf, -np.inf)
+    precomputed_returns = pd.DataFrame({"1D": one_day, "2D": two_day}, index=index)
+    precomputed_returns = precomputed_returns.iloc[np.roll(permutation, 1)].copy(deep=True)
+    groups = {"A00": "left", "A01": "right", "A02": "left"}
+    original_factors = factors.copy(deep=True)
+    original_returns = precomputed_returns.copy(deep=True)
+    original_groups = dict(groups)
+    labels = ("1D", "2D")
+    spec = {
+        "targets": panel["assets"],
+        "start": dates[0],
+        "end": dates[-1],
+        "periods": (1, 2),
+        "label": "precomputed",
+        "preprocess": "none",
+        "min_assets": 1,
+        "min_quantile_assets": 1,
+        "quantiles": 2,
+        "stability_lags": (),
+    }
+
+    result = research.evaluate_factor_research(
+        factors,
+        grid=None,
+        prices=None,
+        universe=None,
+        groups=groups,
+        precomputed_returns=precomputed_returns,
+        spec=spec,
+    )
+
+    expected_labels, expected_signals = _legacy_long_table_oracle(
+        factors, precomputed_returns, groups, labels
+    )
+    pd.testing.assert_frame_equal(result.labels, expected_labels)
+    pd.testing.assert_frame_equal(result.signals, expected_signals)
+    assert result.labels.columns.tolist() == ["time", "asset", "period", "value"]
+    assert result.signals.columns.tolist() == [
+        "time",
+        "asset",
+        "factor",
+        "direction",
+        "value",
+        "processed_value",
+        "preprocess",
+        "group",
+    ]
+    expected_time_dtype = pd.Series(factors.index.get_level_values("time")).dtype
+    assert result.labels["time"].dtype == expected_time_dtype
+    assert result.signals["time"].dtype == expected_time_dtype
+    assert result.signals["group"].dtype == np.dtype(object)
+    assert result.labels["value"].dtype == np.dtype("float64")
+    assert result.signals["value"].dtype == np.dtype("float64")
+    assert result.signals["processed_value"].dtype == np.dtype("float64")
+
+    signal_values = result.signals["value"].to_numpy(dtype=float)
+    processed_values = result.signals["processed_value"].to_numpy(dtype=float)
+    label_values = result.labels["value"].to_numpy(dtype=float)
+    assert np.signbit(signal_values[0])
+    assert np.isnan(signal_values[1])
+    assert np.isposinf(signal_values[2])
+    assert np.isneginf(signal_values[3])
+    assert np.signbit(processed_values[0])
+    assert np.isnan(processed_values[1])
+    assert np.isposinf(processed_values[2])
+    assert np.isneginf(processed_values[3])
+    assert np.signbit(label_values[0])
+    assert np.isnan(label_values[1])
+    assert np.isposinf(label_values[2])
+    assert np.isneginf(label_values[3])
+
+    pd.testing.assert_frame_equal(factors, original_factors)
+    pd.testing.assert_frame_equal(precomputed_returns, original_returns)
+    assert groups == original_groups
+    assert not np.shares_memory(
+        result.signals["value"].to_numpy(copy=False), factors.to_numpy(dtype=float, copy=False)
+    )
+    assert not np.shares_memory(
+        result.labels["value"].to_numpy(copy=False),
+        precomputed_returns.to_numpy(dtype=float, copy=False),
+    )
+
+
+@pytest.mark.parametrize("preprocess", ("none", "cross_section_rank"))
+def test_combination_and_comparison_tables(preprocess: str) -> None:
     panel = _panel()
     values = np.asarray(panel["values"], dtype=float)
     factors = pd.concat(
@@ -470,6 +614,7 @@ def test_combination_and_comparison_tables() -> None:
     )
     spec = _spec(
         panel,
+        preprocess=preprocess,
         combinations={"blend": {"momentum": 0.5, "value": 0.5}},
         comparisons={"head_to_head": ("momentum", "value")},
     )
@@ -486,6 +631,12 @@ def test_combination_and_comparison_tables() -> None:
     assert float(comparison["mean_ic"]) == pytest.approx(0.0, abs=1e-9)
     assert len(result.correlation) == 3
     assert np.allclose(result.correlation["mean_correlation"], 1.0, atol=1e-9)
+    if preprocess == "cross_section_rank":
+        for name in ("momentum", "value"):
+            observed = result.signals.loc[result.signals["factor"] == name, "processed_value"]
+            source = factors[name].sort_index()
+            expected = source.groupby(level="time").rank(method="average", pct=True)
+            np.testing.assert_array_equal(observed.to_numpy(dtype=float), expected.to_numpy(dtype=float))
 
 
 def test_combination_errors_are_rejected() -> None:
