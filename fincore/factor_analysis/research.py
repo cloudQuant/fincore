@@ -774,7 +774,8 @@ def _validate_factors(factors: object, spec: ResearchEvaluationSpec) -> pd.DataF
     names = tuple(factors.columns)
     if any(not isinstance(name, str) or not name for name in names):
         raise DatasetError("factor column names must be non-empty strings", code="factors_column_name")
-    missing_targets = [target for target in spec.targets if target not in assets]
+    present_assets = assets.unique()
+    missing_targets = [target for target in spec.targets if target not in present_assets]
     if missing_targets:
         raise DatasetError(
             "factor panel does not contain every requested target asset",

@@ -360,6 +360,63 @@ def test_rejects_duplicate_keys_and_non_utc_indexes() -> None:
     assert excinfo.value.code == "factors_timezone"
 
 
+def test_validate_factors_accepts_repeated_assets() -> None:
+    dates = pd.date_range("2024-01-02", periods=4, tz="UTC")
+    index = pd.MultiIndex.from_arrays(
+        (dates, ("B", "A", "B", "A")),
+        names=("time", "asset"),
+    )
+    factors = pd.DataFrame({"momentum": (1.0, 2.0, 3.0, 4.0)}, index=index)
+    spec = research.normalize_research_evaluation_spec(
+        {"targets": ("A", "B"), "start": dates[0], "end": dates[-1]}
+    )
+
+    validated = research._validate_factors(factors, spec)
+
+    assert validated.index.get_level_values("asset").tolist() == ["B", "A", "B", "A"]
+
+
+def test_validate_factors_ignores_unused_multiindex_levels() -> None:
+    dates = pd.date_range("2024-01-02", periods=3, tz="UTC")
+    index = pd.MultiIndex(
+        levels=[dates, pd.Index(("A", "B", "UNUSED"))],
+        codes=[[0, 1, 2], [0, 1, 0]],
+        names=("time", "asset"),
+    )
+    factors = pd.DataFrame({"momentum": (1.0, 2.0, 3.0)}, index=index)
+    spec = research.normalize_research_evaluation_spec(
+        {"targets": ("A", "UNUSED"), "start": dates[0], "end": dates[-1]}
+    )
+
+    with pytest.raises(research.DatasetError) as excinfo:
+        research._validate_factors(factors, spec)
+
+    assert excinfo.value.code == "factors_missing_targets"
+    assert excinfo.value.report == {"missing": ["UNUSED"]}
+
+
+def test_validate_factors_preserves_missing_target_order() -> None:
+    dates = pd.date_range("2024-01-02", periods=2, tz="UTC")
+    index = pd.MultiIndex.from_arrays(
+        (dates, ("B", "A")),
+        names=("time", "asset"),
+    )
+    factors = pd.DataFrame({"momentum": (1.0, 2.0)}, index=index)
+    spec = research.normalize_research_evaluation_spec(
+        {
+            "targets": ("MISSING_Z", "B", "MISSING_A", "A"),
+            "start": dates[0],
+            "end": dates[-1],
+        }
+    )
+
+    with pytest.raises(research.DatasetError) as excinfo:
+        research._validate_factors(factors, spec)
+
+    assert excinfo.value.code == "factors_missing_targets"
+    assert excinfo.value.report == {"missing": ["MISSING_Z", "MISSING_A"]}
+
+
 def test_rejects_missing_prices_and_missing_targets() -> None:
     panel = _panel()
     factors = _factor(panel)
