@@ -1332,16 +1332,15 @@ class _FingerprintNotStreamable(Exception):
 
 _FINGERPRINT_CHUNK_BYTES = 8 * 1024 * 1024
 _FINGERPRINT_FLOAT_FRAME_BYTES = 33
-_FINGERPRINT_LEAF_CACHE_ENTRIES = 2048
-_FINGERPRINT_LEAF_CACHE_BYTES = 256 * 1024
+_FINGERPRINT_LEAF_CACHE_ENTRIES = 16384
+_FINGERPRINT_LEAF_CACHE_BYTES = 1024 * 1024
 _FINGERPRINT_LEAF_BATCH_BYTES = 1024 * 1024
 _FINGERPRINT_LEAF_BATCH_ENTRIES = 8192
 _FINGERPRINT_INTEGER_BATCH_ROWS = 32768
 _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS = 8192
-_FINGERPRINT_OBJECT_STRING_MAX_UNIQUES = 1024
+_FINGERPRINT_OBJECT_STRING_MAX_UNIQUES = 8192
 _FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS = 1024
 _FINGERPRINT_OBJECT_STRING_SAMPLE_MIN_TRANSITION_RATIO = 0.8
-_FINGERPRINT_OBJECT_STRING_SAMPLE_MAX_UNIQUE_RATIO = 0.75
 _FINGERPRINT_OBJECT_STRING_MAX_CHARS = 256
 
 
@@ -1769,14 +1768,13 @@ def _stream_object_scalar_supported(value: object) -> bool:
 def _stream_object_string_array_batch_worthwhile(
     values: np.ndarray[Any, Any],
 ) -> bool:
-    """Route only long, highly interleaved, repeated builtin-string arrays."""
+    """Route long, highly interleaved builtin-string arrays by transition rate."""
 
     count = len(values)
     if count < _FINGERPRINT_OBJECT_STRING_CHUNK_ROWS:
         return False
 
     sample_count = min(_FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS, count - 1)
-    sampled_values: list[str] = []
     transitions = 0
     for sample in range(sample_count):
         position = sample * (count - 2) // (sample_count - 1)
@@ -1789,7 +1787,6 @@ def _stream_object_string_array_batch_worthwhile(
             or len(following) > _FINGERPRINT_OBJECT_STRING_MAX_CHARS
         ):
             return False
-        sampled_values.append(value)
         if value != following:
             transitions += 1
 
@@ -1798,10 +1795,7 @@ def _stream_object_string_array_batch_worthwhile(
         < _FINGERPRINT_OBJECT_STRING_SAMPLE_MIN_TRANSITION_RATIO
     ):
         return False
-    return (
-        len(set(sampled_values)) / sample_count
-        <= _FINGERPRINT_OBJECT_STRING_SAMPLE_MAX_UNIQUE_RATIO
-    )
+    return True
 
 
 def _stream_object_string_chunk_supported(values: np.ndarray[Any, Any]) -> bool:

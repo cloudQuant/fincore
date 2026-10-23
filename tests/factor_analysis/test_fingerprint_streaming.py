@@ -392,7 +392,7 @@ def test_string_writer_joins_exactly_one_mib() -> None:
     )
 
 
-def test_interleaved_string_writer_falls_back_above_one_mib(
+def test_interleaved_string_frame_falls_back_above_one_mib(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
@@ -401,49 +401,239 @@ def test_interleaved_string_writer_falls_back_above_one_mib(
     values = np.empty(rows, dtype=object)
     values[::2] = "x" * 106
     values[1::2] = "y" * 106
+    frame = pd.DataFrame({"asset": pd.Series(values, dtype=object)})
+    expected = models._fingerprint_bytes(frame)
     assert models._stream_object_string_array_batch_worthwhile(values)
+    original_factorize = models.pd.factorize
+    factorized_sizes: list[int] = []
     original_write_runs = models._stream_write_object_scalar_runs
-    fallback_calls = 0
+    fallback_sizes: list[int] = []
+
+    def factorize(items: Any, **kwargs: Any) -> tuple[Any, Any]:
+        assert len(items) <= rows
+        assert all(type(item) is str for item in items)
+        factorized_sizes.append(len(items))
+        return original_factorize(items, **kwargs)
 
     def record_fallback(
         items: np.ndarray[Any, Any],
         writer: Any,
         context: models._FingerprintStreamContext,
     ) -> None:
-        nonlocal fallback_calls
-        fallback_calls += 1
+        fallback_sizes.append(len(items))
         original_write_runs(items, writer, context)
 
+    monkeypatch.setattr(models.pd, "factorize", factorize)
     monkeypatch.setattr(models, "_stream_write_object_scalar_runs", record_fallback)
-    writer = _assert_string_array_writer_matches_legacy(values)
+    writer = _CaptureWriter()
+    encoded_length = models._stream_fingerprint(frame, writer)
 
-    assert fallback_calls == 1
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert factorized_sizes == [rows, rows]
+    # The one-element object-typed columns Index uses the same legacy writer;
+    # the oversized asset chunk is the second call.
+    assert sorted(fallback_sizes) == [len(frame.columns), rows]
     assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
 
 
-def test_interleaved_string_writer_falls_back_above_unique_limit(
+def test_high_cardinality_string_column_uses_actual_bounded_batch_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
-    values = np.array([f"asset-{position:04d}" for position in range(rows)], dtype=object)
+    values = np.array(
+        [f"asset-{position:04d}" for position in range(rows)], dtype=object
+    )
+    frame = pd.DataFrame({"asset": values}, index=pd.RangeIndex(rows, name="row"))
+    expected = models._fingerprint_bytes(frame)
+    original_factorize = models.pd.factorize
+    factorized_sizes: list[int] = []
+    batch_writes: list[tuple[int, ...]] = []
+    fallback_sizes: list[int] = []
+    original_write_chunk = models._stream_write_object_string_chunk
     original_write_runs = models._stream_write_object_scalar_runs
-    fallback_calls = 0
+
+    def factorize(items: Any, **kwargs: Any) -> tuple[Any, Any]:
+        assert kwargs == {"sort": False}
+        assert len(items) <= rows
+        assert all(type(item) is str for item in items)
+        factorized_sizes.append(len(items))
+        return original_factorize(items, **kwargs)
+
+    def record_batch(
+        items: np.ndarray[Any, Any],
+        writer: Any,
+        context: models._FingerprintStreamContext,
+    ) -> None:
+        before = len(writer.parts)
+        original_write_chunk(items, writer, context)
+        batch_writes.append(tuple(len(part) for part in writer.parts[before:]))
 
     def record_fallback(
         items: np.ndarray[Any, Any],
         writer: Any,
         context: models._FingerprintStreamContext,
     ) -> None:
-        nonlocal fallback_calls
-        fallback_calls += 1
+        fallback_sizes.append(len(items))
         original_write_runs(items, writer, context)
 
+    monkeypatch.setattr(models.pd, "factorize", factorize)
+    monkeypatch.setattr(models, "_stream_write_object_string_chunk", record_batch)
     monkeypatch.setattr(models, "_stream_write_object_scalar_runs", record_fallback)
-    writer = _assert_string_array_writer_matches_legacy(values)
+    writer = _CaptureWriter()
+    encoded_length = models._stream_fingerprint(frame, writer)
 
-    assert fallback_calls == 1
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert factorized_sizes == [rows, rows]
+    assert len(batch_writes) == 1 and len(batch_writes[0]) == 1
+    assert 0 < batch_writes[0][0] <= models._FINGERPRINT_LEAF_BATCH_BYTES
+    assert fallback_sizes == [len(frame.columns)]
     assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
 
+@pytest.mark.parametrize(("unique_count", "repeats"), ((500, 18), (5471, 4)))
+def test_market_cardinality_string_columns_use_stream_batches(
+    unique_count: int,
+    repeats: int,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rows = unique_count * repeats
+    labels = np.array(
+        [f"asset-{position:04d}" for position in range(unique_count)], dtype=object
+    )
+    values = np.resize(labels, rows)
+    frame = pd.DataFrame(
+        {"asset": values, "signal": np.arange(rows, dtype=np.float64)},
+        index=pd.RangeIndex(rows, name="row"),
+    )
+    expected = models._fingerprint_bytes(frame)
+
+    sample_count = min(models._FINGERPRINT_OBJECT_STRING_SAMPLE_ROWS, len(values) - 1)
+    sample_positions = [
+        sample * (len(values) - 2) // (sample_count - 1)
+        for sample in range(sample_count)
+    ]
+    sample_unique_ratio = (
+        len({values[position] for position in sample_positions}) / sample_count
+    )
+    if unique_count == 5471:
+        # The old 0.75 uniqueness gate rejected this interleaved full-market shape.
+        assert sample_unique_ratio > 0.75
+    else:
+        assert sample_unique_ratio <= 0.75
+
+    original_factorize = models.pd.factorize
+    original_write_chunk = models._stream_write_object_string_chunk
+    original_write_runs = models._stream_write_object_scalar_runs
+    original_context_init = models._FingerprintStreamContext.__init__
+    original_scalar_bytes = models._FingerprintStreamContext.scalar_bytes
+    factorized_sizes: list[int] = []
+    string_batch_writes: list[tuple[int, tuple[int, ...]]] = []
+    contexts: list[models._FingerprintStreamContext] = []
+    asset_labels = set(labels.tolist())
+    string_cache_hits = 0
+    fallback_sizes: list[int] = []
+
+    def factorize(items: Any, **kwargs: Any) -> tuple[Any, Any]:
+        assert kwargs == {"sort": False}
+        assert len(items) <= models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+        assert all(type(item) is str for item in items)
+        factorized_sizes.append(len(items))
+        return original_factorize(items, **kwargs)
+
+    def record_batch(
+        items: np.ndarray[Any, Any],
+        writer: Any,
+        context: models._FingerprintStreamContext,
+    ) -> None:
+        before = len(writer.parts)
+        original_write_chunk(items, writer, context)
+        string_batch_writes.append(
+            (len(items), tuple(len(part) for part in writer.parts[before:]))
+        )
+
+    def record_fallback(
+        items: np.ndarray[Any, Any],
+        writer: Any,
+        context: models._FingerprintStreamContext,
+    ) -> None:
+        fallback_sizes.append(len(items))
+        original_write_runs(items, writer, context)
+
+    def record_context_init(context: models._FingerprintStreamContext) -> None:
+        original_context_init(context)
+        contexts.append(context)
+
+    def record_scalar_bytes(
+        context: models._FingerprintStreamContext, value: object
+    ) -> bytes:
+        nonlocal string_cache_hits
+        if (
+            type(value) is str
+            and value in asset_labels
+            and value in context._strings
+        ):
+            string_cache_hits += 1
+        return original_scalar_bytes(context, value)
+
+    monkeypatch.setattr(models.pd, "factorize", factorize)
+    monkeypatch.setattr(models, "_stream_write_object_string_chunk", record_batch)
+    monkeypatch.setattr(models, "_stream_write_object_scalar_runs", record_fallback)
+    monkeypatch.setattr(models._FingerprintStreamContext, "__init__", record_context_init)
+    monkeypatch.setattr(models._FingerprintStreamContext, "scalar_bytes", record_scalar_bytes)
+    writer = _CaptureWriter()
+    encoded_length = models._stream_fingerprint(frame, writer)
+
+    expected_chunks = [
+        min(models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS, rows - start)
+        for start in range(0, rows, models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS)
+    ]
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert factorized_sizes == expected_chunks * 2
+    assert [item[0] for item in string_batch_writes] == expected_chunks
+    assert all(len(parts) == 1 for _, parts in string_batch_writes)
+    assert all(
+        8 * chunk_rows < parts[0] <= models._FINGERPRINT_LEAF_BATCH_BYTES
+        for chunk_rows, parts in string_batch_writes
+    )
+    assert fallback_sizes == [len(frame.columns)]
+    assert len(contexts) == 1
+    context = contexts[0]
+    assert string_cache_hits > 0
+    assert len(context._strings) >= unique_count
+    cache_entries = (
+        len(context._strings)
+        + len(context._integers)
+        + len(context._other_scalars)
+        + len(context._timestamps)
+        + len(context._framed_parts)
+    )
+    assert cache_entries <= models._FINGERPRINT_LEAF_CACHE_ENTRIES
+    assert context._cache_bytes <= models._FINGERPRINT_LEAF_CACHE_BYTES
+
+
+def test_string_chunk_rejects_overlength_values_before_factorize(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rows = models._FINGERPRINT_OBJECT_STRING_CHUNK_ROWS
+    values = np.resize(np.array(["asset-a", "asset-b"], dtype=object), rows)
+    # This position is outside the 1024-row sample; the bounded chunk scan must
+    # still reject it before pandas factorize sees any values.
+    values[2] = "x" * (models._FINGERPRINT_OBJECT_STRING_MAX_CHARS + 1)
+    frame = pd.DataFrame({"asset": values}, index=pd.RangeIndex(rows))
+    expected = models._fingerprint_bytes(frame)
+
+    def unexpected_factorize(items: Any, **kwargs: Any) -> tuple[Any, Any]:
+        raise AssertionError("overlength exact strings must not be factorized")
+
+    monkeypatch.setattr(models.pd, "factorize", unexpected_factorize)
+    writer = _CaptureWriter()
+    encoded_length = models._stream_fingerprint(frame, writer)
+
+    assert encoded_length == len(expected)
+    assert writer.getvalue() == expected
+    assert max(map(len, writer.parts)) <= models._FINGERPRINT_LEAF_BATCH_BYTES
 
 def test_empty_object_string_array_matches_empty_tuple_oracle() -> None:
     values = np.empty(0, dtype=object)
