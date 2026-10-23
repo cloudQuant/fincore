@@ -162,6 +162,100 @@ def test_equal_object_scalars_with_distinct_encodings_do_not_share_cached_bytes(
     _assert_stream_matches_legacy(tuple(values))
 
 
+@pytest.mark.parametrize(
+    "items",
+    [
+        ["资产/α", "资产/α", "βeta", "βeta", "e\u0301", "é"],
+        [-1, -1, -(2**130), -(2**130), 0, 2**128, 2**128],
+        [True, 1, True, 1, False, 0, False, 0],
+        [float("nan"), float("-nan"), 0.0, -0.0, float("inf"), -float("inf")],
+    ],
+)
+def test_object_scalar_runs_match_legacy_bytes(items: list[object]) -> None:
+    values = np.empty(len(items), dtype=object)
+    values[:] = items
+    series = pd.Series(values, name="object-scalars")
+    _assert_stream_matches_legacy(series)
+    _assert_stream_matches_legacy(tuple(items))
+
+
+def test_repeated_object_scalar_runs_use_bounded_frames_and_skip_generic_length(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    values = np.empty(50_000, dtype=object)
+    values[:18_000] = "资产-α/long-repeated-label"
+    values[18_000:38_000] = -(2**130)
+    values[38_000:] = "tail"
+    expected = models._fingerprint_bytes(tuple(values))
+
+    class _FrameDigestSpy:
+        def __init__(self) -> None:
+            self.digest = sha256()
+            self.sizes: list[int] = []
+            self.total = 0
+
+        def write(self, data: bytes | bytearray | memoryview) -> None:
+            self.sizes.append(len(data))
+            self.total += len(data)
+            self.digest.update(data)
+
+    scalar_calls = 0
+    generic_length_calls = 0
+    original_scalar_bytes = models._FingerprintStreamContext.scalar_bytes
+    original_stream_length = models._stream_length
+
+    def count_scalar_bytes(
+        context: models._FingerprintStreamContext, value: object
+    ) -> bytes:
+        nonlocal scalar_calls
+        scalar_calls += 1
+        return original_scalar_bytes(context, value)
+
+    def count_generic_length(value: object, context: models._FingerprintStreamContext) -> int:
+        nonlocal generic_length_calls
+        generic_length_calls += 1
+        return original_stream_length(value, context)
+
+    monkeypatch.setattr(
+        models._FingerprintStreamContext, "scalar_bytes", count_scalar_bytes
+    )
+    monkeypatch.setattr(models, "_stream_length", count_generic_length)
+
+    context = models._FingerprintStreamContext()
+    encoded_length = models._stream_tuple_array_length(values, values.dtype, context)
+    writer = _FrameDigestSpy()
+    models._stream_tuple_array(values, values.dtype, writer, context)
+
+    assert writer.total == encoded_length == len(expected)
+    assert writer.digest.hexdigest() == sha256(expected).hexdigest()
+    assert max(writer.sizes) <= models._FINGERPRINT_LEAF_BATCH_BYTES
+    assert generic_length_calls == 0
+    # Three adjacent runs are encoded once during each of the length and write
+    # passes, instead of dispatching once per object cell.
+    assert scalar_calls == 6
+    cache_entries = (
+        len(context._strings)
+        + len(context._integers)
+        + len(context._other_scalars)
+        + len(context._timestamps)
+        + len(context._framed_parts)
+    )
+    assert cache_entries <= models._FINGERPRINT_LEAF_CACHE_ENTRIES
+    assert context._cache_bytes <= models._FINGERPRINT_LEAF_CACHE_BYTES
+
+
+def test_custom_object_column_uses_legacy_fallback() -> None:
+    series = pd.Series(
+        np.array([_CustomCell("custom"), _CustomCell("cell")], dtype=object),
+        name="extension-values",
+    )
+    expected = sha256(models._fingerprint_bytes(series)).hexdigest()
+
+    with pytest.raises(models._FingerprintNotStreamable):
+        models._stream_fingerprint(series, _CaptureWriter())
+    assert models.fingerprint_value(series) == expected
+
+
 def test_stream_handles_standard_dataframe_index_metadata_and_duplicate_columns() -> (
     None
 ):

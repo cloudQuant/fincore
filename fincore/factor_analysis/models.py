@@ -12,7 +12,7 @@ import datetime as dt
 import pickle  # nosec B403 # round-trips trusted in-process data only; never deserializes external input
 import re
 import struct
-from collections.abc import Hashable, Mapping, Sequence
+from collections.abc import Hashable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass
 from decimal import Decimal
 from hashlib import sha256
@@ -1724,6 +1724,98 @@ def _stream_write_scalar_part_batch(
     )
 
 
+def _stream_object_scalar_runs(
+    values: np.ndarray[Any, Any],
+) -> Iterator[tuple[object, int]]:
+    """Yield adjacent exact string/integer runs without materializing a column."""
+
+    position = 0
+    count = len(values)
+    while position < count:
+        value = values[position]
+        value_type = type(value)
+        if value_type is not str and value_type is not int:
+            yield value, 1
+            position += 1
+            continue
+
+        end = position + 1
+        while end < count:
+            candidate = values[end]
+            if type(candidate) is not value_type or candidate != value:
+                break
+            end += 1
+        yield value, end - position
+        position = end
+
+
+def _stream_object_scalar_supported(value: object) -> bool:
+    value_type = type(value)
+    return (
+        value_type in _STREAM_SCALAR_TYPES
+        or value_type is str
+        or value_type is int
+        or value is pd.NA
+        or value is pd.NaT
+    )
+
+
+def _stream_write_object_scalar_runs(
+    values: np.ndarray[Any, Any],
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    """Write object-cell leaf frames in bounded batches, repeating exact runs."""
+
+    parts: list[bytes] = []
+    buffered_bytes = 0
+
+    def flush() -> None:
+        nonlocal buffered_bytes
+        if parts:
+            writer.write(b"".join(parts))
+            parts.clear()
+            buffered_bytes = 0
+
+    def append_repetitions(encoded: bytes, repetitions: int) -> None:
+        nonlocal buffered_bytes
+        framed = context.framed_part(encoded)
+        if framed is None or len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES:
+            flush()
+            for _ in range(repetitions):
+                _stream_part_start(writer, len(encoded))
+                writer.write(encoded)
+            return
+
+        while repetitions:
+            if parts and (
+                buffered_bytes + len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES
+                or len(parts) >= _FINGERPRINT_LEAF_BATCH_ENTRIES
+            ):
+                flush()
+            available_bytes = _FINGERPRINT_LEAF_BATCH_BYTES - buffered_bytes
+            available_entries = _FINGERPRINT_LEAF_BATCH_ENTRIES
+            take = min(
+                repetitions,
+                available_entries,
+                available_bytes // len(framed),
+            )
+            if take <= 0:
+                flush()
+                continue
+            block = framed if take == 1 else framed * take
+            parts.append(block)
+            buffered_bytes += len(block)
+            repetitions -= take
+
+    for value, repetitions in _stream_object_scalar_runs(values):
+        if not _stream_object_scalar_supported(value):
+            raise _FingerprintNotStreamable
+        encoded = context.scalar_bytes(value)
+        append_repetitions(encoded, repetitions)
+    flush()
+
+
 def _stream_write_part_values(
     values: Any,
     writer: Any,
@@ -1880,25 +1972,22 @@ def _stream_tuple_array_length(
         return 9 + 23 * count + _stream_integer_decimal_width_sum(values)
     if dtype.kind == "b":
         return 9 + 25 * count
-    if dtype.kind == "O":
-        # Object cells can carry mutable or user-defined values. Do not bypass
-        # defensive getters on the repository's frozen report dataclasses
-        # unless every cell uses an exact standard scalar type. The legacy
-        # encoder preserves its normal getter/deepcopy behavior for everything
-        # outside this narrow subset.
-        pass
+    if dtype.kind == "O" and type(values) is np.ndarray:
+        # Exact ndarray object cells cannot override indexing. Keep the same
+        # standard-scalar allowlist as emission, but avoid generic recursive
+        # dispatch for every cell. Adjacent equal strings/integers share one
+        # leaf-length lookup; no per-cell bytes or column-sized cache is kept.
+        length = 9
+        for item, repetitions in _stream_object_scalar_runs(values):
+            if not _stream_object_scalar_supported(item):
+                raise _FingerprintNotStreamable
+            length += repetitions * (8 + len(context.scalar_bytes(item)))
+        return length
     length = 9
     for position in range(count):
         item = _stream_item_from_array(values, dtype, position)
-        if dtype.kind == "O":
-            item_type = type(item)
-            if (
-                item_type not in _STREAM_SCALAR_TYPES
-                and item_type not in {str, int}
-                and item is not pd.NA
-                and item is not pd.NaT
-            ):
-                raise _FingerprintNotStreamable
+        if dtype.kind == "O" and not _stream_object_scalar_supported(item):
+            raise _FingerprintNotStreamable
         length += 8 + _stream_length(item, context)
     return length
 
@@ -1939,6 +2028,9 @@ def _stream_tuple_array(
         return
     writer.write((5).to_bytes(4, "big"))
     writer.write(b"tuple")
+    if dtype.kind == "O" and type(values) is np.ndarray:
+        _stream_write_object_scalar_runs(values, writer, context)
+        return
     _stream_write_scalar_part_batch(
         (_stream_item_from_array(values, dtype, position) for position in range(len(values))),
         writer,
