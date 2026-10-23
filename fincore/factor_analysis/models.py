@@ -16,7 +16,7 @@ from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass, field, fields, is_dataclass
 from decimal import Decimal
 from hashlib import sha256
-from types import MappingProxyType
+from types import MappingProxyType, MemberDescriptorType
 from typing import Any, Literal, TypeVar, cast
 
 import numpy as np
@@ -1326,10 +1326,1412 @@ def _fingerprint_bytes(value: object) -> bytes:
     raise TypeError(f"factor-analysis fingerprint does not support {value!r} ({type(value).__name__})")
 
 
+class _FingerprintNotStreamable(Exception):
+    """Internal signal to use the byte-compatible legacy encoder."""
+
+
+_FINGERPRINT_CHUNK_BYTES = 8 * 1024 * 1024
+_FINGERPRINT_FLOAT_FRAME_BYTES = 33
+_FINGERPRINT_LEAF_CACHE_ENTRIES = 2048
+_FINGERPRINT_LEAF_CACHE_BYTES = 256 * 1024
+_FINGERPRINT_LEAF_BATCH_BYTES = 1024 * 1024
+_FINGERPRINT_LEAF_BATCH_ENTRIES = 8192
+_FINGERPRINT_INTEGER_BATCH_ROWS = 32768
+
+
+class _FingerprintDigestWriter:
+    """Buffer small framing writes and cap every digest update at eight MiB."""
+
+    __slots__ = ("_buffer", "_digest")
+
+    def __init__(self, digest: Any) -> None:
+        self._digest = digest
+        self._buffer = bytearray()
+
+    def write(self, data: bytes | bytearray | memoryview) -> None:
+        view = memoryview(data).cast("B")
+        offset = 0
+        while offset < len(view):
+            remaining = len(view) - offset
+            if not self._buffer and remaining >= _FINGERPRINT_CHUNK_BYTES:
+                end = offset + _FINGERPRINT_CHUNK_BYTES
+                self._digest.update(view[offset:end])
+                offset = end
+                continue
+            take = min(_FINGERPRINT_CHUNK_BYTES - len(self._buffer), remaining)
+            self._buffer.extend(view[offset : offset + take])
+            offset += take
+            if len(self._buffer) == _FINGERPRINT_CHUNK_BYTES:
+                self._digest.update(self._buffer)
+                self._buffer.clear()
+
+    def finish(self) -> None:
+        if self._buffer:
+            self._digest.update(self._buffer)
+            self._buffer.clear()
+
+
+class _FingerprintStreamContext:
+    """Bounded caches for repeated builtin string and integer leaves."""
+
+    __slots__ = (
+        "_cache_bytes",
+        "_datetime_plans",
+        "_framed_parts",
+        "_index_plans",
+        "_int_tuple_lengths",
+        "_integers",
+        "_node_lengths",
+        "_other_scalars",
+        "_pandas_plans",
+        "_strings",
+        "_timestamps",
+    )
+
+    def __init__(self) -> None:
+        self._strings: dict[str, bytes] = {}
+        self._integers: dict[int, bytes] = {}
+        self._other_scalars: dict[tuple[type[object], object], bytes] = {}
+        self._timestamps: dict[tuple[bytes, bytes, int], bytes] = {}
+        self._framed_parts: dict[bytes, bytes] = {}
+        self._cache_bytes = 0
+        self._node_lengths: dict[int, tuple[object, int]] = {}
+        self._pandas_plans: dict[int, tuple[object, Any]] = {}
+        self._datetime_plans: dict[int, tuple[object, Any]] = {}
+        self._index_plans: dict[int, tuple[object, Any]] = {}
+        self._int_tuple_lengths: dict[int, tuple[object, int]] = {}
+
+    def node_length(self, value: object) -> int | None:
+        cached = self._node_lengths.get(id(value))
+        return cached[1] if cached is not None and cached[0] is value else None
+
+    def remember_node(self, value: object, length: int) -> None:
+        if type(value) in {pd.Series, pd.DataFrame} or isinstance(value, pd.Index):
+            self._node_lengths[id(value)] = (value, length)
+
+    def pandas_plan(self, value: object) -> Any:
+        cached = self._pandas_plans.get(id(value))
+        return cached[1] if cached is not None and cached[0] is value else None
+
+    def remember_pandas_plan(self, value: object, plan: Any) -> None:
+        self._pandas_plans[id(value)] = (value, plan)
+
+    def datetime_plan(self, value: object) -> Any:
+        cached = self._datetime_plans.get(id(value))
+        return cached[1] if cached is not None and cached[0] is value else None
+
+    def remember_datetime_plan(self, value: object, plan: Any) -> None:
+        self._datetime_plans[id(value)] = (value, plan)
+
+    def index_plan(self, value: object) -> Any:
+        cached = self._index_plans.get(id(value))
+        return cached[1] if cached is not None and cached[0] is value else None
+
+    def remember_index_plan(self, value: object, plan: Any) -> None:
+        self._index_plans[id(value)] = (value, plan)
+
+    def int_tuple_length(self, values: object) -> int | None:
+        cached = self._int_tuple_lengths.get(id(values))
+        return cached[1] if cached is not None and cached[0] is values else None
+
+    def remember_int_tuple_length(self, values: object, length: int) -> None:
+        self._int_tuple_lengths[id(values)] = (values, length)
+
+    def scalar_bytes(self, value: object) -> bytes:
+        value_type = type(value)
+        if value_type is str:
+            cached = self._strings.get(cast("str", value))
+            if cached is not None:
+                return cached
+            encoded = _fingerprint_envelope("str", cast("str", value).encode("utf-8"))
+            self._cache("str", value, encoded)
+            return encoded
+        if value_type is int:
+            cached = self._integers.get(cast("int", value))
+            if cached is not None:
+                return cached
+            encoded = _fingerprint_envelope(
+                "int", str(cast("int", value)).encode("ascii")
+            )
+            self._cache("int", value, encoded)
+            return encoded
+        if value_type is pd.Timestamp:
+            timezone = _fingerprint_bytes(_pandas_timezone_payload(value.tz))
+            return self.timestamp_bytes(
+                int(value.asm8.astype("int64")), value.unit.encode("ascii"), timezone
+            )
+        if value_type in {type(None), bool, bytes}:
+            key = (value_type, value)
+            cached = self._other_scalars.get(key)
+            if cached is not None:
+                return cached
+            encoded = _fingerprint_bytes(value)
+            self._cache("other", key, encoded)
+            return encoded
+        if value_type in _STREAM_SCALAR_TYPES:
+            return _fingerprint_bytes(value)
+        if value is pd.NA or value is pd.NaT:
+            return _fingerprint_bytes(value)
+        raise _FingerprintNotStreamable
+
+    def timestamp_bytes(self, raw_value: int, unit: bytes, timezone: bytes) -> bytes:
+        if raw_value == np.iinfo(np.int64).min:
+            return _fingerprint_bytes(pd.NaT)
+        key = (unit, timezone, raw_value)
+        cached = self._timestamps.get(key)
+        if cached is not None:
+            return cached
+        encoded = _fingerprint_envelope(
+            "timestamp",
+            unit,
+            str(raw_value).encode("ascii"),
+            timezone,
+        )
+        self._cache("timestamp", key, encoded)
+        return encoded
+
+    def framed_part(self, encoded: bytes) -> bytes | None:
+        if len(encoded) > 256:
+            return None
+        cached = self._framed_parts.get(encoded)
+        if cached is not None:
+            return cached
+        framed = len(encoded).to_bytes(8, "big") + encoded
+        entry_count = (
+            len(self._strings)
+            + len(self._integers)
+            + len(self._other_scalars)
+            + len(self._timestamps)
+            + len(self._framed_parts)
+        )
+        if (
+            entry_count >= _FINGERPRINT_LEAF_CACHE_ENTRIES
+            or self._cache_bytes + len(encoded) + len(framed)
+            > _FINGERPRINT_LEAF_CACHE_BYTES
+        ):
+            return None
+        self._framed_parts[encoded] = framed
+        self._cache_bytes += len(encoded) + len(framed)
+        return framed
+
+    def _cache(self, kind: str, value: object, encoded: bytes) -> None:
+        if (
+            len(encoded) > 256
+            or (
+                len(self._strings)
+                + len(self._integers)
+                + len(self._other_scalars)
+                + len(self._timestamps)
+                + len(self._framed_parts)
+            )
+            >= _FINGERPRINT_LEAF_CACHE_ENTRIES
+        ):
+            return
+        if self._cache_bytes + len(encoded) > _FINGERPRINT_LEAF_CACHE_BYTES:
+            return
+        if kind == "str":
+            self._strings[cast("str", value)] = encoded
+        elif kind == "int":
+            self._integers[cast("int", value)] = encoded
+        elif kind == "timestamp":
+            self._timestamps[cast("tuple[bytes, bytes, int]", value)] = encoded
+        elif kind == "other":
+            self._other_scalars[cast("tuple[type[object], object]", value)] = encoded
+        self._cache_bytes += len(encoded)
+
+
+_STREAM_SCALAR_TYPES = {
+    type(None),
+    bool,
+    float,
+    complex,
+    Decimal,
+    bytes,
+    dt.datetime,
+    dt.date,
+    dt.timedelta,
+    pd.Timestamp,
+    pd.Timedelta,
+    pd.Period,
+    pd.Interval,
+}
+
+
+def _stream_envelope_length(tag: str, part_lengths: Sequence[int]) -> int:
+    return (
+        4
+        + len(tag.encode("utf-8"))
+        + sum(8 + part_length for part_length in part_lengths)
+    )
+
+
+def _stream_envelope_start(writer: Any, tag: str) -> None:
+    tag_bytes = tag.encode("utf-8")
+    writer.write(len(tag_bytes).to_bytes(4, "big"))
+    writer.write(tag_bytes)
+
+
+def _stream_part_start(writer: Any, length: int) -> None:
+    writer.write(length.to_bytes(8, "big"))
+
+
+def _stream_dtype_is_plain(dtype: object) -> bool:
+    return (
+        isinstance(dtype, np.dtype)
+        and dtype.fields is None
+        and dtype.subdtype is None
+        and dtype.metadata is None
+        and dtype.kind in "biufcMmOSU"
+    )
+
+
+def _stream_series_values(value: pd.Series) -> tuple[Any, Any]:
+    dtype = value.dtype
+    if type(dtype) is pd.DatetimeTZDtype:
+        values = value._values
+        if type(values) is not pd.arrays.DatetimeArray:
+            raise _FingerprintNotStreamable
+        return values, dtype
+    if not _stream_dtype_is_plain(dtype):
+        raise _FingerprintNotStreamable
+    values = value._values
+    if dtype.kind in "f" and dtype.itemsize in (4, 8):
+        if not isinstance(values, np.ndarray) or values.dtype != dtype:
+            raise _FingerprintNotStreamable
+    elif dtype.kind not in "biucMmOSU":
+        raise _FingerprintNotStreamable
+    return values, cast("np.dtype[Any]", dtype)
+
+
+def _stream_item_from_array(values: Any, dtype: np.dtype[Any], position: int) -> object:
+    item = values[position]
+    if dtype.kind in "biuc":
+        return item.item()
+    if dtype.kind in "SU":
+        return item.item()
+    return item
+
+
+def _stream_integer_decimal_widths_chunk(
+    values: np.ndarray[Any, Any],
+) -> np.ndarray[Any, Any]:
+    """Return decimal widths, including a minus sign, for one bounded chunk."""
+
+    kind = values.dtype.kind
+    if kind not in "iu":
+        raise _FingerprintNotStreamable
+    widths = np.ones(len(values), dtype=np.uint8)
+    if kind == "i":
+        negative = values < 0
+        for exponent in range(1, 19):
+            power = 10**exponent
+            widths += values >= power
+            widths += values <= -power
+        widths += negative
+    else:
+        for exponent in range(1, 20):
+            widths += values >= 10**exponent
+    return widths
+
+
+def _stream_integer_decimal_width_sum(values: np.ndarray[Any, Any]) -> int:
+    width_sum = 0
+    for start in range(0, len(values), _FINGERPRINT_INTEGER_BATCH_ROWS):
+        chunk = values[start : start + _FINGERPRINT_INTEGER_BATCH_ROWS]
+        widths = _stream_integer_decimal_widths_chunk(chunk)
+        width_sum += int(widths.sum(dtype=np.uint64))
+    return width_sum
+
+
+def _stream_datetime_plan(
+    values: Any, dtype: pd.DatetimeTZDtype, context: _FingerprintStreamContext
+) -> tuple[np.ndarray[Any, Any], bytes, bytes, int, int]:
+    cached = context.datetime_plan(values)
+    if cached is not None:
+        return cast("tuple[np.ndarray[Any, Any], bytes, bytes, int, int]", cached)
+    if type(values) is not pd.arrays.DatetimeArray:
+        raise _FingerprintNotStreamable
+    raw_values = values.asi8
+    unit = dtype.unit.encode("ascii")
+    timezone = _fingerprint_bytes(_pandas_timezone_payload(dtype.tz))
+    max_frame_bytes = 8 + 37 + len(unit) + len(timezone) + 20
+    if max_frame_bytes > _FINGERPRINT_CHUNK_BYTES:
+        # A single timestamp envelope cannot be split without changing its
+        # framing. Use the compatibility encoder for this unsupported edge.
+        raise _FingerprintNotStreamable
+    rows_per_chunk = min(
+        _FINGERPRINT_INTEGER_BATCH_ROWS,
+        _FINGERPRINT_CHUNK_BYTES // max_frame_bytes,
+    )
+    count = len(raw_values)
+    nat_count = int(np.count_nonzero(raw_values == np.iinfo(np.int64).min))
+    decimal_width_sum = _stream_integer_decimal_width_sum(raw_values)
+    # int64 NaT uses the -9223372036854775808 raw value, whose 20-character
+    # representation is replaced by the 14-byte pandas-nat leaf.
+    decimal_width_sum -= nat_count * 20
+    regular_count = count - nat_count
+    values_length = (
+        9
+        + 8 * count
+        + 14 * nat_count
+        + (37 + len(unit) + len(timezone)) * regular_count
+        + decimal_width_sum
+    )
+    plan = (raw_values, unit, timezone, values_length, rows_per_chunk)
+    context.remember_datetime_plan(values, plan)
+    return plan
+
+
+def _stream_write_encoded_part_batch(
+    encoded_values: Any,
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    parts: list[bytes] = []
+    buffered_bytes = 0
+
+    def flush() -> None:
+        nonlocal buffered_bytes
+        if parts:
+            writer.write(b"".join(parts))
+            parts.clear()
+            buffered_bytes = 0
+
+    for encoded in encoded_values:
+        framed = context.framed_part(encoded)
+        if framed is None or len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES:
+            flush()
+            _stream_part_start(writer, len(encoded))
+            writer.write(encoded)
+            continue
+        if parts and (
+            buffered_bytes + len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES
+            or len(parts) >= _FINGERPRINT_LEAF_BATCH_ENTRIES
+        ):
+            flush()
+        parts.append(framed)
+        buffered_bytes += len(framed)
+    flush()
+
+
+def _stream_write_scalar_part_batch(
+    values: Any,
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    _stream_write_encoded_part_batch(
+        (context.scalar_bytes(value) for value in values), writer, context
+    )
+
+
+def _stream_write_part_values(
+    values: Any,
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    parts: list[bytes] = []
+    buffered_bytes = 0
+
+    def flush() -> None:
+        nonlocal buffered_bytes
+        if parts:
+            writer.write(b"".join(parts))
+            parts.clear()
+            buffered_bytes = 0
+
+    for value in values:
+        value_type = type(value)
+        if (
+            value_type in _STREAM_SCALAR_TYPES
+            or value_type in {str, int}
+            or value is pd.NA
+            or value is pd.NaT
+        ):
+            encoded = context.scalar_bytes(value)
+            framed = context.framed_part(encoded)
+            if framed is None or len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES:
+                flush()
+                _stream_part_start(writer, len(encoded))
+                writer.write(encoded)
+                continue
+            if parts and (
+                buffered_bytes + len(framed) > _FINGERPRINT_LEAF_BATCH_BYTES
+                or len(parts) >= _FINGERPRINT_LEAF_BATCH_ENTRIES
+            ):
+                flush()
+            parts.append(framed)
+            buffered_bytes += len(framed)
+            continue
+        flush()
+        _stream_emit_part_value(value, writer, context)
+    flush()
+
+
+def _stream_write_integer_tuple(
+    values: np.ndarray[Any, Any], writer: Any
+) -> None:
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    for start in range(0, len(values), _FINGERPRINT_INTEGER_BATCH_ROWS):
+        chunk = np.asarray(
+            values[start : start + _FINGERPRINT_INTEGER_BATCH_ROWS]
+        )
+        widths = _stream_integer_decimal_widths_chunk(chunk)
+        decimal_bytes = np.char.mod("%d", chunk).astype("S20", copy=False)
+        decimal_matrix = decimal_bytes.view(np.uint8).reshape(len(chunk), 20)
+        strides = 23 + widths.astype(np.int64)
+        starts = np.empty(len(chunk), dtype=np.int64)
+        starts[0] = 0
+        if len(chunk) > 1:
+            np.cumsum(strides[:-1], dtype=np.int64, out=starts[1:])
+        frame = bytearray(int(strides.sum(dtype=np.int64)))
+        frame_bytes = np.frombuffer(frame, dtype=np.uint8)
+        frame_bytes[starts + 7] = 15 + widths
+        frame_bytes[starts + 11] = 3
+        frame_bytes[starts + 12] = ord("i")
+        frame_bytes[starts + 13] = ord("n")
+        frame_bytes[starts + 14] = ord("t")
+        frame_bytes[starts + 22] = widths
+        for digit in range(20):
+            active = widths > digit
+            frame_bytes[starts[active] + 23 + digit] = decimal_matrix[
+                active, digit
+            ]
+        writer.write(frame)
+
+
+def _stream_write_datetime_tuple(
+    raw_values: np.ndarray[Any, Any],
+    unit: bytes,
+    timezone: bytes,
+    rows_per_chunk: int,
+    writer: Any,
+) -> None:
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    nat_value = np.iinfo(np.int64).min
+    for start in range(0, len(raw_values), rows_per_chunk):
+        chunk = np.asarray(raw_values[start : start + rows_per_chunk])
+        widths = _stream_integer_decimal_widths_chunk(chunk)
+        decimal_bytes = np.char.mod("%d", chunk).astype("S20", copy=False)
+        decimal_matrix = decimal_bytes.view(np.uint8).reshape(len(chunk), 20)
+        nat = chunk == nat_value
+        leaf_lengths = np.where(
+            nat,
+            14,
+            37 + len(unit) + len(timezone) + widths.astype(np.int64),
+        ).astype(np.uint64)
+        strides = (8 + leaf_lengths).astype(np.int64)
+        starts = np.empty(len(chunk), dtype=np.int64)
+        starts[0] = 0
+        if len(chunk) > 1:
+            np.cumsum(strides[:-1], dtype=np.int64, out=starts[1:])
+        frame = bytearray(int(strides.sum(dtype=np.int64)))
+        frame_bytes = np.frombuffer(frame, dtype=np.uint8)
+
+        def write_uint64(offsets: np.ndarray[Any, Any], numbers: np.ndarray[Any, Any]) -> None:
+            for byte_index in range(8):
+                shift = 8 * (7 - byte_index)
+                frame_bytes[offsets + byte_index] = (numbers >> shift) & 0xFF
+
+        write_uint64(starts, leaf_lengths)
+        regular = ~nat
+        leaf_starts = starts[regular] + 8
+        regular_widths = widths[regular].astype(np.uint64)
+        frame_bytes[leaf_starts + 3] = 9
+        tag = b"timestamp"
+        for byte_index, byte_value in enumerate(tag):
+            frame_bytes[leaf_starts + 4 + byte_index] = byte_value
+        write_uint64(leaf_starts + 13, np.full(len(leaf_starts), len(unit), dtype=np.uint64))
+        for byte_index, byte_value in enumerate(unit):
+            frame_bytes[leaf_starts + 21 + byte_index] = byte_value
+        width_offsets = leaf_starts + 21 + len(unit)
+        write_uint64(width_offsets, regular_widths)
+        digit_offsets = leaf_starts + 29 + len(unit)
+        regular_matrix = decimal_matrix[regular]
+        for digit in range(20):
+            active = regular_widths > digit
+            frame_bytes[digit_offsets[active] + digit] = regular_matrix[active, digit]
+        timezone_offsets = leaf_starts + 29 + len(unit) + regular_widths.astype(np.int64)
+        write_uint64(
+            timezone_offsets,
+            np.full(len(leaf_starts), len(timezone), dtype=np.uint64),
+        )
+        payload_offsets = leaf_starts + 37 + len(unit) + regular_widths.astype(np.int64)
+        for byte_index, byte_value in enumerate(timezone):
+            frame_bytes[payload_offsets + byte_index] = byte_value
+
+        nat_starts = starts[nat] + 8
+        nat_leaf = b"\x00\x00\x00\x0apandas-nat"
+        for byte_index, byte_value in enumerate(nat_leaf):
+            frame_bytes[nat_starts + byte_index] = byte_value
+        writer.write(frame)
+
+
+def _stream_tuple_array_length(
+    values: Any, dtype: Any, context: _FingerprintStreamContext
+) -> int:
+    count = len(values)
+    if dtype.kind == "f":
+        return 9 + _FINGERPRINT_FLOAT_FRAME_BYTES * count
+    if type(dtype) is pd.DatetimeTZDtype:
+        return _stream_datetime_plan(values, dtype, context)[3]
+    if dtype.kind in "iu" and type(values) is np.ndarray:
+        return 9 + 23 * count + _stream_integer_decimal_width_sum(values)
+    if dtype.kind == "b":
+        return 9 + 25 * count
+    if dtype.kind == "O":
+        # Object cells can carry mutable or user-defined values. Do not bypass
+        # defensive getters on the repository's frozen report dataclasses
+        # unless every cell uses an exact standard scalar type. The legacy
+        # encoder preserves its normal getter/deepcopy behavior for everything
+        # outside this narrow subset.
+        pass
+    length = 9
+    for position in range(count):
+        item = _stream_item_from_array(values, dtype, position)
+        if dtype.kind == "O":
+            item_type = type(item)
+            if (
+                item_type not in _STREAM_SCALAR_TYPES
+                and item_type not in {str, int}
+                and item is not pd.NA
+                and item is not pd.NaT
+            ):
+                raise _FingerprintNotStreamable
+        length += 8 + _stream_length(item, context)
+    return length
+
+
+def _stream_write_float_tuple(values: np.ndarray[Any, Any], writer: Any) -> None:
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    frame_rows = _FINGERPRINT_CHUNK_BYTES // _FINGERPRINT_FLOAT_FRAME_BYTES
+    for start in range(0, len(values), frame_rows):
+        source = values[start : start + frame_rows]
+        as_float64 = np.asarray(source, dtype=np.float64)
+        payload = as_float64.astype(">f8", copy=False).view(np.uint8).reshape(-1, 8)
+        frames = np.empty((len(source), _FINGERPRINT_FLOAT_FRAME_BYTES), dtype=np.uint8)
+        frames[:, 0:8] = np.frombuffer((25).to_bytes(8, "big"), dtype=np.uint8)
+        frames[:, 8:12] = np.frombuffer((5).to_bytes(4, "big"), dtype=np.uint8)
+        frames[:, 12:17] = np.frombuffer(b"float", dtype=np.uint8)
+        frames[:, 17:25] = np.frombuffer((8).to_bytes(8, "big"), dtype=np.uint8)
+        frames[:, 25:33] = payload
+        writer.write(memoryview(frames).cast("B"))
+
+
+def _stream_tuple_array(
+    values: Any, dtype: Any, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    if dtype.kind == "f":
+        _stream_write_float_tuple(cast("np.ndarray[Any, Any]", values), writer)
+        return
+    if type(dtype) is pd.DatetimeTZDtype:
+        raw_values, unit, timezone, _, rows_per_chunk = _stream_datetime_plan(
+            values, dtype, context
+        )
+        _stream_write_datetime_tuple(
+            raw_values, unit, timezone, rows_per_chunk, writer
+        )
+        return
+    if dtype.kind in "iu" and type(values) is np.ndarray:
+        _stream_write_integer_tuple(values, writer)
+        return
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    _stream_write_scalar_part_batch(
+        (_stream_item_from_array(values, dtype, position) for position in range(len(values))),
+        writer,
+        context,
+    )
+
+
+def _stream_index_length_uncached(
+    index: pd.Index, context: _FingerprintStreamContext
+) -> int:
+    index_type = type(index)
+    if index_type is pd.MultiIndex:
+        names = tuple(index.names)
+        names_length = _stream_length(names, context)
+        levels = tuple(index.levels)
+        level_lengths = tuple(_stream_index_length(level, context) for level in levels)
+        levels_length = 9 + sum(8 + 17 + item for item in level_lengths)
+        codes = tuple(index.codes)
+        code_lengths = tuple(_stream_int_tuple_length(code, context) for code in codes)
+        codes_length = 9 + sum(code_length + 8 for code_length in code_lengths)
+        length = _stream_envelope_length(
+            "multiindex", (names_length, levels_length, codes_length)
+        )
+        context.remember_index_plan(
+            index,
+            (
+                "multiindex",
+                names,
+                names_length,
+                levels,
+                level_lengths,
+                levels_length,
+                codes,
+                code_lengths,
+                codes_length,
+            ),
+        )
+        return length
+    if index_type is pd.CategoricalIndex:
+        name = index.name
+        name_length = _stream_length(name, context)
+        categories = index.categories
+        categories_length = _stream_index_length(categories, context)
+        ordered = cast("pd.CategoricalDtype", index.dtype).ordered
+        ordered_length = _stream_length(ordered, context)
+        codes = index.codes
+        codes_length = _stream_int_tuple_length(codes, context)
+        length = _stream_envelope_length(
+            "categorical-index",
+            (
+                name_length,
+                categories_length,
+                ordered_length,
+                codes_length,
+            ),
+        )
+        context.remember_index_plan(
+            index,
+            (
+                "categorical-index",
+                name,
+                name_length,
+                categories,
+                categories_length,
+                ordered,
+                ordered_length,
+                codes,
+                codes_length,
+            ),
+        )
+        return length
+    if index_type is pd.RangeIndex:
+        parts = (index.name, index.start, index.stop, index.step)
+        part_lengths = tuple(_stream_length(part, context) for part in parts)
+        length = _stream_envelope_length("range-index", part_lengths)
+        context.remember_index_plan(index, ("range-index", parts, part_lengths))
+        return length
+    if index_type is pd.DatetimeIndex:
+        name = index.name
+        name_length = _stream_length(name, context)
+        unit = index.unit.encode("ascii")
+        timezone = _fingerprint_bytes(_pandas_timezone_payload(index.tz))
+        frequency = _fingerprint_bytes(_frequency_payload(index.freq))
+        int_values = cast("Any", index).asi8
+        int_length = _stream_int_tuple_length(int_values, context)
+        parts = (
+            name_length,
+            len(unit),
+            len(timezone),
+            len(frequency),
+            int_length,
+        )
+        length = _stream_envelope_length("datetime-index", parts)
+        context.remember_index_plan(
+            index,
+            (
+                "datetime-index",
+                name,
+                name_length,
+                unit,
+                timezone,
+                frequency,
+                int_values,
+                int_length,
+            ),
+        )
+        return length
+    if index_type is pd.TimedeltaIndex:
+        name = index.name
+        name_length = _stream_length(name, context)
+        dtype_bytes = str(index.dtype).encode("utf-8")
+        frequency = _fingerprint_bytes(_frequency_payload(index.freq))
+        int_values = cast("Any", index).asi8
+        int_length = _stream_int_tuple_length(int_values, context)
+        parts = (
+            name_length,
+            len(dtype_bytes),
+            len(frequency),
+            int_length,
+        )
+        length = _stream_envelope_length("timedelta-index", parts)
+        context.remember_index_plan(
+            index,
+            (
+                "timedelta-index",
+                name,
+                name_length,
+                dtype_bytes,
+                frequency,
+                int_values,
+                int_length,
+            ),
+        )
+        return length
+    if index_type is not pd.Index:
+        raise _FingerprintNotStreamable
+    dtype = index.dtype
+    if not _stream_dtype_is_plain(dtype) or dtype.kind not in "biufcMmOSU":
+        raise _FingerprintNotStreamable
+    values = index._values
+    name = index.name
+    name_length = _stream_length(name, context)
+    dtype_bytes = _fingerprint_dtype(dtype)
+    value_length = _stream_tuple_array_length(
+        values, cast("np.dtype[Any]", dtype), context
+    )
+    length = _stream_envelope_length(
+        "index",
+        (
+            name_length,
+            len(dtype_bytes),
+            value_length,
+        ),
+    )
+    context.remember_index_plan(
+        index,
+        ("index", name, name_length, dtype_bytes, values, dtype, value_length),
+    )
+    return length
+
+
+def _stream_index_length(index: pd.Index, context: _FingerprintStreamContext) -> int:
+    cached = context.node_length(index)
+    if cached is not None:
+        return cached
+    length = _stream_index_length_uncached(index, context)
+    context.remember_node(index, length)
+    return length
+
+
+def _stream_int_tuple_length(values: Any, context: _FingerprintStreamContext) -> int:
+    if type(values) is np.ndarray and values.dtype.kind in "iu":
+        cached = context.int_tuple_length(values)
+        if cached is not None:
+            return cached
+        length = 9 + 23 * len(values) + _stream_integer_decimal_width_sum(values)
+        context.remember_int_tuple_length(values, length)
+        return length
+    length = 9
+    for item in values:
+        encoded_length = len(context.scalar_bytes(int(item)))
+        length += 8 + encoded_length
+    return length
+
+
+def _stream_index_bytes_tuple_length(
+    levels: Sequence[pd.Index], context: _FingerprintStreamContext
+) -> int:
+    length = 9
+    for level in levels:
+        index_length = _stream_index_length(level, context)
+        length += 8 + 17 + index_length
+    return length
+
+
+def _stream_codes_tuple_length(
+    codes: Sequence[Any], context: _FingerprintStreamContext
+) -> int:
+    length = 9
+    for code_array in codes:
+        code_length = _stream_int_tuple_length(code_array, context)
+        length += 8 + code_length
+    return length
+
+
+def _stream_values_length(value: pd.Series, context: _FingerprintStreamContext) -> int:
+    values, dtype = _stream_series_values(value)
+    return _stream_tuple_array_length(values, dtype, context)
+
+
+def _stream_pandas_length(
+    value: pd.Series | pd.DataFrame, context: _FingerprintStreamContext
+) -> int:
+    if type(value) is pd.Series:
+        values, dtype = _stream_series_values(value)
+        name_length = _stream_length(value.name, context)
+        index_length = _stream_index_length(value.index, context)
+        dtype_bytes = _fingerprint_dtype(value.dtype)
+        attrs_length = _stream_length(value.attrs, context)
+        flags_length = _stream_length(value.flags.allows_duplicate_labels, context)
+        values_length = _stream_tuple_array_length(values, dtype, context)
+        length = _stream_envelope_length(
+            "series",
+            (
+                name_length,
+                index_length,
+                len(dtype_bytes),
+                attrs_length,
+                flags_length,
+                values_length,
+            ),
+        )
+        context.remember_pandas_plan(
+            value,
+            (
+                "series",
+                values,
+                dtype,
+                dtype_bytes,
+                name_length,
+                index_length,
+                attrs_length,
+                flags_length,
+                values_length,
+            ),
+        )
+        return length
+    if type(value) is not pd.DataFrame:
+        raise _FingerprintNotStreamable
+    index_length = _stream_index_length(value.index, context)
+    columns_length = _stream_index_length(value.columns, context)
+    attrs_length = _stream_length(value.attrs, context)
+    flags_length = _stream_length(value.flags.allows_duplicate_labels, context)
+    tuple_columns_length = 9
+    column_plan: list[tuple[pd.Series, Any, Any, bytes, int, int]] = []
+    for position in range(value.shape[1]):
+        column = value.iloc[:, position]
+        values, dtype = _stream_series_values(column)
+        dtype_bytes = _fingerprint_dtype(column.dtype)
+        values_length = _stream_tuple_array_length(values, dtype, context)
+        column_length = _stream_envelope_length(
+            "dataframe-column", (len(dtype_bytes), values_length)
+        )
+        tuple_columns_length += 8 + 17 + column_length
+        column_plan.append(
+            (column, values, dtype, dtype_bytes, values_length, column_length)
+        )
+    length = _stream_envelope_length(
+        "dataframe",
+        (
+            index_length,
+            columns_length,
+            attrs_length,
+            flags_length,
+            tuple_columns_length,
+        ),
+    )
+    context.remember_pandas_plan(
+        value,
+        (
+            "dataframe",
+            index_length,
+            columns_length,
+            attrs_length,
+            flags_length,
+            tuple_columns_length,
+            column_plan,
+        ),
+    )
+    return length
+
+
+def _stream_mapping_items(
+    value: object, context: _FingerprintStreamContext
+) -> list[tuple[object, object]]:
+    if type(value) is dict:
+        mapping = cast("dict[object, object]", value)
+    elif type(value) is MappingProxyType:
+        mapping = cast("Mapping[object, object]", value)
+    elif type(value) is globals().get("_FrozenMapping"):
+        # This repository-owned immutable mapping returns deep snapshots through
+        # its public API. Its private backing proxy is the same canonical data
+        # and avoids copying every table just to fingerprint it.
+        mapping = cast(
+            "Mapping[object, object]",
+            object.__getattribute__(value, "_FrozenMapping__data"),
+        )
+    else:
+        raise _FingerprintNotStreamable
+    items = list(mapping.items())
+    if type(value) is not globals().get("_FrozenMapping") and any(
+        type(key) is not str for key, _ in items
+    ):
+        raise _FingerprintNotStreamable
+    encoded_keys = [(context.scalar_bytes(key), key, item) for key, item in items]
+    # A mapping-entry starts with the same tag and an eight-byte key-part
+    # length, so its byte sort is exactly (encoded-key length, encoded key).
+    # Equal encodings are rejected because the legacy sort would then compare
+    # the encoded values too.
+    encoded_keys.sort(key=lambda row: (len(row[0]), row[0]))
+    if any(
+        encoded_keys[i - 1][0] == encoded_keys[i][0]
+        for i in range(1, len(encoded_keys))
+    ):
+        raise _FingerprintNotStreamable
+    return [(key, item) for _, key, item in encoded_keys]
+
+
+def _stream_mapping_length(value: object, context: _FingerprintStreamContext) -> int:
+    entries: list[int] = []
+    for key, item in _stream_mapping_items(value, context):
+        key_length = context.scalar_bytes(key)
+        item_length = _stream_length(item, context)
+        entries.append(
+            _stream_envelope_length("mapping-entry", (len(key_length), item_length))
+        )
+    return _stream_envelope_length("mapping", entries)
+
+
+def _stream_tuple_length(
+    value: tuple[object, ...] | list[object], context: _FingerprintStreamContext
+) -> int:
+    tag = "tuple" if type(value) is tuple else "list"
+    length = 4 + len(tag.encode("utf-8"))
+    for item in value:
+        length += 8 + _stream_length(item, context)
+    return length
+
+
+def _stream_dataclass_length(value: object, context: _FingerprintStreamContext) -> int:
+    class_fields = fields(value)
+    parts = [
+        len(type(value).__module__.encode("utf-8")),
+        len(type(value).__qualname__.encode("utf-8")),
+    ]
+    for item in class_fields:
+        parts.append(len(item.name.encode("utf-8")))
+        parts.append(_stream_length(_stream_dataclass_field(value, item.name), context))
+    return _stream_envelope_length("dataclass", parts)
+
+
+def _stream_dataclass_field(value: object, name: str) -> object:
+    value_type = type(value)
+    standard_getattribute = value_type.__getattribute__ is object.__getattribute__
+    frozen_model = value_type in {
+        globals().get("FactorGroupAnalysis"),
+        globals().get("EventAnalysisModel"),
+        globals().get("FactorAnalysisModel"),
+    }
+    if not standard_getattribute and not frozen_model:
+        raise _FingerprintNotStreamable
+
+    descriptor: object | None = None
+    for owner in value_type.__mro__:
+        if name in owner.__dict__:
+            descriptor = owner.__dict__[name]
+            break
+    if type(descriptor) is MemberDescriptorType:
+        return object.__getattribute__(value, name)
+    if descriptor is not None and hasattr(type(descriptor), "__get__"):
+        raise _FingerprintNotStreamable
+    try:
+        instance_values = object.__getattribute__(value, "__dict__")
+    except AttributeError:
+        raise _FingerprintNotStreamable from None
+    if type(instance_values) is not dict or name not in instance_values:
+        raise _FingerprintNotStreamable
+    return instance_values[name]
+
+
+def _stream_length(value: object, context: _FingerprintStreamContext) -> int:
+    cached_length = context.node_length(value)
+    if cached_length is not None:
+        return cached_length
+    if type(value) is pd.Series or type(value) is pd.DataFrame:
+        length = _stream_pandas_length(cast("pd.Series | pd.DataFrame", value), context)
+    elif isinstance(value, pd.Index):
+        length = _stream_index_length(value, context)
+    elif value is pd.NA or value is pd.NaT:
+        return len(_fingerprint_bytes(value))
+    elif type(value) in {tuple, list}:
+        length = _stream_tuple_length(value, context)
+    elif type(value) in {dict, MappingProxyType} or type(value) is globals().get(
+        "_FrozenMapping"
+    ):
+        length = _stream_mapping_length(value, context)
+    elif is_dataclass(value) and not isinstance(value, type):
+        if type(value).__dict__.get("__dataclass_fields__") is None:
+            raise _FingerprintNotStreamable
+        length = _stream_dataclass_length(value, context)
+    else:
+        return len(context.scalar_bytes(value))
+    context.remember_node(value, length)
+    return length
+
+
+def _stream_emit_envelope(
+    writer: Any, tag: str, parts: Sequence[tuple[int, Any]]
+) -> None:
+    _stream_envelope_start(writer, tag)
+    for length, emit_part in parts:
+        _stream_part_start(writer, length)
+        emit_part()
+
+
+def _stream_emit_tuple_array(
+    values: Any, dtype: np.dtype[Any], writer: Any, context: _FingerprintStreamContext
+) -> None:
+    _stream_tuple_array(values, dtype, writer, context)
+
+
+def _stream_emit_part_value(
+    value: object, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    if (
+        type(value) in _STREAM_SCALAR_TYPES
+        or type(value) in {str, int}
+        or value is pd.NA
+        or value is pd.NaT
+    ):
+        encoded = context.scalar_bytes(value)
+        _stream_part_start(writer, len(encoded))
+        writer.write(encoded)
+        return
+    length = _stream_length(value, context)
+    _stream_part_start(writer, length)
+    _stream_emit(value, writer, context)
+
+
+def _stream_emit_index(
+    index: pd.Index, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    index_type = type(index)
+    if index_type is pd.MultiIndex:
+        plan = context.index_plan(index)
+        if plan is None:
+            _stream_index_length(index, context)
+            plan = context.index_plan(index)
+        (
+            _,
+            names,
+            names_length,
+            levels,
+            level_lengths,
+            levels_length,
+            code_arrays,
+            code_lengths,
+            codes_length,
+        ) = plan
+        _stream_envelope_start(writer, "multiindex")
+        _stream_part_start(writer, names_length)
+        _stream_emit(names, writer, context)
+        _stream_part_start(writer, levels_length)
+        writer.write((5).to_bytes(4, "big"))
+        writer.write(b"tuple")
+        for level, level_length in zip(levels, level_lengths, strict=True):
+            _stream_part_start(writer, 17 + level_length)
+            _stream_envelope_start(writer, "bytes")
+            _stream_part_start(writer, level_length)
+            _stream_emit_index(level, writer, context)
+        _stream_part_start(writer, codes_length)
+        writer.write((5).to_bytes(4, "big"))
+        writer.write(b"tuple")
+        for code_array, code_length in zip(code_arrays, code_lengths, strict=True):
+            _stream_part_start(writer, code_length)
+            _stream_emit_int_tuple(code_array, writer, context)
+        return
+    if index_type is pd.CategoricalIndex:
+        plan = context.index_plan(index)
+        if plan is None:
+            _stream_index_length(index, context)
+            plan = context.index_plan(index)
+        (
+            _,
+            name,
+            name_length,
+            categories,
+            categories_length,
+            ordered,
+            ordered_length,
+            codes,
+            codes_length,
+        ) = plan
+        _stream_envelope_start(writer, "categorical-index")
+        _stream_part_start(writer, name_length)
+        _stream_emit(name, writer, context)
+        _stream_part_start(writer, categories_length)
+        _stream_emit_index(categories, writer, context)
+        _stream_part_start(writer, ordered_length)
+        _stream_emit(ordered, writer, context)
+        _stream_part_start(writer, codes_length)
+        _stream_emit_int_tuple(codes, writer, context)
+        return
+    if index_type is pd.RangeIndex:
+        plan = context.index_plan(index)
+        if plan is None:
+            _stream_index_length(index, context)
+            plan = context.index_plan(index)
+        _, parts, part_lengths = plan
+        _stream_emit_envelope(
+            writer,
+            "range-index",
+            tuple(
+                (
+                    part_length,
+                    lambda part=part: _stream_emit(part, writer, context),
+                )
+                for part, part_length in zip(parts, part_lengths, strict=True)
+            ),
+        )
+        return
+    if index_type in {pd.DatetimeIndex, pd.TimedeltaIndex}:
+        is_datetime = index_type is pd.DatetimeIndex
+        plan = context.index_plan(index)
+        if plan is None:
+            _stream_index_length(index, context)
+            plan = context.index_plan(index)
+        if is_datetime:
+            _, name, name_length, unit, encoded_timezone, frequency_payload, int_values, int_length = plan
+        else:
+            _, name, name_length, dtype_bytes, frequency_payload, int_values, int_length = plan
+        tag = "datetime-index" if is_datetime else "timedelta-index"
+        parts: list[tuple[int, Any]] = []
+        parts.append(
+            (
+                name_length,
+                lambda: _stream_emit(name, writer, context),
+            )
+        )
+        if is_datetime:
+            parts.append(
+                (
+                    len(unit),
+                    lambda: writer.write(unit),
+                )
+            )
+            parts.append(
+                (len(encoded_timezone), lambda: writer.write(encoded_timezone))
+            )
+            parts.append(
+                (len(frequency_payload), lambda: writer.write(frequency_payload))
+            )
+        else:
+            parts.append((len(dtype_bytes), lambda: writer.write(dtype_bytes)))
+            parts.append(
+                (len(frequency_payload), lambda: writer.write(frequency_payload))
+            )
+        parts.append(
+            (int_length, lambda: _stream_emit_int_tuple(int_values, writer, context))
+        )
+        _stream_emit_envelope(writer, tag, parts)
+        return
+    if index_type is not pd.Index:
+        raise _FingerprintNotStreamable
+    plan = context.index_plan(index)
+    if plan is None:
+        _stream_index_length(index, context)
+        plan = context.index_plan(index)
+    _, name, name_length, dtype_bytes, values, dtype, values_length = plan
+    _stream_envelope_start(writer, "index")
+    _stream_part_start(writer, name_length)
+    _stream_emit(name, writer, context)
+    _stream_part_start(writer, len(dtype_bytes))
+    writer.write(dtype_bytes)
+    _stream_part_start(writer, values_length)
+    _stream_emit_tuple_array(values, dtype, writer, context)
+
+
+def _stream_emit_int_tuple(
+    values: Any, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    if type(values) is np.ndarray and values.dtype.kind in "iu":
+        _stream_write_integer_tuple(values, writer)
+        return
+    writer.write((5).to_bytes(4, "big"))
+    writer.write(b"tuple")
+    _stream_write_scalar_part_batch((int(item) for item in values), writer, context)
+
+
+def _stream_emit_mapping(
+    value: object, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    items = _stream_mapping_items(value, context)
+    entry_lengths = [
+        _stream_envelope_length(
+            "mapping-entry",
+            (len(context.scalar_bytes(key)), _stream_length(item, context)),
+        )
+        for key, item in items
+    ]
+    _stream_envelope_start(writer, "mapping")
+    for (key, item), entry_length in zip(items, entry_lengths, strict=True):
+        _stream_part_start(writer, entry_length)
+        key_bytes = context.scalar_bytes(key)
+        item_length = _stream_length(item, context)
+        _stream_envelope_start(writer, "mapping-entry")
+        _stream_part_start(writer, len(key_bytes))
+        writer.write(key_bytes)
+        _stream_part_start(writer, item_length)
+        _stream_emit(item, writer, context)
+
+
+def _stream_emit_tuple(
+    value: tuple[object, ...] | list[object],
+    tag: str,
+    writer: Any,
+    context: _FingerprintStreamContext,
+) -> None:
+    _stream_envelope_start(writer, tag)
+    _stream_write_part_values(value, writer, context)
+
+
+def _stream_emit_dataclass(
+    value: object, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    parts: list[tuple[int, Any]] = [
+        (
+            len(type(value).__module__.encode("utf-8")),
+            lambda: writer.write(type(value).__module__.encode("utf-8")),
+        ),
+        (
+            len(type(value).__qualname__.encode("utf-8")),
+            lambda: writer.write(type(value).__qualname__.encode("utf-8")),
+        ),
+    ]
+    for item in fields(value):
+        name_bytes = item.name.encode("utf-8")
+        field_value = _stream_dataclass_field(value, item.name)
+        field_length = _stream_length(field_value, context)
+        parts.append(
+            (len(name_bytes), lambda name_bytes=name_bytes: writer.write(name_bytes))
+        )
+        parts.append(
+            (
+                field_length,
+                lambda field_value=field_value: _stream_emit(
+                    field_value, writer, context
+                ),
+            )
+        )
+    _stream_emit_envelope(writer, "dataclass", parts)
+
+
+def _stream_emit_scalar_bytes(
+    value: object, encoded: bytes, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    writer.write(encoded)
+
+
+def _stream_emit_pandas(
+    value: pd.Series | pd.DataFrame, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    plan = context.pandas_plan(value)
+    if plan is None:
+        _stream_pandas_length(value, context)
+        plan = context.pandas_plan(value)
+    if type(value) is pd.Series:
+        (
+            _,
+            values,
+            dtype,
+            dtype_bytes,
+            name_length,
+            index_length,
+            attrs_length,
+            flags_length,
+            values_length,
+        ) = plan
+        _stream_envelope_start(writer, "series")
+        _stream_part_start(writer, name_length)
+        _stream_emit(value.name, writer, context)
+        _stream_part_start(writer, index_length)
+        _stream_emit_index(value.index, writer, context)
+        _stream_part_start(writer, len(dtype_bytes))
+        writer.write(dtype_bytes)
+        _stream_part_start(writer, attrs_length)
+        _stream_emit(value.attrs, writer, context)
+        flags = value.flags.allows_duplicate_labels
+        _stream_part_start(writer, flags_length)
+        _stream_emit(flags, writer, context)
+        _stream_part_start(writer, values_length)
+        _stream_emit_tuple_array(values, dtype, writer, context)
+        return
+    (
+        _,
+        index_length,
+        columns_index_length,
+        attrs_length,
+        flags_length,
+        tuple_columns_length,
+        column_plan,
+    ) = plan
+    _stream_envelope_start(writer, "dataframe")
+    _stream_part_start(writer, index_length)
+    _stream_emit_index(value.index, writer, context)
+    _stream_part_start(writer, columns_index_length)
+    _stream_emit_index(value.columns, writer, context)
+    _stream_part_start(writer, attrs_length)
+    _stream_emit(value.attrs, writer, context)
+    flags = value.flags.allows_duplicate_labels
+    _stream_part_start(writer, flags_length)
+    _stream_emit(flags, writer, context)
+    _stream_part_start(writer, tuple_columns_length)
+    _stream_envelope_start(writer, "tuple")
+    for (
+        column,
+        values,
+        dtype,
+        dtype_bytes,
+        values_length,
+        encoded_length,
+    ) in column_plan:
+        bytes_length = 17 + encoded_length
+        _stream_part_start(writer, bytes_length)
+        _stream_envelope_start(writer, "bytes")
+        _stream_part_start(writer, encoded_length)
+        _stream_envelope_start(writer, "dataframe-column")
+        _stream_part_start(writer, len(dtype_bytes))
+        writer.write(dtype_bytes)
+        _stream_part_start(writer, values_length)
+        _stream_emit_tuple_array(values, dtype, writer, context)
+
+
+def _stream_emit(
+    value: object, writer: Any, context: _FingerprintStreamContext
+) -> None:
+    if type(value) is pd.Series or type(value) is pd.DataFrame:
+        _stream_emit_pandas(cast("pd.Series | pd.DataFrame", value), writer, context)
+        return
+    if isinstance(value, pd.Index):
+        _stream_emit_index(value, writer, context)
+        return
+    if value is pd.NA or value is pd.NaT:
+        writer.write(_fingerprint_bytes(value))
+        return
+    if type(value) is tuple:
+        _stream_emit_tuple(cast("tuple[object, ...]", value), "tuple", writer, context)
+        return
+    if type(value) is list:
+        _stream_emit_tuple(cast("list[object]", value), "list", writer, context)
+        return
+    if type(value) in {dict, MappingProxyType} or type(value) is globals().get(
+        "_FrozenMapping"
+    ):
+        _stream_emit_mapping(value, writer, context)
+        return
+    if is_dataclass(value) and not isinstance(value, type):
+        _stream_emit_dataclass(value, writer, context)
+        return
+    encoded = context.scalar_bytes(value)
+    _stream_emit_scalar_bytes(value, encoded, writer, context)
+
+
+def _stream_fingerprint(value: object, writer: Any) -> int:
+    """Write the exact v1 encoding to ``writer`` without building a parent bytes object."""
+
+    context = _FingerprintStreamContext()
+    encoded_length = _stream_length(value, context)
+    _stream_emit(value, writer, context)
+    return encoded_length
+
+
 def fingerprint_value(value: object) -> str:
     """Return a deterministic, lossless SHA-256 fingerprint for model data."""
 
-    return sha256(_fingerprint_bytes(value)).hexdigest()
+    digest = sha256()
+    writer = _FingerprintDigestWriter(digest)
+    try:
+        _stream_fingerprint(value, writer)
+    except _FingerprintNotStreamable:
+        return sha256(_fingerprint_bytes(value)).hexdigest()
+    writer.finish()
+    return digest.hexdigest()
 
 
 def snapshot_pandas(value: pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:
