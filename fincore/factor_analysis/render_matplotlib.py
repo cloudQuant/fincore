@@ -207,8 +207,13 @@ def build_returns_table(
     quantile = _as_frame(mean_ret_quantile, "mean_ret_quantile")
     if not isinstance(mean_ret_spread_quantile, (pd.Series, pd.DataFrame)):
         raise TypeError("mean_ret_spread_quantile must be a pandas Series or DataFrame")
-    table.loc["Mean Period Wise Return Top Quantile (bps)"] = quantile.iloc[-1] * DECIMAL_TO_BPS
-    table.loc["Mean Period Wise Return Bottom Quantile (bps)"] = quantile.iloc[0] * DECIMAL_TO_BPS
+    if quantile.empty:
+        unavailable = pd.Series(np.nan, index=table.columns, dtype=float)
+        table.loc["Mean Period Wise Return Top Quantile (bps)"] = unavailable
+        table.loc["Mean Period Wise Return Bottom Quantile (bps)"] = unavailable
+    else:
+        table.loc["Mean Period Wise Return Top Quantile (bps)"] = quantile.iloc[-1] * DECIMAL_TO_BPS
+        table.loc["Mean Period Wise Return Bottom Quantile (bps)"] = quantile.iloc[0] * DECIMAL_TO_BPS
     # ``Series.mean`` is scalar in the pinned API and intentionally broadcasts
     # over the alpha/beta period columns. A DataFrame retains source's
     # period-wise alignment instead.
@@ -249,6 +254,10 @@ def build_information_table(ic_data: pd.DataFrame) -> pd.DataFrame:
     table["IC Mean"] = data.mean()
     table["IC Std."] = data.std()
     table["Risk-Adjusted IC"] = table["IC Mean"] / table["IC Std."]
+    if data.empty:
+        for column in ("t-stat(IC)", "p-value(IC)", "IC Skew", "IC Kurtosis"):
+            table[column] = np.nan
+        return table
     try:
         stats = importlib.import_module("scipy.stats")
     except ModuleNotFoundError as error:
